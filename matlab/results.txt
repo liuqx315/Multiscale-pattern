@@ -1,0 +1,65 @@
+
+Running tests with integrator: Gauss 3-stage IRK
+   
+Accuracy Test 1 Results:
+   maxerr = 9.43947e-02,   rmserr = 5.44988e-02
+Accuracy Test 2 Results:
+   maxerr = 1.26653e-01,   rmserr = 7.31231e-02
+Accuracy Test 3 Results:
+   maxerr = 1.04323e-06,   rmserr = 6.16516e-07
+
+Speed Test 1 time = 7.24106e+00
+Speed Test 2 time = 7.65155e+00
+Speed Test 3 time = 6.73331e+00
+
+--------------------------------------------------
+
+Running tests with integrator: RadauIIA 5-stage IRK
+   
+Accuracy Test 1 Results:
+   maxerr = 2.26081e-05,   rmserr = 1.84480e-05
+Accuracy Test 2 Results:
+   maxerr = 6.71418e-06,   rmserr = 3.89989e-06
+Accuracy Test 3 Results:
+   maxerr = 2.52532e-07,   rmserr = 1.48397e-07
+
+Speed Test 1 time = 1.05233e+01
+Speed Test 2 time = 1.12537e+01
+Speed Test 3 time = 1.12301e+01
+
+--------------------------------------------------
+
+Running tests with integrator: ARK3(2)4L[2]SA-ESDIRK
+   
+Accuracy Test 1 Results:
+   maxerr = 1.25288e-05,   rmserr = 7.53835e-06
+Accuracy Test 2 Results:
+   maxerr = 1.74946e-03,   rmserr = 1.14126e-03
+Accuracy Test 3 Results:
+   maxerr = 4.69962e-06,   rmserr = 2.87193e-06
+
+Speed Test 1 time = 1.24505e+01
+Speed Test 2 time = 1.32237e+01
+newton_damped warning: nonconvergence after 20 iterations (|F| = 0.0342221)
+newton_damped warning: nonconvergence after 20 iterations (|F| = 0.00100811)
+newton_damped warning: nonconvergence after 20 iterations (|F| = 9.20872e-11)
+newton_damped warning: nonconvergence after 20 iterations (|F| = 21.693)
+newton_damped warning: nonconvergence after 20 iterations (|F| = 0.00334813)
+newton_damped warning: nonconvergence after 20 iterations (|F| = 21.7299)
+Speed Test 3 time = 1.35921e+01
+
+--------------------------------------------------
+
+Running tests with integrator: ARK4(3)6L[2]SA-ESDIRK
+   
+Accuracy Test 1 Results:
+   maxerr = 2.59281e-05,   rmserr = 2.01846e-05
+Accuracy Test 2 Results:
+   maxerr = 2.30821e-05,   rmserr = 1.63829e-05
+Accuracy Test 3 Results:
+   maxerr = 8.45503e-06,   rmserr = 5.21053e-06
+
+Speed Test 1 time = 1.38590e+01
+Speed Test 2 time = 1.57863e+01
+Speed Test 3 time = 1.44786e+01
+
