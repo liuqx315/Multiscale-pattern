@@ -1,5 +1,5 @@
-function J = Jionization_2D(t, y)
-% usage: J = Jionization_2D(t, y)
+function J = J_ionization_2D(t, y)
+% usage: J = J_ionization_2D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics

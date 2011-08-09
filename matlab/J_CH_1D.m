@@ -1,5 +1,5 @@
-function J = JCH_1D(t, y)
-% usage: J = JCH_1D(t, y)
+function J = J_CH_1D(t, y)
+% usage: J = J_CH_1D(t, y)
 %
 %    J = -(c^2 \partial_{xxxx}(*) + (1 - 3y^2) \partial_{xx}(*))
 %      u_x = 0     at x=0,x=1

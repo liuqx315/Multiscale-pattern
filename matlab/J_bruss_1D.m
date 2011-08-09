@@ -1,5 +1,5 @@
-function J = Jbruss_1D(t, y)
-% usage: J = Jbruss_1D(t, y)
+function J = J_bruss_1D(t, y)
+% usage: J = J_bruss_1D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics

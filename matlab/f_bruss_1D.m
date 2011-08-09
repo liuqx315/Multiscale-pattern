@@ -1,5 +1,5 @@
-function dy = fbruss_1D(t, y)
-% usage: dy = fbruss_1D(t, y)
+function dy = f_bruss_1D(t, y)
+% usage: dy = f_bruss_1D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics

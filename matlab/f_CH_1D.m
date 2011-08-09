@@ -1,5 +1,5 @@
-function dy = fCH_1D(t, y)
-% usage: dy = fCH_1D(t, y)
+function dy = f_CH_1D(t, y)
+% usage: dy = f_CH_1D(t, y)
 %
 %   dy = -\partial_xx (c^2 \partial_xx y - y(y^2 - 1)), on [0,1]
 %      u_x = 0     at x=0,x=1

@@ -1,5 +1,5 @@
-function dy = fionization_2D(t, y)
-% usage: dy = fionization_2D(t, y)
+function dy = f_ionization_2D(t, y)
+% usage: dy = f_ionization_2D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
