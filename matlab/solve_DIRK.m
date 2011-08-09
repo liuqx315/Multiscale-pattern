@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
-% usage: [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
+function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, hmax)
+% usage: [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, hmax)
 %
 % DIRK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -7,7 +7,6 @@ function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
 %
 % Inputs:  fcn = function name for ODE right-hand side, F(t,Y)
 %          Jfcn = function name for Jacobian of ODE right-hand side, J(t,Y)
-%          Pdata = problem data passed to fcn and Jfcn for evaluation
 %          tvals = [t0, t1, t2, ..., tN]
 %          Y0 = initial values
 %          B = Butcher matrix for IRK coefficients, of the form
@@ -20,7 +19,7 @@ function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
 %              y(t*) is a column vector of length m.
-%          nsteps = number of internal time steps taken
+%          nsteps = number of internal time steps taken (all stages)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -58,7 +57,6 @@ t = tvals(1);
 Ynew = Y0;
 
 % create Fdata structure
-Fdata.Pdata = Pdata;
 Fdata.fname = fcn;
 Fdata.Jname = Jfcn;
 Fdata.B = B;
@@ -105,6 +103,7 @@ for tstep = 2:length(tvals)
 	 Fdata.t = t;
 	 [Ynew,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
 	     newt_tol, newt_maxit, newt_alpha);
+	 nsteps = nsteps + 1;
 
 	 % check newton error flag, if failure return with error
 	 if (ierr ~= 0) 
@@ -122,7 +121,6 @@ for tstep = 2:length(tvals)
       
       % update time, work counter
       t = t + h;
-      nsteps = nsteps + 1;
    
    end
 

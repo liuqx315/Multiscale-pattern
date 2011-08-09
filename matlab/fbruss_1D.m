@@ -1,5 +1,5 @@
-function dy = fbruss_1D(t, y, Pdata)
-% usage: dy = fbruss_1D(t, y, Pdata)
+function dy = fbruss_1D(t, y)
+% usage: dy = fbruss_1D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,6 +8,7 @@ function dy = fbruss_1D(t, y, Pdata)
 % All Rights Reserved
 
 % extract problem data
+global Pdata;
 a = Pdata.a; 
 b = Pdata.b; 
 d1 = Pdata.d1;

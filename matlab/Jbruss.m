@@ -1,5 +1,5 @@
-function J = Jbruss(t, y, Pdata)
-% usage: J = Jbruss(t, y, Pdata)
+function J = Jbruss(t, y)
+% usage: J = Jbruss(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,6 +8,7 @@ function J = Jbruss(t, y, Pdata)
 % All Rights Reserved
 
 % model parameters
+global Pdata;
 a = Pdata.a; 
 b = Pdata.b; 
 ep = Pdata.ep;

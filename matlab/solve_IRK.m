@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_IRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
-% usage: [tvals,Y,nsteps] = solve_IRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
+function [tvals,Y,nsteps] = solve_IRK(fcn, Jfcn, tvals, Y0, B, hmax)
+% usage: [tvals,Y,nsteps] = solve_IRK(fcn, Jfcn, tvals, Y0, B, hmax)
 %
 % IRK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -7,7 +7,6 @@ function [tvals,Y,nsteps] = solve_IRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
 %
 % Inputs:  fcn = function name for ODE right-hand side, F(t,Y)
 %          Jfcn = function name for Jacobian of ODE right-hand side, J(t,Y)
-%          Pdata = problem data passed to fcn and Jfcn for evaluation
 %          tvals = [t0, t1, t2, ..., tN]
 %          Y0 = initial values
 %          B = Butcher matrix for IRK coefficients, of the form
@@ -17,7 +16,7 @@ function [tvals,Y,nsteps] = solve_IRK(fcn, Jfcn, Pdata, tvals, Y0, B, hmax)
 %              The b2 row is optional, and provides coefficients for an
 %              embedded method.
 %          hmax = maximum internal time step size (can be smaller than t(i)-t(i-1))
-%          nsteps = number of internal time steps taken
+%          nsteps = number of internal time steps taken (all stages)
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
@@ -54,7 +53,6 @@ t = tvals(1);
 Ynew = Y0;
 
 % create Fdata structure
-Fdata.Pdata = Pdata;
 Fdata.fname = fcn;
 Fdata.Jname = Jfcn;
 Fdata.B = B;
@@ -92,7 +90,7 @@ for tstep = 2:length(tvals)
 	 
       % update time, work counter
       t = t + h;
-      nsteps = nsteps + 1;
+      nsteps = nsteps + s;
    
    end
 

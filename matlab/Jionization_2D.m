@@ -1,5 +1,5 @@
-function J = Jionization_2D(t, y, Pdata)
-% usage: J = Jionization_2D(t, y, Pdata)
+function J = Jionization_2D(t, y)
+% usage: J = Jionization_2D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,10 +8,11 @@ function J = Jionization_2D(t, y, Pdata)
 % All Rights Reserved
 
 % model parameters
-a = 0.6; 
-b = 2; 
-d1 = 0.025;
-d2 = 0.025;
+global Pdata;
+a = Pdata.a; 
+b = Pdata.b; 
+d1 = Pdata.d1;
+d2 = Pdata.d2;
 
 % determine spatial size, etc
 n = length(y);

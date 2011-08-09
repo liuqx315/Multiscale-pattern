@@ -27,6 +27,6 @@ st = Fdata.stage;
 t = Fdata.t + Fdata.h*c(st);
 
 % form the DIRK Jacobian
-Amat = eye(length(z)) - Fdata.h*A(st,st)*feval(Fdata.Jname,t,z,Fdata.Pdata);
+Amat = eye(length(z)) - Fdata.h*A(st,st)*feval(Fdata.Jname, t, z);
 
 % end of function

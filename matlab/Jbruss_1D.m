@@ -1,5 +1,5 @@
-function J = Jbruss_1D(t, y, Pdata)
-% usage: J = Jbruss_1D(t, y, Pdata)
+function J = Jbruss_1D(t, y)
+% usage: J = Jbruss_1D(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,6 +8,7 @@ function J = Jbruss_1D(t, y, Pdata)
 % All Rights Reserved
 
 % extract problem data
+global Pdata;
 a = Pdata.a; 
 b = Pdata.b; 
 d1 = Pdata.d1;

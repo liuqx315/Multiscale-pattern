@@ -1,5 +1,5 @@
-function dy = fbruss(t, y, Pdata)
-% usage: dy = fbruss(t, y, Pdata)
+function dy = fbruss(t, y)
+% usage: dy = fbruss(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,6 +8,7 @@ function dy = fbruss(t, y, Pdata)
 % All Rights Reserved
 
 % model parameters
+global Pdata;
 a = Pdata.a; 
 b = Pdata.b; 
 ep = Pdata.ep;

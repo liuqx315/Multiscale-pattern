@@ -1,5 +1,5 @@
-function J = J_VanderPol(t, y, Pdata)
-% usage: J = J_VanderPol(t, y, Pdata)
+function J = J_VanderPol(t, y)
+% usage: J = J_VanderPol(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,6 +8,7 @@ function J = J_VanderPol(t, y, Pdata)
 % All Rights Reserved
 
 % model parameters
+global Pdata;
 ep = Pdata.ep;
 
 % extract variables

@@ -42,7 +42,7 @@ end
 f = zeros(nvar,s);
 for is=1:s
    t = Fdata.t + Fdata.h*c(is);
-   f(:,is) = feval(Fdata.fname, t, z(:,is), Fdata.Pdata);
+   f(:,is) = feval(Fdata.fname, t, z(:,is));
 end
 
 % form the solutions

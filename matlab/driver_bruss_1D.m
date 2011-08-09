@@ -7,7 +7,6 @@
 % All Rights Reserved
 
 clear
-%maxNumCompThreads(1);
 
 % model parameters
 alpha = 0.6; 
@@ -39,32 +38,41 @@ v0 = beta/alpha + 0.1*sin(pi*xspan);
 Y0 = [u0; v0];
 
 % store problem parameters, spatial size, etc
+global Pdata;
 Pdata.a = alpha;
 Pdata.b = beta;
 Pdata.d1 = d1;
 Pdata.d2 = d2;
 Pdata.m = N;
-Pdata.dx = 1/(m-1);
+Pdata.dx = 1/(N-1);
 
 
 % integrate using built-in method and tight tolerances for "true" solution
 
 
 %%%%%%%%%%%%%%%%
-printf('\nRunning 1D brusselator tests with integrator: ')
-disp(mname)
-disp('   ')
+fprintf('\nRunning 1D brusselator test with integrator: %s  (tol = %g)\n',mname,tol)
+
+% integrate using adaptive solver
+[t,Y,ns] = solve_DIRK2('fbruss_1D', 'Jbruss_1D', tout, Y0, B, tol, hmin, hmax);
+
+% get "true" solution
+fprintf('\nComputing "true" solution with ode15s\n')
+opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
+              'InitialStep',hmin/10, 'MaxStep',hmax);
+[t,Ytrue] = ode15s('fbruss_1D', tout, Y0, opts);
+
+% compute error
 err_max = 0;
 err_rms = 0;
-[t,Y,ns] = solve_DIRK2('fbruss_1D', 'Jbruss_1D', Pdata, tout, Y0, B, tol, hmin, hmax);
-%for j=1:2*N
-%   diff = (Y(j,end) - Ytrue(j))/Ytrue(j);
-%   err_max = max([err_max, abs(diff)]);
-%   err_rms = err_rms + diff^2;
-%end
-%err_rms = sqrt(err_rms/(2*N));
-fprintf('Accuracy Test Results:\n')
-%fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
+for j=1:length(Y0)
+   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
+   err_max = max([err_max, abs(diff)]);
+   err_rms = err_rms + diff^2;
+end
+err_rms = sqrt(err_rms/length(Y0));
+fprintf('\nAccuracy/Work Results:\n')
+fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
 
 

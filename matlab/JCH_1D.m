@@ -1,5 +1,5 @@
-function J = JCH_1D(t, y, Pdata)
-% usage: J = JCH_1D(t, y, Pdata)
+function J = JCH_1D(t, y)
+% usage: J = JCH_1D(t, y)
 %
 %    J = -(c^2 \partial_{xxxx}(*) + (1 - 3y^2) \partial_{xx}(*))
 %      u_x = 0     at x=0,x=1
@@ -12,6 +12,7 @@ function J = JCH_1D(t, y, Pdata)
 % All Rights Reserved
 
 % extract model parameters, mesh size; set shortcut constants
+global Pdata;
 c = Pdata.c;
 dx = Pdata.dx;
 n = Pdata.n;

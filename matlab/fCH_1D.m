@@ -1,5 +1,5 @@
-function dy = fCH_1D(t, y, Pdata)
-% usage: dy = fCH_1D(t, y, Pdata)
+function dy = fCH_1D(t, y)
+% usage: dy = fCH_1D(t, y)
 %
 %   dy = -\partial_xx (c^2 \partial_xx y - y(y^2 - 1)), on [0,1]
 %      u_x = 0     at x=0,x=1
@@ -12,6 +12,7 @@ function dy = fCH_1D(t, y, Pdata)
 % All Rights Reserved
 
 % extract model parameters, mesh size; set shortcut constants
+global Pdata;
 c = Pdata.c;
 dx = Pdata.dx;
 n = Pdata.n;

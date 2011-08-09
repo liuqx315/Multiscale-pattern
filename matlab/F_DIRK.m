@@ -28,6 +28,6 @@ t = Fdata.t + Fdata.h*c(st);
 
 % form the DIRK residual
 %    F = z - rhs - h*(a(stage,stage)*fstage)
-F = z - Fdata.rhs - h*A(st,st)*feval(Fdata.fname,t,z,Fdata.Pdata);
+F = z - Fdata.rhs - h*A(st,st)*feval(Fdata.fname, t, z);
 
 % end of function

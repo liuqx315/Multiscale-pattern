@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, Pdata, tvals, Y0, B, tol, hmin, hmax)
-% usage: [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, Pdata, tvals, Y0, B, tol, hmin, hmax)
+function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, tol, hmin, hmax)
+% usage: [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, tol, hmin, hmax)
 %
 % Adaptive time step DIRK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -7,7 +7,6 @@ function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, Pdata, tvals, Y0, B, tol, hmi
 %
 % Inputs:  fcn = function name for ODE right-hand side, F(t,Y)
 %          Jfcn = function name for Jacobian of ODE right-hand side, J(t,Y)
-%          Pdata = problem data passed to fcn and Jfcn for evaluation
 %          tvals = [t0, t1, t2, ..., tN]
 %          Y0 = initial values
 %          B = Butcher matrix for IRK coefficients, of the form
@@ -19,7 +18,7 @@ function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, Pdata, tvals, Y0, B, tol, hmi
 %          tol = desired time accuracy tolerance 
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
-%          nsteps = number of internal time steps taken
+%          nsteps = number of internal time steps taken (total stage steps)
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
@@ -63,7 +62,6 @@ t = tvals(1);
 Ynew = Y0;
 
 % create Fdata structure
-Fdata.Pdata = Pdata;
 Fdata.fname = fcn;
 Fdata.Jname = Jfcn;
 Fdata.B = B;
@@ -116,6 +114,7 @@ for tstep = 2:length(tvals)
 	 Fdata.t = t;
 	 [Ynew,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
 	     newt_tol, newt_maxit, newt_alpha);
+	 nsteps = nsteps + 1;
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
@@ -138,7 +137,6 @@ for tstep = 2:length(tvals)
 
 	 % update time, work counter
 	 t = t + h;
-	 nsteps = nsteps + 1;
    
 	 % estimate error and update time step, assuming that method order
 	 % equals number of stages-1 (this should be an input argument)
@@ -152,7 +150,6 @@ for tstep = 2:length(tvals)
 	 
 	 % reset solution guess, update work counter, reduce time step
 	 Ynew = Y0;
-	 nsteps = nsteps + 1;
 	 h = h*dt_reduce;
       
       end

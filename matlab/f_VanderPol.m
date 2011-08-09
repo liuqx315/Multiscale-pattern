@@ -1,5 +1,5 @@
-function dy = f_VanderPol(t, y, Pdata)
-% usage: dy = f_VanderPol(t, y, Pdata)
+function dy = f_VanderPol(t, y)
+% usage: dy = f_VanderPol(t, y)
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -8,6 +8,7 @@ function dy = f_VanderPol(t, y, Pdata)
 % All Rights Reserved
 
 % model parameters
+global Pdata;
 ep = Pdata.ep;
 
 % extract variables

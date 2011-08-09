@@ -38,7 +38,7 @@ z = reshape(z,nvar,s);
 J = zeros(nvar,nvar,s);
 for is=1:s
    t = Fdata.t + Fdata.h*c(is);
-   J(:,:,is) = feval(Fdata.Jname, t, z(:,is), Fdata.Pdata);
+   J(:,:,is) = feval(Fdata.Jname, t, z(:,is));
 end
 
 % form the IRK Jacobian

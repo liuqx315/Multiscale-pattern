@@ -7,7 +7,6 @@
 % All Rights Reserved
 
 clear
-%maxNumCompThreads(1);
 
 % set the total integration time
 Tf = 10;
@@ -21,19 +20,18 @@ hmax = 1.0;
 tol = 1e-6;
 
 % get the DIRK Butcher table
-% mname = 'ARK3(2)4L[2]SA-ESDIRK';
+%mname = 'ARK3(2)4L[2]SA-ESDIRK';
 mname = 'ARK4(3)6L[2]SA-ESDIRK';
 B = butcher(mname);
 
 
-printf('\nRunning tests with integrator: ')
-disp(mname)
-disp('   ')
+fprintf('\nRunning tests with integrator: %s  (tol = %g)\n',mname,tol)
 
 %%%%%% First set of tests -- accuracy %%%%%%%
 
 %%%%%%%%%%%%%%%%
 % Test 1: initially very fast, then slower evolution
+global Pdata;
 Pdata.a = 1.2; 
 Pdata.b = 2.5; 
 Pdata.ep = 1e-5;
@@ -42,18 +40,24 @@ v0 = 1.1;
 w0 = 2.8;
 Y0 = [u0; v0; w0];
 
-% integrate using student's solver, and compare with "true" solution
-Ytrue = load('Ytrue_test1');
+% integrate using adaptive solver
+[t,Y,ns] = solve_DIRK2('fbruss', 'Jbruss', tout, Y0, B, tol, hmin, hmax);
+
+% get "true" solution
+opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
+              'InitialStep',hmin/10, 'MaxStep',hmax);
+[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+
+% compute error
 err_max = 0;
 err_rms = 0;
-[t,Y,ns] = solve_DIRK2('fbruss1', 'Jbruss1', Pdata, tout, Y0, B, tol, hmin, hmax);
-for j=1:3
-   diff = (Y(j,end) - Ytrue(j))/Ytrue(j);
+for j=1:length(Y0)
+   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
    err_max = max([err_max, abs(diff)]);
    err_rms = err_rms + diff^2;
 end
-err_rms = sqrt(err_rms/3);
-fprintf('Accuracy Test 1 Results:\n')
+err_rms = sqrt(err_rms/length(Y0));
+fprintf('\nAccuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
 
@@ -68,18 +72,24 @@ v0 = 3.1;
 w0 = 3;
 Y0 = [u0; v0; w0];
 
-% integrate using student's solver, and compare with "true" solution
-Ytrue = load('Ytrue_test2');
+% integrate using adaptive solver
+[t,Y,ns] = solve_DIRK2('fbruss', 'Jbruss', tout, Y0, B, tol, hmin, hmax);
+
+% get "true" solution
+opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
+              'InitialStep',hmin/10, 'MaxStep',hmax);
+[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+
+% compute error
 err_max = 0;
 err_rms = 0;
-[t,Y,ns] = solve_DIRK2('fbruss2', 'Jbruss2', tout, Y0, B, tol, hmin, hmax);
-for j=1:3
-   diff = (Y(j,end) - Ytrue(j))/Ytrue(j);
+for j=1:length(Y0)
+   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
    err_max = max([err_max, abs(diff)]);
    err_rms = err_rms + diff^2;
 end
-err_rms = sqrt(err_rms/3);
-fprintf('Accuracy Test 2 Results:\n')
+err_rms = sqrt(err_rms/length(Y0));
+fprintf('\nAccuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
 
@@ -94,18 +104,24 @@ v0 = 3;
 w0 = 3.5;
 Y0 = [u0; v0; w0];
 
-% integrate using student's solver, and compare with "true" solution
-Ytrue = load('Ytrue_test3');
+% integrate using adaptive solver
+[t,Y,ns] = solve_DIRK2('fbruss', 'Jbruss', tout, Y0, B, tol, hmin, hmax);
+
+% get "true" solution
+opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
+              'InitialStep',hmin/10, 'MaxStep',hmax);
+[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+
+% compute error
 err_max = 0;
 err_rms = 0;
-[t,Y,ns] = solve_DIRK2('fbruss3', 'Jbruss3', tout, Y0, B, tol, hmin, hmax);
-for j=1:3
-   diff = (Y(j,end) - Ytrue(j))/Ytrue(j);
+for j=1:length(Y0)
+   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
    err_max = max([err_max, abs(diff)]);
    err_rms = err_rms + diff^2;
 end
-err_rms = sqrt(err_rms/3);
-fprintf('Accuracy Test 3 Results:\n')
+err_rms = sqrt(err_rms/length(Y0));
+fprintf('\nAccuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
 fprintf('\n');

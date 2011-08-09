@@ -12,12 +12,12 @@ function B = butcher(method_name)
 % All Rights Reserved
 
 % set the butcher table
-if (method_name == 'ARK3(2)4L[2]SA-ERK')
+if (strcmp(method_name,'ARK3(2)4L[2]SA-ERK'))
 
    c = [0; 1767732205903/2027836641118; 3/5; 1];
-   b = [1471266399579/7840856788654, -4482444167858/7529755066697, 
+   b = [1471266399579/7840856788654, -4482444167858/7529755066697, ...
       11266239266428/11593286722821, 1767732205903/4055673282236];
-   b2 = [2756255671327/12835298489170, -10771552573575/22201958757719,
+   b2 = [2756255671327/12835298489170, -10771552573575/22201958757719, ...
       9247589265047/10645013368117, 2193209047091/5459859503100];
    A = [0, 0, 0, 0;
       1767732205903/2027836641118, 0, 0, 0;
@@ -26,12 +26,12 @@ if (method_name == 'ARK3(2)4L[2]SA-ERK')
 	  10755448449292/10357097424841, 0];
    B = [c, A; 0, b; 0, b2];
 
-elseif (method_name == 'ARK3(2)4L[2]SA-ESDIRK')
+elseif (strcmp(method_name,'ARK3(2)4L[2]SA-ESDIRK'))
 
    c = [0; 1767732205903/2027836641118; 3/5; 1];
-   b = [1471266399579/7840856788654, -4482444167858/7529755066697, 
+   b = [1471266399579/7840856788654, -4482444167858/7529755066697, ...
       11266239266428/11593286722821, 1767732205903/4055673282236];
-   b2 = [2756255671327/12835298489170, -10771552573575/22201958757719, 
+   b2 = [2756255671327/12835298489170, -10771552573575/22201958757719,  ...
       9247589265047/10645013368117, 2193209047091/5459859503100];
    gamma = 1767732205903/4055673282236;
    A = [0, 0, 0, 0;
@@ -42,7 +42,7 @@ elseif (method_name == 'ARK3(2)4L[2]SA-ESDIRK')
 
    B = [c, A; 0, b; 0, b2];
 
-elseif (method_name == 'ARK4(3)6L[2]SA-ERK')
+elseif (strcmp(method_name,'ARK4(3)6L[2]SA-ERK'))
 
    c = [0; 1/2; 83/250; 31/50; 17/20; 1];
    b = [82889/524892, 0, 15625/83664, 69875/102672, -2260/8211, 1/4];
@@ -61,7 +61,7 @@ elseif (method_name == 'ARK4(3)6L[2]SA-ERK')
    
    B = [c, A; 0, b; 0, b2];
    
-elseif (method_name == 'ARK4(3)6L[2]SA-ESDIRK')
+elseif (strcmp(method_name,'ARK4(3)6L[2]SA-ESDIRK'))
 
    c = [0; 1/2; 83/250; 31/50; 17/20; 1];
    b = [82889/524892, 0, 15625/83664, 69875/102672, -2260/8211, 1/4];
@@ -77,7 +77,7 @@ elseif (method_name == 'ARK4(3)6L[2]SA-ESDIRK')
    
    B = [c, A; 0, b; 0, b2];
    
-elseif (method_name == 'Ascher(2,3,3)-ERK')
+elseif (strcmp(method_name,'Ascher(2,3,3)-ERK'))
 
    gamma = (3 + sqrt(3))/6;
    c = [0; gamma; 1-gamma];
@@ -88,7 +88,7 @@ elseif (method_name == 'Ascher(2,3,3)-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(2,3,3)-SDIRK')
+elseif (strcmp(method_name,'Ascher(2,3,3)-SDIRK'))
 
    gamma = (3 + sqrt(3))/6;
    c = [gamma; 1-gamma];
@@ -98,7 +98,7 @@ elseif (method_name == 'Ascher(2,3,3)-SDIRK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(2,3,2)-ERK')
+elseif (strcmp(method_name,'Ascher(2,3,2)-ERK'))
 
    gamma = (2-sqrt(2))/2;
    delta = -2*sqrt(2)/3;
@@ -110,7 +110,7 @@ elseif (method_name == 'Ascher(2,3,2)-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(2,3,2)-SDIRK')
+elseif (strcmp(method_name,'Ascher(2,3,2)-SDIRK'))
 
    gamma = (2-sqrt(2))/2;
    c = [gamma; 1];
@@ -120,7 +120,7 @@ elseif (method_name == 'Ascher(2,3,2)-SDIRK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(2,2,2)-ERK')
+elseif (strcmp(method_name,'Ascher(2,2,2)-ERK'))
 
    gamma = (2-sqrt(2))/2;
    delta = 1-1/(2*gamma);
@@ -132,7 +132,7 @@ elseif (method_name == 'Ascher(2,2,2)-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(2,2,2)-SDIRK')
+elseif (strcmp(method_name,'Ascher(2,2,2)-SDIRK'))
 
    gamma = (2-sqrt(2))/2;
    c = [gamma; 1];
@@ -142,7 +142,7 @@ elseif (method_name == 'Ascher(2,2,2)-SDIRK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(3,4,3)-ERK')
+elseif (strcmp(method_name,'Ascher(3,4,3)-ERK'))
 
    gamma = 0.4358665215;
    c = [0; gamma; (1+gamma)/2; 1];
@@ -154,7 +154,7 @@ elseif (method_name == 'Ascher(3,4,3)-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(3,4,3)-SDIRK')
+elseif (strcmp(method_name,'Ascher(3,4,3)-SDIRK'))
 
    gamma = 0.4358665215;
    c = [gamma; (1+gamma)/2; 1];
@@ -165,7 +165,7 @@ elseif (method_name == 'Ascher(3,4,3)-SDIRK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(4,4,3)-ERK')
+elseif (strcmp(method_name,'Ascher(4,4,3)-ERK'))
 
    c = [0; 1/2; 2/3; 1/2; 1];
    b = [1/4, 7/4, 3/4, -7/4, 0];
@@ -177,7 +177,7 @@ elseif (method_name == 'Ascher(4,4,3)-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Ascher(4,4,3)-SDIRK')
+elseif (strcmp(method_name,'Ascher(4,4,3)-SDIRK'))
 
    c = [1/2; 2/3; 1/2; 1];
    b = [3/2, -3/2, 1/2, 1/2];
@@ -188,7 +188,7 @@ elseif (method_name == 'Ascher(4,4,3)-SDIRK')
      
    B = [c, A; 0, b];
    
-elseif (method_name == 'Cooper4-ERK')
+elseif (strcmp(method_name,'Cooper4-ERK'))
 
    c = [0; 2/3; 2/3; 1];
    b = [1/4, 1/4, 1/2, 0];
@@ -199,7 +199,7 @@ elseif (method_name == 'Cooper4-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Cooper4-ESDIRK')
+elseif (strcmp(method_name,'Cooper4-ESDIRK'))
 
    c = [0; 2/3; 2/3; 1];
    b = [1/4, 1/4, 1/2, 0];
@@ -210,7 +210,7 @@ elseif (method_name == 'Cooper4-ESDIRK')
      
    B = [c, A; 0, b];
    
-elseif (method_name == 'Cooper6-ERK')
+elseif (strcmp(method_name,'Cooper6-ERK'))
 
    c = [0; 1/2; 1/2; 1/2; 1; 1];
    b = [1/6, 0, 0, 2/3, 1/6, 0];
@@ -223,7 +223,7 @@ elseif (method_name == 'Cooper6-ERK')
    
    B = [c, A; 0, b];
    
-elseif (method_name == 'Cooper6-ESDIRK')
+elseif (strcmp(method_name,'Cooper6-ESDIRK'))
 
    beta = 1.0685790213;
    c = [0; 1/2; 1/2; 1/2; 1; 1];
@@ -236,6 +236,11 @@ elseif (method_name == 'Cooper6-ESDIRK')
 	1/6, 0, 0, 2/3, 1/6, 0];
       
    B = [c, A; 0, b];
+
+else
+   
+   B = 0;
+   fprintf('Butcher error, string %s not defined\n',method_name);
    
 end
 
