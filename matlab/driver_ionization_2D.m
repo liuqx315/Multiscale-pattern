@@ -44,7 +44,7 @@ Pdata.N = N;
 fprintf('\nRunning 1D brusselator test with integrator: %s  (tol = %g)\n',mname,tol)
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('fbruss_1D', 'Jbruss_1D', tout, Y0, B, tol, hmin, hmax);
+[t,Y,ns] = solve_DIRK2('f_bruss_1D', 'J_bruss_1D', tout, Y0, B, tol, hmin, hmax);
 
 % get "true" solution
 fprintf('\nComputing "true" solution with ode15s\n')

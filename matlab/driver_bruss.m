@@ -41,7 +41,7 @@ w0 = 2.8;
 Y0 = [u0; v0; w0];
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('fbruss', 'Jbruss', tout, Y0, B, tol, hmin, hmax);
+[t,Y,ns] = solve_DIRK2('f_bruss', 'J_bruss', tout, Y0, B, tol, hmin, hmax);
 
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
@@ -73,7 +73,7 @@ w0 = 3;
 Y0 = [u0; v0; w0];
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('fbruss', 'Jbruss', tout, Y0, B, tol, hmin, hmax);
+[t,Y,ns] = solve_DIRK2('f_bruss', 'J_bruss', tout, Y0, B, tol, hmin, hmax);
 
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
@@ -105,7 +105,7 @@ w0 = 3.5;
 Y0 = [u0; v0; w0];
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('fbruss', 'Jbruss', tout, Y0, B, tol, hmin, hmax);
+[t,Y,ns] = solve_DIRK2('f_bruss', 'J_bruss', tout, Y0, B, tol, hmin, hmax);
 
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...

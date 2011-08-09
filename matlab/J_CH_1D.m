@@ -20,24 +20,24 @@ dx2 = dx*dx;
 c2 = c*c/dx2/dx2;
 
 % initialize Jacobian
-J = sparse([],[],[],n,n,5*m);
+J = sparse([],[],[],n,n,5*n);
 
 % fourth-order terms
-%   - c2*y(i+2)
-%   + 4*c2*y(i+1) + y(i+1)^3/dx2 
-%   - 6*c2*y(i) - 2*y(i)^3/dx2
-%   + 4*c2*y(i-1) + y(i-1)^3/dx2
-%   - c2*y(i-2)
+%   - c2*y(j+2)
+%   + 4*c2*y(j+1) + y(j+1)^3/dx2 
+%   - 6*c2*y(j) - 2*y(j)^3/dx2
+%   + 4*c2*y(j-1) + y(j-1)^3/dx2
+%   - c2*y(j-2)
 for j=3:n-2
    J(j,j-2) = J(j,j-2) - c2;
-   J(j,j-1) = J(j,j-1) + 4*c2 + 3/dx2*y(i-1)^2;
-   J(j,j)   = J(j,j)   - 6*c2 - 6/dx2*y(i)^2;
-   J(j,j+1) = J(j,j+1) + 4*c2 + 3/dx2*y(i+1)^2;
+   J(j,j-1) = J(j,j-1) + 4*c2 + 3/dx2*y(j-1)^2;
+   J(j,j)   = J(j,j)   - 6*c2 - 6/dx2*y(j)^2;
+   J(j,j+1) = J(j,j+1) + 4*c2 + 3/dx2*y(j+1)^2;
    J(j,j+2) = J(j,j+2) - c2;
 end
 
 % anti-diffusion terms
-%     - [y(i+1) - 2*y(i) + y(i-1)]/dx2
+%     - [y(j+1) - 2*y(j) + y(j-1)]/dx2
 for j=3:n-2
    J(j,j-1) = J(j,j-1) - 1/dx2;
    J(j,j)   = J(j,j)   + 2/dx2;

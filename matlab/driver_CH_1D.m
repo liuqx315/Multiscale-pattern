@@ -33,9 +33,6 @@ mname = 'ARK3(2)4L[2]SA-ESDIRK';
 %mname = 'ARK4(3)6L[2]SA-ESDIRK';
 B = butcher(mname);
 
-% store the Butcher table in a single matrix
-B = [c, A; 0, b'; 0, b2'];
-
 % initial conditions
 %      u(x,0) = u_0 + r,  r is a uniform random number in [-0.05,0.05].
 Y0 = 0.5 + 0.01*(rand(N,1)-0.5);
@@ -58,7 +55,7 @@ Pdata.n = N;
 fprintf('\nRunning 1D Cahn-Hilliard test with integrator: %s  (tol = %g)\n',mname,tol)
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('fCH_1D', 'JCH_1D', tout, Y0, B, tol, hmin, hmax);
+[t,Y,ns] = solve_DIRK2('f_CH_1D', 'J_CH_1D', tout, Y0, B, tol, hmin, hmax);
 
 % get "true" solution
 fprintf('\nComputing "true" solution with ode15s\n')
