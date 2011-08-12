@@ -198,7 +198,7 @@ for tstep = 2:length(tvals)
 	 % be an input argument) 
 	 if (embedded) 
 	    err = norm(Y2-Ynew,inf) + sqrt(eps)*tol;
-	    h = max([h * (dt_safety*tol/err)^(1/(s-1)), hmin]);
+	    h = max([h * (dt_safety*tol/err)^(1/(si-1)), hmin]);
 	 else
 	    h = hmin;
 	 end

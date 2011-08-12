@@ -26,9 +26,9 @@ bi = (Bi(si+1,2:si+1))';
 
 % check to see if we have coefficients for embedding
 if (Brows > Bcols)
-   b2i = (Bi(si+2,2:si+1))';
+   bi2 = (Bi(si+2,2:si+1))';
 else
-   b2i = bi;
+   bi2 = bi;
 end
 
 
@@ -41,9 +41,9 @@ be = (Be(se+1,2:se+1))';
 
 % check to see if we have coefficients for embedding
 if (Brows > Bcols)
-   b2e = (Be(se+2,2:se+1))';
+   be2 = (Be(se+2,2:se+1))';
 else
-   b2e = be;
+   be2 = be;
 end
 
 % ensure that methods have same number of internal stages
