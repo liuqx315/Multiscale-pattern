@@ -118,7 +118,7 @@ for tstep = 2:length(tvals)
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
-	    fprintf('solve_DIRK2 warning: stage failure, cutting timestep');
+	    fprintf('solve_DIRK2 warning: stage failure, cutting timestep\n');
 	    st_success = 1;
 	    break;
 	 end
