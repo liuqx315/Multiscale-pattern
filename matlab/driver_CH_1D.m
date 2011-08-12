@@ -66,7 +66,7 @@ fprintf('\nRunning 1D Cahn-Hilliard test with integrator: %s  (tol = %g)\n',mnam
 fprintf('\nComputing "true" solution with ode15s\n')
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fCH_1D', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_CH_1D', tout, Y0, opts);
 
 % compute error
 err_max = 0;

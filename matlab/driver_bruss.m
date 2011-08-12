@@ -50,7 +50,7 @@ Y0 = [u0; v0; w0];
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_bruss', tout, Y0, opts);
 
 % compute error
 err_max = 0;
@@ -82,7 +82,7 @@ Y0 = [u0; v0; w0];
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_bruss', tout, Y0, opts);
 
 % compute error
 err_max = 0;
@@ -114,7 +114,7 @@ Y0 = [u0; v0; w0];
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_bruss', tout, Y0, opts);
 
 % compute error
 err_max = 0;
@@ -153,7 +153,7 @@ Y0 = [u0; v0; w0];
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_bruss', tout, Y0, opts);
 
 % compute error
 err_max = 0;
@@ -186,7 +186,7 @@ Y0 = [u0; v0; w0];
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_bruss', tout, Y0, opts);
 
 % compute error
 err_max = 0;
@@ -219,7 +219,7 @@ Y0 = [u0; v0; w0];
 % get "true" solution
 opts = odeset('RelTol',1e-10, 'AbsTol',1e-14*ones(size(Y0)),...
               'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('fbruss', tout, Y0, opts);
+[t,Ytrue] = ode15s('f_bruss', tout, Y0, opts);
 
 % compute error
 err_max = 0;
