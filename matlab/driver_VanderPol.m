@@ -26,10 +26,15 @@ hmin = 1e-6;
 hmax = 0.1;
 tol = 1e-6;
 
-% get the DIRK Butcher table
+% get the DIRK Butcher tables
 % mname = 'ARK3(2)4L[2]SA-ESDIRK';
 mname = 'ARK4(3)6L[2]SA-ESDIRK';
 B = butcher(mname);
+
+% mname2 = 'ARK3(2)4L[2]SA-ERK';
+mname2 = 'ARK4(3)6L[2]SA-ERK';
+B2 = butcher(mname2);
+
 
 % set the initial conditions
 u0 = -2;
@@ -63,7 +68,28 @@ end
 err_rms = sqrt(err_rms/length(Y0));
 fprintf('\nAccuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
-fprintf('   work = %i\n',ns);
+fprintf('   work = %i\n\n',ns);
+
+
+%%%%%%%%%%%%%%%%%%%%
+fprintf('\nRunning test with ARK pair: %s / %s  (tol = %g)\n',mname,mname2,tol)
+
+% integrate using ARK solver
+[t,Y,ns] = solve_ARK('fi_VanderPol', 'fe_VanderPol', 'Ji_VanderPol', ...
+    'EStab_VanderPol', tout, Y0, B, B2, tol, hmin, hmax);
+
+% compute error
+err_max = 0;
+err_rms = 0;
+for j=1:length(Y0)
+   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
+   err_max = max([err_max, abs(diff)]);
+   err_rms = err_rms + diff^2;
+end
+err_rms = sqrt(err_rms/length(Y0));
+fprintf('\nAccuracy/Work Results:\n')
+fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
+fprintf('   work = %i\n\n',ns);
 
 
 % end of script
