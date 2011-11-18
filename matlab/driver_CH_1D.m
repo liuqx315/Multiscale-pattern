@@ -92,7 +92,7 @@ fprintf('   work = %i\n',length(t));
 fprintf('\nRunning with SDIRK integrator: %s\n',mname)
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('f_CH_1D', 'J_CH_1D', tout, Y0, B, rtol, atol, hmin, hmax);
+[t,Y,ns] = solve_DIRK('f_CH_1D', 'J_CH_1D', tout, Y0, B, rtol, atol, hmin, hmax);
 
 % compute error
 err_max = 0;

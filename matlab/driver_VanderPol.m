@@ -102,7 +102,7 @@ fprintf('   work = %i\n',length(t));
 fprintf('\nRunning with SDIRK integrator: %s\n',mname)
 
 % integrate using adaptive solver
-[t,Y,ns] = solve_DIRK2('f_VanderPol', 'J_VanderPol', tout, Y0, B, rtol, ...
+[t,Y,ns] = solve_DIRK('f_VanderPol', 'J_VanderPol', tout, Y0, B, rtol, ...
     atol, hmin, hmax);
 
 % compute error

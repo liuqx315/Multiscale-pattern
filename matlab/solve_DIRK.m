@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
-% usage: [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
+function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
+% usage: [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
 %
 % Adaptive time step DIRK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -125,7 +125,7 @@ for tstep = 2:length(tvals)
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
-	    fprintf('solve_DIRK2 warning: stage failure, cutting timestep\n');
+	    fprintf('solve_DIRK warning: stage failure, cutting timestep\n');
 	    st_success = 1;
 	    break;
 	 end
