@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, tol, hmin, hmax)
-% usage: [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, tol, hmin, hmax)
+function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
+% usage: [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
 %
 % Adaptive time step DIRK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -15,14 +15,18 @@ function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, tol, hmin, hmax
 %                      0 b2 ]
 %              The b2 row is optional, and provides coefficients for an
 %              embedded method.
-%          tol = desired time accuracy tolerance 
+%          rtol = desired time accuracy relative tolerance 
+%          atol = desired time accuracy absolute tolerance 
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
-%          nsteps = number of internal time steps taken (total stage steps)
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
 %              y(t*) is a column vector of length m.
+%          nsteps = number of internal time steps taken (total stage steps)
+%
+% Note: to run in fixed-step mode, just call the solver using hmin=hmax as
+% the desired time step size.
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -30,7 +34,7 @@ function [tvals,Y,nsteps] = solve_DIRK2(fcn, Jfcn, tvals, Y0, B, tol, hmin, hmax
 % August 2011
 % All Rights Reserved
 
-% get number of stages for IRK method
+% get number of stages for DIRK method
 [Brows, Bcols] = size(B);
 s = Bcols - 1;
 if (Brows > Bcols) 
@@ -52,9 +56,10 @@ Y(:,1) = Y0;
 
 % set the solver parameters
 newt_maxit = 20;
-newt_tol   = 1e-10;
+%newt_tol   = 1e-10;
+%newt_tol   = 1e-12;
+newt_tol   = 1e-11;
 newt_alpha = 1;
-dt_safety  = 0.1;
 dt_reduce  = 0.1;
 
 % store temporary states
@@ -80,7 +85,9 @@ for tstep = 2:length(tvals)
    while (t < tvals(tstep))
       
       % limit internal time step if needed
-      h = min([h, hmax, tvals(tstep)-t]);
+      h = max([h, hmin]);            % enforce minimum time step size
+      h = min([h, hmax]);            % maximum time step size
+      h = min([h, tvals(tstep)-t]);  % stop at output time
       Fdata.h = h;
       Fdata.yold = Y0;
 
@@ -141,8 +148,7 @@ for tstep = 2:length(tvals)
 	 % estimate error and update time step, assuming that method order
 	 % equals number of stages-1 (this should be an input argument)
 	 if (embedded) 
-	    err = norm(Y2-Ynew,inf) + sqrt(eps)*tol;
-	    h = max([h * (dt_safety*tol/err)^(1/(s-1)), hmin]);
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, s);
 	 end
 	 
       % if any stages failed, reduce step size and retry

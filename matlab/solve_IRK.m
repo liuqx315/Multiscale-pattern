@@ -45,7 +45,8 @@ Y(:,1) = Y0;
 
 % set the solver parameters
 newt_maxit = 20;
-newt_tol   = 1e-10;
+%newt_tol   = 1e-10;
+newt_tol   = 1e-12;
 newt_alpha = 1;
 
 % store temporary states

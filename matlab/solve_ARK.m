@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, Be, tol, hmin, hmax)
-% usage: [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, Be, tol, hmin, hmax)
+function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, Be, rtol, atol, hmin, hmax)
+% usage: [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, Be, rtol, atol, hmin, hmax)
 %
 % Adaptive time step additive RK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -23,7 +23,8 @@ function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, 
 %              The b2 row is optional in both Bi and Be, but if not provided
 %              the method will default to taking fixed step sizes, at
 %              min(hmin, hstab), where hstab is the result of EStabFn(t,Y).
-%          tol = desired time accuracy tolerance 
+%          rtol = desired time accuracy relative tolerance 
+%          atol = desired time accuracy absolute tolerance 
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
 %          nsteps = number of internal time steps taken (total stage steps)
@@ -31,6 +32,9 @@ function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, 
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
 %              y(t*) is a column vector of length m.
+%
+% Note: to run in fixed-step mode, just call the solver using hmin=hmax as
+% the desired time step size.
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -59,7 +63,7 @@ be = (Be(se+1,2:se+1))';
 Ae = Be(1:se,2:se+1);
 if ((Brows > Bcols2) && (embedded == 1))
    embedded = 1;
-   be2 = (Be(si+2,2:si+1))';
+   be2 = (Be(se+2,2:se+1))';
 else
    embedded = 0;
 end
@@ -68,9 +72,9 @@ end
 if (si == se-1)
    % if DIRK method not written with initial explicit stage, pad DIRK with a
    % zero first stage to match ERK
-   Ai = [0, 0*bi; 0*ci; Ai];
+   Ai = [0, 0*bi'; 0*ci, Ai];
    ci = [0; ci];
-   bi = [0, bi];
+   bi = [0, bi'];
    si = si + 1;
    if (embedded)
       bi2 = [0, bi2];
@@ -95,9 +99,14 @@ m = length(Y0);
 Y = zeros(m,N);
 Y(:,1) = Y0;
 
+% initialize diagnostics
+h_e = 0;
+h_i = 0;
+
 % set the solver parameters
 newt_maxit = 20;
-newt_tol   = 1e-10;
+%newt_tol   = 1e-10;
+newt_tol   = 1e-12;
 newt_alpha = 1;
 dt_safety  = 0.1;
 dt_reduce  = 0.1;
@@ -130,10 +139,13 @@ for tstep = 2:length(tvals)
    % loop over internal time steps to get to desired output time
    while (t < tvals(tstep))
       
-      % limit internal time step if needed
-      h = min([h, hmax, tvals(tstep)-t]);
+      % bound internal time step using inputs
+      h = max([h, hmin]);            % enforce minimum time step size
+      h = min([h, hmax]);            % maximum time step size
+      h = min([h, tvals(tstep)-t]);  % stop at output time
       Fdata.h = h;
       Fdata.yold = Y0;
+
 
       % initialize data storage for multiple stages
       z = zeros(m,si);
@@ -194,17 +206,21 @@ for tstep = 2:length(tvals)
 	 t = t + h;
    
 	 % for embedded methods, estimate error and update time step,
-	 % assuming that method order equals number of stages-1 (this should
-	 % be an input argument) 
+	 % assuming that method local truncation error order equals number of stages
 	 if (embedded) 
-	    err = norm(Y2-Ynew,inf) + sqrt(eps)*tol;
-	    h = max([h * (dt_safety*tol/err)^(1/(si-1)), hmin]);
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, si);
 	 else
 	    h = hmin;
 	 end
 	 
-	 % limit time step by explicit stability condition
+	 % limit time step by explicit method stability condition
 	 hstab = dt_stable * feval(EStabFn, t, Ynew);
+	 if (h < hstab)
+	    h_i = h_i + si;
+	 else
+	    h_e = h_e + si;
+	    fprintf('   h limited for explicit stability: h_i = %g, h_e = %g\n',h,hstab);
+	 end
 	 h = min([h, hstab]);
 	 
       % if any stages failed, reduce step size and retry
@@ -222,6 +238,10 @@ for tstep = 2:length(tvals)
    Y(:,tstep) = Ynew;
    
 end
+
+
+% output diagnostics
+fprintf('solve_ARK: took %i explicit and %i implicit steps\n',h_e,h_i);
 
 
 % end function
