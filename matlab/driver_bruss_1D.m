@@ -82,25 +82,25 @@ fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',length(t));
 
 
-%%%%%%%%%%%%%%%%%%%%
-fprintf('\nRunning ode45 to check accuracy/efficiency\n')
-
-% see number of steps required by ode15s
-opts = odeset('RelTol',rtol,'AbsTol',atol,'InitialStep',hmin,'MaxStep',hmax);
-[t,Y] = ode45('f_bruss_1D', [0,Tf], Y0, opts);
-
-% compute error
-err_max = 0;
-err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
-fprintf('Accuracy/Work Results:\n')
-fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
-fprintf('   work = %i\n',length(t));
+% $$$ %%%%%%%%%%%%%%%%%%%%
+% $$$ fprintf('\nRunning ode45 to check accuracy/efficiency\n')
+% $$$ 
+% $$$ % see number of steps required by ode15s
+% $$$ opts = odeset('RelTol',rtol,'AbsTol',atol,'InitialStep',hmin,'MaxStep',hmax);
+% $$$ [t,Y] = ode45('f_bruss_1D', [0,Tf], Y0, opts);
+% $$$ 
+% $$$ % compute error
+% $$$ err_max = 0;
+% $$$ err_rms = 0;
+% $$$ for j=1:length(Y0)
+% $$$    diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
+% $$$    err_max = max([err_max, abs(diff)]);
+% $$$    err_rms = err_rms + diff^2;
+% $$$ end
+% $$$ err_rms = sqrt(err_rms/length(Y0));
+% $$$ fprintf('Accuracy/Work Results:\n')
+% $$$ fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
+% $$$ fprintf('   work = %i\n',length(t));
 
 
 %%%%%%%%%%%%%%%%
