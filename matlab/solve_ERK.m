@@ -140,7 +140,7 @@ for tstep = 2:length(tvals)
 	 h_a = h_a + s;
       else
 	 h_s = h_s + s;
-	 fprintf('   h limited for explicit stability: h_i = %g, h_e = %g\n',h,hstab);
+	 %fprintf('   h limited for explicit stability: h_i = %g, h_e = %g\n',h,hstab);
       end
       h = min([h, hstab]);
 	 
@@ -153,7 +153,7 @@ end
 
 
 % output diagnostics
-fprintf('solve_ERK: took %i accuracy and %i stability steps\n',h_a,h_s);
+%fprintf('solve_ERK: took %i accuracy and %i stability steps\n',h_a,h_s);
 
 
 % end function
