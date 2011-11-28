@@ -50,7 +50,6 @@ function B = butcher(method_name)
 %    TRBDF2-ESDIRK (*)
 %    TRX2-ESDIRK (*)
 %    Billington-SDIRK (*)
-%    Cash(3,2,3)-SDIRK (*)
 %    Cash(5,2,4)-SDIRK (*)
 %    Cash(5,3,4)-SDIRK (*)
 %    Ismail(7,4,5)-ESDIRK (*)
@@ -462,17 +461,6 @@ elseif (strcmp(method_name,'Billington-SDIRK'))
    
    B = [c, A; 0, b; 0, b2];
 
-elseif (strcmp(method_name,'Cash(3,2,3)-SDIRK'))
-
-   A = [0.435866521508, 0, 0; ...
-       -0.7-0.435866521508, 0.435866521508, 0; ...
-        0.896869652944, 0.0182725272734, 0.435866521508];
-   b = [ 0.896869652944, 0.0182725272734, 0.435866521508];
-   b2 = [ 0.776691932910, 0.0297472791484, 0];
-   c = [ 0.435866521508; -0.7; 1];
-   
-   B = [c, A; 0, b; 0, b2];
-
 elseif (strcmp(method_name,'Cash(5,2,4)-SDIRK'))
 
    A = [0.435866521508, 0, 0, 0, 0; ...
@@ -752,7 +740,7 @@ elseif (strcmp(method_name,'LobattoIIIB-4-6-IRK'))
    A = [1/12, (-1-sqrt(5))/24, (-1+sqrt(5))/24, 0; ...
       1/12, (25+sqrt(5))/120, (25-13*sqrt(5))/120, 0; ...
       1/12, (25+13*sqrt(5))/120, (25-sqrt(5))/120, 0; ...
-      1/12, (11-sqrt(5))/120, (11+sqrt(5))/120, 0];
+      1/12, (11-sqrt(5))/24, (11+sqrt(5))/24, 0];
    b = [1/12, 5/12, 5/12, 1/12];
    c = [0; (5-sqrt(5))/10; (5+sqrt(5))/10; 1];
   
