@@ -1,0 +1,2163 @@
+
+Single-cell brusselator test 1 (rtol = 0.01, atol = 1e-14)
+ode15s:
+   work = 56,   maxerr = 1.77e-01,   rmserr = 4.70e-02
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 6.09e-03,   rmserr = 5.00e-04
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 112,   maxerr = 1.12e-03,   rmserr = 1.04e-04
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 118,   maxerr = 7.64e-04,   rmserr = 6.67e-05
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 4.24e-03,   rmserr = 3.24e-04
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 110,   maxerr = 9.61e-04,   rmserr = 9.99e-05
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 3.68e-04,   rmserr = 2.91e-05
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 113,   maxerr = 8.28e-05,   rmserr = 6.93e-06
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 6.01e-05,   rmserr = 4.89e-06
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 3.47e-04,   rmserr = 2.58e-05
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 112,   maxerr = 6.64e-05,   rmserr = 5.87e-06
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 107,   maxerr = 4.37e-06,   rmserr = 6.69e-07
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 115,   maxerr = 2.41e-06,   rmserr = 2.03e-07
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 1.37e-06,   rmserr = 1.44e-07
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 1.40e-05,   rmserr = 1.18e-06
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 113,   maxerr = 7.84e-06,   rmserr = 5.32e-07
+ARK3(2), I controller:
+solve_ARK: took 6 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 119,   maxerr = 3.77e-03,   rmserr = 7.60e-04
+ARK3(2), PI controller:
+solve_ARK: took 55 accuracy and 74 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 129,   maxerr = 3.14e-03,   rmserr = 7.16e-04
+ARK3(2), PID controller:
+solve_ARK: took 132 accuracy and 27 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 159,   maxerr = 3.44e-03,   rmserr = 6.09e-04
+ARK3(2), Gustafsson controller:
+solve_ARK: took 11 accuracy and 112 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 123,   maxerr = 3.44e-03,   rmserr = 7.31e-04
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 52 accuracy and 78 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 130,   maxerr = 2.56e-03,   rmserr = 6.55e-04
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 47 accuracy and 80 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 127,   maxerr = 3.44e-03,   rmserr = 7.09e-04
+ARK4(3), I controller:
+solve_ARK: took 8 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 121,   maxerr = 2.75e-05,   rmserr = 2.20e-06
+ARK4(3), PI controller:
+solve_ARK: took 142 accuracy and 11 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 153,   maxerr = 1.16e-05,   rmserr = 1.11e-06
+ARK4(3), PID controller:
+solve_ARK: took 153 accuracy and 11 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 164,   maxerr = 5.12e-06,   rmserr = 9.08e-07
+ARK4(3), Gustafsson controller:
+solve_ARK: took 6 accuracy and 112 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 118,   maxerr = 2.30e-05,   rmserr = 2.03e-06
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 202 accuracy and 14 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 216,   maxerr = 1.23e-05,   rmserr = 8.51e-07
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 188 accuracy and 14 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 202,   maxerr = 7.05e-06,   rmserr = 6.27e-07
+ARK5(4), I controller:
+solve_ARK: took 11 accuracy and 108 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 119,   maxerr = 1.86e-05,   rmserr = 2.97e-06
+ARK5(4), PI controller:
+solve_ARK: took 248 accuracy and 6 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 254,   maxerr = 2.35e-05,   rmserr = 1.37e-06
+ARK5(4), PID controller:
+solve_ARK: took 249 accuracy and 7 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 256,   maxerr = 7.11e-06,   rmserr = 5.14e-07
+ARK5(4), Gustafsson controller:
+solve_ARK: took 10 accuracy and 112 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 122,   maxerr = 2.96e-05,   rmserr = 3.30e-06
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 146 accuracy and 10 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 156,   maxerr = 1.37e-05,   rmserr = 2.09e-06
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 166 accuracy and 11 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 177,   maxerr = 1.37e-05,   rmserr = 2.21e-06
+
+
+---------------------------
+
+
+Single-cell brusselator test 2 (rtol = 0.01, atol = 1e-14)
+ode15s:
+   work = 74,   maxerr = 2.10e-01,   rmserr = 2.13e-02
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 1.13e-01,   rmserr = 9.15e-03
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 117,   maxerr = 6.70e-02,   rmserr = 6.65e-03
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 118,   maxerr = 8.32e-02,   rmserr = 8.03e-03
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 107,   maxerr = 1.16e-01,   rmserr = 9.33e-03
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 115,   maxerr = 1.14e-01,   rmserr = 9.26e-03
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 3.74e-03,   rmserr = 3.48e-04
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 3.08e-03,   rmserr = 2.73e-04
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 111,   maxerr = 3.74e-03,   rmserr = 3.48e-04
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 3.74e-03,   rmserr = 3.48e-04
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 116,   maxerr = 3.74e-03,   rmserr = 3.48e-04
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.32e-03,   rmserr = 8.35e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 112,   maxerr = 1.32e-03,   rmserr = 8.40e-05
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 119,   maxerr = 1.32e-03,   rmserr = 8.37e-05
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.32e-03,   rmserr = 8.38e-05
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 111,   maxerr = 1.32e-03,   rmserr = 8.38e-05
+ARK3(2), I controller:
+solve_ARK: took 226 accuracy and 345 stability steps
+  step failures:  217 convergence,  1 accuracy
+   work = 571,   maxerr = 1.04e-02,   rmserr = 8.47e-04
+ARK3(2), PI controller:
+solve_ARK: took 311 accuracy and 112 stability steps
+  step failures:  84 convergence,  0 accuracy
+   work = 423,   maxerr = 1.04e-02,   rmserr = 7.06e-04
+ARK3(2), PID controller:
+solve_ARK: took 345 accuracy and 100 stability steps
+  step failures:  77 convergence,  0 accuracy
+   work = 445,   maxerr = 1.05e-02,   rmserr = 7.35e-04
+ARK3(2), Gustafsson controller:
+solve_ARK: took 206 accuracy and 312 stability steps
+  step failures:  159 convergence,  2 accuracy
+   work = 518,   maxerr = 1.17e-02,   rmserr = 1.03e-03
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 303 accuracy and 134 stability steps
+  step failures:  98 convergence,  0 accuracy
+   work = 437,   maxerr = 1.05e-02,   rmserr = 8.24e-04
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 314 accuracy and 124 stability steps
+  step failures:  88 convergence,  0 accuracy
+   work = 438,   maxerr = 1.05e-02,   rmserr = 7.57e-04
+ARK4(3), I controller:
+solve_ARK: took 53 accuracy and 155 stability steps
+  step failures:  34 convergence,  0 accuracy
+   work = 208,   maxerr = 3.99e-02,   rmserr = 2.42e-03
+ARK4(3), PI controller:
+solve_ARK: took 214 accuracy and 20 stability steps
+  step failures:  3 convergence,  0 accuracy
+   work = 234,   maxerr = 1.15e-03,   rmserr = 7.22e-05
+ARK4(3), PID controller:
+solve_ARK: took 237 accuracy and 18 stability steps
+  step failures:  2 convergence,  0 accuracy
+   work = 255,   maxerr = 1.53e-04,   rmserr = 1.10e-05
+ARK4(3), Gustafsson controller:
+solve_ARK: took 57 accuracy and 160 stability steps
+  step failures:  41 convergence,  0 accuracy
+   work = 217,   maxerr = 2.80e-02,   rmserr = 1.70e-03
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 202 accuracy and 36 stability steps
+  step failures:  13 convergence,  0 accuracy
+   work = 238,   maxerr = 1.88e-03,   rmserr = 1.14e-04
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 213 accuracy and 33 stability steps
+  step failures:  8 convergence,  0 accuracy
+   work = 246,   maxerr = 1.88e-03,   rmserr = 1.14e-04
+ARK5(4), I controller:
+solve_ARK: took 13 accuracy and 119 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 132,   maxerr = 3.79e-03,   rmserr = 2.32e-04
+ARK5(4), PI controller:
+solve_ARK: took 243 accuracy and 14 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 257,   maxerr = 7.61e-04,   rmserr = 5.33e-05
+ARK5(4), PID controller:
+solve_ARK: took 239 accuracy and 10 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 249,   maxerr = 1.12e-04,   rmserr = 9.52e-06
+ARK5(4), Gustafsson controller:
+solve_ARK: took 19 accuracy and 117 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 136,   maxerr = 3.09e-03,   rmserr = 1.89e-04
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 180 accuracy and 22 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 202,   maxerr = 4.71e-04,   rmserr = 4.10e-05
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 174 accuracy and 20 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 194,   maxerr = 4.71e-04,   rmserr = 4.10e-05
+
+
+---------------------------
+
+
+Single-cell brusselator test 3 (rtol = 0.01, atol = 1e-14)
+ode15s:
+   work = 58,   maxerr = 6.60e-02,   rmserr = 8.67e-03
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 1.57e-02,   rmserr = 1.23e-03
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 118,   maxerr = 2.28e-03,   rmserr = 1.66e-04
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 117,   maxerr = 2.69e-03,   rmserr = 2.03e-04
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 112,   maxerr = 1.16e-02,   rmserr = 8.25e-04
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 113,   maxerr = 3.03e-03,   rmserr = 2.28e-04
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 2.68e-03,   rmserr = 1.71e-04
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 117,   maxerr = 1.80e-04,   rmserr = 1.16e-05
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 116,   maxerr = 2.46e-04,   rmserr = 1.79e-05
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 2.40e-03,   rmserr = 1.64e-04
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 112,   maxerr = 5.74e-04,   rmserr = 3.72e-05
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 107,   maxerr = 2.17e-04,   rmserr = 1.43e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 116,   maxerr = 8.40e-05,   rmserr = 6.47e-06
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 116,   maxerr = 7.54e-06,   rmserr = 5.64e-07
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 105,   maxerr = 2.87e-04,   rmserr = 2.32e-05
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 1.28e-04,   rmserr = 8.29e-06
+ARK3(2), I controller:
+solve_ARK: took 6 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 119,   maxerr = 3.06e-02,   rmserr = 2.71e-03
+ARK3(2), PI controller:
+solve_ARK: took 51 accuracy and 92 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 143,   maxerr = 5.29e-03,   rmserr = 3.78e-04
+ARK3(2), PID controller:
+solve_ARK: took 92 accuracy and 79 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 171,   maxerr = 5.30e-03,   rmserr = 3.72e-04
+ARK3(2), Gustafsson controller:
+solve_ARK: took 7 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 120,   maxerr = 2.22e-02,   rmserr = 1.78e-03
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 44 accuracy and 98 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 142,   maxerr = 6.69e-03,   rmserr = 4.86e-04
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 52 accuracy and 95 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 147,   maxerr = 3.77e-03,   rmserr = 3.00e-04
+ARK4(3), I controller:
+solve_ARK: took 7 accuracy and 114 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 121,   maxerr = 3.70e-04,   rmserr = 2.44e-05
+ARK4(3), PI controller:
+solve_ARK: took 83 accuracy and 76 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 159,   maxerr = 2.50e-05,   rmserr = 2.65e-06
+ARK4(3), PID controller:
+solve_ARK: took 110 accuracy and 77 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 187,   maxerr = 2.11e-05,   rmserr = 2.18e-06
+ARK4(3), Gustafsson controller:
+solve_ARK: took 7 accuracy and 114 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 121,   maxerr = 4.14e-03,   rmserr = 2.73e-04
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 68 accuracy and 83 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 151,   maxerr = 4.16e-05,   rmserr = 3.06e-06
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 68 accuracy and 83 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 151,   maxerr = 4.16e-05,   rmserr = 3.06e-06
+ARK5(4), I controller:
+solve_ARK: took 7 accuracy and 114 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 121,   maxerr = 2.66e-04,   rmserr = 2.15e-05
+ARK5(4), PI controller:
+solve_ARK: took 128 accuracy and 60 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 188,   maxerr = 4.80e-05,   rmserr = 4.97e-06
+ARK5(4), PID controller:
+solve_ARK: took 164 accuracy and 32 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 196,   maxerr = 7.85e-05,   rmserr = 5.93e-06
+ARK5(4), Gustafsson controller:
+solve_ARK: took 10 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 123,   maxerr = 1.81e-03,   rmserr = 1.39e-04
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 85 accuracy and 74 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 159,   maxerr = 7.05e-05,   rmserr = 7.71e-06
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 85 accuracy and 74 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 159,   maxerr = 7.05e-05,   rmserr = 7.71e-06
+
+
+---------------------------
+
+
+Van der Pol test 1 (rtol = 0.01, atol = 1e-14)
+ode15s:
+   work = 140,   maxerr = 1.88e+01,   rmserr = 1.36e+00
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  45 convergence,  13 accuracy
+   work = 232,   maxerr = 1.32e+01,   rmserr = 9.36e-01
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  4 convergence,  6 accuracy
+   work = 173,   maxerr = 8.44e+00,   rmserr = 5.97e-01
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  2 convergence,  3 accuracy
+   work = 161,   maxerr = 1.15e+01,   rmserr = 8.13e-01
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  40 convergence,  20 accuracy
+   work = 236,   maxerr = 9.60e+00,   rmserr = 6.80e-01
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  4 convergence,  6 accuracy
+   work = 171,   maxerr = 1.38e+01,   rmserr = 9.73e-01
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  22 convergence,  16 accuracy
+   work = 187,   maxerr = 8.42e-01,   rmserr = 5.97e-02
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  5 convergence,  1 accuracy
+   work = 149,   maxerr = 3.78e-01,   rmserr = 2.68e-02
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  3 convergence,  1 accuracy
+   work = 151,   maxerr = 4.06e-01,   rmserr = 2.92e-02
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  22 convergence,  16 accuracy
+   work = 186,   maxerr = 8.50e-01,   rmserr = 6.03e-02
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  5 convergence,  2 accuracy
+   work = 150,   maxerr = 6.79e-01,   rmserr = 4.81e-02
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  20 convergence,  7 accuracy
+   work = 164,   maxerr = 2.32e+00,   rmserr = 1.65e-01
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  4 convergence,  1 accuracy
+   work = 140,   maxerr = 2.57e+00,   rmserr = 1.82e-01
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  3 convergence,  0 accuracy
+   work = 139,   maxerr = 3.19e+00,   rmserr = 2.26e-01
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  24 convergence,  9 accuracy
+   work = 175,   maxerr = 2.31e+00,   rmserr = 1.64e-01
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  4 convergence,  1 accuracy
+   work = 138,   maxerr = 2.45e+00,   rmserr = 1.74e-01
+ARK3(2), I controller:
+solve_ARK: took 163 accuracy and 49 stability steps
+  step failures:  0 convergence,  49 accuracy
+   work = 212,   maxerr = 1.08e+00,   rmserr = 8.11e-02
+ARK3(2), PI controller:
+solve_ARK: took 150 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 155,   maxerr = 1.75e-01,   rmserr = 1.94e-02
+ARK3(2), PID controller:
+solve_ARK: took 164 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 172,   maxerr = 1.33e+00,   rmserr = 9.73e-02
+ARK3(2), Gustafsson controller:
+solve_ARK: took 149 accuracy and 31 stability steps
+  step failures:  1 convergence,  30 accuracy
+   work = 180,   maxerr = 4.84e+00,   rmserr = 3.43e-01
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 152 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 160,   maxerr = 1.45e+00,   rmserr = 1.06e-01
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 139 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 143,   maxerr = 1.91e+01,   rmserr = 1.35e+00
+ARK4(3), I controller:
+solve_ARK: took 152 accuracy and 41 stability steps
+  step failures:  0 convergence,  41 accuracy
+   work = 193,   maxerr = 2.11e+00,   rmserr = 1.56e-01
+ARK4(3), PI controller:
+solve_ARK: took 138 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 140,   maxerr = 2.54e+00,   rmserr = 1.82e-01
+ARK4(3), PID controller:
+solve_ARK: took 154 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 156,   maxerr = 1.86e+00,   rmserr = 1.38e-01
+ARK4(3), Gustafsson controller:
+solve_ARK: took 157 accuracy and 43 stability steps
+  step failures:  1 convergence,  42 accuracy
+   work = 200,   maxerr = 2.11e+00,   rmserr = 1.56e-01
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 141 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 147,   maxerr = 1.99e+00,   rmserr = 1.48e-01
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 141 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 147,   maxerr = 2.27e+00,   rmserr = 1.70e-01
+ARK5(4), I controller:
+solve_ARK: took 131 accuracy and 21 stability steps
+  step failures:  1 convergence,  20 accuracy
+   work = 152,   maxerr = 2.98e+00,   rmserr = 2.11e-01
+ARK5(4), PI controller:
+solve_ARK: took 232 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 234,   maxerr = 1.08e-01,   rmserr = 2.32e-02
+ARK5(4), PID controller:
+solve_ARK: took 206 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 210,   maxerr = 5.41e-02,   rmserr = 1.08e-02
+ARK5(4), Gustafsson controller:
+solve_ARK: took 131 accuracy and 19 stability steps
+  step failures:  2 convergence,  17 accuracy
+   work = 150,   maxerr = 9.78e-01,   rmserr = 6.92e-02
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 165 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 169,   maxerr = 6.13e-01,   rmserr = 4.34e-02
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 165 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 169,   maxerr = 6.13e-01,   rmserr = 4.34e-02
+
+
+---------------------------
+
+
+Van der Pol test 2 (rtol = 0.01, atol = 1e-14)
+ode15s:
+   work = 143,   maxerr = 5.88e+00,   rmserr = 6.92e-01
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  15 accuracy
+   work = 140,   maxerr = 2.97e+00,   rmserr = 2.75e-01
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+   work = 154,   maxerr = 1.80e-01,   rmserr = 2.53e-02
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 161,   maxerr = 1.24e-01,   rmserr = 2.02e-02
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  12 accuracy
+   work = 137,   maxerr = 3.32e+00,   rmserr = 3.03e-01
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+   work = 140,   maxerr = 5.66e-01,   rmserr = 7.76e-02
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 111,   maxerr = 1.52e-01,   rmserr = 1.55e-02
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 1.50e-01,   rmserr = 1.53e-02
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 122,   maxerr = 1.50e-01,   rmserr = 1.54e-02
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 108,   maxerr = 1.50e-01,   rmserr = 1.53e-02
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 113,   maxerr = 1.50e-01,   rmserr = 1.53e-02
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.64e-02,   rmserr = 1.53e-03
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 125,   maxerr = 2.62e-02,   rmserr = 3.09e-03
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 124,   maxerr = 1.02e-02,   rmserr = 1.27e-03
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.64e-02,   rmserr = 1.53e-03
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 123,   maxerr = 1.05e-02,   rmserr = 1.27e-03
+ARK3(2), I controller:
+solve_ARK: took 142 accuracy and 31 stability steps
+  step failures:  0 convergence,  31 accuracy
+   work = 173,   maxerr = 2.20e+00,   rmserr = 2.08e-01
+ARK3(2), PI controller:
+solve_ARK: took 151 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 153,   maxerr = 3.18e-01,   rmserr = 3.22e-02
+ARK3(2), PID controller:
+solve_ARK: took 149 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 151,   maxerr = 6.66e-01,   rmserr = 6.74e-02
+ARK3(2), Gustafsson controller:
+solve_ARK: took 136 accuracy and 21 stability steps
+  step failures:  0 convergence,  21 accuracy
+   work = 157,   maxerr = 2.08e+00,   rmserr = 1.98e-01
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 136 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 137,   maxerr = 1.89e+00,   rmserr = 1.80e-01
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 136 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 138,   maxerr = 2.22e+00,   rmserr = 2.09e-01
+ARK4(3), I controller:
+solve_ARK: took 106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 3.66e-01,   rmserr = 3.79e-02
+ARK4(3), PI controller:
+solve_ARK: took 130 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 131,   maxerr = 1.62e-01,   rmserr = 1.72e-02
+ARK4(3), PID controller:
+solve_ARK: took 147 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 147,   maxerr = 1.38e-01,   rmserr = 1.45e-02
+ARK4(3), Gustafsson controller:
+solve_ARK: took 113 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 114,   maxerr = 2.98e-01,   rmserr = 3.03e-02
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 124 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 124,   maxerr = 7.74e-02,   rmserr = 9.73e-03
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 124 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 124,   maxerr = 7.72e-02,   rmserr = 9.72e-03
+ARK5(4), I controller:
+solve_ARK: took 106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.60e-01,   rmserr = 1.66e-02
+ARK5(4), PI controller:
+solve_ARK: took 121 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 121,   maxerr = 1.52e-01,   rmserr = 1.57e-02
+ARK5(4), PID controller:
+solve_ARK: took 152 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 152,   maxerr = 1.58e-01,   rmserr = 1.63e-02
+ARK5(4), Gustafsson controller:
+solve_ARK: took 106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.60e-01,   rmserr = 1.66e-02
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 117 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 117,   maxerr = 1.59e-01,   rmserr = 1.65e-02
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 117 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 117,   maxerr = 1.59e-01,   rmserr = 1.65e-02
+
+
+---------------------------
+
+
+Van der Pol test 3 (rtol = 0.01, atol = 1e-14)
+ode15s:
+   work = 260,   maxerr = 1.28e-02,   rmserr = 3.90e-03
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  88 convergence,  58 accuracy
+   work = 506,   maxerr = 7.37e-03,   rmserr = 2.19e-03
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  8 convergence,  10 accuracy
+   work = 325,   maxerr = 3.31e-03,   rmserr = 9.83e-04
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  10 convergence,  4 accuracy
+   work = 356,   maxerr = 1.15e-03,   rmserr = 3.42e-04
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  92 convergence,  57 accuracy
+   work = 510,   maxerr = 5.80e-03,   rmserr = 1.72e-03
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  9 convergence,  16 accuracy
+   work = 335,   maxerr = 9.22e-03,   rmserr = 2.74e-03
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  51 convergence,  36 accuracy
+   work = 386,   maxerr = 2.00e-03,   rmserr = 5.94e-04
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  11 convergence,  0 accuracy
+   work = 313,   maxerr = 4.57e-04,   rmserr = 1.36e-04
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  9 convergence,  1 accuracy
+   work = 349,   maxerr = 3.47e-03,   rmserr = 1.03e-03
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  62 convergence,  42 accuracy
+   work = 417,   maxerr = 1.84e-05,   rmserr = 2.37e-06
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  13 convergence,  3 accuracy
+   work = 321,   maxerr = 1.30e-03,   rmserr = 3.87e-04
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  54 convergence,  24 accuracy
+   work = 366,   maxerr = 4.90e-05,   rmserr = 1.46e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  9 convergence,  2 accuracy
+   work = 337,   maxerr = 7.89e-04,   rmserr = 2.34e-04
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  8 convergence,  1 accuracy
+   work = 348,   maxerr = 2.90e-04,   rmserr = 8.63e-05
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  51 convergence,  29 accuracy
+   work = 445,   maxerr = 8.41e-06,   rmserr = 2.50e-06
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  10 convergence,  2 accuracy
+   work = 344,   maxerr = 1.90e-03,   rmserr = 5.65e-04
+ARK3(2), I controller:
+solve_ARK: took 321 accuracy and 101 stability steps
+  step failures:  0 convergence,  101 accuracy
+   work = 422,   maxerr = 2.65e-03,   rmserr = 7.89e-04
+ARK3(2), PI controller:
+solve_ARK: took 329 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 339,   maxerr = 9.03e-03,   rmserr = 2.68e-03
+ARK3(2), PID controller:
+solve_ARK: took 361 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 371,   maxerr = 4.50e-03,   rmserr = 1.34e-03
+ARK3(2), Gustafsson controller:
+solve_ARK: took 415 accuracy and 112 stability steps
+  step failures:  2 convergence,  110 accuracy
+   work = 527,   maxerr = 9.06e-04,   rmserr = 2.69e-04
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 332 accuracy and 16 stability steps
+  step failures:  0 convergence,  16 accuracy
+   work = 348,   maxerr = 2.80e-04,   rmserr = 8.35e-05
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 365 accuracy and 13 stability steps
+  step failures:  0 convergence,  13 accuracy
+   work = 378,   maxerr = 1.83e-03,   rmserr = 5.44e-04
+ARK4(3), I controller:
+solve_ARK: took 294 accuracy and 78 stability steps
+  step failures:  0 convergence,  78 accuracy
+   work = 372,   maxerr = 1.40e-05,   rmserr = 3.47e-06
+ARK4(3), PI controller:
+solve_ARK: took 312 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 322,   maxerr = 1.87e-03,   rmserr = 5.56e-04
+ARK4(3), PID controller:
+solve_ARK: took 322 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 330,   maxerr = 6.75e-03,   rmserr = 2.01e-03
+ARK4(3), Gustafsson controller:
+solve_ARK: took 312 accuracy and 90 stability steps
+  step failures:  0 convergence,  90 accuracy
+   work = 402,   maxerr = 3.75e-05,   rmserr = 4.36e-06
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 325 accuracy and 13 stability steps
+  step failures:  0 convergence,  13 accuracy
+   work = 338,   maxerr = 7.70e-04,   rmserr = 2.29e-04
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 321 accuracy and 11 stability steps
+  step failures:  0 convergence,  11 accuracy
+   work = 332,   maxerr = 2.49e-03,   rmserr = 7.39e-04
+ARK5(4), I controller:
+solve_ARK: took 277 accuracy and 61 stability steps
+  step failures:  1 convergence,  60 accuracy
+   work = 338,   maxerr = 4.37e-06,   rmserr = 1.32e-06
+ARK5(4), PI controller:
+solve_ARK: took 289 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+   work = 296,   maxerr = 1.67e-04,   rmserr = 4.95e-05
+ARK5(4), PID controller:
+solve_ARK: took 324 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+   work = 331,   maxerr = 6.71e-03,   rmserr = 1.99e-03
+ARK5(4), Gustafsson controller:
+solve_ARK: took 317 accuracy and 42 stability steps
+  step failures:  2 convergence,  40 accuracy
+   work = 359,   maxerr = 4.64e-04,   rmserr = 1.38e-04
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 299 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 309,   maxerr = 8.72e-04,   rmserr = 2.59e-04
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 306 accuracy and 9 stability steps
+  step failures:  1 convergence,  8 accuracy
+   work = 315,   maxerr = 3.02e-03,   rmserr = 8.98e-04
+
+
+---------------------------
+
+
+Single-cell brusselator test 1 (rtol = 0.0001, atol = 1e-14)
+ode15s:
+   work = 130,   maxerr = 1.41e-03,   rmserr = 3.06e-04
+SDIRK3(2), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 181,   maxerr = 7.14e-05,   rmserr = 1.22e-05
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 174,   maxerr = 6.82e-05,   rmserr = 2.02e-05
+SDIRK3(2), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 116,   maxerr = 2.00e-04,   rmserr = 1.67e-05
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 131,   maxerr = 7.46e-06,   rmserr = 6.26e-07
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 126,   maxerr = 4.78e-06,   rmserr = 5.31e-07
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 107,   maxerr = 2.99e-04,   rmserr = 2.01e-05
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 128,   maxerr = 1.30e-05,   rmserr = 1.01e-06
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 107,   maxerr = 1.23e-05,   rmserr = 9.07e-07
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 121,   maxerr = 4.45e-07,   rmserr = 4.04e-08
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 126,   maxerr = 3.92e-07,   rmserr = 2.96e-08
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 106,   maxerr = 1.43e-05,   rmserr = 1.34e-06
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 117,   maxerr = 7.30e-07,   rmserr = 7.99e-08
+ARK3(2), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), PI controller:
+solve_ARK: took 322 accuracy and 4 stability steps
+  step failures:  0 convergence,  3 accuracy
+   work = 326,   maxerr = 1.82e-03,   rmserr = 2.25e-04
+ARK3(2), PID controller:
+solve_ARK: took 395 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 396,   maxerr = 7.45e-04,   rmserr = 1.01e-04
+ARK3(2), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 359 accuracy and 5 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 364,   maxerr = 1.25e-03,   rmserr = 1.96e-04
+ARK4(3), I controller:
+solve_ARK: took 200 accuracy and 7 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 207,   maxerr = 8.23e-06,   rmserr = 7.01e-07
+ARK4(3), PI controller:
+solve_ARK: took 438 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 438,   maxerr = 5.79e-07,   rmserr = 5.04e-08
+ARK4(3), PID controller:
+solve_ARK: took 560 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 560,   maxerr = 9.08e-07,   rmserr = 7.00e-08
+ARK4(3), Gustafsson controller:
+solve_ARK: took 180 accuracy and 16 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 196,   maxerr = 1.91e-05,   rmserr = 1.30e-06
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 308 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 308,   maxerr = 2.06e-06,   rmserr = 1.77e-07
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 329 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 330,   maxerr = 1.37e-06,   rmserr = 1.04e-07
+ARK5(4), I controller:
+solve_ARK: took 228 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 229,   maxerr = 2.82e-06,   rmserr = 4.21e-07
+ARK5(4), PI controller:
+solve_ARK: took 587 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 587,   maxerr = 2.79e-07,   rmserr = 5.22e-08
+ARK5(4), PID controller:
+solve_ARK: took 656 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 656,   maxerr = 4.85e-07,   rmserr = 7.42e-08
+ARK5(4), Gustafsson controller:
+solve_ARK: took 196 accuracy and 18 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 214,   maxerr = 4.19e-06,   rmserr = 9.72e-07
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 356 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 356,   maxerr = 1.47e-06,   rmserr = 1.57e-07
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 383 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 383,   maxerr = 1.62e-06,   rmserr = 2.36e-07
+
+
+---------------------------
+
+
+Single-cell brusselator test 2 (rtol = 0.0001, atol = 1e-14)
+ode15s:
+   work = 155,   maxerr = 2.35e-02,   rmserr = 2.61e-03
+SDIRK3(2), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+   work = 222,   maxerr = 1.61e-03,   rmserr = 1.75e-04
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 238,   maxerr = 2.04e-03,   rmserr = 2.27e-04
+SDIRK3(2), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 133,   maxerr = 8.94e-04,   rmserr = 9.18e-05
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 147,   maxerr = 1.05e-03,   rmserr = 1.14e-04
+SDIRK4(3), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 114,   maxerr = 2.84e-04,   rmserr = 2.43e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 126,   maxerr = 2.84e-04,   rmserr = 2.77e-05
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 129,   maxerr = 4.02e-04,   rmserr = 3.34e-05
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 113,   maxerr = 2.84e-04,   rmserr = 2.83e-05
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 117,   maxerr = 2.84e-04,   rmserr = 2.35e-05
+ARK3(2), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), PI controller:
+solve_ARK: took 462 accuracy and 34 stability steps
+  step failures:  31 convergence,  2 accuracy
+   work = 496,   maxerr = 1.25e-03,   rmserr = 1.19e-04
+ARK3(2), PID controller:
+solve_ARK: took 483 accuracy and 16 stability steps
+  step failures:  14 convergence,  1 accuracy
+   work = 499,   maxerr = 8.90e-04,   rmserr = 9.41e-05
+ARK3(2), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 444 accuracy and 35 stability steps
+  step failures:  28 convergence,  2 accuracy
+   work = 479,   maxerr = 1.58e-03,   rmserr = 1.48e-04
+ARK4(3), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), PI controller:
+solve_ARK: took 462 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 463,   maxerr = 4.26e-06,   rmserr = 4.62e-07
+ARK4(3), PID controller:
+solve_ARK: took 526 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 526,   maxerr = 3.36e-06,   rmserr = 3.83e-07
+ARK4(3), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 311 accuracy and 3 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 314,   maxerr = 1.68e-05,   rmserr = 1.49e-06
+ARK5(4), I controller:
+solve_ARK: took 248 accuracy and 7 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 255,   maxerr = 5.90e-06,   rmserr = 1.07e-06
+ARK5(4), PI controller:
+solve_ARK: took 554 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 554,   maxerr = 9.07e-07,   rmserr = 9.42e-08
+ARK5(4), PID controller:
+solve_ARK: took 716 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 716,   maxerr = 1.13e-06,   rmserr = 8.82e-08
+ARK5(4), Gustafsson controller:
+solve_ARK: took 208 accuracy and 37 stability steps
+  step failures:  0 convergence,  14 accuracy
+   work = 245,   maxerr = 1.37e-05,   rmserr = 1.81e-06
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 365 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 366,   maxerr = 6.07e-06,   rmserr = 4.52e-07
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 425 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 426,   maxerr = 6.07e-06,   rmserr = 4.58e-07
+
+
+---------------------------
+
+
+Single-cell brusselator test 3 (rtol = 0.0001, atol = 1e-14)
+ode15s:
+   work = 125,   maxerr = 3.39e-04,   rmserr = 7.65e-05
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  34 accuracy
+   work = 182,   maxerr = 2.18e-04,   rmserr = 4.12e-05
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 174,   maxerr = 1.38e-04,   rmserr = 1.88e-05
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 185,   maxerr = 7.46e-05,   rmserr = 9.14e-06
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  32 accuracy
+   work = 178,   maxerr = 2.62e-04,   rmserr = 4.31e-05
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 136,   maxerr = 2.17e-04,   rmserr = 3.62e-05
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+   work = 114,   maxerr = 9.92e-05,   rmserr = 1.04e-05
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 124,   maxerr = 6.30e-05,   rmserr = 3.93e-06
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 153,   maxerr = 2.16e-05,   rmserr = 1.57e-06
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 112,   maxerr = 5.69e-04,   rmserr = 3.58e-05
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 123,   maxerr = 3.75e-05,   rmserr = 3.71e-06
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 114,   maxerr = 1.64e-04,   rmserr = 1.10e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 126,   maxerr = 1.78e-05,   rmserr = 1.50e-06
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 124,   maxerr = 2.69e-06,   rmserr = 2.30e-07
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 109,   maxerr = 3.17e-04,   rmserr = 2.10e-05
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 129,   maxerr = 4.79e-06,   rmserr = 3.22e-07
+ARK3(2), I controller:
+solve_ARK: took 122 accuracy and 95 stability steps
+  step failures:  0 convergence,  20 accuracy
+   work = 217,   maxerr = 1.13e-03,   rmserr = 1.07e-04
+ARK3(2), PI controller:
+solve_ARK: took 180 accuracy and 59 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 239,   maxerr = 9.03e-04,   rmserr = 7.71e-05
+ARK3(2), PID controller:
+solve_ARK: took 215 accuracy and 54 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 269,   maxerr = 5.00e-04,   rmserr = 4.37e-05
+ARK3(2), Gustafsson controller:
+solve_ARK: took 149 accuracy and 172 stability steps
+  step failures:  0 convergence,  80 accuracy
+   work = 321,   maxerr = 1.85e-03,   rmserr = 2.67e-04
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 169 accuracy and 64 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 233,   maxerr = 4.96e-04,   rmserr = 5.09e-05
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 167 accuracy and 62 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 229,   maxerr = 8.83e-04,   rmserr = 8.12e-05
+ARK4(3), I controller:
+solve_ARK: took 98 accuracy and 78 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 176,   maxerr = 1.11e-05,   rmserr = 1.15e-06
+ARK4(3), PI controller:
+solve_ARK: took 342 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 342,   maxerr = 4.49e-06,   rmserr = 5.05e-07
+ARK4(3), PID controller:
+solve_ARK: took 290 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 290,   maxerr = 3.11e-06,   rmserr = 5.29e-07
+ARK4(3), Gustafsson controller:
+solve_ARK: took 77 accuracy and 87 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 164,   maxerr = 2.17e-05,   rmserr = 1.98e-06
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 199 accuracy and 27 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 226,   maxerr = 3.81e-06,   rmserr = 6.27e-07
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 199 accuracy and 27 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 226,   maxerr = 3.81e-06,   rmserr = 6.27e-07
+ARK5(4), I controller:
+solve_ARK: took 91 accuracy and 75 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 166,   maxerr = 3.28e-05,   rmserr = 3.90e-06
+ARK5(4), PI controller:
+solve_ARK: took 342 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 342,   maxerr = 1.26e-05,   rmserr = 1.38e-06
+ARK5(4), PID controller:
+solve_ARK: took 372 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 372,   maxerr = 1.74e-05,   rmserr = 2.13e-06
+ARK5(4), Gustafsson controller:
+solve_ARK: took 81 accuracy and 83 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 164,   maxerr = 3.83e-05,   rmserr = 5.25e-06
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 287 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 288,   maxerr = 2.98e-05,   rmserr = 2.96e-06
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 323 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 324,   maxerr = 2.98e-05,   rmserr = 2.71e-06
+
+
+---------------------------
+
+
+Van der Pol test 1 (rtol = 0.0001, atol = 1e-14)
+ode15s:
+   work = 279,   maxerr = 1.77e+00,   rmserr = 1.27e-01
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  306 accuracy
+   work = 780,   maxerr = 2.30e-01,   rmserr = 1.63e-02
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 287,   maxerr = 2.09e-01,   rmserr = 1.49e-02
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+   work = 300,   maxerr = 1.91e-01,   rmserr = 1.36e-02
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  436 accuracy
+   work = 1001,   maxerr = 1.64e-01,   rmserr = 1.17e-02
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  25 accuracy
+   work = 319,   maxerr = 1.84e-01,   rmserr = 1.31e-02
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  14 convergence,  119 accuracy
+   work = 387,   maxerr = 1.08e-01,   rmserr = 7.62e-03
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+   work = 200,   maxerr = 1.05e-01,   rmserr = 7.45e-03
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+   work = 193,   maxerr = 1.90e-02,   rmserr = 1.34e-03
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  20 convergence,  99 accuracy
+   work = 360,   maxerr = 1.29e-02,   rmserr = 9.23e-04
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  9 accuracy
+   work = 189,   maxerr = 7.69e-02,   rmserr = 5.44e-03
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  23 convergence,  52 accuracy
+   work = 265,   maxerr = 1.33e-01,   rmserr = 9.46e-03
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+   work = 160,   maxerr = 4.30e-02,   rmserr = 3.05e-03
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+   work = 185,   maxerr = 1.69e-02,   rmserr = 1.21e-03
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  17 convergence,  29 accuracy
+   work = 210,   maxerr = 1.73e-01,   rmserr = 1.22e-02
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  1 convergence,  5 accuracy
+   work = 157,   maxerr = 4.17e-02,   rmserr = 2.96e-03
+ARK3(2), I controller:
+solve_ARK: took 463 accuracy and 307 stability steps
+  step failures:  0 convergence,  307 accuracy
+   work = 770,   maxerr = 4.22e-03,   rmserr = 4.59e-04
+ARK3(2), PI controller:
+solve_ARK: took 291 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 299,   maxerr = 1.04e-02,   rmserr = 7.54e-04
+ARK3(2), PID controller:
+solve_ARK: took 354 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 360,   maxerr = 5.75e-03,   rmserr = 4.48e-04
+ARK3(2), Gustafsson controller:
+solve_ARK: took 499 accuracy and 362 stability steps
+  step failures:  0 convergence,  362 accuracy
+   work = 861,   maxerr = 3.91e-03,   rmserr = 5.09e-04
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 283 accuracy and 19 stability steps
+  step failures:  0 convergence,  19 accuracy
+   work = 302,   maxerr = 6.64e-03,   rmserr = 5.64e-04
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 277 accuracy and 18 stability steps
+  step failures:  0 convergence,  18 accuracy
+   work = 295,   maxerr = 7.03e-03,   rmserr = 5.81e-04
+ARK4(3), I controller:
+solve_ARK: took 277 accuracy and 146 stability steps
+  step failures:  0 convergence,  146 accuracy
+   work = 423,   maxerr = 3.74e-02,   rmserr = 2.65e-03
+ARK4(3), PI controller:
+solve_ARK: took 287 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 292,   maxerr = 1.47e-02,   rmserr = 1.05e-03
+ARK4(3), PID controller:
+solve_ARK: took 296 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 298,   maxerr = 1.05e-02,   rmserr = 7.54e-04
+ARK4(3), Gustafsson controller:
+solve_ARK: took 269 accuracy and 144 stability steps
+  step failures:  0 convergence,  144 accuracy
+   work = 413,   maxerr = 1.63e-02,   rmserr = 1.18e-03
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 275 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+   work = 284,   maxerr = 2.40e-02,   rmserr = 1.71e-03
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 274 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 282,   maxerr = 2.29e-02,   rmserr = 1.63e-03
+ARK5(4), I controller:
+solve_ARK: took 181 accuracy and 61 stability steps
+  step failures:  0 convergence,  61 accuracy
+   work = 242,   maxerr = 1.45e-02,   rmserr = 1.24e-03
+ARK5(4), PI controller:
+solve_ARK: took 252 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 256,   maxerr = 4.41e-02,   rmserr = 3.12e-03
+ARK5(4), PID controller:
+solve_ARK: took 260 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+   work = 263,   maxerr = 3.36e-02,   rmserr = 2.38e-03
+ARK5(4), Gustafsson controller:
+solve_ARK: took 199 accuracy and 83 stability steps
+  step failures:  0 convergence,  83 accuracy
+   work = 282,   maxerr = 5.75e-02,   rmserr = 4.07e-03
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 249 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 254,   maxerr = 3.26e-02,   rmserr = 2.31e-03
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 243 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 248,   maxerr = 3.25e-02,   rmserr = 2.30e-03
+
+
+---------------------------
+
+
+Van der Pol test 2 (rtol = 0.0001, atol = 1e-14)
+ode15s:
+   work = 274,   maxerr = 7.08e-02,   rmserr = 8.63e-03
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  258 accuracy
+   work = 685,   maxerr = 1.25e-02,   rmserr = 1.66e-03
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 318,   maxerr = 8.72e-03,   rmserr = 1.02e-03
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+   work = 326,   maxerr = 4.95e-03,   rmserr = 7.68e-04
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  322 accuracy
+   work = 798,   maxerr = 1.30e-02,   rmserr = 1.81e-03
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  12 accuracy
+   work = 296,   maxerr = 1.98e-02,   rmserr = 2.22e-03
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  58 accuracy
+   work = 235,   maxerr = 3.07e-02,   rmserr = 3.24e-03
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 185,   maxerr = 9.41e-03,   rmserr = 1.08e-03
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 184,   maxerr = 4.49e-03,   rmserr = 6.26e-04
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  44 accuracy
+   work = 209,   maxerr = 2.47e-02,   rmserr = 2.81e-03
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 173,   maxerr = 5.02e-03,   rmserr = 6.11e-04
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  15 accuracy
+   work = 140,   maxerr = 4.81e-03,   rmserr = 4.95e-04
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 143,   maxerr = 2.67e-02,   rmserr = 2.95e-03
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 165,   maxerr = 8.27e-04,   rmserr = 1.04e-04
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  10 accuracy
+   work = 134,   maxerr = 2.55e-02,   rmserr = 2.72e-03
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+   work = 142,   maxerr = 8.58e-03,   rmserr = 9.01e-04
+ARK3(2), I controller:
+solve_ARK: took 379 accuracy and 219 stability steps
+  step failures:  0 convergence,  219 accuracy
+   work = 598,   maxerr = 4.20e-02,   rmserr = 4.46e-03
+ARK3(2), PI controller:
+solve_ARK: took 315 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 325,   maxerr = 2.12e-02,   rmserr = 2.26e-03
+ARK3(2), PID controller:
+solve_ARK: took 369 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 375,   maxerr = 1.41e-02,   rmserr = 1.50e-03
+ARK3(2), Gustafsson controller:
+solve_ARK: took 428 accuracy and 285 stability steps
+  step failures:  0 convergence,  285 accuracy
+   work = 713,   maxerr = 2.64e-02,   rmserr = 2.78e-03
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 287 accuracy and 23 stability steps
+  step failures:  0 convergence,  23 accuracy
+   work = 310,   maxerr = 3.51e-02,   rmserr = 3.74e-03
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 270 accuracy and 19 stability steps
+  step failures:  0 convergence,  19 accuracy
+   work = 289,   maxerr = 3.01e-02,   rmserr = 3.18e-03
+ARK4(3), I controller:
+solve_ARK: took 184 accuracy and 63 stability steps
+  step failures:  0 convergence,  63 accuracy
+   work = 247,   maxerr = 2.58e-02,   rmserr = 2.72e-03
+ARK4(3), PI controller:
+solve_ARK: took 267 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 268,   maxerr = 3.39e-03,   rmserr = 3.58e-04
+ARK4(3), PID controller:
+solve_ARK: took 276 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 277,   maxerr = 5.72e-03,   rmserr = 6.33e-04
+ARK4(3), Gustafsson controller:
+solve_ARK: took 179 accuracy and 58 stability steps
+  step failures:  0 convergence,  58 accuracy
+   work = 237,   maxerr = 4.63e-03,   rmserr = 4.62e-04
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 219 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 223,   maxerr = 1.17e-02,   rmserr = 1.23e-03
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 181 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+   work = 184,   maxerr = 1.24e-02,   rmserr = 1.33e-03
+ARK5(4), I controller:
+solve_ARK: took 127 accuracy and 17 stability steps
+  step failures:  0 convergence,  17 accuracy
+   work = 144,   maxerr = 2.60e-02,   rmserr = 2.72e-03
+ARK5(4), PI controller:
+solve_ARK: took 183 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 183,   maxerr = 5.98e-03,   rmserr = 6.43e-04
+ARK5(4), PID controller:
+solve_ARK: took 205 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 205,   maxerr = 5.54e-03,   rmserr = 5.96e-04
+ARK5(4), Gustafsson controller:
+solve_ARK: took 125 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 131,   maxerr = 4.35e-03,   rmserr = 3.76e-04
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 174 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 174,   maxerr = 1.86e-03,   rmserr = 2.01e-04
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 171 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 171,   maxerr = 1.85e-03,   rmserr = 1.96e-04
+
+
+---------------------------
+
+
+Van der Pol test 3 (rtol = 0.0001, atol = 1e-14)
+ode15s:
+   work = 404,   maxerr = 1.27e-04,   rmserr = 1.91e-05
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  28 convergence,  666 accuracy
+   work = 1627,   maxerr = 9.22e-05,   rmserr = 2.80e-05
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  14 accuracy
+   work = 510,   maxerr = 8.00e-05,   rmserr = 2.39e-05
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  11 accuracy
+   work = 520,   maxerr = 6.89e-05,   rmserr = 2.07e-05
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  30 convergence,  659 accuracy
+   work = 1612,   maxerr = 7.44e-05,   rmserr = 2.24e-05
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  1 convergence,  36 accuracy
+   work = 551,   maxerr = 9.08e-05,   rmserr = 2.71e-05
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  40 convergence,  204 accuracy
+   work = 717,   maxerr = 9.10e-05,   rmserr = 2.71e-05
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  1 convergence,  9 accuracy
+   work = 396,   maxerr = 2.96e-05,   rmserr = 8.79e-06
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  10 accuracy
+   work = 426,   maxerr = 1.14e-05,   rmserr = 3.38e-06
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  40 convergence,  149 accuracy
+   work = 645,   maxerr = 9.25e-05,   rmserr = 2.75e-05
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  18 accuracy
+   work = 408,   maxerr = 5.72e-06,   rmserr = 1.70e-06
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  65 convergence,  72 accuracy
+   work = 521,   maxerr = 1.45e-04,   rmserr = 4.30e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  3 convergence,  5 accuracy
+   work = 365,   maxerr = 2.56e-04,   rmserr = 7.62e-05
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  3 convergence,  4 accuracy
+   work = 364,   maxerr = 8.36e-05,   rmserr = 2.49e-05
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  68 convergence,  78 accuracy
+   work = 623,   maxerr = 3.16e-04,   rmserr = 9.40e-05
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  3 convergence,  7 accuracy
+   work = 361,   maxerr = 3.04e-06,   rmserr = 9.03e-07
+ARK3(2), I controller:
+solve_ARK: took 946 accuracy and 656 stability steps
+  step failures:  0 convergence,  656 accuracy
+   work = 1602,   maxerr = 8.96e-05,   rmserr = 2.66e-05
+ARK3(2), PI controller:
+solve_ARK: took 524 accuracy and 14 stability steps
+  step failures:  0 convergence,  14 accuracy
+   work = 538,   maxerr = 1.06e-04,   rmserr = 3.15e-05
+ARK3(2), PID controller:
+solve_ARK: took 529 accuracy and 11 stability steps
+  step failures:  0 convergence,  11 accuracy
+   work = 540,   maxerr = 9.67e-05,   rmserr = 2.87e-05
+ARK3(2), Gustafsson controller:
+solve_ARK: took 1052 accuracy and 680 stability steps
+  step failures:  0 convergence,  680 accuracy
+   work = 1732,   maxerr = 4.66e-04,   rmserr = 1.38e-04
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 558 accuracy and 34 stability steps
+  step failures:  0 convergence,  34 accuracy
+   work = 592,   maxerr = 1.57e-04,   rmserr = 4.66e-05
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 618 accuracy and 29 stability steps
+  step failures:  0 convergence,  29 accuracy
+   work = 647,   maxerr = 1.52e-04,   rmserr = 4.53e-05
+ARK4(3), I controller:
+solve_ARK: took 472 accuracy and 211 stability steps
+  step failures:  0 convergence,  211 accuracy
+   work = 683,   maxerr = 9.57e-05,   rmserr = 2.84e-05
+ARK4(3), PI controller:
+solve_ARK: took 364 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+   work = 373,   maxerr = 7.67e-05,   rmserr = 2.28e-05
+ARK4(3), PID controller:
+solve_ARK: took 386 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+   work = 393,   maxerr = 3.87e-05,   rmserr = 1.15e-05
+ARK4(3), Gustafsson controller:
+solve_ARK: took 505 accuracy and 220 stability steps
+  step failures:  0 convergence,  220 accuracy
+   work = 725,   maxerr = 1.37e-04,   rmserr = 4.06e-05
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 368 accuracy and 16 stability steps
+  step failures:  0 convergence,  16 accuracy
+   work = 384,   maxerr = 3.60e-05,   rmserr = 1.07e-05
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 349 accuracy and 12 stability steps
+  step failures:  0 convergence,  12 accuracy
+   work = 361,   maxerr = 6.24e-05,   rmserr = 1.86e-05
+ARK5(4), I controller:
+solve_ARK: took 410 accuracy and 137 stability steps
+  step failures:  0 convergence,  137 accuracy
+   work = 547,   maxerr = 8.03e-04,   rmserr = 2.39e-04
+ARK5(4), PI controller:
+solve_ARK: took 359 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+   work = 366,   maxerr = 7.38e-05,   rmserr = 2.19e-05
+ARK5(4), PID controller:
+solve_ARK: took 395 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 400,   maxerr = 1.72e-05,   rmserr = 5.11e-06
+ARK5(4), Gustafsson controller:
+solve_ARK: took 484 accuracy and 172 stability steps
+  step failures:  0 convergence,  172 accuracy
+   work = 656,   maxerr = 4.16e-05,   rmserr = 1.24e-05
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 324 accuracy and 11 stability steps
+  step failures:  0 convergence,  11 accuracy
+   work = 335,   maxerr = 2.84e-05,   rmserr = 8.45e-06
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 322 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+   work = 331,   maxerr = 3.34e-04,   rmserr = 9.91e-05
+
+
+---------------------------
+
+
+Single-cell brusselator test 1 (rtol = 1e-06, atol = 1e-14)
+ode15s:
+   work = 263,   maxerr = 1.31e-05,   rmserr = 3.22e-06
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  310 accuracy
+   work = 826,   maxerr = 6.31e-06,   rmserr = 2.39e-06
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 409,   maxerr = 3.92e-06,   rmserr = 1.09e-06
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 455,   maxerr = 1.30e-06,   rmserr = 4.41e-07
+SDIRK3(2), Gustafsson controller:
+   work = 4,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 389,   maxerr = 2.91e-06,   rmserr = 9.55e-07
+SDIRK4(3), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 232,   maxerr = 5.09e-07,   rmserr = 7.68e-08
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 277,   maxerr = 4.18e-07,   rmserr = 4.23e-08
+SDIRK4(3), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+   work = 121,   maxerr = 1.65e-06,   rmserr = 1.58e-07
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 135,   maxerr = 5.79e-07,   rmserr = 5.65e-08
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 138,   maxerr = 4.83e-08,   rmserr = 1.40e-08
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  16 accuracy
+   work = 140,   maxerr = 2.05e-06,   rmserr = 2.07e-07
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 123,   maxerr = 1.98e-07,   rmserr = 2.47e-08
+ARK3(2), I controller:
+solve_ARK: took 2143 accuracy and 948 stability steps
+  step failures:  0 convergence,  948 accuracy
+   work = 3091,   maxerr = 2.32e-05,   rmserr = 5.40e-06
+ARK3(2), PI controller:
+solve_ARK: took 1854 accuracy and 99 stability steps
+  step failures:  0 convergence,  99 accuracy
+   work = 1953,   maxerr = 1.33e-05,   rmserr = 2.43e-06
+ARK3(2), PID controller:
+solve_ARK: took 1813 accuracy and 76 stability steps
+  step failures:  0 convergence,  76 accuracy
+   work = 1889,   maxerr = 1.82e-05,   rmserr = 3.23e-06
+ARK3(2), Gustafsson controller:
+   work = 4,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 1854 accuracy and 180 stability steps
+  step failures:  0 convergence,  180 accuracy
+   work = 2034,   maxerr = 3.09e-05,   rmserr = 4.15e-06
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 2209 accuracy and 147 stability steps
+  step failures:  0 convergence,  147 accuracy
+   work = 2356,   maxerr = 2.63e-05,   rmserr = 3.93e-06
+ARK4(3), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), PI controller:
+solve_ARK: took 2068 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2068,   maxerr = 8.93e-09,   rmserr = 1.52e-09
+ARK4(3), PID controller:
+solve_ARK: took 2281 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2281,   maxerr = 8.24e-09,   rmserr = 1.50e-09
+ARK4(3), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 1389 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 1389,   maxerr = 3.38e-08,   rmserr = 3.33e-09
+ARK5(4), I controller:
+solve_ARK: took 1385 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+   work = 1388,   maxerr = 1.06e-07,   rmserr = 1.65e-08
+ARK5(4), PI controller:
+solve_ARK: took 2453 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2453,   maxerr = 5.34e-08,   rmserr = 8.10e-09
+ARK5(4), PID controller:
+solve_ARK: took 2826 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2826,   maxerr = 4.40e-08,   rmserr = 7.73e-09
+ARK5(4), Gustafsson controller:
+solve_ARK: took 1787 accuracy and 336 stability steps
+  step failures:  0 convergence,  336 accuracy
+   work = 2123,   maxerr = 3.12e-07,   rmserr = 2.99e-08
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 1476 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 1478,   maxerr = 1.02e-07,   rmserr = 1.80e-08
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 1597 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 1597,   maxerr = 7.34e-08,   rmserr = 1.48e-08
+
+
+---------------------------
+
+
+Single-cell brusselator test 2 (rtol = 1e-06, atol = 1e-14)
+ode15s:
+   work = 332,   maxerr = 7.35e-05,   rmserr = 7.81e-06
+SDIRK3(2), I controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), PI controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), PID controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), Gustafsson controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK3(2), explicit Gustafsson controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  71 accuracy
+   work = 272,   maxerr = 7.20e-05,   rmserr = 8.04e-06
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 263,   maxerr = 3.69e-05,   rmserr = 4.13e-06
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 275,   maxerr = 2.19e-05,   rmserr = 2.47e-06
+SDIRK4(3), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK4(3), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK5(4), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 140,   maxerr = 3.20e-05,   rmserr = 3.40e-06
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 143,   maxerr = 3.30e-05,   rmserr = 3.64e-06
+SDIRK5(4), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+SDIRK5(4), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), I controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), PI controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), PID controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), Gustafsson controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), explicit Gustafsson controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK3(2), imex Gustafsson controller:
+   work = 1,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), I controller:
+solve_ARK: took 1387 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 1389,   maxerr = 1.74e-08,   rmserr = 2.67e-09
+ARK4(3), PI controller:
+solve_ARK: took 2182 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2182,   maxerr = 1.08e-08,   rmserr = 1.40e-09
+ARK4(3), PID controller:
+solve_ARK: took 2457 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2457,   maxerr = 6.13e-09,   rmserr = 1.14e-09
+ARK4(3), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 1466 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 1467,   maxerr = 1.30e-08,   rmserr = 2.01e-09
+ARK5(4), I controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK5(4), PI controller:
+solve_ARK: took 2679 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 2679,   maxerr = 6.25e-08,   rmserr = 7.10e-09
+ARK5(4), PID controller:
+solve_ARK: took 3106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 3106,   maxerr = 1.95e-08,   rmserr = 4.04e-09
+ARK5(4), Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK5(4), explicit Gustafsson controller:
+   work = 2,   maxerr = 1.00e+00,   rmserr = 9.95e-01
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 1734 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 1735,   maxerr = 6.47e-08,   rmserr = 9.85e-09
+
+
+---------------------------
+
+
+Single-cell brusselator test 3 (rtol = 1e-06, atol = 1e-14)
+ode15s:
+   work = 247,   maxerr = 7.63e-06,   rmserr = 1.47e-06
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  417 accuracy
+   work = 1023,   maxerr = 3.37e-06,   rmserr = 1.12e-06
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 366,   maxerr = 2.01e-06,   rmserr = 4.71e-07
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 371,   maxerr = 1.35e-06,   rmserr = 3.65e-07
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  627 accuracy
+   work = 1402,   maxerr = 4.06e-06,   rmserr = 9.58e-07
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+   work = 315,   maxerr = 2.93e-06,   rmserr = 7.23e-07
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  25 accuracy
+   work = 182,   maxerr = 3.46e-06,   rmserr = 4.77e-07
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 216,   maxerr = 1.01e-06,   rmserr = 1.30e-07
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 215,   maxerr = 7.74e-07,   rmserr = 7.57e-08
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  81 accuracy
+   work = 285,   maxerr = 6.88e-06,   rmserr = 5.65e-07
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 208,   maxerr = 1.01e-06,   rmserr = 1.36e-07
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  19 accuracy
+   work = 149,   maxerr = 7.77e-06,   rmserr = 5.28e-07
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+   work = 166,   maxerr = 2.10e-07,   rmserr = 2.01e-08
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 169,   maxerr = 3.61e-07,   rmserr = 2.73e-08
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  22 accuracy
+   work = 156,   maxerr = 6.36e-06,   rmserr = 4.96e-07
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 150,   maxerr = 6.59e-07,   rmserr = 4.41e-08
+ARK3(2), I controller:
+solve_ARK: took 2192 accuracy and 1856 stability steps
+  step failures:  0 convergence,  1802 accuracy
+   work = 4048,   maxerr = 1.58e-05,   rmserr = 3.84e-06
+ARK3(2), PI controller:
+solve_ARK: took 1027 accuracy and 19 stability steps
+  step failures:  0 convergence,  18 accuracy
+   work = 1046,   maxerr = 1.18e-05,   rmserr = 1.56e-06
+ARK3(2), PID controller:
+solve_ARK: took 1064 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+   work = 1067,   maxerr = 7.61e-06,   rmserr = 9.28e-07
+ARK3(2), Gustafsson controller:
+solve_ARK: took 2701 accuracy and 2411 stability steps
+  step failures:  0 convergence,  2353 accuracy
+   work = 5112,   maxerr = 1.19e-05,   rmserr = 4.05e-06
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 869 accuracy and 39 stability steps
+  step failures:  0 convergence,  38 accuracy
+   work = 908,   maxerr = 1.28e-05,   rmserr = 1.91e-06
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 966 accuracy and 42 stability steps
+  step failures:  0 convergence,  42 accuracy
+   work = 1008,   maxerr = 1.10e-05,   rmserr = 1.53e-06
+ARK4(3), I controller:
+solve_ARK: took 611 accuracy and 7 stability steps
+  step failures:  0 convergence,  3 accuracy
+   work = 618,   maxerr = 3.63e-07,   rmserr = 6.30e-08
+ARK4(3), PI controller:
+solve_ARK: took 1004 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 1004,   maxerr = 2.65e-07,   rmserr = 3.18e-08
+ARK4(3), PID controller:
+solve_ARK: took 1010 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 1010,   maxerr = 1.66e-07,   rmserr = 2.26e-08
+ARK4(3), Gustafsson controller:
+solve_ARK: took 555 accuracy and 33 stability steps
+  step failures:  0 convergence,  29 accuracy
+   work = 588,   maxerr = 4.39e-07,   rmserr = 7.87e-08
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 717 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 718,   maxerr = 4.71e-07,   rmserr = 6.48e-08
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 679 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 680,   maxerr = 4.75e-07,   rmserr = 6.75e-08
+ARK5(4), I controller:
+solve_ARK: took 526 accuracy and 14 stability steps
+  step failures:  0 convergence,  13 accuracy
+   work = 540,   maxerr = 1.65e-06,   rmserr = 2.29e-07
+ARK5(4), PI controller:
+solve_ARK: took 964 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 964,   maxerr = 6.78e-07,   rmserr = 8.67e-08
+ARK5(4), PID controller:
+solve_ARK: took 1068 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 1068,   maxerr = 5.32e-07,   rmserr = 6.04e-08
+ARK5(4), Gustafsson controller:
+solve_ARK: took 513 accuracy and 65 stability steps
+  step failures:  0 convergence,  63 accuracy
+   work = 578,   maxerr = 2.44e-06,   rmserr = 2.89e-07
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 605 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 606,   maxerr = 2.13e-06,   rmserr = 2.52e-07
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 608 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 608,   maxerr = 2.18e-06,   rmserr = 2.50e-07
+
+
+---------------------------
+
+
+Van der Pol test 1 (rtol = 1e-06, atol = 1e-14)
+ode15s:
+   work = 549,   maxerr = 2.59e-02,   rmserr = 1.85e-03
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  1409 accuracy
+   work = 3229,   maxerr = 8.32e-03,   rmserr = 5.93e-04
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+   work = 891,   maxerr = 4.72e-03,   rmserr = 3.36e-04
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 896,   maxerr = 4.33e-03,   rmserr = 3.08e-04
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  2568 accuracy
+   work = 5305,   maxerr = 6.87e-03,   rmserr = 4.90e-04
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  35 accuracy
+   work = 817,   maxerr = 7.54e-03,   rmserr = 5.37e-04
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  399 accuracy
+   work = 990,   maxerr = 5.28e-04,   rmserr = 3.73e-05
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 418,   maxerr = 1.08e-03,   rmserr = 7.64e-05
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 417,   maxerr = 8.11e-04,   rmserr = 5.73e-05
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  585 accuracy
+   work = 1332,   maxerr = 2.87e-05,   rmserr = 2.26e-06
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  10 accuracy
+   work = 389,   maxerr = 1.03e-03,   rmserr = 7.32e-05
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  172 accuracy
+   work = 483,   maxerr = 1.00e-02,   rmserr = 7.14e-04
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 336,   maxerr = 3.16e-03,   rmserr = 2.23e-04
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+   work = 320,   maxerr = 1.70e-03,   rmserr = 1.21e-04
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  177 accuracy
+   work = 487,   maxerr = 9.61e-03,   rmserr = 6.82e-04
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+   work = 300,   maxerr = 2.80e-03,   rmserr = 1.98e-04
+ARK3(2), I controller:
+solve_ARK: took 1966 accuracy and 1297 stability steps
+  step failures:  0 convergence,  1297 accuracy
+   work = 3263,   maxerr = 2.17e-04,   rmserr = 1.58e-05
+ARK3(2), PI controller:
+solve_ARK: took 1221 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 1231,   maxerr = 1.47e-04,   rmserr = 1.05e-05
+ARK3(2), PID controller:
+solve_ARK: took 1314 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 1318,   maxerr = 1.32e-04,   rmserr = 9.43e-06
+ARK3(2), Gustafsson controller:
+solve_ARK: took 3402 accuracy and 3110 stability steps
+  step failures:  0 convergence,  3110 accuracy
+   work = 6512,   maxerr = 2.33e-05,   rmserr = 4.91e-06
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 1075 accuracy and 42 stability steps
+  step failures:  0 convergence,  42 accuracy
+   work = 1117,   maxerr = 5.86e-05,   rmserr = 5.01e-06
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 1080 accuracy and 38 stability steps
+  step failures:  0 convergence,  38 accuracy
+   work = 1118,   maxerr = 2.11e-05,   rmserr = 3.29e-06
+ARK4(3), I controller:
+solve_ARK: took 863 accuracy and 495 stability steps
+  step failures:  0 convergence,  495 accuracy
+   work = 1358,   maxerr = 3.51e-04,   rmserr = 2.49e-05
+ARK4(3), PI controller:
+solve_ARK: took 720 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 725,   maxerr = 1.57e-04,   rmserr = 1.12e-05
+ARK4(3), PID controller:
+solve_ARK: took 827 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 829,   maxerr = 1.58e-04,   rmserr = 1.12e-05
+ARK4(3), Gustafsson controller:
+solve_ARK: took 1138 accuracy and 832 stability steps
+  step failures:  0 convergence,  832 accuracy
+   work = 1970,   maxerr = 3.16e-05,   rmserr = 2.39e-06
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 651 accuracy and 12 stability steps
+  step failures:  0 convergence,  12 accuracy
+   work = 663,   maxerr = 2.94e-04,   rmserr = 2.09e-05
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 634 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 644,   maxerr = 3.38e-04,   rmserr = 2.41e-05
+ARK5(4), I controller:
+solve_ARK: took 440 accuracy and 158 stability steps
+  step failures:  0 convergence,  158 accuracy
+   work = 598,   maxerr = 5.68e-04,   rmserr = 4.06e-05
+ARK5(4), PI controller:
+solve_ARK: took 569 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 573,   maxerr = 3.77e-04,   rmserr = 2.67e-05
+ARK5(4), PID controller:
+solve_ARK: took 682 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 684,   maxerr = 2.87e-04,   rmserr = 2.04e-05
+ARK5(4), Gustafsson controller:
+solve_ARK: took 479 accuracy and 228 stability steps
+  step failures:  0 convergence,  228 accuracy
+   work = 707,   maxerr = 1.07e-03,   rmserr = 7.63e-05
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 449 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 455,   maxerr = 5.50e-04,   rmserr = 3.89e-05
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 452 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+   work = 456,   maxerr = 6.86e-04,   rmserr = 4.86e-05
+
+
+---------------------------
+
+
+Van der Pol test 2 (rtol = 1e-06, atol = 1e-14)
+ode15s:
+   work = 551,   maxerr = 1.54e-03,   rmserr = 1.78e-04
+SDIRK3(2), I controller:
+solve_DIRK: step failures:  0 convergence,  1293 accuracy
+   work = 3126,   maxerr = 3.08e-04,   rmserr = 3.92e-05
+SDIRK3(2), PI controller:
+solve_DIRK: step failures:  0 convergence,  9 accuracy
+   work = 1036,   maxerr = 7.81e-05,   rmserr = 1.06e-05
+SDIRK3(2), PID controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 1076,   maxerr = 5.71e-05,   rmserr = 8.00e-06
+SDIRK3(2), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  2863 accuracy
+   work = 5938,   maxerr = 2.36e-04,   rmserr = 2.81e-05
+SDIRK3(2), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  46 accuracy
+   work = 1002,   maxerr = 1.37e-04,   rmserr = 1.77e-05
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  227 accuracy
+   work = 647,   maxerr = 1.19e-04,   rmserr = 1.98e-05
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 391,   maxerr = 1.01e-04,   rmserr = 1.39e-05
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+   work = 401,   maxerr = 7.51e-05,   rmserr = 8.38e-06
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  401 accuracy
+   work = 965,   maxerr = 1.26e-04,   rmserr = 1.76e-05
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+   work = 377,   maxerr = 1.48e-04,   rmserr = 1.87e-05
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  102 accuracy
+   work = 329,   maxerr = 6.42e-04,   rmserr = 7.07e-05
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 241,   maxerr = 6.56e-05,   rmserr = 5.88e-06
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+   work = 270,   maxerr = 2.37e-05,   rmserr = 3.01e-06
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  100 accuracy
+   work = 329,   maxerr = 8.89e-04,   rmserr = 9.48e-05
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 209,   maxerr = 5.32e-04,   rmserr = 5.91e-05
+ARK3(2), I controller:
+solve_ARK: took 1846 accuracy and 1303 stability steps
+  step failures:  0 convergence,  1303 accuracy
+   work = 3149,   maxerr = 2.61e-04,   rmserr = 2.80e-05
+ARK3(2), PI controller:
+solve_ARK: took 1044 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+   work = 1054,   maxerr = 2.40e-04,   rmserr = 2.54e-05
+ARK3(2), PID controller:
+solve_ARK: took 1074 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 1079,   maxerr = 2.08e-04,   rmserr = 2.20e-05
+ARK3(2), Gustafsson controller:
+solve_ARK: took 3074 accuracy and 2841 stability steps
+  step failures:  0 convergence,  2841 accuracy
+   work = 5915,   maxerr = 3.99e-05,   rmserr = 4.17e-06
+ARK3(2), explicit Gustafsson controller:
+solve_ARK: took 940 accuracy and 41 stability steps
+  step failures:  0 convergence,  41 accuracy
+   work = 981,   maxerr = 4.37e-04,   rmserr = 4.64e-05
+ARK3(2), imex Gustafsson controller:
+solve_ARK: took 940 accuracy and 42 stability steps
+  step failures:  0 convergence,  42 accuracy
+   work = 982,   maxerr = 4.25e-04,   rmserr = 4.49e-05
+ARK4(3), I controller:
+solve_ARK: took 547 accuracy and 312 stability steps
+  step failures:  0 convergence,  312 accuracy
+   work = 859,   maxerr = 4.79e-04,   rmserr = 5.19e-05
+ARK4(3), PI controller:
+solve_ARK: took 434 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 435,   maxerr = 8.73e-05,   rmserr = 9.28e-06
+ARK4(3), PID controller:
+solve_ARK: took 505 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+   work = 506,   maxerr = 4.00e-05,   rmserr = 4.18e-06
+ARK4(3), Gustafsson controller:
+solve_ARK: took 709 accuracy and 518 stability steps
+  step failures:  0 convergence,  518 accuracy
+   work = 1227,   maxerr = 2.07e-05,   rmserr = 2.71e-06
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 390 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+   work = 397,   maxerr = 4.99e-05,   rmserr = 4.94e-06
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 394 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 402,   maxerr = 5.73e-05,   rmserr = 5.71e-06
+ARK5(4), I controller:
+solve_ARK: took 264 accuracy and 140 stability steps
+  step failures:  0 convergence,  140 accuracy
+   work = 404,   maxerr = 4.71e-04,   rmserr = 4.95e-05
+ARK5(4), PI controller:
+solve_ARK: took 269 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 269,   maxerr = 1.45e-04,   rmserr = 1.52e-05
+ARK5(4), PID controller:
+solve_ARK: took 293 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+   work = 293,   maxerr = 1.39e-04,   rmserr = 1.46e-05
+ARK5(4), Gustafsson controller:
+solve_ARK: took 254 accuracy and 125 stability steps
+  step failures:  0 convergence,  125 accuracy
+   work = 379,   maxerr = 3.58e-04,   rmserr = 3.67e-05
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 257 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 259,   maxerr = 2.84e-04,   rmserr = 2.99e-05
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 259 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+   work = 261,   maxerr = 2.84e-04,   rmserr = 2.99e-05
+
+
+---------------------------
+
+
+Van der Pol test 3 (rtol = 1e-06, atol = 1e-14)
+ode15s:
+   work = 788,   maxerr = 6.20e-06,   rmserr = 9.50e-07
+SDIRK3(2), I controller:
+   work = 3333,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+SDIRK3(2), PI controller:
+   work = 1127,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+SDIRK3(2), PID controller:
+   work = 749,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+SDIRK3(2), Gustafsson controller:
+   work = 4,   maxerr = 2.00e+00,   rmserr = 1.21e+00
+SDIRK3(2), explicit Gustafsson controller:
+   work = 716,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+SDIRK4(3), I controller:
+solve_DIRK: step failures:  0 convergence,  553 accuracy
+   work = 1479,   maxerr = 4.61e-07,   rmserr = 1.37e-07
+SDIRK4(3), PI controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 640,   maxerr = 1.36e-07,   rmserr = 4.04e-08
+SDIRK4(3), PID controller:
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+   work = 619,   maxerr = 2.02e-07,   rmserr = 6.01e-08
+SDIRK4(3), Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  641 accuracy
+   work = 1651,   maxerr = 5.17e-08,   rmserr = 1.55e-08
+SDIRK4(3), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  24 accuracy
+   work = 629,   maxerr = 2.34e-07,   rmserr = 6.95e-08
+SDIRK5(4), I controller:
+solve_DIRK: step failures:  0 convergence,  318 accuracy
+   work = 961,   maxerr = 1.37e-06,   rmserr = 4.08e-07
+SDIRK5(4), PI controller:
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+   work = 479,   maxerr = 3.13e-06,   rmserr = 9.31e-07
+SDIRK5(4), PID controller:
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+   work = 502,   maxerr = 1.64e-06,   rmserr = 4.87e-07
+SDIRK5(4), Gustafsson controller:
+solve_DIRK: step failures:  1 convergence,  489 accuracy
+   work = 1389,   maxerr = 1.63e-08,   rmserr = 4.83e-09
+SDIRK5(4), explicit Gustafsson controller:
+solve_DIRK: step failures:  0 convergence,  18 accuracy
+   work = 498,   maxerr = 1.68e-05,   rmserr = 4.98e-06
+ARK3(2), I controller:
+   work = 3192,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+ARK3(2), PI controller:
+   work = 1759,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+ARK3(2), PID controller:
+   work = 1306,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+ARK3(2), Gustafsson controller:
+   work = 4,   maxerr = 2.00e+00,   rmserr = 1.21e+00
+ARK3(2), explicit Gustafsson controller:
+   work = 1540,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+ARK3(2), imex Gustafsson controller:
+   work = 1416,   maxerr = 2.00e+00,   rmserr = 6.11e-01
+ARK4(3), I controller:
+solve_ARK: took 1298 accuracy and 600 stability steps
+  step failures:  0 convergence,  600 accuracy
+   work = 1898,   maxerr = 5.20e-07,   rmserr = 1.55e-07
+ARK4(3), PI controller:
+solve_ARK: took 1314 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 1320,   maxerr = 1.01e-06,   rmserr = 3.00e-07
+ARK4(3), PID controller:
+solve_ARK: took 1413 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+   work = 1419,   maxerr = 8.51e-07,   rmserr = 2.53e-07
+ARK4(3), Gustafsson controller:
+solve_ARK: took 1420 accuracy and 734 stability steps
+  step failures:  0 convergence,  734 accuracy
+   work = 2154,   maxerr = 4.74e-07,   rmserr = 1.41e-07
+ARK4(3), explicit Gustafsson controller:
+solve_ARK: took 982 accuracy and 17 stability steps
+  step failures:  0 convergence,  17 accuracy
+   work = 999,   maxerr = 1.35e-06,   rmserr = 4.01e-07
+ARK4(3), imex Gustafsson controller:
+solve_ARK: took 974 accuracy and 13 stability steps
+  step failures:  0 convergence,  13 accuracy
+   work = 987,   maxerr = 1.48e-06,   rmserr = 4.40e-07
+ARK5(4), I controller:
+solve_ARK: took 866 accuracy and 219 stability steps
+  step failures:  0 convergence,  219 accuracy
+   work = 1085,   maxerr = 5.14e-06,   rmserr = 1.53e-06
+ARK5(4), PI controller:
+solve_ARK: took 1287 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 1292,   maxerr = 7.84e-07,   rmserr = 2.33e-07
+ARK5(4), PID controller:
+solve_ARK: took 1478 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+   work = 1483,   maxerr = 1.54e-06,   rmserr = 4.59e-07
+ARK5(4), Gustafsson controller:
+solve_ARK: took 1135 accuracy and 457 stability steps
+  step failures:  0 convergence,  457 accuracy
+   work = 1592,   maxerr = 7.59e-06,   rmserr = 2.26e-06
+ARK5(4), explicit Gustafsson controller:
+solve_ARK: took 968 accuracy and 15 stability steps
+  step failures:  0 convergence,  15 accuracy
+   work = 983,   maxerr = 1.37e-06,   rmserr = 4.06e-07
+ARK5(4), imex Gustafsson controller:
+solve_ARK: took 901 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+   work = 909,   maxerr = 7.26e-07,   rmserr = 2.16e-07
+
+
+---------------------------
+
+   
