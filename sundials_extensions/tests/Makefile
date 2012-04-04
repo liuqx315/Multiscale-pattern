@@ -17,19 +17,23 @@ LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 # listing of all test routines
 TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
-        nvector_parallel_grid_test.exe 
+        nvector_parallel_grid_test.exe \
+        cv_analytic.exe
 
 # target to build all test executables
 all : ${TESTS}
 
 nvector_serial_test.exe : nvector_serial_test.c
-	${CC} ${CFLAGS_} ${INCS} nvector_serial_test.c ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 nvector_parallel_test.exe : nvector_parallel_test.c
-	${CC} ${CFLAGS_} ${INCS} nvector_parallel_test.c ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
-	${CC} ${CFLAGS_} ${INCS} nvector_parallel_grid_test.c ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+cv_analytic.exe : cv_analytic.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 clean :
 	\rm -f *.o *.exe
