@@ -23,7 +23,7 @@ function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
 %              y(t*) is a column vector of length m.
-%          nsteps = number of internal time steps taken (total stage steps)
+%          nsteps = number of internal time steps taken
 %
 % Note: to run in fixed-step mode, just call the solver using hmin=hmax as
 % the desired time step size.
@@ -48,11 +48,27 @@ c = B(1:s,1);
 b = (B(s+1,2:s+1))';
 A = B(1:s,2:s+1);
 
+% determine method order (and embedding order)
+if (s == 4) 
+   q_method = 3;
+   p_method = 2;
+elseif (s == 6)
+   q_method = 4;
+   p_method = 3;
+elseif (s == 8)
+   q_method = 5;
+   p_method = 4;
+end   
+
 % initialize output arrays
 N = length(tvals);
 m = length(Y0);
 Y = zeros(m,N);
 Y(:,1) = Y0;
+
+% initialize diagnostics
+c_fails = 0;
+a_fails = 0;
 
 % set the solver parameters
 newt_maxit = 20;
@@ -94,8 +110,8 @@ for tstep = 2:length(tvals)
       % initialize data storage for multiple stages
       z = zeros(m,s);
 
-      % reset stage success flag
-      st_success = 0;
+      % reset stage failure flag
+      st_fail = 0;
       
       % loop over stages
       for stage=1:s
@@ -121,12 +137,12 @@ for tstep = 2:length(tvals)
 	 Fdata.t = t;
 	 [Ynew,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
 	     newt_tol, newt_maxit, newt_alpha);
-	 nsteps = nsteps + 1;
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
-	    fprintf('solve_DIRK warning: stage failure, cutting timestep\n');
-	    st_success = 1;
+	    % fprintf('solve_DIRK warning: stage failure, cutting timestep\n');
+	    st_fail = 1;
+	    c_fails = c_fails + 1;
 	    break;
 	 end
 	 
@@ -134,29 +150,51 @@ for tstep = 2:length(tvals)
 	 z(:,stage) = Ynew;
 	 
       end
-
-      % check whether all stages solved successfully
-      if (st_success == 0) 
+      nsteps = nsteps + 1;
       
-	 % use stage solutions to determine time-evolved answer, update old
-	 [Ynew,Y2] = Y_DIRK(z,Fdata);
-	 Y0 = Ynew;
+      
+      % compute new solution, embedding (if available)
+      [Ynew,Y2] = Y_DIRK(z,Fdata);
 
-	 % update time, work counter
-	 t = t + h;
-   
-	 % estimate error and update time step, assuming that method order
-	 % equals number of stages-1 (this should be an input argument)
-	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, s);
+
+      % check whether step accuracy meets tolerances (only if stages successful)
+      if ((st_fail == 0) & embedded)
+
+	 % compute error in current step
+	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
+	 
+	 % if error too high, flag step as a failure (to be recomputed)
+	 if (err_step > 1.2) 
+	    a_fails = a_fails + 1;
+	    st_fail = 1;
 	 end
 	 
-      % if any stages failed, reduce step size and retry
+      end
+
+
+      % if step was successful
+      if (st_fail == 0) 
+      
+	 % update old solution, current time
+	 Y0 = Ynew;
+	 t = t + h;
+   
+	 % estimate error and update time step
+	 if (embedded) 
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, p_method);
+	 else
+	    h = hmin;
+	 end
+	 
+      % if step failed, reduce step size and retry
       else
 	 
 	 % reset solution guess, update work counter, reduce time step
 	 Ynew = Y0;
-	 h = h*dt_reduce;
+	 h = h * dt_reduce;
+         if (h <= hmin) 
+            return
+         end
       
       end
       
@@ -167,5 +205,7 @@ for tstep = 2:length(tvals)
    
 end
 
+fprintf('solve_DIRK: step failures:  %i convergence,  %i accuracy\n',...
+    c_fails,a_fails);
 
 % end function

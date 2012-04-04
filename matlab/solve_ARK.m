@@ -27,7 +27,7 @@ function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, 
 %          atol = desired time accuracy absolute tolerance 
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
-%          nsteps = number of internal time steps taken (total stage steps)
+%          nsteps = number of internal time steps taken
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
@@ -84,6 +84,19 @@ if (si == se-1)
    end
 end
 
+% determine method order (and embedding order)
+if (se == 4) 
+   q_method = 3;
+   p_method = 2;
+elseif (se == 6)
+   q_method = 4;
+   p_method = 3;
+elseif (se == 8)
+   q_method = 5;
+   p_method = 4;
+end   
+
+
 % ensure that ci now equals ce, otherwise return with error
 if (si ~= se)
    error('incompatible SDIRK/EKR pair for ARK method, internal stage mismatch!')
@@ -100,8 +113,10 @@ Y = zeros(m,N);
 Y(:,1) = Y0;
 
 % initialize diagnostics
-h_e = 0;
-h_i = 0;
+h_s = 0;
+h_a = 0;
+c_fails = 0;
+a_fails = 0;
 
 % set the solver parameters
 newt_maxit = 20;
@@ -150,8 +165,8 @@ for tstep = 2:length(tvals)
       % initialize data storage for multiple stages
       z = zeros(m,si);
 
-      % reset stage success flag
-      st_success = 0;
+      % reset step failure flag
+      st_fail = 0;
       
       % loop over stages
       for stage=1:si
@@ -181,12 +196,12 @@ for tstep = 2:length(tvals)
 	 Fdata.t = t;
 	 [Ynew,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
 	     newt_tol, newt_maxit, newt_alpha);
-	 nsteps = nsteps + 1;
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
-	    fprintf('solve_ARK warning: stage failure, cutting timestep\n');
-	    st_success = 1;
+	    % fprintf('solve_ARK warning: stage failure, cutting timestep\n');
+	    st_fail = 1;
+	    c_fails = c_fails + 1;
 	    break;
 	 end
 	 
@@ -194,21 +209,38 @@ for tstep = 2:length(tvals)
 	 z(:,stage) = Ynew;
 	 
       end
+      nsteps = nsteps + 1;
 
-      % check whether all stages solved successfully
-      if (st_success == 0) 
+
+      % compute new solution, embedding (if available)
+      [Ynew,Y2] = Y_ARK(z,Fdata);
+
       
-	 % use stage solutions to determine time-evolved answer, update old
-	 [Ynew,Y2] = Y_ARK(z,Fdata);
-	 Y0 = Ynew;
+      % check whether step accuracy meets tolerances (only if stages successful)
+      if ((st_fail == 0) & embedded)
 
-	 % update time, work counter
+	 % compute error in current step
+	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
+	 
+	 % if error too high, flag step as a failure (to be recomputed)
+	 if (err_step > 1.2) 
+	    a_fails = a_fails + 1;
+	    st_fail = 1;
+	 end
+	 
+      end
+      
+      
+      % if step was successful
+      if (st_fail == 0) 
+      
+	 % update old solution, current time
+	 Y0 = Ynew;
 	 t = t + h;
    
-	 % for embedded methods, estimate error and update time step,
-	 % assuming that method local truncation error order equals number of stages
+	 % for embedded methods, estimate error and update time step
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, si);
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, p_method);
 	 else
 	    h = hmin;
 	 end
@@ -216,19 +248,23 @@ for tstep = 2:length(tvals)
 	 % limit time step by explicit method stability condition
 	 hstab = dt_stable * feval(EStabFn, t, Ynew);
 	 if (h < hstab)
-	    h_i = h_i + si;
+	    h_a = h_a + 1;
 	 else
-	    h_e = h_e + si;
-	    fprintf('   h limited for explicit stability: h_i = %g, h_e = %g\n',h,hstab);
+	    h_s = h_s + 1;
+	    % fprintf('   h limited for explicit stability: h = %g, h_stab = %g\n',h,hstab);
 	 end
 	 h = min([h, hstab]);
 	 
-      % if any stages failed, reduce step size and retry
+      % if step failed, reduce step size and retry
       else
 	 
 	 % reset solution guess, update work counter, reduce time step
 	 Ynew = Y0;
 	 h = h * dt_reduce;
+	 h_s = h_s + 1;
+         if (h <= hmin) 
+            return
+         end
       
       end
       
@@ -241,7 +277,8 @@ end
 
 
 % output diagnostics
-fprintf('solve_ARK: took %i explicit and %i implicit steps\n',h_e,h_i);
+fprintf('solve_ARK: took %i accuracy and %i stability steps\n',h_a,h_s);
+fprintf('  step failures:  %i convergence,  %i accuracy\n',c_fails,a_fails);
 
 
 % end function

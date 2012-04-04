@@ -20,7 +20,7 @@ function [tvals,Y,nsteps] = solve_ERK(fcn, EStabFn, tvals, Y0, B, rtol, atol, hm
 %          atol = desired time accuracy absolute tolerance 
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
-%          nsteps = number of internal time steps taken (total stage steps)
+%          nsteps = number of internal time steps taken
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
@@ -48,6 +48,18 @@ else
    embedded = 0;
 end
 
+% determine method order (and embedding order)
+if (s == 4) 
+   q_method = 3;
+   p_method = 2;
+elseif (s == 6)
+   q_method = 4;
+   p_method = 3;
+elseif (s == 8)
+   q_method = 5;
+   p_method = 4;
+end   
+
 % initialize output arrays
 N = length(tvals);
 m = length(Y0);
@@ -57,6 +69,7 @@ Y(:,1) = Y0;
 % initialize diagnostics
 h_a = 0;
 h_s = 0;
+a_fails = 0;
 
 % set the solver parameters
 dt_safety  = 0.1;
@@ -96,8 +109,8 @@ for tstep = 2:length(tvals)
       % initialize data storage for multiple stages
       z = zeros(m,s);
 
-      % reset stage success flag
-      st_success = 0;
+      % reset step failure flag
+      st_fail = 0;
       
       % loop over stages
       for stage=1:s
@@ -114,36 +127,67 @@ for tstep = 2:length(tvals)
 	 for j=1:stage-1
 	    z(:,stage) = z(:,stage) + h*A(stage,j)*feval(fcn,t+h*c(j),z(:,j));
 	 end
-	 nsteps = nsteps + 1;
 	 
       end
+      nsteps = nsteps + 1;
 
-      % use stage solutions to determine time-evolved answer, update old
+      % compute new solution, embedding (if available)
       Fdata.t = t;
       [Ynew,Y2] = Y_ERK(z,Fdata);
-      Y0 = Ynew;
+
       
-      % update time, work counter
-      t = t + h;
-      
-      % for embedded methods, estimate error and update time step,
-      % assuming that method local truncation error order equals number of stages
-      if (embedded) 
-	 h = h_estimate(Ynew, Y2, h, rtol, atol, s);
-      else
-	 h = hmin;
-      end
-      
-      % limit time step by stability condition
-      hstab = dt_stable * feval(EStabFn, t, Ynew);
-      if (h < hstab)
-	 h_a = h_a + s;
-      else
-	 h_s = h_s + s;
-	 %fprintf('   h limited for explicit stability: h_i = %g, h_e = %g\n',h,hstab);
-      end
-      h = min([h, hstab]);
+      % check whether step accuracy meets tolerances
+      if (embedded)
+
+	 % compute error in current step
+	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
 	 
+	 % if error too high, flag step as a failure (to be recomputed)
+	 if (err_step > 1.2) 
+	    a_fails = a_fails + 1;
+	    st_fail = 1;
+	 end
+	 
+      end
+      
+      % if step was successful
+      if (st_fail == 0) 
+      
+	 % update old solution, current time
+	 Y0 = Ynew;
+	 t = t + h;
+      
+	 % for embedded methods, estimate error and update time step,
+	 % assuming that method local truncation error order equals number of stages
+	 if (embedded) 
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, p_method);
+	 else
+	    h = hmin;
+	 end
+	 
+	 % limit time step by stability condition
+	 hstab = dt_stable * feval(EStabFn, t, Ynew);
+	 if (h < hstab)
+	    h_a = h_a + 1;
+	 else
+	    h_s = h_s + 1;
+	    %fprintf('   h limited for explicit stability: h_i = %g, h_e = %g\n',h,hstab);
+	 end
+	 h = min([h, hstab]);
+	 
+      % if step failed, reduce step size and retry
+      else
+	 
+	 % reset solution guess, update work counter, reduce time step
+	 Ynew = Y0;
+	 h = h * dt_reduce;
+	 h_s = h_s + 1;
+         if (h <= hmin) 
+            return
+         end
+	 
+      end
+      
    end
 
    % store updated solution
@@ -153,7 +197,8 @@ end
 
 
 % output diagnostics
-%fprintf('solve_ERK: took %i accuracy and %i stability steps\n',h_a,h_s);
+fprintf('solve_ERK: took %i accuracy and %i stability steps (%i failures)\n',...
+    h_a, h_s, a_fails);
 
 
 % end function
