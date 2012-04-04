@@ -13,12 +13,13 @@ clear
 
 % set problem parameters
 ep = 1e-4;
+ep2 = 1.0;
 
 % set the total integration time
 Tf = 1.5;
 
 % set desired output times
-tout = [0,Tf];
+tout = linspace(0,Tf,100);
 
 % set the time step size bounds, tolerance
 %hmin = 10^(-4.5);
@@ -28,12 +29,14 @@ rtol = 1e-6;
 atol = 1e-14*ones(2,1);
 
 % get the DIRK Butcher tables
-% mname = 'ARK3(2)4L[2]SA-ESDIRK';
-mname = 'ARK4(3)6L[2]SA-ESDIRK';
+mname = 'ARK3(2)4L[2]SA-ESDIRK';
+%mname = 'ARK4(3)6L[2]SA-ESDIRK';
+%mname = 'ARK5(4)8L[2]SA-ESDIRK';
 B = butcher(mname);
 
-% mname2 = 'ARK3(2)4L[2]SA-ERK';
-mname2 = 'ARK4(3)6L[2]SA-ERK';
+mname2 = 'ARK3(2)4L[2]SA-ERK';
+%mname2 = 'ARK4(3)6L[2]SA-ERK';
+%mname2 = 'ARK5(4)8L[2]SA-ERK';
 B2 = butcher(mname2);
 
 
@@ -45,6 +48,7 @@ Y0 = [u0; v0];
 % store problem parameters
 global Pdata;
 Pdata.ep = ep;
+Pdata.ep2 = ep2;
 
 
 fprintf('\nVan der Pol test (rtol = %g, atol = %g)\n',rtol,atol(1))
@@ -59,20 +63,16 @@ fprintf('\nRunning ode15s to check accuracy/efficiency\n')
 
 % see number of steps required by ode15s
 opts = odeset('RelTol',rtol,'AbsTol',atol,'InitialStep',hmin,'MaxStep',hmax);
-[t,Y] = ode15s('f_VanderPol', [0,Tf], Y0, opts);
+[t,Y] = ode15s('f_VanderPol', [0,Tf], Y0, opts);  nsteps = length(t);
+[t,Y] = ode15s('f_VanderPol', tout, Y0, opts);
 
 % compute error
-err_max = 0;
-err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
-fprintf('   work = %i\n',length(t));
+fprintf('   work = %i\n',nsteps);
 
 
 
@@ -81,20 +81,16 @@ fprintf('\nRunning ode45 to check accuracy/efficiency\n')
 
 % see number of steps required by ode15s
 opts = odeset('RelTol',rtol,'AbsTol',atol,'InitialStep',hmin,'MaxStep',hmax);
-[t,Y] = ode45('f_VanderPol', [0,Tf], Y0, opts);
+[t,Y] = ode45('f_VanderPol', [0,Tf], Y0, opts);  nsteps = length(t);
+[t,Y] = ode45('f_VanderPol', tout, Y0, opts);
 
 % compute error
-err_max = 0;
-err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
-fprintf('   work = %i\n',length(t));
+fprintf('   work = %i\n',nsteps);
 
 
 
@@ -106,14 +102,9 @@ fprintf('\nRunning with SDIRK integrator: %s\n',mname)
     atol, hmin, hmax);
 
 % compute error
-err_max = 0;
-err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y'-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y'-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
@@ -127,14 +118,9 @@ fprintf('\nRunning with ARK pair: %s / %s\n',mname,mname2)
     'EStab_VanderPol', tout, Y0, B, B2, rtol, atol, hmin, hmax);
 
 % compute error
-err_max = 0;
-err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y'-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y'-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
@@ -147,14 +133,9 @@ fprintf('\nRunning tests with ERK integrator: %s\n',mname2)
 [t,Y,ns] = solve_ERK('f_VanderPol', 'EStab_VanderPol', tout, Y0, B2, rtol, atol, hmin, hmax);
 
 % compute error
-err_max = 0;
-err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y'-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y'-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);

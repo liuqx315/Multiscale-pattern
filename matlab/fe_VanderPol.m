@@ -10,6 +10,7 @@ function dy = fe_VanderPol(t, y)
 % model parameters
 global Pdata;
 ep = Pdata.ep;
+ep2 = Pdata.ep2;
 
 % extract variables
 u = y(1);
