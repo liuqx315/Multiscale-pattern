@@ -16,10 +16,10 @@ d2 = 0.025;
 
 % set the total integration time, mesh size
 Tf = 80;
-N = 1.0/0.002;
+N = 1.0/0.005;
 
 % set desired output times
-tout = linspace(0,Tf,50);
+tout = linspace(0,Tf,100);
 
 % set the time step size bounds, tolerance
 hmin = 1e-6;
@@ -66,17 +66,20 @@ fprintf('\nRunning ode15s to check accuracy/efficiency\n')
 
 % see number of steps required by ode15s
 opts = odeset('RelTol',rtol,'AbsTol',atol,'InitialStep',hmin,'MaxStep',hmax);
-[t,Y] = ode15s('f_bruss_1D', [0,Tf], Y0, opts);
+[t,Y] = ode15s('f_bruss_1D', tout, Y0, opts);
 
 % compute error
 err_max = 0;
 err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
+% $$$ for j=1:length(Y0)
+% $$$    diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
+% $$$    err_max = max([err_max, abs(diff)]);
+% $$$    err_rms = err_rms + diff^2;
+% $$$ end
+% $$$ err_rms = sqrt(err_rms/length(Y0));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',length(t));
@@ -87,17 +90,20 @@ fprintf('   work = %i\n',length(t));
 % $$$ 
 % $$$ % see number of steps required by ode15s
 % $$$ opts = odeset('RelTol',rtol,'AbsTol',atol,'InitialStep',hmin,'MaxStep',hmax);
-% $$$ [t,Y] = ode45('f_bruss_1D', [0,Tf], Y0, opts);
+% $$$ [t,Y] = ode45('f_bruss_1D', tout, Y0, opts);
 % $$$ 
 % $$$ % compute error
 % $$$ err_max = 0;
 % $$$ err_rms = 0;
-% $$$ for j=1:length(Y0)
-% $$$    diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
-% $$$    err_max = max([err_max, abs(diff)]);
-% $$$    err_rms = err_rms + diff^2;
-% $$$ end
-% $$$ err_rms = sqrt(err_rms/length(Y0));
+% $$$ err_max = max(max(abs((Y-Ytrue)./Ytrue)));
+% $$$ err_rms = sum(sum(((Y-Ytrue)./Ytrue).^2));
+% $$$ err_rms = sqrt(err_rms/numel(Y));
+% $$$ % $$$ for j=1:length(Y0)
+% $$$ % $$$    diff = (Y(end,j) - Ytrue(end,j))/Ytrue(end,j);
+% $$$ % $$$    err_max = max([err_max, abs(diff)]);
+% $$$ % $$$    err_rms = err_rms + diff^2;
+% $$$ % $$$ end
+% $$$ % $$$ err_rms = sqrt(err_rms/length(Y0));
 % $$$ fprintf('Accuracy/Work Results:\n')
 % $$$ fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 % $$$ fprintf('   work = %i\n',length(t));
@@ -112,12 +118,15 @@ fprintf('\nRunning test with SDIRK integrator: %s\n',mname)
 % compute error
 err_max = 0;
 err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y'-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y'-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
+% $$$ for j=1:length(Y0)
+% $$$    diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
+% $$$    err_max = max([err_max, abs(diff)]);
+% $$$    err_rms = err_rms + diff^2;
+% $$$ end
+% $$$ err_rms = sqrt(err_rms/length(Y0));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
@@ -133,12 +142,15 @@ fprintf('\nRunning with ARK pair: %s / %s\n',mname,mname2)
 % compute error
 err_max = 0;
 err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y'-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y'-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
+% $$$ for j=1:length(Y0)
+% $$$    diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
+% $$$    err_max = max([err_max, abs(diff)]);
+% $$$    err_rms = err_rms + diff^2;
+% $$$ end
+% $$$ err_rms = sqrt(err_rms/length(Y0));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
@@ -153,12 +165,15 @@ fprintf('\nRunning tests with ERK integrator: %s\n',mname2)
 % compute error
 err_max = 0;
 err_rms = 0;
-for j=1:length(Y0)
-   diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
-   err_max = max([err_max, abs(diff)]);
-   err_rms = err_rms + diff^2;
-end
-err_rms = sqrt(err_rms/length(Y0));
+err_max = max(max(abs((Y'-Ytrue)./Ytrue)));
+err_rms = sum(sum(((Y'-Ytrue)./Ytrue).^2));
+err_rms = sqrt(err_rms/numel(Y));
+% $$$ for j=1:length(Y0)
+% $$$    diff = (Y(j,end) - Ytrue(end,j))/Ytrue(end,j);
+% $$$    err_max = max([err_max, abs(diff)]);
+% $$$    err_rms = err_rms + diff^2;
+% $$$ end
+% $$$ err_rms = sqrt(err_rms/length(Y0));
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);

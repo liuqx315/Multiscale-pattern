@@ -30,12 +30,12 @@ rtol = 1e-6;
 atol = 1e-14*ones(N,1);
 
 % get the DIRK Butcher tables
-mname = 'ARK3(2)4L[2]SA-ESDIRK';
-%mname = 'ARK4(3)6L[2]SA-ESDIRK';
+%mname = 'ARK3(2)4L[2]SA-ESDIRK';
+mname = 'ARK4(3)6L[2]SA-ESDIRK';
 B = butcher(mname);
 
-mname2 = 'ARK3(2)4L[2]SA-ERK';
-%mname2 = 'ARK4(3)6L[2]SA-ERK';
+%mname2 = 'ARK3(2)4L[2]SA-ERK';
+mname2 = 'ARK4(3)6L[2]SA-ERK';
 B2 = butcher(mname2);
 
 
