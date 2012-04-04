@@ -21,7 +21,7 @@ all :
 	for dir in ${EXTEN}; do \
 	  $(MAKE) -C $$dir; \
 	done
-	ar -r sundials_extensions.a */*.o
+	ar -cr sundials_extensions.a */*.o
 	make -C tests
 
 clean : 
