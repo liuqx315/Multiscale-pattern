@@ -10,7 +10,7 @@
  * All rights reserved.
  * For details, see the LICENSE file.
  * -----------------------------------------------------------------
- * This is the implementation file for a ghosted parallel MPI 
+ * This is the implementation file for a grid parallel MPI 
  * implementation of the NVECTOR package.
  * -----------------------------------------------------------------
  */
@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <nvector/nvector_parallel_ghost.h>
+#include <nvector/nvector_parallel_grid.h>
 #include <sundials/sundials_math.h>
 
 #define ZERO   RCONST(0.0)
@@ -28,7 +28,7 @@
 
 /* Error Message */
 
-#define BAD_N1 "N_VNew_Parallel_Ghost -- Sum of local vector lengths "
+#define BAD_N1 "N_VNew_Parallel_Grid -- Sum of local vector lengths "
 #define BAD_N2 "differs from input global length. \n\n"
 #define BAD_N   BAD_N1 BAD_N2
 
@@ -67,27 +67,27 @@ static booleantype VCheck_Compatible(N_Vector x, N_Vector z);
 /* vector data length */
 static long int NV_DATALEN_PG(N_Vector x);
 /* Reduction operations add/max/min over the processor group */
-static realtype VAllReduce_Parallel_Ghost(realtype d, int op, MPI_Comm comm);
+static realtype VAllReduce_Parallel_Grid(realtype d, int op, MPI_Comm comm);
 /* z=x */
-static void VCopy_Parallel_Ghost(N_Vector x, N_Vector z);
+static void VCopy_Parallel_Grid(N_Vector x, N_Vector z);
 /* z=x+y */
-static void VSum_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z);
+static void VSum_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z);
 /* z=x-y */
-static void VDiff_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z);
+static void VDiff_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z);
 /* z=-x */
-static void VNeg_Parallel_Ghost(N_Vector x, N_Vector z);
+static void VNeg_Parallel_Grid(N_Vector x, N_Vector z);
 /* z=c(x+y) */
-static void VScaleSum_Parallel_Ghost(realtype c, N_Vector x, N_Vector y, N_Vector z);
+static void VScaleSum_Parallel_Grid(realtype c, N_Vector x, N_Vector y, N_Vector z);
 /* z=c(x-y) */
-static void VScaleDiff_Parallel_Ghost(realtype c, N_Vector x, N_Vector y, N_Vector z); 
+static void VScaleDiff_Parallel_Grid(realtype c, N_Vector x, N_Vector y, N_Vector z); 
 /* z=ax+y */
-static void VLin1_Parallel_Ghost(realtype a, N_Vector x, N_Vector y, N_Vector z);
+static void VLin1_Parallel_Grid(realtype a, N_Vector x, N_Vector y, N_Vector z);
 /* z=ax-y */
-static void VLin2_Parallel_Ghost(realtype a, N_Vector x, N_Vector y, N_Vector z);
+static void VLin2_Parallel_Grid(realtype a, N_Vector x, N_Vector y, N_Vector z);
 /* y <- ax+y */
-static void Vaxpy_Parallel_Ghost(realtype a, N_Vector x, N_Vector y);
+static void Vaxpy_Parallel_Grid(realtype a, N_Vector x, N_Vector y);
 /* x <- ax */
-static void VScaleBy_Parallel_Ghost(realtype a, N_Vector x);
+static void VScaleBy_Parallel_Grid(realtype a, N_Vector x);
 
 /*
  * -----------------------------------------------------------------
@@ -96,31 +96,31 @@ static void VScaleBy_Parallel_Ghost(realtype a, N_Vector x);
  */
 
 /* ----------------------------------------------------------------
- * Function to create a new parallel ghosted vector with empty data array
+ * Function to create a new parallel grid vector with empty data array
  */
 
-N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm, 
-				    long int dims,
-				    long int *dim_length,
-				    long int *dim_alength,
-				    long int *dim_offset,
-				    long int F_ordering,
-				    long int global_length)
+N_Vector N_VNewEmpty_Parallel_Grid(MPI_Comm comm, 
+				   long int dims,
+				   long int *dim_length,
+				   long int *dim_alength,
+				   long int *dim_offset,
+				   long int F_ordering,
+				   long int global_length)
 {
   N_Vector v;
   N_Vector_Ops ops;
-  N_VectorContent_Parallel_Ghost content;
+  N_VectorContent_Parallel_Grid content;
   long int n, Nsum;
   int i;
 
   /* ensure that 0 < dims <= MAX_DIMS */
   if (dims > MAX_DIMS) {
-    printf("N_VNew_Parallel_Ghost error -- dims must be at most %i\n\n",
+    printf("N_VNew_Parallel_Grid error -- dims must be at most %i\n\n",
 	   MAX_DIMS);
     return(NULL);
   }
   if (dims == 0) {
-    printf("N_VNew_Parallel_Ghost error -- dims must be at least 1\n\n");
+    printf("N_VNew_Parallel_Grid error -- dims must be at least 1\n\n");
     return(NULL);
   }
 
@@ -145,36 +145,36 @@ N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm,
   ops = (N_Vector_Ops) malloc(sizeof(struct _generic_N_Vector_Ops));
   if (ops == NULL) { free(v); return(NULL); }
 
-  ops->nvclone           = N_VClone_Parallel_Ghost;
-  ops->nvcloneempty      = N_VCloneEmpty_Parallel_Ghost;
-  ops->nvdestroy         = N_VDestroy_Parallel_Ghost;
-  ops->nvspace           = N_VSpace_Parallel_Ghost;
-  ops->nvgetarraypointer = N_VGetArrayPointer_Parallel_Ghost;
-  ops->nvsetarraypointer = N_VSetArrayPointer_Parallel_Ghost;
-  ops->nvlinearsum       = N_VLinearSum_Parallel_Ghost;
-  ops->nvconst           = N_VConst_Parallel_Ghost;
-  ops->nvprod            = N_VProd_Parallel_Ghost;
-  ops->nvdiv             = N_VDiv_Parallel_Ghost;
-  ops->nvscale           = N_VScale_Parallel_Ghost;
-  ops->nvabs             = N_VAbs_Parallel_Ghost;
-  ops->nvinv             = N_VInv_Parallel_Ghost;
-  ops->nvaddconst        = N_VAddConst_Parallel_Ghost;
-  ops->nvdotprod         = N_VDotProd_Parallel_Ghost;
-  ops->nvmaxnorm         = N_VMaxNorm_Parallel_Ghost;
-  ops->nvwrmsnormmask    = N_VWrmsNormMask_Parallel_Ghost;
-  ops->nvwrmsnorm        = N_VWrmsNorm_Parallel_Ghost;
-  ops->nvmin             = N_VMin_Parallel_Ghost;
-  ops->nvwl2norm         = N_VWL2Norm_Parallel_Ghost;
-  ops->nvl1norm          = N_VL1Norm_Parallel_Ghost;
-  ops->nvcompare         = N_VCompare_Parallel_Ghost;
-  ops->nvinvtest         = N_VInvTest_Parallel_Ghost;
-  ops->nvconstrmask      = N_VConstrMask_Parallel_Ghost;
-  ops->nvminquotient     = N_VMinQuotient_Parallel_Ghost;
+  ops->nvclone           = N_VClone_Parallel_Grid;
+  ops->nvcloneempty      = N_VCloneEmpty_Parallel_Grid;
+  ops->nvdestroy         = N_VDestroy_Parallel_Grid;
+  ops->nvspace           = N_VSpace_Parallel_Grid;
+  ops->nvgetarraypointer = N_VGetArrayPointer_Parallel_Grid;
+  ops->nvsetarraypointer = N_VSetArrayPointer_Parallel_Grid;
+  ops->nvlinearsum       = N_VLinearSum_Parallel_Grid;
+  ops->nvconst           = N_VConst_Parallel_Grid;
+  ops->nvprod            = N_VProd_Parallel_Grid;
+  ops->nvdiv             = N_VDiv_Parallel_Grid;
+  ops->nvscale           = N_VScale_Parallel_Grid;
+  ops->nvabs             = N_VAbs_Parallel_Grid;
+  ops->nvinv             = N_VInv_Parallel_Grid;
+  ops->nvaddconst        = N_VAddConst_Parallel_Grid;
+  ops->nvdotprod         = N_VDotProd_Parallel_Grid;
+  ops->nvmaxnorm         = N_VMaxNorm_Parallel_Grid;
+  ops->nvwrmsnormmask    = N_VWrmsNormMask_Parallel_Grid;
+  ops->nvwrmsnorm        = N_VWrmsNorm_Parallel_Grid;
+  ops->nvmin             = N_VMin_Parallel_Grid;
+  ops->nvwl2norm         = N_VWL2Norm_Parallel_Grid;
+  ops->nvl1norm          = N_VL1Norm_Parallel_Grid;
+  ops->nvcompare         = N_VCompare_Parallel_Grid;
+  ops->nvinvtest         = N_VInvTest_Parallel_Grid;
+  ops->nvconstrmask      = N_VConstrMask_Parallel_Grid;
+  ops->nvminquotient     = N_VMinQuotient_Parallel_Grid;
 
   /* Create content */
   content = NULL;
-  content = (N_VectorContent_Parallel_Ghost) 
-    malloc(sizeof(struct _N_VectorContent_Parallel_Ghost));
+  content = (N_VectorContent_Parallel_Grid) 
+    malloc(sizeof(struct _N_VectorContent_Parallel_Grid));
   if (content == NULL) { free(ops); free(v); return(NULL); }
 
   /* Attach vector components */
@@ -197,7 +197,7 @@ N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm,
   for (i=0; i<MAX_DIMS; i++) 
     if (content->dim_alength[i]+content->dim_offset[i] > content->dim_length[i])
       {
-	printf("N_VNewEmpty_Parallel_Ghost: illegal inputs for dimension %i:\n",i);
+	printf("N_VNewEmpty_Parallel_Grid: illegal inputs for dimension %i:\n",i);
 	printf("  total length (%li) must exceed active length (%li) plus offset (%li)\n",
 	       content->dim_length[i],content->dim_alength[i],content->dim_offset[i]);
 	return NULL;
@@ -211,23 +211,23 @@ N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm,
 }
 
 /* ---------------------------------------------------------------- 
- * Function to create a new parallel ghosted vector
+ * Function to create a new parallel grid vector
  */
 
-N_Vector N_VNew_Parallel_Ghost(MPI_Comm comm, 
-			       long int dims,
-			       long int *dim_length,
-			       long int *dim_alength,
-			       long int *dim_offset,
-			       long int F_ordering,
-			       long int global_length)
+N_Vector N_VNew_Parallel_Grid(MPI_Comm comm, 
+			      long int dims,
+			      long int *dim_length,
+			      long int *dim_alength,
+			      long int *dim_offset,
+			      long int F_ordering,
+			      long int global_length)
 {
   N_Vector v;
   realtype *data;
 
   v = NULL;
-  v = N_VNewEmpty_Parallel_Ghost(comm, dims, dim_length, dim_alength, 
-				 dim_offset, F_ordering, global_length);
+  v = N_VNewEmpty_Parallel_Grid(comm, dims, dim_length, dim_alength, 
+				dim_offset, F_ordering, global_length);
   if (v == NULL) return(NULL);
 
   /* Compute total local length */
@@ -241,7 +241,7 @@ N_Vector N_VNew_Parallel_Ghost(MPI_Comm comm,
     /* Allocate memory, initialize to zero */
     data = NULL;
     data = (realtype *) malloc(local_length * sizeof(realtype));
-    if(data == NULL) { N_VDestroy_Parallel_Ghost(v); return(NULL); }
+    if(data == NULL) { N_VDestroy_Parallel_Grid(v); return(NULL); }
     for (i=0; i<local_length; i++)  data[i] = 0.0;
 
     /* Attach data */
@@ -254,23 +254,23 @@ N_Vector N_VNew_Parallel_Ghost(MPI_Comm comm,
 }
 
 /* ---------------------------------------------------------------- 
- * Function to create a parallel ghosted N_Vector with user data component 
+ * Function to create a parallel grid N_Vector with user data component 
  */
 
-N_Vector N_VMake_Parallel_Ghost(MPI_Comm comm, 
-				long int dims,
-				long int *dim_length,
-				long int *dim_alength,
-				long int *dim_offset,
-				long int F_ordering,
-				long int global_length,
-				realtype *v_data)
+N_Vector N_VMake_Parallel_Grid(MPI_Comm comm, 
+			       long int dims,
+			       long int *dim_length,
+			       long int *dim_alength,
+			       long int *dim_offset,
+			       long int F_ordering,
+			       long int global_length,
+			       realtype *v_data)
 {
   N_Vector v;
 
   v = NULL;
-  v = N_VNewEmpty_Parallel_Ghost(comm, dims, dim_length, dim_alength, 
-				 dim_offset, F_ordering, global_length);
+  v = N_VNewEmpty_Parallel_Grid(comm, dims, dim_length, dim_alength, 
+				dim_offset, F_ordering, global_length);
   if (v == NULL) return(NULL);
 
   if (NV_DATALEN_PG(v) > 0) {
@@ -283,10 +283,10 @@ N_Vector N_VMake_Parallel_Ghost(MPI_Comm comm,
 }
 
 /* ---------------------------------------------------------------- 
- * Function to create an array of new parallel ghosted vectors. 
+ * Function to create an array of new parallel grid vectors. 
  */
 
-N_Vector *N_VCloneVectorArray_Parallel_Ghost(int count, N_Vector w)
+N_Vector *N_VCloneVectorArray_Parallel_Grid(int count, N_Vector w)
 {
   N_Vector *vs;
   int j;
@@ -299,9 +299,9 @@ N_Vector *N_VCloneVectorArray_Parallel_Ghost(int count, N_Vector w)
 
   for (j = 0; j < count; j++) {
     vs[j] = NULL;
-    vs[j] = N_VClone_Parallel_Ghost(w);
+    vs[j] = N_VClone_Parallel_Grid(w);
     if (vs[j] == NULL) {
-      N_VDestroyVectorArray_Parallel_Ghost(vs, j-1);
+      N_VDestroyVectorArray_Parallel_Grid(vs, j-1);
       return(NULL);
     }
   }
@@ -310,11 +310,11 @@ N_Vector *N_VCloneVectorArray_Parallel_Ghost(int count, N_Vector w)
 }
 
 /* ---------------------------------------------------------------- 
- * Function to create an array of new parallel ghosted vectors with empty
+ * Function to create an array of new parallel grid vectors with empty
  * (NULL) data array.
  */
 
-N_Vector *N_VCloneVectorArrayEmpty_Parallel_Ghost(int count, N_Vector w)
+N_Vector *N_VCloneVectorArrayEmpty_Parallel_Grid(int count, N_Vector w)
 {
   N_Vector *vs;
   int j;
@@ -327,9 +327,9 @@ N_Vector *N_VCloneVectorArrayEmpty_Parallel_Ghost(int count, N_Vector w)
 
   for (j = 0; j < count; j++) {
     vs[j] = NULL;
-    vs[j] = N_VCloneEmpty_Parallel_Ghost(w);
+    vs[j] = N_VCloneEmpty_Parallel_Grid(w);
     if (vs[j] == NULL) {
-      N_VDestroyVectorArray_Parallel_Ghost(vs, j-1);
+      N_VDestroyVectorArray_Parallel_Grid(vs, j-1);
       return(NULL);
     }
   }
@@ -338,14 +338,14 @@ N_Vector *N_VCloneVectorArrayEmpty_Parallel_Ghost(int count, N_Vector w)
 }
 
 /* ----------------------------------------------------------------
- * Function to free an array created with N_VCloneVectorArray_Parallel_Ghost
+ * Function to free an array created with N_VCloneVectorArray_Parallel_Grid
  */
 
-void N_VDestroyVectorArray_Parallel_Ghost(N_Vector *vs, int count)
+void N_VDestroyVectorArray_Parallel_Grid(N_Vector *vs, int count)
 {
   int j;
 
-  for (j = 0; j < count; j++) N_VDestroy_Parallel_Ghost(vs[j]);
+  for (j = 0; j < count; j++) N_VDestroy_Parallel_Grid(vs[j]);
 
   free(vs); vs = NULL;
 
@@ -353,10 +353,10 @@ void N_VDestroyVectorArray_Parallel_Ghost(N_Vector *vs, int count)
 }
 
 /* ---------------------------------------------------------------- 
- * Function to print the active portion of a parallel ghosted vector 
+ * Function to print the active portion of a parallel grid vector 
  */
 
-void N_VPrint_Parallel_Ghost(N_Vector x)
+void N_VPrint_Parallel_Grid(N_Vector x)
 {
   /* get array dimensions */
   long int i;
@@ -484,10 +484,10 @@ void N_VPrint_Parallel_Ghost(N_Vector x)
 }
 
 /* ---------------------------------------------------------------- 
- * Function to print all data in a parallel ghosted vector 
+ * Function to print all data in a parallel grid vector 
  */
 
-void N_VPrintAll_Parallel_Ghost(N_Vector x)
+void N_VPrintAll_Parallel_Grid(N_Vector x)
 {
   /* get array dimensions */
   long int i;
@@ -618,11 +618,11 @@ void N_VPrintAll_Parallel_Ghost(N_Vector x)
  * -----------------------------------------------------------------
  */
 
-N_Vector N_VCloneEmpty_Parallel_Ghost(N_Vector w)
+N_Vector N_VCloneEmpty_Parallel_Grid(N_Vector w)
 {
   N_Vector v;
   N_Vector_Ops ops;
-  N_VectorContent_Parallel_Ghost content;
+  N_VectorContent_Parallel_Grid content;
 
   if (w == NULL) return(NULL);
 
@@ -664,8 +664,8 @@ N_Vector N_VCloneEmpty_Parallel_Ghost(N_Vector w)
 
   /* Create content */  
   content = NULL;
-  content = (N_VectorContent_Parallel_Ghost) 
-    malloc(sizeof(struct _N_VectorContent_Parallel_Ghost));
+  content = (N_VectorContent_Parallel_Grid) 
+    malloc(sizeof(struct _N_VectorContent_Parallel_Grid));
   if (content == NULL) { free(ops); free(v); return(NULL); }
 
   /* Attach lengths and communicator */
@@ -687,14 +687,14 @@ N_Vector N_VCloneEmpty_Parallel_Ghost(N_Vector w)
   return(v);
 }
 
-N_Vector N_VClone_Parallel_Ghost(N_Vector w)
+N_Vector N_VClone_Parallel_Grid(N_Vector w)
 {
   N_Vector v;
   realtype *data;
   long int local_length, i;
 
   v = NULL;
-  v = N_VCloneEmpty_Parallel_Ghost(w);
+  v = N_VCloneEmpty_Parallel_Grid(w);
   if (v == NULL) return(NULL);
 
   local_length = NV_DATALEN_PG(w);
@@ -705,7 +705,7 @@ N_Vector N_VClone_Parallel_Ghost(N_Vector w)
     /* Allocate memory */
     data = NULL;
     data = (realtype *) malloc(local_length * sizeof(realtype));
-    if(data == NULL) { N_VDestroy_Parallel_Ghost(v); return(NULL); }
+    if(data == NULL) { N_VDestroy_Parallel_Grid(v); return(NULL); }
     for (i=0; i<local_length; i++)  data[i] = 0.0;
 
     /* Attach data */
@@ -716,7 +716,7 @@ N_Vector N_VClone_Parallel_Ghost(N_Vector w)
   return(v);
 }
 
-void N_VDestroy_Parallel_Ghost(N_Vector v)
+void N_VDestroy_Parallel_Grid(N_Vector v)
 {
   if ((NV_OWN_DATA_PG(v) == TRUE) && (NV_DATA_PG(v) != NULL)) {
     free(NV_DATA_PG(v));
@@ -729,7 +729,7 @@ void N_VDestroy_Parallel_Ghost(N_Vector v)
   return;
 }
 
-void N_VSpace_Parallel_Ghost(N_Vector v, long int *lrw, long int *liw)
+void N_VSpace_Parallel_Grid(N_Vector v, long int *lrw, long int *liw)
 {
   MPI_Comm comm;
   int npes;
@@ -743,19 +743,20 @@ void N_VSpace_Parallel_Ghost(N_Vector v, long int *lrw, long int *liw)
   return;
 }
 
-realtype *N_VGetArrayPointer_Parallel_Ghost(N_Vector v)
+realtype *N_VGetArrayPointer_Parallel_Grid(N_Vector v)
 {
   return((realtype *) NV_DATA_PG(v));
 }
 
-void N_VSetArrayPointer_Parallel_Ghost(realtype *v_data, N_Vector v)
+void N_VSetArrayPointer_Parallel_Grid(realtype *v_data, N_Vector v)
 {
   if (NV_DATALEN_PG(v) > 0) NV_DATA_PG(v) = v_data;
 
   return;
 }
 
-void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z)
+void N_VLinearSum_Parallel_Grid(realtype a, N_Vector x, realtype b, 
+				N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype c, *xd, *yd, *zd;
@@ -765,11 +766,11 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
 
   /* first check that N_Vectors are compatible */
   if (!VCheck_Compatible(x,y)) {
-    fprintf(stderr,"N_VLinearSum_Parallel_Ghost error: x,y incompatible\n");
+    fprintf(stderr,"N_VLinearSum_Parallel_Grid error: x,y incompatible\n");
     return;
   }
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VLinearSum_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VLinearSum_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -777,19 +778,19 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
   /* usage scenarios */
 
   if ((b == ONE) && (z == y)) {    /* BLAS usage: axpy y <- ax+y */
-    Vaxpy_Parallel_Ghost(a, x, y);
+    Vaxpy_Parallel_Grid(a, x, y);
     return;
   }
 
   if ((a == ONE) && (z == x)) {    /* BLAS usage: axpy x <- by+x */
-    Vaxpy_Parallel_Ghost(b, y, x);
+    Vaxpy_Parallel_Grid(b, y, x);
     return;
   }
 
   /* Case: a == b == 1.0 */
 
   if ((a == ONE) && (b == ONE)) {
-    VSum_Parallel_Ghost(x, y, z);
+    VSum_Parallel_Grid(x, y, z);
     return;
   }
 
@@ -798,7 +799,7 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
   if ((test = ((a == ONE) && (b == -ONE))) || ((a == -ONE) && (b == ONE))) {
     v1 = test ? y : x;
     v2 = test ? x : y;
-    VDiff_Parallel_Ghost(v2, v1, z);
+    VDiff_Parallel_Grid(v2, v1, z);
     return;
   }
 
@@ -809,7 +810,7 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
     c = test ? b : a;
     v1 = test ? y : x;
     v2 = test ? x : y;
-    VLin1_Parallel_Ghost(c, v1, v2, z);
+    VLin1_Parallel_Grid(c, v1, v2, z);
     return;
   }
 
@@ -819,7 +820,7 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
     c = test ? b : a;
     v1 = test ? y : x;
     v2 = test ? x : y;
-    VLin2_Parallel_Ghost(c, v1, v2, z);
+    VLin2_Parallel_Grid(c, v1, v2, z);
     return;
   }
 
@@ -827,14 +828,14 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
   /* catches case both a and b are 0.0 - user should have called N_VConst */
 
   if (a == b) {
-    VScaleSum_Parallel_Ghost(a, x, y, z);
+    VScaleSum_Parallel_Grid(a, x, y, z);
     return;
   }
 
   /* Case: a == -b */
 
   if (a == -b) {
-    VScaleDiff_Parallel_Ghost(a, x, y, z);
+    VScaleDiff_Parallel_Grid(a, x, y, z);
     return;
   }
 
@@ -851,36 +852,36 @@ void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y,
   /* set total local vector length */
   N = NV_DATALEN_PG(x);
 
-  /* iterate over entire vector data, including ghost cells */
+  /* iterate over entire vector data, including grid cells */
   for (i=0; i<N; i++)  zd[i] = (a*xd[i])+(b*yd[i]);
 
   return;
 }
 
-void N_VConst_Parallel_Ghost(realtype c, N_Vector z)
+void N_VConst_Parallel_Grid(realtype c, N_Vector z)
 {
   realtype *zd = NV_DATA_PG(z);
   long int N = NV_DATALEN_PG(z);
 
-  /* set all entries of z to the constant (including ghost zones) */
+  /* set all entries of z to the constant (including grid zones) */
   long int i;
   for (i=0; i<N; i++)  zd[i] = c;
 
   return;
 }
 
-void N_VProd_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
+void N_VProd_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z)
 {
   realtype *xd, *yd, *zd;
   xd = yd = zd = NULL;
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,y)) {
-    fprintf(stderr,"N_VProd_Parallel_Ghost error: x,y incompatible\n");
+    fprintf(stderr,"N_VProd_Parallel_Grid error: x,y incompatible\n");
     return;
   }
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VProd_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VProd_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -890,25 +891,25 @@ void N_VProd_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
   yd = NV_DATA_PG(y);
   zd = NV_DATA_PG(z);
 
-  /* perform product (even on ghost zones) */
+  /* perform product (even on grid zones) */
   long int i;
   for (i=0; i<N; i++)  zd[i] = xd[i]*yd[i];
 
   return;
 }
 
-void N_VDiv_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
+void N_VDiv_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z)
 {
   realtype *xd, *yd, *zd;
   xd = yd = zd = NULL;
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,y)) {
-    fprintf(stderr,"N_VDiv_Parallel_Ghost error: x,y incompatible\n");
+    fprintf(stderr,"N_VDiv_Parallel_Grid error: x,y incompatible\n");
     return;
   }
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VDiv_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VDiv_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -934,7 +935,7 @@ void N_VDiv_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
   return;
 }
 
-void N_VScale_Parallel_Ghost(realtype c, N_Vector x, N_Vector z)
+void N_VScale_Parallel_Grid(realtype c, N_Vector x, N_Vector z)
 {
   long int i, N;
   realtype *xd, *zd;
@@ -942,19 +943,19 @@ void N_VScale_Parallel_Ghost(realtype c, N_Vector x, N_Vector z)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VScale_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VScale_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
   if (z == x) {       /* BLAS usage: scale x <- cx */
-    VScaleBy_Parallel_Ghost(c, x);
+    VScaleBy_Parallel_Grid(c, x);
     return;
   }
 
   if (c == ONE) {
-    VCopy_Parallel_Ghost(x, z);
+    VCopy_Parallel_Grid(x, z);
   } else if (c == -ONE) {
-    VNeg_Parallel_Ghost(x, z);
+    VNeg_Parallel_Grid(x, z);
   } else {
     N  = NV_DATALEN_PG(x);
     xd = NV_DATA_PG(x);
@@ -965,7 +966,7 @@ void N_VScale_Parallel_Ghost(realtype c, N_Vector x, N_Vector z)
   return;
 }
 
-void N_VAbs_Parallel_Ghost(N_Vector x, N_Vector z)
+void N_VAbs_Parallel_Grid(N_Vector x, N_Vector z)
 {
   long int i, N;
   realtype *xd, *zd;
@@ -973,7 +974,7 @@ void N_VAbs_Parallel_Ghost(N_Vector x, N_Vector z)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VAbs_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VAbs_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -985,14 +986,14 @@ void N_VAbs_Parallel_Ghost(N_Vector x, N_Vector z)
   return;
 }
 
-void N_VInv_Parallel_Ghost(N_Vector x, N_Vector z)
+void N_VInv_Parallel_Grid(N_Vector x, N_Vector z)
 {
   realtype *xd, *zd;
   xd = zd = NULL;
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VAbs_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VAbs_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -1018,7 +1019,7 @@ void N_VInv_Parallel_Ghost(N_Vector x, N_Vector z)
   return;
 }
 
-void N_VAddConst_Parallel_Ghost(N_Vector x, realtype b, N_Vector z)
+void N_VAddConst_Parallel_Grid(N_Vector x, realtype b, N_Vector z)
 {
   long int i, N;
   realtype *xd, *zd;
@@ -1026,7 +1027,7 @@ void N_VAddConst_Parallel_Ghost(N_Vector x, realtype b, N_Vector z)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VAddConst_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VAddConst_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -1038,7 +1039,7 @@ void N_VAddConst_Parallel_Ghost(N_Vector x, realtype b, N_Vector z)
   return;
 }
 
-realtype N_VDotProd_Parallel_Ghost(N_Vector x, N_Vector y)
+realtype N_VDotProd_Parallel_Grid(N_Vector x, N_Vector y)
 {
   realtype sum, *xd, *yd, gsum;
   MPI_Comm comm;
@@ -1046,7 +1047,7 @@ realtype N_VDotProd_Parallel_Ghost(N_Vector x, N_Vector y)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,y)) {
-    fprintf(stderr,"N_VAddConst_Parallel_Ghost error: x,y incompatible\n");
+    fprintf(stderr,"N_VAddConst_Parallel_Grid error: x,y incompatible\n");
     return(-1.0);
   }
 
@@ -1071,12 +1072,12 @@ realtype N_VDotProd_Parallel_Ghost(N_Vector x, N_Vector y)
 
   /* communicate to obtain global sum */
   comm = NV_COMM_PG(x);
-  gsum = VAllReduce_Parallel_Ghost(sum, 1, comm);
+  gsum = VAllReduce_Parallel_Grid(sum, 1, comm);
 
   return(gsum);
 }
 
-realtype N_VMaxNorm_Parallel_Ghost(N_Vector x)
+realtype N_VMaxNorm_Parallel_Grid(N_Vector x)
 {
   realtype max, *xd, gmax;
   MPI_Comm comm;
@@ -1102,12 +1103,12 @@ realtype N_VMaxNorm_Parallel_Ghost(N_Vector x)
 
   /* communicate to obtain global max */
   comm = NV_COMM_PG(x);
-  gmax = VAllReduce_Parallel_Ghost(max, 2, comm);
+  gmax = VAllReduce_Parallel_Grid(max, 2, comm);
 
   return(gmax);
 }
 
-realtype N_VWrmsNorm_Parallel_Ghost(N_Vector x, N_Vector w)
+realtype N_VWrmsNorm_Parallel_Grid(N_Vector x, N_Vector w)
 {
   realtype sum, *xd, *wd, gsum, prodi;
   MPI_Comm comm;
@@ -1115,7 +1116,7 @@ realtype N_VWrmsNorm_Parallel_Ghost(N_Vector x, N_Vector w)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,w)) {
-    fprintf(stderr,"N_VWrmsNorm_Parallel_Ghost error: x,w incompatible\n");
+    fprintf(stderr,"N_VWrmsNorm_Parallel_Grid error: x,w incompatible\n");
     return(-1.0);
   }
 
@@ -1142,12 +1143,12 @@ realtype N_VWrmsNorm_Parallel_Ghost(N_Vector x, N_Vector w)
 
   /* communicate to obtain global sum */
   comm = NV_COMM_PG(x);
-  gsum = VAllReduce_Parallel_Ghost(sum, 1, comm);
+  gsum = VAllReduce_Parallel_Grid(sum, 1, comm);
 
   return(RSqrt(gsum/NV_GLOBLENGTH_PG(x)));
 }
 
-realtype N_VWrmsNormMask_Parallel_Ghost(N_Vector x, N_Vector w, N_Vector id)
+realtype N_VWrmsNormMask_Parallel_Grid(N_Vector x, N_Vector w, N_Vector id)
 {
   realtype sum, prodi, *xd, *wd, *idd, gsum;
   MPI_Comm comm;
@@ -1155,11 +1156,11 @@ realtype N_VWrmsNormMask_Parallel_Ghost(N_Vector x, N_Vector w, N_Vector id)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,w)) {
-    fprintf(stderr,"N_VWrmsNormMask_Parallel_Ghost error: x,w incompatible\n");
+    fprintf(stderr,"N_VWrmsNormMask_Parallel_Grid error: x,w incompatible\n");
     return(-1.0);
   }
   if (!VCheck_Compatible(x,id)) {
-    fprintf(stderr,"N_VWrmsNormMask_Parallel_Ghost error: x,id incompatible\n");
+    fprintf(stderr,"N_VWrmsNormMask_Parallel_Grid error: x,id incompatible\n");
     return(-1.0);
   }
 
@@ -1191,12 +1192,12 @@ realtype N_VWrmsNormMask_Parallel_Ghost(N_Vector x, N_Vector w, N_Vector id)
 
   /* communicate to obtain global sum */
   comm = NV_COMM_PG(x);
-  gsum = VAllReduce_Parallel_Ghost(sum, 1, comm);
+  gsum = VAllReduce_Parallel_Grid(sum, 1, comm);
 
   return(RSqrt(gsum/NV_GLOBLENGTH_PG(x)));
 }
 
-realtype N_VMin_Parallel_Ghost(N_Vector x)
+realtype N_VMin_Parallel_Grid(N_Vector x)
 {
   realtype gmin;
   MPI_Comm comm;
@@ -1229,12 +1230,12 @@ realtype N_VMin_Parallel_Ghost(N_Vector x)
 
   /* communicate to obtain global min */
   comm = NV_COMM_PG(x);
-  gmin = VAllReduce_Parallel_Ghost(min, 3, comm);
+  gmin = VAllReduce_Parallel_Grid(min, 3, comm);
 
   return(gmin);
 }
 
-realtype N_VWL2Norm_Parallel_Ghost(N_Vector x, N_Vector w)
+realtype N_VWL2Norm_Parallel_Grid(N_Vector x, N_Vector w)
 {
   realtype prodi, *xd, *wd, gsum;
   MPI_Comm comm;
@@ -1243,7 +1244,7 @@ realtype N_VWL2Norm_Parallel_Ghost(N_Vector x, N_Vector w)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,w)) {
-    fprintf(stderr,"N_VWl2Norm_Parallel_Ghost error: x,w incompatible\n");
+    fprintf(stderr,"N_VWl2Norm_Parallel_Grid error: x,w incompatible\n");
     return(-1.0);
   }
 
@@ -1269,12 +1270,12 @@ realtype N_VWL2Norm_Parallel_Ghost(N_Vector x, N_Vector w)
 
   /* communicate to obtain global sum */
   comm = NV_COMM_PG(x);
-  gsum = VAllReduce_Parallel_Ghost(sum, 1, comm);
+  gsum = VAllReduce_Parallel_Grid(sum, 1, comm);
 
   return(RSqrt(gsum));
 }
 
-realtype N_VL1Norm_Parallel_Ghost(N_Vector x)
+realtype N_VL1Norm_Parallel_Grid(N_Vector x)
 {
   realtype gsum;
   MPI_Comm comm;
@@ -1300,19 +1301,19 @@ realtype N_VL1Norm_Parallel_Ghost(N_Vector x)
 
   /* communicate to obtain global sum */
   comm = NV_COMM_PG(x);
-  gsum = VAllReduce_Parallel_Ghost(sum, 1, comm);
+  gsum = VAllReduce_Parallel_Grid(sum, 1, comm);
 
   return(gsum);
 }
 
-void N_VCompare_Parallel_Ghost(realtype c, N_Vector x, N_Vector z)
+void N_VCompare_Parallel_Grid(realtype c, N_Vector x, N_Vector z)
 {
   realtype *xd, *zd;
   xd = zd = NULL;
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VCompare_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VCompare_Parallel_Grid error: x,z incompatible\n");
     return;
   }
 
@@ -1320,7 +1321,7 @@ void N_VCompare_Parallel_Ghost(realtype c, N_Vector x, N_Vector z)
   xd = NV_DATA_PG(x);
   zd = NV_DATA_PG(z);
 
-  /* perform operation on full domain (including ghosts) */
+  /* perform operation on full domain (including grids) */
   long int N, i;
   N = NV_DATALEN_PG(x);
   for (i=0; i<N; i++) 
@@ -1329,7 +1330,7 @@ void N_VCompare_Parallel_Ghost(realtype c, N_Vector x, N_Vector z)
   return;
 }
 
-booleantype N_VInvTest_Parallel_Ghost(N_Vector x, N_Vector z)
+booleantype N_VInvTest_Parallel_Grid(N_Vector x, N_Vector z)
 {
   realtype *xd, *zd, val, gval;
   MPI_Comm comm;
@@ -1337,7 +1338,7 @@ booleantype N_VInvTest_Parallel_Ghost(N_Vector x, N_Vector z)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,z)) {
-    fprintf(stderr,"N_VInvTest_Parallel_Ghost error: x,z incompatible\n");
+    fprintf(stderr,"N_VInvTest_Parallel_Grid error: x,z incompatible\n");
     return(TRUE);
   }
 
@@ -1368,7 +1369,7 @@ booleantype N_VInvTest_Parallel_Ghost(N_Vector x, N_Vector z)
 
   /* communicate to obtain global min */
   comm = NV_COMM_PG(x);
-  gval = VAllReduce_Parallel_Ghost(val, 3, comm);
+  gval = VAllReduce_Parallel_Grid(val, 3, comm);
 
   if (gval == ZERO)
     return(FALSE);
@@ -1376,7 +1377,7 @@ booleantype N_VInvTest_Parallel_Ghost(N_Vector x, N_Vector z)
     return(TRUE);
 }
 
-booleantype N_VConstrMask_Parallel_Ghost(N_Vector c, N_Vector x, N_Vector m)
+booleantype N_VConstrMask_Parallel_Grid(N_Vector c, N_Vector x, N_Vector m)
 {
   realtype temp;
   realtype *cd, *xd, *md;
@@ -1385,11 +1386,11 @@ booleantype N_VConstrMask_Parallel_Ghost(N_Vector c, N_Vector x, N_Vector m)
 
   /* check for compatibility */
   if (!VCheck_Compatible(x,c)) {
-    fprintf(stderr,"N_VConstrMask_Parallel_Ghost error: x,c incompatible\n");
+    fprintf(stderr,"N_VConstrMask_Parallel_Grid error: x,c incompatible\n");
     return(TRUE);
   }
   if (!VCheck_Compatible(x,m)) {
-    fprintf(stderr,"N_VConstrMask_Parallel_Ghost error: x,m incompatible\n");
+    fprintf(stderr,"N_VConstrMask_Parallel_Grid error: x,m incompatible\n");
     return(TRUE);
   }
 
@@ -1432,13 +1433,13 @@ booleantype N_VConstrMask_Parallel_Ghost(N_Vector c, N_Vector x, N_Vector m)
 
   /* communicate to obtain global min */
   comm = NV_COMM_PG(x);
-  temp = VAllReduce_Parallel_Ghost(temp, 3, comm);
+  temp = VAllReduce_Parallel_Grid(temp, 3, comm);
 
   if (temp == ONE) return(TRUE);
   else return(FALSE);
 }
 
-realtype N_VMinQuotient_Parallel_Ghost(N_Vector num, N_Vector denom)
+realtype N_VMinQuotient_Parallel_Grid(N_Vector num, N_Vector denom)
 {
   booleantype notEvenOnce;
   realtype *nd, *dd, min;
@@ -1447,7 +1448,7 @@ realtype N_VMinQuotient_Parallel_Ghost(N_Vector num, N_Vector denom)
 
   /* check for compatibility */
   if (!VCheck_Compatible(num,denom)) {
-    fprintf(stderr,"N_VMinQuotient_Parallel_Ghost error: num,denom incompatible\n");
+    fprintf(stderr,"N_VMinQuotient_Parallel_Grid error: num,denom incompatible\n");
     return(-1.0);
   }
 
@@ -1487,7 +1488,7 @@ realtype N_VMinQuotient_Parallel_Ghost(N_Vector num, N_Vector denom)
 
   /* communicate to obtain global min */
   comm = NV_COMM_PG(num);
-  return(VAllReduce_Parallel_Ghost(min, 3, comm));
+  return(VAllReduce_Parallel_Grid(min, 3, comm));
 }
 
 /*
@@ -1560,7 +1561,7 @@ static long int NV_DATALEN_PG(N_Vector x) {
   return N;
 }
 
-static realtype VAllReduce_Parallel_Ghost(realtype d, int op, MPI_Comm comm)
+static realtype VAllReduce_Parallel_Grid(realtype d, int op, MPI_Comm comm)
 {
   /* 
    * This function does a global reduction.  The operation is
@@ -1588,7 +1589,7 @@ static realtype VAllReduce_Parallel_Ghost(realtype d, int op, MPI_Comm comm)
   return(out);
 }
 
-static void VCopy_Parallel_Ghost(N_Vector x, N_Vector z)
+static void VCopy_Parallel_Grid(N_Vector x, N_Vector z)
 {
   long int i, N;
   realtype *xd, *zd;
@@ -1605,7 +1606,7 @@ static void VCopy_Parallel_Ghost(N_Vector x, N_Vector z)
   return;
 }
 
-static void VSum_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
+static void VSum_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype *xd, *yd, *zd;
@@ -1623,7 +1624,7 @@ static void VSum_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
   return;
 }
 
-static void VDiff_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
+static void VDiff_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype *xd, *yd, *zd;
@@ -1641,7 +1642,7 @@ static void VDiff_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z)
   return;
 }
 
-static void VNeg_Parallel_Ghost(N_Vector x, N_Vector z)
+static void VNeg_Parallel_Grid(N_Vector x, N_Vector z)
 {
   long int i, N;
   realtype *xd, *zd;
@@ -1658,8 +1659,8 @@ static void VNeg_Parallel_Ghost(N_Vector x, N_Vector z)
   return;
 }
 
-static void VScaleSum_Parallel_Ghost(realtype c, N_Vector x, 
-				     N_Vector y, N_Vector z)
+static void VScaleSum_Parallel_Grid(realtype c, N_Vector x, 
+				    N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype *xd, *yd, *zd;
@@ -1677,8 +1678,8 @@ static void VScaleSum_Parallel_Ghost(realtype c, N_Vector x,
   return;
 }
 
-static void VScaleDiff_Parallel_Ghost(realtype c, N_Vector x, 
-				      N_Vector y, N_Vector z)
+static void VScaleDiff_Parallel_Grid(realtype c, N_Vector x, 
+				     N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype *xd, *yd, *zd;
@@ -1696,7 +1697,8 @@ static void VScaleDiff_Parallel_Ghost(realtype c, N_Vector x,
   return;
 }
 
-static void VLin1_Parallel_Ghost(realtype a, N_Vector x, N_Vector y, N_Vector z)
+static void VLin1_Parallel_Grid(realtype a, N_Vector x, 
+				N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype *xd, *yd, *zd;
@@ -1714,7 +1716,8 @@ static void VLin1_Parallel_Ghost(realtype a, N_Vector x, N_Vector y, N_Vector z)
   return;
 }
 
-static void VLin2_Parallel_Ghost(realtype a, N_Vector x, N_Vector y, N_Vector z)
+static void VLin2_Parallel_Grid(realtype a, N_Vector x, 
+				N_Vector y, N_Vector z)
 {
   long int i, N;
   realtype *xd, *yd, *zd;
@@ -1732,7 +1735,7 @@ static void VLin2_Parallel_Ghost(realtype a, N_Vector x, N_Vector y, N_Vector z)
   return;
 }
 
-static void Vaxpy_Parallel_Ghost(realtype a, N_Vector x, N_Vector y)
+static void Vaxpy_Parallel_Grid(realtype a, N_Vector x, N_Vector y)
 {
   long int i, N;
   realtype *xd, *yd;
@@ -1759,7 +1762,7 @@ static void Vaxpy_Parallel_Ghost(realtype a, N_Vector x, N_Vector y)
   return;
 }
 
-static void VScaleBy_Parallel_Ghost(realtype a, N_Vector x)
+static void VScaleBy_Parallel_Grid(realtype a, N_Vector x)
 {
   long int i, N;
   realtype *xd;

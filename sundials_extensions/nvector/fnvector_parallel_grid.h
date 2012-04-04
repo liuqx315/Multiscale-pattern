@@ -10,20 +10,20 @@
  * All rights reserved.
  * For details, see the LICENSE file.
  * -----------------------------------------------------------------
- * This file (companion of nvector_parallel_ghost.h) contains the
- * definitions needed for the initialization of parallel ghosted
+ * This file (companion of nvector_parallel_grid.h) contains the
+ * definitions needed for the initialization of parallel grid
  * vector operations in Fortran.
  * -----------------------------------------------------------------
  */
 
-#ifndef _FNVECTOR_PARALLEL_GHOST_H
-#define _FNVECTOR_PARALLEL_GHOST_H
+#ifndef _FNVECTOR_PARALLEL_GRID_H
+#define _FNVECTOR_PARALLEL_GRID_H
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
-#include <nvector/nvector_parallel_ghost.h>  
+#include <nvector/nvector_parallel_grid.h>  
 #include <sundials/sundials_fnvector.h>
 
 #if defined(SUNDIALS_F77_FUNC)
@@ -67,11 +67,11 @@ extern N_Vector F2C_KINSOL_vec;
 /* 
  * Prototypes of exported functions 
  *
- * FNV_INITPG    - initializes parallel ghosted vector operations for main problem
- * FNV_INITPG_Q  - initializes parallel ghosted vector operations for quadratures
- * FNV_INITPG_S  - initializes parallel ghosted vector operations for sensitivities
- * FNV_INITPG_B  - initializes parallel ghosted vector operations for adjoint problem
- * FNV_INITPG_QB - initializes parallel ghosted vector operations for adjoint quadratures
+ * FNV_INITPG    - initializes parallel grid vector operations for main problem
+ * FNV_INITPG_Q  - initializes parallel grid vector operations for quadratures
+ * FNV_INITPG_S  - initializes parallel grid vector operations for sensitivities
+ * FNV_INITPG_B  - initializes parallel grid vector operations for adjoint problem
+ * FNV_INITPG_QB - initializes parallel grid vector operations for adjoint quadratures
  *
  */
 

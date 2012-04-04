@@ -1,9 +1,9 @@
 /*************************************************************************
- * File        : nvector_parallel_ghost_test.c                           *
+ * File        : nvector_parallel_grid_test.c                            *
  * Programmers : Daniel R. Reynolds @ SMU                                *
  * Version of  : 3 April 2012                                            *
  *-----------------------------------------------------------------------*
- * This testing routine is designed to exercise the parallel ghosted     *
+ * This testing routine is designed to exercise the parallel grid        *
  * NVector routines.                                                     *
  *************************************************************************/
 
@@ -12,7 +12,7 @@
 #include <math.h>
 
 #include <sundials/sundials_types.h>
-#include <nvector/nvector_parallel_ghost.h>
+#include <nvector/nvector_parallel_grid.h>
 #include <sundials/sundials_math.h>
 
 /* floating point "equality" comparison, failure update macro */
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   Forder = 1;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 1D, Fortran order: failed %i tests\n",
+    printf("Parallel grid NVector, 1D, Fortran order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
   Forder = 0;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 1D, C order: failed %i tests\n",
+    printf("Parallel grid NVector, 1D, C order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   Forder = 1;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 2D, Fortran order: failed %i tests\n",
+    printf("Parallel grid NVector, 2D, Fortran order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   Forder = 0;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 2D, C order: failed %i tests\n",
+    printf("Parallel grid NVector, 2D, C order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
   Forder = 1;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 3D, Fortran order: failed %i tests\n",
+    printf("Parallel grid NVector, 3D, Fortran order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   Forder = 0;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 3D, C order: failed %i tests\n",
+    printf("Parallel grid NVector, 3D, C order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
   Forder = 1;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 4D, Fortran order: failed %i tests\n",
+    printf("Parallel grid NVector, 4D, Fortran order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
   Forder = 0;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 4D, C order: failed %i tests\n",
+    printf("Parallel grid NVector, 4D, C order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
   Forder = 1;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 5D, Fortran order: failed %i tests\n",
+    printf("Parallel grid NVector, 5D, Fortran order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
   Forder = 0;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 5D, C order: failed %i tests\n",
+    printf("Parallel grid NVector, 5D, C order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
   Forder = 1;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 6D, Fortran order: failed %i tests\n",
+    printf("Parallel grid NVector, 6D, Fortran order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
   Forder = 0;
   test_fails = tester(comm, ndim, dim_len, dim_alen, dim_off, Forder);
   if (test_fails) {
-    printf("Parallel ghosted NVector, 6D, C order: failed %i tests\n",
+    printf("Parallel grid NVector, 6D, C order: failed %i tests\n",
 	   test_fails);
     failure++;
   }
@@ -217,10 +217,10 @@ int main(int argc, char *argv[])
   /* Root node prints final SUCCESS/FAIL result */
   if (my_id == 0) {
     if (max_fails) 
-      printf("  FAIL: Parallel Ghosted NVector module failed %i tests\n",
+      printf("  FAIL: Parallel Grid NVector module failed %i tests\n",
 	     max_fails);
     else 
-      printf("  SUCCESS: Parallel Ghosted NVector module passed all tests\n");
+      printf("  SUCCESS: Parallel Grid NVector module passed all tests\n");
   }
 
   /* finalize MPI and return */
@@ -256,18 +256,18 @@ int tester(MPI_Comm comm, long int ndim, long int *dim_len,
   
   /* Make NVector Uvec out of user data */
   realtype *Udata = malloc(veclen * sizeof(realtype));
-  N_Vector Uvec = N_VMake_Parallel_Ghost(comm, ndim, dim_len, dim_alen, 
-					 dim_off, Forder, glob_len, Udata);
+  N_Vector Uvec = N_VMake_Parallel_Grid(comm, ndim, dim_len, dim_alen, 
+					dim_off, Forder, glob_len, Udata);
 
   /* Make NVector Xvec out of user data (approach 2) */
   realtype *Xdata = malloc(veclen * sizeof(realtype));
-  N_Vector Xvec = N_VNewEmpty_Parallel_Ghost(comm, ndim, dim_len, dim_alen,
-					     dim_off, Forder, glob_len);
+  N_Vector Xvec = N_VNewEmpty_Parallel_Grid(comm, ndim, dim_len, dim_alen,
+					    dim_off, Forder, glob_len);
   N_VSetArrayPointer(Xdata,Xvec);
 
   /* Make NVector Yvec from scratch */
-  N_Vector Yvec = N_VNew_Parallel_Ghost(comm, ndim, dim_len, dim_alen,
-					dim_off, Forder, glob_len);
+  N_Vector Yvec = N_VNew_Parallel_Grid(comm, ndim, dim_len, dim_alen,
+				       dim_off, Forder, glob_len);
   
   /* Make NVector Zvec by cloning Uvec */
   N_Vector Zvec = N_VClone(Uvec);
@@ -412,7 +412,7 @@ int tester(MPI_Comm comm, long int ndim, long int *dim_len,
   a = N_VDotProd( Xvec, Yvec );
   if (FNEQ(a, 3.0*glob_len)) {
     printf("  Failed test -- N_VScale and N_VDotProd\n");
-    printf("     (X,3*U) = %g  (should be 300.0)\n",a);
+    printf("     (X,3*U) = %g  (should be %g)\n",a,3.0*glob_len);
     failure++;
   }
 

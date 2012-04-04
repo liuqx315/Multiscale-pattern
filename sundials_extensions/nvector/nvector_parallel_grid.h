@@ -11,9 +11,9 @@
  * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the main header file for the MPI-enabled implementation
- * of the ghosted NVECTOR module.
+ * of the grid NVECTOR module.
  *
- * Part I contains declarations specific to the parallel ghosted
+ * Part I contains declarations specific to the parallel grid
  * implementation of the supplied NVECTOR module.
  *
  * Part II defines accessor macros that allow the user to efficiently
@@ -21,7 +21,7 @@
  * underlying data structure.
  *
  * Part III contains the prototype for the constructor
- * N_VNew_Parallel_Ghost as well as implementation-specific prototypes
+ * N_VNew_Parallel_Grid as well as implementation-specific prototypes
  * for various useful vector operations.
  *
  * Notes:
@@ -38,15 +38,15 @@
  *   - N_Vector arguments to arithmetic vector operations need not
  *     be distinct. For example, the following call:
  *
- *        N_VLinearSum_Parallel_Ghost(a,x,b,y,y);
+ *        N_VLinearSum_Parallel_Grid(a,x,b,y,y);
  *
  *     (which stores the result of the operation a*x+b*y in y)
  *     is legal.
  * -----------------------------------------------------------------
  */
 
-#ifndef _NVECTOR_PARALLEL_GHOST_H
-#define _NVECTOR_PARALLEL_GHOST_H
+#ifndef _NVECTOR_PARALLEL_GRID_H
+#define _NVECTOR_PARALLEL_GRID_H
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
@@ -59,7 +59,7 @@ extern "C" {
 
 /*
  * -----------------------------------------------------------------
- * PART I: PARALLEL ghosted implementation of N_Vector
+ * PART I: PARALLEL grid implementation of N_Vector
  * -----------------------------------------------------------------
  */
 
@@ -88,22 +88,21 @@ extern "C" {
 
 #define PGVEC_INTEGER_MPI_TYPE MPI_LONG
 
-/* parallel ghosted implementation of the N_Vector 'content' 
-   structure contains the vector dimensionality, the total allocated 
-   array length in each direction, the active array length in each 
-   direction, the offset to the beginning of the active data in each 
-   direction, the global lengths of the vector (all MPI tasks), a 
-   pointer to an array of 'realtype components', the MPI 
-   communicator, a flag indicating ownership of the data, and a flag 
-   indicating whether the data is stored in Fortran (column-major) or 
-   C (row-major) ordering.
+/* parallel grid implementation of the N_Vector 'content' structure 
+   contains the vector dimensionality, the total allocated array length 
+   in each direction, the active array length in each direction, the
+   offset to the beginning of the active data in each direction, the 
+   global length of the vector (all MPI tasks), a flag indicating 
+   ownership of the data, a pointer to a contiguous array of 'realtype' 
+   components, the MPI communicator, and a flag indicating whether the 
+   data is stored in Fortran (column-major) or C (row-major) ordering.
 
    Note: the total length of the allocated array will be the product of 
    dim_length[0] through dim_length[dims-1].  We assume that the 
    multidimensional data held in the actual "data" array adheres to the 
    choice of C or Fortran major ordering held in the 'ordering' flag. */
 
-struct _N_VectorContent_Parallel_Ghost {
+struct _N_VectorContent_Parallel_Grid {
   long int dims;                  /* vector dimensionality                 */
   long int dim_length[MAX_DIMS];  /* total array length in each dimension  */
   long int dim_alength[MAX_DIMS]; /* active array length in each dimension */
@@ -115,7 +114,7 @@ struct _N_VectorContent_Parallel_Ghost {
   booleantype F_ordering;         /* Fortran or C ordering                 */
 };
 
-typedef struct _N_VectorContent_Parallel_Ghost *N_VectorContent_Parallel_Ghost;
+typedef struct _N_VectorContent_Parallel_Grid *N_VectorContent_Parallel_Grid;
 
 /*
  * -----------------------------------------------------------------
@@ -132,16 +131,16 @@ typedef struct _N_VectorContent_Parallel_Ghost *N_VectorContent_Parallel_Ghost;
  * (1) NV_CONTENT_PG
  *
  *     This routines gives access to the contents of the parallel
- *     ghosted vector N_Vector.
+ *     grid vector N_Vector.
  *
  *     The assignment v_cont = NV_CONTENT_P(v) sets v_cont to be
- *     a pointer to the parallel ghosted N_Vector content structure.
+ *     a pointer to the parallel grid N_Vector content structure.
  *
  * (2) NV_DATA_PG, NV_DIMS_PG, NV_ORDER_PG, NV_OWN_DATA_PG, NV_ARRAYLEN_PG, 
  *     NV_ACTIVELEN_PG, NV_OFFSET_PG, NV_GLOBLENGTH_PG and NV_COMM_PG
  *
  *     These routines give access to the individual parts of
- *     the content structure of a parallel ghosted N_Vector.
+ *     the content structure of a parallel grid N_Vector.
  *
  *     The assignment v_data = NV_DATA_PG(v) sets v_data to be
  *     a pointer to the first component of the local data for
@@ -192,7 +191,7 @@ typedef struct _N_VectorContent_Parallel_Ghost *N_VectorContent_Parallel_Ghost;
  * -----------------------------------------------------------------
  */
 
-#define NV_CONTENT_PG(v)     ( (N_VectorContent_Parallel_Ghost)(v->content) )
+#define NV_CONTENT_PG(v)     ( (N_VectorContent_Parallel_Grid)(v->content) )
 
 #define NV_DATA_PG(v)        ( NV_CONTENT_PG(v)->data )
 
@@ -214,166 +213,166 @@ typedef struct _N_VectorContent_Parallel_Ghost *N_VectorContent_Parallel_Ghost;
 
 /*
  * -----------------------------------------------------------------
- * PART III: functions exported by nvector_parallel_ghost
+ * PART III: functions exported by nvector_parallel_grid
  * 
  * CONSTRUCTORS:
- *    N_VNew_Parallel_Ghost
- *    N_VNewEmpty_Parallel_Ghost
- *    N_VMake_Parallel_Ghost
- *    N_VCloneVectorArray_Parallel_Ghost
- *    N_VCloneVectorArrayEmpty_Parallel_Ghost
+ *    N_VNew_Parallel_Grid
+ *    N_VNewEmpty_Parallel_Grid
+ *    N_VMake_Parallel_Grid
+ *    N_VCloneVectorArray_Parallel_Grid
+ *    N_VCloneVectorArrayEmpty_Parallel_Grid
  * DESTRUCTORS:
- *    N_VDestroy_Parallel_Ghost
- *    N_VDestroyVectorArray_Parallel_Ghost
+ *    N_VDestroy_Parallel_Grid
+ *    N_VDestroyVectorArray_Parallel_Grid
  * OTHER:
- *    N_VPrint_Parallel_Ghost
+ *    N_VPrint_Parallel_Grid
  * OTHER:
- *    N_VPrintAll_Parallel_Ghost
+ *    N_VPrintAll_Parallel_Grid
  * -----------------------------------------------------------------
  */
 
 /*
  * -----------------------------------------------------------------
- * Function : N_VNew_Parallel_Ghost
+ * Function : N_VNew_Parallel_Grid
  * -----------------------------------------------------------------
  * This function creates and allocates memory for a parallel 
- * ghosted vector.
+ * grid vector.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT N_Vector N_VNew_Parallel_Ghost(MPI_Comm comm, 
+SUNDIALS_EXPORT N_Vector N_VNew_Parallel_Grid(MPI_Comm comm, 
+					      long int dims,
+					      long int *dim_length,
+					      long int *dim_alength,
+					      long int *dim_offset,
+					      long int F_ordering,
+					      long int global_length);
+
+/*
+ * -----------------------------------------------------------------
+ * Function : N_VNewEmpty_Parallel_Grid
+ * -----------------------------------------------------------------
+ * This function creates a new parallel grid N_Vector with an 
+ * empty (NULL) data array.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT N_Vector N_VNewEmpty_Parallel_Grid(MPI_Comm comm, 
+						   long int dims,
+						   long int *dim_length,
+						   long int *dim_alength,
+						   long int *dim_offset,
+						   long int F_ordering,
+						   long int global_length);
+
+/*
+ * -----------------------------------------------------------------
+ * Function : N_VMake_Parallel_Grid
+ * -----------------------------------------------------------------
+ * This function creates and allocates memory for a parallel grid 
+ * vector with a user-supplied data array.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT N_Vector N_VMake_Parallel_Grid(MPI_Comm comm, 
 					       long int dims,
 					       long int *dim_length,
 					       long int *dim_alength,
 					       long int *dim_offset,
 					       long int F_ordering,
-					       long int global_length);
+					       long int global_length,
+					       realtype *v_data);
 
 /*
  * -----------------------------------------------------------------
- * Function : N_VNewEmpty_Parallel_Ghost
+ * Function : N_VCloneVectorArray_Parallel_Grid
  * -----------------------------------------------------------------
- * This function creates a new parallel ghosted N_Vector with an 
- * empty (NULL) data array.
- * -----------------------------------------------------------------
- */
-
-SUNDIALS_EXPORT N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm, 
-						    long int dims,
-						    long int *dim_length,
-						    long int *dim_alength,
-						    long int *dim_offset,
-						    long int F_ordering,
-						    long int global_length);
-
-/*
- * -----------------------------------------------------------------
- * Function : N_VMake_Parallel_Ghost
- * -----------------------------------------------------------------
- * This function creates and allocates memory for a parallel ghosted 
- * vector with a user-supplied data array.
- * -----------------------------------------------------------------
- */
-
-SUNDIALS_EXPORT N_Vector N_VMake_Parallel_Ghost(MPI_Comm comm, 
-						long int dims,
-						long int *dim_length,
-						long int *dim_alength,
-						long int *dim_offset,
-						long int F_ordering,
-						long int global_length,
-						realtype *v_data);
-
-/*
- * -----------------------------------------------------------------
- * Function : N_VCloneVectorArray_Parallel_Ghost
- * -----------------------------------------------------------------
- * This function creates an array of 'count' PARALLEL ghosted 
+ * This function creates an array of 'count' PARALLEL grid 
  * vectors by cloning a given vector w.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT N_Vector *N_VCloneVectorArray_Parallel_Ghost(int count, 
-							     N_Vector w);
+SUNDIALS_EXPORT N_Vector *N_VCloneVectorArray_Parallel_Grid(int count, 
+							    N_Vector w);
 
 /*
  * -----------------------------------------------------------------
- * Function : N_VCloneVectorArrayEmpty_Parallel_Ghost
+ * Function : N_VCloneVectorArrayEmpty_Parallel_Grid
  * -----------------------------------------------------------------
- * This function creates an array of 'count' PARALLEL ghosted 
+ * This function creates an array of 'count' PARALLEL grid 
  * vectors each with an empty (NULL) data array by cloning w.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT N_Vector *N_VCloneVectorArrayEmpty_Parallel_Ghost(int count, 
-								  N_Vector w);
+SUNDIALS_EXPORT N_Vector *N_VCloneVectorArrayEmpty_Parallel_Grid(int count, 
+								 N_Vector w);
 
 /*
  * -----------------------------------------------------------------
- * Function : N_VDestroyVectorArray_Parallel_Ghost
+ * Function : N_VDestroyVectorArray_Parallel_Grid
  * -----------------------------------------------------------------
  * This function frees an array of N_Vector created with 
- * N_VCloneVectorArray_Parallel_Ghost or 
- * N_VCloneVectorArrayEmpty_Parallel_Ghost.
+ * N_VCloneVectorArray_Parallel_Grid or 
+ * N_VCloneVectorArrayEmpty_Parallel_Grid.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT void N_VDestroyVectorArray_Parallel_Ghost(N_Vector *vs, 
-							  int count);
+SUNDIALS_EXPORT void N_VDestroyVectorArray_Parallel_Grid(N_Vector *vs, 
+							 int count);
 
 /*
  * -----------------------------------------------------------------
- * Function : N_VPrint_Parallel_Ghost
+ * Function : N_VPrint_Parallel_Grid
  * -----------------------------------------------------------------
- * This function prints the content of a parallel ghosted vector to 
+ * This function prints the content of a parallel grid vector to 
  * stdout.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT void N_VPrint_Parallel_Ghost(N_Vector v);
+SUNDIALS_EXPORT void N_VPrint_Parallel_Grid(N_Vector v);
 
 /*
  * -----------------------------------------------------------------
- * Function : N_VPrintAll_Parallel_Ghost
+ * Function : N_VPrintAll_Parallel_Grid
  * -----------------------------------------------------------------
- * This function prints the content of a parallel ghosted vector to 
- * stdout, including all ghost zone values.
+ * This function prints the content of a parallel grid vector to 
+ * stdout, including all grid zone values.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT void N_VPrintAll_Parallel_Ghost(N_Vector v);
+SUNDIALS_EXPORT void N_VPrintAll_Parallel_Grid(N_Vector v);
 
 /*
  * -----------------------------------------------------------------
- * ghosted parallel implementations of the vector operations
+ * grid parallel implementations of the vector operations
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT N_Vector N_VCloneEmpty_Parallel_Ghost(N_Vector w);
-SUNDIALS_EXPORT N_Vector N_VClone_Parallel_Ghost(N_Vector w);
-SUNDIALS_EXPORT void N_VDestroy_Parallel_Ghost(N_Vector v);
-SUNDIALS_EXPORT void N_VSpace_Parallel_Ghost(N_Vector v, long int *lrw, long int *liw);
-SUNDIALS_EXPORT realtype *N_VGetArrayPointer_Parallel_Ghost(N_Vector v);
-SUNDIALS_EXPORT void N_VSetArrayPointer_Parallel_Ghost(realtype *v_data, N_Vector v);
-SUNDIALS_EXPORT void N_VLinearSum_Parallel_Ghost(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z);
-SUNDIALS_EXPORT void N_VConst_Parallel_Ghost(realtype c, N_Vector z);
-SUNDIALS_EXPORT void N_VProd_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z);
-SUNDIALS_EXPORT void N_VDiv_Parallel_Ghost(N_Vector x, N_Vector y, N_Vector z);
-SUNDIALS_EXPORT void N_VScale_Parallel_Ghost(realtype c, N_Vector x, N_Vector z);
-SUNDIALS_EXPORT void N_VAbs_Parallel_Ghost(N_Vector x, N_Vector z);
-SUNDIALS_EXPORT void N_VInv_Parallel_Ghost(N_Vector x, N_Vector z);
-SUNDIALS_EXPORT void N_VAddConst_Parallel_Ghost(N_Vector x, realtype b, N_Vector z);
-SUNDIALS_EXPORT realtype N_VDotProd_Parallel_Ghost(N_Vector x, N_Vector y);
-SUNDIALS_EXPORT realtype N_VMaxNorm_Parallel_Ghost(N_Vector x);
-SUNDIALS_EXPORT realtype N_VWrmsNorm_Parallel_Ghost(N_Vector x, N_Vector w);
-SUNDIALS_EXPORT realtype N_VWrmsNormMask_Parallel_Ghost(N_Vector x, N_Vector w, N_Vector id);
-SUNDIALS_EXPORT realtype N_VMin_Parallel_Ghost(N_Vector x);
-SUNDIALS_EXPORT realtype N_VWL2Norm_Parallel_Ghost(N_Vector x, N_Vector w);
-SUNDIALS_EXPORT realtype N_VL1Norm_Parallel_Ghost(N_Vector x);
-SUNDIALS_EXPORT void N_VCompare_Parallel_Ghost(realtype c, N_Vector x, N_Vector z);
-SUNDIALS_EXPORT booleantype N_VInvTest_Parallel_Ghost(N_Vector x, N_Vector z);
-SUNDIALS_EXPORT booleantype N_VConstrMask_Parallel_Ghost(N_Vector c, N_Vector x, N_Vector m);
-SUNDIALS_EXPORT realtype N_VMinQuotient_Parallel_Ghost(N_Vector num, N_Vector denom);
+SUNDIALS_EXPORT N_Vector N_VCloneEmpty_Parallel_Grid(N_Vector w);
+SUNDIALS_EXPORT N_Vector N_VClone_Parallel_Grid(N_Vector w);
+SUNDIALS_EXPORT void N_VDestroy_Parallel_Grid(N_Vector v);
+SUNDIALS_EXPORT void N_VSpace_Parallel_Grid(N_Vector v, long int *lrw, long int *liw);
+SUNDIALS_EXPORT realtype *N_VGetArrayPointer_Parallel_Grid(N_Vector v);
+SUNDIALS_EXPORT void N_VSetArrayPointer_Parallel_Grid(realtype *v_data, N_Vector v);
+SUNDIALS_EXPORT void N_VLinearSum_Parallel_Grid(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z);
+SUNDIALS_EXPORT void N_VConst_Parallel_Grid(realtype c, N_Vector z);
+SUNDIALS_EXPORT void N_VProd_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z);
+SUNDIALS_EXPORT void N_VDiv_Parallel_Grid(N_Vector x, N_Vector y, N_Vector z);
+SUNDIALS_EXPORT void N_VScale_Parallel_Grid(realtype c, N_Vector x, N_Vector z);
+SUNDIALS_EXPORT void N_VAbs_Parallel_Grid(N_Vector x, N_Vector z);
+SUNDIALS_EXPORT void N_VInv_Parallel_Grid(N_Vector x, N_Vector z);
+SUNDIALS_EXPORT void N_VAddConst_Parallel_Grid(N_Vector x, realtype b, N_Vector z);
+SUNDIALS_EXPORT realtype N_VDotProd_Parallel_Grid(N_Vector x, N_Vector y);
+SUNDIALS_EXPORT realtype N_VMaxNorm_Parallel_Grid(N_Vector x);
+SUNDIALS_EXPORT realtype N_VWrmsNorm_Parallel_Grid(N_Vector x, N_Vector w);
+SUNDIALS_EXPORT realtype N_VWrmsNormMask_Parallel_Grid(N_Vector x, N_Vector w, N_Vector id);
+SUNDIALS_EXPORT realtype N_VMin_Parallel_Grid(N_Vector x);
+SUNDIALS_EXPORT realtype N_VWL2Norm_Parallel_Grid(N_Vector x, N_Vector w);
+SUNDIALS_EXPORT realtype N_VL1Norm_Parallel_Grid(N_Vector x);
+SUNDIALS_EXPORT void N_VCompare_Parallel_Grid(realtype c, N_Vector x, N_Vector z);
+SUNDIALS_EXPORT booleantype N_VInvTest_Parallel_Grid(N_Vector x, N_Vector z);
+SUNDIALS_EXPORT booleantype N_VConstrMask_Parallel_Grid(N_Vector c, N_Vector x, N_Vector m);
+SUNDIALS_EXPORT realtype N_VMinQuotient_Parallel_Grid(N_Vector num, N_Vector denom);
 
 #ifdef __cplusplus
 }

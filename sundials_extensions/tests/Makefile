@@ -15,7 +15,9 @@ INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../
 LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 
 # listing of all test routines
-TESTS = nvector_serial_test.exe nvector_parallel_ghost_test.exe 
+TESTS = nvector_serial_test.exe \
+        nvector_parallel_test.exe \
+        nvector_parallel_grid_test.exe 
 
 # target to build all test executables
 all : ${TESTS}
@@ -23,8 +25,11 @@ all : ${TESTS}
 nvector_serial_test.exe : nvector_serial_test.c
 	${CC} ${CFLAGS_} ${INCS} nvector_serial_test.c ${LIBS} -o $@
 
-nvector_parallel_ghost_test.exe : nvector_parallel_ghost_test.c
-	${CC} ${CFLAGS_} ${INCS} nvector_parallel_ghost_test.c ${LIBS} -o $@
+nvector_parallel_test.exe : nvector_parallel_test.c
+	${CC} ${CFLAGS_} ${INCS} nvector_parallel_test.c ${LIBS} -o $@
+
+nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
+	${CC} ${CFLAGS_} ${INCS} nvector_parallel_grid_test.c ${LIBS} -o $@
 
 clean :
 	\rm -f *.o *.exe
