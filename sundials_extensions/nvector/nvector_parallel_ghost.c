@@ -126,7 +126,7 @@ N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm,
 
   /* Compute total local length */
   n = 1;
-  for (i=0; i<dims; i++)  n *= dim_length[i];
+  for (i=0; i<dims; i++)  n *= dim_alength[i];
 
   /* Compute global length as sum of local lengths */
   MPI_Allreduce(&n, &Nsum, 1, PGVEC_INTEGER_MPI_TYPE, MPI_SUM, comm);
@@ -192,6 +192,16 @@ N_Vector N_VNewEmpty_Parallel_Ghost(MPI_Comm comm,
   for (i=dims; i<MAX_DIMS; i++)  content->dim_length[i]  = 1;
   for (i=dims; i<MAX_DIMS; i++)  content->dim_alength[i] = 1;
   for (i=dims; i<MAX_DIMS; i++)  content->dim_offset[i]  = 0;
+
+  /* verify that array lengths are legal */
+  for (i=0; i<MAX_DIMS; i++) 
+    if (content->dim_alength[i]+content->dim_offset[i] > content->dim_length[i])
+      {
+	printf("N_VNewEmpty_Parallel_Ghost: illegal inputs for dimension %i:\n",i);
+	printf("  total length (%li) must exceed active length (%li) plus offset (%li)\n",
+	       content->dim_length[i],content->dim_alength[i],content->dim_offset[i]);
+	return NULL;
+      }
 
   /* Attach content and ops */
   v->content = content;
