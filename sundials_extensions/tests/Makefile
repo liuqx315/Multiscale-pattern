@@ -18,7 +18,10 @@ LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
         nvector_parallel_grid_test.exe \
-        cv_analytic.exe
+        cv_analytic.exe \
+        cv_VanderPol.exe \
+        cv_brusselator.exe \
+        cv_brusselator1D.exe
 
 # target to build all test executables
 all : ${TESTS}
@@ -33,6 +36,15 @@ nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 cv_analytic.exe : cv_analytic.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+cv_VanderPol.exe : cv_VanderPol.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+cv_brusselator.exe : cv_brusselator.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+cv_brusselator1D.exe : cv_brusselator1D.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 clean :

@@ -6,24 +6,46 @@
  * -----------------------------------------------------------------
  * Example problem:
  * 
- * The following is a simple example problem with analytical 
- * solution,
- *    dy/dt = lamda*y + 1/(1+t^2) - lamda*atan(t)
- * for t in the interval [0.0, 10.0], with initial condition: y=0. 
+ * The following test simulates the Van der Pol oscillator.  This 
+ * is an ODE system with 2 components, Y = [u,v], satisfying the 
+ * equations,
+ *    du/dt = v
+ *    dv/dt = (v - v*u^2 - ep2*u)/ep.
+ * for t in [0,Tf] and initial conditions Y0 = [u0,v0].
  * 
- * The stiffness of the problem is directly proportional to the 
- * value of "lamda", which is specified through an input file, along 
- * with the desired relative and absolute tolerances.  The value of
- * lamda should be negative to result in a well-posed ODE; for values
- * with magnitude larger than 100 the problem becomes quite stiff.
+ * We have 3 different testing scenarios:
  *
- * In the example input file, we choose lamda = -100.
+ * Test 1:  Tf=1.5, u0=-2, v0=-2.3553013976081, ep=1.0e-3, ep2=1.0
+ *    Here, v quickly increases to around 0.5, then both change very 
+ *    slowly until around t=0.6, when v increases exponentially to a 
+ *    value of near 12, before it suddenly drops down to around -1.0.  
+ *    When v drops, u jumps to around 2.0.  Both proceed slowly 
+ *    afterwards for the remainder of the time interval.
+ *
+ * Test 2:  Tf=12,  u0=2,  v0=0,  ep=ep2=0.2
+ *    Here, both u and v proceed smoothly until around t=5, when v 
+ *    dips to -7.0 and then returns to around 0.5 within an interval
+ *    of around 1 unit time.  During that change, u drops from 
+ *    around 1.0 to around -2.0.  This process then repeats but in 
+ *    the opposite direction at around t=11.
+ *
+ * Test 3:  Tf=1000,  u0=2,  v0=0,  ep=ep2=1.0e-3
+ *    Here, both u and v proceed smoothly until around t=800, when 
+ *    within less than 10 time units u suddenly plunges from around 
+ *    1.1 to -2.0.  Meanwhile, v remains relatively constant 
+ *    throughout the entire simulation.
+ *
+ * These tests are selected within the input file (test = {1,2,3}), 
+ * with the default set to test 1 in case the input is invalid.
+ * Also in the input file, we allow specification of the desired 
+ * relative and absolute tolerances.
  * 
- * This program solves the problem with the BDF method,
+ * This program solves the problem with the BDF method, using a
  * Newton iteration with the CVDENSE dense linear solver, and a
  * user-supplied Jacobian routine.
- * Output is printed every 1.0 units of time (10 total).
- * Run statistics (optional outputs) are printed at the end.
+ *
+ * 100 outputs are printed at equal intervals, and run statistics 
+ * are printed at the end.
  * -----------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -54,10 +76,10 @@ static int check_flag(void *flagvalue, char *funcname, int opt);
 int main()
 {
   /* general problem parameters */
-  realtype T0 = 0.0;
-  realtype Tf = 10.0;
-  realtype dTout = 1.0;
-  long int NEQ = 1;
+  realtype T0=0.0;
+  realtype Tf, dTout, ep, ep2, u0, v0;
+  int NEQ = 2;
+  int Nt = 100;
 
   /* general problem variables */
   int flag;
@@ -65,13 +87,14 @@ int main()
   void *cvode_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
-     lamda  - problem stiffness parameter
+     test   - test problem choice
      reltol - desired relative tolerance
      abstol - desired absolute tolerance */
-  double reltol_, abstol_, lamda_;
+  int test;
+  double reltol_, abstol_;
   FILE *FID;
-  FID=fopen("input_analytic.txt","r");
-  fscanf(FID,"  lamda = %lf\n", &lamda_);
+  FID=fopen("input_VanderPol.txt","r");
+  fscanf(FID,"  test = %i\n", &test);
   fscanf(FID,"  reltol = %lf\n", &reltol_);
   fscanf(FID,"  abstol = %lf\n", &abstol_);
   fclose(FID);
@@ -79,21 +102,48 @@ int main()
   /* convert the inputs to 'realtype' format */
   realtype reltol = reltol_;
   realtype abstol = abstol_;
-  realtype lamda  = lamda_;
+
+  /* set up the test problem according to the desired input */
+  if (test == 2) {
+    Tf = RCONST(12.0);
+    u0 = RCONST(2.0);
+    v0 = RCONST(0.0);
+    ep = RCONST(0.2);
+    ep2 = RCONST(0.2);
+  } else if (test == 3) {
+    Tf = RCONST(1000.0);
+    u0 = RCONST(2.0);
+    v0 = RCONST(0.0);
+    ep = RCONST(1.0e-3);
+    ep2 = RCONST(1.0e-3);
+  } else {
+    Tf = RCONST(1.5);
+    u0 = RCONST(-2.0);
+    v0 = RCONST(-2.3553013976081);
+    ep = RCONST(1.0e-3);
+    ep2 = RCONST(1.0);
+  }
+  dTout = (Tf-T0)/Nt;
+
+  /* set user data to contain stiffness parameters */
+  realtype rdata[2] = {ep, ep2};
 
   /* Initial problem output */
-  printf("\nAnalytical ODE test problem:\n");
-  printf("    lamda = %g\n",lamda);
-  printf("   reltol = %.1e\n",reltol);
-  printf("   abstol = %.1e\n\n",abstol);
+  printf("\nVan der Pol ODE test problem:\n");
+  printf("    time interval:  t in [%g,%g]\n",T0,Tf);
+  printf("    output interval = %g\n",dTout);
+  printf("    initial conditions:  u0 = %g,  v0 = %g\n",u0,v0);
+  printf("    stiffness parameters:  ep = %g,  ep2 = %g\n",ep,ep2);
+  printf("    tolerances:  reltol = %.1e,  abstol = %.1e\n\n",reltol,abstol);
 
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
 
-  /* Initialize y to 0 */
-  NV_Ith_S(y,0) = 0.0;
+  /* Set initial conditions into y */
+  NV_Ith_S(y,0) = u0;
+  NV_Ith_S(y,1) = v0;
 
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
@@ -106,8 +156,8 @@ int main()
   flag = CVodeInit(cvode_mem, f, T0, y);
   if (check_flag(&flag, "CVodeInit", 1)) return(1);
 
-  /* Call CVodeSetUserData to pass lamda to user functions */
-  flag = CVodeSetUserData(cvode_mem, (void *) &lamda);
+  /* Call CVodeSetUserData to pass rdata to user functions */
+  flag = CVodeSetUserData(cvode_mem, (void *) rdata);
   if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
@@ -127,13 +177,15 @@ int main()
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype tout = dTout;
-  realtype u;
-  printf("        t           u         error\n");
-  printf("   ------------------------------------\n");
-  while (Tf - t > 1.0e-15) {
+  realtype u, v;
+  printf("        t           u           v\n");
+  printf("   ----------------------------------\n");
+  int iout;
+  for (iout=0; iout<Nt; iout++) {
     flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
     u = NV_Ith_S(y,0);
-    printf("  %10.6f  %10.6f  %12.5e\n", t, u, atan(t)-u);
+    v = NV_Ith_S(y,1);
+    printf("  %10.6f  %10.6f  %10.6f\n", t, u, v);
 
     if (check_flag(&flag, "CVode", 1)) break;
     if (flag == CV_SUCCESS) {
@@ -141,7 +193,7 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
-  printf("   ------------------------------------\n");
+  printf("   ----------------------------------\n");
 
   /* Print some final statistics */
   long int nst, nfe, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -193,10 +245,16 @@ int main()
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   realtype *rdata = (realtype *) user_data;
-  realtype lamda = rdata[0];
+  realtype ep  = rdata[0];
+  realtype ep2 = rdata[1];
   realtype u = NV_Ith_S(y,0);
+  realtype v = NV_Ith_S(y,1);
 
-  NV_Ith_S(ydot,0) = lamda*u + 1.0/(1.0+t*t) - lamda*atan(t);
+  /* du/dt = v */
+  NV_Ith_S(ydot,0) = v;
+
+  /* dv/dt = (v - v*u^2 - ep2*u)/ep */
+  NV_Ith_S(ydot,1) = (v - v*u*u - ep2*u)/ep;
 
   return(0);
 }
@@ -208,8 +266,18 @@ static int Jac(long int N, realtype t,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
   realtype *rdata = (realtype *) user_data;
-  realtype lamda = rdata[0];
-  DENSE_ELEM(J,0,0) = lamda;
+  realtype ep  = rdata[0];
+  realtype ep2 = rdata[1];
+  realtype u = NV_Ith_S(y,0);
+  realtype v = NV_Ith_S(y,1);
+
+  /* du/dt = v */
+  DENSE_ELEM(J,0,0) = 0.0;
+  DENSE_ELEM(J,0,1) = 1.0;
+
+  /* dv/dt = (v - v*u^2 - ep2*u)/ep */
+  DENSE_ELEM(J,1,0) = -(2.0*v*u + ep2)/ep;
+  DENSE_ELEM(J,1,1) = (1.0 - u*u)/ep;
 
   return(0);
 }
