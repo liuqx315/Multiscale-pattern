@@ -50,6 +50,9 @@
 #include <sundials/sundials_types.h> /* definition of type realtype */
 
 
+/* accessor macros between (x,v) location and 1D NVector array */
+#define IDX(x,v) (3*(x)+v)
+
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -140,9 +143,9 @@ int main()
   pi = 4.0*atan(1.0);
   dx = 1.0/(N-1);
   for (i=0; i<N; i++) {
-    Ydata[3*i]   =  a  + 0.1*sin(pi*dx*i);  /* u */
-    Ydata[3*i+1] = b/a + 0.1*sin(pi*dx*i);  /* v */
-    Ydata[3*i+2] =  b  + 0.1*sin(pi*dx*i);  /* w */
+    Ydata[IDX(i,0)] =  a  + 0.1*sin(pi*dx*i);  /* u */
+    Ydata[IDX(i,1)] = b/a + 0.1*sin(pi*dx*i);  /* v */
+    Ydata[IDX(i,2)] =  b  + 0.1*sin(pi*dx*i);  /* w */
   }
 
   /* Create serial vector masks for each solution component */
@@ -157,17 +160,17 @@ int main()
   N_VConst(0.0, umask);
   Ydata = N_VGetArrayPointer(umask);
   if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  Ydata[3*i] = 1.0;
+  for (i=0; i<N; i++)  Ydata[IDX(i,0)] = 1.0;
 
   N_VConst(0.0, vmask);
   Ydata = N_VGetArrayPointer(vmask);
   if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  Ydata[3*i+1] = 1.0;
+  for (i=0; i<N; i++)  Ydata[IDX(i,1)] = 1.0;
 
   N_VConst(0.0, wmask);
   Ydata = N_VGetArrayPointer(wmask);
   if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  Ydata[3*i+2] = 1.0;
+  for (i=0; i<N; i++)  Ydata[IDX(i,2)] = 1.0;
 
 
   /* set user data to contain problem-defining parameters */
@@ -309,24 +312,24 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   for (i=1; i<N-1; i++) {
 
     /* set shortcuts */
-    u = Ydata[3*i];    ul = Ydata[3*(i-1)];    ur = Ydata[3*(i+1)];
-    v = Ydata[3*i+1];  vl = Ydata[3*(i-1)+1];  vr = Ydata[3*(i+1)+1];
-    w = Ydata[3*i+2];  wl = Ydata[3*(i-1)+2];  wr = Ydata[3*(i+1)+2];
+    u = Ydata[IDX(i,0)];  ul = Ydata[IDX(i-1,0)];  ur = Ydata[IDX(i+1,0)];
+    v = Ydata[IDX(i,1)];  vl = Ydata[IDX(i-1,1)];  vr = Ydata[IDX(i+1,1)];
+    w = Ydata[IDX(i,2)];  wl = Ydata[IDX(i-1,2)];  wr = Ydata[IDX(i+1,2)];
 
     /* u_t = d1*u_xx + a - (w+1)*u + v*u^2 */
-    dYdata[3*i] = (ul - 2.0*u + ur)*uconst + a - (w+1.0)*u + v*u*u;
+    dYdata[IDX(i,0)] = (ul - 2.0*u + ur)*uconst + a - (w+1.0)*u + v*u*u;
 
     /* v_t = d2*v_xx + w*u - v*u^2 */
-    dYdata[3*i+1] = (vl - 2.0*v + vr)*vconst + w*u - v*u*u;
+    dYdata[IDX(i,1)] = (vl - 2.0*v + vr)*vconst + w*u - v*u*u;
 
     /* w_t = d3*w_xx + (b-w)/ep - w*u */
-    dYdata[3*i+2] = (wl - 2.0*w + wr)*wconst + (b-w)/ep - w*u;
+    dYdata[IDX(i,2)] = (wl - 2.0*w + wr)*wconst + (b-w)/ep - w*u;
 
   }
 
   /* enforce stationary boundaries */
-  dYdata[0]     = dYdata[1]     = dYdata[2]     = 0.0;
-  dYdata[3*N-3] = dYdata[3*N-2] = dYdata[3*N-1] = 0.0;
+  dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
+  dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
 
   return(0);
 }
@@ -360,40 +363,40 @@ static int Jac(long int M, long int mu, long int ml,
 
   /* iterate over space, setting Jacobian entries */
   realtype u, v, w;
-  long int i, N = M/3;
+  long int i, N = M/3;   /* M is the total data length, so M/3 is each var. */
   for (i=1; i<N-1; i++) {
 
     /* set shortcuts */
-    u = Ydata[3*i];
-    v = Ydata[3*i+1];
-    w = Ydata[3*i+2];
+    u = Ydata[IDX(i,0)];
+    v = Ydata[IDX(i,1)];
+    w = Ydata[IDX(i,2)];
 
     /* set diffusion components (by row, even though that's less efficient) */
     /*     d1*u_xx  */
-    BAND_ELEM(J,3*i,3*(i-1)) = uconst;
-    BAND_ELEM(J,3*i,3*(i+1)) = uconst;
-    BAND_ELEM(J,3*i,3*i)     = -2.0*uconst;
+    BAND_ELEM(J,IDX(i,0),IDX(i-1,0)) = uconst;
+    BAND_ELEM(J,IDX(i,0),IDX(i+1,0)) = uconst;
+    BAND_ELEM(J,IDX(i,0),IDX(i,0))   = -2.0*uconst;
     /*     d2*v_xx  */
-    BAND_ELEM(J,3*i+1,3*(i-1)+1) = vconst;
-    BAND_ELEM(J,3*i+1,3*(i+1)+1) = vconst;
-    BAND_ELEM(J,3*i+1,3*i+1)     = -2.0*vconst;
+    BAND_ELEM(J,IDX(i,1),IDX(i-1,1)) = vconst;
+    BAND_ELEM(J,IDX(i,1),IDX(i+1,1)) = vconst;
+    BAND_ELEM(J,IDX(i,1),IDX(i,1))   = -2.0*vconst;
     /*     d3*w_xx  */
-    BAND_ELEM(J,3*i+2,3*(i-1)+2) = wconst;
-    BAND_ELEM(J,3*i+2,3*(i+1)+2) = wconst;
-    BAND_ELEM(J,3*i+2,3*i+2)     = -2.0*wconst;
+    BAND_ELEM(J,IDX(i,2),IDX(i-1,2)) = wconst;
+    BAND_ELEM(J,IDX(i,2),IDX(i+1,2)) = wconst;
+    BAND_ELEM(J,IDX(i,2),IDX(i,2))   = -2.0*wconst;
     
     /* set reaction components*/
     /*     all vars wrt u */
-    BAND_ELEM(J,3*i,3*i)   += 2.0*u*v - (w+1.0);
-    BAND_ELEM(J,3*i+1,3*i) += w - 2.0*u*v;
-    BAND_ELEM(J,3*i+2,3*i) -= w;
+    BAND_ELEM(J,IDX(i,0),IDX(i,0)) += 2.0*u*v - (w+1.0);
+    BAND_ELEM(J,IDX(i,1),IDX(i,0)) += w - 2.0*u*v;
+    BAND_ELEM(J,IDX(i,2),IDX(i,0)) -= w;
     /*     all vars wrt v */
-    BAND_ELEM(J,3*i,3*i+1)   += u*u;
-    BAND_ELEM(J,3*i+1,3*i+1) -= u*u;
+    BAND_ELEM(J,IDX(i,0),IDX(i,1)) += u*u;
+    BAND_ELEM(J,IDX(i,1),IDX(i,1)) -= u*u;
     /*     all vars wrt w */
-    BAND_ELEM(J,3*i,3*i+2)   -= u;
-    BAND_ELEM(J,3*i+1,3*i+2) += u;
-    BAND_ELEM(J,3*i+2,3*i+2) += (-1.0/ep - u);
+    BAND_ELEM(J,IDX(i,0),IDX(i,2)) -= u;
+    BAND_ELEM(J,IDX(i,1),IDX(i,2)) += u;
+    BAND_ELEM(J,IDX(i,2),IDX(i,2)) += (-1.0/ep - u);
 
   }
 
