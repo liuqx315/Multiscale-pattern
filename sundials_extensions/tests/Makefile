@@ -21,7 +21,8 @@ TESTS = nvector_serial_test.exe \
         cv_analytic.exe \
         cv_VanderPol.exe \
         cv_brusselator.exe \
-        cv_brusselator1D.exe
+        cv_brusselator1D.exe \
+        ida_brusselator1D_FEM.exe
 
 # target to build all test executables
 all : ${TESTS}
@@ -45,6 +46,9 @@ cv_brusselator.exe : cv_brusselator.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 cv_brusselator1D.exe : cv_brusselator1D.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+ida_brusselator1D_FEM.exe : ida_brusselator1D_FEM.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 clean :

@@ -7,16 +7,15 @@
  * Example problem:
  * 
  * The following test simulates a brusselator problem from chemical 
- * kinetics.  This is an ODE system with 3 components, Y = [u,v,w], 
+ * kinetics.  This is n PDE system with 3 components, Y = [u,v,w], 
  * satisfying the equations,
- *    u_t = d1*u_xx + a - (w+1)*u + v*u^2
- *    v_t = d2*v_xx + w*u - v*u^2
- *    w_t = d3*w_xx + (b-w)/ep - w*u
- * for t in [0, 80], x in [0, 1], with initial conditions 
- * Y0 = [u0,v0,w0], where
- *    u0(x) = a + 0.1*sin(pi*x)
- *    v0(x) = b/a + 0.1*sin(pi*x)
- *    w0(x) = b + 0.1*sin(pi*x),
+ *    u_t = du*u_xx + a - (w+1)*u + v*u^2
+ *    v_t = dv*v_xx + w*u - v*u^2
+ *    w_t = dw*w_xx + (b-w)/ep - w*u
+ * for t in [0, 80], x in [0, 1], with initial conditions
+ *    u(0,x) =  a  + 0.1*sin(pi*x)
+ *    v(0,x) = b/a + 0.1*sin(pi*x)
+ *    w(0,x) =  b  + 0.1*sin(pi*x),
  * and with stationary boundary conditions, i.e. 
  *    u_t(t,0) = u_t(t,1) = v_t(t,0) = v_t(t,1) = w_t(t,0) = w_t(t,1) = 0.
  * Note: these can also be implemented as Dirichlet boundary conditions 
@@ -26,7 +25,7 @@
  * differences, with the data distributed over N points on a uniform 
  * spatial grid.
  *
- * The number of spatial points N, the parameters a, b, d1, d2, d3 
+ * The number of spatial points N, the parameters a, b, du, dv, dw 
  * and ep, as well as the desired relative and absolute solver 
  * tolerances, are provided in the input file input_brusselator1D.txt.
  * 
@@ -39,6 +38,7 @@
  * -----------------------------------------------------------------*/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 /* Header files with a description of contents used */
@@ -53,6 +53,24 @@
 /* accessor macros between (x,v) location and 1D NVector array */
 #define IDX(x,v) (3*(x)+v)
 
+/* constants */
+#define ONE (RCONST(1.0))
+#define TWO (RCONST(2.0))
+
+
+/* user data structure */
+typedef struct {  
+  long int N;    /* number of intervals     */
+  realtype dx;   /* mesh spacing            */
+  realtype a;    /* constant forcing on u   */
+  realtype b;    /* steady-state value of w */
+  realtype du;   /* diffusion coeff for u   */
+  realtype dv;   /* diffusion coeff for v   */
+  realtype dw;   /* diffusion coeff for w   */
+  realtype ep;   /* stiffness parameter     */
+} *UserData;
+
+
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -63,6 +81,8 @@ static int Jac(long int N, long int mu, long int ml,
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
+static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata);
+static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata);
 
 
 
@@ -70,12 +90,12 @@ static int check_flag(void *flagvalue, char *funcname, int opt);
 int main()
 {
   /* general problem parameters */
-  realtype T0 = 0.0;
-  realtype Tf = 10.0;
+  realtype T0 = RCONST(0.0);
+  realtype Tf = RCONST(10.0);
   int Nt = 100;
   int Nvar = 3;
-  realtype a, b, d1, d2, d3, ep, reltol, abstol, dx, pi;
-  realtype *Ydata;
+  UserData udata = NULL;
+  realtype *data;
   long int N, NEQ, i;
 
   /* general problem variables */
@@ -86,97 +106,106 @@ int main()
   N_Vector wmask = NULL;
   void *cvode_mem = NULL;
 
+  /* allocate udata structure */
+  udata = (UserData) malloc(sizeof(*udata));
+  if (check_flag((void *)udata, "malloc", 2)) return(1);
+
   /* read problem parameter and tolerances from input file:
      N - number of spatial discretization points
      a - constant forcing on u
      b - steady-state value of w
-     d1 - diffusion coefficient for u
-     d2 - diffusion coefficient for v
-     d3 - diffusion coefficient for w
+     du - diffusion coefficient for u
+     dv - diffusion coefficient for v
+     dw - diffusion coefficient for w
      ep - stiffness parameter
      reltol - desired relative tolerance
      abstol - desired absolute tolerance */
-  double a_, b_, d1_, d2_, d3_, ep_, reltol_, abstol_;
+  double a, b, du, dv, dw, ep, reltol, abstol;
   FILE *FID;
   FID=fopen("input_brusselator1D.txt","r");
   fscanf(FID,"  N = %li\n", &N);
-  fscanf(FID,"  a = %lf\n", &a_);
-  fscanf(FID,"  b = %lf\n", &b_);
-  fscanf(FID,"  d1 = %lf\n", &d1_);
-  fscanf(FID,"  d2 = %lf\n", &d2_);
-  fscanf(FID,"  d3 = %lf\n", &d3_);
-  fscanf(FID,"  ep = %lf\n", &ep_);
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
+  fscanf(FID,"  a = %lf\n", &a);
+  fscanf(FID,"  b = %lf\n", &b);
+  fscanf(FID,"  du = %lf\n", &du);
+  fscanf(FID,"  dv = %lf\n", &dv);
+  fscanf(FID,"  dw = %lf\n", &dw);
+  fscanf(FID,"  ep = %lf\n", &ep);
+  fscanf(FID,"  reltol = %lf\n", &reltol);
+  fscanf(FID,"  abstol = %lf\n", &abstol);
   fclose(FID);
 
-  /* convert the inputs to 'realtype' format */
-  a  = a_;
-  b  = b_;
-  d1 = d1_;
-  d2 = d2_;
-  d3 = d3_;
-  ep = ep_;
-  reltol = reltol_;
-  abstol = abstol_;
+  /* store the inputs in the UserData structure */
+  udata->N  = N;
+  udata->a  = a;
+  udata->b  = b;
+  udata->du = du;
+  udata->dv = dv;
+  udata->dw = dw;
+  udata->ep = ep;
 
   /* set total allocated vector length */
-  NEQ = Nvar*N;
+  NEQ = Nvar*udata->N;
 
   /* Initial problem output */
   printf("\n1D Brusselator PDE test problem:\n");
-  printf("    N = %li,  NEQ = %li\n",N,NEQ);
-  printf("    problem parameters:  a = %g,  b = %g,  ep = %g\n",a,b,ep);
-  printf("    diffusion coefficients:  d1 = %g,  d2 = %g,  d3 = %g\n",d1,d2,d3);
-  printf("    reltol = %.1e,  abstol = %.1e\n\n",reltol,abstol);
+  printf("    N = %li,  NEQ = %li\n", udata->N, NEQ);
+  printf("    problem parameters:  a = %g,  b = %g,  ep = %g\n",
+	 udata->a, udata->b, udata->ep);
+  printf("    diffusion coefficients:  du = %g,  dv = %g,  dw = %g\n", 
+	 udata->du, udata->dv, udata->dw);
+  printf("    reltol = %.1e,  abstol = %.1e\n\n", reltol, abstol);
 
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
 
-  /* Access data array for new NVector y, and set shortcuts for each component */
-  Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
+  /* set spatial mesh spacing */
+  udata->dx = ONE/(N-1);
 
-  /* Set initial conditions into y, grouped according to location */
-  pi = 4.0*atan(1.0);
-  dx = 1.0/(N-1);
+  /* output mesh to disk */
+  FID=fopen("bruss_mesh.txt","w");
+  for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
+  fclose(FID);
+  
+
+  /* Access data array for new NVector y */
+  data = N_VGetArrayPointer(y);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+
+  /* Set initial conditions into y */
+  realtype pi = RCONST(4.0)*atan(ONE);
   for (i=0; i<N; i++) {
-    Ydata[IDX(i,0)] =  a  + 0.1*sin(pi*dx*i);  /* u */
-    Ydata[IDX(i,1)] = b/a + 0.1*sin(pi*dx*i);  /* v */
-    Ydata[IDX(i,2)] =  b  + 0.1*sin(pi*dx*i);  /* w */
+    data[IDX(i,0)] =  a  + RCONST(0.1)*sin(pi*i*udata->dx);  /* u */
+    data[IDX(i,1)] = b/a + RCONST(0.1)*sin(pi*i*udata->dx);  /* v */
+    data[IDX(i,2)] =  b  + RCONST(0.1)*sin(pi*i*udata->dx);  /* w */
   }
 
   /* Create serial vector masks for each solution component */
   umask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return(1);
   vmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return(1);
   wmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return(1);
 
   /* Set mask array values for each solution component */
   N_VConst(0.0, umask);
-  Ydata = N_VGetArrayPointer(umask);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  Ydata[IDX(i,0)] = 1.0;
+  data = N_VGetArrayPointer(umask);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  for (i=0; i<N; i++)  data[IDX(i,0)] = ONE;
 
   N_VConst(0.0, vmask);
-  Ydata = N_VGetArrayPointer(vmask);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  Ydata[IDX(i,1)] = 1.0;
+  data = N_VGetArrayPointer(vmask);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  for (i=0; i<N; i++)  data[IDX(i,1)] = ONE;
 
   N_VConst(0.0, wmask);
-  Ydata = N_VGetArrayPointer(wmask);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  Ydata[IDX(i,2)] = 1.0;
+  data = N_VGetArrayPointer(wmask);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  for (i=0; i<N; i++)  data[IDX(i,2)] = ONE;
 
 
-  /* set user data to contain problem-defining parameters */
-  realtype rdata[7] = {a, b, d1, d2, d3, ep, dx};
-
-  
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
@@ -188,8 +217,8 @@ int main()
   flag = CVodeInit(cvode_mem, f, T0, y);
   if (check_flag(&flag, "CVodeInit", 1)) return(1);
   
-  /* Call CVodeSetUserData to pass lamda to user functions */
-  flag = CVodeSetUserData(cvode_mem, (void *) rdata);
+  /* Call CVodeSetUserData to pass rdata to user functions */
+  flag = CVodeSetUserData(cvode_mem, (void *) udata);
   if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
@@ -204,6 +233,21 @@ int main()
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetBandJacFn(cvode_mem, Jac);
   if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return(1);
+
+  /* Open output stream for results, access data arrays */
+  FILE *UFID=fopen("bruss_u.txt","w");
+  FILE *VFID=fopen("bruss_v.txt","w");
+  FILE *WFID=fopen("bruss_w.txt","w");
+  data = N_VGetArrayPointer(y);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+
+  /* output initial condition to disk */
+  for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
+  for (i=0; i<N; i++)  fprintf(VFID," %.16e", data[IDX(i,1)]);
+  for (i=0; i<N; i++)  fprintf(WFID," %.16e", data[IDX(i,2)]);
+  fprintf(UFID,"\n");
+  fprintf(VFID,"\n");
+  fprintf(WFID,"\n");
 
   /* In loop, call CVode, print results, and test for error.
      Break out of loop when the final output time has been reached */
@@ -221,6 +265,14 @@ int main()
     w = N_VWL2Norm(y,wmask);
     printf("  %10.6f  %10.6f  %10.6f  %10.6f\n", t, u, v, w);
 
+    /* output results to disk */
+    for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
+    for (i=0; i<N; i++)  fprintf(VFID," %.16e", data[IDX(i,1)]);
+    for (i=0; i<N; i++)  fprintf(WFID," %.16e", data[IDX(i,2)]);
+    fprintf(UFID,"\n");
+    fprintf(VFID,"\n");
+    fprintf(WFID,"\n");
+
     if (check_flag(&flag, "CVode", 1)) break;
     if (flag == CV_SUCCESS) {
       tout += dTout;
@@ -228,6 +280,10 @@ int main()
     }
   }
   printf("   ----------------------------------------------\n");
+  fclose(UFID);
+  fclose(VFID);
+  fclose(WFID);
+    
 
   /* Print some final statistics */
   long int nst, nfe, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -264,6 +320,9 @@ int main()
   N_VDestroy_Serial(vmask);
   N_VDestroy_Serial(wmask);
 
+  /* Free user data */
+  free(udata);
+
   /* Free integrator memory */
   CVodeFree(&cvode_mem);
 
@@ -283,32 +342,31 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   /* clear out ydot (to be careful) */
   N_VConst(0.0, ydot);
 
-  /* access parameters from problem data */
-  realtype *rdata = (realtype *) user_data;
-  realtype a  = rdata[0];
-  realtype b  = rdata[1];
-  realtype d1 = rdata[2];
-  realtype d2 = rdata[3];
-  realtype d3 = rdata[4];
-  realtype ep = rdata[5];
-  realtype dx = rdata[6];
+  /* problem data */
+  UserData udata = (UserData) user_data;
 
-  /* determine problem size */
-  long int N, M, i;
-  N_VSpace(y, &M, &N);  /* M is total vector length */
-  N = M/3;              /* N is the number of spatial mesh points */
+  /* shortcuts to number of intervals, background values */
+  long int N  = udata->N;
+  realtype a  = udata->a;
+  realtype b  = udata->b;
+  realtype ep = udata->ep;
+  realtype du = udata->du;
+  realtype dv = udata->dv;
+  realtype dw = udata->dw;
+  realtype dx = udata->dx;
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
   realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
 
   /* iterate over domain, computing all equations */
-  realtype uconst = d1/dx/dx;
-  realtype vconst = d2/dx/dx;
-  realtype wconst = d3/dx/dx;
+  realtype uconst = du/dx/dx;
+  realtype vconst = dv/dx/dx;
+  realtype wconst = dw/dx/dx;
   realtype u, ul, ur, v, vl, vr, w, wl, wr;
+  long int i;
   for (i=1; i<N-1; i++) {
 
     /* set shortcuts */
@@ -316,14 +374,14 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     v = Ydata[IDX(i,1)];  vl = Ydata[IDX(i-1,1)];  vr = Ydata[IDX(i+1,1)];
     w = Ydata[IDX(i,2)];  wl = Ydata[IDX(i-1,2)];  wr = Ydata[IDX(i+1,2)];
 
-    /* u_t = d1*u_xx + a - (w+1)*u + v*u^2 */
-    dYdata[IDX(i,0)] = (ul - 2.0*u + ur)*uconst + a - (w+1.0)*u + v*u*u;
+    /* u_t = du*u_xx + a - (w+1)*u + v*u^2 */
+    dYdata[IDX(i,0)] = (ul - TWO*u + ur)*uconst + a - (w+ONE)*u + v*u*u;
 
-    /* v_t = d2*v_xx + w*u - v*u^2 */
-    dYdata[IDX(i,1)] = (vl - 2.0*v + vr)*vconst + w*u - v*u*u;
+    /* v_t = dv*v_xx + w*u - v*u^2 */
+    dYdata[IDX(i,1)] = (vl - TWO*v + vr)*vconst + w*u - v*u*u;
 
-    /* w_t = d3*w_xx + (b-w)/ep - w*u */
-    dYdata[IDX(i,2)] = (wl - 2.0*w + wr)*wconst + (b-w)/ep - w*u;
+    /* w_t = dw*w_xx + (b-w)/ep - w*u */
+    dYdata[IDX(i,2)] = (wl - TWO*w + wr)*wconst + (b-w)/ep - w*u;
 
   }
 
@@ -344,60 +402,19 @@ static int Jac(long int M, long int mu, long int ml,
   /* clear out Jacobian (to be careful) */
   SetToZero(J);
 
-  /* access parameters from problem data */
-  realtype *rdata = (realtype *) user_data;
-  realtype d1 = rdata[2];
-  realtype d2 = rdata[3];
-  realtype d3 = rdata[4];
-  realtype ep = rdata[5];
-  realtype dx = rdata[6];
+  /* problem data */
+  UserData udata = (UserData) user_data;
 
-  /* access data arrays */
-  realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)y, "N_VGetArrayPointer", 0)) return(1);
+  /* Fill in the Laplace matrix */
+  if (LaplaceMatrix(ONE, J, udata)) {
+    printf("Jacobian calculation error in calling LaplaceMatrix!\n");
+    return(1);
+  }
 
-  /* set scaled diffusion differencing parameters */
-  realtype uconst = d1/dx/dx;
-  realtype vconst = d2/dx/dx;
-  realtype wconst = d3/dx/dx;
-
-  /* iterate over space, setting Jacobian entries */
-  realtype u, v, w;
-  long int i, N = M/3;   /* M is the total data length, so M/3 is each var. */
-  for (i=1; i<N-1; i++) {
-
-    /* set shortcuts */
-    u = Ydata[IDX(i,0)];
-    v = Ydata[IDX(i,1)];
-    w = Ydata[IDX(i,2)];
-
-    /* set diffusion components (by row, even though that's less efficient) */
-    /*     d1*u_xx  */
-    BAND_ELEM(J,IDX(i,0),IDX(i-1,0)) = uconst;
-    BAND_ELEM(J,IDX(i,0),IDX(i+1,0)) = uconst;
-    BAND_ELEM(J,IDX(i,0),IDX(i,0))   = -2.0*uconst;
-    /*     d2*v_xx  */
-    BAND_ELEM(J,IDX(i,1),IDX(i-1,1)) = vconst;
-    BAND_ELEM(J,IDX(i,1),IDX(i+1,1)) = vconst;
-    BAND_ELEM(J,IDX(i,1),IDX(i,1))   = -2.0*vconst;
-    /*     d3*w_xx  */
-    BAND_ELEM(J,IDX(i,2),IDX(i-1,2)) = wconst;
-    BAND_ELEM(J,IDX(i,2),IDX(i+1,2)) = wconst;
-    BAND_ELEM(J,IDX(i,2),IDX(i,2))   = -2.0*wconst;
-    
-    /* set reaction components*/
-    /*     all vars wrt u */
-    BAND_ELEM(J,IDX(i,0),IDX(i,0)) += 2.0*u*v - (w+1.0);
-    BAND_ELEM(J,IDX(i,1),IDX(i,0)) += w - 2.0*u*v;
-    BAND_ELEM(J,IDX(i,2),IDX(i,0)) -= w;
-    /*     all vars wrt v */
-    BAND_ELEM(J,IDX(i,0),IDX(i,1)) += u*u;
-    BAND_ELEM(J,IDX(i,1),IDX(i,1)) -= u*u;
-    /*     all vars wrt w */
-    BAND_ELEM(J,IDX(i,0),IDX(i,2)) -= u;
-    BAND_ELEM(J,IDX(i,1),IDX(i,2)) += u;
-    BAND_ELEM(J,IDX(i,2),IDX(i,2)) += (-1.0/ep - u);
-
+  /* Add in the Jacobian of the reaction terms matrix */
+  if (ReactionJac(ONE, y, J, udata)) {
+    printf("Jacobian calculation error in calling ReactionJac!\n");
+    return(1);
   }
 
   return(0);
@@ -408,6 +425,83 @@ static int Jac(long int M, long int mu, long int ml,
 /*-------------------------------
  * Private helper functions
  *-------------------------------*/
+
+/* Routine to compute the stiffness matrix from (L*y), scaled by the factor c.
+   We add the result into Jac and do not erase what was already there */
+static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata)
+{
+  /* shortcut to number of intervals */
+  long int N = udata->N;
+
+  /* set shortcuts */
+  long int i;
+  realtype dx = udata->dx;
+  
+  /* iterate over intervals, filling in Jacobian entries */
+  for (i=1; i<N-1; i++) {
+
+    /* Jacobian of (L*y) at this node */
+    BAND_ELEM(Jac,IDX(i,0),IDX(i-1,0)) += c*udata->du/dx/dx;
+    BAND_ELEM(Jac,IDX(i,1),IDX(i-1,1)) += c*udata->dv/dx/dx;
+    BAND_ELEM(Jac,IDX(i,2),IDX(i-1,2)) += c*udata->dw/dx/dx;
+    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += -c*TWO*udata->du/dx/dx;
+    BAND_ELEM(Jac,IDX(i,1),IDX(i,1)) += -c*TWO*udata->dv/dx/dx;
+    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += -c*TWO*udata->dw/dx/dx;
+    BAND_ELEM(Jac,IDX(i,0),IDX(i+1,0)) += c*udata->du/dx/dx;
+    BAND_ELEM(Jac,IDX(i,1),IDX(i+1,1)) += c*udata->dv/dx/dx;
+    BAND_ELEM(Jac,IDX(i,2),IDX(i+1,2)) += c*udata->dw/dx/dx;
+  }
+
+  return(0);
+}
+
+
+
+/* Routine to compute the Jacobian matrix from R(y), scaled by the factor c.
+   We add the result into Jac and do not erase what was already there */
+static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
+{
+
+  /* shortcuts to number of intervals, background values */
+  long int N  = udata->N;
+
+  /* access data arrays */
+  realtype *Ydata = N_VGetArrayPointer(y);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+
+  /* set shortcuts */
+  long int i;
+  realtype u, v, w;
+  realtype ep = udata->ep;
+  
+  /* iterate over nodes, filling in Jacobian entries */
+  for (i=1; i<N-1; i++) {
+
+    /* set nodal value shortcuts (shifted index due to start at first interior node) */
+    u = Ydata[IDX(i,0)];
+    v = Ydata[IDX(i,1)];
+    w = Ydata[IDX(i,2)];
+
+    /* all vars wrt u */
+    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += c*(TWO*u*v-(w+ONE));
+    BAND_ELEM(Jac,IDX(i,1),IDX(i,0)) += c*(w - TWO*u*v);
+    BAND_ELEM(Jac,IDX(i,2),IDX(i,0)) += c*(-w);
+
+    /* all vars wrt v */
+    BAND_ELEM(Jac,IDX(i,0),IDX(i,1)) += c*(u*u);
+    BAND_ELEM(Jac,IDX(i,1),IDX(i,1)) += c*(-u*u);
+
+    /* all vars wrt w */
+    BAND_ELEM(Jac,IDX(i,0),IDX(i,2)) += c*(-u);
+    BAND_ELEM(Jac,IDX(i,1),IDX(i,2)) += c*(u);
+    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += c*(-ONE/ep - u);
+
+  }
+
+  return(0);
+}
+
+
 
 /* Check function return value...
     opt == 0 means SUNDIALS function allocates memory so check if

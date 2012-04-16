@@ -161,7 +161,7 @@ int main()
   flag = CVodeInit(cvode_mem, f, T0, y);
   if (check_flag(&flag, "CVodeInit", 1)) return(1);
 
-  /* Call CVodeSetUserData to pass lamda to user functions */
+  /* Call CVodeSetUserData to pass rdata to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) rdata);
   if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
 
