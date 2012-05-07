@@ -1,5 +1,5 @@
-function h = h_estimate_I(Y1, Y2, h_old, r_tol, a_tol, p)
-% Usage: h = h_estimate_I(Y1, Y2, h_old, r_tol, a_tol, p)
+function h = h_estimate_I(Y1, Y2, h_old, r_tol, a_tol, p, reset)
+% Usage: h = h_estimate_I(Y1, Y2, h_old, r_tol, a_tol, p, reset)
 %
 % Adaptive time step estimation routine, that attempts to guarantee a 
 % local truncation error satisfying the bound
@@ -11,6 +11,7 @@ function h = h_estimate_I(Y1, Y2, h_old, r_tol, a_tol, p)
 %       r_tol -- desired relative tolerance (scalar)
 %       a_tol -- desired absolute tolerance (vector, size of Y1)
 %           p -- order of accuracy for predictor
+%       reset -- flag to denote reset of history
 %
 % Output:   h -- new time step
 %
@@ -41,6 +42,10 @@ function h = h_estimate_I(Y1, Y2, h_old, r_tol, a_tol, p)
 % $$$ % $$$ fprintf(',  h = %g\n',h);
 
 
+if (reset == 1)
+   h = 1;
+   return;
+end
 
 % set variables
 safety = 0.9;

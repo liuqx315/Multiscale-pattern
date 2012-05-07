@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
-% usage: [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax)
+function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax, hmethod)
+% usage: [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax, hmethod)
 %
 % Adaptive time step DIRK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -19,6 +19,7 @@ function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin
 %          atol = desired time accuracy absolute tolerance 
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
+%          hmethod = integer flag denoting which time adaptivity strategy to use
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
@@ -90,6 +91,10 @@ Fdata.s = s;
 
 % set initial time step size
 h = hmin;
+
+% reset time step controller
+h_estimate(0, 0, 0, 0, 0, 0, hmethod, 1);
+
 
 % initialize work counter
 nsteps = 0;
@@ -181,7 +186,7 @@ for tstep = 2:length(tvals)
    
 	 % estimate error and update time step
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method);
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method, hmethod, 0);
 	 else
 	    h = hmin;
 	 end

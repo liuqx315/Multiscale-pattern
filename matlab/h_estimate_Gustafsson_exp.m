@@ -1,5 +1,5 @@
-function h = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p)
-% Usage: h = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p)
+function h = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p, reset)
+% Usage: h = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p, reset)
 %
 % Adaptive time step estimation routine, that attempts to guarantee a 
 % local truncation error satisfying the bound
@@ -11,6 +11,7 @@ function h = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p)
 %       r_tol -- desired relative tolerance (scalar)
 %       a_tol -- desired absolute tolerance (vector, size of Y1)
 %           p -- order of accuracy for predictor
+%       reset -- flag to denote reset of history
 %
 % Output:   h -- new time step
 %
@@ -20,6 +21,11 @@ function h = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p)
 % November 2011
 % All Rights Reserved
 
+if (reset == 1)
+   clear r_n;
+   h = 1;
+   return;
+end
 
 % set variables
 dt_growth = 10;

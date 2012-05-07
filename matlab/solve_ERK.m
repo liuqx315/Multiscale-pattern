@@ -1,5 +1,5 @@
-function [tvals,Y,nsteps] = solve_ERK(fcn, EStabFn, tvals, Y0, B, rtol, atol, hmin, hmax)
-% usage: [tvals,Y,nsteps] = solve_ERK(fcn, EStabFn, tvals, Y0, B, rtol, atol, hmin, hmax)
+function [tvals,Y,nsteps] = solve_ERK(fcn, EStabFn, tvals, Y0, B, rtol, atol, hmin, hmax, hmethod)
+% usage: [tvals,Y,nsteps] = solve_ERK(fcn, EStabFn, tvals, Y0, B, rtol, atol, hmin, hmax, hmethod)
 %
 % Adaptive time step explicit RK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -21,6 +21,7 @@ function [tvals,Y,nsteps] = solve_ERK(fcn, EStabFn, tvals, Y0, B, rtol, atol, hm
 %          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
 %          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
 %          nsteps = number of internal time steps taken
+%          hmethod = integer flag denoting which time adaptivity strategy to use
 %
 % Outputs: t = tspan
 %          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
@@ -88,6 +89,10 @@ Fdata.s = s;
 
 % set initial time step size
 h = hmin;
+
+% reset time step controller
+h_estimate(0, 0, 0, 0, 0, 0, hmethod, 1);
+
 
 % initialize work counter
 nsteps = 0;
@@ -160,7 +165,7 @@ for tstep = 2:length(tvals)
 	 % for embedded methods, estimate error and update time step,
 	 % assuming that method local truncation error order equals number of stages
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method);
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method, hmethod, 0);
 	 else
 	    h = hmin;
 	 end
