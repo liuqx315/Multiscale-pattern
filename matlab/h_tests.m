@@ -281,8 +281,8 @@ for i_test = 1:length(tests)
             [t,Y] = ode15s(fn, [0,Tf], Y0, opts);  ns = length(t);
             [t,Y] = ode15s(fn, tout, Y0, opts);
             fprintf('ode15s       no    %i    %i    0    %.2e    %.2e\n',...
-                    ns, ns, max(max(abs((Y-Ytrue)./Ytrue))),...
-                    sqrt(sum(sum(((Y-Ytrue)./Ytrue).^2))/numel(Y)));
+                    ns, ns, max(max(abs(Y-Ytrue))),...
+                    sqrt(sum(sum((Y-Ytrue).^2))/numel(Y)));
          end
 
          % ode45
@@ -291,8 +291,8 @@ for i_test = 1:length(tests)
             [t,Y] = ode45(fn, [0,Tf], Y0, opts);  ns = length(t);
             [t,Y] = ode45(fn, tout, Y0, opts);
             fprintf('ode45        no    %i    %i    0    %.2e    %.2e\n',...
-                    ns, ns, max(max(abs((Y-Ytrue)./Ytrue))),...
-                    sqrt(sum(sum(((Y-Ytrue)./Ytrue).^2))/numel(Y)));
+                    ns, ns, max(max(abs(Y-Ytrue))),...
+                    sqrt(sum(sum((Y-Ytrue).^2))/numel(Y)));
          end
 
          if (DIRK32_meth)
@@ -303,40 +303,40 @@ for i_test = 1:length(tests)
                hmethod = 1;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK3(2)   I    %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PI_cont)   % SDIRK3(2), PI controller
                hmethod = 2;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK3(2)   PI   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PID_cont)  % SDIRK3(2), PID controller
                hmethod = 3;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK3(2)   PID  %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
             
             if (Gi_cont)   % SDIRK3(2), Gustafsson controller
                hmethod = 4;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK3(2)   iG   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
             
             if (Ge_cont)   % SDIRK3(2), explicit Gustafsson controller
                hmethod = 5;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK3(2)   eG   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
          end  % SDIRK32 method
          
@@ -349,15 +349,15 @@ for i_test = 1:length(tests)
                hmethod = 1;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK4(3)   I    %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
             
             if (PI_cont)   % SDIRK4(3), PI controller
                hmethod = 2;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK4(3)   PI   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
                        sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
             end
 
@@ -366,23 +366,23 @@ for i_test = 1:length(tests)
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK4(3)   PID  %i    %i    0    %.2e    %.2e\n',...
                        ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gi_cont)   % SDIRK4(3), Gustafsson controller
                hmethod = 4;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK4(3)   iG   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Ge_cont)   % SDIRK4(3), explicit Gustafsson controller
                hmethod = 5;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK4(3)   eG   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
          end  % SDIRK4(3) method
          
@@ -395,7 +395,7 @@ for i_test = 1:length(tests)
                hmethod = 1;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK5(4)   I    %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
                        sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
             end
 
@@ -404,31 +404,31 @@ for i_test = 1:length(tests)
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK5(4)   PI   %i    %i    0    %.2e    %.2e\n',...
                        ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PID_cont)  % SDIRK5(4), PID controller
                hmethod = 3;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK5(4)   PID  %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gi_cont)   % SDIRK5(4), Gustafsson controller
                hmethod = 4;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK5(4)   iG   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Ge_cont)   % SDIRK5(4), explicit Gustafsson controller
                hmethod = 5;
                [t,Y,ns] = solve_DIRK(fn, Jn, tout, Y0, B, rtol, atol, hmin, hmax, hmethod);
                fprintf('SDIRK5(4)   eG   %i    %i    0    %.2e    %.2e\n',...
-                       ns, ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
          end  % SDIRK5(4) method
 
@@ -443,48 +443,48 @@ for i_test = 1:length(tests)
                hmethod = 1;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK3(2)   I    %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PI_cont)   % ARK3(2), PI controller
                hmethod = 2;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK3(2)   PI   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PID_cont)  % ARK3(2), PID controller
                hmethod = 3;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK3(2)   PID  %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gi_cont)   % ARK3(2), Gustafsson controller
                hmethod = 4;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK3(2)   iG   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Ge_cont)   % ARK3(2), explicit Gustafsson controller
                hmethod = 5;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK3(2)   eG   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gie_cont)  % ARK3(2), imex Gustafsson controller
                hmethod = 6;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK3(2)   ieG  %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
          end  % ARK3(2) method
 
@@ -499,48 +499,48 @@ for i_test = 1:length(tests)
                hmethod = 1;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK4(3)   I   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PI_cont)   % ARK4(3), PI controller
                hmethod = 2;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK4(3)   PI  %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PID_cont)  % ARK4(3), PID controller
                hmethod = 3;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK4(3)   PID %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gi_cont)   % ARK4(3), Gustafsson controller
                hmethod = 4;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK4(3)   iG   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Ge_cont)   % ARK4(3), explicit Gustafsson controller
                hmethod = 5;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK4(3)   eG   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gie_cont)  % ARK4(3), imex Gustafsson controller
                hmethod = 6;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK4(3)   ieG  %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
          end  % ARK4(3) method
 
@@ -555,7 +555,7 @@ for i_test = 1:length(tests)
                hmethod = 1;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK5(4)   I    %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
+                       ns, max(max(abs(Y'-Ytrue))),...
                        sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
             end
 
@@ -564,39 +564,39 @@ for i_test = 1:length(tests)
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK5(4)   PI   %i    0    0    %.2e    %.2e\n',...
                        ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (PID_cont) % ARK5(4), PID controller
                hmethod = 3;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK5(4)   PID  %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gi_cont)  % ARK5(4), Gustafsson controller
                hmethod = 4;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK5(4)   iG   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Ge_cont)  % ARK5(4), explicit Gustafsson controller
                hmethod = 5;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK5(4)   eG   %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
 
             if (Gie_cont) % ARK5(4), imex Gustafsson controller
                hmethod = 6;
                [t,Y,ns] = solve_ARK(fi, fe, Ji, Es, tout, Y0, B, B2, rtol, atol, hmin, hmax, hmethod);
                fprintf('ARK5(4)   ieG  %i    0    0    %.2e    %.2e\n',...
-                       ns, max(max(abs((Y'-Ytrue)./Ytrue))),...
-                       sqrt(sum(sum(((Y'-Ytrue)./Ytrue).^2))/numel(Y)));
+                       ns, max(max(abs(Y'-Ytrue))),...
+                       sqrt(sum(sum((Y'-Ytrue).^2))/numel(Y)));
             end
          end  % ARK5(4) method
 
