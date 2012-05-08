@@ -240,7 +240,7 @@ for tstep = 2:length(tvals)
    
 	 % for embedded methods, estimate error and update time step
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, p_method);
+	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method);
 	 else
 	    h = hmin;
 	 end
