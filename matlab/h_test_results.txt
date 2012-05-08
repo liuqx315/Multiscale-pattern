@@ -4,91 +4,91 @@ rtol = 0.01,  atol = 1e-14
 
 method     ctrl   work   astep   sstep    maxerr   rmserr
 ---------------------------------------------------------
-ode15s       no    56    56    0    1.77e-01    4.70e-02
+ode15s       no    56    56    0    2.82e-01    7.41e-02
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   I    106    106    0    3.97e-03    2.87e-04
+SDIRK3(2)   I    106    106    0    2.85e-03    2.81e-04
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PI   120    120    0    2.13e-04    2.95e-05
+SDIRK3(2)   PI   120    120    0    1.67e-04    3.74e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PID  128    128    0    2.82e-04    2.93e-05
+SDIRK3(2)   PID  128    128    0    2.02e-04    3.69e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   iG   105    105    0    4.04e-03    2.96e-04
+SDIRK3(2)   iG   105    105    0    2.90e-03    2.91e-04
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   eG   115    115    0    6.06e-04    6.06e-05
+SDIRK3(2)   eG   115    115    0    4.45e-04    6.41e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   I    107    107    0    3.13e-04    2.15e-05
+SDIRK4(3)   I    107    107    0    2.16e-04    2.05e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PI   117    117    0    3.90e-05    2.79e-06
+SDIRK4(3)   PI   117    117    0    2.93e-05    2.79e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PID  119    119    0    2.38e-05    1.97e-06
+SDIRK4(3)   PID  119    119    0    2.38e-05    1.93e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   iG   111    111    0    1.93e-04    1.56e-05
+SDIRK4(3)   iG   111    111    0    1.34e-04    1.51e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   eG   114    114    0    5.24e-05    3.87e-06
+SDIRK4(3)   eG   114    114    0    3.92e-05    3.89e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   I    112    112    0    7.08e-06    5.72e-07
+SDIRK5(4)   I    112    112    0    6.48e-06    5.72e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PI   117    117    0    1.32e-06    1.32e-07
+SDIRK5(4)   PI   117    117    0    1.32e-06    1.85e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PID  128    128    0    5.75e-07    4.19e-08
+SDIRK5(4)   PID  128    128    0    4.92e-07    4.87e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   iG   105    105    0    1.36e-05    1.10e-06
+SDIRK5(4)   iG   105    105    0    1.32e-05    1.43e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   eG   113    113    0    2.40e-06    1.99e-07
+SDIRK5(4)   eG   113    113    0    2.07e-06    2.60e-07
 solve_ARK: took 11 accuracy and 111 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   I    122    0    0    3.43e-03    7.35e-04
+ARK3(2)   I    122    0    0    8.58e-03    1.83e-03
 solve_ARK: took 153 accuracy and 15 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   PI   168    0    0    2.56e-03    5.78e-04
+ARK3(2)   PI   168    0    0    6.41e-03    1.44e-03
 solve_ARK: took 189 accuracy and 6 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   PID  195    0    0    2.56e-03    5.57e-04
+ARK3(2)   PID  195    0    0    6.41e-03    1.39e-03
 solve_ARK: took 10 accuracy and 110 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   iG   120    0    0    3.77e-03    7.60e-04
+ARK3(2)   iG   120    0    0    9.42e-03    1.90e-03
 solve_ARK: took 125 accuracy and 24 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   eG   149    0    0    2.56e-03    5.97e-04
+ARK3(2)   eG   149    0    0    6.41e-03    1.49e-03
 solve_ARK: took 137 accuracy and 26 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   ieG  163    0    0    2.56e-03    5.97e-04
+ARK3(2)   ieG  163    0    0    6.41e-03    1.49e-03
 solve_ARK: took 9 accuracy and 111 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   I   120    0    0    3.09e-05    2.40e-06
+ARK4(3)   I   120    0    0    2.33e-05    3.57e-06
 solve_ARK: took 155 accuracy and 6 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PI  161    0    0    5.76e-06    9.50e-07
+ARK4(3)   PI  161    0    0    1.27e-05    1.93e-06
 solve_ARK: took 293 accuracy and 4 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PID 297    0    0    4.29e-06    3.33e-07
+ARK4(3)   PID 297    0    0    3.00e-06    3.42e-07
 solve_ARK: took 10 accuracy and 112 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   iG   122    0    0    1.98e-05    1.83e-06
+ARK4(3)   iG   122    0    0    1.53e-05    3.08e-06
 solve_ARK: took 214 accuracy and 9 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   eG   223    0    0    7.09e-06    5.36e-07
+ARK4(3)   eG   223    0    0    5.37e-06    6.06e-07
 solve_ARK: took 214 accuracy and 9 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   ieG  223    0    0    7.09e-06    5.36e-07
+ARK4(3)   ieG  223    0    0    5.37e-06    6.06e-07
 solve_ARK: took 35 accuracy and 86 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   I    121    0    0    2.36e-05    3.09e-06
+ARK5(4)   I    121    0    0    5.89e-05    3.09e-06
 solve_ARK: took 300 accuracy and 3 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PI   303    0    0    6.17e-06    3.99e-07
+ARK5(4)   PI   303    0    0    6.17e-06    9.92e-07
 solve_ARK: took 390 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PID  390    0    0    4.95e-07    9.81e-08
+ARK5(4)   PID  390    0    0    1.24e-06    2.44e-07
 solve_ARK: took 29 accuracy and 92 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   iG   121    0    0    1.84e-05    2.96e-06
+ARK5(4)   iG   121    0    0    4.61e-05    7.39e-06
 solve_ARK: took 163 accuracy and 5 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   eG   168    0    0    1.37e-05    2.08e-06
+ARK5(4)   eG   168    0    0    3.43e-05    5.20e-06
 solve_ARK: took 211 accuracy and 4 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   ieG  215    0    0    3.27e-06    4.83e-07
+ARK5(4)   ieG  215    0    0    8.18e-06    1.20e-06
 ---------------------------------------------------------
 
 
@@ -96,91 +96,91 @@ rtol = 0.001,  atol = 1e-14
 
 method     ctrl   work   astep   sstep    maxerr   rmserr
 ---------------------------------------------------------
-ode15s       no    86    86    0    1.34e-02    3.44e-03
+ode15s       no    86    86    0    2.30e-02    5.63e-03
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   I    111    111    0    2.14e-03    1.63e-04
+SDIRK3(2)   I    111    111    0    1.69e-03    1.67e-04
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PI   151    151    0    1.36e-04    2.25e-05
+SDIRK3(2)   PI   151    151    0    1.27e-04    3.28e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PID  169    169    0    1.44e-04    2.26e-05
+SDIRK3(2)   PID  169    169    0    1.34e-04    3.33e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   iG   107    107    0    1.38e-03    1.34e-04
+SDIRK3(2)   iG   107    107    0    1.10e-03    1.37e-04
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   eG   135    135    0    1.99e-04    2.73e-05
+SDIRK3(2)   eG   135    135    0    1.43e-04    3.57e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   I    109    109    0    3.42e-04    2.21e-05
+SDIRK4(3)   I    109    109    0    2.47e-04    2.19e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PI   129    129    0    1.70e-05    1.11e-06
+SDIRK4(3)   PI   129    129    0    1.20e-05    1.11e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PID  130    130    0    1.14e-05    7.63e-07
+SDIRK4(3)   PID  130    130    0    1.14e-05    7.36e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   iG   106    106    0    3.06e-04    2.08e-05
+SDIRK4(3)   iG   106    106    0    2.12e-04    1.98e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   eG   118    118    0    9.95e-06    9.43e-07
+SDIRK4(3)   eG   118    118    0    7.99e-06    9.87e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   I    107    107    0    1.11e-05    8.15e-07
+SDIRK5(4)   I    107    107    0    1.05e-05    8.15e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PI   122    122    0    2.92e-07    3.45e-08
+SDIRK5(4)   PI   122    122    0    2.92e-07    5.02e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PID  125    125    0    3.64e-07    3.71e-08
+SDIRK5(4)   PID  125    125    0    4.29e-07    5.38e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   iG   106    106    0    1.14e-05    8.73e-07
+SDIRK5(4)   iG   106    106    0    1.14e-05    1.18e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   eG   114    114    0    1.14e-06    1.23e-07
+SDIRK5(4)   eG   114    114    0    1.27e-06    1.76e-07
 solve_ARK: took 19 accuracy and 107 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   I    126    0    0    3.13e-03    7.02e-04
+ARK3(2)   I    126    0    0    7.84e-03    1.75e-03
 solve_ARK: took 288 accuracy and 2 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   PI   290    0    0    1.04e-03    1.46e-04
+ARK3(2)   PI   290    0    0    2.59e-03    3.64e-04
 solve_ARK: took 344 accuracy and 2 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   PID  346    0    0    1.08e-03    1.06e-04
+ARK3(2)   PID  346    0    0    2.69e-03    2.66e-04
 solve_ARK: took 13 accuracy and 116 stability steps
   step failures:  0 convergence,  5 accuracy
-ARK3(2)   iG   129    0    0    3.75e-03    7.90e-04
+ARK3(2)   iG   129    0    0    9.38e-03    1.97e-03
 solve_ARK: took 148 accuracy and 7 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   eG   155    0    0    2.56e-03    5.89e-04
+ARK3(2)   eG   155    0    0    6.41e-03    1.47e-03
 solve_ARK: took 291 accuracy and 5 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   ieG  296    0    0    1.75e-03    2.50e-04
+ARK3(2)   ieG  296    0    0    4.38e-03    6.26e-04
 solve_ARK: took 101 accuracy and 31 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   I   132    0    0    1.65e-05    1.41e-06
+ARK4(3)   I   132    0    0    1.27e-05    2.26e-06
 solve_ARK: took 329 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PI  329    0    0    1.94e-06    1.37e-07
+ARK4(3)   PI  329    0    0    1.47e-06    1.74e-07
 solve_ARK: took 473 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PID 473    0    0    1.18e-06    1.06e-07
+ARK4(3)   PID 473    0    0    1.55e-06    1.39e-07
 solve_ARK: took 85 accuracy and 42 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   iG   127    0    0    3.63e-05    2.52e-06
+ARK4(3)   iG   127    0    0    2.74e-05    3.24e-06
 solve_ARK: took 211 accuracy and 2 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   eG   213    0    0    5.07e-06    7.50e-07
+ARK4(3)   eG   213    0    0    1.27e-05    1.68e-06
 solve_ARK: took 237 accuracy and 2 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   ieG  239    0    0    5.07e-06    7.41e-07
+ARK4(3)   ieG  239    0    0    1.27e-05    1.67e-06
 solve_ARK: took 120 accuracy and 18 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   I    138    0    0    1.37e-05    2.14e-06
+ARK5(4)   I    138    0    0    3.43e-05    2.14e-06
 solve_ARK: took 480 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PI   480    0    0    4.08e-07    6.86e-08
+ARK5(4)   PI   480    0    0    4.08e-07    1.71e-07
 solve_ARK: took 455 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PID  455    0    0    1.35e-06    2.21e-07
+ARK5(4)   PID  455    0    0    3.38e-06    5.52e-07
 solve_ARK: took 96 accuracy and 27 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   iG   123    0    0    1.86e-05    3.01e-06
+ARK5(4)   iG   123    0    0    4.64e-05    7.50e-06
 solve_ARK: took 323 accuracy and 1 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   eG   324    0    0    1.58e-06    2.08e-07
+ARK5(4)   eG   324    0    0    3.96e-06    5.18e-07
 solve_ARK: took 265 accuracy and 1 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   ieG  266    0    0    1.58e-06    2.16e-07
+ARK5(4)   ieG  266    0    0    3.96e-06    5.36e-07
 ---------------------------------------------------------
 
 
@@ -188,91 +188,91 @@ rtol = 0.0001,  atol = 1e-14
 
 method     ctrl   work   astep   sstep    maxerr   rmserr
 ---------------------------------------------------------
-ode15s       no    130    130    0    1.41e-03    3.06e-04
+ode15s       no    130    130    0    2.59e-03    5.22e-04
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   I    119    119    0    2.69e-04    3.16e-05
+SDIRK3(2)   I    119    119    0    2.13e-04    3.92e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PI   232    232    0    4.79e-05    6.31e-06
+SDIRK3(2)   PI   232    232    0    3.44e-05    8.13e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PID  243    243    0    2.49e-05    4.18e-06
+SDIRK3(2)   PID  243    243    0    1.96e-05    5.63e-06
 solve_DIRK: step failures:  0 convergence,  1 accuracy
-SDIRK3(2)   iG   115    115    0    2.38e-04    3.33e-05
+SDIRK3(2)   iG   115    115    0    1.72e-04    4.05e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   eG   217    217    0    8.81e-05    9.79e-06
+SDIRK3(2)   eG   217    217    0    6.32e-05    1.19e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   I    111    111    0    1.03e-04    9.07e-06
+SDIRK4(3)   I    111    111    0    7.05e-05    8.77e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PI   149    149    0    4.06e-06    4.51e-07
+SDIRK4(3)   PI   149    149    0    2.98e-06    4.51e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PID  236    236    0    1.50e-06    1.33e-07
+SDIRK4(3)   PID  236    236    0    1.50e-06    1.32e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   iG   109    109    0    2.71e-04    1.75e-05
+SDIRK4(3)   iG   109    109    0    1.89e-04    1.67e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   eG   130    130    0    6.53e-06    6.32e-07
+SDIRK4(3)   eG   130    130    0    4.58e-06    6.39e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   I    108    108    0    1.11e-05    8.04e-07
+SDIRK5(4)   I    108    108    0    1.04e-05    8.04e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PI   125    125    0    1.52e-07    2.00e-08
+SDIRK5(4)   PI   125    125    0    1.52e-07    2.75e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PID  133    133    0    2.37e-07    2.08e-08
+SDIRK5(4)   PID  133    133    0    1.99e-07    2.64e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   iG   106    106    0    1.43e-05    1.26e-06
+SDIRK5(4)   iG   106    106    0    1.54e-05    1.79e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   eG   121    121    0    4.99e-07    3.58e-08
+SDIRK5(4)   eG   121    121    0    4.20e-07    4.23e-08
 solve_ARK: took 165 accuracy and 14 stability steps
   step failures:  0 convergence,  3 accuracy
-ARK3(2)   I    179    0    0    2.56e-03    5.27e-04
+ARK3(2)   I    179    0    0    6.41e-03    1.32e-03
 solve_ARK: took 412 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   PI   412    0    0    9.97e-04    9.86e-05
+ARK3(2)   PI   412    0    0    2.49e-03    2.46e-04
 solve_ARK: took 478 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   PID  478    0    0    5.71e-04    5.69e-05
+ARK3(2)   PID  478    0    0    1.43e-03    1.42e-04
 solve_ARK: took 152 accuracy and 41 stability steps
   step failures:  0 convergence,  13 accuracy
-ARK3(2)   iG   193    0    0    2.56e-03    5.92e-04
+ARK3(2)   iG   193    0    0    6.41e-03    1.48e-03
 solve_ARK: took 347 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   eG   347    0    0    5.69e-04    8.91e-05
+ARK3(2)   eG   347    0    0    1.42e-03    2.23e-04
 solve_ARK: took 469 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK3(2)   ieG  469    0    0    4.70e-04    5.93e-05
+ARK3(2)   ieG  469    0    0    1.18e-03    1.48e-04
 solve_ARK: took 217 accuracy and 4 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   I   221    0    0    4.60e-06    4.07e-07
+ARK4(3)   I   221    0    0    3.46e-06    4.34e-07
 solve_ARK: took 577 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PI  577    0    0    1.04e-06    6.56e-08
+ARK4(3)   PI  577    0    0    7.90e-07    7.09e-08
 solve_ARK: took 707 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PID 707    0    0    2.31e-07    2.24e-08
+ARK4(3)   PID 707    0    0    1.89e-07    3.24e-08
 solve_ARK: took 191 accuracy and 21 stability steps
   step failures:  0 convergence,  5 accuracy
-ARK4(3)   iG   212    0    0    1.54e-05    1.10e-06
+ARK4(3)   iG   212    0    0    1.17e-05    1.36e-06
 solve_ARK: took 439 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   eG   439    0    0    1.05e-06    9.30e-08
+ARK4(3)   eG   439    0    0    1.05e-06    1.18e-07
 solve_ARK: took 388 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   ieG  388    0    0    1.05e-06    9.69e-08
+ARK4(3)   ieG  388    0    0    7.35e-07    1.30e-07
 solve_ARK: took 278 accuracy and 2 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   I    280    0    0    2.28e-05    1.37e-06
+ARK5(4)   I    280    0    0    5.70e-05    1.37e-06
 solve_ARK: took 769 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PI   769    0    0    2.74e-07    4.13e-08
+ARK5(4)   PI   769    0    0    2.74e-07    1.03e-07
 solve_ARK: took 802 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PID  802    0    0    2.81e-07    4.60e-08
+ARK5(4)   PID  802    0    0    7.03e-07    1.15e-07
 solve_ARK: took 221 accuracy and 14 stability steps
   step failures:  0 convergence,  8 accuracy
-ARK5(4)   iG   235    0    0    8.70e-06    1.09e-06
+ARK5(4)   iG   235    0    0    2.18e-05    2.70e-06
 solve_ARK: took 440 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   eG   440    0    0    5.42e-07    1.01e-07
+ARK5(4)   eG   440    0    0    1.35e-06    2.50e-07
 solve_ARK: took 562 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   ieG  562    0    0    5.42e-07    8.67e-08
+ARK5(4)   ieG  562    0    0    1.36e-06    2.15e-07
 ---------------------------------------------------------
 
 
@@ -280,91 +280,91 @@ rtol = 1e-05,  atol = 1e-14
 
 method     ctrl   work   astep   sstep    maxerr   rmserr
 ---------------------------------------------------------
-ode15s       no    190    190    0    2.18e-04    5.22e-05
+ode15s       no    190    190    0    4.32e-04    8.77e-05
 solve_DIRK: step failures:  0 convergence,  1 accuracy
-SDIRK3(2)   I    155    155    0    3.12e-05    1.16e-05
+SDIRK3(2)   I    155    155    0    5.55e-05    1.70e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PI   295    295    0    6.11e-06    1.73e-06
+SDIRK3(2)   PI   295    295    0    8.84e-06    2.44e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PID  323    323    0    5.98e-06    1.13e-06
+SDIRK3(2)   PID  323    323    0    7.55e-06    1.68e-06
 solve_DIRK: step failures:  0 convergence,  3 accuracy
-SDIRK3(2)   iG   148    148    0    3.39e-05    1.37e-05
+SDIRK3(2)   iG   148    148    0    5.66e-05    1.98e-05
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   eG   250    250    0    1.43e-05    3.71e-06
+SDIRK3(2)   eG   250    250    0    1.43e-05    5.43e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   I    116    116    0    1.34e-05    1.48e-06
+SDIRK4(3)   I    116    116    0    9.53e-06    1.47e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PI   229    229    0    1.19e-06    1.16e-07
+SDIRK4(3)   PI   229    229    0    8.43e-07    1.16e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PID  247    247    0    5.62e-07    4.88e-08
+SDIRK4(3)   PID  247    247    0    5.62e-07    4.89e-08
 solve_DIRK: step failures:  0 convergence,  2 accuracy
-SDIRK4(3)   iG   116    116    0    4.23e-05    3.18e-06
+SDIRK4(3)   iG   116    116    0    3.12e-05    3.14e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   eG   182    182    0    3.70e-06    2.64e-07
+SDIRK4(3)   eG   182    182    0    2.62e-06    2.79e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   I    110    110    0    6.13e-06    5.32e-07
+SDIRK5(4)   I    110    110    0    6.02e-06    5.32e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PI   140    140    0    6.96e-08    1.49e-08
+SDIRK5(4)   PI   140    140    0    6.96e-08    2.15e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PID  152    152    0    7.39e-08    1.44e-08
+SDIRK5(4)   PID  152    152    0    7.06e-08    2.09e-08
 solve_DIRK: step failures:  0 convergence,  1 accuracy
-SDIRK5(4)   iG   110    110    0    7.43e-06    6.51e-07
+SDIRK5(4)   iG   110    110    0    7.74e-06    8.91e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   eG   124    124    0    3.90e-07    2.92e-08
+SDIRK5(4)   eG   124    124    0    3.26e-07    3.48e-08
 solve_ARK: took 513 accuracy and 48 stability steps
   step failures:  0 convergence,  48 accuracy
-ARK3(2)   I    561    0    0    3.96e-04    6.06e-05
+ARK3(2)   I    561    0    0    9.90e-04    1.51e-04
 solve_ARK: took 772 accuracy and 4 stability steps
   step failures:  0 convergence,  4 accuracy
-ARK3(2)   PI   776    0    0    1.28e-04    1.91e-05
+ARK3(2)   PI   776    0    0    3.20e-04    4.77e-05
 solve_ARK: took 785 accuracy and 1 stability steps
   step failures:  0 convergence,  1 accuracy
-ARK3(2)   PID  786    0    0    8.08e-05    1.35e-05
+ARK3(2)   PID  786    0    0    2.02e-04    3.37e-05
 solve_ARK: took 916 accuracy and 274 stability steps
   step failures:  0 convergence,  272 accuracy
-ARK3(2)   iG   1190    0    0    3.96e-04    6.55e-05
+ARK3(2)   iG   1190    0    0    9.90e-04    1.64e-04
 solve_ARK: took 635 accuracy and 11 stability steps
   step failures:  0 convergence,  11 accuracy
-ARK3(2)   eG   646    0    0    1.46e-04    2.28e-05
+ARK3(2)   eG   646    0    0    3.65e-04    5.70e-05
 solve_ARK: took 849 accuracy and 15 stability steps
   step failures:  0 convergence,  15 accuracy
-ARK3(2)   ieG  864    0    0    1.16e-04    2.06e-05
+ARK3(2)   ieG  864    0    0    2.89e-04    5.14e-05
 solve_ARK: took 537 accuracy and 3 stability steps
   step failures:  0 convergence,  3 accuracy
-ARK4(3)   I   540    0    0    1.02e-06    7.95e-08
+ARK4(3)   I   540    0    0    2.54e-06    1.79e-07
 solve_ARK: took 1051 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PI  1051    0    0    4.21e-08    5.08e-09
+ARK4(3)   PI  1051    0    0    5.83e-08    1.11e-08
 solve_ARK: took 1244 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   PID 1244    0    0    2.13e-08    3.62e-09
+ARK4(3)   PID 1244    0    0    5.14e-08    8.44e-09
 solve_ARK: took 612 accuracy and 86 stability steps
   step failures:  0 convergence,  82 accuracy
-ARK4(3)   iG   698    0    0    3.38e-06    2.28e-07
+ARK4(3)   iG   698    0    0    3.59e-06    3.08e-07
 solve_ARK: took 717 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   eG   717    0    0    2.13e-07    1.57e-08
+ARK4(3)   eG   717    0    0    1.61e-07    2.41e-08
 solve_ARK: took 820 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK4(3)   ieG  820    0    0    3.57e-07    2.51e-08
+ARK4(3)   ieG  820    0    0    8.92e-07    5.47e-08
 solve_ARK: took 572 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   I    572    0    0    6.68e-07    6.49e-08
+ARK5(4)   I    572    0    0    1.67e-06    6.49e-08
 solve_ARK: took 1324 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PI   1324    0    0    1.15e-07    2.15e-08
+ARK5(4)   PI   1324    0    0    1.15e-07    5.37e-08
 solve_ARK: took 1524 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   PID  1524    0    0    7.86e-08    1.61e-08
+ARK5(4)   PID  1524    0    0    1.97e-07    4.03e-08
 solve_ARK: took 816 accuracy and 132 stability steps
   step failures:  0 convergence,  131 accuracy
-ARK5(4)   iG   948    0    0    1.46e-06    1.22e-07
+ARK5(4)   iG   948    0    0    3.65e-06    3.05e-07
 solve_ARK: took 787 accuracy and 1 stability steps
   step failures:  0 convergence,  1 accuracy
-ARK5(4)   eG   788    0    0    4.17e-07    4.97e-08
+ARK5(4)   eG   788    0    0    1.04e-06    1.24e-07
 solve_ARK: took 911 accuracy and 0 stability steps
   step failures:  0 convergence,  0 accuracy
-ARK5(4)   ieG  911    0    0    2.22e-07    3.85e-08
+ARK5(4)   ieG  911    0    0    5.55e-07    9.62e-08
 ---------------------------------------------------------
 
 
@@ -372,35 +372,2340 @@ rtol = 1e-06,  atol = 1e-14
 
 method     ctrl   work   astep   sstep    maxerr   rmserr
 ---------------------------------------------------------
-ode15s       no    263    263    0    1.31e-05    3.22e-06
+ode15s       no    263    263    0    2.46e-05    5.18e-06
 solve_DIRK: step failures:  0 convergence,  1 accuracy
-SDIRK3(2)   I    285    285    0    4.65e-06    1.92e-06
+SDIRK3(2)   I    285    285    0    1.10e-05    3.14e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PI   471    471    0    1.04e-06    4.24e-07
+SDIRK3(2)   PI   471    471    0    1.93e-06    6.01e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   PID  551    551    0    8.73e-07    2.82e-07
+SDIRK3(2)   PID  551    551    0    1.08e-06    4.18e-07
 solve_DIRK: step failures:  0 convergence,  4 accuracy
-SDIRK3(2)   iG   270    270    0    7.27e-06    2.87e-06
+SDIRK3(2)   iG   270    270    0    1.49e-05    4.55e-06
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK3(2)   eG   427    427    0    2.49e-06    5.42e-07
+SDIRK3(2)   eG   427    427    0    2.46e-06    7.68e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   I    128    128    0    1.81e-06    2.41e-07
+SDIRK4(3)   I    128    128    0    1.42e-06    2.65e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PI   250    250    0    3.30e-07    2.84e-08
+SDIRK4(3)   PI   250    250    0    2.31e-07    2.84e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   PID  277    277    0    1.34e-07    1.37e-08
+SDIRK4(3)   PID  277    277    0    1.34e-07    1.49e-08
 solve_DIRK: step failures:  0 convergence,  1 accuracy
-SDIRK4(3)   iG   121    121    0    5.22e-06    5.58e-07
+SDIRK4(3)   iG   121    121    0    4.19e-06    5.91e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK4(3)   eG   239    239    0    3.12e-07    4.13e-08
+SDIRK4(3)   eG   239    239    0    2.33e-07    4.43e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   I    113    113    0    9.72e-07    1.23e-07
+SDIRK5(4)   I    113    113    0    1.26e-06    1.23e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PI   146    146    0    5.15e-08    1.40e-08
+SDIRK5(4)   PI   146    146    0    5.15e-08    2.05e-08
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   PID  160    160    0    6.96e-08    1.44e-08
+SDIRK5(4)   PID  160    160    0    7.12e-08    2.09e-08
 solve_DIRK: step failures:  0 convergence,  1 accuracy
-SDIRK5(4)   iG   112    112    0    1.51e-06    1.58e-07
+SDIRK5(4)   iG   112    112    0    1.39e-06    2.20e-07
 solve_DIRK: step failures:  0 convergence,  0 accuracy
-SDIRK5(4)   eG   131    131    0    2.42e-07    2.42e-08
-solve_ARK: took 1453 accuracy and 21
+SDIRK5(4)   eG   131    131    0    2.74e-07    3.52e-08
+solve_ARK: took 1453 accuracy and 215 stability steps
+  step failures:  0 convergence,  215 accuracy
+ARK3(2)   I    1668    0    0    7.61e-05    1.60e-05
+solve_ARK: took 1800 accuracy and 37 stability steps
+  step failures:  0 convergence,  37 accuracy
+ARK3(2)   PI   1837    0    0    2.77e-05    4.56e-06
+solve_ARK: took 1696 accuracy and 14 stability steps
+  step failures:  0 convergence,  14 accuracy
+ARK3(2)   PID  1710    0    0    3.83e-05    6.76e-06
+solve_ARK: took 2963 accuracy and 1032 stability steps
+  step failures:  0 convergence,  1032 accuracy
+ARK3(2)   iG   3995    0    0    8.00e-05    1.29e-05
+solve_ARK: took 1812 accuracy and 114 stability steps
+  step failures:  0 convergence,  114 accuracy
+ARK3(2)   eG   1926    0    0    5.42e-05    8.70e-06
+solve_ARK: took 2205 accuracy and 81 stability steps
+  step failures:  0 convergence,  81 accuracy
+ARK3(2)   ieG  2286    0    0    4.96e-05    7.88e-06
+solve_ARK: took 1345 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   I   1347    0    0    5.49e-08    8.32e-09
+solve_ARK: took 2433 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  2433    0    0    1.92e-08    3.61e-09
+solve_ARK: took 2856 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 2856    0    0    1.75e-08    2.97e-09
+solve_ARK: took 2051 accuracy and 426 stability steps
+  step failures:  0 convergence,  425 accuracy
+ARK4(3)   iG   2477    0    0    1.06e-07    1.36e-08
+solve_ARK: took 1492 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   eG   1493    0    0    3.70e-08    5.94e-09
+solve_ARK: took 1529 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  1529    0    0    3.95e-08    6.70e-09
+solve_ARK: took 1489 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   I    1491    0    0    1.97e-07    1.39e-08
+solve_ARK: took 2864 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   2864    0    0    4.17e-08    1.90e-08
+solve_ARK: took 3427 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  3427    0    0    7.59e-08    1.33e-08
+solve_ARK: took 2644 accuracy and 565 stability steps
+  step failures:  0 convergence,  565 accuracy
+ARK5(4)   iG   3209    0    0    3.79e-07    5.42e-08
+solve_ARK: took 1585 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   eG   1586    0    0    2.32e-07    4.45e-08
+solve_ARK: took 1670 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  1670    0    0    2.45e-07    4.15e-08
+---------------------------------------------------------
+
+
+
+Single-cell brusselator test 2
+rtol = 0.01,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    74    74    0    4.29e-01    4.36e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   I    109    109    0    1.91e-01    1.96e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   128    128    0    1.51e-01    1.46e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  133    133    0    1.74e-01    1.68e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   iG   107    107    0    1.95e-01    1.99e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   116    116    0    1.94e-01    1.87e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   I    107    107    0    7.06e-03    7.19e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   127    127    0    7.06e-03    2.48e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  114    114    0    3.74e-03    7.19e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   iG   105    105    0    7.06e-03    7.19e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   110    110    0    7.06e-03    7.19e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    106    106    0    1.68e-03    8.35e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   116    116    0    1.32e-03    1.50e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  117    117    0    1.68e-03    1.49e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   iG   106    106    0    1.68e-03    1.49e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   114    114    0    1.68e-03    1.49e-04
+solve_ARK: took 203 accuracy and 325 stability steps
+  step failures:  183 convergence,  0 accuracy
+ARK3(2)   I    528    0    0    2.36e-02    1.92e-03
+solve_ARK: took 348 accuracy and 63 stability steps
+  step failures:  49 convergence,  0 accuracy
+ARK3(2)   PI   411    0    0    7.17e-03    8.51e-04
+solve_ARK: took 399 accuracy and 59 stability steps
+  step failures:  46 convergence,  0 accuracy
+ARK3(2)   PID  458    0    0    4.59e-03    6.57e-04
+solve_ARK: took 218 accuracy and 266 stability steps
+  step failures:  130 convergence,  0 accuracy
+ARK3(2)   iG   484    0    0    3.66e-02    2.92e-03
+solve_ARK: took 319 accuracy and 94 stability steps
+  step failures:  66 convergence,  0 accuracy
+ARK3(2)   eG   413    0    0    3.66e-02    2.70e-03
+solve_ARK: took 380 accuracy and 90 stability steps
+  step failures:  70 convergence,  0 accuracy
+ARK3(2)   ieG  470    0    0    1.19e-02    1.11e-03
+solve_ARK: took 75 accuracy and 162 stability steps
+  step failures:  45 convergence,  0 accuracy
+ARK4(3)   I   237    0    0    1.35e-02    1.11e-03
+solve_ARK: took 213 accuracy and 16 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  229    0    0    1.23e-03    1.23e-04
+solve_ARK: took 283 accuracy and 7 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 290    0    0    2.88e-04    2.56e-05
+solve_ARK: took 72 accuracy and 171 stability steps
+  step failures:  32 convergence,  0 accuracy
+ARK4(3)   iG   243    0    0    1.26e-03    1.24e-04
+solve_ARK: took 236 accuracy and 20 stability steps
+  step failures:  1 convergence,  0 accuracy
+ARK4(3)   eG   256    0    0    1.58e-03    1.40e-04
+solve_ARK: took 222 accuracy and 22 stability steps
+  step failures:  1 convergence,  0 accuracy
+ARK4(3)   ieG  244    0    0    1.57e-03    1.40e-04
+solve_ARK: took 45 accuracy and 87 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    132    0    0    1.96e-03    1.00e-04
+solve_ARK: took 260 accuracy and 7 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   267    0    0    3.87e-04    7.32e-05
+solve_ARK: took 316 accuracy and 4 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  320    0    0    1.01e-03    7.25e-05
+solve_ARK: took 31 accuracy and 105 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   iG   136    0    0    1.75e-03    1.56e-04
+solve_ARK: took 223 accuracy and 18 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   241    0    0    1.93e-03    1.33e-04
+solve_ARK: took 228 accuracy and 16 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  244    0    0    1.78e-03    1.29e-04
+---------------------------------------------------------
+
+
+rtol = 0.001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    103    103    0    2.99e-02    5.87e-03
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK3(2)   I    130    130    0    7.38e-02    7.14e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   204    204    0    3.08e-02    2.99e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  177    177    0    3.02e-02    2.95e-03
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+SDIRK3(2)   iG   125    125    0    7.06e-02    6.84e-03
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK3(2)   eG   140    140    0    3.41e-02    3.34e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   I    109    109    0    7.06e-03    7.06e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   130    130    0    5.86e-03    2.23e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  147    147    0    2.39e-03    6.02e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   iG   109    109    0    7.06e-03    5.92e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   120    120    0    7.06e-03    6.02e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    107    107    0    1.68e-03    8.35e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   116    116    0    6.37e-04    1.00e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  126    126    0    1.56e-03    1.43e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   iG   110    110    0    1.68e-03    1.50e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   114    114    0    1.68e-03    1.50e-04
+solve_ARK: took 285 accuracy and 203 stability steps
+  step failures:  127 convergence,  2 accuracy
+ARK3(2)   I    488    0    0    1.31e-02    1.25e-03
+solve_ARK: took 381 accuracy and 39 stability steps
+  step failures:  33 convergence,  0 accuracy
+ARK3(2)   PI   420    0    0    7.52e-03    6.37e-04
+solve_ARK: took 419 accuracy and 22 stability steps
+  step failures:  17 convergence,  0 accuracy
+ARK3(2)   PID  441    0    0    6.02e-03    4.79e-04
+solve_ARK: took 257 accuracy and 263 stability steps
+  step failures:  129 convergence,  2 accuracy
+ARK3(2)   iG   520    0    0    2.19e-02    2.17e-03
+solve_ARK: took 384 accuracy and 45 stability steps
+  step failures:  34 convergence,  0 accuracy
+ARK3(2)   eG   429    0    0    7.57e-03    5.90e-04
+solve_ARK: took 436 accuracy and 41 stability steps
+  step failures:  29 convergence,  0 accuracy
+ARK3(2)   ieG  477    0    0    4.54e-03    5.83e-04
+solve_ARK: took 166 accuracy and 73 stability steps
+  step failures:  24 convergence,  0 accuracy
+ARK4(3)   I   239    0    0    1.44e-04    1.33e-05
+solve_ARK: took 331 accuracy and 3 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  334    0    0    9.98e-06    1.10e-06
+solve_ARK: took 331 accuracy and 3 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 334    0    0    7.79e-06    9.36e-07
+solve_ARK: took 115 accuracy and 131 stability steps
+  step failures:  33 convergence,  0 accuracy
+ARK4(3)   iG   246    0    0    4.25e-04    3.55e-05
+solve_ARK: took 263 accuracy and 8 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   eG   271    0    0    3.13e-04    2.83e-05
+solve_ARK: took 281 accuracy and 8 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  289    0    0    3.13e-04    2.83e-05
+solve_ARK: took 123 accuracy and 35 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    158    0    0    3.93e-04    1.09e-05
+solve_ARK: took 351 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   351    0    0    1.35e-05    3.23e-06
+solve_ARK: took 546 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  546    0    0    1.64e-05    1.06e-06
+solve_ARK: took 103 accuracy and 49 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   iG   152    0    0    6.87e-04    5.25e-05
+solve_ARK: took 254 accuracy and 8 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   262    0    0    1.09e-03    7.34e-05
+solve_ARK: took 280 accuracy and 7 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  287    0    0    1.09e-03    6.94e-05
+---------------------------------------------------------
+
+
+rtol = 0.0001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    155    155    0    6.22e-02    6.12e-03
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   I    140    140    0    1.42e-02    1.38e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   268    268    0    2.27e-03    2.21e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  272    272    0    2.32e-03    2.25e-04
+solve_DIRK: step failures:  0 convergence,  24 accuracy
+SDIRK3(2)   iG   176    176    0    1.27e-02    1.23e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   230    230    0    8.15e-03    7.99e-04
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK4(3)   I    121    121    0    3.36e-03    3.03e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   172    172    0    7.93e-04    3.11e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  228    228    0    1.03e-03    2.57e-04
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   iG   115    115    0    3.76e-03    3.41e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   163    163    0    2.81e-03    2.67e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK5(4)   I    114    114    0    8.86e-04    2.43e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PI   124    124    0    4.01e-04    7.98e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PID  137    137    0    8.86e-04    8.00e-05
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK5(4)   iG   113    113    0    8.86e-04    7.48e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   eG   119    119    0    8.86e-04    7.93e-05
+solve_ARK: took 381 accuracy and 99 stability steps
+  step failures:  79 convergence,  5 accuracy
+ARK3(2)   I    480    0    0    3.26e-03    5.09e-04
+solve_ARK: took 494 accuracy and 7 stability steps
+  step failures:  7 convergence,  0 accuracy
+ARK3(2)   PI   501    0    0    2.70e-03    2.66e-04
+solve_ARK: took 512 accuracy and 8 stability steps
+  step failures:  8 convergence,  0 accuracy
+ARK3(2)   PID  520    0    0    2.27e-03    3.14e-04
+solve_ARK: took 433 accuracy and 191 stability steps
+  step failures:  98 convergence,  32 accuracy
+ARK3(2)   iG   624    0    0    5.78e-03    9.12e-04
+solve_ARK: took 393 accuracy and 20 stability steps
+  step failures:  15 convergence,  1 accuracy
+ARK3(2)   eG   413    0    0    3.35e-03    4.06e-04
+solve_ARK: took 540 accuracy and 21 stability steps
+  step failures:  17 convergence,  2 accuracy
+ARK3(2)   ieG  561    0    0    3.49e-03    3.12e-04
+solve_ARK: took 277 accuracy and 14 stability steps
+  step failures:  8 convergence,  0 accuracy
+ARK4(3)   I   291    0    0    2.92e-05    3.08e-06
+solve_ARK: took 565 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  565    0    0    5.59e-06    5.67e-07
+solve_ARK: took 670 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 670    0    0    3.87e-06    3.88e-07
+solve_ARK: took 277 accuracy and 61 stability steps
+  step failures:  26 convergence,  11 accuracy
+ARK4(3)   iG   338    0    0    7.41e-05    7.55e-06
+solve_ARK: took 367 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   eG   368    0    0    2.62e-05    2.67e-06
+solve_ARK: took 440 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  441    0    0    2.97e-05    2.97e-06
+solve_ARK: took 270 accuracy and 3 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    273    0    0    2.07e-05    1.03e-06
+solve_ARK: took 712 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   712    0    0    4.71e-07    1.63e-07
+solve_ARK: took 904 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  904    0    0    2.42e-06    1.97e-07
+solve_ARK: took 251 accuracy and 37 stability steps
+  step failures:  0 convergence,  16 accuracy
+ARK5(4)   iG   288    0    0    3.50e-05    4.66e-06
+solve_ARK: took 470 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   470    0    0    2.17e-05    1.56e-06
+solve_ARK: took 529 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  529    0    0    2.17e-05    1.57e-06
+---------------------------------------------------------
+
+
+rtol = 1e-05,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    250    250    0    1.14e-03    1.33e-04
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   I    200    200    0    1.59e-04    2.85e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK3(2)   PI   377    377    0    3.10e-04    3.04e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  370    370    0    1.60e-04    1.61e-05
+solve_DIRK: step failures:  0 convergence,  11 accuracy
+SDIRK3(2)   iG   203    203    0    4.26e-04    4.79e-05
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   eG   321    321    0    5.62e-04    5.50e-05
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK4(3)   I    139    139    0    1.16e-03    1.09e-04
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   PI   255    255    0    1.69e-04    6.56e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  267    267    0    5.43e-05    1.45e-05
+solve_DIRK: step failures:  0 convergence,  19 accuracy
+SDIRK4(3)   iG   155    155    0    8.75e-04    8.19e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   168    168    0    6.77e-04    6.50e-05
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK5(4)   I    129    129    0    5.46e-04    1.85e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   143    143    0    9.21e-05    2.18e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PID  176    176    0    2.92e-04    2.79e-05
+SDIRK5(4)   iG   2    2    0    5.85e+00    3.15e+00
+SDIRK5(4)   eG   2    2    0    5.85e+00    3.15e+00
+solve_ARK: took 615 accuracy and 83 stability steps
+  step failures:  31 convergence,  52 accuracy
+ARK3(2)   I    698    0    0    1.10e-03    1.35e-04
+solve_ARK: took 721 accuracy and 6 stability steps
+  step failures:  2 convergence,  4 accuracy
+ARK3(2)   PI   727    0    0    5.76e-04    7.26e-05
+solve_ARK: took 782 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PID  782    0    0    5.20e-04    6.65e-05
+solve_ARK: took 1049 accuracy and 318 stability steps
+  step failures:  64 convergence,  251 accuracy
+ARK3(2)   iG   1367    0    0    7.81e-04    1.61e-04
+solve_ARK: took 729 accuracy and 28 stability steps
+  step failures:  6 convergence,  22 accuracy
+ARK3(2)   eG   757    0    0    7.93e-04    9.14e-05
+solve_ARK: took 913 accuracy and 16 stability steps
+  step failures:  2 convergence,  14 accuracy
+ARK3(2)   ieG  929    0    0    7.20e-04    8.16e-05
+solve_ARK: took 555 accuracy and 2 stability steps
+  step failures:  1 convergence,  1 accuracy
+ARK4(3)   I   557    0    0    1.42e-06    1.52e-07
+solve_ARK: took 1153 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  1153    0    0    1.15e-07    1.32e-08
+solve_ARK: took 1406 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 1406    0    0    7.42e-08    8.22e-09
+solve_ARK: took 722 accuracy and 120 stability steps
+  step failures:  2 convergence,  114 accuracy
+ARK4(3)   iG   842    0    0    2.49e-06    2.83e-07
+solve_ARK: took 716 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   eG   716    0    0    1.31e-06    1.35e-07
+solve_ARK: took 735 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  735    0    0    4.68e-07    6.75e-08
+solve_ARK: took 613 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    613    0    0    1.19e-06    3.84e-08
+solve_ARK: took 1361 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   1361    0    0    1.98e-07    6.93e-08
+solve_ARK: took 1674 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  1674    0    0    2.83e-07    4.22e-08
+ARK5(4)   iG   2    0    0    5.85e+00    3.15e+00
+ARK5(4)   eG   2    0    0    5.85e+00    3.15e+00
+ARK5(4)   ieG  2    0    0    5.85e+00    3.15e+00
+---------------------------------------------------------
+
+
+rtol = 1e-06,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    332    332    0    1.64e-04    1.78e-05
+SDIRK3(2)   I    1    1    0    5.85e+00    3.15e+00
+SDIRK3(2)   PI   1    1    0    5.85e+00    3.15e+00
+SDIRK3(2)   PID  1    1    0    5.85e+00    3.15e+00
+SDIRK3(2)   iG   1    1    0    5.85e+00    3.15e+00
+SDIRK3(2)   eG   1    1    0    5.85e+00    3.15e+00
+solve_DIRK: step failures:  0 convergence,  22 accuracy
+SDIRK4(3)   I    183    183    0    2.24e-04    2.15e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   288    288    0    4.56e-05    1.81e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  286    286    0    1.52e-05    4.26e-06
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   iG   140    140    0    2.33e-04    2.23e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   eG   262    262    0    6.89e-05    6.60e-06
+solve_DIRK: step failures:  0 convergence,  10 accuracy
+SDIRK5(4)   I    147    147    0    2.31e-04    8.98e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   212    212    0    3.09e-05    7.76e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  231    231    0    8.85e-05    8.52e-06
+SDIRK5(4)   iG   2    2    0    5.85e+00    3.15e+00
+SDIRK5(4)   eG   2    2    0    5.85e+00    3.15e+00
+ARK3(2)   I    1    0    0    5.85e+00    3.15e+00
+ARK3(2)   PI   1    0    0    5.85e+00    3.15e+00
+ARK3(2)   PID  1    0    0    5.85e+00    3.15e+00
+ARK3(2)   iG   1    0    0    5.85e+00    3.15e+00
+ARK3(2)   eG   1    0    0    5.85e+00    3.15e+00
+ARK3(2)   ieG  1    0    0    5.85e+00    3.15e+00
+solve_ARK: took 1489 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   I   1491    0    0    6.63e-08    7.04e-09
+solve_ARK: took 2706 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  2706    0    0    2.44e-08    3.87e-09
+solve_ARK: took 3067 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 3067    0    0    2.89e-08    3.50e-09
+solve_ARK: took 2189 accuracy and 444 stability steps
+  step failures:  1 convergence,  441 accuracy
+ARK4(3)   iG   2633    0    0    2.92e-07    3.32e-08
+solve_ARK: took 1521 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   eG   1522    0    0    6.53e-08    7.15e-09
+solve_ARK: took 1590 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  1590    0    0    4.18e-08    6.10e-09
+solve_ARK: took 1605 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   I    1606    0    0    3.81e-07    1.05e-08
+solve_ARK: took 3165 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   3165    0    0    5.66e-08    1.80e-08
+solve_ARK: took 3747 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  3747    0    0    1.51e-07    1.49e-08
+ARK5(4)   iG   2    0    0    5.85e+00    3.15e+00
+ARK5(4)   eG   2    0    0    5.85e+00    3.15e+00
+ARK5(4)   ieG  2    0    0    5.85e+00    3.15e+00
+---------------------------------------------------------
+
+
+
+Single-cell brusselator test 3
+rtol = 0.01,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    58    58    0    6.17e-02    8.46e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   I    106    106    0    1.50e-02    1.33e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   128    128    0    8.94e-04    8.44e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  128    128    0    4.31e-04    5.49e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   iG   105    105    0    1.49e-02    1.33e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   122    122    0    8.66e-04    8.46e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   I    106    106    0    1.82e-03    1.76e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   119    119    0    9.72e-05    9.05e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  121    121    0    3.53e-05    3.95e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   iG   111    111    0    1.05e-03    1.23e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   118    118    0    1.23e-04    1.12e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    106    106    0    1.17e-04    1.21e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   123    123    0    7.43e-06    8.11e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  126    126    0    6.08e-06    5.32e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   iG   111    111    0    3.75e-04    3.01e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   117    117    0    2.24e-05    3.12e-06
+solve_ARK: took 8 accuracy and 114 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   I    122    0    0    3.13e-02    3.02e-03
+solve_ARK: took 105 accuracy and 74 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PI   179    0    0    7.42e-03    7.16e-04
+solve_ARK: took 112 accuracy and 72 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PID  184    0    0    4.99e-03    4.69e-04
+solve_ARK: took 18 accuracy and 111 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   iG   129    0    0    3.56e-02    3.06e-03
+solve_ARK: took 81 accuracy and 82 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   eG   163    0    0    1.59e-02    1.23e-03
+solve_ARK: took 111 accuracy and 78 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   ieG  189    0    0    6.29e-03    5.66e-04
+solve_ARK: took 10 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   I   123    0    0    1.43e-03    1.20e-04
+solve_ARK: took 116 accuracy and 61 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  177    0    0    3.88e-05    4.65e-06
+solve_ARK: took 187 accuracy and 29 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 216    0    0    2.40e-05    3.11e-06
+solve_ARK: took 13 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   iG   126    0    0    4.13e-03    3.81e-04
+solve_ARK: took 107 accuracy and 71 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   eG   178    0    0    3.86e-05    4.85e-06
+solve_ARK: took 108 accuracy and 74 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  182    0    0    3.86e-05    4.51e-06
+solve_ARK: took 28 accuracy and 103 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    131    0    0    1.96e-03    4.03e-05
+solve_ARK: took 238 accuracy and 6 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   244    0    0    5.10e-05    1.50e-05
+solve_ARK: took 304 accuracy and 2 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  306    0    0    8.09e-05    9.52e-06
+solve_ARK: took 15 accuracy and 113 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   iG   128    0    0    5.06e-03    3.23e-04
+solve_ARK: took 113 accuracy and 50 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   163    0    0    1.55e-04    2.05e-05
+solve_ARK: took 113 accuracy and 50 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  163    0    0    1.55e-04    2.05e-05
+---------------------------------------------------------
+
+
+rtol = 0.001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    93    93    0    1.30e-02    1.10e-03
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK3(2)   I    115    115    0    1.74e-03    1.53e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   178    178    0    1.11e-04    1.61e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  175    175    0    3.10e-04    3.09e-05
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK3(2)   iG   113    113    0    1.34e-03    1.74e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   130    130    0    5.35e-04    5.35e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   I    109    109    0    1.51e-03    1.34e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   147    147    0    2.53e-05    3.26e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  143    143    0    3.21e-05    3.48e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   iG   107    107    0    8.07e-04    7.65e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   120    120    0    6.95e-05    7.07e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    107    107    0    1.11e-04    1.07e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   127    127    0    4.15e-06    5.40e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  130    130    0    3.33e-06    3.26e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   iG   106    106    0    1.60e-04    1.62e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   118    118    0    1.12e-05    1.41e-06
+solve_ARK: took 29 accuracy and 96 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   I    125    0    0    2.00e-02    2.66e-03
+solve_ARK: took 175 accuracy and 63 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PI   238    0    0    3.37e-03    2.65e-04
+solve_ARK: took 166 accuracy and 49 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PID  215    0    0    3.67e-03    3.05e-04
+solve_ARK: took 26 accuracy and 108 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   iG   134    0    0    1.99e-02    2.75e-03
+solve_ARK: took 136 accuracy and 65 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   eG   201    0    0    4.35e-03    4.10e-04
+solve_ARK: took 127 accuracy and 66 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   ieG  193    0    0    5.57e-03    4.96e-04
+solve_ARK: took 46 accuracy and 92 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   I   138    0    0    1.39e-04    1.29e-05
+solve_ARK: took 213 accuracy and 11 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  224    0    0    2.86e-05    2.73e-06
+solve_ARK: took 320 accuracy and 2 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 322    0    0    1.97e-05    2.75e-06
+solve_ARK: took 33 accuracy and 102 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   iG   135    0    0    3.72e-04    3.24e-05
+solve_ARK: took 164 accuracy and 38 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   eG   202    0    0    2.69e-05    3.32e-06
+solve_ARK: took 185 accuracy and 23 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  208    0    0    2.69e-05    3.61e-06
+solve_ARK: took 55 accuracy and 88 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    143    0    0    4.16e-04    1.01e-05
+solve_ARK: took 312 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   312    0    0    2.26e-05    6.99e-06
+solve_ARK: took 349 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  349    0    0    7.03e-05    6.68e-06
+solve_ARK: took 30 accuracy and 100 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   iG   130    0    0    2.43e-04    4.13e-05
+solve_ARK: took 278 accuracy and 2 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   280    0    0    8.46e-05    1.00e-05
+solve_ARK: took 262 accuracy and 2 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  264    0    0    8.46e-05    8.92e-06
+---------------------------------------------------------
+
+
+rtol = 0.0001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    125    125    0    4.41e-04    8.53e-05
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   I    131    131    0    1.89e-04    2.83e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   196    196    0    2.63e-05    5.97e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  207    207    0    4.62e-05    5.68e-06
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK3(2)   iG   134    134    0    1.93e-04    3.29e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   183    183    0    7.52e-05    1.03e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   I    112    112    0    2.11e-04    1.77e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   167    167    0    2.92e-05    1.46e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  173    173    0    8.22e-06    8.85e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   iG   110    110    0    1.81e-04    2.07e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   164    164    0    2.08e-05    1.72e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    110    110    0    3.55e-04    1.59e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   131    131    0    1.19e-06    2.15e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  158    158    0    1.88e-06    1.55e-07
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   iG   109    109    0    4.08e-04    3.26e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   123    123    0    1.73e-06    2.66e-07
+solve_ARK: took 114 accuracy and 71 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK3(2)   I    185    0    0    2.97e-03    3.39e-04
+solve_ARK: took 364 accuracy and 2 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PI   366    0    0    7.84e-04    8.49e-05
+solve_ARK: took 399 accuracy and 2 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PID  401    0    0    7.91e-04    8.35e-05
+solve_ARK: took 138 accuracy and 118 stability steps
+  step failures:  0 convergence,  33 accuracy
+ARK3(2)   iG   256    0    0    3.23e-03    4.71e-04
+solve_ARK: took 181 accuracy and 50 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK3(2)   eG   231    0    0    3.06e-03    3.20e-04
+solve_ARK: took 214 accuracy and 46 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   ieG  260    0    0    2.28e-03    1.87e-04
+solve_ARK: took 108 accuracy and 73 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   I   181    0    0    2.22e-05    2.90e-06
+solve_ARK: took 380 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  380    0    0    1.18e-05    1.15e-06
+solve_ARK: took 438 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 438    0    0    5.82e-06    7.98e-07
+solve_ARK: took 104 accuracy and 93 stability steps
+  step failures:  0 convergence,  12 accuracy
+ARK4(3)   iG   197    0    0    2.50e-05    3.64e-06
+solve_ARK: took 250 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   eG   251    0    0    1.52e-05    2.04e-06
+solve_ARK: took 254 accuracy and 1 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  255    0    0    1.52e-05    1.95e-06
+solve_ARK: took 107 accuracy and 70 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    177    0    0    9.03e-05    3.88e-06
+solve_ARK: took 372 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   372    0    0    1.01e-05    4.21e-06
+solve_ARK: took 434 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  434    0    0    3.44e-05    3.71e-06
+solve_ARK: took 78 accuracy and 83 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   iG   161    0    0    1.38e-04    1.86e-05
+solve_ARK: took 316 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   316    0    0    9.83e-05    1.01e-05
+solve_ARK: took 303 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  303    0    0    9.83e-05    1.02e-05
+---------------------------------------------------------
+
+
+rtol = 1e-05,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    184    184    0    7.94e-05    1.82e-05
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   I    180    180    0    3.24e-05    1.50e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   277    277    0    6.84e-06    1.22e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  330    330    0    5.34e-06    9.42e-07
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK3(2)   iG   173    173    0    3.10e-05    1.58e-05
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   243    243    0    1.11e-05    2.08e-06
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+SDIRK4(3)   I    130    130    0    1.80e-05    1.94e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   184    184    0    3.18e-06    2.11e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  208    208    0    1.65e-06    1.88e-07
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK4(3)   iG   121    121    0    4.18e-05    4.26e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   175    175    0    5.72e-06    6.22e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    111    111    0    5.74e-05    2.80e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   168    168    0    6.11e-07    6.62e-08
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  168    168    0    4.41e-07    5.49e-08
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK5(4)   iG   115    115    0    2.00e-05    2.37e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   133    133    0    1.25e-06    1.32e-07
+solve_ARK: took 252 accuracy and 69 stability steps
+  step failures:  0 convergence,  9 accuracy
+ARK3(2)   I    321    0    0    3.31e-04    4.28e-05
+solve_ARK: took 591 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PI   591    0    0    2.11e-04    2.27e-05
+solve_ARK: took 614 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK3(2)   PID  616    0    0    1.14e-04    1.25e-05
+solve_ARK: took 445 accuracy and 189 stability steps
+  step failures:  0 convergence,  126 accuracy
+ARK3(2)   iG   634    0    0    4.90e-04    5.28e-05
+solve_ARK: took 498 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   eG   505    0    0    4.23e-04    3.71e-05
+solve_ARK: took 553 accuracy and 8 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   ieG  561    0    0    3.23e-04    3.85e-05
+solve_ARK: took 266 accuracy and 46 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   I   312    0    0    5.39e-06    7.52e-07
+solve_ARK: took 584 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  584    0    0    2.74e-06    4.00e-07
+solve_ARK: took 704 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 704    0    0    2.07e-06    2.53e-07
+solve_ARK: took 374 accuracy and 158 stability steps
+  step failures:  0 convergence,  93 accuracy
+ARK4(3)   iG   532    0    0    6.79e-06    1.07e-06
+solve_ARK: took 459 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   eG   459    0    0    6.02e-06    6.87e-07
+solve_ARK: took 433 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  433    0    0    6.02e-06    9.30e-07
+solve_ARK: took 274 accuracy and 21 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   I    295    0    0    2.09e-05    8.81e-07
+solve_ARK: took 660 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   660    0    0    3.52e-06    1.24e-06
+solve_ARK: took 723 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  723    0    0    7.05e-06    8.56e-07
+solve_ARK: took 292 accuracy and 99 stability steps
+  step failures:  0 convergence,  54 accuracy
+ARK5(4)   iG   391    0    0    4.07e-05    5.39e-06
+solve_ARK: took 425 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   425    0    0    2.17e-05    2.22e-06
+solve_ARK: took 441 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  441    0    0    2.17e-05    2.87e-06
+---------------------------------------------------------
+
+
+rtol = 1e-06,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    247    247    0    7.65e-06    2.20e-06
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   I    290    290    0    3.67e-06    1.81e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PI   446    446    0    7.29e-07    3.48e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  506    506    0    6.65e-07    2.80e-07
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   iG   261    261    0    4.65e-06    2.37e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   eG   349    349    0    2.12e-06    8.16e-07
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   I    143    143    0    5.19e-06    6.01e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   215    215    0    7.29e-07    4.76e-08
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  239    239    0    5.36e-07    6.05e-08
+solve_DIRK: step failures:  0 convergence,  22 accuracy
+SDIRK4(3)   iG   172    172    0    6.17e-06    8.16e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   211    211    0    1.91e-06    1.90e-07
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK5(4)   I    129    129    0    7.16e-06    3.62e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   181    181    0    1.37e-07    2.07e-08
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  187    187    0    2.12e-07    1.80e-08
+solve_DIRK: step failures:  0 convergence,  10 accuracy
+SDIRK5(4)   iG   134    134    0    6.31e-06    6.20e-07
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   165    165    0    6.04e-07    5.29e-08
+solve_ARK: took 650 accuracy and 28 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK3(2)   I    678    0    0    3.71e-05    1.04e-05
+solve_ARK: took 1214 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PI   1214    0    0    1.13e-05    2.12e-06
+solve_ARK: took 1402 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PID  1402    0    0    8.83e-06    1.19e-06
+solve_ARK: took 1082 accuracy and 363 stability steps
+  step failures:  0 convergence,  318 accuracy
+ARK3(2)   iG   1445    0    0    3.94e-05    1.10e-05
+solve_ARK: took 864 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   eG   868    0    0    3.33e-05    4.50e-06
+solve_ARK: took 912 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   ieG  916    0    0    3.24e-05    4.52e-06
+solve_ARK: took 699 accuracy and 2 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   I   701    0    0    1.04e-06    1.59e-07
+solve_ARK: took 1240 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  1240    0    0    4.33e-07    6.17e-08
+solve_ARK: took 1387 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 1387    0    0    3.28e-07    5.31e-08
+solve_ARK: took 863 accuracy and 199 stability steps
+  step failures:  0 convergence,  196 accuracy
+ARK4(3)   iG   1062    0    0    1.33e-06    2.16e-07
+solve_ARK: took 842 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   eG   843    0    0    1.35e-06    1.71e-07
+solve_ARK: took 725 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   ieG  725    0    0    1.39e-06    1.75e-07
+solve_ARK: took 585 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   I    586    0    0    4.57e-06    2.17e-07
+solve_ARK: took 1125 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   1125    0    0    5.02e-07    2.19e-07
+solve_ARK: took 1263 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  1263    0    0    9.14e-07    1.17e-07
+solve_ARK: took 727 accuracy and 169 stability steps
+  step failures:  0 convergence,  167 accuracy
+ARK5(4)   iG   896    0    0    8.35e-06    9.99e-07
+solve_ARK: took 750 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   750    0    0    6.07e-06    9.44e-07
+solve_ARK: took 783 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  783    0    0    6.85e-06    7.90e-07
+---------------------------------------------------------
+
+
+
+Van der Pol test 1
+rtol = 0.01,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    140    140    0    1.88e+01    1.36e+00
+solve_DIRK: step failures:  41 convergence,  37 accuracy
+SDIRK3(2)   I    278    278    0    1.66e+01    1.18e+00
+solve_DIRK: step failures:  1 convergence,  2 accuracy
+SDIRK3(2)   PI   163    163    0    1.10e+01    7.75e-01
+solve_DIRK: step failures:  1 convergence,  4 accuracy
+SDIRK3(2)   PID  182    182    0    9.57e+00    6.77e-01
+solve_DIRK: step failures:  29 convergence,  29 accuracy
+SDIRK3(2)   iG   236    236    0    3.59e+01    2.54e+00
+solve_DIRK: step failures:  2 convergence,  4 accuracy
+SDIRK3(2)   eG   165    165    0    1.81e+01    1.28e+00
+solve_DIRK: step failures:  29 convergence,  11 accuracy
+SDIRK4(3)   I    196    196    0    4.73e-01    3.37e-02
+solve_DIRK: step failures:  3 convergence,  0 accuracy
+SDIRK4(3)   PI   145    145    0    4.04e-01    1.05e-02
+solve_DIRK: step failures:  3 convergence,  0 accuracy
+SDIRK4(3)   PID  152    152    0    4.04e-01    7.76e-02
+solve_DIRK: step failures:  34 convergence,  3 accuracy
+SDIRK4(3)   iG   185    185    0    6.16e-01    4.39e-02
+solve_DIRK: step failures:  3 convergence,  1 accuracy
+SDIRK4(3)   eG   148    148    0    5.11e-01    3.62e-02
+solve_DIRK: step failures:  16 convergence,  9 accuracy
+SDIRK5(4)   I    162    162    0    2.51e+00    6.55e-02
+solve_DIRK: step failures:  2 convergence,  1 accuracy
+SDIRK5(4)   PI   141    141    0    1.33e+00    2.55e-01
+solve_DIRK: step failures:  2 convergence,  1 accuracy
+SDIRK5(4)   PID  153    153    0    2.49e+00    1.76e-01
+solve_DIRK: step failures:  18 convergence,  2 accuracy
+SDIRK5(4)   iG   153    153    0    2.11e+00    1.50e-01
+solve_DIRK: step failures:  4 convergence,  1 accuracy
+SDIRK5(4)   eG   140    140    0    2.47e+00    1.75e-01
+solve_ARK: took 169 accuracy and 47 stability steps
+  step failures:  0 convergence,  47 accuracy
+ARK3(2)   I    216    0    0    1.54e+00    1.13e-01
+solve_ARK: took 150 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK3(2)   PI   152    0    0    5.94e-01    4.47e-02
+solve_ARK: took 186 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   PID  190    0    0    9.47e-01    6.96e-02
+solve_ARK: took 165 accuracy and 47 stability steps
+  step failures:  0 convergence,  47 accuracy
+ARK3(2)   iG   212    0    0    1.55e+00    1.13e-01
+solve_ARK: took 149 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   eG   154    0    0    8.10e-01    6.30e-02
+solve_ARK: took 151 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   ieG  155    0    0    8.01e-01    6.19e-02
+solve_ARK: took 147 accuracy and 30 stability steps
+  step failures:  0 convergence,  30 accuracy
+ARK4(3)   I   177    0    0    2.11e+00    1.57e-01
+solve_ARK: took 198 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PI  200    0    0    1.51e+00    1.10e-01
+solve_ARK: took 271 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PID 273    0    0    1.66e+00    1.18e-01
+solve_ARK: took 129 accuracy and 14 stability steps
+  step failures:  0 convergence,  14 accuracy
+ARK4(3)   iG   143    0    0    2.38e+00    1.75e-01
+solve_ARK: took 151 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   eG   154    0    0    2.17e+00    1.60e-01
+solve_ARK: took 149 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   ieG  152    0    0    2.21e+00    1.63e-01
+solve_ARK: took 139 accuracy and 27 stability steps
+  step failures:  0 convergence,  27 accuracy
+ARK5(4)   I    166    0    0    3.95e-02    3.35e-03
+solve_ARK: took 229 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   PI   230    0    0    3.32e+00    6.38e-01
+solve_ARK: took 260 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PID  262    0    0    6.71e+00    4.75e-01
+solve_ARK: took 138 accuracy and 28 stability steps
+  step failures:  1 convergence,  27 accuracy
+ARK5(4)   iG   166    0    0    5.53e-02    9.33e-03
+solve_ARK: took 227 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   eG   229    0    0    1.57e+00    1.11e-01
+solve_ARK: took 230 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   ieG  232    0    0    1.49e+00    1.06e-01
+---------------------------------------------------------
+
+
+rtol = 0.001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    202    202    0    3.37e+00    3.25e-01
+solve_DIRK: step failures:  0 convergence,  160 accuracy
+SDIRK3(2)   I    464    464    0    1.32e+00    9.39e-02
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   PI   212    212    0    1.84e+00    1.31e-01
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   PID  222    222    0    9.14e-01    6.47e-02
+solve_DIRK: step failures:  1 convergence,  164 accuracy
+SDIRK3(2)   iG   467    467    0    1.34e+00    9.53e-02
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK3(2)   eG   207    207    0    1.11e+00    7.88e-02
+solve_DIRK: step failures:  22 convergence,  43 accuracy
+SDIRK4(3)   I    254    254    0    1.22e-01    8.99e-03
+solve_DIRK: step failures:  1 convergence,  2 accuracy
+SDIRK4(3)   PI   171    171    0    1.28e-01    3.34e-03
+solve_DIRK: step failures:  1 convergence,  1 accuracy
+SDIRK4(3)   PID  171    171    0    4.01e-02    8.06e-03
+solve_DIRK: step failures:  15 convergence,  47 accuracy
+SDIRK4(3)   iG   243    243    0    3.70e-01    2.63e-02
+solve_DIRK: step failures:  2 convergence,  2 accuracy
+SDIRK4(3)   eG   160    160    0    2.73e-01    1.93e-02
+solve_DIRK: step failures:  23 convergence,  20 accuracy
+SDIRK5(4)   I    201    201    0    1.14e+00    2.98e-02
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK5(4)   PI   151    151    0    2.68e-02    5.14e-03
+solve_DIRK: step failures:  2 convergence,  0 accuracy
+SDIRK5(4)   PID  217    217    0    1.84e-01    1.30e-02
+solve_DIRK: step failures:  24 convergence,  12 accuracy
+SDIRK5(4)   iG   185    185    0    1.21e+00    8.56e-02
+solve_DIRK: step failures:  1 convergence,  2 accuracy
+SDIRK5(4)   eG   140    140    0    2.69e-01    1.90e-02
+solve_ARK: took 251 accuracy and 107 stability steps
+  step failures:  0 convergence,  107 accuracy
+ARK3(2)   I    358    0    0    2.00e-01    1.45e-02
+solve_ARK: took 212 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   PI   215    0    0    2.10e-02    1.83e-03
+solve_ARK: took 348 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   PID  351    0    0    5.90e-02    4.28e-03
+solve_ARK: took 241 accuracy and 103 stability steps
+  step failures:  0 convergence,  103 accuracy
+ARK3(2)   iG   344    0    0    2.18e-01    1.56e-02
+solve_ARK: took 189 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK3(2)   eG   195    0    0    3.15e-02    3.33e-03
+solve_ARK: took 194 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   ieG  199    0    0    1.53e-01    1.10e-02
+solve_ARK: took 177 accuracy and 48 stability steps
+  step failures:  0 convergence,  48 accuracy
+ARK4(3)   I   225    0    0    3.18e-01    2.27e-02
+solve_ARK: took 257 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   PI  258    0    0    1.47e-01    1.06e-02
+solve_ARK: took 294 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   PID 297    0    0    1.62e-01    1.17e-02
+solve_ARK: took 179 accuracy and 54 stability steps
+  step failures:  0 convergence,  54 accuracy
+ARK4(3)   iG   233    0    0    1.30e-01    9.35e-03
+solve_ARK: took 267 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   eG   270    0    0    2.22e-01    1.61e-02
+solve_ARK: took 267 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   ieG  270    0    0    1.95e-01    1.43e-02
+solve_ARK: took 156 accuracy and 38 stability steps
+  step failures:  1 convergence,  37 accuracy
+ARK5(4)   I    194    0    0    3.38e-01    8.96e-03
+solve_ARK: took 243 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK5(4)   PI   246    0    0    1.67e-02    3.22e-03
+solve_ARK: took 245 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PID  247    0    0    7.89e-02    5.78e-03
+solve_ARK: took 156 accuracy and 43 stability steps
+  step failures:  0 convergence,  43 accuracy
+ARK5(4)   iG   199    0    0    3.34e-01    2.40e-02
+solve_ARK: took 236 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK5(4)   eG   239    0    0    2.42e-01    1.71e-02
+solve_ARK: took 232 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK5(4)   ieG  235    0    0    2.19e-01    1.56e-02
+---------------------------------------------------------
+
+
+rtol = 0.0001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    279    279    0    1.77e+00    1.27e-01
+solve_DIRK: step failures:  0 convergence,  91 accuracy
+SDIRK3(2)   I    399    399    0    2.76e-01    1.96e-02
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   PI   303    303    0    1.48e-01    1.05e-02
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   PID  317    317    0    1.56e-01    1.11e-02
+solve_DIRK: step failures:  0 convergence,  106 accuracy
+SDIRK3(2)   iG   415    415    0    2.78e-01    1.98e-02
+solve_DIRK: step failures:  0 convergence,  14 accuracy
+SDIRK3(2)   eG   305    305    0    1.97e-01    1.40e-02
+solve_DIRK: step failures:  1 convergence,  77 accuracy
+SDIRK4(3)   I    298    298    0    4.10e-02    2.90e-03
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK4(3)   PI   289    289    0    5.12e-02    1.33e-03
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK4(3)   PID  305    305    0    1.57e-02    3.02e-03
+solve_DIRK: step failures:  2 convergence,  120 accuracy
+SDIRK4(3)   iG   372    372    0    3.21e-02    2.27e-03
+solve_DIRK: step failures:  1 convergence,  5 accuracy
+SDIRK4(3)   eG   188    188    0    1.23e-01    8.69e-03
+solve_DIRK: step failures:  5 convergence,  72 accuracy
+SDIRK5(4)   I    273    273    0    1.34e-01    3.49e-03
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK5(4)   PI   268    268    0    1.50e-02    2.89e-03
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PID  272    272    0    6.95e-02    4.92e-03
+solve_DIRK: step failures:  5 convergence,  48 accuracy
+SDIRK5(4)   iG   225    225    0    1.25e-01    8.88e-03
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK5(4)   eG   219    219    0    7.16e-02    5.07e-03
+solve_ARK: took 311 accuracy and 97 stability steps
+  step failures:  0 convergence,  97 accuracy
+ARK3(2)   I    408    0    0    1.44e-02    1.07e-03
+solve_ARK: took 443 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   PI   447    0    0    1.08e-02    7.71e-04
+solve_ARK: took 496 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   PID  501    0    0    8.71e-03    6.22e-04
+solve_ARK: took 309 accuracy and 107 stability steps
+  step failures:  0 convergence,  107 accuracy
+ARK3(2)   iG   416    0    0    1.27e-02    9.48e-04
+solve_ARK: took 354 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+ARK3(2)   eG   364    0    0    2.56e-03    2.33e-04
+solve_ARK: took 285 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   ieG  292    0    0    1.45e-02    1.06e-03
+solve_ARK: took 234 accuracy and 80 stability steps
+  step failures:  0 convergence,  80 accuracy
+ARK4(3)   I   314    0    0    4.01e-02    2.85e-03
+solve_ARK: took 296 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PI  298    0    0    6.79e-03    4.93e-04
+solve_ARK: took 325 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   PID 328    0    0    4.51e-03    3.22e-04
+solve_ARK: took 271 accuracy and 133 stability steps
+  step failures:  0 convergence,  133 accuracy
+ARK4(3)   iG   404    0    0    3.47e-02    2.46e-03
+solve_ARK: took 278 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK4(3)   eG   283    0    0    1.57e-02    1.12e-03
+solve_ARK: took 274 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   ieG  278    0    0    2.41e-02    1.72e-03
+solve_ARK: took 183 accuracy and 55 stability steps
+  step failures:  0 convergence,  55 accuracy
+ARK5(4)   I    238    0    0    1.45e-01    3.80e-03
+solve_ARK: took 280 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PI   282    0    0    5.93e-03    1.15e-03
+solve_ARK: took 270 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PID  272    0    0    7.41e-03    5.38e-04
+solve_ARK: took 165 accuracy and 39 stability steps
+  step failures:  0 convergence,  39 accuracy
+ARK5(4)   iG   204    0    0    1.68e-01    1.19e-02
+solve_ARK: took 250 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK5(4)   eG   254    0    0    3.57e-02    2.53e-03
+solve_ARK: took 244 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK5(4)   ieG  247    0    0    3.61e-02    2.56e-03
+---------------------------------------------------------
+
+
+rtol = 1e-05,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    385    385    0    3.24e-01    2.31e-02
+solve_DIRK: step failures:  0 convergence,  67 accuracy
+SDIRK3(2)   I    504    504    0    4.40e-02    3.13e-03
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   PI   507    507    0    1.78e-02    1.26e-03
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   PID  558    558    0    1.98e-02    1.41e-03
+solve_DIRK: step failures:  0 convergence,  147 accuracy
+SDIRK3(2)   iG   628    628    0    4.64e-02    3.30e-03
+solve_DIRK: step failures:  0 convergence,  17 accuracy
+SDIRK3(2)   eG   467    467    0    3.27e-02    2.33e-03
+solve_DIRK: step failures:  0 convergence,  82 accuracy
+SDIRK4(3)   I    340    340    0    1.25e-02    8.83e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   PI   340    340    0    5.98e-03    1.56e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   PID  361    361    0    1.78e-03    3.41e-04
+solve_DIRK: step failures:  0 convergence,  208 accuracy
+SDIRK4(3)   iG   569    569    0    1.41e-02    1.00e-03
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK4(3)   eG   325    325    0    6.62e-03    4.68e-04
+solve_DIRK: step failures:  0 convergence,  63 accuracy
+SDIRK5(4)   I    258    258    0    1.26e-01    3.27e-03
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK5(4)   PI   283    283    0    3.74e-03    7.18e-04
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK5(4)   PID  284    284    0    1.02e-02    7.19e-04
+solve_DIRK: step failures:  6 convergence,  69 accuracy
+SDIRK5(4)   iG   281    281    0    1.12e-02    8.01e-04
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK5(4)   eG   270    270    0    2.16e-02    1.53e-03
+solve_ARK: took 473 accuracy and 75 stability steps
+  step failures:  0 convergence,  75 accuracy
+ARK3(2)   I    548    0    0    1.47e-03    1.11e-04
+solve_ARK: took 715 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   PI   718    0    0    2.16e-03    1.53e-04
+solve_ARK: took 825 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   PID  829    0    0    1.92e-03    1.36e-04
+solve_ARK: took 466 accuracy and 101 stability steps
+  step failures:  0 convergence,  101 accuracy
+ARK3(2)   iG   567    0    0    6.23e-04    6.31e-05
+solve_ARK: took 626 accuracy and 13 stability steps
+  step failures:  0 convergence,  13 accuracy
+ARK3(2)   eG   639    0    0    1.29e-04    2.53e-05
+solve_ARK: took 606 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   ieG  611    0    0    7.49e-04    5.68e-05
+solve_ARK: took 345 accuracy and 75 stability steps
+  step failures:  0 convergence,  75 accuracy
+ARK4(3)   I   420    0    0    3.51e-03    2.50e-04
+solve_ARK: took 571 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PI  573    0    0    7.96e-04    5.70e-05
+solve_ARK: took 615 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PID 617    0    0    6.90e-04    4.94e-05
+solve_ARK: took 375 accuracy and 169 stability steps
+  step failures:  0 convergence,  169 accuracy
+ARK4(3)   iG   544    0    0    5.02e-03    3.56e-04
+solve_ARK: took 351 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK4(3)   eG   356    0    0    2.67e-03    1.90e-04
+solve_ARK: took 442 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   ieG  446    0    0    3.23e-03    2.30e-04
+solve_ARK: took 285 accuracy and 78 stability steps
+  step failures:  0 convergence,  78 accuracy
+ARK5(4)   I    363    0    0    1.00e-02    2.61e-04
+solve_ARK: took 465 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PI   467    0    0    1.49e-03    2.87e-04
+solve_ARK: took 574 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PID  576    0    0    1.22e-03    8.66e-05
+solve_ARK: took 203 accuracy and 44 stability steps
+  step failures:  0 convergence,  44 accuracy
+ARK5(4)   iG   247    0    0    1.44e-02    1.02e-03
+solve_ARK: took 371 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK5(4)   eG   376    0    0    5.92e-03    4.19e-04
+solve_ARK: took 375 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK5(4)   ieG  378    0    0    1.34e-02    9.47e-04
+---------------------------------------------------------
+
+
+rtol = 1e-06,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    549    549    0    2.59e-02    1.85e-03
+solve_DIRK: step failures:  0 convergence,  72 accuracy
+SDIRK3(2)   I    849    849    0    8.80e-03    6.27e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   PI   1032    1032    0    2.35e-03    1.67e-04
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   PID  1111    1111    0    1.80e-03    1.28e-04
+solve_DIRK: step failures:  0 convergence,  85 accuracy
+SDIRK3(2)   iG   816    816    0    9.19e-03    6.54e-04
+solve_DIRK: step failures:  0 convergence,  19 accuracy
+SDIRK3(2)   eG   851    851    0    4.15e-03    2.95e-04
+solve_DIRK: step failures:  0 convergence,  44 accuracy
+SDIRK4(3)   I    350    350    0    1.56e-03    1.10e-04
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK4(3)   PI   443    443    0    6.34e-04    1.65e-05
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   PID  477    477    0    2.53e-04    4.85e-05
+solve_DIRK: step failures:  0 convergence,  187 accuracy
+SDIRK4(3)   iG   602    602    0    9.66e-04    6.83e-05
+solve_DIRK: step failures:  0 convergence,  9 accuracy
+SDIRK4(3)   eG   403    403    0    9.63e-04    6.81e-05
+solve_DIRK: step failures:  0 convergence,  51 accuracy
+SDIRK5(4)   I    266    266    0    4.38e-03    1.14e-04
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK5(4)   PI   321    321    0    8.78e-04    1.69e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK5(4)   PID  330    330    0    1.67e-03    1.18e-04
+solve_DIRK: step failures:  0 convergence,  77 accuracy
+SDIRK5(4)   iG   308    308    0    2.91e-03    2.06e-04
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK5(4)   eG   309    309    0    1.51e-03    1.08e-04
+solve_ARK: took 1016 accuracy and 75 stability steps
+  step failures:  0 convergence,  75 accuracy
+ARK3(2)   I    1091    0    0    1.42e-04    1.04e-05
+solve_ARK: took 1425 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   PI   1430    0    0    1.13e-04    8.07e-06
+solve_ARK: took 1599 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   PID  1604    0    0    9.30e-05    6.63e-06
+solve_ARK: took 1017 accuracy and 149 stability steps
+  step failures:  0 convergence,  149 accuracy
+ARK3(2)   iG   1166    0    0    1.18e-04    9.61e-06
+solve_ARK: took 1091 accuracy and 16 stability steps
+  step failures:  0 convergence,  16 accuracy
+ARK3(2)   eG   1107    0    0    1.58e-05    2.98e-06
+solve_ARK: took 1097 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   ieG  1101    0    0    1.46e-04    1.06e-05
+solve_ARK: took 506 accuracy and 38 stability steps
+  step failures:  0 convergence,  38 accuracy
+ARK4(3)   I   544    0    0    3.33e-04    2.37e-05
+solve_ARK: took 882 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   PI  883    0    0    1.32e-04    9.43e-06
+solve_ARK: took 962 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PID 964    0    0    7.38e-05    5.28e-06
+solve_ARK: took 583 accuracy and 112 stability steps
+  step failures:  0 convergence,  112 accuracy
+ARK4(3)   iG   695    0    0    4.30e-04    3.06e-05
+solve_ARK: took 696 accuracy and 11 stability steps
+  step failures:  0 convergence,  11 accuracy
+ARK4(3)   eG   707    0    0    2.50e-04    1.78e-05
+solve_ARK: took 714 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK4(3)   ieG  721    0    0    2.61e-04    1.86e-05
+solve_ARK: took 355 accuracy and 40 stability steps
+  step failures:  0 convergence,  40 accuracy
+ARK5(4)   I    395    0    0    8.41e-04    2.20e-05
+solve_ARK: took 677 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   PI   678    0    0    9.30e-05    1.79e-05
+solve_ARK: took 765 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   PID  767    0    0    2.60e-04    1.85e-05
+solve_ARK: took 450 accuracy and 135 stability steps
+  step failures:  0 convergence,  135 accuracy
+ARK5(4)   iG   585    0    0    9.10e-04    6.44e-05
+solve_ARK: took 541 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK5(4)   eG   547    0    0    3.68e-04    2.61e-05
+solve_ARK: took 539 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK5(4)   ieG  542    0    0    6.06e-04    4.29e-05
+---------------------------------------------------------
+
+
+
+Van der Pol test 2
+rtol = 0.01,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    143    143    0    5.88e+00    6.92e-01
+solve_DIRK: step failures:  0 convergence,  20 accuracy
+SDIRK3(2)   I    155    155    0    3.45e+00    3.23e-01
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK3(2)   PI   166    166    0    1.64e-01    2.39e-02
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK3(2)   PID  180    180    0    1.75e-01    2.22e-02
+solve_DIRK: step failures:  0 convergence,  11 accuracy
+SDIRK3(2)   iG   139    139    0    3.62e+00    3.37e-01
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   eG   162    162    0    3.83e-01    3.97e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   I    113    113    0    1.52e-01    1.55e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   126    126    0    1.50e-01    NaN
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  138    138    0    1.72e-01    1.54e-02
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   iG   110    110    0    1.50e-01    1.53e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   130    130    0    1.51e-01    1.54e-02
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   I    106    106    0    1.64e-02    NaN
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   138    138    0    2.76e-02    2.23e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  136    136    0    1.03e-02    1.27e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   iG   106    106    0    1.64e-02    1.53e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   125    125    0    1.03e-02    1.26e-03
+solve_ARK: took 134 accuracy and 20 stability steps
+  step failures:  0 convergence,  20 accuracy
+ARK3(2)   I    154    0    0    2.54e+00    2.36e-01
+solve_ARK: took 169 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK3(2)   PI   169    0    0    1.85e-01    1.98e-02
+solve_ARK: took 175 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK3(2)   PID  177    0    0    1.71e-01    1.87e-02
+solve_ARK: took 136 accuracy and 19 stability steps
+  step failures:  0 convergence,  19 accuracy
+ARK3(2)   iG   155    0    0    2.10e+00    1.99e-01
+solve_ARK: took 153 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   eG   156    0    0    6.88e-01    6.95e-02
+solve_ARK: took 149 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK3(2)   ieG  150    0    0    1.93e+00    1.82e-01
+solve_ARK: took 106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   I   106    0    0    3.66e-01    3.79e-02
+solve_ARK: took 157 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  157    0    0    6.43e-02    6.76e-03
+solve_ARK: took 226 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 226    0    0    2.13e-02    2.71e-03
+solve_ARK: took 110 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   iG   110    0    0    3.11e-01    3.18e-02
+solve_ARK: took 143 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   eG   144    0    0    1.08e-01    1.13e-02
+solve_ARK: took 143 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   ieG  144    0    0    1.07e-01    1.12e-02
+solve_ARK: took 106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    106    0    0    1.60e-01    NaN
+solve_ARK: took 132 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   132    0    0    1.87e-01    1.59e-02
+solve_ARK: took 152 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  152    0    0    1.57e-01    1.63e-02
+solve_ARK: took 106 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   iG   106    0    0    1.60e-01    1.66e-02
+solve_ARK: took 124 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   124    0    0    1.60e-01    1.65e-02
+solve_ARK: took 124 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  124    0    0    1.60e-01    1.65e-02
+---------------------------------------------------------
+
+
+rtol = 0.001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    188    188    0    8.27e-01    8.48e-02
+solve_DIRK: step failures:  0 convergence,  66 accuracy
+SDIRK3(2)   I    272    272    0    1.92e-01    2.04e-02
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK3(2)   PI   245    245    0    1.89e-02    2.38e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK3(2)   PID  249    249    0    2.59e-02    4.45e-03
+solve_DIRK: step failures:  0 convergence,  56 accuracy
+SDIRK3(2)   iG   249    249    0    3.20e-01    3.29e-02
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   eG   205    205    0    5.14e-02    7.37e-03
+solve_DIRK: step failures:  0 convergence,  10 accuracy
+SDIRK4(3)   I    131    131    0    7.85e-02    7.62e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   175    175    0    6.32e-02    NaN
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   PID  180    180    0    1.27e-01    1.05e-02
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+SDIRK4(3)   iG   125    125    0    7.69e-02    8.16e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   eG   146    146    0    1.12e-01    1.16e-02
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   I    111    111    0    1.82e-02    NaN
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PI   154    154    0    4.94e-02    4.32e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  160    160    0    1.65e-02    1.74e-03
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   iG   114    114    0    1.59e-02    2.04e-03
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   eG   138    138    0    1.40e-02    1.56e-03
+solve_ARK: took 189 accuracy and 52 stability steps
+  step failures:  0 convergence,  52 accuracy
+ARK3(2)   I    241    0    0    4.24e-01    4.34e-02
+solve_ARK: took 255 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK3(2)   PI   256    0    0    6.64e-02    6.95e-03
+solve_ARK: took 310 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK3(2)   PID  311    0    0    3.91e-02    4.22e-03
+solve_ARK: took 173 accuracy and 42 stability steps
+  step failures:  0 convergence,  42 accuracy
+ARK3(2)   iG   215    0    0    2.87e-01    2.95e-02
+solve_ARK: took 232 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK3(2)   eG   234    0    0    7.97e-02    8.40e-03
+solve_ARK: took 229 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   ieG  232    0    0    2.20e-01    2.29e-02
+solve_ARK: took 129 accuracy and 14 stability steps
+  step failures:  0 convergence,  14 accuracy
+ARK4(3)   I   143    0    0    1.36e-01    1.54e-02
+solve_ARK: took 230 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  230    0    0    9.60e-03    9.74e-04
+solve_ARK: took 262 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 262    0    0    3.44e-02    3.66e-03
+solve_ARK: took 128 accuracy and 11 stability steps
+  step failures:  0 convergence,  11 accuracy
+ARK4(3)   iG   139    0    0    1.07e-01    1.11e-02
+solve_ARK: took 199 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   eG   201    0    0    3.52e-02    3.96e-03
+solve_ARK: took 155 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   ieG  157    0    0    3.51e-03    4.99e-04
+solve_ARK: took 114 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   I    114    0    0    1.61e-01    NaN
+solve_ARK: took 216 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   216    0    0    5.74e-03    4.86e-04
+solve_ARK: took 238 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  238    0    0    2.87e-03    3.06e-04
+solve_ARK: took 110 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   iG   110    0    0    1.45e-01    1.50e-02
+solve_ARK: took 134 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   eG   134    0    0    1.53e-01    1.58e-02
+solve_ARK: took 151 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   ieG  151    0    0    1.48e-01    1.52e-02
+---------------------------------------------------------
+
+
+rtol = 0.0001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    274    274    0    7.08e-02    8.63e-03
+solve_DIRK: step failures:  0 convergence,  100 accuracy
+SDIRK3(2)   I    409    409    0    1.06e-02    1.51e-03
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   PI   402    402    0    5.17e-03    5.70e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   PID  425    425    0    2.19e-03    2.59e-04
+solve_DIRK: step failures:  0 convergence,  107 accuracy
+SDIRK3(2)   iG   409    409    0    2.42e-02    2.77e-03
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK3(2)   eG   343    343    0    1.78e-02    1.95e-03
+solve_DIRK: step failures:  0 convergence,  29 accuracy
+SDIRK4(3)   I    190    190    0    2.50e-02    2.69e-03
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK4(3)   PI   278    278    0    5.48e-03    NaN
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  283    283    0    7.46e-03    6.23e-04
+solve_DIRK: step failures:  0 convergence,  25 accuracy
+SDIRK4(3)   iG   173    173    0    3.12e-03    4.60e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   eG   195    195    0    3.59e-03    4.35e-04
+solve_DIRK: step failures:  0 convergence,  9 accuracy
+SDIRK5(4)   I    131    131    0    4.84e-03    NaN
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PI   157    157    0    4.56e-03    5.52e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  180    180    0    9.57e-03    1.00e-03
+solve_DIRK: step failures:  0 convergence,  12 accuracy
+SDIRK5(4)   iG   138    138    0    2.68e-02    2.84e-03
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   eG   149    149    0    6.95e-03    8.34e-04
+solve_ARK: took 331 accuracy and 141 stability steps
+  step failures:  0 convergence,  141 accuracy
+ARK3(2)   I    472    0    0    4.47e-02    4.73e-03
+solve_ARK: took 374 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   PI   378    0    0    7.79e-03    8.38e-04
+solve_ARK: took 427 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   PID  430    0    0    9.48e-03    1.01e-03
+solve_ARK: took 278 accuracy and 91 stability steps
+  step failures:  0 convergence,  91 accuracy
+ARK3(2)   iG   369    0    0    4.30e-02    4.51e-03
+solve_ARK: took 342 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK3(2)   eG   348    0    0    2.54e-02    2.73e-03
+solve_ARK: took 338 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   ieG  341    0    0    2.72e-02    2.90e-03
+solve_ARK: took 182 accuracy and 52 stability steps
+  step failures:  0 convergence,  52 accuracy
+ARK4(3)   I   234    0    0    2.27e-02    2.39e-03
+solve_ARK: took 260 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  260    0    0    9.87e-04    1.04e-04
+solve_ARK: took 291 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PID 291    0    0    1.37e-03    1.54e-04
+solve_ARK: took 166 accuracy and 42 stability steps
+  step failures:  0 convergence,  42 accuracy
+ARK4(3)   iG   208    0    0    8.79e-03    9.96e-04
+solve_ARK: took 244 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   eG   246    0    0    1.26e-02    1.32e-03
+solve_ARK: took 247 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   ieG  248    0    0    2.21e-03    2.47e-04
+solve_ARK: took 126 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+ARK5(4)   I    136    0    0    2.88e-02    NaN
+solve_ARK: took 229 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   229    0    0    1.73e-03    1.45e-04
+solve_ARK: took 238 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  238    0    0    3.41e-03    3.61e-04
+solve_ARK: took 126 accuracy and 11 stability steps
+  step failures:  0 convergence,  11 accuracy
+ARK5(4)   iG   137    0    0    9.53e-03    1.03e-03
+solve_ARK: took 221 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   eG   222    0    0    4.23e-03    4.54e-04
+solve_ARK: took 221 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   ieG  222    0    0    4.23e-03    4.54e-04
+---------------------------------------------------------
+
+
+rtol = 1e-05,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    398    398    0    1.84e-02    2.10e-03
+solve_DIRK: step failures:  0 convergence,  92 accuracy
+SDIRK3(2)   I    572    572    0    1.29e-03    1.64e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK3(2)   PI   642    642    0    6.27e-04    7.36e-05
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   PID  705    705    0    6.26e-04    7.04e-05
+solve_DIRK: step failures:  0 convergence,  130 accuracy
+SDIRK3(2)   iG   603    603    0    1.44e-03    1.84e-04
+solve_DIRK: step failures:  0 convergence,  12 accuracy
+SDIRK3(2)   eG   578    578    0    7.69e-04    1.09e-04
+solve_DIRK: step failures:  0 convergence,  53 accuracy
+SDIRK4(3)   I    261    261    0    8.87e-04    1.23e-04
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PI   316    316    0    6.36e-04    NaN
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK4(3)   PID  341    341    0    5.33e-04    4.84e-05
+solve_DIRK: step failures:  0 convergence,  92 accuracy
+SDIRK4(3)   iG   330    330    0    1.21e-03    1.71e-04
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   eG   283    283    0    2.65e-04    4.29e-05
+solve_DIRK: step failures:  0 convergence,  51 accuracy
+SDIRK5(4)   I    222    222    0    2.16e-03    NaN
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PI   241    241    0    5.88e-04    5.15e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PID  251    251    0    6.18e-04    6.91e-05
+solve_DIRK: step failures:  0 convergence,  42 accuracy
+SDIRK5(4)   iG   203    203    0    7.85e-04    9.96e-05
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK5(4)   eG   172    172    0    5.55e-04    6.99e-05
+solve_ARK: took 478 accuracy and 96 stability steps
+  step failures:  0 convergence,  96 accuracy
+ARK3(2)   I    574    0    0    4.21e-03    4.46e-04
+solve_ARK: took 681 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   PI   685    0    0    1.39e-03    1.47e-04
+solve_ARK: took 763 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK3(2)   PID  766    0    0    1.15e-03    1.22e-04
+solve_ARK: took 428 accuracy and 83 stability steps
+  step failures:  0 convergence,  83 accuracy
+ARK3(2)   iG   511    0    0    4.91e-03    5.20e-04
+solve_ARK: took 519 accuracy and 18 stability steps
+  step failures:  0 convergence,  18 accuracy
+ARK3(2)   eG   537    0    0    3.13e-03    3.33e-04
+solve_ARK: took 486 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK3(2)   ieG  494    0    0    3.06e-03    3.26e-04
+solve_ARK: took 216 accuracy and 39 stability steps
+  step failures:  0 convergence,  39 accuracy
+ARK4(3)   I   255    0    0    2.36e-03    2.49e-04
+solve_ARK: took 344 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  344    0    0    3.02e-05    3.15e-06
+solve_ARK: took 354 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   PID 356    0    0    1.98e-04    2.07e-05
+solve_ARK: took 285 accuracy and 121 stability steps
+  step failures:  0 convergence,  121 accuracy
+ARK4(3)   iG   406    0    0    9.33e-04    1.09e-04
+solve_ARK: took 303 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   eG   307    0    0    2.60e-03    2.80e-04
+solve_ARK: took 290 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK4(3)   ieG  292    0    0    1.84e-03    1.96e-04
+solve_ARK: took 173 accuracy and 52 stability steps
+  step failures:  0 convergence,  52 accuracy
+ARK5(4)   I    225    0    0    3.78e-03    NaN
+solve_ARK: took 261 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PI   261    0    0    4.84e-04    4.05e-05
+solve_ARK: took 269 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  269    0    0    3.07e-04    3.24e-05
+solve_ARK: took 169 accuracy and 47 stability steps
+  step failures:  0 convergence,  47 accuracy
+ARK5(4)   iG   216    0    0    5.06e-03    5.36e-04
+solve_ARK: took 236 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   eG   238    0    0    6.79e-04    7.11e-05
+solve_ARK: took 236 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   ieG  238    0    0    6.79e-04    7.11e-05
+---------------------------------------------------------
+
+
+rtol = 1e-06,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    551    551    0    1.54e-03    1.78e-04
+solve_DIRK: step failures:  0 convergence,  98 accuracy
+SDIRK3(2)   I    971    971    0    1.57e-04    2.12e-05
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   PI   1223    1223    0    6.04e-05    7.20e-06
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   PID  1306    1306    0    4.86e-05    5.98e-06
+solve_DIRK: step failures:  0 convergence,  95 accuracy
+SDIRK3(2)   iG   900    900    0    1.97e-04    2.52e-05
+solve_DIRK: step failures:  0 convergence,  18 accuracy
+SDIRK3(2)   eG   963    963    0    9.27e-05    1.22e-05
+solve_DIRK: step failures:  0 convergence,  44 accuracy
+SDIRK4(3)   I    322    322    0    1.40e-04    2.11e-05
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK4(3)   PI   426    426    0    1.39e-05    NaN
+solve_DIRK: step failures:  0 convergence,  2 accuracy
+SDIRK4(3)   PID  465    465    0    6.25e-05    5.58e-06
+solve_DIRK: step failures:  0 convergence,  121 accuracy
+SDIRK4(3)   iG   447    447    0    9.62e-05    1.33e-05
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK4(3)   eG   362    362    0    2.00e-04    2.25e-05
+solve_DIRK: step failures:  0 convergence,  75 accuracy
+SDIRK5(4)   I    284    284    0    4.87e-04    NaN
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   PI   315    315    0    1.20e-04    9.32e-06
+solve_DIRK: step failures:  0 convergence,  0 accuracy
+SDIRK5(4)   PID  285    285    0    6.63e-05    7.17e-06
+solve_DIRK: step failures:  0 convergence,  76 accuracy
+SDIRK5(4)   iG   281    281    0    3.06e-04    3.75e-05
+solve_DIRK: step failures:  0 convergence,  1 accuracy
+SDIRK5(4)   eG   242    242    0    4.59e-04    5.35e-05
+solve_ARK: took 883 accuracy and 88 stability steps
+  step failures:  0 convergence,  88 accuracy
+ARK3(2)   I    971    0    0    4.03e-04    4.28e-05
+solve_ARK: took 1190 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK3(2)   PI   1194    0    0    1.62e-04    1.72e-05
+solve_ARK: took 1336 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK3(2)   PID  1341    0    0    1.36e-04    1.44e-05
+solve_ARK: took 792 accuracy and 79 stability steps
+  step failures:  0 convergence,  79 accuracy
+ARK3(2)   iG   871    0    0    5.15e-04    5.45e-05
+solve_ARK: took 924 accuracy and 17 stability steps
+  step failures:  0 convergence,  17 accuracy
+ARK3(2)   eG   941    0    0    3.69e-04    3.91e-05
+solve_ARK: took 894 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK3(2)   ieG  900    0    0    3.63e-04    3.85e-05
+solve_ARK: took 350 accuracy and 43 stability steps
+  step failures:  0 convergence,  43 accuracy
+ARK4(3)   I   393    0    0    2.10e-04    2.22e-05
+solve_ARK: took 477 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK4(3)   PI  477    0    0    5.04e-05    5.40e-06
+solve_ARK: took 599 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK4(3)   PID 600    0    0    1.67e-05    1.81e-06
+solve_ARK: took 478 accuracy and 209 stability steps
+  step failures:  0 convergence,  209 accuracy
+ARK4(3)   iG   687    0    0    2.01e-04    2.11e-05
+solve_ARK: took 468 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   eG   472    0    0    1.17e-05    1.49e-06
+solve_ARK: took 436 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   ieG  440    0    0    2.07e-04    2.23e-05
+solve_ARK: took 185 accuracy and 41 stability steps
+  step failures:  0 convergence,  41 accuracy
+ARK5(4)   I    226    0    0    4.42e-04    NaN
+solve_ARK: took 346 accuracy and 1 stability steps
+  step failures:  0 convergence,  1 accuracy
+ARK5(4)   PI   347    0    0    7.72e-05    6.41e-06
+solve_ARK: took 306 accuracy and 0 stability steps
+  step failures:  0 convergence,  0 accuracy
+ARK5(4)   PID  306    0    0    1.26e-04    1.30e-05
+solve_ARK: took 242 accuracy and 106 stability steps
+  step failures:  0 convergence,  106 accuracy
+ARK5(4)   iG   348    0    0    1.83e-04    2.05e-05
+solve_ARK: took 272 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   eG   274    0    0    2.14e-04    2.23e-05
+solve_ARK: took 267 accuracy and 2 stability steps
+  step failures:  0 convergence,  2 accuracy
+ARK5(4)   ieG  269    0    0    2.22e-04    2.32e-05
+---------------------------------------------------------
+
+
+
+Van der Pol test 3
+rtol = 0.01,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    260    260    0    1.28e-02    3.90e-03
+solve_DIRK: step failures:  133 convergence,  32 accuracy
+SDIRK3(2)   I    559    559    0    5.54e-03    1.65e-03
+solve_DIRK: step failures:  5 convergence,  5 accuracy
+SDIRK3(2)   PI   352    352    0    2.55e-03    7.58e-04
+solve_DIRK: step failures:  4 convergence,  7 accuracy
+SDIRK3(2)   PID  386    386    0    1.08e-03    3.21e-04
+solve_DIRK: step failures:  140 convergence,  23 accuracy
+SDIRK3(2)   iG   557    557    0    3.64e-03    1.08e-03
+solve_DIRK: step failures:  6 convergence,  7 accuracy
+SDIRK3(2)   eG   351    351    0    5.07e-04    1.51e-04
+solve_DIRK: step failures:  66 convergence,  50 accuracy
+SDIRK4(3)   I    450    450    0    2.01e-03    5.97e-04
+solve_DIRK: step failures:  8 convergence,  1 accuracy
+SDIRK4(3)   PI   345    345    0    1.21e-04    NaN
+solve_DIRK: step failures:  7 convergence,  0 accuracy
+SDIRK4(3)   PID  356    356    0    1.78e-04    5.44e-05
+solve_DIRK: step failures:  50 convergence,  51 accuracy
+SDIRK4(3)   iG   458    458    0    3.21e-03    9.54e-04
+solve_DIRK: step failures:  9 convergence,  0 accuracy
+SDIRK4(3)   eG   326    326    0    7.24e-04    2.15e-04
+solve_DIRK: step failures:  56 convergence,  35 accuracy
+SDIRK5(4)   I    396    396    0    2.17e-06    NaN
+solve_DIRK: step failures:  8 convergence,  0 accuracy
+SDIRK5(4)   PI   335    335    0    3.91e-04    1.20e-04
+solve_DIRK: step failures:  7 convergence,  1 accuracy
+SDIRK5(4)   PID  326    326    0    1.58e-03    4.71e-04
+solve_DIRK: step failures:  45 convergence,  16 accuracy
+SDIRK5(4)   iG   425    425    0    3.13e-04    9.30e-05
+solve_DIRK: step failures:  8 convergence,  0 accuracy
+SDIRK5(4)   eG   336    336    0    1.85e-03    5.51e-04
+solve_ARK: took 324 accuracy and 80 stability steps
+  step failures:  0 convergence,  80 accuracy
+ARK3(2)   I    404    0    0    1.12e-02    3.32e-03
+solve_ARK: took 373 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK3(2)   PI   381    0    0    6.99e-03    2.08e-03
+solve_ARK: took 389 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   PID  396    0    0    4.70e-03    1.40e-03
+solve_ARK: took 422 accuracy and 87 stability steps
+  step failures:  0 convergence,  87 accuracy
+ARK3(2)   iG   509    0    0    1.81e-02    5.36e-03
+solve_ARK: took 355 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+ARK3(2)   eG   365    0    0    1.28e-02    3.79e-03
+solve_ARK: took 420 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   ieG  427    0    0    7.26e-03    2.16e-03
+solve_ARK: took 273 accuracy and 42 stability steps
+  step failures:  0 convergence,  42 accuracy
+ARK4(3)   I   315    0    0    2.93e-03    8.70e-04
+solve_ARK: took 300 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK4(3)   PI  307    0    0    1.69e-04    5.03e-05
+solve_ARK: took 303 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK4(3)   PID 310    0    0    2.74e-03    8.15e-04
+solve_ARK: took 306 accuracy and 42 stability steps
+  step failures:  1 convergence,  41 accuracy
+ARK4(3)   iG   348    0    0    1.39e-02    4.14e-03
+solve_ARK: took 305 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+ARK4(3)   eG   314    0    0    1.36e-02    4.05e-03
+solve_ARK: took 299 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK4(3)   ieG  307    0    0    7.53e-05    2.24e-05
+solve_ARK: took 302 accuracy and 75 stability steps
+  step failures:  1 convergence,  74 accuracy
+ARK5(4)   I    377    0    0    2.70e-01    NaN
+solve_ARK: took 278 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK5(4)   PI   284    0    0    7.30e-03    2.25e-03
+solve_ARK: took 308 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK5(4)   PID  315    0    0    1.10e-02    3.27e-03
+solve_ARK: took 357 accuracy and 59 stability steps
+  step failures:  0 convergence,  59 accuracy
+ARK5(4)   iG   416    0    0    1.28e-02    3.79e-03
+solve_ARK: took 295 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK5(4)   eG   302    0    0    9.23e-03    2.74e-03
+solve_ARK: took 284 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK5(4)   ieG  291    0    0    1.44e-03    4.26e-04
+---------------------------------------------------------
+
+
+rtol = 0.001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    305    305    0    1.55e-03    4.63e-04
+solve_DIRK: step failures:  30 convergence,  288 accuracy
+SDIRK3(2)   I    895    895    0    1.59e-03    4.72e-04
+solve_DIRK: step failures:  2 convergence,  6 accuracy
+SDIRK3(2)   PI   400    400    0    4.47e-04    1.33e-04
+solve_DIRK: step failures:  3 convergence,  5 accuracy
+SDIRK3(2)   PID  444    444    0    7.37e-04    2.19e-04
+solve_DIRK: step failures:  30 convergence,  320 accuracy
+SDIRK3(2)   iG   959    959    0    6.18e-04    1.85e-04
+solve_DIRK: step failures:  3 convergence,  12 accuracy
+SDIRK3(2)   eG   407    407    0    5.46e-04    1.62e-04
+solve_DIRK: step failures:  43 convergence,  45 accuracy
+SDIRK4(3)   I    414    414    0    2.09e-03    6.22e-04
+solve_DIRK: step failures:  2 convergence,  6 accuracy
+SDIRK4(3)   PI   374    374    0    5.71e-06    NaN
+solve_DIRK: step failures:  4 convergence,  3 accuracy
+SDIRK4(3)   PID  362    362    0    8.85e-04    2.71e-04
+solve_DIRK: step failures:  43 convergence,  113 accuracy
+SDIRK4(3)   iG   582    582    0    1.90e-03    5.64e-04
+solve_DIRK: step failures:  6 convergence,  4 accuracy
+SDIRK4(3)   eG   356    356    0    1.56e-04    4.64e-05
+solve_DIRK: step failures:  68 convergence,  49 accuracy
+SDIRK5(4)   I    477    477    0    4.28e-04    NaN
+solve_DIRK: step failures:  5 convergence,  4 accuracy
+SDIRK5(4)   PI   332    332    0    4.08e-05    1.25e-05
+solve_DIRK: step failures:  5 convergence,  1 accuracy
+SDIRK5(4)   PID  331    331    0    1.44e-04    4.29e-05
+solve_DIRK: step failures:  51 convergence,  49 accuracy
+SDIRK5(4)   iG   536    536    0    7.86e-04    2.34e-04
+solve_DIRK: step failures:  7 convergence,  2 accuracy
+SDIRK5(4)   eG   332    332    0    7.32e-04    2.18e-04
+solve_ARK: took 502 accuracy and 198 stability steps
+  step failures:  0 convergence,  198 accuracy
+ARK3(2)   I    700    0    0    1.73e-03    5.13e-04
+solve_ARK: took 446 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK3(2)   PI   454    0    0    5.58e-04    1.66e-04
+solve_ARK: took 476 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+ARK3(2)   PID  486    0    0    4.31e-04    1.28e-04
+solve_ARK: took 599 accuracy and 207 stability steps
+  step failures:  0 convergence,  207 accuracy
+ARK3(2)   iG   806    0    0    1.53e-03    4.54e-04
+solve_ARK: took 424 accuracy and 13 stability steps
+  step failures:  0 convergence,  13 accuracy
+ARK3(2)   eG   437    0    0    6.69e-04    1.99e-04
+solve_ARK: took 492 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   ieG  499    0    0    1.39e-03    4.12e-04
+solve_ARK: took 324 accuracy and 70 stability steps
+  step failures:  0 convergence,  70 accuracy
+ARK4(3)   I   394    0    0    2.26e-04    6.72e-05
+solve_ARK: took 322 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK4(3)   PI  328    0    0    3.32e-04    9.88e-05
+solve_ARK: took 342 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK4(3)   PID 347    0    0    6.09e-04    1.81e-04
+solve_ARK: took 375 accuracy and 73 stability steps
+  step failures:  0 convergence,  73 accuracy
+ARK4(3)   iG   448    0    0    1.38e-03    4.09e-04
+solve_ARK: took 321 accuracy and 10 stability steps
+  step failures:  0 convergence,  10 accuracy
+ARK4(3)   eG   331    0    0    1.39e-04    4.12e-05
+solve_ARK: took 331 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+ARK4(3)   ieG  340    0    0    1.35e-03    4.00e-04
+solve_ARK: took 339 accuracy and 75 stability steps
+  step failures:  0 convergence,  75 accuracy
+ARK5(4)   I    414    0    0    1.84e-03    NaN
+solve_ARK: took 289 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK5(4)   PI   294    0    0    6.55e-04    2.01e-04
+solve_ARK: took 359 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK5(4)   PID  364    0    0    3.51e-04    1.04e-04
+solve_ARK: took 429 accuracy and 113 stability steps
+  step failures:  0 convergence,  113 accuracy
+ARK5(4)   iG   542    0    0    2.05e-03    6.09e-04
+solve_ARK: took 296 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK5(4)   eG   303    0    0    3.31e-04    9.84e-05
+solve_ARK: took 298 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK5(4)   ieG  306    0    0    2.07e-03    6.16e-04
+---------------------------------------------------------
+
+
+rtol = 0.0001,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    404    404    0    1.27e-04    1.91e-05
+solve_DIRK: step failures:  0 convergence,  89 accuracy
+SDIRK3(2)   I    558    558    0    1.23e-04    3.70e-05
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK3(2)   PI   513    513    0    5.10e-05    1.53e-05
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+SDIRK3(2)   PID  561    561    0    4.37e-05    1.32e-05
+solve_DIRK: step failures:  0 convergence,  137 accuracy
+SDIRK3(2)   iG   663    663    0    9.72e-05    2.93e-05
+SDIRK3(2)   eG   453    453    0    2.00e+00    6.11e-01
+solve_DIRK: step failures:  23 convergence,  79 accuracy
+SDIRK4(3)   I    472    472    0    5.36e-05    1.59e-05
+solve_DIRK: step failures:  1 convergence,  5 accuracy
+SDIRK4(3)   PI   403    403    0    1.49e-05    NaN
+solve_DIRK: step failures:  0 convergence,  8 accuracy
+SDIRK4(3)   PID  403    403    0    3.01e-06    9.22e-07
+solve_DIRK: step failures:  24 convergence,  96 accuracy
+SDIRK4(3)   iG   554    554    0    1.49e-04    4.41e-05
+solve_DIRK: step failures:  0 convergence,  12 accuracy
+SDIRK4(3)   eG   389    389    0    3.51e-05    1.04e-05
+solve_DIRK: step failures:  7 convergence,  178 accuracy
+SDIRK5(4)   I    641    641    0    7.62e-05    NaN
+solve_DIRK: step failures:  3 convergence,  4 accuracy
+SDIRK5(4)   PI   341    341    0    2.57e-04    7.86e-05
+solve_DIRK: step failures:  1 convergence,  5 accuracy
+SDIRK5(4)   PID  336    336    0    1.50e-04    4.46e-05
+solve_DIRK: step failures:  9 convergence,  146 accuracy
+SDIRK5(4)   iG   664    664    0    2.16e-04    6.42e-05
+solve_DIRK: step failures:  2 convergence,  8 accuracy
+SDIRK5(4)   eG   334    334    0    6.04e-05    1.79e-05
+solve_ARK: took 515 accuracy and 78 stability steps
+  step failures:  0 convergence,  78 accuracy
+ARK3(2)   I    593    0    0    1.61e-04    4.80e-05
+solve_ARK: took 558 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK3(2)   PI   564    0    0    7.79e-05    2.32e-05
+solve_ARK: took 583 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   PID  590    0    0    5.39e-05    1.60e-05
+solve_ARK: took 679 accuracy and 136 stability steps
+  step failures:  0 convergence,  136 accuracy
+ARK3(2)   iG   815    0    0    1.68e-04    4.99e-05
+solve_ARK: took 565 accuracy and 18 stability steps
+  step failures:  0 convergence,  18 accuracy
+ARK3(2)   eG   583    0    0    1.02e-04    3.03e-05
+solve_ARK: took 583 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK3(2)   ieG  590    0    0    1.41e-04    4.19e-05
+solve_ARK: took 415 accuracy and 100 stability steps
+  step failures:  0 convergence,  100 accuracy
+ARK4(3)   I   515    0    0    7.68e-05    2.28e-05
+solve_ARK: took 391 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   PI  395    0    0    7.11e-05    2.11e-05
+solve_ARK: took 443 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK4(3)   PID 449    0    0    3.48e-05    1.03e-05
+solve_ARK: took 617 accuracy and 286 stability steps
+  step failures:  0 convergence,  286 accuracy
+ARK4(3)   iG   903    0    0    4.07e-05    1.21e-05
+solve_ARK: took 378 accuracy and 13 stability steps
+  step failures:  0 convergence,  13 accuracy
+ARK4(3)   eG   391    0    0    5.35e-05    1.59e-05
+solve_ARK: took 346 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   ieG  349    0    0    1.84e-04    5.47e-05
+solve_ARK: took 337 accuracy and 33 stability steps
+  step failures:  0 convergence,  33 accuracy
+ARK5(4)   I    370    0    0    5.41e-04    NaN
+solve_ARK: took 397 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK5(4)   PI   401    0    0    1.46e-05    4.48e-06
+solve_ARK: took 439 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK5(4)   PID  443    0    0    5.39e-05    1.60e-05
+solve_ARK: took 485 accuracy and 120 stability steps
+  step failures:  0 convergence,  120 accuracy
+ARK5(4)   iG   605    0    0    3.04e-05    9.02e-06
+solve_ARK: took 337 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+ARK5(4)   eG   346    0    0    1.16e-04    3.46e-05
+solve_ARK: took 328 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK5(4)   ieG  336    0    0    9.06e-05    2.69e-05
+---------------------------------------------------------
+
+
+rtol = 1e-05,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    566    566    0    3.78e-05    1.17e-05
+SDIRK3(2)   I    651    651    0    2.00e+00    6.11e-01
+SDIRK3(2)   PI   673    673    0    2.00e+00    6.11e-01
+solve_DIRK: step failures:  0 convergence,  4 accuracy
+SDIRK3(2)   PID  843    843    0    4.54e-06    1.32e-06
+SDIRK3(2)   iG   631    631    0    2.00e+00    6.11e-01
+solve_DIRK: step failures:  0 convergence,  25 accuracy
+SDIRK3(2)   eG   763    763    0    1.25e-05    3.78e-06
+solve_DIRK: step failures:  0 convergence,  130 accuracy
+SDIRK4(3)   I    604    604    0    3.07e-07    9.15e-08
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK4(3)   PI   456    456    0    2.17e-06    NaN
+solve_DIRK: step failures:  0 convergence,  7 accuracy
+SDIRK4(3)   PID  488    488    0    1.81e-06    5.56e-07
+solve_DIRK: step failures:  1 convergence,  185 accuracy
+SDIRK4(3)   iG   771    771    0    9.45e-06    2.81e-06
+solve_DIRK: step failures:  0 convergence,  15 accuracy
+SDIRK4(3)   eG   486    486    0    5.07e-06    1.51e-06
+solve_DIRK: step failures:  1 convergence,  74 accuracy
+SDIRK5(4)   I    472    472    0    4.32e-05    NaN
+solve_DIRK: step failures:  0 convergence,  9 accuracy
+SDIRK5(4)   PI   413    413    0    1.34e-05    4.11e-06
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+SDIRK5(4)   PID  424    424    0    8.73e-05    2.59e-05
+solve_DIRK: step failures:  9 convergence,  153 accuracy
+SDIRK5(4)   iG   741    741    0    1.41e-07    4.19e-08
+solve_DIRK: step failures:  0 convergence,  13 accuracy
+SDIRK5(4)   eG   397    397    0    1.48e-05    4.38e-06
+ARK3(2)   I    766    0    0    2.00e+00    6.11e-01
+solve_ARK: took 896 accuracy and 8 stability steps
+  step failures:  0 convergence,  8 accuracy
+ARK3(2)   PI   904    0    0    7.04e-06    2.09e-06
+ARK3(2)   PID  839    0    0    2.00e+00    6.11e-01
+ARK3(2)   iG   1058    0    0    2.00e+00    6.11e-01
+ARK3(2)   eG   716    0    0    2.00e+00    6.11e-01
+solve_ARK: took 880 accuracy and 9 stability steps
+  step failures:  0 convergence,  9 accuracy
+ARK3(2)   ieG  889    0    0    1.48e-05    4.41e-06
+solve_ARK: took 605 accuracy and 159 stability steps
+  step failures:  0 convergence,  159 accuracy
+ARK4(3)   I   764    0    0    6.61e-06    1.97e-06
+solve_ARK: took 698 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   PI  702    0    0    7.93e-06    2.35e-06
+solve_ARK: took 936 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   PID 940    0    0    5.05e-06    1.50e-06
+solve_ARK: took 844 accuracy and 330 stability steps
+  step failures:  0 convergence,  330 accuracy
+ARK4(3)   iG   1174    0    0    4.88e-06    1.45e-06
+solve_ARK: took 549 accuracy and 16 stability steps
+  step failures:  0 convergence,  16 accuracy
+ARK4(3)   eG   565    0    0    7.74e-06    2.30e-06
+solve_ARK: took 509 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK4(3)   ieG  513    0    0    1.76e-05    5.23e-06
+solve_ARK: took 557 accuracy and 165 stability steps
+  step failures:  0 convergence,  165 accuracy
+ARK5(4)   I    722    0    0    1.87e-05    NaN
+solve_ARK: took 846 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK5(4)   PI   852    0    0    3.37e-06    1.03e-06
+solve_ARK: took 1059 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK5(4)   PID  1063    0    0    5.67e-06    1.68e-06
+solve_ARK: took 597 accuracy and 111 stability steps
+  step failures:  0 convergence,  111 accuracy
+ARK5(4)   iG   708    0    0    3.80e-05    1.13e-05
+solve_ARK: took 493 accuracy and 12 stability steps
+  step failures:  0 convergence,  12 accuracy
+ARK5(4)   eG   505    0    0    1.30e-05    3.85e-06
+solve_ARK: took 487 accuracy and 7 stability steps
+  step failures:  0 convergence,  7 accuracy
+ARK5(4)   ieG  494    0    0    1.45e-06    4.32e-07
+---------------------------------------------------------
+
+
+rtol = 1e-06,  atol = 1e-14
+
+method     ctrl   work   astep   sstep    maxerr   rmserr
+---------------------------------------------------------
+ode15s       no    788    788    0    6.20e-06    9.50e-07
+SDIRK3(2)   I    666    666    0    2.00e+00    6.11e-01
+SDIRK3(2)   PI   1219    1219    0    2.00e+00    6.11e-01
+SDIRK3(2)   PID  835    835    0    2.00e+00    6.11e-01
+SDIRK3(2)   iG   3    3    0    2.00e+00    1.21e+00
+SDIRK3(2)   eG   744    744    0    2.00e+00    6.11e-01
+solve_DIRK: step failures:  0 convergence,  123 accuracy
+SDIRK4(3)   I    727    727    0    3.93e-07    1.17e-07
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK4(3)   PI   673    673    0    2.99e-07    NaN
+solve_DIRK: step failures:  0 convergence,  3 accuracy
+SDIRK4(3)   PID  716    716    0    2.66e-07    7.99e-08
+solve_DIRK: step failures:  0 convergence,  299 accuracy
+SDIRK4(3)   iG   1123    1123    0    1.58e-07    4.70e-08
+solve_DIRK: step failures:  0 convergence,  21 accuracy
+SDIRK4(3)   eG   637    637    0    3.47e-07    1.03e-07
+solve_DIRK: step failures:  0 convergence,  69 accuracy
+SDIRK5(4)   I    529    529    0    2.45e-06    NaN
+solve_DIRK: step failures:  0 convergence,  6 accuracy
+SDIRK5(4)   PI   571    571    0    1.45e-06    4.44e-07
+solve_DIRK: step failures:  0 convergence,  5 accuracy
+SDIRK5(4)   PID  601    601    0    2.05e-06    6.08e-07
+solve_DIRK: step failures:  0 convergence,  273 accuracy
+SDIRK5(4)   iG   1016    1016    0    1.73e-06    5.13e-07
+solve_DIRK: step failures:  0 convergence,  13 accuracy
+SDIRK5(4)   eG   461    461    0    1.31e-06    3.90e-07
+ARK3(2)   I    1088    0    0    2.00e+00    6.11e-01
+ARK3(2)   PI   1398    0    0    2.00e+00    6.11e-01
+ARK3(2)   PID  1469    0    0    2.00e+00    6.11e-01
+ARK3(2)   iG   3    0    0    2.00e+00    1.21e+00
+ARK3(2)   eG   1504    0    0    2.00e+00    6.11e-01
+ARK3(2)   ieG  1611    0    0    2.00e+00    6.11e-01
+solve_ARK: took 955 accuracy and 127 stability steps
+  step failures:  0 convergence,  127 accuracy
+ARK4(3)   I   1082    0    0    1.45e-06    4.30e-07
+solve_ARK: took 1558 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   PI  1561    0    0    7.46e-07    2.22e-07
+solve_ARK: took 1762 accuracy and 3 stability steps
+  step failures:  0 convergence,  3 accuracy
+ARK4(3)   PID 1765    0    0    5.59e-07    1.66e-07
+solve_ARK: took 1544 accuracy and 591 stability steps
+  step failures:  0 convergence,  591 accuracy
+ARK4(3)   iG   2135    0    0    8.81e-07    2.62e-07
+solve_ARK: took 1104 accuracy and 20 stability steps
+  step failures:  0 convergence,  20 accuracy
+ARK4(3)   eG   1124    0    0    8.95e-07    2.66e-07
+solve_ARK: took 1068 accuracy and 6 stability steps
+  step failures:  0 convergence,  6 accuracy
+ARK4(3)   ieG  1074    0    0    1.55e-06    4.60e-07
+solve_ARK: took 768 accuracy and 47 stability steps
+  step failures:  0 convergence,  47 accuracy
+ARK5(4)   I    815    0    0    2.37e-06    NaN
+solve_ARK: took 1491 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK5(4)   PI   1495    0    0    6.90e-07    2.11e-07
+solve_ARK: took 1766 accuracy and 4 stability steps
+  step failures:  0 convergence,  4 accuracy
+ARK5(4)   PID  1770    0    0    1.54e-06    4.57e-07
+solve_ARK: took 1038 accuracy and 213 stability steps
+  step failures:  0 convergence,  213 accuracy
+ARK5(4)   iG   1251    0    0    1.87e-06    5.56e-07
+solve_ARK: took 990 accuracy and 15 stability steps
+  step failures:  0 convergence,  15 accuracy
+ARK5(4)   eG   1005    0    0    1.36e-06    4.04e-07
+solve_ARK: took 990 accuracy and 5 stability steps
+  step failures:  0 convergence,  5 accuracy
+ARK5(4)   ieG  995    0    0    1.68e-06    4.99e-07
+---------------------------------------------------------
+
+
+   
