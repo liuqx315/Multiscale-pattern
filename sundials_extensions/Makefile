@@ -13,7 +13,7 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 
 # extension directories
-EXTEN = nvector
+EXTEN = nvector arkode
 
 
 # build all library source code and tests
