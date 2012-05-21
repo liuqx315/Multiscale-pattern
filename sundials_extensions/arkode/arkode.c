@@ -26,13 +26,6 @@
 #include <sundials/sundials_types.h>
 
 /*=================================================================*/
-/*             Macros                                              */
-/*=================================================================*/
-
-/* Macro: loop */
-#define loop for(;;)
-
-/*=================================================================*/
 /*             ARKODE Private Constants                             */
 /*=================================================================*/
 
@@ -410,13 +403,6 @@ void *ARKodeCreate(int lmm, int iter)
 
 /*-----------------------------------------------------------------*/
 
-#define iter (ark_mem->ark_iter)  
-#define lmm  (ark_mem->ark_lmm) 
-#define lrw  (ark_mem->ark_lrw)
-#define liw  (ark_mem->ark_liw)
-
-/*-----------------------------------------------------------------*/
-
 /*
  * ARKodeInit
  * 
@@ -467,7 +453,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   /* Test if all required vector operations are implemented */
 
   nvectorOK = ARKCheckNvector(y0);
-  if(!nvectorOK) {
+  if (!nvectorOK) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeInit", MSGARK_BAD_NVECTOR);
     return(ARK_ILL_INPUT);
   }
@@ -559,11 +545,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
 
   return(ARK_SUCCESS);
 }
-
-/*-----------------------------------------------------------------*/
-
-#define lrw1 (ark_mem->ark_lrw1)
-#define liw1 (ark_mem->ark_liw1)
 
 /*-----------------------------------------------------------------*/
 
@@ -749,8 +730,8 @@ int ARKodeSVtolerances(void *arkode_mem, realtype reltol, N_Vector abstol)
   
   if ( !(ark_mem->ark_VabstolMallocDone) ) {
     ark_mem->ark_Vabstol = N_VClone(ark_mem->ark_ewt);
-    lrw += lrw1;
-    liw += liw1;
+    ark_mem->ark_lrw += ark_mem->ark_lrw1;
+    ark_mem->ark_liw += ark_mem->ark_liw1;
     ark_mem->ark_VabstolMallocDone = TRUE;
   }
 
@@ -793,16 +774,6 @@ int ARKodeWFtolerances(void *arkode_mem, ARKEwtFn efun)
 
 /*-----------------------------------------------------------------*/
 
-#define gfun    (ark_mem->ark_gfun)
-#define glo     (ark_mem->ark_glo)
-#define ghi     (ark_mem->ark_ghi)
-#define grout   (ark_mem->ark_grout)
-#define iroots  (ark_mem->ark_iroots)
-#define rootdir (ark_mem->ark_rootdir)
-#define gactive (ark_mem->ark_gactive)
-
-/*-----------------------------------------------------------------*/
-
 /*
  * ARKodeRootInit
  *
@@ -831,22 +802,22 @@ int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
      functions (changing number of gfun components), then free
      currently held memory resources */
   if ((nrt != ark_mem->ark_nrtfn) && (ark_mem->ark_nrtfn > 0)) {
-    free(glo); glo = NULL;
-    free(ghi); ghi = NULL;
-    free(grout); grout = NULL;
-    free(iroots); iroots = NULL;
-    free(rootdir); rootdir = NULL;
-    free(gactive); gactive = NULL;
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL;
+    free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
+    free(ark_mem->ark_grout); ark_mem->ark_grout = NULL;
+    free(ark_mem->ark_iroots); ark_mem->ark_iroots = NULL;
+    free(ark_mem->ark_rootdir); ark_mem->ark_rootdir = NULL;
+    free(ark_mem->ark_gactive); ark_mem->ark_gactive = NULL;
 
-    lrw -= 3 * (ark_mem->ark_nrtfn);
-    liw -= 3 * (ark_mem->ark_nrtfn);
+    ark_mem->ark_lrw -= 3 * (ark_mem->ark_nrtfn);
+    ark_mem->ark_liw -= 3 * (ark_mem->ark_nrtfn);
   }
 
   /* If ARKodeRootInit() was called with nrtfn == 0, then set ark_nrtfn to
      zero and ark_gfun to NULL before returning */
   if (nrt == 0) {
     ark_mem->ark_nrtfn = nrt;
-    gfun = NULL;
+    ark_mem->ark_gfun = NULL;
     return(ARK_SUCCESS);
   }
 
@@ -856,23 +827,23 @@ int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
   /* If g != NULL then return as currently reserved memory resources
      will suffice */
   if (nrt == ark_mem->ark_nrtfn) {
-    if (g != gfun) {
+    if (g != ark_mem->ark_gfun) {
       if (g == NULL) {
-        free(glo); glo = NULL;
-        free(ghi); ghi = NULL;
-        free(grout); grout = NULL;
-        free(iroots); iroots = NULL;
-        free(rootdir); rootdir = NULL;
-        free(gactive); gactive = NULL;
+        free(ark_mem->ark_glo); ark_mem->ark_glo = NULL;
+        free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
+        free(ark_mem->ark_grout); ark_mem->ark_grout = NULL;
+        free(ark_mem->ark_iroots); ark_mem->ark_iroots = NULL;
+        free(ark_mem->ark_rootdir); ark_mem->ark_rootdir = NULL;
+        free(ark_mem->ark_gactive); ark_mem->ark_gactive = NULL;
 
-        lrw -= 3*nrt;
-        liw -= 3*nrt;
+        ark_mem->ark_lrw -= 3*nrt;
+        ark_mem->ark_liw -= 3*nrt;
 
         ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeRootInit", MSGARK_NULL_G);
         return(ARK_ILL_INPUT);
       }
       else {
-        gfun = g;
+        ark_mem->ark_gfun = g;
         return(ARK_SUCCESS);
       }
     }
@@ -885,174 +856,77 @@ int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeRootInit", MSGARK_NULL_G);
     return(ARK_ILL_INPUT);
   }
-  else gfun = g;
+  else ark_mem->ark_gfun = g;
 
   /* Allocate necessary memory and return */
-  glo = NULL;
-  glo = (realtype *) malloc(nrt*sizeof(realtype));
-  if (glo == NULL) {
+  ark_mem->ark_glo = NULL;
+  ark_mem->ark_glo = (realtype *) malloc(nrt*sizeof(realtype));
+  if (ark_mem->ark_glo == NULL) {
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", "ARKodeRootInit", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
 
-  ghi = NULL;
-  ghi = (realtype *) malloc(nrt*sizeof(realtype));
-  if (ghi == NULL) {
-    free(glo); glo = NULL;
+  ark_mem->ark_ghi = NULL;
+  ark_mem->ark_ghi = (realtype *) malloc(nrt*sizeof(realtype));
+  if (ark_mem->ark_ghi == NULL) {
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL;
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", "ARKodeRootInit", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
 
-  grout = NULL;
-  grout = (realtype *) malloc(nrt*sizeof(realtype));
-  if (grout == NULL) {
-    free(glo); glo = NULL;
-    free(ghi); ghi = NULL;
+  ark_mem->ark_grout = NULL;
+  ark_mem->ark_grout = (realtype *) malloc(nrt*sizeof(realtype));
+  if (ark_mem->ark_grout == NULL) {
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL;
+    free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", "ARKodeRootInit", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
 
-  iroots = NULL;
-  iroots = (int *) malloc(nrt*sizeof(int));
-  if (iroots == NULL) {
-    free(glo); glo = NULL; 
-    free(ghi); ghi = NULL;
-    free(grout); grout = NULL;
+  ark_mem->ark_iroots = NULL;
+  ark_mem->ark_iroots = (int *) malloc(nrt*sizeof(int));
+  if (ark_mem->ark_iroots == NULL) {
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL; 
+    free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
+    free(ark_mem->ark_grout); ark_mem->ark_grout = NULL;
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", "ARKodeRootInit", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
 
-  rootdir = NULL;
-  rootdir = (int *) malloc(nrt*sizeof(int));
-  if (rootdir == NULL) {
-    free(glo); glo = NULL; 
-    free(ghi); ghi = NULL;
-    free(grout); grout = NULL;
-    free(iroots); iroots = NULL;
+  ark_mem->ark_rootdir = NULL;
+  ark_mem->ark_rootdir = (int *) malloc(nrt*sizeof(int));
+  if (ark_mem->ark_rootdir == NULL) {
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL; 
+    free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
+    free(ark_mem->ark_grout); ark_mem->ark_grout = NULL;
+    free(ark_mem->ark_iroots); ark_mem->ark_iroots = NULL;
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", "ARKodeRootInit", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
 
-  gactive = NULL;
-  gactive = (booleantype *) malloc(nrt*sizeof(booleantype));
-  if (gactive == NULL) {
-    free(glo); glo = NULL; 
-    free(ghi); ghi = NULL;
-    free(grout); grout = NULL;
-    free(iroots); iroots = NULL;
-    free(rootdir); rootdir = NULL;
+  ark_mem->ark_gactive = NULL;
+  ark_mem->ark_gactive = (booleantype *) malloc(nrt*sizeof(booleantype));
+  if (ark_mem->ark_gactive == NULL) {
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL; 
+    free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
+    free(ark_mem->ark_grout); ark_mem->ark_grout = NULL;
+    free(ark_mem->ark_iroots); ark_mem->ark_iroots = NULL;
+    free(ark_mem->ark_rootdir); ark_mem->ark_rootdir = NULL;
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODES", "ARKodeRootInit", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
 
   /* Set default values for rootdir (both directions) */
-  for(i=0; i<nrt; i++) rootdir[i] = 0;
+  for(i=0; i<nrt; i++) ark_mem->ark_rootdir[i] = 0;
 
   /* Set default values for gactive (all active) */
-  for(i=0; i<nrt; i++) gactive[i] = TRUE;
+  for(i=0; i<nrt; i++) ark_mem->ark_gactive[i] = TRUE;
 
-  lrw += 3*nrt;
-  liw += 3*nrt;
+  ark_mem->ark_lrw += 3*nrt;
+  ark_mem->ark_liw += 3*nrt;
 
   return(ARK_SUCCESS);
 }
-
-/* 
- * =================================================================
- * Readibility Constants
- * =================================================================
- */
-
-#define f              (ark_mem->ark_f)      
-#define user_data      (ark_mem->ark_user_data) 
-#define efun           (ark_mem->ark_efun)
-#define e_data         (ark_mem->ark_e_data) 
-#define qmax           (ark_mem->ark_qmax)
-#define mxstep         (ark_mem->ark_mxstep)
-#define mxhnil         (ark_mem->ark_mxhnil)
-#define sldeton        (ark_mem->ark_sldeton)
-#define hin            (ark_mem->ark_hin)
-#define hmin           (ark_mem->ark_hmin)
-#define hmax_inv       (ark_mem->ark_hmax_inv)
-#define tstop          (ark_mem->ark_tstop)
-#define tstopset       (ark_mem->ark_tstopset)
-#define maxnef         (ark_mem->ark_maxnef)
-#define maxncf         (ark_mem->ark_maxncf)
-#define maxcor         (ark_mem->ark_maxcor)
-#define nlscoef        (ark_mem->ark_nlscoef)
-#define itol           (ark_mem->ark_itol)         
-#define reltol         (ark_mem->ark_reltol)       
-#define Sabstol        (ark_mem->ark_Sabstol)
-#define Vabstol        (ark_mem->ark_Vabstol)
-
-#define uround         (ark_mem->ark_uround)  
-#define zn             (ark_mem->ark_zn) 
-#define ewt            (ark_mem->ark_ewt)  
-#define y              (ark_mem->ark_y)
-#define acor           (ark_mem->ark_acor)
-#define tempv          (ark_mem->ark_tempv)
-#define ftemp          (ark_mem->ark_ftemp) 
-#define q              (ark_mem->ark_q)
-#define qprime         (ark_mem->ark_qprime)
-#define next_q         (ark_mem->ark_next_q)
-#define qwait          (ark_mem->ark_qwait)
-#define L              (ark_mem->ark_L)
-#define h              (ark_mem->ark_h)
-#define hprime         (ark_mem->ark_hprime)
-#define next_h         (ark_mem->ark_next_h)
-#define eta            (ark_mem->ark_eta) 
-#define etaqm1         (ark_mem->ark_etaqm1) 
-#define etaq           (ark_mem->ark_etaq) 
-#define etaqp1         (ark_mem->ark_etaqp1) 
-#define nscon          (ark_mem->ark_nscon)
-#define hscale         (ark_mem->ark_hscale)
-#define tn             (ark_mem->ark_tn)
-#define tau            (ark_mem->ark_tau)
-#define tq             (ark_mem->ark_tq)
-#define l              (ark_mem->ark_l)
-#define rl1            (ark_mem->ark_rl1)
-#define gamma          (ark_mem->ark_gamma) 
-#define gammap         (ark_mem->ark_gammap) 
-#define gamrat         (ark_mem->ark_gamrat)
-#define crate          (ark_mem->ark_crate)
-#define acnrm          (ark_mem->ark_acnrm)
-#define mnewt          (ark_mem->ark_mnewt)
-#define etamax         (ark_mem->ark_etamax)
-#define nst            (ark_mem->ark_nst)
-#define nfe            (ark_mem->ark_nfe)
-#define ncfn           (ark_mem->ark_ncfn)
-#define netf           (ark_mem->ark_netf)
-#define nni            (ark_mem->ark_nni)
-#define nsetups        (ark_mem->ark_nsetups)
-#define nhnil          (ark_mem->ark_nhnil)
-#define linit          (ark_mem->ark_linit)
-#define lsetup         (ark_mem->ark_lsetup)
-#define lsolve         (ark_mem->ark_lsolve) 
-#define lfree          (ark_mem->ark_lfree) 
-#define lmem           (ark_mem->ark_lmem) 
-#define qu             (ark_mem->ark_qu)          
-#define nstlp          (ark_mem->ark_nstlp)  
-#define h0u            (ark_mem->ark_h0u)
-#define hu             (ark_mem->ark_hu)         
-#define saved_tq5      (ark_mem->ark_saved_tq5)  
-#define indx_acor      (ark_mem->ark_indx_acor)
-#define jcur           (ark_mem->ark_jcur)         
-#define tolsf          (ark_mem->ark_tolsf)      
-#define setupNonNull   (ark_mem->ark_setupNonNull) 
-#define nor            (ark_mem->ark_nor)
-#define ssdat          (ark_mem->ark_ssdat)
-
-#define nrtfn          (ark_mem->ark_nrtfn)
-#define tlo            (ark_mem->ark_tlo)
-#define thi            (ark_mem->ark_thi)
-#define tretlast       (ark_mem->ark_tretlast)
-#define toutc          (ark_mem->ark_toutc)
-#define trout          (ark_mem->ark_trout)
-#define ttol           (ark_mem->ark_ttol)
-#define taskc          (ark_mem->ark_taskc)
-#define irfnd          (ark_mem->ark_irfnd)
-#define nge            (ark_mem->ark_nge)
-
 
 /*-----------------------------------------------------------------*/
 
@@ -1103,7 +977,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   }
   
   /* Check for yout != NULL */
-  if ((y = yout) == NULL) {
+  if ((ark_mem->ark_y = yout) == NULL) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_YOUT_NULL);
     return(ARK_ILL_INPUT);
   }
@@ -1120,8 +994,8 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     return(ARK_ILL_INPUT);
   }
 
-  if (itask == ARK_NORMAL) toutc = tout;
-  taskc = itask;
+  if (itask == ARK_NORMAL) ark_mem->ark_toutc = tout;
+  ark_mem->ark_taskc = itask;
 
   /*
    * ----------------------------------------
@@ -1135,7 +1009,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
    * ----------------------------------------
    */
 
-  if (nst == 0) {
+  if (ark_mem->ark_nst == 0) {
 
     ier = ARKInitialSetup(ark_mem);
     if (ier!= ARK_SUCCESS) return(ier);
@@ -1144,10 +1018,10 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
        set initial h (from H0 or ARKHin), and scale zn[1] by h.
        Also check for zeros of root function g at and near t0.    */
     
-    retval = f(tn, zn[0], zn[1], user_data); 
-    nfe++;
+    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_zn[1], ark_mem->ark_user_data); 
+    ark_mem->ark_nfe++;
     if (retval < 0) {
-      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RHSFUNC_FAILED, tn);
+      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
       return(ARK_RHSFUNC_FAIL);
     }
     if (retval > 0) {
@@ -1157,51 +1031,51 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
 
     /* Set initial h (from H0 or ARKHin). */
 
-    h = hin;
-    if ( (h != ZERO) && ((tout-tn)*h < ZERO) ) {
+    ark_mem->ark_h = ark_mem->ark_hin;
+    if ( (ark_mem->ark_h != ZERO) && ((tout-ark_mem->ark_tn)*ark_mem->ark_h < ZERO) ) {
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_BAD_H0);
       return(ARK_ILL_INPUT);
     }
-    if (h == ZERO) {
+    if (ark_mem->ark_h == ZERO) {
       tout_hin = tout;
-      if ( tstopset && (tout-tn)*(tout-tstop) > 0 ) tout_hin = tstop; 
+      if ( ark_mem->ark_tstopset && (tout-ark_mem->ark_tn)*(tout-ark_mem->ark_tstop) > 0 ) tout_hin = ark_mem->ark_tstop; 
       hflag = ARKHin(ark_mem, tout_hin);
       if (hflag != ARK_SUCCESS) {
         istate = ARKHandleFailure(ark_mem, hflag);
         return(istate);
       }
     }
-    rh = ABS(h)*hmax_inv;
-    if (rh > ONE) h /= rh;
-    if (ABS(h) < hmin) h *= hmin/ABS(h);
+    rh = ABS(ark_mem->ark_h)*ark_mem->ark_hmax_inv;
+    if (rh > ONE) ark_mem->ark_h /= rh;
+    if (ABS(ark_mem->ark_h) < ark_mem->ark_hmin) ark_mem->ark_h *= ark_mem->ark_hmin/ABS(ark_mem->ark_h);
 
     /* Check for approach to tstop */
 
-    if (tstopset) {
-      if ( (tstop - tn)*h < ZERO ) {
-        ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_BAD_TSTOP, tstop, tn);
+    if (ark_mem->ark_tstopset) {
+      if ( (ark_mem->ark_tstop - ark_mem->ark_tn)*ark_mem->ark_h < ZERO ) {
+        ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_BAD_TSTOP, ark_mem->ark_tstop, ark_mem->ark_tn);
         return(ARK_ILL_INPUT);
       }
-      if ( (tn + h - tstop)*h > ZERO ) 
-        h = (tstop - tn)*(ONE-FOUR*uround);
+      if ( (ark_mem->ark_tn + ark_mem->ark_h - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO ) 
+        ark_mem->ark_h = (ark_mem->ark_tstop - ark_mem->ark_tn)*(ONE-FOUR*ark_mem->ark_uround);
     }
 
     /* Scale zn[1] by h.*/
 
-    hscale = h; 
-    h0u    = h;
-    hprime = h;
+    ark_mem->ark_hscale = ark_mem->ark_h; 
+    ark_mem->ark_h0u    = ark_mem->ark_h;
+    ark_mem->ark_hprime = ark_mem->ark_h;
 
-    N_VScale(h, zn[1], zn[1]);
+    N_VScale(ark_mem->ark_h, ark_mem->ark_zn[1], ark_mem->ark_zn[1]);
 
     /* Check for zeros of root function g at and near t0. */
 
-    if (nrtfn > 0) {
+    if (ark_mem->ark_nrtfn > 0) {
 
       retval = ARKRcheck1(ark_mem);
 
       if (retval == ARK_RTFUNC_FAIL) {
-        ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck1", MSGARK_RTFUNC_FAILED, tn);
+        ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck1", MSGARK_RTFUNC_FAILED, ark_mem->ark_tn);
         return(ARK_RTFUNC_FAIL);
       }
 
@@ -1221,52 +1095,52 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
    * -------------------------------------------------------
    */
 
-  if (nst > 0) {
+  if (ark_mem->ark_nst > 0) {
 
     /* Estimate an infinitesimal time interval to be used as
        a roundoff for time quantities (based on current time 
        and step size) */
-    troundoff = FUZZ_FACTOR*uround*(ABS(tn) + ABS(h));
+    troundoff = FUZZ_FACTOR*ark_mem->ark_uround*(ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_h));
 
     /* First, check for a root in the last step taken, other than the
        last root found, if any.  If itask = ARK_ONE_STEP and y(tn) was not
        returned because of an intervening root, return y(tn) now.     */
-    if (nrtfn > 0) {
+    if (ark_mem->ark_nrtfn > 0) {
 
-      irfndp = irfnd;
+      irfndp = ark_mem->ark_irfnd;
       
       retval = ARKRcheck2(ark_mem);
 
       if (retval == CLOSERT) {
-        ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKRcheck2", MSGARK_CLOSE_ROOTS, tlo);
+        ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKRcheck2", MSGARK_CLOSE_ROOTS, ark_mem->ark_tlo);
         return(ARK_ILL_INPUT);
       } else if (retval == ARK_RTFUNC_FAIL) {
-        ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck2", MSGARK_RTFUNC_FAILED, tlo);
+        ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck2", MSGARK_RTFUNC_FAILED, ark_mem->ark_tlo);
         return(ARK_RTFUNC_FAIL);
       } else if (retval == RTFOUND) {
-        tretlast = *tret = tlo;
+        ark_mem->ark_tretlast = *tret = ark_mem->ark_tlo;
         return(ARK_ROOT_RETURN);
       }
 
       /* If tn is distinct from tretlast (within roundoff),
          check remaining interval for roots */
-      if ( ABS(tn - tretlast) > troundoff ) {
+      if ( ABS(ark_mem->ark_tn - ark_mem->ark_tretlast) > troundoff ) {
 
         retval = ARKRcheck3(ark_mem);
 
         if (retval == ARK_SUCCESS) {     /* no root found */
-          irfnd = 0;
+          ark_mem->ark_irfnd = 0;
           if ((irfndp == 1) && (itask == ARK_ONE_STEP)) {
-            tretlast = *tret = tn;
-            N_VScale(ONE, zn[0], yout);
+            ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+            N_VScale(ONE, ark_mem->ark_zn[0], yout);
             return(ARK_SUCCESS);
           }
         } else if (retval == RTFOUND) {  /* a new root was found */
-          irfnd = 1;
-          tretlast = *tret = tlo;
+          ark_mem->ark_irfnd = 1;
+          ark_mem->ark_tretlast = *tret = ark_mem->ark_tlo;
           return(ARK_ROOT_RETURN);
         } else if (retval == ARK_RTFUNC_FAIL) {  /* g failed */
-          ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck3", MSGARK_RTFUNC_FAILED, tlo);
+          ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck3", MSGARK_RTFUNC_FAILED, ark_mem->ark_tlo);
           return(ARK_RTFUNC_FAIL);
         }
 
@@ -1275,8 +1149,8 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     } /* end of root stop check */
 
     /* In ARK_NORMAL mode, test if tout was reached */
-    if ( (itask == ARK_NORMAL) && ((tn-tout)*h >= ZERO) ) {
-      tretlast = *tret = tout;
+    if ( (itask == ARK_NORMAL) && ((ark_mem->ark_tn-tout)*ark_mem->ark_h >= ZERO) ) {
+      ark_mem->ark_tretlast = *tret = tout;
       ier =  ARKodeGetDky(ark_mem, tout, 0, yout);
       if (ier != ARK_SUCCESS) {
         ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_BAD_TOUT, tout);
@@ -1286,30 +1160,30 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     }
 
     /* In ARK_ONE_STEP mode, test if tn was returned */
-    if ( itask == ARK_ONE_STEP && ABS(tn - tretlast) > troundoff ) {
-      tretlast = *tret = tn;
-      N_VScale(ONE, zn[0], yout);
+    if ( itask == ARK_ONE_STEP && ABS(ark_mem->ark_tn - ark_mem->ark_tretlast) > troundoff ) {
+      ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+      N_VScale(ONE, ark_mem->ark_zn[0], yout);
       return(ARK_SUCCESS);
     }
 
     /* Test for tn at tstop or near tstop */
-    if ( tstopset ) {
+    if ( ark_mem->ark_tstopset ) {
 
-      if ( ABS(tn - tstop) <= troundoff) {
-        ier =  ARKodeGetDky(ark_mem, tstop, 0, yout);
+      if ( ABS(ark_mem->ark_tn - ark_mem->ark_tstop) <= troundoff) {
+        ier =  ARKodeGetDky(ark_mem, ark_mem->ark_tstop, 0, yout);
         if (ier != ARK_SUCCESS) {
-          ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_BAD_TSTOP, tstop, tn);
+          ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_BAD_TSTOP, ark_mem->ark_tstop, ark_mem->ark_tn);
           return(ARK_ILL_INPUT);
         }
-        tretlast = *tret = tstop;
-        tstopset = FALSE;
+        ark_mem->ark_tretlast = *tret = ark_mem->ark_tstop;
+        ark_mem->ark_tstopset = FALSE;
         return(ARK_TSTOP_RETURN);
       }
       
       /* If next step would overtake tstop, adjust stepsize */
-      if ( (tn + hprime - tstop)*h > ZERO ) {
-        hprime = (tstop - tn)*(ONE-FOUR*uround);
-        eta = hprime/h;
+      if ( (ark_mem->ark_tn + ark_mem->ark_hprime - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO ) {
+        ark_mem->ark_hprime = (ark_mem->ark_tstop - ark_mem->ark_tn)*(ONE-FOUR*ark_mem->ark_uround);
+        ark_mem->ark_eta = ark_mem->ark_hprime/ark_mem->ark_h;
       }
 
     }
@@ -1333,60 +1207,60 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
    */
 
   nstloc = 0;
-  loop {
+  for(;;) {
    
-    next_h = h;
-    next_q = q;
+    ark_mem->ark_next_h = ark_mem->ark_h;
+    ark_mem->ark_next_q = ark_mem->ark_q;
     
     /* Reset and check ewt */
-    if (nst > 0) {
+    if (ark_mem->ark_nst > 0) {
 
-      ewtsetOK = efun(zn[0], ewt, e_data);
+      ewtsetOK = ark_mem->ark_efun(ark_mem->ark_zn[0], ark_mem->ark_ewt, ark_mem->ark_e_data);
 
       if (ewtsetOK != 0) {
 
-        if (itol == ARK_WF) 
-          ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_EWT_NOW_FAIL, tn);
+        if (ark_mem->ark_itol == ARK_WF) 
+          ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_EWT_NOW_FAIL, ark_mem->ark_tn);
         else 
-          ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_EWT_NOW_BAD, tn);
+          ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", MSGARK_EWT_NOW_BAD, ark_mem->ark_tn);
 	
         istate = ARK_ILL_INPUT;
-        tretlast = *tret = tn;
-        N_VScale(ONE, zn[0], yout);
+        ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+        N_VScale(ONE, ark_mem->ark_zn[0], yout);
         break;
 
       }
     }
     
     /* Check for too many steps */
-    if ( (mxstep>0) && (nstloc >= mxstep) ) {
-      ARKProcessError(ark_mem, ARK_TOO_MUCH_WORK, "ARKODE", "ARKode", MSGARK_MAX_STEPS, tn);
+    if ( (ark_mem->ark_mxstep>0) && (nstloc >= ark_mem->ark_mxstep) ) {
+      ARKProcessError(ark_mem, ARK_TOO_MUCH_WORK, "ARKODE", "ARKode", MSGARK_MAX_STEPS, ark_mem->ark_tn);
       istate = ARK_TOO_MUCH_WORK;
-      tretlast = *tret = tn;
-      N_VScale(ONE, zn[0], yout);
+      ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+      N_VScale(ONE, ark_mem->ark_zn[0], yout);
       break;
     }
 
     /* Check for too much accuracy requested */
-    nrm = N_VWrmsNorm(zn[0], ewt);
-    tolsf = uround * nrm;
-    if (tolsf > ONE) {
-      ARKProcessError(ark_mem, ARK_TOO_MUCH_ACC, "ARKODE", "ARKode", MSGARK_TOO_MUCH_ACC, tn);
+    nrm = N_VWrmsNorm(ark_mem->ark_zn[0], ark_mem->ark_ewt);
+    ark_mem->ark_tolsf = ark_mem->ark_uround * nrm;
+    if (ark_mem->ark_tolsf > ONE) {
+      ARKProcessError(ark_mem, ARK_TOO_MUCH_ACC, "ARKODE", "ARKode", MSGARK_TOO_MUCH_ACC, ark_mem->ark_tn);
       istate = ARK_TOO_MUCH_ACC;
-      tretlast = *tret = tn;
-      N_VScale(ONE, zn[0], yout);
-      tolsf *= TWO;
+      ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+      N_VScale(ONE, ark_mem->ark_zn[0], yout);
+      ark_mem->ark_tolsf *= TWO;
       break;
     } else {
-      tolsf = ONE;
+      ark_mem->ark_tolsf = ONE;
     }
 
     /* Check for h below roundoff level in tn */
-    if (tn + h == tn) {
-      nhnil++;
-      if (nhnil <= mxhnil) 
-        ARKProcessError(ark_mem, ARK_WARNING, "ARKODE", "ARKode", MSGARK_HNIL, tn, h);
-      if (nhnil == mxhnil) 
+    if (ark_mem->ark_tn + ark_mem->ark_h == ark_mem->ark_tn) {
+      ark_mem->ark_nhnil++;
+      if (ark_mem->ark_nhnil <= ark_mem->ark_mxhnil) 
+        ARKProcessError(ark_mem, ARK_WARNING, "ARKODE", "ARKode", MSGARK_HNIL, ark_mem->ark_tn, ark_mem->ark_h);
+      if (ark_mem->ark_nhnil == ark_mem->ark_mxhnil) 
         ARKProcessError(ark_mem, ARK_WARNING, "ARKODE", "ARKode", MSGARK_HNIL_DONE);
     }
 
@@ -1396,25 +1270,25 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     /* Process failed step cases, and exit loop */
     if (kflag != ARK_SUCCESS) {
       istate = ARKHandleFailure(ark_mem, kflag);
-      tretlast = *tret = tn;
-      N_VScale(ONE, zn[0], yout);
+      ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+      N_VScale(ONE, ark_mem->ark_zn[0], yout);
       break;
     }
     
     nstloc++;
 
     /* Check for root in last step taken. */
-    if (nrtfn > 0) {
+    if (ark_mem->ark_nrtfn > 0) {
 
       retval = ARKRcheck3(ark_mem);
 
       if (retval == RTFOUND) {  /* A new root was found */
-        irfnd = 1;
+        ark_mem->ark_irfnd = 1;
         istate = ARK_ROOT_RETURN;
-        tretlast = *tret = tlo;
+        ark_mem->ark_tretlast = *tret = ark_mem->ark_tlo;
         break;
       } else if (retval == ARK_RTFUNC_FAIL) { /* g failed */
-        ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck3", MSGARK_RTFUNC_FAILED, tlo);
+        ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKRcheck3", MSGARK_RTFUNC_FAILED, ark_mem->ark_tlo);
         istate = ARK_RTFUNC_FAIL;
         break;
       }
@@ -1424,10 +1298,10 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
        * as this may indicate a user error in the implementation
        * of the root function. */
 
-      if (nst==1) {
+      if (ark_mem->ark_nst==1) {
         inactive_roots = FALSE;
-        for (ir=0; ir<nrtfn; ir++) { 
-          if (!gactive[ir]) {
+        for (ir=0; ir<ark_mem->ark_nrtfn; ir++) { 
+          if (!ark_mem->ark_gactive[ir]) {
             inactive_roots = TRUE;
             break;
           }
@@ -1440,30 +1314,30 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     }
 
     /* In NORMAL mode, check if tout reached */
-    if ( (itask == ARK_NORMAL) &&  (tn-tout)*h >= ZERO ) {
+    if ( (itask == ARK_NORMAL) &&  (ark_mem->ark_tn-tout)*ark_mem->ark_h >= ZERO ) {
       istate = ARK_SUCCESS;
-      tretlast = *tret = tout;
+      ark_mem->ark_tretlast = *tret = tout;
       (void) ARKodeGetDky(ark_mem, tout, 0, yout);
-      next_q = qprime;
-      next_h = hprime;
+      ark_mem->ark_next_q = ark_mem->ark_qprime;
+      ark_mem->ark_next_h = ark_mem->ark_hprime;
       break;
     }
 
     /* Check if tn is at tstop or near tstop */
-    if ( tstopset ) {
+    if ( ark_mem->ark_tstopset ) {
 
-      troundoff = FUZZ_FACTOR*uround*(ABS(tn) + ABS(h));
-      if ( ABS(tn - tstop) <= troundoff) {
-        (void) ARKodeGetDky(ark_mem, tstop, 0, yout);
-        tretlast = *tret = tstop;
-        tstopset = FALSE;
+      troundoff = FUZZ_FACTOR*ark_mem->ark_uround*(ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_h));
+      if ( ABS(ark_mem->ark_tn - ark_mem->ark_tstop) <= troundoff) {
+        (void) ARKodeGetDky(ark_mem, ark_mem->ark_tstop, 0, yout);
+        ark_mem->ark_tretlast = *tret = ark_mem->ark_tstop;
+        ark_mem->ark_tstopset = FALSE;
         istate = ARK_TSTOP_RETURN;
         break;
       }
 
-      if ( (tn + hprime - tstop)*h > ZERO ) {
-        hprime = (tstop - tn)*(ONE-FOUR*uround);
-        eta = hprime/h;
+      if ( (ark_mem->ark_tn + ark_mem->ark_hprime - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO ) {
+        ark_mem->ark_hprime = (ark_mem->ark_tstop - ark_mem->ark_tn)*(ONE-FOUR*ark_mem->ark_uround);
+        ark_mem->ark_eta = ark_mem->ark_hprime/ark_mem->ark_h;
       }
 
     }
@@ -1471,10 +1345,10 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     /* In ONE_STEP mode, copy y and exit loop */
     if (itask == ARK_ONE_STEP) {
       istate = ARK_SUCCESS;
-      tretlast = *tret = tn;
-      N_VScale(ONE, zn[0], yout);
-      next_q = qprime;
-      next_h = hprime;
+      ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+      N_VScale(ONE, ark_mem->ark_zn[0], yout);
+      ark_mem->ark_next_q = ark_mem->ark_qprime;
+      ark_mem->ark_next_h = ark_mem->ark_hprime;
       break;
     }
 
@@ -1521,35 +1395,35 @@ int ARKodeGetDky(void *arkode_mem, realtype t, int k, N_Vector dky)
     return(ARK_BAD_DKY);
   }
 
-  if ((k < 0) || (k > q)) {
+  if ((k < 0) || (k > ark_mem->ark_q)) {
     ARKProcessError(ark_mem, ARK_BAD_K, "ARKODE", "ARKodeGetDky", MSGARK_BAD_K);
     return(ARK_BAD_K);
   }
   
   /* Allow for some slack */
-  tfuzz = FUZZ_FACTOR * uround * (ABS(tn) + ABS(hu));
-  if (hu < ZERO) tfuzz = -tfuzz;
-  tp = tn - hu - tfuzz;
-  tn1 = tn + tfuzz;
+  tfuzz = FUZZ_FACTOR * ark_mem->ark_uround * (ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_hu));
+  if (ark_mem->ark_hu < ZERO) tfuzz = -tfuzz;
+  tp = ark_mem->ark_tn - ark_mem->ark_hu - tfuzz;
+  tn1 = ark_mem->ark_tn + tfuzz;
   if ((t-tp)*(t-tn1) > ZERO) {
-    ARKProcessError(ark_mem, ARK_BAD_T, "ARKODE", "ARKodeGetDky", MSGARK_BAD_T, t, tn-hu, tn);
+    ARKProcessError(ark_mem, ARK_BAD_T, "ARKODE", "ARKodeGetDky", MSGARK_BAD_T, t, ark_mem->ark_tn-ark_mem->ark_hu, ark_mem->ark_tn);
     return(ARK_BAD_T);
   }
 
   /* Sum the differentiated interpolating polynomial */
 
-  s = (t - tn) / h;
-  for (j=q; j >= k; j--) {
+  s = (t - ark_mem->ark_tn) / ark_mem->ark_h;
+  for (j=ark_mem->ark_q; j >= k; j--) {
     c = ONE;
     for (i=j; i >= j-k+1; i--) c *= i;
-    if (j == q) {
-      N_VScale(c, zn[q], dky);
+    if (j == ark_mem->ark_q) {
+      N_VScale(c, ark_mem->ark_zn[ark_mem->ark_q], dky);
     } else {
-      N_VLinearSum(c, zn[j], s, dky, dky);
+      N_VLinearSum(c, ark_mem->ark_zn[j], s, dky, dky);
     }
   }
   if (k == 0) return(ARK_SUCCESS);
-  r = RPowerI(h,-k);
+  r = RPowerI(ark_mem->ark_h,-k);
   N_VScale(r, dky, dky);
   return(ARK_SUCCESS);
 }
@@ -1573,15 +1447,15 @@ void ARKodeFree(void **arkode_mem)
   
   ARKFreeVectors(ark_mem);
 
-  if (iter == ARK_NEWTON && lfree != NULL) lfree(ark_mem);
+  if (ark_mem->ark_iter == ARK_NEWTON && ark_mem->ark_lfree != NULL) ark_mem->ark_lfree(ark_mem);
 
-  if (nrtfn > 0) {
-    free(glo); glo = NULL;
-    free(ghi); ghi = NULL;
-    free(grout); grout = NULL;
-    free(iroots); iroots = NULL;
-    free(rootdir); rootdir = NULL;
-    free(gactive); gactive = NULL;
+  if (ark_mem->ark_nrtfn > 0) {
+    free(ark_mem->ark_glo); ark_mem->ark_glo = NULL;
+    free(ark_mem->ark_ghi); ark_mem->ark_ghi = NULL;
+    free(ark_mem->ark_grout); ark_mem->ark_grout = NULL;
+    free(ark_mem->ark_iroots); ark_mem->ark_iroots = NULL;
+    free(ark_mem->ark_rootdir); ark_mem->ark_rootdir = NULL;
+    free(ark_mem->ark_gactive); ark_mem->ark_gactive = NULL;
   }
 
   free(*arkode_mem);
@@ -1602,7 +1476,7 @@ void ARKodeFree(void **arkode_mem)
 
 static booleantype ARKCheckNvector(N_Vector tmpl)
 {
-  if((tmpl->ops->nvclone     == NULL) ||
+  if ((tmpl->ops->nvclone     == NULL) ||
      (tmpl->ops->nvdestroy   == NULL) ||
      (tmpl->ops->nvlinearsum == NULL) ||
      (tmpl->ops->nvconst     == NULL) ||
@@ -1638,50 +1512,50 @@ static booleantype ARKAlloarkectors(ARKodeMem ark_mem, N_Vector tmpl)
 
   /* Allocate ewt, acor, tempv, ftemp */
   
-  ewt = N_VClone(tmpl);
-  if (ewt == NULL) return(FALSE);
+  ark_mem->ark_ewt = N_VClone(tmpl);
+  if (ark_mem->ark_ewt == NULL) return(FALSE);
 
-  acor = N_VClone(tmpl);
-  if (acor == NULL) {
-    N_VDestroy(ewt);
+  ark_mem->ark_acor = N_VClone(tmpl);
+  if (ark_mem->ark_acor == NULL) {
+    N_VDestroy(ark_mem->ark_ewt);
     return(FALSE);
   }
 
-  tempv = N_VClone(tmpl);
-  if (tempv == NULL) {
-    N_VDestroy(ewt);
-    N_VDestroy(acor);
+  ark_mem->ark_tempv = N_VClone(tmpl);
+  if (ark_mem->ark_tempv == NULL) {
+    N_VDestroy(ark_mem->ark_ewt);
+    N_VDestroy(ark_mem->ark_acor);
     return(FALSE);
   }
 
-  ftemp = N_VClone(tmpl);
-  if (ftemp == NULL) {
-    N_VDestroy(tempv);
-    N_VDestroy(ewt);
-    N_VDestroy(acor);
+  ark_mem->ark_ftemp = N_VClone(tmpl);
+  if (ark_mem->ark_ftemp == NULL) {
+    N_VDestroy(ark_mem->ark_tempv);
+    N_VDestroy(ark_mem->ark_ewt);
+    N_VDestroy(ark_mem->ark_acor);
     return(FALSE);
   }
 
   /* Allocate zn[0] ... zn[qmax] */
 
-  for (j=0; j <= qmax; j++) {
-    zn[j] = N_VClone(tmpl);
-    if (zn[j] == NULL) {
-      N_VDestroy(ewt);
-      N_VDestroy(acor);
-      N_VDestroy(tempv);
-      N_VDestroy(ftemp);
-      for (i=0; i < j; i++) N_VDestroy(zn[i]);
+  for (j=0; j <= ark_mem->ark_qmax; j++) {
+    ark_mem->ark_zn[j] = N_VClone(tmpl);
+    if (ark_mem->ark_zn[j] == NULL) {
+      N_VDestroy(ark_mem->ark_ewt);
+      N_VDestroy(ark_mem->ark_acor);
+      N_VDestroy(ark_mem->ark_tempv);
+      N_VDestroy(ark_mem->ark_ftemp);
+      for (i=0; i < j; i++) N_VDestroy(ark_mem->ark_zn[i]);
       return(FALSE);
     }
   }
 
   /* Update solver workspace lengths  */
-  lrw += (qmax + 5)*lrw1;
-  liw += (qmax + 5)*liw1;
+  ark_mem->ark_lrw += (ark_mem->ark_qmax + 5)*ark_mem->ark_lrw1;
+  ark_mem->ark_liw += (ark_mem->ark_qmax + 5)*ark_mem->ark_liw1;
 
   /* Store the value of qmax used here */
-  ark_mem->ark_qmax_alloc = qmax;
+  ark_mem->ark_qmax_alloc = ark_mem->ark_qmax;
 
   return(TRUE);
 }
@@ -1698,19 +1572,19 @@ static void ARKFreeVectors(ARKodeMem ark_mem)
   
   maxord = ark_mem->ark_qmax_alloc;
 
-  N_VDestroy(ewt);
-  N_VDestroy(acor);
-  N_VDestroy(tempv);
-  N_VDestroy(ftemp);
-  for(j=0; j <= maxord; j++) N_VDestroy(zn[j]);
+  N_VDestroy(ark_mem->ark_ewt);
+  N_VDestroy(ark_mem->ark_acor);
+  N_VDestroy(ark_mem->ark_tempv);
+  N_VDestroy(ark_mem->ark_ftemp);
+  for(j=0; j <= maxord; j++) N_VDestroy(ark_mem->ark_zn[j]);
 
-  lrw -= (maxord + 5)*lrw1;
-  liw -= (maxord + 5)*liw1;
+  ark_mem->ark_lrw -= (maxord + 5)*ark_mem->ark_lrw1;
+  ark_mem->ark_liw -= (maxord + 5)*ark_mem->ark_liw1;
 
   if (ark_mem->ark_VabstolMallocDone) {
-    N_VDestroy(Vabstol);
-    lrw -= lrw1;
-    liw -= liw1;
+    N_VDestroy(ark_mem->ark_Vabstol);
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
   }
 }
 
@@ -1727,19 +1601,19 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
   int ier;
 
   /* Did the user specify tolerances? */
-  if (itol == ARK_NN) {
+  if (ark_mem->ark_itol == ARK_NN) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKInitialSetup", MSGARK_NO_TOLS);
     return(ARK_ILL_INPUT);
   }
 
   /* Set data for efun */
-  if (ark_mem->ark_user_efun) e_data = user_data;
-  else                      e_data = ark_mem;
+  if (ark_mem->ark_user_efun) ark_mem->ark_e_data = ark_mem->ark_user_data;
+  else                      ark_mem->ark_e_data = ark_mem;
 
   /* Load initial error weights */
-  ier = efun(zn[0], ewt, e_data);
+  ier = ark_mem->ark_efun(ark_mem->ark_zn[0], ark_mem->ark_ewt, ark_mem->ark_e_data);
   if (ier != 0) {
-    if (itol == ARK_WF) 
+    if (ark_mem->ark_itol == ARK_WF) 
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKInitialSetup", MSGARK_EWT_FAIL);
     else 
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKInitialSetup", MSGARK_BAD_EWT);
@@ -1747,13 +1621,13 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
   }
   
   /* Check if lsolve function exists (if needed) and call linit function (if it exists) */
-  if (iter == ARK_NEWTON) {
-    if (lsolve == NULL) {
+  if (ark_mem->ark_iter == ARK_NEWTON) {
+    if (ark_mem->ark_lsolve == NULL) {
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKInitialSetup", MSGARK_LSOLVE_NULL);
       return(ARK_ILL_INPUT);
     }
-    if (linit != NULL) {
-      ier = linit(ark_mem);
+    if (ark_mem->ark_linit != NULL) {
+      ier = ark_mem->ark_linit(ark_mem);
       if (ier != 0) {
         ARKProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", "ARKInitialSetup", MSGARK_LINIT_FAIL);
         return(ARK_LINIT_FAIL);
@@ -1813,11 +1687,11 @@ static int ARKHin(ARKodeMem ark_mem, realtype tout)
 
   /* If tout is too close to tn, give up */
   
-  if ((tdiff = tout-tn) == ZERO) return(ARK_TOO_CLOSE);
+  if ((tdiff = tout-ark_mem->ark_tn) == ZERO) return(ARK_TOO_CLOSE);
   
   sign = (tdiff > ZERO) ? 1 : -1;
   tdist = ABS(tdiff);
-  tround = uround * MAX(ABS(tn), ABS(tout));
+  tround = ark_mem->ark_uround * MAX(ABS(ark_mem->ark_tn), ABS(tout));
 
   if (tdist < TWO*tround) return(ARK_TOO_CLOSE);
   
@@ -1833,8 +1707,8 @@ static int ARKHin(ARKodeMem ark_mem, realtype tout)
   hg  = RSqrt(hlb*hub);
 
   if (hub < hlb) {
-    if (sign == -1) h = -hg;
-    else            h =  hg;
+    if (sign == -1) ark_mem->ark_h = -hg;
+    else            ark_mem->ark_h =  hg;
     return(ARK_SUCCESS);
   }
   
@@ -1903,7 +1777,7 @@ static int ARKHin(ARKodeMem ark_mem, realtype tout)
   if (h0 < hlb) h0 = hlb;
   if (h0 > hub) h0 = hub;
   if (sign == -1) h0 = -h0;
-  h = h0;
+  ark_mem->ark_h = h0;
 
   return(ARK_SUCCESS);
 }
@@ -1926,15 +1800,15 @@ static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
    * factor is used as a safeguard against zero components in y0. 
    */
 
-  temp1 = tempv;
-  temp2 = acor;
+  temp1 = ark_mem->ark_tempv;
+  temp2 = ark_mem->ark_acor;
 
-  N_VAbs(zn[0], temp2);
-  efun(zn[0], temp1, e_data);
+  N_VAbs(ark_mem->ark_zn[0], temp2);
+  ark_mem->ark_efun(ark_mem->ark_zn[0], temp1, ark_mem->ark_e_data);
   N_VInv(temp1, temp1);
   N_VLinearSum(HUB_FACTOR, temp2, ONE, temp1, temp1);
 
-  N_VAbs(zn[1], temp2);
+  N_VAbs(ark_mem->ark_zn[1], temp2);
 
   N_VDiv(temp2, temp1, temp1);
   hub_inv = N_VMaxNorm(temp1);
@@ -1946,7 +1820,7 @@ static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
 
   hub = HUB_FACTOR*tdist;
 
-  /* Use the smaler of the two */
+  /* Use the smaller of the two */
 
   if (hub*hub_inv > ONE) hub = ONE/hub_inv;
 
@@ -1964,16 +1838,16 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
 {
   int retval;
 
-  N_VLinearSum(hg, zn[1], ONE, zn[0], y);
-  retval = f(tn+hg, y, tempv, user_data);
-  nfe++;
+  N_VLinearSum(hg, ark_mem->ark_zn[1], ONE, ark_mem->ark_zn[0], ark_mem->ark_y);
+  retval = ark_mem->ark_f(ark_mem->ark_tn+hg, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
+  ark_mem->ark_nfe++;
   if (retval < 0) return(ARK_RHSFUNC_FAIL);
   if (retval > 0) return(RHSFUNC_RECVR);
 
-  N_VLinearSum(ONE, tempv, -ONE, zn[1], tempv);
-  N_VScale(ONE/hg, tempv, tempv);
+  N_VLinearSum(ONE, ark_mem->ark_tempv, -ONE, ark_mem->ark_zn[1], ark_mem->ark_tempv);
+  N_VScale(ONE/hg, ark_mem->ark_tempv, ark_mem->ark_tempv);
 
-  *yddnrm = N_VWrmsNorm(tempv, ewt);
+  *yddnrm = N_VWrmsNorm(ark_mem->ark_tempv, ark_mem->ark_ewt);
 
   return(ARK_SUCCESS);
 }
@@ -2003,14 +1877,14 @@ static int ARKStep(ARKodeMem ark_mem)
   int ncf, nef;
   int nflag, kflag, eflag;
   
-  saved_t = tn;
+  saved_t = ark_mem->ark_tn;
   ncf = nef = 0;
   nflag = FIRST_CALL;
 
-  if ((nst > 0) && (hprime != h)) ARKAdjustParams(ark_mem);
+  if ((ark_mem->ark_nst > 0) && (ark_mem->ark_hprime != ark_mem->ark_h)) ARKAdjustParams(ark_mem);
   
   /* Looping point for attempts to take a step */
-  loop {  
+  for(;;) {  
 
     ARKPredict(ark_mem);  
     ARKSet(ark_mem);
@@ -2048,14 +1922,14 @@ static int ARKStep(ARKodeMem ark_mem)
   /* If Stablilty Limit Detection is turned on, call stability limit
      detection routine for possible order reduction. */
 
-  if (sldeton) ARKBDFStab(ark_mem);
+  if (ark_mem->ark_sldeton) ARKBDFStab(ark_mem);
 
-  etamax = (nst <= SMALL_NST) ? ETAMX2 : ETAMX3;
+  ark_mem->ark_etamax = (ark_mem->ark_nst <= SMALL_NST) ? ETAMX2 : ETAMX3;
 
   /*  Finally, we rescale the acor array to be the 
       estimated local error vector. */
 
-  N_VScale(tq[2], acor, acor);
+  N_VScale(ark_mem->ark_tq[2], ark_mem->ark_acor, ark_mem->ark_acor);
   return(ARK_SUCCESS);
       
 }
@@ -2072,11 +1946,11 @@ static int ARKStep(ARKodeMem ark_mem)
 
 static void ARKAdjustParams(ARKodeMem ark_mem)
 {
-  if (qprime != q) {
-    ARKAdjustOrder(ark_mem, qprime-q);
-    q = qprime;
-    L = q+1;
-    qwait = L;
+  if (ark_mem->ark_qprime != ark_mem->ark_q) {
+    ARKAdjustOrder(ark_mem, ark_mem->ark_qprime-ark_mem->ark_q);
+    ark_mem->ark_q = ark_mem->ark_qprime;
+    ark_mem->ark_L = ark_mem->ark_q+1;
+    ark_mem->ark_qwait = ark_mem->ark_L;
   }
   ARKRescale(ark_mem);
 }
@@ -2093,9 +1967,9 @@ static void ARKAdjustParams(ARKodeMem ark_mem)
 
 static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq)
 {
-  if ((q==2) && (deltaq != 1)) return;
+  if ((ark_mem->ark_q==2) && (deltaq != 1)) return;
   
-  switch(lmm){
+  switch(ark_mem->ark_lmm){
   case ARK_ADAMS: 
     ARKAdjustAdams(ark_mem, deltaq);
     break;
@@ -2120,7 +1994,7 @@ static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq)
   /* On an order increase, set new column of zn to zero and return */
   
   if (deltaq==1) {
-    N_VConst(ZERO, zn[L]);
+    N_VConst(ZERO, ark_mem->ark_zn[ark_mem->ark_L]);
     return;
   }
 
@@ -2133,19 +2007,19 @@ static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq)
    * where xi_j = [t_n - t_(n-j)]/h => xi_0 = 0
    */
 
-  for (i=0; i <= qmax; i++) l[i] = ZERO;
-  l[1] = ONE;
+  for (i=0; i <= ark_mem->ark_qmax; i++) ark_mem->ark_l[i] = ZERO;
+  ark_mem->ark_l[1] = ONE;
   hsum = ZERO;
-  for (j=1; j <= q-2; j++) {
-    hsum += tau[j];
-    xi = hsum / hscale;
-    for (i=j+1; i >= 1; i--) l[i] = l[i]*xi + l[i-1];
+  for (j=1; j <= ark_mem->ark_q-2; j++) {
+    hsum += ark_mem->ark_tau[j];
+    xi = hsum / ark_mem->ark_hscale;
+    for (i=j+1; i >= 1; i--) ark_mem->ark_l[i] = ark_mem->ark_l[i]*xi + ark_mem->ark_l[i-1];
   }
   
-  for (j=1; j <= q-2; j++) l[j+1] = q * (l[j] / (j+1));
+  for (j=1; j <= ark_mem->ark_q-2; j++) ark_mem->ark_l[j+1] = ark_mem->ark_q * (ark_mem->ark_l[j] / (j+1));
   
-  for (j=2; j < q; j++)
-    N_VLinearSum(-l[j], zn[q], ONE, zn[j], zn[j]);
+  for (j=2; j < ark_mem->ark_q; j++)
+    N_VLinearSum(-ark_mem->ark_l[j], ark_mem->ark_zn[ark_mem->ark_q], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
 }
 
 /*
@@ -2186,25 +2060,25 @@ static void ARKIncreaseBDF(ARKodeMem ark_mem)
   realtype alpha0, alpha1, prod, xi, xiold, hsum, A1;
   int i, j;
   
-  for (i=0; i <= qmax; i++) l[i] = ZERO;
-  l[2] = alpha1 = prod = xiold = ONE;
+  for (i=0; i <= ark_mem->ark_qmax; i++) ark_mem->ark_l[i] = ZERO;
+  ark_mem->ark_l[2] = alpha1 = prod = xiold = ONE;
   alpha0 = -ONE;
-  hsum = hscale;
-  if (q > 1) {
-    for (j=1; j < q; j++) {
-      hsum += tau[j+1];
-      xi = hsum / hscale;
+  hsum = ark_mem->ark_hscale;
+  if (ark_mem->ark_q > 1) {
+    for (j=1; j < ark_mem->ark_q; j++) {
+      hsum += ark_mem->ark_tau[j+1];
+      xi = hsum / ark_mem->ark_hscale;
       prod *= xi;
       alpha0 -= ONE / (j+1);
       alpha1 += ONE / xi;
-      for (i=j+2; i >= 2; i--) l[i] = l[i]*xiold + l[i-1];
+      for (i=j+2; i >= 2; i--) ark_mem->ark_l[i] = ark_mem->ark_l[i]*xiold + ark_mem->ark_l[i-1];
       xiold = xi;
     }
   }
   A1 = (-alpha0 - alpha1) / prod;
-  N_VScale(A1, zn[indx_acor], zn[L]);
-  for (j=2; j <= q; j++) {
-    N_VLinearSum(l[j], zn[L], ONE, zn[j], zn[j]);
+  N_VScale(A1, ark_mem->ark_zn[ark_mem->ark_indx_acor], ark_mem->ark_zn[ark_mem->ark_L]);
+  for (j=2; j <= ark_mem->ark_q; j++) {
+    N_VLinearSum(ark_mem->ark_l[j], ark_mem->ark_zn[ark_mem->ark_L], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
   }  
 }
 
@@ -2223,17 +2097,17 @@ static void ARKDecreaseBDF(ARKodeMem ark_mem)
   realtype hsum, xi;
   int i, j;
   
-  for (i=0; i <= qmax; i++) l[i] = ZERO;
-  l[2] = ONE;
+  for (i=0; i <= ark_mem->ark_qmax; i++) ark_mem->ark_l[i] = ZERO;
+  ark_mem->ark_l[2] = ONE;
   hsum = ZERO;
-  for(j=1; j <= q-2; j++) {
-    hsum += tau[j];
-    xi = hsum /hscale;
-    for (i=j+2; i >= 2; i--) l[i] = l[i]*xi + l[i-1];
+  for(j=1; j <= ark_mem->ark_q-2; j++) {
+    hsum += ark_mem->ark_tau[j];
+    xi = hsum /ark_mem->ark_hscale;
+    for (i=j+2; i >= 2; i--) ark_mem->ark_l[i] = ark_mem->ark_l[i]*xi + ark_mem->ark_l[i-1];
   }
   
-  for(j=2; j < q; j++)
-    N_VLinearSum(-l[j], zn[q], ONE, zn[j], zn[j]);
+  for(j=2; j < ark_mem->ark_q; j++)
+    N_VLinearSum(-ark_mem->ark_l[j], ark_mem->ark_zn[ark_mem->ark_q], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
 }
 
 /*
@@ -2249,15 +2123,15 @@ static void ARKRescale(ARKodeMem ark_mem)
   int j;
   realtype factor;
   
-  factor = eta;
-  for (j=1; j <= q; j++) {
-    N_VScale(factor, zn[j], zn[j]);
-    factor *= eta;
+  factor = ark_mem->ark_eta;
+  for (j=1; j <= ark_mem->ark_q; j++) {
+    N_VScale(factor, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
+    factor *= ark_mem->ark_eta;
   }
-  h = hscale * eta;
-  next_h = h;
-  hscale = h;
-  nscon = 0;
+  ark_mem->ark_h = ark_mem->ark_hscale * ark_mem->ark_eta;
+  ark_mem->ark_next_h = ark_mem->ark_h;
+  ark_mem->ark_hscale = ark_mem->ark_h;
+  ark_mem->ark_nscon = 0;
 }
 
 /*
@@ -2274,13 +2148,13 @@ static void ARKPredict(ARKodeMem ark_mem)
 {
   int j, k;
   
-  tn += h;
-  if (tstopset) {
-    if ((tn - tstop)*h > ZERO) tn = tstop;
+  ark_mem->ark_tn += ark_mem->ark_h;
+  if (ark_mem->ark_tstopset) {
+    if ((ark_mem->ark_tn - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO) ark_mem->ark_tn = ark_mem->ark_tstop;
   }
-  for (k = 1; k <= q; k++)
-    for (j = q; j >= k; j--) 
-      N_VLinearSum(ONE, zn[j-1], ONE, zn[j], zn[j-1]); 
+  for (k = 1; k <= ark_mem->ark_q; k++)
+    for (j = ark_mem->ark_q; j >= k; j--) 
+      N_VLinearSum(ONE, ark_mem->ark_zn[j-1], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j-1]); 
 }
 
 /*
@@ -2303,7 +2177,7 @@ static void ARKPredict(ARKodeMem ark_mem)
 
 static void ARKSet(ARKodeMem ark_mem)
 {
-  switch(lmm) {
+  switch(ark_mem->ark_lmm) {
   case ARK_ADAMS: 
     ARKSetAdams(ark_mem);
     break;
@@ -2311,10 +2185,10 @@ static void ARKSet(ARKodeMem ark_mem)
     ARKSetBDF(ark_mem);
     break;
   }
-  rl1 = ONE / l[1];
-  gamma = h * rl1;
-  if (nst == 0) gammap = gamma;
-  gamrat = (nst > 0) ? gamma / gammap : ONE;  /* protect x / x != 1.0 */
+  ark_mem->ark_rl1 = ONE / ark_mem->ark_l[1];
+  ark_mem->ark_gamma = ark_mem->ark_h * ark_mem->ark_rl1;
+  if (ark_mem->ark_nst == 0) ark_mem->ark_gammap = ark_mem->ark_gamma;
+  ark_mem->ark_gamrat = (ark_mem->ark_nst > 0) ? ark_mem->ark_gamma / ark_mem->ark_gammap : ONE;  /* protect x / x != 1.0 */
 }
 
 /*
@@ -2339,18 +2213,18 @@ static void ARKSetAdams(ARKodeMem ark_mem)
 {
   realtype m[L_MAX], M[3], hsum;
   
-  if (q == 1) {
-    l[0] = l[1] = tq[1] = tq[5] = ONE;
-    tq[2] = HALF;
-    tq[3] = ONE/TWELVE;
-    tq[4] = nlscoef / tq[2];       /* = 0.1 / tq[2] */
+  if (ark_mem->ark_q == 1) {
+    ark_mem->ark_l[0] = ark_mem->ark_l[1] = ark_mem->ark_tq[1] = ark_mem->ark_tq[5] = ONE;
+    ark_mem->ark_tq[2] = HALF;
+    ark_mem->ark_tq[3] = ONE/TWELVE;
+    ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];       /* = 0.1 / tq[2] */
     return;
   }
   
   hsum = ARKAdamsStart(ark_mem, m);
   
-  M[0] = ARKAltSum(q-1, m, 1);
-  M[1] = ARKAltSum(q-1, m, 2);
+  M[0] = ARKAltSum(ark_mem->ark_q-1, m, 1);
+  M[1] = ARKAltSum(ark_mem->ark_q-1, m, 2);
   
   ARKAdamsFinish(ark_mem, m, M, hsum);
 }
@@ -2367,17 +2241,17 @@ static realtype ARKAdamsStart(ARKodeMem ark_mem, realtype m[])
   realtype hsum, xi_inv, sum;
   int i, j;
   
-  hsum = h;
+  hsum = ark_mem->ark_h;
   m[0] = ONE;
-  for (i=1; i <= q; i++) m[i] = ZERO;
-  for (j=1; j < q; j++) {
-    if ((j==q-1) && (qwait == 1)) {
-      sum = ARKAltSum(q-2, m, 2);
-      tq[1] = q * sum / m[q-2];
+  for (i=1; i <= ark_mem->ark_q; i++) m[i] = ZERO;
+  for (j=1; j < ark_mem->ark_q; j++) {
+    if ((j==ark_mem->ark_q-1) && (ark_mem->ark_qwait == 1)) {
+      sum = ARKAltSum(ark_mem->ark_q-2, m, 2);
+      ark_mem->ark_tq[1] = ark_mem->ark_q * sum / m[ark_mem->ark_q-2];
     }
-    xi_inv = h / hsum;
+    xi_inv = ark_mem->ark_h / hsum;
     for (i=j; i >= 1; i--) m[i] += m[i-1] * xi_inv;
-    hsum += tau[j];
+    hsum += ark_mem->ark_tau[j];
     /* The m[i] are coefficients of product(1 to j) (1 + x/xi_i) */
   }
   return(hsum);
@@ -2396,21 +2270,21 @@ static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], realtype M[], realty
   
   M0_inv = ONE / M[0];
   
-  l[0] = ONE;
-  for (i=1; i <= q; i++) l[i] = M0_inv * (m[i-1] / i);
-  xi = hsum / h;
+  ark_mem->ark_l[0] = ONE;
+  for (i=1; i <= ark_mem->ark_q; i++) ark_mem->ark_l[i] = M0_inv * (m[i-1] / i);
+  xi = hsum / ark_mem->ark_h;
   xi_inv = ONE / xi;
   
-  tq[2] = M[1] * M0_inv / xi;
-  tq[5] = xi / l[q];
+  ark_mem->ark_tq[2] = M[1] * M0_inv / xi;
+  ark_mem->ark_tq[5] = xi / ark_mem->ark_l[ark_mem->ark_q];
 
-  if (qwait == 1) {
-    for (i=q; i >= 1; i--) m[i] += m[i-1] * xi_inv;
-    M[2] = ARKAltSum(q, m, 2);
-    tq[3] = M[2] * M0_inv / L;
+  if (ark_mem->ark_qwait == 1) {
+    for (i=ark_mem->ark_q; i >= 1; i--) m[i] += m[i-1] * xi_inv;
+    M[2] = ARKAltSum(ark_mem->ark_q, m, 2);
+    ark_mem->ark_tq[3] = M[2] * M0_inv / ark_mem->ark_L;
   }
 
-  tq[4] = nlscoef / tq[2];
+  ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];
 }
 
 /*  
@@ -2462,26 +2336,26 @@ static void ARKSetBDF(ARKodeMem ark_mem)
   realtype alpha0, alpha0_hat, xi_inv, xistar_inv, hsum;
   int i,j;
   
-  l[0] = l[1] = xi_inv = xistar_inv = ONE;
-  for (i=2; i <= q; i++) l[i] = ZERO;
+  ark_mem->ark_l[0] = ark_mem->ark_l[1] = xi_inv = xistar_inv = ONE;
+  for (i=2; i <= ark_mem->ark_q; i++) ark_mem->ark_l[i] = ZERO;
   alpha0 = alpha0_hat = -ONE;
-  hsum = h;
-  if (q > 1) {
-    for (j=2; j < q; j++) {
-      hsum += tau[j-1];
-      xi_inv = h / hsum;
+  hsum = ark_mem->ark_h;
+  if (ark_mem->ark_q > 1) {
+    for (j=2; j < ark_mem->ark_q; j++) {
+      hsum += ark_mem->ark_tau[j-1];
+      xi_inv = ark_mem->ark_h / hsum;
       alpha0 -= ONE / j;
-      for(i=j; i >= 1; i--) l[i] += l[i-1]*xi_inv;
+      for(i=j; i >= 1; i--) ark_mem->ark_l[i] += ark_mem->ark_l[i-1]*xi_inv;
       /* The l[i] are coefficients of product(1 to j) (1 + x/xi_i) */
     }
     
     /* j = q */
-    alpha0 -= ONE / q;
-    xistar_inv = -l[1] - alpha0;
-    hsum += tau[q-1];
-    xi_inv = h / hsum;
-    alpha0_hat = -l[1] - xi_inv;
-    for (i=q; i >= 1; i--) l[i] += l[i-1]*xistar_inv;
+    alpha0 -= ONE / ark_mem->ark_q;
+    xistar_inv = -ark_mem->ark_l[1] - alpha0;
+    hsum += ark_mem->ark_tau[ark_mem->ark_q-1];
+    xi_inv = ark_mem->ark_h / hsum;
+    alpha0_hat = -ark_mem->ark_l[1] - xi_inv;
+    for (i=ark_mem->ark_q; i >= 1; i--) ark_mem->ark_l[i] += ark_mem->ark_l[i-1]*xistar_inv;
   }
 
   ARKSetTqBDF(ark_mem, hsum, alpha0, alpha0_hat, xi_inv, xistar_inv);
@@ -2501,26 +2375,26 @@ static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
   realtype C, Cpinv, Cppinv;
   
   A1 = ONE - alpha0_hat + alpha0;
-  A2 = ONE + q * A1;
-  tq[2] = ABS(A1 / (alpha0 * A2));
-  tq[5] = ABS(A2 * xistar_inv / (l[q] * xi_inv));
-  if (qwait == 1) {
-    if (q > 1) {
-      C = xistar_inv / l[q];
-      A3 = alpha0 + ONE / q;
+  A2 = ONE + ark_mem->ark_q * A1;
+  ark_mem->ark_tq[2] = ABS(A1 / (alpha0 * A2));
+  ark_mem->ark_tq[5] = ABS(A2 * xistar_inv / (ark_mem->ark_l[ark_mem->ark_q] * xi_inv));
+  if (ark_mem->ark_qwait == 1) {
+    if (ark_mem->ark_q > 1) {
+      C = xistar_inv / ark_mem->ark_l[ark_mem->ark_q];
+      A3 = alpha0 + ONE / ark_mem->ark_q;
       A4 = alpha0_hat + xi_inv;
       Cpinv = (ONE - A4 + A3) / A3;
-      tq[1] = ABS(C * Cpinv);
+      ark_mem->ark_tq[1] = ABS(C * Cpinv);
     }
-    else tq[1] = ONE;
-    hsum += tau[q];
-    xi_inv = h / hsum;
-    A5 = alpha0 - (ONE / (q+1));
+    else ark_mem->ark_tq[1] = ONE;
+    hsum += ark_mem->ark_tau[ark_mem->ark_q];
+    xi_inv = ark_mem->ark_h / hsum;
+    A5 = alpha0 - (ONE / (ark_mem->ark_q+1));
     A6 = alpha0_hat - xi_inv;
     Cppinv = (ONE - A6 + A5) / A2;
-    tq[3] = ABS(Cppinv / (xi_inv * (q+2) * A5));
+    ark_mem->ark_tq[3] = ABS(Cppinv / (xi_inv * (ark_mem->ark_q+2) * A5));
   }
-  tq[4] = nlscoef / tq[2];
+  ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];
 }
 
 /*
@@ -2536,7 +2410,7 @@ static int ARKNls(ARKodeMem ark_mem, int nflag)
 {
   int flag = ARK_SUCCESS;
 
-  switch(iter) {
+  switch(ark_mem->ark_iter) {
   case ARK_FUNCTIONAL: 
     flag = ARKNlsFunctional(ark_mem);
     break;
@@ -2572,52 +2446,52 @@ static int ARKNlsFunctional(ARKodeMem ark_mem)
 
   /* Initialize counter and evaluate f at predicted y */
   
-  crate = ONE;
+  ark_mem->ark_crate = ONE;
   m = 0;
 
-  retval = f(tn, zn[0], tempv, user_data);
-  nfe++;
+  retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
+  ark_mem->ark_nfe++;
   if (retval < 0) return(ARK_RHSFUNC_FAIL);
   if (retval > 0) return(RHSFUNC_RECVR);
 
-  N_VConst(ZERO, acor);
+  N_VConst(ZERO, ark_mem->ark_acor);
 
   /* Initialize delp to avoid compiler warning message */
   del = delp = ZERO;
 
   /* Loop until convergence; accumulate corrections in acor */
 
-  loop {
+  for(;;) {
 
-    nni++;
+    ark_mem->ark_nni++;
 
     /* Correct y directly from the last f value */
-    N_VLinearSum(h, tempv, -ONE, zn[1], tempv);
-    N_VScale(rl1, tempv, tempv);
-    N_VLinearSum(ONE, zn[0], ONE, tempv, y);
+    N_VLinearSum(ark_mem->ark_h, ark_mem->ark_tempv, -ONE, ark_mem->ark_zn[1], ark_mem->ark_tempv);
+    N_VScale(ark_mem->ark_rl1, ark_mem->ark_tempv, ark_mem->ark_tempv);
+    N_VLinearSum(ONE, ark_mem->ark_zn[0], ONE, ark_mem->ark_tempv, ark_mem->ark_y);
     /* Get WRMS norm of current correction to use in convergence test */
-    N_VLinearSum(ONE, tempv, -ONE, acor, acor);
-    del = N_VWrmsNorm(acor, ewt);
-    N_VScale(ONE, tempv, acor);
+    N_VLinearSum(ONE, ark_mem->ark_tempv, -ONE, ark_mem->ark_acor, ark_mem->ark_acor);
+    del = N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
+    N_VScale(ONE, ark_mem->ark_tempv, ark_mem->ark_acor);
     
     /* Test for convergence.  If m > 0, an estimate of the convergence
        rate constant is stored in crate, and used in the test.        */
-    if (m > 0) crate = MAX(CRDOWN * crate, del / delp);
-    dcon = del * MIN(ONE, crate) / tq[4];
+    if (m > 0) ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del / delp);
+    dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_tq[4];
     if (dcon <= ONE) {
-      acnrm = (m == 0) ? del : N_VWrmsNorm(acor, ewt);
+      ark_mem->ark_acnrm = (m == 0) ? del : N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
       return(ARK_SUCCESS);  /* Convergence achieved */
     }
 
     /* Stop at maxcor iterations or if iter. seems to be diverging */
     m++;
-    if ((m==maxcor) || ((m >= 2) && (del > RDIV * delp))) return(CONV_FAIL);
+    if ((m==ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV * delp))) return(CONV_FAIL);
 
     /* Save norm of correction, evaluate f, and loop again */
     delp = del;
 
-    retval = f(tn, y, tempv, user_data);
-    nfe++;
+    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
+    ark_mem->ark_nfe++;
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) return(RHSFUNC_RECVR);
 
@@ -2650,20 +2524,20 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
   int convfail, retval, ier;
   booleantype callSetup;
   
-  vtemp1 = acor;  /* rename acor as vtemp1 for readability  */
-  vtemp2 = y;     /* rename y as vtemp2 for readability     */
-  vtemp3 = tempv; /* rename tempv as vtemp3 for readability */
+  vtemp1 = ark_mem->ark_acor;  /* rename acor as vtemp1 for readability  */
+  vtemp2 = ark_mem->ark_y;     /* rename y as vtemp2 for readability     */
+  vtemp3 = ark_mem->ark_tempv; /* rename tempv as vtemp3 for readability */
   
   /* Set flag convfail, input to lsetup for its evaluation decision */
   convfail = ((nflag == FIRST_CALL) || (nflag == PREV_ERR_FAIL)) ?
     ARK_NO_FAILURES : ARK_FAIL_OTHER;
 
   /* Decide whether or not to call setup routine (if one exists) */
-  if (setupNonNull) {      
+  if (ark_mem->ark_setupNonNull) {      
     callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
-      (nst == 0) || (nst >= nstlp + MSBP) || (ABS(gamrat-ONE) > DGMAX);
+      (ark_mem->ark_nst == 0) || (ark_mem->ark_nst >= ark_mem->ark_nstlp + MSBP) || (ABS(ark_mem->ark_gamrat-ONE) > DGMAX);
   } else {  
-    crate = ONE;
+    ark_mem->ark_crate = ONE;
     callSetup = FALSE;
   }
   
@@ -2671,29 +2545,29 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
      Evaluate f at the predicted y, call lsetup if indicated, and
      call ARKNewtonIteration for the Newton iteration itself.      */
   
-  loop {
+  for(;;) {
 
-    retval = f(tn, zn[0], ftemp, user_data);
-    nfe++; 
+    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_ftemp, ark_mem->ark_user_data);
+    ark_mem->ark_nfe++; 
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) return(RHSFUNC_RECVR);
 
     if (callSetup) {
-      ier = lsetup(ark_mem, convfail, zn[0], ftemp, &jcur, 
+      ier = ark_mem->ark_lsetup(ark_mem, convfail, ark_mem->ark_zn[0], ark_mem->ark_ftemp, &ark_mem->ark_jcur, 
                    vtemp1, vtemp2, vtemp3);
-      nsetups++;
+      ark_mem->ark_nsetups++;
       callSetup = FALSE;
-      gamrat = crate = ONE; 
-      gammap = gamma;
-      nstlp = nst;
+      ark_mem->ark_gamrat = ark_mem->ark_crate = ONE; 
+      ark_mem->ark_gammap = ark_mem->ark_gamma;
+      ark_mem->ark_nstlp = ark_mem->ark_nst;
       /* Return if lsetup failed */
       if (ier < 0) return(ARK_LSETUP_FAIL);
       if (ier > 0) return(CONV_FAIL);
     }
 
     /* Set acor to zero and load prediction into y vector */
-    N_VConst(ZERO, acor);
-    N_VScale(ONE, zn[0], y);
+    N_VConst(ZERO, ark_mem->ark_acor);
+    N_VScale(ONE, ark_mem->ark_zn[0], ark_mem->ark_y);
 
     /* Do the Newton iteration */
     ier = ARKNewtonIteration(ark_mem);
@@ -2727,67 +2601,67 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
   realtype del, delp, dcon;
   N_Vector b;
 
-  mnewt = m = 0;
+  ark_mem->ark_mnewt = m = 0;
 
   /* Initialize delp to avoid compiler warning message */
   del = delp = ZERO;
 
   /* Looping point for Newton iteration */
-  loop {
+  for(;;) {
 
     /* Evaluate the residual of the nonlinear system*/
-    N_VLinearSum(rl1, zn[1], ONE, acor, tempv);
-    N_VLinearSum(gamma, ftemp, -ONE, tempv, tempv);
+    N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], ONE, ark_mem->ark_acor, ark_mem->ark_tempv);
+    N_VLinearSum(ark_mem->ark_gamma, ark_mem->ark_ftemp, -ONE, ark_mem->ark_tempv, ark_mem->ark_tempv);
 
     /* Call the lsolve function */
-    b = tempv;
-    retval = lsolve(ark_mem, b, ewt, y, ftemp); 
-    nni++;
+    b = ark_mem->ark_tempv;
+    retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, ark_mem->ark_y, ark_mem->ark_ftemp); 
+    ark_mem->ark_nni++;
     
     if (retval < 0) return(ARK_LSOLVE_FAIL);
     
     /* If lsolve had a recoverable failure and Jacobian data is
        not current, signal to try the solution again            */
     if (retval > 0) { 
-      if ((!jcur) && (setupNonNull)) return(TRY_AGAIN);
+      if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) return(TRY_AGAIN);
       else                           return(CONV_FAIL);
     }
 
     /* Get WRMS norm of correction; add correction to acor and y */
-    del = N_VWrmsNorm(b, ewt);
-    N_VLinearSum(ONE, acor, ONE, b, acor);
-    N_VLinearSum(ONE, zn[0], ONE, acor, y);
+    del = N_VWrmsNorm(b, ark_mem->ark_ewt);
+    N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
+    N_VLinearSum(ONE, ark_mem->ark_zn[0], ONE, ark_mem->ark_acor, ark_mem->ark_y);
     
     /* Test for convergence.  If m > 0, an estimate of the convergence
        rate constant is stored in crate, and used in the test.        */
     if (m > 0) {
-      crate = MAX(CRDOWN * crate, del/delp);
+      ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del/delp);
     }
-    dcon = del * MIN(ONE, crate) / tq[4];
+    dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_tq[4];
     
     if (dcon <= ONE) {
-      acnrm = (m==0) ? del : N_VWrmsNorm(acor, ewt);
-      jcur = FALSE;
+      ark_mem->ark_acnrm = (m==0) ? del : N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
+      ark_mem->ark_jcur = FALSE;
       return(ARK_SUCCESS); /* Nonlinear system was solved successfully */
     }
     
-    mnewt = ++m;
+    ark_mem->ark_mnewt = ++m;
     
     /* Stop at maxcor iterations or if iter. seems to be diverging.
        If still not converged and Jacobian data is not current, 
        signal to try the solution again                            */
-    if ((m == maxcor) || ((m >= 2) && (del > RDIV*delp))) {
-      if ((!jcur) && (setupNonNull)) return(TRY_AGAIN);
+    if ((m == ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV*delp))) {
+      if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) return(TRY_AGAIN);
       else                           return(CONV_FAIL);
     }
     
     /* Save norm of correction, evaluate f, and loop again */
     delp = del;
-    retval = f(tn, y, ftemp, user_data);
-    nfe++;
+    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_ftemp, ark_mem->ark_user_data);
+    ark_mem->ark_nfe++;
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) {
-      if ((!jcur) && (setupNonNull)) return(TRY_AGAIN);
+      if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) return(TRY_AGAIN);
       else                           return(RHSFUNC_RECVR);
     }
 
@@ -2836,7 +2710,7 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, realtype saved_t,
   if (nflag == ARK_SUCCESS) return(DO_ERROR_TEST);
 
   /* The nonlinear soln. failed; increment ncfn and restore zn */
-  ncfn++;
+  ark_mem->ark_ncfn++;
   ARKRestore(ark_mem, saved_t);
   
   /* Return if lsetup, lsolve, or rhs failed unrecoverably */
@@ -2847,19 +2721,19 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, realtype saved_t,
   /* At this point, nflag = CONV_FAIL or RHSFUNC_RECVR; increment ncf */
   
   (*ncfPtr)++;
-  etamax = ONE;
+  ark_mem->ark_etamax = ONE;
 
   /* If we had maxncf failures or |h| = hmin, 
      return ARK_CONV_FAILURE or ARK_REPTD_RHSFUNC_ERR. */
 
-  if ((ABS(h) <= hmin*ONEPSM) || (*ncfPtr == maxncf)) {
+  if ((ABS(ark_mem->ark_h) <= ark_mem->ark_hmin*ONEPSM) || (*ncfPtr == ark_mem->ark_maxncf)) {
     if (nflag == CONV_FAIL)     return(ARK_CONV_FAILURE);
     if (nflag == RHSFUNC_RECVR) return(ARK_REPTD_RHSFUNC_ERR);    
   }
 
   /* Reduce step size; return to reattempt the step */
 
-  eta = MAX(ETACF, hmin / ABS(h));
+  ark_mem->ark_eta = MAX(ETACF, ark_mem->ark_hmin / ABS(ark_mem->ark_h));
   *nflagPtr = PREV_CONV_FAIL;
   ARKRescale(ark_mem);
 
@@ -2878,10 +2752,10 @@ static void ARKRestore(ARKodeMem ark_mem, realtype saved_t)
 {
   int j, k;
   
-  tn = saved_t;
-  for (k = 1; k <= q; k++)
-    for (j = q; j >= k; j--)
-      N_VLinearSum(ONE, zn[j-1], -ONE, zn[j], zn[j-1]);
+  ark_mem->ark_tn = saved_t;
+  for (k = 1; k <= ark_mem->ark_q; k++)
+    for (j = ark_mem->ark_q; j >= k; j--)
+      N_VLinearSum(ONE, ark_mem->ark_zn[j-1], -ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j-1]);
 }
 
 /*
@@ -2913,7 +2787,7 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   realtype dsm;
   int retval;
   
-  dsm = acnrm * tq[2];
+  dsm = ark_mem->ark_acnrm * ark_mem->ark_tq[2];
 
   /* If est. local error norm dsm passes test, return ARK_SUCCESS */  
   *dsmPtr = dsm; 
@@ -2921,51 +2795,51 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   
   /* Test failed; increment counters, set nflag, and restore zn array */
   (*nefPtr)++;
-  netf++;
+  ark_mem->ark_netf++;
   *nflagPtr = PREV_ERR_FAIL;
   ARKRestore(ark_mem, saved_t);
 
   /* At maxnef failures or |h| = hmin, return ARK_ERR_FAILURE */
-  if ((ABS(h) <= hmin*ONEPSM) || (*nefPtr == maxnef)) return(ARK_ERR_FAILURE);
+  if ((ABS(ark_mem->ark_h) <= ark_mem->ark_hmin*ONEPSM) || (*nefPtr == ark_mem->ark_maxnef)) return(ARK_ERR_FAILURE);
 
   /* Set etamax = 1 to prevent step size increase at end of this step */
-  etamax = ONE;
+  ark_mem->ark_etamax = ONE;
 
   /* Set h ratio eta from dsm, rescale, and return for retry of step */
   if (*nefPtr <= MXNEF1) {
-    eta = ONE / (RPowerR(BIAS2*dsm,ONE/L) + ADDON);
-    eta = MAX(ETAMIN, MAX(eta, hmin / ABS(h)));
-    if (*nefPtr >= SMALL_NEF) eta = MIN(eta, ETAMXF);
+    ark_mem->ark_eta = ONE / (RPowerR(BIAS2*dsm,ONE/ark_mem->ark_L) + ADDON);
+    ark_mem->ark_eta = MAX(ETAMIN, MAX(ark_mem->ark_eta, ark_mem->ark_hmin / ABS(ark_mem->ark_h)));
+    if (*nefPtr >= SMALL_NEF) ark_mem->ark_eta = MIN(ark_mem->ark_eta, ETAMXF);
     ARKRescale(ark_mem);
     return(TRY_AGAIN);
   }
   
   /* After MXNEF1 failures, force an order reduction and retry step */
-  if (q > 1) {
-    eta = MAX(ETAMIN, hmin / ABS(h));
+  if (ark_mem->ark_q > 1) {
+    ark_mem->ark_eta = MAX(ETAMIN, ark_mem->ark_hmin / ABS(ark_mem->ark_h));
     ARKAdjustOrder(ark_mem,-1);
-    L = q;
-    q--;
-    qwait = L;
+    ark_mem->ark_L = ark_mem->ark_q;
+    ark_mem->ark_q--;
+    ark_mem->ark_qwait = ark_mem->ark_L;
     ARKRescale(ark_mem);
     return(TRY_AGAIN);
   }
 
   /* If already at order 1, restart: reload zn from scratch */
 
-  eta = MAX(ETAMIN, hmin / ABS(h));
-  h *= eta;
-  next_h = h;
-  hscale = h;
-  qwait = LONG_WAIT;
-  nscon = 0;
+  ark_mem->ark_eta = MAX(ETAMIN, ark_mem->ark_hmin / ABS(ark_mem->ark_h));
+  ark_mem->ark_h *= ark_mem->ark_eta;
+  ark_mem->ark_next_h = ark_mem->ark_h;
+  ark_mem->ark_hscale = ark_mem->ark_h;
+  ark_mem->ark_qwait = LONG_WAIT;
+  ark_mem->ark_nscon = 0;
 
-  retval = f(tn, zn[0], tempv, user_data);
-  nfe++;
+  retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
+  ark_mem->ark_nfe++;
   if (retval < 0)  return(ARK_RHSFUNC_FAIL);
   if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
 
-  N_VScale(h, tempv, zn[1]);
+  N_VScale(ark_mem->ark_h, ark_mem->ark_tempv, ark_mem->ark_zn[1]);
 
   return(TRY_AGAIN);
 }
@@ -2992,22 +2866,22 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
 {
   int i, j;
   
-  nst++;
-  nscon++;
-  hu = h;
-  qu = q;
+  ark_mem->ark_nst++;
+  ark_mem->ark_nscon++;
+  ark_mem->ark_hu = ark_mem->ark_h;
+  ark_mem->ark_qu = ark_mem->ark_q;
 
-  for (i=q; i >= 2; i--)  tau[i] = tau[i-1];
-  if ((q==1) && (nst > 1)) tau[2] = tau[1];
-  tau[1] = h;
+  for (i=ark_mem->ark_q; i >= 2; i--)  ark_mem->ark_tau[i] = ark_mem->ark_tau[i-1];
+  if ((ark_mem->ark_q==1) && (ark_mem->ark_nst > 1)) ark_mem->ark_tau[2] = ark_mem->ark_tau[1];
+  ark_mem->ark_tau[1] = ark_mem->ark_h;
 
-  for (j=0; j <= q; j++) 
-    N_VLinearSum(l[j], acor, ONE, zn[j], zn[j]);
-  qwait--;
-  if ((qwait == 1) && (q != qmax)) {
-    N_VScale(ONE, acor, zn[qmax]);
-    saved_tq5 = tq[5];
-    indx_acor = qmax;
+  for (j=0; j <= ark_mem->ark_q; j++) 
+    N_VLinearSum(ark_mem->ark_l[j], ark_mem->ark_acor, ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
+  ark_mem->ark_qwait--;
+  if ((ark_mem->ark_qwait == 1) && (ark_mem->ark_q != ark_mem->ark_qmax)) {
+    N_VScale(ONE, ark_mem->ark_acor, ark_mem->ark_zn[ark_mem->ark_qmax]);
+    ark_mem->ark_saved_tq5 = ark_mem->ark_tq[5];
+    ark_mem->ark_indx_acor = ark_mem->ark_qmax;
   }
 }
 
@@ -3023,31 +2897,31 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
  static void ARKPrepareNextStep(ARKodeMem ark_mem, realtype dsm)
 {
   /* If etamax = 1, defer step size or order changes */
-  if (etamax == ONE) {
-    qwait = MAX(qwait, 2);
-    qprime = q;
-    hprime = h;
-    eta = ONE;
+  if (ark_mem->ark_etamax == ONE) {
+    ark_mem->ark_qwait = MAX(ark_mem->ark_qwait, 2);
+    ark_mem->ark_qprime = ark_mem->ark_q;
+    ark_mem->ark_hprime = ark_mem->ark_h;
+    ark_mem->ark_eta = ONE;
     return;
   }
 
   /* etaq is the ratio of new to old h at the current order */  
-  etaq = ONE /(RPowerR(BIAS2*dsm,ONE/L) + ADDON);
+  ark_mem->ark_etaq = ONE /(RPowerR(BIAS2*dsm,ONE/ark_mem->ark_L) + ADDON);
   
   /* If no order change, adjust eta and acor in ARKSetEta and return */
-  if (qwait != 0) {
-    eta = etaq;
-    qprime = q;
+  if (ark_mem->ark_qwait != 0) {
+    ark_mem->ark_eta = ark_mem->ark_etaq;
+    ark_mem->ark_qprime = ark_mem->ark_q;
     ARKSetEta(ark_mem);
     return;
   }
   
-  /* If qwait = 0, consider an order change.   etaqm1 and etaqp1 are 
+  /* If ark_mem->ark_qwait = 0, consider an order change.   etaqm1 and etaqp1 are 
      the ratios of new to old h at orders q-1 and q+1, respectively.
      ARKChooseEta selects the largest; ARKSetEta adjusts eta and acor */
-  qwait = 2;
-  etaqm1 = ARKComputeEtaqm1(ark_mem);
-  etaqp1 = ARKComputeEtaqp1(ark_mem);  
+  ark_mem->ark_qwait = 2;
+  ark_mem->ark_etaqm1 = ARKComputeEtaqm1(ark_mem);
+  ark_mem->ark_etaqp1 = ARKComputeEtaqp1(ark_mem);  
   ARKChooseEta(ark_mem); 
   ARKSetEta(ark_mem);
 }
@@ -3064,15 +2938,15 @@ static void ARKSetEta(ARKodeMem ark_mem)
 {
 
   /* If eta below the threshhold THRESH, reject a change of step size */
-  if (eta < THRESH) {
-    eta = ONE;
-    hprime = h;
+  if (ark_mem->ark_eta < THRESH) {
+    ark_mem->ark_eta = ONE;
+    ark_mem->ark_hprime = ark_mem->ark_h;
   } else {
     /* Limit eta by etamax and hmax, then set hprime */
-    eta = MIN(eta, etamax);
-    eta /= MAX(ONE, ABS(h)*hmax_inv*eta);
-    hprime = h * eta;
-    if (qprime < q) nscon = 0;
+    ark_mem->ark_eta = MIN(ark_mem->ark_eta, ark_mem->ark_etamax);
+    ark_mem->ark_eta /= MAX(ONE, ABS(ark_mem->ark_h)*ark_mem->ark_hmax_inv*ark_mem->ark_eta);
+    ark_mem->ark_hprime = ark_mem->ark_h * ark_mem->ark_eta;
+    if (ark_mem->ark_qprime < ark_mem->ark_q) ark_mem->ark_nscon = 0;
   }
   
   /* Reset etamax for the next step size change, and scale acor */
@@ -3089,12 +2963,12 @@ static realtype ARKComputeEtaqm1(ARKodeMem ark_mem)
 {
   realtype ddn;
   
-  etaqm1 = ZERO;
-  if (q > 1) {
-    ddn = N_VWrmsNorm(zn[q], ewt) * tq[1];
-    etaqm1 = ONE/(RPowerR(BIAS1*ddn, ONE/q) + ADDON);
+  ark_mem->ark_etaqm1 = ZERO;
+  if (ark_mem->ark_q > 1) {
+    ddn = N_VWrmsNorm(ark_mem->ark_zn[ark_mem->ark_q], ark_mem->ark_ewt) * ark_mem->ark_tq[1];
+    ark_mem->ark_etaqm1 = ONE/(RPowerR(BIAS1*ddn, ONE/ark_mem->ark_q) + ADDON);
   }
-  return(etaqm1);
+  return(ark_mem->ark_etaqm1);
 }
 
 /*
@@ -3108,15 +2982,15 @@ static realtype ARKComputeEtaqp1(ARKodeMem ark_mem)
 {
   realtype dup, cquot;
   
-  etaqp1 = ZERO;
-  if (q != qmax) {
-    if (saved_tq5 == ZERO) return(etaqp1);
-    cquot = (tq[5] / saved_tq5) * RPowerI(h/tau[2], L);
-    N_VLinearSum(-cquot, zn[qmax], ONE, acor, tempv);
-    dup = N_VWrmsNorm(tempv, ewt) * tq[3];
-    etaqp1 = ONE / (RPowerR(BIAS3*dup, ONE/(L+1)) + ADDON);
+  ark_mem->ark_etaqp1 = ZERO;
+  if (ark_mem->ark_q != ark_mem->ark_qmax) {
+    if (ark_mem->ark_saved_tq5 == ZERO) return(ark_mem->ark_etaqp1);
+    cquot = (ark_mem->ark_tq[5] / ark_mem->ark_saved_tq5) * RPowerI(ark_mem->ark_h/ark_mem->ark_tau[2], ark_mem->ark_L);
+    N_VLinearSum(-cquot, ark_mem->ark_zn[ark_mem->ark_qmax], ONE, ark_mem->ark_acor, ark_mem->ark_tempv);
+    dup = N_VWrmsNorm(ark_mem->ark_tempv, ark_mem->ark_ewt) * ark_mem->ark_tq[3];
+    ark_mem->ark_etaqp1 = ONE / (RPowerR(BIAS3*dup, ONE/(ark_mem->ark_L+1)) + ADDON);
   }
-  return(etaqp1);
+  return(ark_mem->ark_etaqp1);
 }
 
 /*
@@ -3135,30 +3009,30 @@ static void ARKChooseEta(ARKodeMem ark_mem)
 {
   realtype etam;
   
-  etam = MAX(etaqm1, MAX(etaq, etaqp1));
+  etam = MAX(ark_mem->ark_etaqm1, MAX(ark_mem->ark_etaq, ark_mem->ark_etaqp1));
   
   if (etam < THRESH) {
-    eta = ONE;
-    qprime = q;
+    ark_mem->ark_eta = ONE;
+    ark_mem->ark_qprime = ark_mem->ark_q;
     return;
   }
 
-  if (etam == etaq) {
+  if (etam == ark_mem->ark_etaq) {
 
-    eta = etaq;
-    qprime = q;
+    ark_mem->ark_eta = ark_mem->ark_etaq;
+    ark_mem->ark_qprime = ark_mem->ark_q;
 
-  } else if (etam == etaqm1) {
+  } else if (etam == ark_mem->ark_etaqm1) {
 
-    eta = etaqm1;
-    qprime = q - 1;
+    ark_mem->ark_eta = ark_mem->ark_etaqm1;
+    ark_mem->ark_qprime = ark_mem->ark_q - 1;
 
   } else {
 
-    eta = etaqp1;
-    qprime = q + 1;
+    ark_mem->ark_eta = ark_mem->ark_etaqp1;
+    ark_mem->ark_qprime = ark_mem->ark_q + 1;
 
-    if (lmm == ARK_BDF) {
+    if (ark_mem->ark_lmm == ARK_BDF) {
 
       /* 
        * Store Delta_n in zn[qmax] to be used in order increase 
@@ -3167,7 +3041,7 @@ static void ARKChooseEta(ARKodeMem ark_mem)
        * to order q+1, so it represents Delta_n in the ELTE at q+1
        */
 
-      N_VScale(ONE, acor, zn[qmax]);
+      N_VScale(ONE, ark_mem->ark_acor, ark_mem->ark_zn[ark_mem->ark_qmax]);
 
     }
 
@@ -3195,28 +3069,28 @@ static int ARKHandleFailure(ARKodeMem ark_mem, int flag)
   /* Depending on flag, print error message and return error flag */
   switch (flag) {
   case ARK_ERR_FAILURE: 
-    ARKProcessError(ark_mem, ARK_ERR_FAILURE, "ARKODE", "ARKode", MSGARK_ERR_FAILS, tn, h);
+    ARKProcessError(ark_mem, ARK_ERR_FAILURE, "ARKODE", "ARKode", MSGARK_ERR_FAILS, ark_mem->ark_tn, ark_mem->ark_h);
     break;
   case ARK_CONV_FAILURE:
-    ARKProcessError(ark_mem, ARK_CONV_FAILURE, "ARKODE", "ARKode", MSGARK_CONV_FAILS, tn, h);
+    ARKProcessError(ark_mem, ARK_CONV_FAILURE, "ARKODE", "ARKode", MSGARK_CONV_FAILS, ark_mem->ark_tn, ark_mem->ark_h);
     break;
   case ARK_LSETUP_FAIL:
-    ARKProcessError(ark_mem, ARK_LSETUP_FAIL, "ARKODE", "ARKode", MSGARK_SETUP_FAILED, tn);
+    ARKProcessError(ark_mem, ARK_LSETUP_FAIL, "ARKODE", "ARKode", MSGARK_SETUP_FAILED, ark_mem->ark_tn);
     break;
   case ARK_LSOLVE_FAIL:
-    ARKProcessError(ark_mem, ARK_LSOLVE_FAIL, "ARKODE", "ARKode", MSGARK_SOLVE_FAILED, tn);
+    ARKProcessError(ark_mem, ARK_LSOLVE_FAIL, "ARKODE", "ARKode", MSGARK_SOLVE_FAILED, ark_mem->ark_tn);
     break;
   case ARK_RHSFUNC_FAIL:
-    ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RHSFUNC_FAILED, tn);
+    ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
     break;
   case ARK_UNREC_RHSFUNC_ERR:
-    ARKProcessError(ark_mem, ARK_UNREC_RHSFUNC_ERR, "ARKODE", "ARKode", MSGARK_RHSFUNC_UNREC, tn);
+    ARKProcessError(ark_mem, ARK_UNREC_RHSFUNC_ERR, "ARKODE", "ARKode", MSGARK_RHSFUNC_UNREC, ark_mem->ark_tn);
     break;
   case ARK_REPTD_RHSFUNC_ERR:
-    ARKProcessError(ark_mem, ARK_REPTD_RHSFUNC_ERR, "ARKODE", "ARKode", MSGARK_RHSFUNC_REPTD, tn);
+    ARKProcessError(ark_mem, ARK_REPTD_RHSFUNC_ERR, "ARKODE", "ARKode", MSGARK_RHSFUNC_REPTD, ark_mem->ark_tn);
     break;
   case ARK_RTFUNC_FAIL:    
-    ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RTFUNC_FAILED, tn);
+    ARKProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RTFUNC_FAILED, ark_mem->ark_tn);
     break;
   case ARK_TOO_CLOSE:
     ARKProcessError(ark_mem, ARK_TOO_CLOSE, "ARKODE", "ARKode", MSGARK_TOO_CLOSE);
@@ -3255,43 +3129,43 @@ void ARKBDFStab(ARKodeMem ark_mem)
   /* If order is 3 or greater, then save scaled derivative data,
      push old data down in i, then add current values to top.    */
 
-  if (q >= 3) {
+  if (ark_mem->ark_q >= 3) {
     for (k = 1; k <= 3; k++)
-      { for (i = 5; i >= 2; i--) ssdat[i][k] = ssdat[i-1][k]; }
+      { for (i = 5; i >= 2; i--) ark_mem->ark_ssdat[i][k] = ark_mem->ark_ssdat[i-1][k]; }
     factorial = 1;
-    for (i = 1; i <= q-1; i++) factorial *= i;
-    sq = factorial*q*(q+1)*acnrm/MAX(tq[5],TINY);
-    sqm1 = factorial*q*N_VWrmsNorm(zn[q], ewt);
-    sqm2 = factorial*N_VWrmsNorm(zn[q-1], ewt);
-    ssdat[1][1] = sqm2*sqm2;
-    ssdat[1][2] = sqm1*sqm1;
-    ssdat[1][3] = sq*sq;
+    for (i = 1; i <= ark_mem->ark_q-1; i++) factorial *= i;
+    sq = factorial*ark_mem->ark_q*(ark_mem->ark_q+1)*ark_mem->ark_acnrm/MAX(ark_mem->ark_tq[5],TINY);
+    sqm1 = factorial*ark_mem->ark_q*N_VWrmsNorm(ark_mem->ark_zn[ark_mem->ark_q], ark_mem->ark_ewt);
+    sqm2 = factorial*N_VWrmsNorm(ark_mem->ark_zn[ark_mem->ark_q-1], ark_mem->ark_ewt);
+    ark_mem->ark_ssdat[1][1] = sqm2*sqm2;
+    ark_mem->ark_ssdat[1][2] = sqm1*sqm1;
+    ark_mem->ark_ssdat[1][3] = sq*sq;
   }  
 
-  if (qprime >= q) {
+  if (ark_mem->ark_qprime >= ark_mem->ark_q) {
 
     /* If order is 3 or greater, and enough ssdat has been saved,
        nscon >= q+5, then call stability limit detection routine.  */
 
-    if ( (q >= 3) && (nscon >= q+5) ) {
+    if ( (ark_mem->ark_q >= 3) && (ark_mem->ark_nscon >= ark_mem->ark_q+5) ) {
       ldflag = ARKsldet(ark_mem);
       if (ldflag > 3) {
         /* A stability limit violation is indicated by
            a return flag of 4, 5, or 6.
            Reduce new order.                     */
-        qprime = q-1;
-        eta = etaqm1; 
-        eta = MIN(eta,etamax);
-        eta = eta/MAX(ONE,ABS(h)*hmax_inv*eta);
-        hprime = h*eta;
-        nor = nor + 1;
+        ark_mem->ark_qprime = ark_mem->ark_q-1;
+        ark_mem->ark_eta = ark_mem->ark_etaqm1; 
+        ark_mem->ark_eta = MIN(ark_mem->ark_eta,ark_mem->ark_etamax);
+        ark_mem->ark_eta = ark_mem->ark_eta/MAX(ONE,ABS(ark_mem->ark_h)*ark_mem->ark_hmax_inv*ark_mem->ark_eta);
+        ark_mem->ark_hprime = ark_mem->ark_h*ark_mem->ark_eta;
+        ark_mem->ark_nor = ark_mem->ark_nor + 1;
       }
     }
   }
   else {
     /* Otherwise, let order increase happen, and 
        reset stability limit counter, nscon.     */
-    nscon = 0;
+    ark_mem->ark_nscon = 0;
   }
 }
 
@@ -3364,12 +3238,12 @@ static int ARKsldet(ARKodeMem ark_mem)
   /* get maxima, minima, and variances, and form quartic coefficients  */
   
   for (k=1; k<=3; k++) {
-    smink = ssdat[1][k];
+    smink = ark_mem->ark_ssdat[1][k];
     smaxk = ZERO;
     
     for (i=1; i<=5; i++) {
-      smink = MIN(smink,ssdat[i][k]);
-      smaxk = MAX(smaxk,ssdat[i][k]);
+      smink = MIN(smink,ark_mem->ark_ssdat[i][k]);
+      smaxk = MAX(smaxk,ark_mem->ark_ssdat[i][k]);
     }
     
     if (smink < TINY*smaxk) {
@@ -3382,18 +3256,18 @@ static int ARKsldet(ARKodeMem ark_mem)
     sumrat = ZERO;
     sumrsq = ZERO;
     for (i=1; i<=4; i++) {
-      rat[i][k] = ssdat[i][k]/ssdat[i+1][k];
+      rat[i][k] = ark_mem->ark_ssdat[i][k]/ark_mem->ark_ssdat[i+1][k];
       sumrat = sumrat + rat[i][k];
       sumrsq = sumrsq + rat[i][k]*rat[i][k];
     } 
     rav[k] = FOURTH*sumrat;
     vrat[k] = ABS(FOURTH*sumrsq - rav[k]*rav[k]);
     
-    qc[5][k] = ssdat[1][k]*ssdat[3][k] - ssdat[2][k]*ssdat[2][k];
-    qc[4][k] = ssdat[2][k]*ssdat[3][k] - ssdat[1][k]*ssdat[4][k];
+    qc[5][k] = ark_mem->ark_ssdat[1][k]*ark_mem->ark_ssdat[3][k] - ark_mem->ark_ssdat[2][k]*ark_mem->ark_ssdat[2][k];
+    qc[4][k] = ark_mem->ark_ssdat[2][k]*ark_mem->ark_ssdat[3][k] - ark_mem->ark_ssdat[1][k]*ark_mem->ark_ssdat[4][k];
     qc[3][k] = ZERO;
-    qc[2][k] = ssdat[2][k]*ssdat[5][k] - ssdat[3][k]*ssdat[4][k];
-    qc[1][k] = ssdat[4][k]*ssdat[4][k] - ssdat[3][k]*ssdat[5][k];
+    qc[2][k] = ark_mem->ark_ssdat[2][k]*ark_mem->ark_ssdat[5][k] - ark_mem->ark_ssdat[3][k]*ark_mem->ark_ssdat[4][k];
+    qc[1][k] = ark_mem->ark_ssdat[4][k]*ark_mem->ark_ssdat[4][k] - ark_mem->ark_ssdat[3][k]*ark_mem->ark_ssdat[5][k];
     
     for (i=1; i<=5; i++) {
       qco[i][k] = qc[i][k];
@@ -3408,7 +3282,7 @@ static int ARKsldet(ARKodeMem ark_mem)
   vmin = MIN(vrat[1],MIN(vrat[2],vrat[3]));
   vmax = MAX(vrat[1],MAX(vrat[2],vrat[3]));
   
-  if(vmin < vrrtol*vrrtol) {
+  if (vmin < vrrtol*vrrtol) {
     if (vmax > vrrt2*vrrt2) {
       kflag = -2;  
       return(kflag);
@@ -3537,16 +3411,16 @@ static int ARKsldet(ARKodeMem ark_mem)
         return(kflag);
       }
     }     /*  end of if (sqmax < sqtol) else   */
-  }      /*  end of if(vmin < vrrtol*vrrtol) else, quartics to get rr. */
+  }      /*  end of if (vmin < vrrtol*vrrtol) else, quartics to get rr. */
   
   /* given rr, find sigsq[k] and verify rr.  */
   /* All positive kflag drop to this section  */
   
   for(k=1; k<=3; k++) {
-    rsa = ssdat[1][k];
-    rsb = ssdat[2][k]*rr;
-    rsc = ssdat[3][k]*rr*rr;
-    rsd = ssdat[4][k]*rr*rr*rr;
+    rsa = ark_mem->ark_ssdat[1][k];
+    rsb = ark_mem->ark_ssdat[2][k]*rr;
+    rsc = ark_mem->ark_ssdat[3][k]*rr*rr;
+    rsd = ark_mem->ark_ssdat[4][k]*rr*rr*rr;
     rd1a = rsa - rsb;
     rd1b = rsb - rsc;
     rd1c = rsc - rsd;
@@ -3565,7 +3439,7 @@ static int ARKsldet(ARKodeMem ark_mem)
       return(kflag);
     }
     corr1 = (rd2b/cest1)/(rr*rr);
-    sigsq[k] = ssdat[3][k] + corr1;
+    sigsq[k] = ark_mem->ark_ssdat[3][k] + corr1;
   }
   
   if (sigsq[2] < TINY) {
@@ -3575,8 +3449,8 @@ static int ARKsldet(ARKodeMem ark_mem)
   
   ratp = sigsq[3]/sigsq[2];
   ratm = sigsq[1]/sigsq[2];
-  qfac1 = FOURTH*(q*q - ONE);
-  qfac2 = TWO/(q - ONE);
+  qfac1 = FOURTH*(ark_mem->ark_q*ark_mem->ark_q - ONE);
+  qfac2 = TWO/(ark_mem->ark_q - ONE);
   bb = ratp*ratm - ONE - qfac1*ratp;
   tem = ONE - qfac2*bb;
   
@@ -3631,39 +3505,39 @@ static int ARKRcheck1(ARKodeMem ark_mem)
   realtype smallh, hratio, tplus;
   booleantype zroot;
 
-  for (i = 0; i < nrtfn; i++) iroots[i] = 0;
-  tlo = tn;
-  ttol = (ABS(tn) + ABS(h))*uround*HUN;
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_iroots[i] = 0;
+  ark_mem->ark_tlo = ark_mem->ark_tn;
+  ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUN;
 
   /* Evaluate g at initial t and check for zero values. */
-  retval = gfun(tlo, zn[0], glo, user_data);
-  nge = 1;
+  retval = ark_mem->ark_gfun(ark_mem->ark_tlo, ark_mem->ark_zn[0], ark_mem->ark_glo, ark_mem->ark_user_data);
+  ark_mem->ark_nge = 1;
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
   zroot = FALSE;
-  for (i = 0; i < nrtfn; i++) {
-    if (ABS(glo[i]) == ZERO) {
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) {
+    if (ABS(ark_mem->ark_glo[i]) == ZERO) {
       zroot = TRUE;
-      gactive[i] = FALSE;
+      ark_mem->ark_gactive[i] = FALSE;
     }
   }
   if (!zroot) return(ARK_SUCCESS);
 
   /* Some g_i is zero at t0; look at g at t0+(small increment). */
-  hratio = MAX(ttol/ABS(h), TENTH);
-  smallh = hratio*h;
-  tplus = tlo + smallh;
-  N_VLinearSum(ONE, zn[0], hratio, zn[1], y);
-  retval = gfun(tplus, y, ghi, user_data);
-  nge++;
+  hratio = MAX(ark_mem->ark_ttol/ABS(ark_mem->ark_h), TENTH);
+  smallh = hratio*ark_mem->ark_h;
+  tplus = ark_mem->ark_tlo + smallh;
+  N_VLinearSum(ONE, ark_mem->ark_zn[0], hratio, ark_mem->ark_zn[1], ark_mem->ark_y);
+  retval = ark_mem->ark_gfun(tplus, ark_mem->ark_y, ark_mem->ark_ghi, ark_mem->ark_user_data);
+  ark_mem->ark_nge++;
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
   /* We check now only the components of g which were exactly 0.0 at t0
    * to see if we can 'activate' them. */
-  for (i = 0; i < nrtfn; i++) {
-    if (!gactive[i] && ABS(ghi[i]) != ZERO) {
-      gactive[i] = TRUE;
-      glo[i] = ghi[i];
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) {
+    if (!ark_mem->ark_gactive[i] && ABS(ark_mem->ark_ghi[i]) != ZERO) {
+      ark_mem->ark_gactive[i] = TRUE;
+      ark_mem->ark_glo[i] = ark_mem->ark_ghi[i];
     }
   }
   return(ARK_SUCCESS);
@@ -3696,49 +3570,49 @@ static int ARKRcheck2(ARKodeMem ark_mem)
   realtype smallh, hratio, tplus;
   booleantype zroot;
 
-  if (irfnd == 0) return(ARK_SUCCESS);
+  if (ark_mem->ark_irfnd == 0) return(ARK_SUCCESS);
 
-  (void) ARKodeGetDky(ark_mem, tlo, 0, y);
-  retval = gfun(tlo, y, glo, user_data);
-  nge++;
+  (void) ARKodeGetDky(ark_mem, ark_mem->ark_tlo, 0, ark_mem->ark_y);
+  retval = ark_mem->ark_gfun(ark_mem->ark_tlo, ark_mem->ark_y, ark_mem->ark_glo, ark_mem->ark_user_data);
+  ark_mem->ark_nge++;
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
   zroot = FALSE;
-  for (i = 0; i < nrtfn; i++) iroots[i] = 0;
-  for (i = 0; i < nrtfn; i++) {
-    if (!gactive[i]) continue;
-    if (ABS(glo[i]) == ZERO) {
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_iroots[i] = 0;
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) {
+    if (!ark_mem->ark_gactive[i]) continue;
+    if (ABS(ark_mem->ark_glo[i]) == ZERO) {
       zroot = TRUE;
-      iroots[i] = 1;
+      ark_mem->ark_iroots[i] = 1;
     }
   }
   if (!zroot) return(ARK_SUCCESS);
 
   /* One or more g_i has a zero at tlo.  Check g at tlo+smallh. */
-  ttol = (ABS(tn) + ABS(h))*uround*HUN;
-  smallh = (h > ZERO) ? ttol : -ttol;
-  tplus = tlo + smallh;
-  if ( (tplus - tn)*h >= ZERO) {
-    hratio = smallh/h;
-    N_VLinearSum(ONE, y, hratio, zn[1], y);
+  ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUN;
+  smallh = (ark_mem->ark_h > ZERO) ? ark_mem->ark_ttol : -ark_mem->ark_ttol;
+  tplus = ark_mem->ark_tlo + smallh;
+  if ( (tplus - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO) {
+    hratio = smallh/ark_mem->ark_h;
+    N_VLinearSum(ONE, ark_mem->ark_y, hratio, ark_mem->ark_zn[1], ark_mem->ark_y);
   } else {
-    (void) ARKodeGetDky(ark_mem, tplus, 0, y);
+    (void) ARKodeGetDky(ark_mem, tplus, 0, ark_mem->ark_y);
   }
-  retval = gfun(tplus, y, ghi, user_data);
-  nge++;
+  retval = ark_mem->ark_gfun(tplus, ark_mem->ark_y, ark_mem->ark_ghi, ark_mem->ark_user_data);
+  ark_mem->ark_nge++;
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
   /* Check for close roots (error return), for a new zero at tlo+smallh,
   and for a g_i that changed from zero to nonzero. */
   zroot = FALSE;
-  for (i = 0; i < nrtfn; i++) {
-    if (ABS(ghi[i]) == ZERO) {
-      if (!gactive[i]) continue;
-      if (iroots[i] == 1) return(CLOSERT);
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) {
+    if (ABS(ark_mem->ark_ghi[i]) == ZERO) {
+      if (!ark_mem->ark_gactive[i]) continue;
+      if (ark_mem->ark_iroots[i] == 1) return(CLOSERT);
       zroot = TRUE;
-      iroots[i] = 1;
+      ark_mem->ark_iroots[i] = 1;
     } else {
-      if (iroots[i] == 1) glo[i] = ghi[i];
+      if (ark_mem->ark_iroots[i] == 1) ark_mem->ark_glo[i] = ark_mem->ark_ghi[i];
     }
   }
   if (zroot) return(RTFOUND);
@@ -3763,39 +3637,39 @@ static int ARKRcheck3(ARKodeMem ark_mem)
   int i, retval, ier;
 
   /* Set thi = tn or tout, whichever comes first; set y = y(thi). */
-  if (taskc == ARK_ONE_STEP) {
-    thi = tn;
-    N_VScale(ONE, zn[0], y);
+  if (ark_mem->ark_taskc == ARK_ONE_STEP) {
+    ark_mem->ark_thi = ark_mem->ark_tn;
+    N_VScale(ONE, ark_mem->ark_zn[0], ark_mem->ark_y);
   }
-  if (taskc == ARK_NORMAL) {
-    if ( (toutc - tn)*h >= ZERO) {
-      thi = tn; 
-      N_VScale(ONE, zn[0], y);
+  if (ark_mem->ark_taskc == ARK_NORMAL) {
+    if ( (ark_mem->ark_toutc - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO) {
+      ark_mem->ark_thi = ark_mem->ark_tn; 
+      N_VScale(ONE, ark_mem->ark_zn[0], ark_mem->ark_y);
     } else {
-      thi = toutc;
-      (void) ARKodeGetDky(ark_mem, thi, 0, y);
+      ark_mem->ark_thi = ark_mem->ark_toutc;
+      (void) ARKodeGetDky(ark_mem, ark_mem->ark_thi, 0, ark_mem->ark_y);
     }
   }
 
-  /* Set ghi = g(thi) and call ARKRootfind to search (tlo,thi) for roots. */
-  retval = gfun(thi, y, ghi, user_data);
-  nge++;
+  /* Set ark_mem->ark_ghi = g(thi) and call ARKRootfind to search (tlo,thi) for roots. */
+  retval = ark_mem->ark_gfun(ark_mem->ark_thi, ark_mem->ark_y, ark_mem->ark_ghi, ark_mem->ark_user_data);
+  ark_mem->ark_nge++;
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
-  ttol = (ABS(tn) + ABS(h))*uround*HUN;
+  ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUN;
   ier = ARKRootfind(ark_mem);
   if (ier == ARK_RTFUNC_FAIL) return(ARK_RTFUNC_FAIL);
-  for(i=0; i<nrtfn; i++) {
-    if(!gactive[i] && grout[i] != ZERO) gactive[i] = TRUE;
+  for(i=0; i<ark_mem->ark_nrtfn; i++) {
+    if (!ark_mem->ark_gactive[i] && ark_mem->ark_grout[i] != ZERO) ark_mem->ark_gactive[i] = TRUE;
   }
-  tlo = trout;
-  for (i = 0; i < nrtfn; i++) glo[i] = grout[i];
+  ark_mem->ark_tlo = ark_mem->ark_trout;
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_glo[i] = ark_mem->ark_grout[i];
 
   /* If no root found, return ARK_SUCCESS. */  
   if (ier == ARK_SUCCESS) return(ARK_SUCCESS);
 
   /* If a root was found, interpolate to get y(trout) and return.  */
-  (void) ARKodeGetDky(ark_mem, trout, 0, y);
+  (void) ARKodeGetDky(ark_mem, ark_mem->ark_trout, 0, ark_mem->ark_y);
   return(RTFOUND);
 
 }
@@ -3889,15 +3763,15 @@ static int ARKRootfind(ARKodeMem ark_mem)
   maxfrac = ZERO;
   zroot = FALSE;
   sgnchg = FALSE;
-  for (i = 0;  i < nrtfn; i++) {
-    if(!gactive[i]) continue;
-    if (ABS(ghi[i]) == ZERO) {
-      if(rootdir[i]*glo[i] <= ZERO) {
+  for (i = 0;  i < ark_mem->ark_nrtfn; i++) {
+    if (!ark_mem->ark_gactive[i]) continue;
+    if (ABS(ark_mem->ark_ghi[i]) == ZERO) {
+      if (ark_mem->ark_rootdir[i]*ark_mem->ark_glo[i] <= ZERO) {
         zroot = TRUE;
       }
     } else {
-      if ( (glo[i]*ghi[i] < ZERO) && (rootdir[i]*glo[i] <= ZERO) ) {
-        gfrac = ABS(ghi[i]/(ghi[i] - glo[i]));
+      if ( (ark_mem->ark_glo[i]*ark_mem->ark_ghi[i] < ZERO) && (ark_mem->ark_rootdir[i]*ark_mem->ark_glo[i] <= ZERO) ) {
+        gfrac = ABS(ark_mem->ark_ghi[i]/(ark_mem->ark_ghi[i] - ark_mem->ark_glo[i]));
         if (gfrac > maxfrac) {
           sgnchg = TRUE;
           maxfrac = gfrac;
@@ -3910,13 +3784,13 @@ static int ARKRootfind(ARKodeMem ark_mem)
   /* If no sign change was found, reset trout and grout.  Then return
      ARK_SUCCESS if no zero was found, or set iroots and return RTFOUND.  */ 
   if (!sgnchg) {
-    trout = thi;
-    for (i = 0; i < nrtfn; i++) grout[i] = ghi[i];
+    ark_mem->ark_trout = ark_mem->ark_thi;
+    for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_grout[i] = ark_mem->ark_ghi[i];
     if (!zroot) return(ARK_SUCCESS);
-    for (i = 0; i < nrtfn; i++) {
-      iroots[i] = 0;
-      if(!gactive[i]) continue;
-      if (ABS(ghi[i]) == ZERO) iroots[i] = glo[i] > 0 ? -1:1;
+    for (i = 0; i < ark_mem->ark_nrtfn; i++) {
+      ark_mem->ark_iroots[i] = 0;
+      if (!ark_mem->ark_gactive[i]) continue;
+      if (ABS(ark_mem->ark_ghi[i]) == ZERO) ark_mem->ark_iroots[i] = ark_mem->ark_glo[i] > 0 ? -1:1;
     }
     return(RTFOUND);
   }
@@ -3927,7 +3801,7 @@ static int ARKRootfind(ARKodeMem ark_mem)
   /* A sign change was found.  Loop to locate nearest root. */
 
   side = 0;  sideprev = -1;
-  loop {                                    /* Looping point */
+  for(;;) {                                    /* Looping point */
 
     /* Set weight alpha.
        On the first two passes, set alpha = 1.  Thereafter, reset alpha
@@ -3948,21 +3822,21 @@ static int ARKRootfind(ARKodeMem ark_mem)
     /* Set next root approximation tmid and get g(tmid).
        If tmid is too close to tlo or thi, adjust it inward,
        by a fractional distance that is between 0.1 and 0.5.  */
-    tmid = thi - (thi - tlo)*ghi[imax]/(ghi[imax] - alpha*glo[imax]);
-    if (ABS(tmid - tlo) < HALF*ttol) {
-      fracint = ABS(thi - tlo)/ttol;
+    tmid = ark_mem->ark_thi - (ark_mem->ark_thi - ark_mem->ark_tlo)*ark_mem->ark_ghi[imax]/(ark_mem->ark_ghi[imax] - alpha*ark_mem->ark_glo[imax]);
+    if (ABS(tmid - ark_mem->ark_tlo) < HALF*ark_mem->ark_ttol) {
+      fracint = ABS(ark_mem->ark_thi - ark_mem->ark_tlo)/ark_mem->ark_ttol;
       fracsub = (fracint > FIVE) ? TENTH : HALF/fracint;
-      tmid = tlo + fracsub*(thi - tlo);
+      tmid = ark_mem->ark_tlo + fracsub*(ark_mem->ark_thi - ark_mem->ark_tlo);
     }
-    if (ABS(thi - tmid) < HALF*ttol) {
-      fracint = ABS(thi - tlo)/ttol;
+    if (ABS(ark_mem->ark_thi - tmid) < HALF*ark_mem->ark_ttol) {
+      fracint = ABS(ark_mem->ark_thi - ark_mem->ark_tlo)/ark_mem->ark_ttol;
       fracsub = (fracint > FIVE) ? TENTH : HALF/fracint;
-      tmid = thi - fracsub*(thi - tlo);
+      tmid = ark_mem->ark_thi - fracsub*(ark_mem->ark_thi - ark_mem->ark_tlo);
     }
 
-    (void) ARKodeGetDky(ark_mem, tmid, 0, y);
-    retval = gfun(tmid, y, grout, user_data);
-    nge++;
+    (void) ARKodeGetDky(ark_mem, tmid, 0, ark_mem->ark_y);
+    retval = ark_mem->ark_gfun(tmid, ark_mem->ark_y, ark_mem->ark_grout, ark_mem->ark_user_data);
+    ark_mem->ark_nge++;
     if (retval != 0) return(ARK_RTFUNC_FAIL);
 
     /* Check to see in which subinterval g changes sign, and reset imax.
@@ -3971,15 +3845,15 @@ static int ARKRootfind(ARKodeMem ark_mem)
     zroot = FALSE;
     sgnchg = FALSE;
     sideprev = side;
-    for (i = 0;  i < nrtfn; i++) {
-      if(!gactive[i]) continue;
-      if (ABS(grout[i]) == ZERO) {
-        if(rootdir[i]*glo[i] <= ZERO) {
+    for (i = 0;  i < ark_mem->ark_nrtfn; i++) {
+      if (!ark_mem->ark_gactive[i]) continue;
+      if (ABS(ark_mem->ark_grout[i]) == ZERO) {
+        if (ark_mem->ark_rootdir[i]*ark_mem->ark_glo[i] <= ZERO) {
           zroot = TRUE;
         }
       } else {
-        if ( (glo[i]*grout[i] < ZERO) && (rootdir[i]*glo[i] <= ZERO) ) {
-          gfrac = ABS(grout[i]/(grout[i] - glo[i]));
+        if ( (ark_mem->ark_glo[i]*ark_mem->ark_grout[i] < ZERO) && (ark_mem->ark_rootdir[i]*ark_mem->ark_glo[i] <= ZERO) ) {
+          gfrac = ABS(ark_mem->ark_grout[i]/(ark_mem->ark_grout[i] - ark_mem->ark_glo[i]));
           if (gfrac > maxfrac) {
             sgnchg = TRUE;
             maxfrac = gfrac;
@@ -3990,41 +3864,41 @@ static int ARKRootfind(ARKodeMem ark_mem)
     }
     if (sgnchg) {
       /* Sign change found in (tlo,tmid); replace thi with tmid. */
-      thi = tmid;
-      for (i = 0; i < nrtfn; i++) ghi[i] = grout[i];
+      ark_mem->ark_thi = tmid;
+      for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_ghi[i] = ark_mem->ark_grout[i];
       side = 1;
       /* Stop at root thi if converged; otherwise loop. */
-      if (ABS(thi - tlo) <= ttol) break;
+      if (ABS(ark_mem->ark_thi - ark_mem->ark_tlo) <= ark_mem->ark_ttol) break;
       continue;  /* Return to looping point. */
     }
 
     if (zroot) {
       /* No sign change in (tlo,tmid), but g = 0 at tmid; return root tmid. */
-      thi = tmid;
-      for (i = 0; i < nrtfn; i++) ghi[i] = grout[i];
+      ark_mem->ark_thi = tmid;
+      for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_ghi[i] = ark_mem->ark_grout[i];
       break;
     }
 
     /* No sign change in (tlo,tmid), and no zero at tmid.
        Sign change must be in (tmid,thi).  Replace tlo with tmid. */
-    tlo = tmid;
-    for (i = 0; i < nrtfn; i++) glo[i] = grout[i];
+    ark_mem->ark_tlo = tmid;
+    for (i = 0; i < ark_mem->ark_nrtfn; i++) ark_mem->ark_glo[i] = ark_mem->ark_grout[i];
     side = 2;
     /* Stop at root thi if converged; otherwise loop back. */
-    if (ABS(thi - tlo) <= ttol) break;
+    if (ABS(ark_mem->ark_thi - ark_mem->ark_tlo) <= ark_mem->ark_ttol) break;
 
   } /* End of root-search loop */
 
   /* Reset trout and grout, set iroots, and return RTFOUND. */
-  trout = thi;
-  for (i = 0; i < nrtfn; i++) {
-    grout[i] = ghi[i];
-    iroots[i] = 0;
-    if(!gactive[i]) continue;
-    if ( (ABS(ghi[i]) == ZERO) && (rootdir[i]*glo[i] <= ZERO) ) 
-      iroots[i] = glo[i] > 0 ? -1:1;
-    if ( (glo[i]*ghi[i] < ZERO) && (rootdir[i]*glo[i] <= ZERO) ) 
-      iroots[i] = glo[i] > 0 ? -1:1;
+  ark_mem->ark_trout = ark_mem->ark_thi;
+  for (i = 0; i < ark_mem->ark_nrtfn; i++) {
+    ark_mem->ark_grout[i] = ark_mem->ark_ghi[i];
+    ark_mem->ark_iroots[i] = 0;
+    if (!ark_mem->ark_gactive[i]) continue;
+    if ( (ABS(ark_mem->ark_ghi[i]) == ZERO) && (ark_mem->ark_rootdir[i]*ark_mem->ark_glo[i] <= ZERO) ) 
+      ark_mem->ark_iroots[i] = ark_mem->ark_glo[i] > 0 ? -1:1;
+    if ( (ark_mem->ark_glo[i]*ark_mem->ark_ghi[i] < ZERO) && (ark_mem->ark_rootdir[i]*ark_mem->ark_glo[i] <= ZERO) ) 
+      ark_mem->ark_iroots[i] = ark_mem->ark_glo[i] > 0 ? -1:1;
   }
   return(RTFOUND);
 }
@@ -4062,7 +3936,7 @@ int ARKEwtSet(N_Vector ycur, N_Vector weight, void *data)
 
   ark_mem = (ARKodeMem) data;
 
-  switch(itol) {
+  switch(ark_mem->ark_itol) {
   case ARK_SS: 
     flag = ARKEwtSetSS(ark_mem, ycur, weight);
     break;
@@ -4085,11 +3959,11 @@ int ARKEwtSet(N_Vector ycur, N_Vector weight, void *data)
 
 static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 {
-  N_VAbs(ycur, tempv);
-  N_VScale(reltol, tempv, tempv);
-  N_VAddConst(tempv, Sabstol, tempv);
-  if (N_VMin(tempv) <= ZERO) return(-1);
-  N_VInv(tempv, weight);
+  N_VAbs(ycur, ark_mem->ark_tempv);
+  N_VScale(ark_mem->ark_reltol, ark_mem->ark_tempv, ark_mem->ark_tempv);
+  N_VAddConst(ark_mem->ark_tempv, ark_mem->ark_Sabstol, ark_mem->ark_tempv);
+  if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
+  N_VInv(ark_mem->ark_tempv, weight);
   return(0);
 }
 
@@ -4104,10 +3978,10 @@ static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 
 static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 {
-  N_VAbs(ycur, tempv);
-  N_VLinearSum(reltol, tempv, ONE, Vabstol, tempv);
-  if (N_VMin(tempv) <= ZERO) return(-1);
-  N_VInv(tempv, weight);
+  N_VAbs(ycur, ark_mem->ark_tempv);
+  N_VLinearSum(ark_mem->ark_reltol, ark_mem->ark_tempv, ONE, ark_mem->ark_Vabstol, ark_mem->ark_tempv);
+  if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
+  N_VInv(ark_mem->ark_tempv, weight);
   return(0);
 }
 
@@ -4120,12 +3994,9 @@ static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 /* 
  * ARKProcessError is a high level error handling function
  * - if ark_mem==NULL it prints the error message to stderr
- * - otherwise, it sets-up and calls the error hadling function 
+ * - otherwise, it sets-up and calls the error handling function 
  *   pointed to by ark_ehfun
  */
-
-#define ehfun    (ark_mem->ark_ehfun)
-#define eh_data  (ark_mem->ark_eh_data)
 
 void ARKProcessError(ARKodeMem ark_mem, 
                     int error_code, const char *module, const char *fname, 
@@ -4155,7 +4026,7 @@ void ARKProcessError(ARKodeMem ark_mem,
 
     /* Call ehfun */
 
-    ehfun(error_code, module, fname, msg, eh_data);
+    ark_mem->ark_ehfun(error_code, module, fname, msg, ark_mem->ark_eh_data);
 
   }
 
@@ -4169,8 +4040,6 @@ void ARKProcessError(ARKodeMem ark_mem,
 
 /* ARKErrHandler is the default error handling function.
    It sends the error message to the stream pointed to by ark_errfp */
-
-#define errfp    (ark_mem->ark_errfp)
 
 void ARKErrHandler(int error_code, const char *module,
                   const char *function, char *msg, void *data)
@@ -4188,9 +4057,9 @@ void ARKErrHandler(int error_code, const char *module,
     sprintf(err_type,"ERROR");
 
 #ifndef NO_FPRINTF_OUTPUT
-  if (errfp!=NULL) {
-    fprintf(errfp,"\n[%s %s]  %s\n",module,err_type,function);
-    fprintf(errfp,"  %s\n\n",msg);
+  if (ark_mem->ark_errfp!=NULL) {
+    fprintf(ark_mem->ark_errfp,"\n[%s %s]  %s\n",module,err_type,function);
+    fprintf(ark_mem->ark_errfp,"  %s\n\n",msg);
   }
 #endif
 
