@@ -326,6 +326,9 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  *                          | which the solution is not to proceed.
  *                          | [infinity]
  *                          |
+ * ARKodeSetAdapMethod      | Method to use for time step adaptivity
+ *                          | [0]
+ *                          |
  * ARKodeSetAdaptivityFn    | user-provided time step adaptivity function.
  *                          | [internal]
  *                          |
@@ -344,6 +347,10 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  * ARKodeSetNonlinConvCoef  | Coefficient in the nonlinear
  *                          | convergence test.
  *                          | [0.1]
+ *                          |
+ * ARKodeSetPredictMethod   | Method to use for prediction of new-time
+ *                          | solutions
+ *                          | [0]
  *                          |
  * -----------------------------------------------------------------
  *                             |
@@ -379,11 +386,14 @@ SUNDIALS_EXPORT int ARKodeSetInitStep(void *arkode_mem, realtype hin);
 SUNDIALS_EXPORT int ARKodeSetMinStep(void *arkode_mem, realtype hmin);
 SUNDIALS_EXPORT int ARKodeSetMaxStep(void *arkode_mem, realtype hmax);
 SUNDIALS_EXPORT int ARKodeSetStopTime(void *arkode_mem, realtype tstop);
+SUNDIALS_EXPORT int ARKodeSetAdaptMethod(void *arkode_mem, int imethod, 
+					 realtype *adapt_params);
 SUNDIALS_EXPORT int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun);
 SUNDIALS_EXPORT int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef);
 SUNDIALS_EXPORT int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor);
 SUNDIALS_EXPORT int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf);
 SUNDIALS_EXPORT int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef);
+SUNDIALS_EXPORT int ARKodeSetPredictMethod(void *arkode_mem, int imethod);
 
 SUNDIALS_EXPORT int ARKodeSetRootDirection(void *arkode_mem, int *rootdir);
 SUNDIALS_EXPORT int ARKodeSetNoInactiveRootWarn(void *arkode_mem);
