@@ -49,6 +49,14 @@ extern "C" {
  *        and return the solution at the point reached by that step.
  * ----------------------------------------------------------------- */
 
+/* flags to delete */
+#define ARK_ADAMS      0
+#define ARK_BDF        1
+#define ARK_FUNCTIONAL 0
+#define ARK_NEWTON     1
+
+
+
 /* itask */
 #define ARK_NORMAL         1
 #define ARK_ONE_STEP       2

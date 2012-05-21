@@ -10,7 +10,10 @@ b3_test = 1;  % brusselator test 3
 v1_test = 1;  % van der Pol test 1
 v2_test = 1;  % van der Pol test 2
 v3_test = 1;  % van der Pol test 3
-tests = [b1_test, b2_test, b3_test, v1_test, v2_test, v3_test];
+a1_test = 1;  % analytical  test 1
+a2_test = 1;  % analytical  test 2
+a3_test = 1;  % analytical  test 3
+tests = [b1_test, b2_test, b3_test, v1_test, v2_test, v3_test, a1_test, a2_test, a3_test];
 
 % methods to use
 ode15s_meth = 1;
@@ -255,6 +258,94 @@ for i_test = 1:length(tests)
              set(gca,'FontSize',12)
              print('-depsc','vanderPol3')
           end
+          
+          
+        case(7)  % analytical test 1
+          fprintf('\nAnalytical\n')
+          fn = 'f_analytic';
+          Jn = 'J_analytic';
+          fi = 'fi_analytic';
+          fe = 'fe_analytic';
+          Ji = 'Ji_analytic';
+          Es = 'EStab_analytic';
+          Tf = 10;
+          tout = linspace(0,Tf,11);
+          rtol = 1e-2;
+          atol = 1e-14*ones(1,1);
+          global Pdata;
+          Pdata.ep = 1e-3;
+          Y0 = 0;
+          
+          % plot "true" solution
+          if (show_plots == 1)
+             t = tout;
+             Ytrue = atan(tout);
+             figure()
+             plot(tout,Ytrue)
+             xlabel('t','FontSize',12), ylabel('y','FontSize',12)
+             title('Analytic Test 1','FontSize',14)
+             set(gca,'FontSize',12)
+             print('-depsc','analytic3')
+          end
+
+        
+        case(8)  % analytical test 2
+          fprintf('\nAnalytical\n')
+          fn = 'f_analytic';
+          Jn = 'J_analytic';
+          fi = 'fi_analytic';
+          fe = 'fe_analytic';
+          Ji = 'Ji_analytic';
+          Es = 'EStab_analytic';
+          Tf = 10;
+          tout = linspace(0,Tf,11);
+          rtol = 1e-2;
+          atol = 1e-14*ones(1,1);
+          global Pdata;
+          Pdata.ep = 1e-4;
+          Y0 = 0;
+          
+          % plot "true" solution
+          if (show_plots == 1)
+             t = tout;
+             Ytrue = atan(tout);
+             figure()
+             plot(tout,Ytrue)
+             xlabel('t','FontSize',12), ylabel('y','FontSize',12)
+             title('Analytic Test 2','FontSize',14)
+             set(gca,'FontSize',12)
+             print('-depsc','analytic3')
+          end
+
+        
+        case(9)  % analytical test 3
+          fprintf('\nAnalytical\n')
+          fn = 'f_analytic';
+          Jn = 'J_analytic';
+          fi = 'fi_analytic';
+          fe = 'fe_analytic';
+          Ji = 'Ji_analytic';
+          Es = 'EStab_analytic';
+          Tf = 10;
+          tout = linspace(0,Tf,11);
+          rtol = 1e-2;
+          atol = 1e-14*ones(1,1);
+          global Pdata;
+          Pdata.ep = 1e-5;
+          Y0 = 0;
+          
+          % plot "true" solution
+          if (show_plots == 1)
+             t = tout;
+             Ytrue = atan(tout);
+             figure()
+             plot(tout,Ytrue)
+             xlabel('t','FontSize',12), ylabel('y','FontSize',12)
+             title('Analytic Test 3','FontSize',14)
+             set(gca,'FontSize',12)
+             print('-depsc','analytic3')
+          end
+          
           
       end  % switch
       

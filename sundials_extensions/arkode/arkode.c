@@ -426,7 +426,8 @@ void *ARKodeCreate(int lmm, int iter)
  * errfp and an error flag is returned. Otherwise, it returns ARK_SUCCESS
  */
 
-int ARKodeInit(void *arkode_mem, ARKRhsFn f, realtype t0, N_Vector y0)
+int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi, 
+	       ARKExpStabFn EStab, realtype t0, N_Vector y0)
 {
   ARKodeMem ark_mem;
   booleantype nvectorOK, allocOK;
@@ -448,7 +449,17 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn f, realtype t0, N_Vector y0)
     return(ARK_ILL_INPUT);
   }
 
-  if (f == NULL) {
+  if (fe == NULL) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeInit", MSGARK_NULL_F);
+    return(ARK_ILL_INPUT);
+  }
+
+  if (fi == NULL) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeInit", MSGARK_NULL_F);
+    return(ARK_ILL_INPUT);
+  }
+
+  if (EStab == NULL) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeInit", MSGARK_NULL_F);
     return(ARK_ILL_INPUT);
   }
@@ -484,7 +495,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn f, realtype t0, N_Vector y0)
 
   /* Copy the input parameters into ARKODE state */
 
-  ark_mem->ark_f  = f;
+  ark_mem->ark_f  = fi;
   ark_mem->ark_tn = t0;
 
   /* Set step parameters */

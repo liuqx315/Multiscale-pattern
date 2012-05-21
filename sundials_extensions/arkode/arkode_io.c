@@ -894,10 +894,12 @@ int ARKodeGetWorkSpace(void *arkode_mem, long int *lenrw, long int *leniw)
  * Returns integrator statistics
  */
 
-int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, long int *nfevals, 
-                            long int *nlinsetups, long int *netfails, int *qlast, 
-                            int *qcur, realtype *hinused, realtype *hlast, 
-                            realtype *hcur, realtype *tcur)
+int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, 
+			     long int *expsteps, long int *accsteps, 
+			     long int *convsteps, long int *nfevals, 
+			     long int *nlinsetups, long int *netfails, 
+			     realtype *hinused, realtype *hlast, 
+			     realtype *hcur, realtype *tcur)
 {
   ARKodeMem ark_mem;
 
@@ -912,8 +914,6 @@ int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, long int *nfeva
   *nfevals = nfe;
   *nlinsetups = nsetups;
   *netfails = netf;
-  *qlast = qu;
-  *qcur = next_q;
   *hinused = h0u;
   *hlast = hu;
   *hcur = next_h;
