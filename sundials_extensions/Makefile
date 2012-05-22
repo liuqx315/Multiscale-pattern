@@ -22,13 +22,13 @@ all :
 	  $(MAKE) -C $$dir; \
 	done
 	ar -cr sundials_extensions.a */*.o
-	make -C tests
+	make -C examples
 
 clean : 
 	for dir in ${EXTEN}; do \
-	  cd $$dir && $(MAKE) clean; \
+	  cd $$dir && $(MAKE) clean && cd -; \
 	done
-	cd tests && $(MAKE) clean
+	cd examples && $(MAKE) clean
 
 
 ####### End of Makefile #######

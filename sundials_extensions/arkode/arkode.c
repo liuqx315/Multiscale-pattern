@@ -411,11 +411,11 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
 		    "ARKodeInit", MSGARK_NULL_Y0);
     return(ARK_ILL_INPUT);
   }
-  if (fe == NULL) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeInit", MSGARK_NULL_F);
-    return(ARK_ILL_INPUT);
-  }
+  /* if (fe == NULL) { */
+  /*   ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE",  */
+  /* 		    "ARKodeInit", MSGARK_NULL_F); */
+  /*   return(ARK_ILL_INPUT); */
+  /* } */
   if (fi == NULL) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeInit", MSGARK_NULL_F);
