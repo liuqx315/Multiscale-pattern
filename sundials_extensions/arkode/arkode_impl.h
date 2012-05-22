@@ -23,10 +23,8 @@ extern "C" {
 ===============================================================*/
 
 /* Basic ARKODE constants */
-#define ADAMS_Q_MAX 12       /* max value of q for lmm == ADAMS */
-#define BDF_Q_MAX    5       /* max value of q for lmm == BDF   */
-#define Q_MAX  ADAMS_Q_MAX   /* max value of q for either lmm   */
-#define L_MAX  (Q_MAX+1)     /* max value of L for either lmm   */
+#define Q_MAX        5       /* max value of q */
+#define L_MAX    (Q_MAX+1)   /* max value of L */
 #define NUM_TESTS    5       /* number of error test quantities */
 
 #define HMIN_DEFAULT     RCONST(0.0)  /* hmin default value     */
@@ -51,7 +49,6 @@ typedef struct ARKodeMemRec {
   ARKRhsFn ark_fe;            /* y' = fe(t,y(t)) + fi(t,y(t))          */
   ARKRhsFn ark_fi;
   void *ark_user_data;        /* user pointer passed to f              */
-  int ark_lmm;                /* lmm = ARK_ADAMS or ARK_BDF            */
   int ark_iter;               /* iter = ARK_FUNCTIONAL or ARK_NEWTON   */
   int ark_itol;               /* itol = ARK_SS, ARK_SV, ARK_WF, ARK_NN */
 
@@ -406,12 +403,10 @@ void ARKErrHandler(int error_code, const char *module,
 #define MSGARK_NO_MEM        "arkode_mem = NULL illegal."
 #define MSGARK_ARKMEM_FAIL   "Allocation of arkode_mem failed."
 #define MSGARK_MEM_FAIL      "A memory request failed."
-#define MSGARK_BAD_LMM       "Illegal value for lmm. The legal values are ARK_ADAMS and ARK_BDF."
 #define MSGARK_BAD_ITER      "Illegal value for iter. The legal values are ARK_FUNCTIONAL and ARK_NEWTON."
 #define MSGARK_NO_MALLOC     "Attempt to call before ARKodeInit."
 #define MSGARK_NEG_MAXORD    "maxord <= 0 illegal."
 #define MSGARK_BAD_MAXORD    "Illegal attempt to increase maximum method order."
-#define MSGARK_SET_SLDET     "Attempt to use stability limit detection with the ARK_ADAMS method illegal."
 #define MSGARK_NEG_HMIN      "hmin < 0 illegal."
 #define MSGARK_NEG_HMAX      "hmax < 0 illegal."
 #define MSGARK_BAD_HMIN_HMAX "Inconsistent step size limits: hmin > hmax."

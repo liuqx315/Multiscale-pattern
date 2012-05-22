@@ -32,7 +32,7 @@ extern "C" {
 /*---------------------------------------------------------------
  Enumerations for inputs to ARKodeCreate and ARKode.
 -----------------------------------------------------------------
- Symbolic constants for the lmm and iter parameters to 
+ Symbolic constants for the iter parameter to 
  ARKodeCreate and the input parameter itask to ARKode, are given 
  below.
  
@@ -51,8 +51,6 @@ extern "C" {
 ---------------------------------------------------------------*/
 
 /* TO DELETE */
-#define ARK_ADAMS      0
-#define ARK_BDF        1
 #define ARK_FUNCTIONAL 0
 #define ARK_NEWTON     1
 

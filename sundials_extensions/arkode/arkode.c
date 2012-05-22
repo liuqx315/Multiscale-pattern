@@ -245,7 +245,6 @@ static int ARKsldet(ARKodeMem ark_mem);
 
 static void ARKAdjustParams(ARKodeMem ark_mem);
 static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq);
-static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq);
 static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq);
 static void ARKIncreaseBDF(ARKodeMem ark_mem);
 static void ARKDecreaseBDF(ARKodeMem ark_mem);
@@ -255,11 +254,6 @@ static void ARKRescale(ARKodeMem ark_mem);
 static void ARKPredict(ARKodeMem ark_mem);
 
 static void ARKSet(ARKodeMem ark_mem);
-static void ARKSetAdams(ARKodeMem ark_mem);
-static realtype ARKAdamsStart(ARKodeMem ark_mem, 
-			      realtype m[]);
-static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], 
-			   realtype M[], realtype hsum);
 static realtype ARKAltSum(int iend, realtype a[], int k);
 static void ARKSetBDF(ARKodeMem ark_mem);
 static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, 
@@ -305,23 +299,17 @@ static int ARKRootfind(ARKodeMem ark_mem);
  ARKodeCreate:
 
  ARKodeCreate creates an internal memory block for a problem to 
- be solved by ARKODE.
- If successful, ARKodeCreate returns a pointer to the problem memory. 
- This pointer should be passed to ARKodeInit.  
- If an initialization error occurs, ARKodeCreate prints an error 
- message to standard err and returns NULL. 
+ be solved by ARKODE. If successful, ARKodeCreate returns a 
+ pointer to the problem memory. This pointer should be passed to
+ ARKodeInit. If an initialization error occurs, ARKodeCreate 
+ prints an error message to standard err and returns NULL. 
 ---------------------------------------------------------------*/
-void *ARKodeCreate(int lmm, int iter)
+void *ARKodeCreate(int iter)
 {
   int maxord;
   ARKodeMem ark_mem;
 
   /* Test inputs */
-  if ((lmm != ARK_ADAMS) && (lmm != ARK_BDF)) {
-    ARKProcessError(NULL, 0, "ARKODE", "ARKodeCreate", MSGARK_BAD_LMM);
-    return(NULL);
-  }
-  
   if ((iter != ARK_FUNCTIONAL) && (iter != ARK_NEWTON)) {
     ARKProcessError(NULL, 0, "ARKODE", "ARKodeCreate", MSGARK_BAD_ITER);
     return(NULL);
@@ -337,10 +325,9 @@ void *ARKodeCreate(int lmm, int iter)
   /* Zero out ark_mem */
   memset(ark_mem, 0, sizeof(struct ARKodeMemRec));
 
-  maxord = (lmm == ARK_ADAMS) ? ADAMS_Q_MAX : BDF_Q_MAX;
+  maxord = Q_MAX;
 
   /* copy input parameters into ark_mem */
-  ark_mem->ark_lmm  = lmm;
   ark_mem->ark_iter = iter;
 
   /* Set uround */
@@ -1850,60 +1837,12 @@ static void ARKAdjustParams(ARKodeMem ark_mem)
  This routine is a high level routine which handles an order
  change by an amount deltaq (= +1 or -1). If a decrease in order
  is requested and q==2, then the routine returns immediately.
- Otherwise ARKAdjustAdams or ARKAdjustBDF is called to handle the
- order change (depending on the value of lmm).
+ Otherwise ARKAdjustBDF is called to handle the order change.
 ---------------------------------------------------------------*/
 static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq)
 {
   if ((ark_mem->ark_q==2) && (deltaq != 1)) return;
-  
-  switch(ark_mem->ark_lmm){
-  case ARK_ADAMS: 
-    ARKAdjustAdams(ark_mem, deltaq);
-    break;
-  case ARK_BDF:   
-    ARKAdjustBDF(ark_mem, deltaq);
-    break;
-  }
-}
-
-
-/*---------------------------------------------------------------
- ARKAdjustAdams
-
- This routine adjusts the history array on a change of order q by
- deltaq, in the case that lmm == ARK_ADAMS. 
----------------------------------------------------------------*/
-static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq)
-{
-  int i, j;
-  realtype xi, hsum;
-
-  /* On an order increase, set new column of zn to zero and return */
-  if (deltaq==1) {
-    N_VConst(ZERO, ark_mem->ark_zn[ark_mem->ark_L]);
-    return;
-  }
-
-  /* On an order decrease, each zn[j] is adjusted by a multiple of zn[q].
-   * The coeffs. in the adjustment are the coeffs. of the polynomial:
-   *        x
-   * q * INT { u * ( u + xi_1 ) * ... * ( u + xi_{q-2} ) } du 
-   *        0
-   * where xi_j = [t_n - t_(n-j)]/h => xi_0 = 0  */
-  for (i=0; i <= ark_mem->ark_qmax; i++) ark_mem->ark_l[i] = ZERO;
-  ark_mem->ark_l[1] = ONE;
-  hsum = ZERO;
-  for (j=1; j <= ark_mem->ark_q-2; j++) {
-    hsum += ark_mem->ark_tau[j];
-    xi = hsum / ark_mem->ark_hscale;
-    for (i=j+1; i >= 1; i--) ark_mem->ark_l[i] = ark_mem->ark_l[i]*xi + ark_mem->ark_l[i-1];
-  }
-  
-  for (j=1; j <= ark_mem->ark_q-2; j++) ark_mem->ark_l[j+1] = ark_mem->ark_q * (ark_mem->ark_l[j] / (j+1));
-  
-  for (j=2; j < ark_mem->ark_q; j++)
-    N_VLinearSum(-ark_mem->ark_l[j], ark_mem->ark_zn[ark_mem->ark_q], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
+  ARKAdjustBDF(ark_mem, deltaq);
 }
 
 
@@ -1911,9 +1850,9 @@ static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq)
  ARKAdjustBDF
 
  This is a high level routine which handles adjustments to the
- history array on a change of order by deltaq in the case that 
- lmm == ARK_BDF.  ARKAdjustBDF calls ARKIncreaseBDF if deltaq = +1 and 
- ARKDecreaseBDF if deltaq = -1 to do the actual work.
+ history array on a change of order by deltaq.  ARKAdjustBDF 
+ calls ARKIncreaseBDF if deltaq = +1 and ARKDecreaseBDF if 
+ deltaq = -1 to do the actual work.
 ---------------------------------------------------------------*/
 static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq)
 {
@@ -1932,12 +1871,11 @@ static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq)
  ARKIncreaseBDF
 
  This routine adjusts the history array on an increase in the 
- order q in the case that lmm == ARK_BDF.  
- A new column zn[q+1] is set equal to a multiple of the saved 
- vector (= acor) in zn[indx_acor].  Then each zn[j] is adjusted by
- a multiple of zn[q+1].  The coefficients in the adjustment are the 
- coefficients of the polynomial x*x*(x+xi_1)*...*(x+xi_j),
- where xi_j = [t_n - t_(n-j)]/h. 
+ order q.  A new column zn[q+1] is set equal to a multiple of 
+ the saved vector (= acor) in zn[indx_acor].  Then each zn[j] is
+ adjusted by a multiple of zn[q+1].  The coefficients in the 
+ adjustment are the coefficients of the polynomial 
+ x*x*(x+xi_1)*...*(x+xi_j), where xi_j = [t_n - t_(n-j)]/h. 
 ---------------------------------------------------------------*/
 static void ARKIncreaseBDF(ARKodeMem ark_mem)
 {
@@ -1971,9 +1909,9 @@ static void ARKIncreaseBDF(ARKodeMem ark_mem)
  ARKDecreaseBDF
 
  This routine adjusts the history array on a decrease in the 
- order q in the case that lmm == ARK_BDF.  
- Each zn[j] is adjusted by a multiple of zn[q].  The coefficients
- in the adjustment are the coefficients of the polynomial
+ order q.  Each zn[j] is adjusted by a multiple of zn[q].  The 
+ coefficients in the adjustment are the coefficients of the 
+ polynomial
    x*x*(x+xi_1)*...*(x+xi_j), where xi_j = [t_n - t_(n-j)]/h. 
 ---------------------------------------------------------------*/
 static void ARKDecreaseBDF(ARKodeMem ark_mem)
@@ -2045,8 +1983,8 @@ static void ARKPredict(ARKodeMem ark_mem)
 /*---------------------------------------------------------------
  ARKSet
 
- This routine is a high level routine which calls ARKSetAdams or
- ARKSetBDF to set the polynomial l, the test quantity array tq, 
+ This routine is a high level routine which calls ARKSetBDF to 
+ set the polynomial l, the test quantity array tq, 
  and the related variables  rl1, gamma, and gamrat.
 
  The array tq is loaded with constants used in the control of estimated
@@ -2061,114 +1999,11 @@ static void ARKPredict(ARKodeMem ark_mem)
 ---------------------------------------------------------------*/
 static void ARKSet(ARKodeMem ark_mem)
 {
-  switch(ark_mem->ark_lmm) {
-  case ARK_ADAMS: 
-    ARKSetAdams(ark_mem);
-    break;
-  case ARK_BDF:
-    ARKSetBDF(ark_mem);
-    break;
-  }
+  ARKSetBDF(ark_mem);
   ark_mem->ark_rl1 = ONE / ark_mem->ark_l[1];
   ark_mem->ark_gamma = ark_mem->ark_h * ark_mem->ark_rl1;
   if (ark_mem->ark_nst == 0) ark_mem->ark_gammap = ark_mem->ark_gamma;
   ark_mem->ark_gamrat = (ark_mem->ark_nst > 0) ? ark_mem->ark_gamma / ark_mem->ark_gammap : ONE;  /* protect x / x != 1.0 */
-}
-
-
-/*---------------------------------------------------------------
- ARKSetAdams
-
- This routine handles the computation of l and tq for the
- case lmm == ARK_ADAMS.
-
- The components of the array l are the coefficients of a
- polynomial Lambda(x) = l_0 + l_1 x + ... + l_q x^q, given by
-                          q-1
- (d/dx) Lambda(x) = c * PRODUCT (1 + x / xi_i) , where
-                          i=1
-  Lambda(-1) = 0, Lambda(0) = 1, and c is a normalization factor.
- Here xi_i = [t_n - t_(n-i)] / h.
-
- The array tq is set to test quantities used in the convergence
- test, the error test, and the selection of h at a new order.
----------------------------------------------------------------*/
-static void ARKSetAdams(ARKodeMem ark_mem)
-{
-  realtype m[L_MAX], M[3], hsum;
-  
-  if (ark_mem->ark_q == 1) {
-    ark_mem->ark_l[0] = ark_mem->ark_l[1] = ark_mem->ark_tq[1] = ark_mem->ark_tq[5] = ONE;
-    ark_mem->ark_tq[2] = HALF;
-    ark_mem->ark_tq[3] = ONE/TWELVE;
-    ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];       /* = 0.1 / tq[2] */
-    return;
-  }
-  
-  hsum = ARKAdamsStart(ark_mem, m);
-  
-  M[0] = ARKAltSum(ark_mem->ark_q-1, m, 1);
-  M[1] = ARKAltSum(ark_mem->ark_q-1, m, 2);
-  
-  ARKAdamsFinish(ark_mem, m, M, hsum);
-}
-
-
-/*---------------------------------------------------------------
- ARKAdamsStart
-
- This routine generates in m[] the coefficients of the product
- polynomial needed for the Adams l and tq coefficients for q > 1.
----------------------------------------------------------------*/
-static realtype ARKAdamsStart(ARKodeMem ark_mem, realtype m[])
-{
-  realtype hsum, xi_inv, sum;
-  int i, j;
-  
-  hsum = ark_mem->ark_h;
-  m[0] = ONE;
-  for (i=1; i <= ark_mem->ark_q; i++) m[i] = ZERO;
-  for (j=1; j < ark_mem->ark_q; j++) {
-    if ((j==ark_mem->ark_q-1) && (ark_mem->ark_qwait == 1)) {
-      sum = ARKAltSum(ark_mem->ark_q-2, m, 2);
-      ark_mem->ark_tq[1] = ark_mem->ark_q * sum / m[ark_mem->ark_q-2];
-    }
-    xi_inv = ark_mem->ark_h / hsum;
-    for (i=j; i >= 1; i--) m[i] += m[i-1] * xi_inv;
-    hsum += ark_mem->ark_tau[j];
-    /* The m[i] are coefficients of product(1 to j) (1 + x/xi_i) */
-  }
-  return(hsum);
-}
-
-
-/*---------------------------------------------------------------
- ARKAdamsFinish
-
- This routine completes the calculation of the Adams l and tq.
----------------------------------------------------------------*/
-static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], realtype M[], realtype hsum)
-{
-  int i;
-  realtype M0_inv, xi, xi_inv;
-  
-  M0_inv = ONE / M[0];
-  
-  ark_mem->ark_l[0] = ONE;
-  for (i=1; i <= ark_mem->ark_q; i++) ark_mem->ark_l[i] = M0_inv * (m[i-1] / i);
-  xi = hsum / ark_mem->ark_h;
-  xi_inv = ONE / xi;
-  
-  ark_mem->ark_tq[2] = M[1] * M0_inv / xi;
-  ark_mem->ark_tq[5] = xi / ark_mem->ark_l[ark_mem->ark_q];
-
-  if (ark_mem->ark_qwait == 1) {
-    for (i=ark_mem->ark_q; i >= 1; i--) m[i] += m[i-1] * xi_inv;
-    M[2] = ARKAltSum(ark_mem->ark_q, m, 2);
-    ark_mem->ark_tq[3] = M[2] * M0_inv / ark_mem->ark_L;
-  }
-
-  ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];
 }
 
 
@@ -2201,9 +2036,8 @@ static realtype ARKAltSum(int iend, realtype a[], int k)
 /*---------------------------------------------------------------
  ARKSetBDF
 
- This routine computes the coefficients l and tq in the case
- lmm == ARK_BDF.  ARKSetBDF calls ARKSetTqBDF to set the test
- quantity array tq. 
+ This routine computes the coefficients l and tq.  ARKSetBDF 
+ calls ARKSetTqBDF to set the test quantity array tq. 
  
  The components of the array l are the coefficients of a
  polynomial Lambda(x) = l_0 + l_1 x + ... + l_q x^q, given by
@@ -2249,8 +2083,7 @@ static void ARKSetBDF(ARKodeMem ark_mem)
 /*---------------------------------------------------------------
  ARKSetTqBDF
 
- This routine sets the test quantity array tq in the case
- lmm == ARK_BDF.
+ This routine sets the test quantity array tq.
 ---------------------------------------------------------------*/
 static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
                        realtype alpha0_hat, realtype xi_inv, realtype xistar_inv)
@@ -2902,16 +2735,12 @@ static void ARKChooseEta(ARKodeMem ark_mem)
   } else {
     ark_mem->ark_eta = ark_mem->ark_etaqp1;
     ark_mem->ark_qprime = ark_mem->ark_q + 1;
+    
+    /* Store Delta_n in zn[qmax] to be used in order increase.
+       This happens at the last step of order q before an increase
+       to order q+1, so it represents Delta_n in the ELTE at q+1 */
+    N_VScale(ONE, ark_mem->ark_acor, ark_mem->ark_zn[ark_mem->ark_qmax]);
 
-    if (ark_mem->ark_lmm == ARK_BDF) {
-
-      /* Store Delta_n in zn[qmax] to be used in order increase 
-       *
-       * This happens at the last step of order q before an increase
-       * to order q+1, so it represents Delta_n in the ELTE at q+1 */
-      N_VScale(ONE, ark_mem->ark_acor, ark_mem->ark_zn[ark_mem->ark_qmax]);
-
-    }
   }
 }
 
@@ -2971,12 +2800,12 @@ static int ARKHandleFailure(ARKodeMem ark_mem, int flag)
  ARKBDFStab
 
  This routine handles the BDF Stability Limit Detection Algorithm
- STALD.  It is called if lmm = ARK_BDF and the SLDET option is on.
- If the order is 3 or more, the required norm data is saved.
- If a decision to reduce order has not already been made, and
- enough data has been saved, ARKsldet is called.  If it signals
- a stability limit violation, the order is reduced, and the step
- size is reset accordingly. 
+ STALD.  It is called if the SLDET option is on.  If the order is
+ 3 or more, the required norm data is saved.  If a decision to 
+ reduce order has not already been made, and enough data has been
+ saved, ARKsldet is called.  If it signals a stability limit 
+ violation, the order is reduced, and the step size is reset 
+ accordingly. 
 ---------------------------------------------------------------*/
 void ARKBDFStab(ARKodeMem ark_mem)
 {

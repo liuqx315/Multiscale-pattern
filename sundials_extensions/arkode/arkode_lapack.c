@@ -434,8 +434,8 @@ static int arkLapackDenseSolve(ARKodeMem ark_mem, N_Vector b,
 
   if (ier > 0) return(1);
 
-  /* For BDF, scale the correction to account for change in gamma */
-  if ((ark_mem->ark_lmm == ARK_BDF) && (ark_mem->ark_gamrat != ONE)) {
+  /* scale the correction to account for change in gamma */
+  if (ark_mem->ark_gamrat != ONE) {
     fact = TWO/(ONE + ark_mem->ark_gamrat);
     dscal_f77(&intn, &fact, bd, &one); 
   }
@@ -603,8 +603,8 @@ static int arkLapackBandSolve(ARKodeMem ark_mem, N_Vector b,
 	     &ldmat, arkdls_mem->d_pivots, bd, &intn, &ier, 1);
   if (ier > 0) return(1);
 
-  /* For BDF, scale the correction to account for change in gamma */
-  if ((ark_mem->ark_lmm == ARK_BDF) && (ark_mem->ark_gamrat != ONE)) {
+  /* scale the correction to account for change in gamma */
+  if (ark_mem->ark_gamrat != ONE) {
     fact = TWO/(ONE + ark_mem->ark_gamrat);
     dscal_f77(&intn, &fact, bd, &one); 
   }

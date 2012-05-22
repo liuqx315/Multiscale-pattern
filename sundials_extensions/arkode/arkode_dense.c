@@ -263,10 +263,9 @@ static int arkDenseSolve(ARKodeMem ark_mem, N_Vector b,
 
   DenseGETRS(arkdls_mem->d_M, arkdls_mem->d_lpivots, bd);
 
-  /* If ARK_BDF, scale the correction to account for change in gamma */
-  if ((ark_mem->ark_lmm == ARK_BDF) && (ark_mem->ark_gamrat != ONE)) {
+  /* scale the correction to account for change in gamma */
+  if (ark_mem->ark_gamrat != ONE) 
     N_VScale(TWO/(ONE + ark_mem->ark_gamrat), b, b);
-  }
   
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
   return(0);

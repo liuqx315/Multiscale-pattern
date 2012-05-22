@@ -230,13 +230,6 @@ int ARKodeSetStabLimDet(void *arkode_mem, booleantype sldet)
   }
 
   ark_mem = (ARKodeMem) arkode_mem;
-
-  if( sldet && (ark_mem->ark_lmm != ARK_BDF) ) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetStabLimDet", MSGARK_SET_SLDET);
-    return(ARK_ILL_INPUT);
-  }
-
   ark_mem->ark_sldeton = sldet;
 
   return(ARK_SUCCESS);

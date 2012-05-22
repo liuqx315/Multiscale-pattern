@@ -122,7 +122,6 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
   }
 
   /* Allocate memory for ytemp and x */
-
   arkspils_mem->s_ytemp = N_VClone(ark_mem->ark_tempv);
   if (arkspils_mem->s_ytemp == NULL) {
     ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
