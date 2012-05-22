@@ -33,8 +33,7 @@
    ...
    Set y0
    ...
-   arkode_mem = ARKodeCreate(...);
-   ier = ARKodeMalloc(...);
+   arkode_mem = ARKodeCreate();
    ...
    flag = ARKSpgmr(arkode_mem, pretype, maxl);
       -or-

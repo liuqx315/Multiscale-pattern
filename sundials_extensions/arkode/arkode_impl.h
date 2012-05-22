@@ -48,7 +48,9 @@ typedef struct ARKodeMemRec {
     --------------------------*/
   ARKRhsFn ark_fe;            /* y' = fe(t,y(t)) + fi(t,y(t))          */
   ARKRhsFn ark_fi;
-  void *ark_user_data;        /* user pointer passed to f              */
+  void *ark_user_data;        /* user pointer passed to fe, fi         */
+  ARKExpStabFn ark_expstab;   /* time step stability function for fe   */
+  void *ark_estab_data;       /* user pointer passed to expstab        */
   int ark_itol;               /* itol = ARK_SS, ARK_SV, ARK_WF, ARK_NN */
 
   realtype ark_reltol;        /* relative tolerance                    */
@@ -104,6 +106,9 @@ typedef struct ARKodeMemRec {
   realtype ark_hscale;          /* value of h used in zn                    */
   realtype ark_tn;              /* current internal value of t              */
   realtype ark_tretlast;        /* value of tret last returned by ARKode    */
+
+  ARKAdaptFn ark_hadapt;        /* function to set the new time step size   */
+  void *ark_hadapt_data;        /* user pointer passed to hadapt            */
 
   realtype ark_tau[L_MAX+1];    /* array of previous q+1 successful step 
 				   sizes indexed from 1 to q+1              */
@@ -164,7 +169,6 @@ typedef struct ARKodeMemRec {
   /*------------------
     Linear Solver Data 
     ------------------*/
-
   int (*ark_linit)(struct ARKodeMemRec *ark_mem);
   int (*ark_lsetup)(struct ARKodeMemRec *ark_mem, int convfail, N_Vector ypred,
 		    N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
@@ -197,14 +201,6 @@ typedef struct ARKodeMemRec {
   ARKErrHandlerFn ark_ehfun;    /* error messages are handled by ehfun     */
   void *ark_eh_data;            /* data pointer passed to ehfun            */
   FILE *ark_errfp;              /* ARKODE error messages are sent to errfp */
-
-  /*-------------------------
-    Stability Limit Detection
-    -------------------------*/
-  booleantype ark_sldeton;     /* is Stability Limit Detection on?       */
-  realtype ark_ssdat[6][4];    /* scaled data array for STALD            */
-  int ark_nscon;               /* counter for STALD method               */
-  long int ark_nor;            /* counter for number of order reductions */
 
   /*----------------
     Rootfinding Data
@@ -367,6 +363,14 @@ void ARKProcessError(ARKodeMem ark_mem, int error_code,
 void ARKErrHandler(int error_code, const char *module, 
 		   const char *function, char *msg, void *data);
 
+/* Prototype of internal time step adaptivity function */
+int ARKAdapt(N_Vector y, realtype t, realtype h, 
+	     realtype e1, realtype e2, 
+	     realtype e3, int q, int p, 
+	     realtype *hnew, void *data);
+
+/* Prototype of internal explicit stability estimation function */
+int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 
 /*===============================================================
    ARKODE ERROR MESSAGES

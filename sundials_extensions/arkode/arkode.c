@@ -253,7 +253,6 @@ static void ARKRescale(ARKodeMem ark_mem);
 static void ARKPredict(ARKodeMem ark_mem);
 
 static void ARKSet(ARKodeMem ark_mem);
-static realtype ARKAltSum(int iend, realtype a[], int k);
 static void ARKSetBDF(ARKodeMem ark_mem);
 static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, 
 			realtype alpha0, realtype alpha0_hat, 
@@ -279,7 +278,6 @@ static void ARKSetEta(ARKodeMem ark_mem);
 static realtype ARKComputeEtaqm1(ARKodeMem ark_mem);
 static realtype ARKComputeEtaqp1(ARKodeMem ark_mem);
 static void ARKChooseEta(ARKodeMem ark_mem);
-static void ARKBDFStab(ARKodeMem ark_mem);
 
 static int  ARKHandleFailure(ARKodeMem ark_mem,int flag);
 
@@ -323,28 +321,31 @@ void *ARKodeCreate()
   ark_mem->ark_uround = UNIT_ROUNDOFF;
 
   /* Set default values for integrator optional inputs */
-  ark_mem->ark_fe         = NULL;
-  ark_mem->ark_fi         = NULL;
-  ark_mem->ark_user_data  = NULL;
-  ark_mem->ark_itol       = ARK_NN;
-  ark_mem->ark_user_efun  = FALSE;
-  ark_mem->ark_efun       = NULL;
-  ark_mem->ark_e_data     = NULL;
-  ark_mem->ark_ehfun      = ARKErrHandler;
-  ark_mem->ark_eh_data    = ark_mem;
-  ark_mem->ark_errfp      = stderr;
-  ark_mem->ark_qmax       = maxord;
-  ark_mem->ark_mxstep     = MXSTEP_DEFAULT;
-  ark_mem->ark_mxhnil     = MXHNIL_DEFAULT;
-  ark_mem->ark_sldeton    = FALSE;
-  ark_mem->ark_hin        = ZERO;
-  ark_mem->ark_hmin       = HMIN_DEFAULT;
-  ark_mem->ark_hmax_inv   = HMAX_INV_DEFAULT;
-  ark_mem->ark_tstopset   = FALSE;
-  ark_mem->ark_maxcor     = NLS_MAXCOR;
-  ark_mem->ark_maxnef     = MXNEF;
-  ark_mem->ark_maxncf     = MXNCF;
-  ark_mem->ark_nlscoef    = CORTES;
+  ark_mem->ark_fe          = NULL;
+  ark_mem->ark_fi          = NULL;
+  ark_mem->ark_expstab     = ARKExpStab;
+  ark_mem->ark_estab_data  = ark_mem;
+  ark_mem->ark_hadapt      = ARKAdapt;
+  ark_mem->ark_hadapt_data = ark_mem;
+  ark_mem->ark_user_data   = NULL;
+  ark_mem->ark_itol        = ARK_NN;
+  ark_mem->ark_user_efun   = FALSE;
+  ark_mem->ark_efun        = NULL;
+  ark_mem->ark_e_data      = NULL;
+  ark_mem->ark_ehfun       = ARKErrHandler;
+  ark_mem->ark_eh_data     = ark_mem;
+  ark_mem->ark_errfp       = stderr;
+  ark_mem->ark_qmax        = maxord;
+  ark_mem->ark_mxstep      = MXSTEP_DEFAULT;
+  ark_mem->ark_mxhnil      = MXHNIL_DEFAULT;
+  ark_mem->ark_hin         = ZERO;
+  ark_mem->ark_hmin        = HMIN_DEFAULT;
+  ark_mem->ark_hmax_inv    = HMAX_INV_DEFAULT;
+  ark_mem->ark_tstopset    = FALSE;
+  ark_mem->ark_maxcor      = NLS_MAXCOR;
+  ark_mem->ark_maxnef      = MXNEF;
+  ark_mem->ark_maxncf      = MXNCF;
+  ark_mem->ark_nlscoef     = CORTES;
 
   /* Initialize root finding variables */
   ark_mem->ark_glo        = NULL;
@@ -383,12 +384,11 @@ void *ARKodeCreate()
  ARK_SUCCESS.
 ---------------------------------------------------------------*/
 int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi, 
-	       ARKExpStabFn EStab, realtype t0, N_Vector y0)
+	       realtype t0, N_Vector y0)
 {
   ARKodeMem ark_mem;
   booleantype nvectorOK, allocOK;
   long int lrw1, liw1;
-  int i,k;
 
   /* Check arkode_mem */
   if (arkode_mem==NULL) {
@@ -407,10 +407,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
     return(ARK_ILL_INPUT);
   }
   if (fi == NULL) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeInit", MSGARK_NULL_F);
-    return(ARK_ILL_INPUT);
-  }
-  if (EStab == NULL) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKodeInit", MSGARK_NULL_F);
     return(ARK_ILL_INPUT);
   }
@@ -476,7 +472,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nsetups = 0;
   ark_mem->ark_nhnil   = 0;
   ark_mem->ark_nstlp   = 0;
-  ark_mem->ark_nscon   = 0;
   ark_mem->ark_nge     = 0;
 
   ark_mem->ark_irfnd   = 0;
@@ -485,15 +480,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_h0u      = ZERO;
   ark_mem->ark_next_h   = ZERO;
   ark_mem->ark_next_q   = 0;
-
-  /* Initialize Stablilty Limit Detection data */
-  /* NOTE: We do this even if stab lim det was not
-     turned on yet. This way, the user can turn it
-     on at any time */
-  ark_mem->ark_nor = 0;
-  for (i = 1; i <= 5; i++)
-    for (k = 1; k <= 3; k++) 
-      ark_mem->ark_ssdat[i-1][k-1] = ZERO;
 
   /* Problem has been successfully initialized */
   ark_mem->ark_MallocDone = TRUE;
@@ -517,7 +503,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
 int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
 {
   ARKodeMem ark_mem;
-  int i,k;
  
   /* Check arkode_mem */
   if (arkode_mem==NULL) {
@@ -563,7 +548,6 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_nsetups = 0;
   ark_mem->ark_nhnil   = 0;
   ark_mem->ark_nstlp   = 0;
-  ark_mem->ark_nscon   = 0;
   ark_mem->ark_nge     = 0;
 
   ark_mem->ark_irfnd   = 0;
@@ -573,12 +557,6 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_next_h   = ZERO;
   ark_mem->ark_next_q   = 0;
 
-  /* Initialize Stablilty Limit Detection data */
-  ark_mem->ark_nor = 0;
-  for (i = 1; i <= 5; i++)
-    for (k = 1; k <= 3; k++) 
-      ark_mem->ark_ssdat[i-1][k-1] = ZERO;
-  
   /* Problem has been successfully re-initialized */
   return(ARK_SUCCESS);
 }
@@ -1733,7 +1711,6 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
  - testing the local error;
  - updating zn and other state data if successful;
  - resetting stepsize and order for the next step.
- - if SLDET is on, check for stability, reduce order if necessary.
  On a failure in the nonlinear system solution or error test, the
  step may be reattempted, depending on the nature of the failure.
 ---------------------------------------------------------------*/
@@ -1782,10 +1759,6 @@ static int ARKStep(ARKodeMem ark_mem)
      Update data, and consider change of step and/or order.       */
   ARKCompleteStep(ark_mem); 
   ARKPrepareNextStep(ark_mem, dsm); 
-
-  /* If Stablilty Limit Detection is turned on, call stability limit
-     detection routine for possible order reduction. */
-  if (ark_mem->ark_sldeton) ARKBDFStab(ark_mem);
 
   ark_mem->ark_etamax = (ark_mem->ark_nst <= SMALL_NST) ? ETAMX2 : ETAMX3;
 
@@ -1940,7 +1913,6 @@ static void ARKRescale(ARKodeMem ark_mem)
   ark_mem->ark_h = ark_mem->ark_hscale * ark_mem->ark_eta;
   ark_mem->ark_next_h = ark_mem->ark_h;
   ark_mem->ark_hscale = ark_mem->ark_h;
-  ark_mem->ark_nscon = 0;
 }
 
 
@@ -1991,32 +1963,6 @@ static void ARKSet(ARKodeMem ark_mem)
   ark_mem->ark_gamma = ark_mem->ark_h * ark_mem->ark_rl1;
   if (ark_mem->ark_nst == 0) ark_mem->ark_gammap = ark_mem->ark_gamma;
   ark_mem->ark_gamrat = (ark_mem->ark_nst > 0) ? ark_mem->ark_gamma / ark_mem->ark_gammap : ONE;  /* protect x / x != 1.0 */
-}
-
-
-/*---------------------------------------------------------------
- ARKAltSum
-
- ARKAltSum returns the value of the alternating sum
-   sum (i= 0 ... iend) [ (-1)^i * (a[i] / (i + k)) ].
- If iend < 0 then ARKAltSum returns 0.
- This operation is needed to compute the integral, from -1 to 0,
- of a polynomial x^(k-1) M(x) given the coefficients of M(x).
----------------------------------------------------------------*/
-static realtype ARKAltSum(int iend, realtype a[], int k)
-{
-  int i, sign;
-  realtype sum;
-  
-  if (iend < 0) return(ZERO);
-  
-  sum = ZERO;
-  sign = 1;
-  for (i=0; i <= iend; i++) {
-    sum += sign * (a[i] / (i+k));
-    sign = -sign;
-  }
-  return(sum);
 }
 
 
@@ -2442,7 +2388,6 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_next_h = ark_mem->ark_h;
   ark_mem->ark_hscale = ark_mem->ark_h;
   ark_mem->ark_qwait = LONG_WAIT;
-  ark_mem->ark_nscon = 0;
 
   retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
   ark_mem->ark_nfe++;
@@ -2475,7 +2420,6 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
   int i, j;
   
   ark_mem->ark_nst++;
-  ark_mem->ark_nscon++;
   ark_mem->ark_hu = ark_mem->ark_h;
   ark_mem->ark_qu = ark_mem->ark_q;
 
@@ -2554,7 +2498,6 @@ static void ARKSetEta(ARKodeMem ark_mem)
     ark_mem->ark_eta = MIN(ark_mem->ark_eta, ark_mem->ark_etamax);
     ark_mem->ark_eta /= MAX(ONE, ABS(ark_mem->ark_h)*ark_mem->ark_hmax_inv*ark_mem->ark_eta);
     ark_mem->ark_hprime = ark_mem->ark_h * ark_mem->ark_eta;
-    if (ark_mem->ark_qprime < ark_mem->ark_q) ark_mem->ark_nscon = 0;
   }
   
   /* Reset etamax for the next step size change, and scale acor */
@@ -2691,370 +2634,6 @@ static int ARKHandleFailure(ARKodeMem ark_mem, int flag)
 
   return(flag);
 }
-
-
-/*===============================================================
- BDF Stability Limit Detection                       
-===============================================================*/
-
-/*---------------------------------------------------------------
- ARKBDFStab
-
- This routine handles the BDF Stability Limit Detection Algorithm
- STALD.  It is called if the SLDET option is on.  If the order is
- 3 or more, the required norm data is saved.  If a decision to 
- reduce order has not already been made, and enough data has been
- saved, ARKsldet is called.  If it signals a stability limit 
- violation, the order is reduced, and the step size is reset 
- accordingly. 
----------------------------------------------------------------*/
-void ARKBDFStab(ARKodeMem ark_mem)
-{
-  int i,k, ldflag, factorial;
-  realtype sq, sqm1, sqm2;
-      
-  /* If order is 3 or greater, then save scaled derivative data,
-     push old data down in i, then add current values to top.    */
-  if (ark_mem->ark_q >= 3) {
-    for (k = 1; k <= 3; k++)
-      { for (i = 5; i >= 2; i--) ark_mem->ark_ssdat[i][k] = ark_mem->ark_ssdat[i-1][k]; }
-    factorial = 1;
-    for (i = 1; i <= ark_mem->ark_q-1; i++) factorial *= i;
-    sq = factorial*ark_mem->ark_q*(ark_mem->ark_q+1)*ark_mem->ark_acnrm/MAX(ark_mem->ark_tq[5],TINY);
-    sqm1 = factorial*ark_mem->ark_q*N_VWrmsNorm(ark_mem->ark_zn[ark_mem->ark_q], ark_mem->ark_ewt);
-    sqm2 = factorial*N_VWrmsNorm(ark_mem->ark_zn[ark_mem->ark_q-1], ark_mem->ark_ewt);
-    ark_mem->ark_ssdat[1][1] = sqm2*sqm2;
-    ark_mem->ark_ssdat[1][2] = sqm1*sqm1;
-    ark_mem->ark_ssdat[1][3] = sq*sq;
-  }  
-
-  if (ark_mem->ark_qprime >= ark_mem->ark_q) {
-
-    /* If order is 3 or greater, and enough ssdat has been saved,
-       nscon >= q+5, then call stability limit detection routine.  */
-    if ( (ark_mem->ark_q >= 3) && (ark_mem->ark_nscon >= ark_mem->ark_q+5) ) {
-      ldflag = ARKsldet(ark_mem);
-      if (ldflag > 3) {
-        /* A stability limit violation is indicated by
-           a return flag of 4, 5, or 6.
-           Reduce new order.                     */
-        ark_mem->ark_qprime = ark_mem->ark_q-1;
-        ark_mem->ark_eta = ark_mem->ark_etaqm1; 
-        ark_mem->ark_eta = MIN(ark_mem->ark_eta,ark_mem->ark_etamax);
-        ark_mem->ark_eta = ark_mem->ark_eta/MAX(ONE,ABS(ark_mem->ark_h)*ark_mem->ark_hmax_inv*ark_mem->ark_eta);
-        ark_mem->ark_hprime = ark_mem->ark_h*ark_mem->ark_eta;
-        ark_mem->ark_nor = ark_mem->ark_nor + 1;
-      }
-    }
-  }
-  else {
-    /* Otherwise, let order increase happen, and 
-       reset stability limit counter, nscon.     */
-    ark_mem->ark_nscon = 0;
-  }
-}
-
-
-/*---------------------------------------------------------------
- ARKsldet
-
- This routine detects stability limitation using stored scaled 
- derivatives data. ARKsldet returns the magnitude of the
- dominate characteristic root, rr. The presents of a stability
- limit is indicated by rr > "something a little less then 1.0",  
- and a positive kflag. This routine should only be called if
- order is greater than or equal to 3, and data has been collected
- for 5 time steps. 
- 
- Returned values:
-    kflag = 1 -> Found stable characteristic root, normal matrix case
-    kflag = 2 -> Found stable characteristic root, quartic solution
-    kflag = 3 -> Found stable characteristic root, quartic solution,
-                 with Newton correction
-    kflag = 4 -> Found stability violation, normal matrix case
-    kflag = 5 -> Found stability violation, quartic solution
-    kflag = 6 -> Found stability violation, quartic solution,
-                 with Newton correction
-
-    kflag < 0 -> No stability limitation, 
-                 or could not compute limitation.
-
-    kflag = -1 -> Min/max ratio of ssdat too small.
-    kflag = -2 -> For normal matrix case, vmax > vrrt2*vrrt2
-    kflag = -3 -> For normal matrix case, The three ratios
-                  are inconsistent.
-    kflag = -4 -> Small coefficient prevents elimination of quartics.  
-    kflag = -5 -> R value from quartics not consistent.
-    kflag = -6 -> No corrected root passes test on qk values
-    kflag = -7 -> Trouble solving for sigsq.
-    kflag = -8 -> Trouble solving for B, or R via B.
-    kflag = -9 -> R via sigsq[k] disagrees with R from data. 
----------------------------------------------------------------*/
-static int ARKsldet(ARKodeMem ark_mem)
-{
-  int i, k, j, it, kmin, kflag = 0;
-  realtype rat[5][4], rav[4], qkr[4], sigsq[4], smax[4], ssmax[4];
-  realtype drr[4], rrc[4],sqmx[4], qjk[4][4], vrat[5], qc[6][4], qco[6][4];
-  realtype rr, rrcut, vrrtol, vrrt2, sqtol, rrtol;
-  realtype smink, smaxk, sumrat, sumrsq, vmin, vmax, drrmax, adrr;
-  realtype tem, sqmax, saqk, qp, s, sqmaxk, saqj, sqmin;
-  realtype rsa, rsb, rsc, rsd, rd1a, rd1b, rd1c;
-  realtype rd2a, rd2b, rd3a, cest1, corr1; 
-  realtype ratp, ratm, qfac1, qfac2, bb, rrb;
-
-  /* The following are cutoffs and tolerances used by this routine */
-  rrcut  = RCONST(0.98);
-  vrrtol = RCONST(1.0e-4);
-  vrrt2  = RCONST(5.0e-4);
-  sqtol  = RCONST(1.0e-3);
-  rrtol  = RCONST(1.0e-2);
-  
-  rr = ZERO;
-  
-  /*  Index k corresponds to the degree of the interpolating polynomial. */
-  /*      k = 1 -> q-1          */
-  /*      k = 2 -> q            */
-  /*      k = 3 -> q+1          */
-  /*  Index i is a backward-in-time index, i = 1 -> current time, */
-  /*      i = 2 -> previous step, etc    */
-  /* get maxima, minima, and variances, and form quartic coefficients  */
-  
-  for (k=1; k<=3; k++) {
-    smink = ark_mem->ark_ssdat[1][k];
-    smaxk = ZERO;
-    
-    for (i=1; i<=5; i++) {
-      smink = MIN(smink,ark_mem->ark_ssdat[i][k]);
-      smaxk = MAX(smaxk,ark_mem->ark_ssdat[i][k]);
-    }
-    
-    if (smink < TINY*smaxk) {
-      kflag = -1;  
-      return(kflag);
-    }
-    smax[k] = smaxk;
-    ssmax[k] = smaxk*smaxk;
-    
-    sumrat = ZERO;
-    sumrsq = ZERO;
-    for (i=1; i<=4; i++) {
-      rat[i][k] = ark_mem->ark_ssdat[i][k]/ark_mem->ark_ssdat[i+1][k];
-      sumrat = sumrat + rat[i][k];
-      sumrsq = sumrsq + rat[i][k]*rat[i][k];
-    } 
-    rav[k] = FOURTH*sumrat;
-    vrat[k] = ABS(FOURTH*sumrsq - rav[k]*rav[k]);
-    
-    qc[5][k] = ark_mem->ark_ssdat[1][k]*ark_mem->ark_ssdat[3][k] - ark_mem->ark_ssdat[2][k]*ark_mem->ark_ssdat[2][k];
-    qc[4][k] = ark_mem->ark_ssdat[2][k]*ark_mem->ark_ssdat[3][k] - ark_mem->ark_ssdat[1][k]*ark_mem->ark_ssdat[4][k];
-    qc[3][k] = ZERO;
-    qc[2][k] = ark_mem->ark_ssdat[2][k]*ark_mem->ark_ssdat[5][k] - ark_mem->ark_ssdat[3][k]*ark_mem->ark_ssdat[4][k];
-    qc[1][k] = ark_mem->ark_ssdat[4][k]*ark_mem->ark_ssdat[4][k] - ark_mem->ark_ssdat[3][k]*ark_mem->ark_ssdat[5][k];
-    
-    for (i=1; i<=5; i++) {
-      qco[i][k] = qc[i][k];
-    }
-  }                            /* End of k loop */
-  
-  /* Isolate normal or nearly-normal matrix case. Three quartic will
-     have common or nearly-common roots in this case. 
-     Return a kflag = 1 if this procedure works. If three root 
-     differ more than vrrt2, return error kflag = -3.    */
-  vmin = MIN(vrat[1],MIN(vrat[2],vrat[3]));
-  vmax = MAX(vrat[1],MAX(vrat[2],vrat[3]));
-  
-  if (vmin < vrrtol*vrrtol) {
-    if (vmax > vrrt2*vrrt2) {
-      kflag = -2;  
-      return(kflag);
-    } else {
-      rr = (rav[1] + rav[2] + rav[3])/THREE;
-      
-      drrmax = ZERO;
-      for(k = 1;k<=3;k++) {
-        adrr = ABS(rav[k] - rr);
-        drrmax = MAX(drrmax, adrr);
-      }
-      if (drrmax > vrrt2) {
-        kflag = -3;    
-      }
-      
-      kflag = 1;
-
-      /*  can compute charactistic root, drop to next section   */
-    }
-  } else {
-
-    /* use the quartics to get rr. */
-    if (ABS(qco[1][1]) < TINY*ssmax[1]) {
-      kflag = -4;    
-      return(kflag);
-    }
-    
-    tem = qco[1][2]/qco[1][1];
-    for(i=2; i<=5; i++) {
-      qco[i][2] = qco[i][2] - tem*qco[i][1];
-    }
-
-    qco[1][2] = ZERO;
-    tem = qco[1][3]/qco[1][1];
-    for(i=2; i<=5; i++) {
-      qco[i][3] = qco[i][3] - tem*qco[i][1];
-    }
-    qco[1][3] = ZERO;
-    
-    if (ABS(qco[2][2]) < TINY*ssmax[2]) {
-      kflag = -4;    
-      return(kflag);
-    }
-    
-    tem = qco[2][3]/qco[2][2];
-    for(i=3; i<=5; i++) {
-      qco[i][3] = qco[i][3] - tem*qco[i][2];
-    }
-    
-    if (ABS(qco[4][3]) < TINY*ssmax[3]) {
-      kflag = -4;    
-      return(kflag);
-    }
-    
-    rr = -qco[5][3]/qco[4][3];
-    
-    if (rr < TINY || rr > HUN) {
-      kflag = -5;   
-      return(kflag);
-    }
-    
-    for(k=1; k<=3; k++) {
-      qkr[k] = qc[5][k] + rr*(qc[4][k] + rr*rr*(qc[2][k] + rr*qc[1][k]));
-    }  
-    
-    sqmax = ZERO;
-    for(k=1; k<=3; k++) {
-      saqk = ABS(qkr[k])/ssmax[k];
-      if (saqk > sqmax) sqmax = saqk;
-    } 
-    
-    if (sqmax < sqtol) {
-      kflag = 2;
-      
-      /*  can compute charactistic root, drop to "given rr,etc"   */
-      
-    } else {
-
-      /* do Newton corrections to improve rr.  */
-      for(it=1; it<=3; it++) {
-        for(k=1; k<=3; k++) {
-          qp = qc[4][k] + rr*rr*(THREE*qc[2][k] + rr*FOUR*qc[1][k]);
-          drr[k] = ZERO;
-          if (ABS(qp) > TINY*ssmax[k]) drr[k] = -qkr[k]/qp;
-          rrc[k] = rr + drr[k];
-        } 
-        
-        for(k=1; k<=3; k++) {
-          s = rrc[k];
-          sqmaxk = ZERO;
-          for(j=1; j<=3; j++) {
-            qjk[j][k] = qc[5][j] + s*(qc[4][j] + 
-                                      s*s*(qc[2][j] + s*qc[1][j]));
-            saqj = ABS(qjk[j][k])/ssmax[j];
-            if (saqj > sqmaxk) sqmaxk = saqj;
-          } 
-          sqmx[k] = sqmaxk;
-        } 
-
-        sqmin = sqmx[1]; kmin = 1;
-        for(k=2; k<=3; k++) {
-          if (sqmx[k] < sqmin) {
-            kmin = k;
-            sqmin = sqmx[k];
-          }
-        } 
-        rr = rrc[kmin];
-        
-        if (sqmin < sqtol) {
-          kflag = 3;
-          /*  can compute charactistic root   */
-          /*  break out of Newton correction loop and drop to "given rr,etc" */ 
-          break;
-        } else {
-          for(j=1; j<=3; j++) {
-            qkr[j] = qjk[j][kmin];
-          }
-        }     
-      }          /*  end of Newton correction loop  */ 
-      
-      if (sqmin > sqtol) {
-        kflag = -6;
-        return(kflag);
-      }
-    }     /*  end of if (sqmax < sqtol) else   */
-  }      /*  end of if (vmin < vrrtol*vrrtol) else, quartics to get rr. */
-  
-  /* given rr, find sigsq[k] and verify rr.  */
-  /* All positive kflag drop to this section  */
-  for(k=1; k<=3; k++) {
-    rsa = ark_mem->ark_ssdat[1][k];
-    rsb = ark_mem->ark_ssdat[2][k]*rr;
-    rsc = ark_mem->ark_ssdat[3][k]*rr*rr;
-    rsd = ark_mem->ark_ssdat[4][k]*rr*rr*rr;
-    rd1a = rsa - rsb;
-    rd1b = rsb - rsc;
-    rd1c = rsc - rsd;
-    rd2a = rd1a - rd1b;
-    rd2b = rd1b - rd1c;
-    rd3a = rd2a - rd2b;
-    
-    if (ABS(rd1b) < TINY*smax[k]) {
-      kflag = -7;
-      return(kflag);
-    }
-    
-    cest1 = -rd3a/rd1b;
-    if (cest1 < TINY || cest1 > FOUR) {
-      kflag = -7;
-      return(kflag);
-    }
-    corr1 = (rd2b/cest1)/(rr*rr);
-    sigsq[k] = ark_mem->ark_ssdat[3][k] + corr1;
-  }
-  
-  if (sigsq[2] < TINY) {
-    kflag = -8;
-    return(kflag);
-  }
-  
-  ratp = sigsq[3]/sigsq[2];
-  ratm = sigsq[1]/sigsq[2];
-  qfac1 = FOURTH*(ark_mem->ark_q*ark_mem->ark_q - ONE);
-  qfac2 = TWO/(ark_mem->ark_q - ONE);
-  bb = ratp*ratm - ONE - qfac1*ratp;
-  tem = ONE - qfac2*bb;
-  
-  if (ABS(tem) < TINY) {
-    kflag = -8;
-    return(kflag);
-  }
-  
-  rrb = ONE/tem;
-  
-  if (ABS(rrb - rr) > rrtol) {
-    kflag = -9;
-    return(kflag);
-  }
-  
-  /* Check to see if rr is above cutoff rrcut  */
-  if (rr > rrcut) {
-    if (kflag == 1) kflag = 4;
-    if (kflag == 2) kflag = 5;
-    if (kflag == 3) kflag = 6;
-  }
-  
-  /* All positive kflag returned at this point  */
-  
-  return(kflag);
-}
-
 
 
 /*===============================================================
@@ -3604,7 +3183,7 @@ void ARKProcessError(ARKodeMem ark_mem,
    It sends the error message to the stream pointed to by ark_errfp 
 ---------------------------------------------------------------*/
 void ARKErrHandler(int error_code, const char *module,
-                  const char *function, char *msg, void *data)
+		   const char *function, char *msg, void *data)
 {
   ARKodeMem ark_mem;
   char err_type[10];
@@ -3625,6 +3204,32 @@ void ARKErrHandler(int error_code, const char *module,
 #endif
 
   return;
+}
+
+/*---------------------------------------------------------------
+ ARKAdapt is the default time step adaptivity function.
+---------------------------------------------------------------*/
+int ARKAdapt(N_Vector y, realtype t, realtype h, 
+	     realtype e1, realtype e2, 
+	     realtype e3, int q, int p, 
+	     realtype *hnew, void *data)
+{
+  /* FILL THIS IN!!! */
+  *hnew = h;
+
+  return(0);
+}
+
+
+/*---------------------------------------------------------------
+ ARKExpStab is the default explicit stability estimation function
+---------------------------------------------------------------*/
+int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
+{
+  /* FILL THIS IN!!! */
+  *hstab = RCONST(1.0e200);
+
+  return(0);
 }
 
 /*===============================================================

@@ -26,7 +26,7 @@
 
  Usage:
    The following is a summary of the usage of this module.
-   Details of the calls to ARKodeCreate, ARKodeMalloc, ARKSp*,
+   Details of the calls to ARKodeCreate, ARKSp*,
    and ARKode are available in the User Guide.
    To use these routines, the sequence of calls in the user
    main program should be as follows:
@@ -36,8 +36,7 @@
    ...
    Set y0
    ...
-   arkode_mem = ARKodeCreate(...);
-   ier = ARKodeMalloc(...);
+   arkode_mem = ARKodeCreate();
    ...
    flag = ARKSptfqmr(arkode_mem, pretype, maxl);
      -or-

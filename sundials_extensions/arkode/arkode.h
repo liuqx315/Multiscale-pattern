@@ -55,10 +55,8 @@ extern "C" {
 #define ARK_ONE_STEP       2
 #define ARK_FIXED_STEP     3
 
-/*----------------------------------------
- ARKODE return flags
-----------------------------------------*/
 
+/* ARKODE return flags */
 #define ARK_SUCCESS               0
 #define ARK_TSTOP_RETURN          1
 #define ARK_ROOT_RETURN           2
@@ -323,11 +321,15 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | which the solution is not to proceed.
                           | [infinity]
                           |
- ARKodeSetAdapMethod      | Method to use for time step adaptivity
+ ARKodeSetAdaptMethod     | Method to use for time step adaptivity
                           | [0]
                           |
  ARKodeSetAdaptivityFn    | user-provided time step adaptivity 
                           | function.
+                          | [internal]
+                          |
+ ARKodeSetStabilityFn     | user-provided explicit time step 
+                          | stability function.
                           | [internal]
                           |
  ARKodeSetMaxErrTestFails | Maximum number of error test failures
@@ -370,8 +372,8 @@ SUNDIALS_EXPORT int ARKodeSetErrFile(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeSetUserData(void *arkode_mem, 
 				      void *user_data);
 SUNDIALS_EXPORT int ARKodeSetOrd(void *arkode_mem, int maxord);
-SUNDIALS_EXPORT int ARKodeSetERK(void *arkode_mem, int truefalse);
-SUNDIALS_EXPORT int ARKodeSetIRK(void *arkode_mem, int truefalse);
+SUNDIALS_EXPORT int ARKodeSetERK(void *arkode_mem);
+SUNDIALS_EXPORT int ARKodeSetIRK(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, realtype s, 
 				      realtype *c, realtype *A, 
 				      realtype *b, realtype *bembed, 
@@ -396,7 +398,11 @@ SUNDIALS_EXPORT int ARKodeSetAdaptMethod(void *arkode_mem,
 					 int imethod, 
 					 realtype *adapt_params);
 SUNDIALS_EXPORT int ARKodeSetAdaptivityFn(void *arkode_mem, 
-					  ARKAdaptFn hfun);
+					  ARKAdaptFn hfun, 
+					  void *h_data);
+SUNDIALS_EXPORT int ARKodeSetStabilityFn(void *arkode_mem, 
+					 ARKExpStabFn EStab, 
+					 void *estab_data);
 SUNDIALS_EXPORT int ARKodeSetMaxErrTestFails(void *arkode_mem, 
 					     int maxnef);
 SUNDIALS_EXPORT int ARKodeSetMaxNonlinIters(void *arkode_mem, 
@@ -428,9 +434,6 @@ SUNDIALS_EXPORT int ARKodeSetNoInactiveRootWarn(void *arkode_mem);
          portion of the right-hand side function in 
                 y' = fe(t,y) + fi(t,y).
 
- EStab   is the name of the C function defining the stability 
-         restriction for fe.
-
  t0      is the initial value of t.
 
  y0      is the initial condition vector y(t0).
@@ -442,8 +445,7 @@ SUNDIALS_EXPORT int ARKodeSetNoInactiveRootWarn(void *arkode_mem);
   ARK_ILL_INPUT if an argument has an illegal value.
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKodeInit(void *arkode_mem, ARKRhsFn fe, 
-			       ARKRhsFn fi, ARKExpStabFn EStab, 
-			       realtype t0, N_Vector y0);
+			       ARKRhsFn fi, realtype t0, N_Vector y0);
 
 /*---------------------------------------------------------------
  Function : ARKodeReInit
@@ -773,9 +775,7 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
  ARKodeGet* return values:
    ARK_SUCCESS   if succesful
    ARK_MEM_NULL  if the arkode memory was NULL
-   ARK_NO_SLDET  if stability limit was not turned on
 ---------------------------------------------------------------*/
-
 SUNDIALS_EXPORT int ARKodeGetWorkSpace(void *arkode_mem, 
 				       long int *lenrw, 
 				       long int *leniw);

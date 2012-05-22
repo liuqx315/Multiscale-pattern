@@ -95,12 +95,14 @@ int ARKodeSetUserData(void *arkode_mem, void *user_data)
 
 
 /*---------------------------------------------------------------
- ARKodeSetMaxOrd:
+ ARKodeSetOrd:
 
- Specifies the maximum method order
+ Specifies the method order
 ---------------------------------------------------------------*/
-int ARKodeSetMaxOrd(void *arkode_mem, int maxord)
+int ARKodeSetOrd(void *arkode_mem, int ord)
 {
+  /* UPDATE THIS ROUTINE TO ALLOW FOR ORDER INCREASES AS WELL!!! */
+  
   ARKodeMem ark_mem;
   int qmax_alloc;
 
@@ -112,7 +114,7 @@ int ARKodeSetMaxOrd(void *arkode_mem, int maxord)
 
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (maxord <= 0) {
+  if (ord <= 0) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetMaxOrd", MSGARK_NEG_MAXORD);
     return(ARK_ILL_INPUT);
@@ -122,14 +124,70 @@ int ARKodeSetMaxOrd(void *arkode_mem, int maxord)
      was used when allocating memory */
   qmax_alloc = ark_mem->ark_qmax_alloc;
 
-  if (maxord > qmax_alloc) {
+  if (ord > qmax_alloc) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetMaxOrd", MSGARK_BAD_MAXORD);
     return(ARK_ILL_INPUT);
   }
 
-  ark_mem->ark_qmax = maxord;
+  ark_mem->ark_qmax = ord;
 
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetERK:
+
+ Specifies that the implicit portion of the problem is disabled, 
+ and to use an explicit RK method.
+---------------------------------------------------------------*/
+int ARKodeSetERK(void *arkode_mem)
+{
+  /* FILL THIS IN!!!! */
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetIRK:
+
+ Specifies that the explicit portion of the problem is disabled, 
+ and to use an implicit RK method.
+---------------------------------------------------------------*/
+int ARKodeSetIRK(void *arkode_mem)
+{
+  /* FILL THIS IN!!!! */
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetERKTable:
+
+ Specifies to use a customized Butcher table for the explicit 
+ portion of the system.
+---------------------------------------------------------------*/
+int ARKodeSetERKTable(void *arkode_mem, realtype s, realtype *c, 
+		      realtype *A, realtype *b, 
+		      realtype *bembed, realtype *bdense)
+{
+  /* FILL THIS IN!!!! */
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetIRKTable:
+
+ Specifies to use a customized Butcher table for the implicit 
+ portion of the system.
+---------------------------------------------------------------*/
+int ARKodeSetIRKTable(void *arkode_mem, realtype s, realtype *c, 
+		      realtype *A, realtype *b, 
+		      realtype *bembed, realtype *bdense)
+{
+  /* FILL THIS IN!!!! */
   return(ARK_SUCCESS);
 }
 
@@ -180,28 +238,6 @@ int ARKodeSetMaxHnilWarns(void *arkode_mem, int mxhnil)
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_mxhnil = mxhnil;
-
-  return(ARK_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
- ARKodeSetStabLimDet:
-
- Turns on/off the stability limit detection algorithm
----------------------------------------------------------------*/
-int ARKodeSetStabLimDet(void *arkode_mem, booleantype sldet)
-{
-  ARKodeMem ark_mem;
-
-  if (arkode_mem==NULL) {
-    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetStabLimDet", MSGARK_NO_MEM);
-    return(ARK_MEM_NULL);
-  }
-
-  ark_mem = (ARKodeMem) arkode_mem;
-  ark_mem->ark_sldeton = sldet;
 
   return(ARK_SUCCESS);
 }
@@ -346,6 +382,71 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
 
   ark_mem->ark_tstop = tstop;
   ark_mem->ark_tstopset = TRUE;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetAdaptMethod:
+
+ Specifies the time step adaptivity algorithm (and associated 
+ parameters) to use.
+---------------------------------------------------------------*/
+int ARKodeSetAdaptMethod(void *arkode_mem, int imethod, 
+			 realtype *adapt_params)
+{
+  /* FILL THIS IN!!!! */
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetAdaptivityFn:
+
+ Specifies the user-provided time step adaptivity function to use.
+---------------------------------------------------------------*/
+int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
+			  void *h_data)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  ark_mem->ark_hadapt = hfun;
+  ark_mem->ark_hadapt_data = h_data;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetStabilityFn:
+
+ Specifies the user-provided explicit time step stability 
+ function to use.
+---------------------------------------------------------------*/
+int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab,
+			 void *estab_data)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetStabilityFn", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  ark_mem->ark_expstab = EStab;
+  ark_mem->ark_estab_data = estab_data;
 
   return(ARK_SUCCESS);
 }
@@ -640,33 +741,6 @@ int ARKodeGetCurrentOrder(void *arkode_mem, int *qcur)
   ark_mem = (ARKodeMem) arkode_mem;
 
   *qcur = ark_mem->ark_next_q;
-
-  return(ARK_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
- ARKodeGetNumStabLimOrderReds:
-
- Returns the number of order reductions triggered by the stability
- limit detection algorithm
----------------------------------------------------------------*/
-int ARKodeGetNumStabLimOrderReds(void *arkode_mem, long int *nslred)
-{
-  ARKodeMem ark_mem;
-
-  if (arkode_mem==NULL) {
-    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetNumStabLimOrderReds", MSGARK_NO_MEM);
-    return(ARK_MEM_NULL);
-  }
-
-  ark_mem = (ARKodeMem) arkode_mem;
-
-  if (ark_mem->ark_sldeton==FALSE)
-    *nslred = 0;
-  else
-    *nslred = ark_mem->ark_nor;
 
   return(ARK_SUCCESS);
 }
