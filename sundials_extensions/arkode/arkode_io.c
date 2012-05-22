@@ -72,35 +72,6 @@ int ARKodeSetErrFile(void *arkode_mem, FILE *errfp)
 
 
 /*---------------------------------------------------------------
- ARKodeSetIterType:
-
- Specifies the iteration type (ARK_FUNCTIONAL or ARK_NEWTON)
----------------------------------------------------------------*/
-int ARKodeSetIterType(void *arkode_mem, int iter)
-{
-  ARKodeMem ark_mem;
-
-  if (arkode_mem==NULL) {
-    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetIterType", MSGARK_NO_MEM);
-    return(ARK_MEM_NULL);
-  }
-
-  ark_mem = (ARKodeMem) arkode_mem;
-
-  if ((iter != ARK_FUNCTIONAL) && (iter != ARK_NEWTON)) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetIterType", MSGARK_BAD_ITER);
-    return (ARK_ILL_INPUT);
-  }
-
-  ark_mem->ark_iter = iter;
-
-  return(ARK_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
  ARKodeSetUserData:
 
  Specifies the user data pointer for f

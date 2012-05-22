@@ -175,8 +175,7 @@
     CRDOWN      constant used in the estimation of the 
                 convergence rate (crate) of the iterates for 
                 the nonlinear equation
-    DGMAX       if iter == ARK_NEWTON, and |gamma/gammap-1| > DGMAX
-                then call lsetup
+    DGMAX       if |gamma/gammap-1| > DGMAX then call lsetup
     RDIV        declare divergence if ratio del/delp > RDIV
     MSBP        max no. of steps between lsetup calls
 ---------------------------------------------------------------*/
@@ -261,7 +260,6 @@ static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum,
 			realtype xi_inv, realtype xistar_inv);
 
 static int ARKNls(ARKodeMem ark_mem, int nflag);
-static int ARKNlsFunctional(ARKodeMem ark_mem);
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag);
 static int ARKNewtonIteration(ARKodeMem ark_mem);
 
@@ -304,16 +302,10 @@ static int ARKRootfind(ARKodeMem ark_mem);
  ARKodeInit. If an initialization error occurs, ARKodeCreate 
  prints an error message to standard err and returns NULL. 
 ---------------------------------------------------------------*/
-void *ARKodeCreate(int iter)
+void *ARKodeCreate()
 {
   int maxord;
   ARKodeMem ark_mem;
-
-  /* Test inputs */
-  if ((iter != ARK_FUNCTIONAL) && (iter != ARK_NEWTON)) {
-    ARKProcessError(NULL, 0, "ARKODE", "ARKodeCreate", MSGARK_BAD_ITER);
-    return(NULL);
-  }
 
   ark_mem = NULL;
   ark_mem = (ARKodeMem) malloc(sizeof(struct ARKodeMemRec));
@@ -326,9 +318,6 @@ void *ARKodeCreate(int iter)
   memset(ark_mem, 0, sizeof(struct ARKodeMemRec));
 
   maxord = Q_MAX;
-
-  /* copy input parameters into ark_mem */
-  ark_mem->ark_iter = iter;
 
   /* Set uround */
   ark_mem->ark_uround = UNIT_ROUNDOFF;
@@ -468,7 +457,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_tolsf = ONE;
 
   /* Set the linear solver addresses to NULL.
-     (We check != NULL later, in ARKode, if using ARK_NEWTON.) */
+     (We check != NULL later, in ARKode.) */
   ark_mem->ark_linit  = NULL;
   ark_mem->ark_lsetup = NULL;
   ark_mem->ark_lsolve = NULL;
@@ -1350,7 +1339,7 @@ void ARKodeFree(void **arkode_mem)
   
   ARKFreeVectors(ark_mem);
 
-  if (ark_mem->ark_iter == ARK_NEWTON && ark_mem->ark_lfree != NULL) 
+  if (ark_mem->ark_lfree != NULL) 
     ark_mem->ark_lfree(ark_mem);
 
   if (ark_mem->ark_nrtfn > 0) {
@@ -1519,20 +1508,18 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
   }
   
   /* Check if lsolve function exists (if needed) and call linit function (if it exists) */
-  if (ark_mem->ark_iter == ARK_NEWTON) {
-    if (ark_mem->ark_lsolve == NULL) {
-      ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKInitialSetup", MSGARK_LSOLVE_NULL);
-      return(ARK_ILL_INPUT);
-    }
-    if (ark_mem->ark_linit != NULL) {
-      ier = ark_mem->ark_linit(ark_mem);
-      if (ier != 0) {
-        ARKProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", "ARKInitialSetup", MSGARK_LINIT_FAIL);
-        return(ARK_LINIT_FAIL);
-      }
+  if (ark_mem->ark_lsolve == NULL) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKInitialSetup", MSGARK_LSOLVE_NULL);
+    return(ARK_ILL_INPUT);
+  }
+  if (ark_mem->ark_linit != NULL) {
+    ier = ark_mem->ark_linit(ark_mem);
+    if (ier != 0) {
+      ARKProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", "ARKInitialSetup", MSGARK_LINIT_FAIL);
+      return(ARK_LINIT_FAIL);
     }
   }
-
+  
   return(ARK_SUCCESS);
 }
 
@@ -2120,97 +2107,11 @@ static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
 
  This routine attempts to solve the nonlinear system associated
  with a single implicit step of the linear multistep method.
- Depending on iter, it calls ARKNlsFunctional or ARKNlsNewton
- to do the work.
+ It calls ARKNlsNewton to do the work.
 ---------------------------------------------------------------*/
 static int ARKNls(ARKodeMem ark_mem, int nflag)
 {
-  int flag = ARK_SUCCESS;
-
-  switch(ark_mem->ark_iter) {
-  case ARK_FUNCTIONAL: 
-    flag = ARKNlsFunctional(ark_mem);
-    break;
-  case ARK_NEWTON:
-    flag = ARKNlsNewton(ark_mem, nflag);
-    break;
-  }
-
-  return(flag);
-}
-
-
-/*---------------------------------------------------------------
- ARKNlsFunctional
-
- This routine attempts to solve the nonlinear system using 
- functional iteration (no matrices involved).
-
- Possible return values are:
-
-   ARK_SUCCESS      --->  continue with error test
-
-   ARK_RHSFUNC_FAIL --->  halt the integration
-
-   CONV_FAIL       -+
-   RHSFUNC_RECVR   -+->  predict again or stop if too many
----------------------------------------------------------------*/
-static int ARKNlsFunctional(ARKodeMem ark_mem)
-{
-  int retval, m;
-  realtype del, delp, dcon;
-
-  /* Initialize counter and evaluate f at predicted y */
-  ark_mem->ark_crate = ONE;
-  m = 0;
-
-  retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
-  ark_mem->ark_nfe++;
-  if (retval < 0) return(ARK_RHSFUNC_FAIL);
-  if (retval > 0) return(RHSFUNC_RECVR);
-
-  N_VConst(ZERO, ark_mem->ark_acor);
-
-  /* Initialize delp to avoid compiler warning message */
-  del = delp = ZERO;
-
-  /* Loop until convergence; accumulate corrections in acor */
-  for(;;) {
-
-    ark_mem->ark_nni++;
-
-    /* Correct y directly from the last f value */
-    N_VLinearSum(ark_mem->ark_h, ark_mem->ark_tempv, -ONE, ark_mem->ark_zn[1], ark_mem->ark_tempv);
-    N_VScale(ark_mem->ark_rl1, ark_mem->ark_tempv, ark_mem->ark_tempv);
-    N_VLinearSum(ONE, ark_mem->ark_zn[0], ONE, ark_mem->ark_tempv, ark_mem->ark_y);
-
-    /* Get WRMS norm of current correction to use in convergence test */
-    N_VLinearSum(ONE, ark_mem->ark_tempv, -ONE, ark_mem->ark_acor, ark_mem->ark_acor);
-    del = N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
-    N_VScale(ONE, ark_mem->ark_tempv, ark_mem->ark_acor);
-    
-    /* Test for convergence.  If m > 0, an estimate of the convergence
-       rate constant is stored in crate, and used in the test.        */
-    if (m > 0) ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del / delp);
-    dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_tq[4];
-    if (dcon <= ONE) {
-      ark_mem->ark_acnrm = (m == 0) ? del : N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
-      return(ARK_SUCCESS);  /* Convergence achieved */
-    }
-
-    /* Stop at maxcor iterations or if iter. seems to be diverging */
-    m++;
-    if ((m==ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV * delp))) return(CONV_FAIL);
-
-    /* Save norm of correction, evaluate f, and loop again */
-    delp = del;
-
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
-    ark_mem->ark_nfe++;
-    if (retval < 0) return(ARK_RHSFUNC_FAIL);
-    if (retval > 0) return(RHSFUNC_RECVR);
-
-  }
+  return(ARKNlsNewton(ark_mem, nflag));
 }
 
 

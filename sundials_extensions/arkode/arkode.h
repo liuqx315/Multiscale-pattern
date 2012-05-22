@@ -50,12 +50,6 @@ extern "C" {
 	control.
 ---------------------------------------------------------------*/
 
-/* TO DELETE */
-#define ARK_FUNCTIONAL 0
-#define ARK_NEWTON     1
-
-
-
 /* itask */
 #define ARK_NORMAL         1
 #define ARK_ONE_STEP       2

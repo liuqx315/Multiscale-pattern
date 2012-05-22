@@ -49,7 +49,6 @@ typedef struct ARKodeMemRec {
   ARKRhsFn ark_fe;            /* y' = fe(t,y(t)) + fi(t,y(t))          */
   ARKRhsFn ark_fi;
   void *ark_user_data;        /* user pointer passed to f              */
-  int ark_iter;               /* iter = ARK_FUNCTIONAL or ARK_NEWTON   */
   int ark_itol;               /* itol = ARK_SS, ARK_SV, ARK_WF, ARK_NN */
 
   realtype ark_reltol;        /* relative tolerance                    */
@@ -403,7 +402,6 @@ void ARKErrHandler(int error_code, const char *module,
 #define MSGARK_NO_MEM        "arkode_mem = NULL illegal."
 #define MSGARK_ARKMEM_FAIL   "Allocation of arkode_mem failed."
 #define MSGARK_MEM_FAIL      "A memory request failed."
-#define MSGARK_BAD_ITER      "Illegal value for iter. The legal values are ARK_FUNCTIONAL and ARK_NEWTON."
 #define MSGARK_NO_MALLOC     "Attempt to call before ARKodeInit."
 #define MSGARK_NEG_MAXORD    "maxord <= 0 illegal."
 #define MSGARK_BAD_MAXORD    "Illegal attempt to increase maximum method order."
