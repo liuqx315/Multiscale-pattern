@@ -1,16 +1,12 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Common implementation header file for the scaled, preconditioned
- * linear solver modules.
- * -----------------------------------------------------------------
- ***** UNTOUCHED *****
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Common implementation header file for the scaled, preconditioned
+ linear solver modules.
+---------------------------------------------------------------*/
 
 #ifndef _ARKSPILS_IMPL_H
 #define _ARKSPILS_IMPL_H
@@ -22,20 +18,18 @@ extern "C" {
 #include <arkode/arkode_spils.h>
 #include "arkode_impl.h"
 
-/* Types of iterative linear solvers */
 
+/* Types of iterative linear solvers */
 #define SPILS_SPGMR   1
 #define SPILS_SPBCG   2
 #define SPILS_SPTFQMR 3
 
-/*
- * -----------------------------------------------------------------
- * Types : ARKSpilsMemRec, ARKSpilsMem
- * -----------------------------------------------------------------
- * The type ARKSpilsMem is pointer to a ARKSpilsMemRec.
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ Types: ARKSpilsMemRec, ARKSpilsMem
+
+ The type ARKSpilsMem is pointer to a ARKSpilsMemRec.
+---------------------------------------------------------------*/
 typedef struct ARKSpilsMemRec {
 
   int s_type;           /* type of scaled preconditioned iterative LS   */
@@ -93,41 +87,35 @@ typedef struct ARKSpilsMemRec {
 
 } *ARKSpilsMem;
 
-/*
- * -----------------------------------------------------------------
- * Prototypes of internal functions
- * -----------------------------------------------------------------
- */
+
+/*---------------------------------------------------------------
+ Prototypes of internal functions
+---------------------------------------------------------------*/
 
 /* Atimes and PSolve routines called by generic solver */
-
 int ARKSpilsAtimes(void *ark_mem, N_Vector v, N_Vector z);
-
 int ARKSpilsPSolve(void *ark_mem, N_Vector r, N_Vector z, int lr);
 
 /* Difference quotient approximation for Jac times vector */
-
 int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
-                    N_Vector y, N_Vector fy, void *data,
-                    N_Vector work);
+		     N_Vector y, N_Vector fy, void *data,
+		     N_Vector work);
 
-/*
- * -----------------------------------------------------------------
- * Error Messages
- * -----------------------------------------------------------------
- */
 
-#define MSGS_ARKMEM_NULL  "Integrator memory is NULL."
-#define MSGS_MEM_FAIL    "A memory request failed."
-#define MSGS_BAD_NVECTOR "A required vector operation is not implemented."
-#define MSGS_BAD_LSTYPE  "Incompatible linear solver type."
-#define MSGS_BAD_PRETYPE "Illegal value for pretype. Legal values are PREC_NONE, PREC_LEFT, PREC_RIGHT, and PREC_BOTH."
-#define MSGS_PSOLVE_REQ  "pretype != PREC_NONE, but PSOLVE = NULL is illegal."
-#define MSGS_LMEM_NULL   "Linear solver memory is NULL."
-#define MSGS_BAD_GSTYPE  "Illegal value for gstype. Legal values are MODIFIED_GS and CLASSICAL_GS."
-#define MSGS_BAD_EPLIN   "eplifac < 0 illegal."
+/*---------------------------------------------------------------
+ Error Messages
+---------------------------------------------------------------*/
+#define MSGS_ARKMEM_NULL   "Integrator memory is NULL."
+#define MSGS_MEM_FAIL      "A memory request failed."
+#define MSGS_BAD_NVECTOR   "A required vector operation is not implemented."
+#define MSGS_BAD_LSTYPE    "Incompatible linear solver type."
+#define MSGS_BAD_PRETYPE   "Illegal value for pretype. Legal values are PREC_NONE, PREC_LEFT, PREC_RIGHT, and PREC_BOTH."
+#define MSGS_PSOLVE_REQ    "pretype != PREC_NONE, but PSOLVE = NULL is illegal."
+#define MSGS_LMEM_NULL     "Linear solver memory is NULL."
+#define MSGS_BAD_GSTYPE    "Illegal value for gstype. Legal values are MODIFIED_GS and CLASSICAL_GS."
+#define MSGS_BAD_EPLIN     "eplifac < 0 illegal."
 
-#define MSGS_PSET_FAILED "The preconditioner setup routine failed in an unrecoverable manner."
+#define MSGS_PSET_FAILED   "The preconditioner setup routine failed in an unrecoverable manner."
 #define MSGS_PSOLVE_FAILED "The preconditioner solve routine failed in an unrecoverable manner."
 #define MSGS_JTIMES_FAILED "The Jacobian x vector routine failed in an unrecoverable manner."
 

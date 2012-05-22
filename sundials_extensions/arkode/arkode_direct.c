@@ -1,21 +1,11 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * This is the implementation file for the ARKDLS linear solvers
- * -----------------------------------------------------------------
- ***** UNTOUCHED *****
- * -----------------------------------------------------------------
- */
-
-/* 
- * =================================================================
- * IMPORTED HEADER FILES
- * =================================================================
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ This is the implementation file for the ARKDLS linear solvers
+---------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,60 +14,24 @@
 #include "arkode_direct_impl.h"
 #include <sundials/sundials_math.h>
 
-/* 
- * =================================================================
- * FUNCTION SPECIFIC CONSTANTS
- * =================================================================
- */
+/*===============================================================
+ FUNCTION SPECIFIC CONSTANTS
+===============================================================*/
 
 /* Constant for DQ Jacobian approximation */
 #define MIN_INC_MULT RCONST(1000.0)
-
 #define ZERO         RCONST(0.0)
 #define ONE          RCONST(1.0)
 #define TWO          RCONST(2.0)
 
-/*
- * =================================================================
- * READIBILITY REPLACEMENTS
- * =================================================================
- */
 
-#define f         (ark_mem->ark_f)
-#define user_data (ark_mem->ark_user_data)
-#define uround    (ark_mem->ark_uround)
-#define nst       (ark_mem->ark_nst)
-#define tn        (ark_mem->ark_tn)
-#define h         (ark_mem->ark_h)
-#define gamma     (ark_mem->ark_gamma)
-#define gammap    (ark_mem->ark_gammap)
-#define gamrat    (ark_mem->ark_gamrat)
-#define ewt       (ark_mem->ark_ewt)
-
-#define lmem      (ark_mem->ark_lmem)
-
-#define mtype     (arkdls_mem->d_type)
-#define n         (arkdls_mem->d_n)
-#define ml        (arkdls_mem->d_ml)
-#define mu        (arkdls_mem->d_mu)
-#define smu       (arkdls_mem->d_smu)
-#define jacDQ     (arkdls_mem->d_jacDQ)
-#define djac      (arkdls_mem->d_djac)
-#define bjac      (arkdls_mem->d_bjac)
-#define M         (arkdls_mem->d_M)
-#define nje       (arkdls_mem->d_nje)
-#define nfeDQ     (arkdls_mem->d_nfeDQ)
-#define last_flag (arkdls_mem->d_last_flag)
-
-/* 
- * =================================================================
- * EXPORTED FUNCTIONS
- * =================================================================
- */
+/*===============================================================
+ EXPORTED FUNCTIONS
+===============================================================*/
               
-/*
- * ARKDlsSetDenseJacFn specifies the dense Jacobian function.
- */
+/*---------------------------------------------------------------
+ ARKDlsSetDenseJacFn specifies the dense Jacobian function.
+---------------------------------------------------------------*/
 int ARKDlsSetDenseJacFn(void *arkode_mem, ARKDlsDenseJacFn jac)
 {
   ARKodeMem ark_mem;
@@ -90,25 +44,26 @@ int ARKDlsSetDenseJacFn(void *arkode_mem, ARKDlsDenseJacFn jac)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
+  if (ark_mem->ark_lmem == NULL) {
     ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsSetDenseJacFn", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   if (jac != NULL) {
-    jacDQ = FALSE;
-    djac = jac;
+    arkdls_mem->d_jacDQ = FALSE;
+    arkdls_mem->d_djac = jac;
   } else {
-    jacDQ = TRUE;
+    arkdls_mem->d_jacDQ = TRUE;
   }
 
   return(ARKDLS_SUCCESS);
 }
 
-/*
- * ARKDlsSetBandJacFn specifies the band Jacobian function.
- */
+
+/*---------------------------------------------------------------
+ ARKDlsSetBandJacFn specifies the band Jacobian function.
+---------------------------------------------------------------*/
 int ARKDlsSetBandJacFn(void *arkode_mem, ARKDlsBandJacFn jac)
 {
   ARKodeMem ark_mem;
@@ -121,26 +76,27 @@ int ARKDlsSetBandJacFn(void *arkode_mem, ARKDlsBandJacFn jac)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
+  if (ark_mem->ark_lmem == NULL) {
     ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsSetBandJacFn", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   if (jac != NULL) {
-    jacDQ = FALSE;
-    bjac = jac;
+    arkdls_mem->d_jacDQ = FALSE;
+    arkdls_mem->d_bjac = jac;
   } else {
-    jacDQ = TRUE;
+    arkdls_mem->d_jacDQ = TRUE;
   }
 
   return(ARKDLS_SUCCESS);
 }
 
-/*
- * ARKDlsGetWorkSpace returns the length of workspace allocated for the
- * ARKDLS linear solver.
- */
+
+/*---------------------------------------------------------------
+ ARKDlsGetWorkSpace returns the length of workspace allocated for 
+ the ARKDLS linear solver.
+---------------------------------------------------------------*/
 int ARKDlsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 {
   ARKodeMem ark_mem;
@@ -153,26 +109,27 @@ int ARKDlsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
+  if (ark_mem->ark_lmem == NULL) {
     ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetWorkSpace", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
-  if (mtype == SUNDIALS_DENSE) {
-    *lenrwLS = 2*n*n;
-    *leniwLS = n;
-  } else if (mtype == SUNDIALS_BAND) {
-    *lenrwLS = n*(smu + mu + 2*ml + 2);
-    *leniwLS = n;
+  if (arkdls_mem->d_type == SUNDIALS_DENSE) {
+    *lenrwLS = 2*arkdls_mem->d_n*arkdls_mem->d_n;
+    *leniwLS = arkdls_mem->d_n;
+  } else if (arkdls_mem->d_type == SUNDIALS_BAND) {
+    *lenrwLS = arkdls_mem->d_n*(arkdls_mem->d_smu + arkdls_mem->d_mu + 2*arkdls_mem->d_ml + 2);
+    *leniwLS = arkdls_mem->d_n;
   }
 
   return(ARKDLS_SUCCESS);
 }
 
-/*
- * ARKDlsGetNumJacEvals returns the number of Jacobian evaluations.
- */
+
+/*---------------------------------------------------------------
+ ARKDlsGetNumJacEvals returns the number of Jacobian evaluations.
+---------------------------------------------------------------*/
 int ARKDlsGetNumJacEvals(void *arkode_mem, long int *njevals)
 {
   ARKodeMem ark_mem;
@@ -185,21 +142,22 @@ int ARKDlsGetNumJacEvals(void *arkode_mem, long int *njevals)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
+  if (ark_mem->ark_lmem == NULL) {
     ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetNumJacEvals", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
-  *njevals = nje;
+  *njevals = arkdls_mem->d_nje;
 
   return(ARKDLS_SUCCESS);
 }
 
-/*
- * ARKDlsGetNumRhsEvals returns the number of calls to the ODE function
- * needed for the DQ Jacobian approximation.
- */
+
+/*---------------------------------------------------------------
+ ARKDlsGetNumRhsEvals returns the number of calls to the ODE function
+ needed for the DQ Jacobian approximation.
+---------------------------------------------------------------*/
 int ARKDlsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 {
   ARKodeMem ark_mem;
@@ -212,21 +170,22 @@ int ARKDlsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
+  if (ark_mem->ark_lmem == NULL) {
     ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetNumRhsEvals", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
-  *nfevalsLS = nfeDQ;
+  *nfevalsLS = arkdls_mem->d_nfeDQ;
 
   return(ARKDLS_SUCCESS);
 }
 
-/*
- * ARKDlsGetReturnFlagName returns the name associated with a ARKDLS
- * return value.
- */
+
+/*---------------------------------------------------------------
+ ARKDlsGetReturnFlagName returns the name associated with a ARKDLS
+ return value.
+---------------------------------------------------------------*/
 char *ARKDlsGetReturnFlagName(long int flag)
 {
   char *name;
@@ -262,9 +221,10 @@ char *ARKDlsGetReturnFlagName(long int flag)
   return(name);
 }
 
-/*
- * ARKDlsGetLastFlag returns the last flag set in a ARKDLS function.
- */
+
+/*---------------------------------------------------------------
+ ARKDlsGetLastFlag returns the last flag set in a ARKDLS function.
+---------------------------------------------------------------*/
 int ARKDlsGetLastFlag(void *arkode_mem, long int *flag)
 {
   ARKodeMem ark_mem;
@@ -277,42 +237,37 @@ int ARKDlsGetLastFlag(void *arkode_mem, long int *flag)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
+  if (ark_mem->ark_lmem == NULL) {
     ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetLastFlag", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
-  *flag = last_flag;
+  *flag = arkdls_mem->d_last_flag;
 
   return(ARKDLS_SUCCESS);
 }
 
-/* 
- * =================================================================
- * DQ JACOBIAN APPROXIMATIONS
- * =================================================================
- */
 
-/*
- * -----------------------------------------------------------------
- * arkDlsDenseDQJac 
- * -----------------------------------------------------------------
- * This routine generates a dense difference quotient approximation to
- * the Jacobian of f(t,y). It assumes that a dense matrix of type
- * DlsMat is stored column-wise, and that elements within each column
- * are contiguous. The address of the jth column of J is obtained via
- * the macro DENSE_COL and this pointer is associated with an N_Vector
- * using the N_VGetArrayPointer/N_VSetArrayPointer functions. 
- * Finally, the actual computation of the jth column of the Jacobian is 
- * done with a call to N_VLinearSum.
- * -----------------------------------------------------------------
- */ 
+/*===============================================================
+ DQ JACOBIAN APPROXIMATIONS
+===============================================================*/
 
-int arkDlsDenseDQJac(long int N, realtype t,
-                    N_Vector y, N_Vector fy, 
-                    DlsMat Jac, void *data,
-                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+/*---------------------------------------------------------------
+ arkDlsDenseDQJac:
+
+ This routine generates a dense difference quotient approximation 
+ to the Jacobian of f(t,y). It assumes that a dense matrix of 
+ type DlsMat is stored column-wise, and that elements within each 
+ column are contiguous. The address of the jth column of J is 
+ obtained via the macro DENSE_COL and this pointer is associated 
+ with an N_Vector using the N_VGetArrayPointer/N_VSetArrayPointer 
+ functions.  Finally, the actual computation of the jth column of
+ the Jacobian is done with a call to N_VLinearSum.
+---------------------------------------------------------------*/
+int arkDlsDenseDQJac(long int N, realtype t, N_Vector y, 
+		     N_Vector fy, DlsMat Jac, void *data,
+		     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
   realtype fnorm, minInc, inc, inc_inv, yjsaved, srur;
   realtype *tmp2_data, *y_data, *ewt_data;
@@ -325,7 +280,7 @@ int arkDlsDenseDQJac(long int N, realtype t,
 
   /* data points to arkode_mem */
   ark_mem = (ARKodeMem) data;
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   /* Save pointer to the array in tmp2 */
   tmp2_data = N_VGetArrayPointer(tmp2);
@@ -335,27 +290,26 @@ int arkDlsDenseDQJac(long int N, realtype t,
   jthCol = tmp2;
 
   /* Obtain pointers to the data for ewt, y */
-  ewt_data = N_VGetArrayPointer(ewt);
+  ewt_data = N_VGetArrayPointer(ark_mem->ark_ewt);
   y_data   = N_VGetArrayPointer(y);
 
   /* Set minimum increment based on uround and norm of f */
-  srur = RSqrt(uround);
-  fnorm = N_VWrmsNorm(fy, ewt);
+  srur = RSqrt(ark_mem->ark_uround);
+  fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt);
   minInc = (fnorm != ZERO) ?
-           (MIN_INC_MULT * ABS(h) * uround * N * fnorm) : ONE;
+           (MIN_INC_MULT * ABS(ark_mem->ark_h) * ark_mem->ark_uround * N * fnorm) : ONE;
 
   for (j = 0; j < N; j++) {
 
     /* Generate the jth col of J(tn,y) */
-
     N_VSetArrayPointer(DENSE_COL(Jac,j), jthCol);
 
     yjsaved = y_data[j];
     inc = MAX(srur*ABS(yjsaved), minInc/ewt_data[j]);
     y_data[j] += inc;
 
-    retval = f(t, y, ftemp, user_data);
-    nfeDQ++;
+    retval = ark_mem->ark_fi(t, y, ftemp, ark_mem->ark_user_data);
+    arkdls_mem->d_nfeDQ++;
     if (retval != 0) break;
     
     y_data[j] = yjsaved;
@@ -372,19 +326,17 @@ int arkDlsDenseDQJac(long int N, realtype t,
   return(retval);
 }
 
-/*
- * -----------------------------------------------------------------
- * arkDlsBandDQJac
- * -----------------------------------------------------------------
- * This routine generates a banded difference quotient approximation to
- * the Jacobian of f(t,y).  It assumes that a band matrix of type
- * DlsMat is stored column-wise, and that elements within each column
- * are contiguous. This makes it possible to get the address of a column
- * of J via the macro BAND_COL and to write a simple for loop to set
- * each of the elements of a column in succession.
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ arkDlsBandDQJac:
+
+ This routine generates a banded difference quotient approximation 
+ to the Jacobian of f(t,y).  It assumes that a band matrix of type
+ DlsMat is stored column-wise, and that elements within each 
+ column are contiguous. This makes it possible to get the address 
+ of a column of J via the macro BAND_COL and to write a simple for 
+ loop to set each of the elements of a column in succession.
+---------------------------------------------------------------*/
 int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
                    realtype t, N_Vector y, N_Vector fy, 
                    DlsMat Jac, void *data,
@@ -401,14 +353,14 @@ int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
 
   /* data points to arkode_mem */
   ark_mem = (ARKodeMem) data;
-  arkdls_mem = (ARKDlsMem) lmem;
+  arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   /* Rename work vectors for use as temporary values of y and f */
   ftemp = tmp1;
   ytemp = tmp2;
 
   /* Obtain pointers to the data for ewt, fy, ftemp, y, ytemp */
-  ewt_data   = N_VGetArrayPointer(ewt);
+  ewt_data   = N_VGetArrayPointer(ark_mem->ark_ewt);
   fy_data    = N_VGetArrayPointer(fy);
   ftemp_data = N_VGetArrayPointer(ftemp);
   y_data     = N_VGetArrayPointer(y);
@@ -418,10 +370,10 @@ int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
   N_VScale(ONE, y, ytemp);
 
   /* Set minimum increment based on uround and norm of f */
-  srur = RSqrt(uround);
-  fnorm = N_VWrmsNorm(fy, ewt);
+  srur = RSqrt(ark_mem->ark_uround);
+  fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt);
   minInc = (fnorm != ZERO) ?
-           (MIN_INC_MULT * ABS(h) * uround * N * fnorm) : ONE;
+           (MIN_INC_MULT * ABS(ark_mem->ark_h) * ark_mem->ark_uround * N * fnorm) : ONE;
 
   /* Set bandwidth and number of column groups for band differencing */
   width = mlower + mupper + 1;
@@ -437,9 +389,8 @@ int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
     }
 
     /* Evaluate f with incremented y */
-
-    retval = f(tn, ytemp, ftemp, user_data);
-    nfeDQ++;
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ytemp, ftemp, ark_mem->ark_user_data);
+    arkdls_mem->d_nfeDQ++;
     if (retval != 0) break;
 
     /* Restore ytemp, then form and load difference quotients */
@@ -458,3 +409,7 @@ int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
   return(retval);
 }
 
+
+/*---------------------------------------------------------------
+    EOF
+---------------------------------------------------------------*/

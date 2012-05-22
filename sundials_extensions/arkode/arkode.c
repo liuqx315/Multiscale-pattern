@@ -1,19 +1,16 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * This is the implementation file for the main ARKODE integrator.
- * It is independent of the ARKODE linear solver in use.
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ This is the implementation file for the main ARKODE integrator.
+ It is independent of the ARKODE linear solver in use.
+---------------------------------------------------------------*/
 
-/*=================================================================*/
-/*             Import Header Files                                 */
-/*=================================================================*/
-
+/*===============================================================
+             Import Header Files                                 
+===============================================================*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -23,64 +20,64 @@
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_types.h>
 
-/*=================================================================*/
-/*             ARKODE Private Constants                             */
-/*=================================================================*/
 
-#define ZERO   RCONST(0.0)     /* real 0.0     */
-#define TINY   RCONST(1.0e-10) /* small number */
-#define TENTH  RCONST(0.1)     /* real 0.1     */
-#define POINT2 RCONST(0.2)     /* real 0.2     */
-#define FOURTH RCONST(0.25)    /* real 0.25    */
-#define HALF   RCONST(0.5)     /* real 0.5     */
-#define ONE    RCONST(1.0)     /* real 1.0     */
-#define TWO    RCONST(2.0)     /* real 2.0     */
-#define THREE  RCONST(3.0)     /* real 3.0     */
-#define FOUR   RCONST(4.0)     /* real 4.0     */
-#define FIVE   RCONST(5.0)     /* real 5.0     */
-#define TWELVE RCONST(12.0)    /* real 12.0    */
-#define HUN    RCONST(100.0)   /* real 100.0   */
+/*===============================================================
+             ARKODE Private Constants                             
+===============================================================*/
+#define ZERO   RCONST(0.0)      /* real 0.0     */
+#define TINY   RCONST(1.0e-10)  /* small number */
+#define TENTH  RCONST(0.1)      /* real 0.1     */
+#define POINT2 RCONST(0.2)      /* real 0.2     */
+#define FOURTH RCONST(0.25)     /* real 0.25    */
+#define HALF   RCONST(0.5)      /* real 0.5     */
+#define ONE    RCONST(1.0)      /* real 1.0     */
+#define TWO    RCONST(2.0)      /* real 2.0     */
+#define THREE  RCONST(3.0)      /* real 3.0     */
+#define FOUR   RCONST(4.0)      /* real 4.0     */
+#define FIVE   RCONST(5.0)      /* real 5.0     */
+#define TWELVE RCONST(12.0)     /* real 12.0    */
+#define HUN    RCONST(100.0)    /* real 100.0   */
 
 
-/*=================================================================*/
-/*             ARKODE Routine-Specific Constants                   */
-/*=================================================================*/
+/*===============================================================
+             ARKODE Routine-Specific Constants                   
+===============================================================*/
 
-/* Control constants for lower-level functions used by ARKStep 
- * ----------------------------------------------------------
- *
- * ARKHin return values:
- *    ARK_SUCCESS
- *    ARK_RHSFUNC_FAIL
- *    ARK_TOO_CLOSE
- *
- * ARKStep control constants:
- *    DO_ERROR_TEST
- *    PREDICT_AGAIN
- *
- * ARKStep return values: 
- *    ARK_SUCCESS,
- *    ARK_LSETUP_FAIL,  ARK_LSOLVE_FAIL, 
- *    ARK_RHSFUNC_FAIL, ARK_RTFUNC_FAIL
- *    ARK_CONV_FAILURE, ARK_ERR_FAILURE,
- *    ARK_FIRST_RHSFUNC_ERR
- *
- * ARKNls input nflag values:
- *    FIRST_CALL
- *    PREV_CONV_FAIL
- *    PREV_ERR_FAIL
- *    
- * ARKNls return values: 
- *    ARK_SUCCESS,
- *    ARK_LSETUP_FAIL, ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL,
- *    CONV_FAIL, RHSFUNC_RECVR
- * 
- * ARKNewtonIteration return values:
- *    ARK_SUCCESS, 
- *    ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL
- *    CONV_FAIL, RHSFUNC_RECVR,
- *    TRY_AGAIN
- */
+/*---------------------------------------------------------------
+ Control constants for lower-level functions used by ARKStep:
+-----------------------------------------------------------------
+ ARKHin return values:
+    ARK_SUCCESS
+    ARK_RHSFUNC_FAIL
+    ARK_TOO_CLOSE
+
+ ARKStep control constants:
+    DO_ERROR_TEST
+    PREDICT_AGAIN
+
+ ARKStep return values: 
+    ARK_SUCCESS,
+    ARK_LSETUP_FAIL,  ARK_LSOLVE_FAIL, 
+    ARK_RHSFUNC_FAIL, ARK_RTFUNC_FAIL
+    ARK_CONV_FAILURE, ARK_ERR_FAILURE,
+    ARK_FIRST_RHSFUNC_ERR
+
+ ARKNls input nflag values:
+    FIRST_CALL
+    PREV_CONV_FAIL
+    PREV_ERR_FAIL
+    
+ ARKNls return values: 
+    ARK_SUCCESS,
+    ARK_LSETUP_FAIL, ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL,
+    CONV_FAIL, RHSFUNC_RECVR
+ 
+ ARKNewtonIteration return values:
+    ARK_SUCCESS, 
+    ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL
+    CONV_FAIL, RHSFUNC_RECVR,
+    TRY_AGAIN
+---------------------------------------------------------------*/
 #define DO_ERROR_TEST    +2
 #define PREDICT_AGAIN    +3
 
@@ -94,83 +91,95 @@
 #define RHSFUNC_RECVR    +9
 
 
-/* Control constants for lower-level rootfinding functions
- * -------------------------------------------------------
- *
- * ARKRcheck1 return values:
- *    ARK_SUCCESS,
- *    ARK_RTFUNC_FAIL,
- * ARKRcheck2 return values:
- *    ARK_SUCCESS
- *    ARK_RTFUNC_FAIL,
- *    CLOSERT
- *    RTFOUND
- * ARKRcheck3 return values:
- *    ARK_SUCCESS
- *    ARK_RTFUNC_FAIL,
- *    RTFOUND
- * ARKRootfind return values:
- *    ARK_SUCCESS
- *    ARK_RTFUNC_FAIL,
- *    RTFOUND
- */
+/*---------------------------------------------------------------
+ Control constants for lower-level rootfinding functions
+-----------------------------------------------------------------
+ ARKRcheck1 return values:
+    ARK_SUCCESS,
+    ARK_RTFUNC_FAIL,
+
+ ARKRcheck2 return values:
+    ARK_SUCCESS
+    ARK_RTFUNC_FAIL,
+    CLOSERT
+    RTFOUND
+
+ ARKRcheck3 return values:
+    ARK_SUCCESS
+    ARK_RTFUNC_FAIL,
+    RTFOUND
+
+ ARKRootfind return values:
+    ARK_SUCCESS
+    ARK_RTFUNC_FAIL,
+    RTFOUND
+---------------------------------------------------------------*/
+
 #define RTFOUND          +1
 #define CLOSERT          +3
 
-/* Control constants for tolerances
- * --------------------------------
- */
+/*---------------------------------------------------------------
+ Control constants for tolerances
+---------------------------------------------------------------*/
 #define ARK_NN  0
 #define ARK_SS  1
 #define ARK_SV  2
 #define ARK_WF  3
 
-/* Algorithmic constants
- * ---------------------
- *
- * ARKodeGetDky and ARKStep
- *    FUZZ_FACTOR
- *
- * ARKHin
- *    HLB_FACTOR
- *    HUB_FACTOR
- *    H_BIAS
- *    MAX_ITERS
- *
- * ARKodeCreate 
- *   CORTES
- *
- * ARKStep
- *    THRESH
- *    ETAMX1
- *    ETAMX2
- *    ETAMX3
- *    ETAMXF
- *    ETAMIN
- *    ETACF
- *    ADDON
- *    BIAS1
- *    BIAS2
- *    BIAS3
- *    ONEPSM
- *
- *    SMALL_NST   nst > SMALL_NST => use ETAMX3 
- *    MXNCF       max no. of convergence failures during one step try
- *    MXNEF       max no. of error test failures during one step try
- *    MXNEF1      max no. of error test failures before forcing a reduction of order
- *    SMALL_NEF   if an error failure occurs and SMALL_NEF <= nef <= MXNEF1, then
- *                reset eta =  MIN(eta, ETAMXF)
- *    LONG_WAIT   number of steps to wait before considering an order change when
- *                q==1 and MXNEF1 error test failures have occurred
- *
- * ARKNls
- *    NLS_MAXCOR  maximum no. of corrector iterations for the nonlinear solver
- *    CRDOWN      constant used in the estimation of the convergence rate (crate)
- *                of the iterates for the nonlinear equation
- *    DGMAX       iter == ARK_NEWTON, |gamma/gammap-1| > DGMAX => call lsetup
- *    RDIV        declare divergence if ratio del/delp > RDIV
- *    MSBP        max no. of steps between lsetup calls
- */
+/*---------------------------------------------------------------
+ Algorithmic constants
+-----------------------------------------------------------------
+ ARKodeGetDky and ARKStep
+    FUZZ_FACTOR
+
+ ARKHin
+    HLB_FACTOR
+    HUB_FACTOR
+    H_BIAS
+    MAX_ITERS
+
+ ARKodeCreate 
+   CORTES
+
+ ARKStep
+    THRESH
+    ETAMX1
+    ETAMX2
+    ETAMX3
+    ETAMXF
+    ETAMIN
+    ETACF
+    ADDON
+    BIAS1
+    BIAS2
+    BIAS3
+    ONEPSM
+
+    SMALL_NST   nst > SMALL_NST => use ETAMX3 
+    MXNCF       max no. of convergence failures during one step 
+                try
+    MXNEF       max no. of error test failures during one step 
+                try
+    MXNEF1      max no. of error test failures before forcing a 
+                reduction of order
+    SMALL_NEF   if an error failure occurs and 
+                SMALL_NEF <= nef <= MXNEF1, then reset 
+                eta = MIN(eta, ETAMXF)
+    LONG_WAIT   number of steps to wait before considering an 
+                order change when q==1 and MXNEF1 error test 
+                failures have occurred
+
+ ARKNls
+    NLS_MAXCOR  maximum no. of corrector iterations for the 
+                nonlinear solver
+    CRDOWN      constant used in the estimation of the 
+                convergence rate (crate) of the iterates for 
+                the nonlinear equation
+    DGMAX       if iter == ARK_NEWTON, and |gamma/gammap-1| > DGMAX
+                then call lsetup
+    RDIV        declare divergence if ratio del/delp > RDIV
+    MSBP        max no. of steps between lsetup calls
+---------------------------------------------------------------*/
 #define FUZZ_FACTOR RCONST(100.0)
 
 #define HLB_FACTOR  RCONST(100.0)
@@ -208,23 +217,27 @@
 #define MSBP        20
 
 
-/*=================================================================*/
-/*             Private Helper Functions Prototypes                 */
-/*=================================================================*/
-
+/*===============================================================
+             Private Helper Functions Prototypes
+===============================================================*/
 static booleantype ARKCheckNvector(N_Vector tmpl);
 
 static int ARKInitialSetup(ARKodeMem ark_mem);
 
-static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl);
+static booleantype ARKAllocVectors(ARKodeMem ark_mem, 
+				   N_Vector tmpl);
 static void ARKFreeVectors(ARKodeMem ark_mem);
 
-static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight);
-static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight);
+static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, 
+		       N_Vector weight);
+static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, 
+		       N_Vector weight);
 
 static int ARKHin(ARKodeMem ark_mem, realtype tout);
-static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist);
-static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm);
+static realtype ARKUpperBoundH0(ARKodeMem ark_mem, 
+				realtype tdist);
+static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, 
+		      realtype *yddnrm);
 
 static int ARKStep(ARKodeMem ark_mem);
 
@@ -243,25 +256,29 @@ static void ARKPredict(ARKodeMem ark_mem);
 
 static void ARKSet(ARKodeMem ark_mem);
 static void ARKSetAdams(ARKodeMem ark_mem);
-static realtype ARKAdamsStart(ARKodeMem ark_mem, realtype m[]);
-static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], realtype M[], realtype hsum);
+static realtype ARKAdamsStart(ARKodeMem ark_mem, 
+			      realtype m[]);
+static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], 
+			   realtype M[], realtype hsum);
 static realtype ARKAltSum(int iend, realtype a[], int k);
 static void ARKSetBDF(ARKodeMem ark_mem);
-static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
-                       realtype alpha0_hat, realtype xi_inv, realtype xistar_inv);
+static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, 
+			realtype alpha0, realtype alpha0_hat, 
+			realtype xi_inv, realtype xistar_inv);
 
 static int ARKNls(ARKodeMem ark_mem, int nflag);
 static int ARKNlsFunctional(ARKodeMem ark_mem);
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag);
 static int ARKNewtonIteration(ARKodeMem ark_mem);
 
-static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, realtype saved_t,
-                         int *ncfPtr);
+static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, 
+			  realtype saved_t, int *ncfPtr);
 
 static void ARKRestore(ARKodeMem ark_mem, realtype saved_t);
 
 static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
-                         realtype saved_t, int *nefPtr, realtype *dsmPtr);
+                         realtype saved_t, int *nefPtr, 
+			  realtype *dsmPtr);
 
 static void ARKCompleteStep(ARKodeMem ark_mem);
 
@@ -280,20 +297,20 @@ static int ARKRcheck3(ARKodeMem ark_mem);
 static int ARKRootfind(ARKodeMem ark_mem);
 
 
-/* =================================================================
- * EXPORTED FUNCTIONS IMPLEMENTATION
- * =================================================================
- */
+/*===============================================================
+  EXPORTED FUNCTIONS IMPLEMENTATION
+===============================================================*/
 
-/* ARKodeCreate
- *
- * ARKodeCreate creates an internal memory block for a problem to 
- * be solved by ARKODE.
- * If successful, ARKodeCreate returns a pointer to the problem memory. 
- * This pointer should be passed to ARKodeInit.  
- * If an initialization error occurs, ARKodeCreate prints an error 
- * message to standard err and returns NULL. 
- */
+/*---------------------------------------------------------------
+ ARKodeCreate:
+
+ ARKodeCreate creates an internal memory block for a problem to 
+ be solved by ARKODE.
+ If successful, ARKodeCreate returns a pointer to the problem memory. 
+ This pointer should be passed to ARKodeInit.  
+ If an initialization error occurs, ARKodeCreate prints an error 
+ message to standard err and returns NULL. 
+---------------------------------------------------------------*/
 void *ARKodeCreate(int lmm, int iter)
 {
   int maxord;
@@ -330,7 +347,8 @@ void *ARKodeCreate(int lmm, int iter)
   ark_mem->ark_uround = UNIT_ROUNDOFF;
 
   /* Set default values for integrator optional inputs */
-  ark_mem->ark_f          = NULL;
+  ark_mem->ark_fe         = NULL;
+  ark_mem->ark_fi         = NULL;
   ark_mem->ark_user_data  = NULL;
   ark_mem->ark_itol       = ARK_NN;
   ark_mem->ark_user_efun  = FALSE;
@@ -378,15 +396,16 @@ void *ARKodeCreate(int lmm, int iter)
   return((void *)ark_mem);
 }
 
-/*-----------------------------------------------------------------*/
 
-/* ARKodeInit
- * 
- * ARKodeInit allocates and initializes memory for a problem. All 
- * problem inputs are checked for errors. If any error occurs during 
- * initialization, it is reported to the file whose file pointer is 
- * errfp and an error flag is returned. Otherwise, it returns ARK_SUCCESS
- */
+/*---------------------------------------------------------------
+ ARKodeInit:
+ 
+ ARKodeInit allocates and initializes memory for a problem. All 
+ problem inputs are checked for errors. If any error occurs during 
+ initialization, it is reported to the file whose file pointer is 
+ errfp and an error flag is returned. Otherwise, it returns 
+ ARK_SUCCESS.
+---------------------------------------------------------------*/
 int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi, 
 	       ARKExpStabFn EStab, realtype t0, N_Vector y0)
 {
@@ -447,7 +466,8 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   /* All error checking is complete at this point */
 
   /* Copy the input parameters into ARKODE state */
-  ark_mem->ark_f  = fi;
+  ark_mem->ark_fe = fe;
+  ark_mem->ark_fi = fi;
   ark_mem->ark_tn = t0;
 
   /* Set step parameters */
@@ -505,18 +525,19 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   return(ARK_SUCCESS);
 }
 
-/*-----------------------------------------------------------------*/
 
-/* ARKodeReInit
- *
- * ARKodeReInit re-initializes ARKODE's memory for a problem, assuming
- * it has already been allocated in a prior ARKodeInit call.
- * All problem specification inputs are checked for errors.
- * If any error occurs during initialization, it is reported to the
- * file whose file pointer is errfp.
- * The return value is ARK_SUCCESS = 0 if no errors occurred, or
- * a negative value otherwise.
- */
+/*---------------------------------------------------------------
+ ARKodeReInit:
+
+ ARKodeReInit re-initializes ARKODE's memory for a problem, 
+ assuming it has already been allocated in a prior ARKodeInit 
+ call.  All problem specification inputs are checked for errors.
+ If any error occurs during initialization, it is reported to 
+ the file whose file pointer is errfp.
+
+ The return value is ARK_SUCCESS = 0 if no errors occurred, or
+ a negative value otherwise.
+---------------------------------------------------------------*/
 int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
 {
   ARKodeMem ark_mem;
@@ -586,22 +607,25 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   return(ARK_SUCCESS);
 }
 
-/*-----------------------------------------------------------------*/
 
-/* ARKodeSStolerances
- * ARKodeSVtolerances
- * ARKodeWFtolerances
- *
- * These functions specify the integration tolerances. One of them
- * MUST be called before the first call to ARKode.
- *
- * ARKodeSStolerances specifies scalar relative and absolute tolerances.
- * ARKodeSVtolerances specifies scalar relative tolerance and a vector
- *   absolute tolerance (a potentially different absolute tolerance 
- *   for each vector component).
- * ARKodeWFtolerances specifies a user-provides function (of type ARKEwtFn)
- *   which will be called to set the error weight vector.
- */
+/*---------------------------------------------------------------
+ ARKodeSStolerances:
+ ARKodeSVtolerances:
+ ARKodeWFtolerances:
+
+ These functions specify the integration tolerances. One of them
+ SHOULD be called before the first call to ARKode; otherwise 
+ default values of reltol=1e-4 and abstol=1e-9 will be used, 
+ which may be entirely incorrect for a specific problem.
+
+ ARKodeSStolerances specifies scalar relative and absolute 
+   tolerances.
+ ARKodeSVtolerances specifies scalar relative tolerance and a 
+   vector absolute tolerance (a potentially different absolute 
+   tolerance for each vector component).
+ ARKodeWFtolerances specifies a user-provides function (of type
+   ARKEwtFn) which will be called to set the error weight vector.
+---------------------------------------------------------------*/
 int ARKodeSStolerances(void *arkode_mem, realtype reltol, realtype abstol)
 {
   ARKodeMem ark_mem;
@@ -703,16 +727,16 @@ int ARKodeWFtolerances(void *arkode_mem, ARKEwtFn efun)
   return(ARK_SUCCESS);
 }
 
-/*-----------------------------------------------------------------*/
 
-/* ARKodeRootInit
- *
- * ARKodeRootInit initializes a rootfinding problem to be solved
- * during the integration of the ODE system.  It loads the root
- * function pointer and the number of root functions, and allocates
- * workspace memory.  The return value is ARK_SUCCESS = 0 if no errors
- * occurred, or a negative value otherwise.
- */
+/*---------------------------------------------------------------
+ ARKodeRootInit:
+
+ ARKodeRootInit initializes a rootfinding problem to be solved
+ during the integration of the ODE system.  It loads the root
+ function pointer and the number of root functions, and allocates
+ workspace memory.  The return value is ARK_SUCCESS = 0 if no 
+ errors occurred, or a negative value otherwise.
+---------------------------------------------------------------*/
 int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
 {
   ARKodeMem ark_mem;
@@ -852,23 +876,26 @@ int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
   return(ARK_SUCCESS);
 }
 
-/*-----------------------------------------------------------------*/
 
-/* ARKode
- *
- * This routine is the main driver of the ARKODE package. 
- *
- * It integrates over a time interval defined by the user, by calling
- * ARKStep to do internal time steps.
- *
- * The first time that ARKode is called for a successfully initialized
- * problem, it computes a tentative initial step size h.
- *
- * ARKode supports two modes, specified by itask: ARK_NORMAL, ARK_ONE_STEP.
- * In the ARK_NORMAL mode, the solver steps until it reaches or passes tout
- * and then interpolates to obtain y(tout).
- * In the ARK_ONE_STEP mode, it takes one internal step and returns.
- */
+/*---------------------------------------------------------------
+ ARKode:
+
+ This routine is the main driver of the ARKODE package. 
+
+ It integrates over a time interval defined by the user, by 
+ calling ARKStep to do internal time steps.
+
+ The first time that ARKode is called for a successfully 
+ initialized problem, it computes a tentative initial step size h.
+
+ ARKode supports three modes, specified by itask: ARK_NORMAL, 
+ ARK_ONE_STEP and ARK_FIXED_STEP.  In the ARK_NORMAL mode, the 
+ solver steps until it reaches or passes tout and then 
+ interpolates to obtain y(tout).  In the ARK_ONE_STEP mode, it 
+ takes one internal step and returns.  In the ARK_FIXED_STEP mode, 
+ it takes fixed step sizes (given by hmin) and turns of all time 
+ adaptivity.
+---------------------------------------------------------------*/
 int ARKode(void *arkode_mem, realtype tout, N_Vector yout, 
 	   realtype *tret, int itask)
 {
@@ -879,9 +906,9 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   realtype troundoff, tout_hin, rh, nrm;
   booleantype inactive_roots;
 
-  /* -------------------------------------
-   * 1. Check and process inputs
-   * ------------------------------------- */
+  /*-------------------------------------
+    1. Check and process inputs
+  -------------------------------------*/
 
   /* Check if arkode_mem exists */
   if (arkode_mem == NULL) {
@@ -917,15 +944,15 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   if (itask == ARK_NORMAL) ark_mem->ark_toutc = tout;
   ark_mem->ark_taskc = itask;
 
-  /* ----------------------------------------
-   * 2. Initializations performed only at
-   *    the first step (nst=0):
-   *    - initial setup
-   *    - initialize Nordsieck history array
-   *    - compute initial step size
-   *    - check for approach to tstop
-   *    - check for approach to a root
-   * ---------------------------------------- */
+  /*----------------------------------------
+    2. Initializations performed only at
+       the first step (nst=0):
+       - initial setup
+       - initialize Nordsieck history array
+       - compute initial step size
+       - check for approach to tstop
+       - check for approach to a root
+  ----------------------------------------*/
 
   if (ark_mem->ark_nst == 0) {
 
@@ -935,7 +962,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     /* Call f at (t0,y0), set zn[1] = y'(t0), 
        set initial h (from H0 or ARKHin), and scale zn[1] by h.
        Also check for zeros of root function g at and near t0.    */
-    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_zn[1], ark_mem->ark_user_data); 
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_zn[1], ark_mem->ark_user_data); 
     ark_mem->ark_nfe++;
     if (retval < 0) {
       ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
@@ -994,15 +1021,15 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
 
   } /* end of first call block */
 
-  /* ------------------------------------------------------
-   * 3. At following steps, perform stop tests:
-   *    - check for root in last step
-   *    - check if we passed tstop
-   *    - check if we passed tout (NORMAL mode)
-   *    - check if current tn was returned (ONE_STEP mode)
-   *    - check if we are close to tstop
-   *      (adjust step size if needed)
-   * ------------------------------------------------------- */
+  /*------------------------------------------------------
+    3. At following steps, perform stop tests:
+       - check for root in last step
+       - check if we passed tstop
+       - check if we passed tout (NORMAL mode)
+       - check if current tn was returned (ONE_STEP mode)
+       - check if we are close to tstop
+         (adjust step size if needed)
+  -------------------------------------------------------*/
 
   if (ark_mem->ark_nst > 0) {
 
@@ -1097,19 +1124,19 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     }
   } /* end stopping tests block */  
 
-  /* --------------------------------------------------
-   * 4. Looping point for internal steps
-   *
-   *    4.1. check for errors (too many steps, too much
-   *         accuracy requested, step size too small)
-   *    4.2. take a new step (call ARKStep)
-   *    4.3. stop on error 
-   *    4.4. perform stop tests:
-   *         - check for root in last step
-   *         - check if tout was passed
-   *         - check if close to tstop
-   *         - check if in ONE_STEP mode (must return)
-   * -------------------------------------------------- */
+  /*--------------------------------------------------
+    4. Looping point for internal steps
+   
+       4.1. check for errors (too many steps, too much
+            accuracy requested, step size too small)
+       4.2. take a new step (call ARKStep)
+       4.3. stop on error 
+       4.4. perform stop tests:
+            - check for root in last step
+            - check if tout was passed
+            - check if close to tstop
+            - check if in ONE_STEP mode (must return)
+  --------------------------------------------------*/
 
   nstloc = 0;
   for(;;) {
@@ -1252,22 +1279,22 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   return(istate);
 }
 
-/*-----------------------------------------------------------------*/
 
-/* ARKodeGetDky
- *
- * This routine computes the k-th derivative of the interpolating
- * polynomial at the time t and stores the result in the vector dky.
- * The formula is:
- *         q 
- *  dky = SUM c(j,k) * (t - tn)^(j-k) * h^(-j) * zn[j] , 
- *        j=k 
- * where c(j,k) = j*(j-1)*...*(j-k+1), q is the current order, and
- * zn[j] is the j-th column of the Nordsieck history array.
- *
- * This function is called by ARKode with k = 0 and t = tout, but
- * may also be called directly by the user.
- */
+/*---------------------------------------------------------------
+ ARKodeGetDky:
+
+ This routine computes the k-th derivative of the interpolating
+ polynomial at the time t and stores the result in the vector 
+ dky. The formula is:
+         q 
+  dky = SUM c(j,k) * (t - tn)^(j-k) * h^(-j) * zn[j] , 
+        j=k 
+ where c(j,k) = j*(j-1)*...*(j-k+1), q is the current order, and
+ zn[j] is the j-th column of the Nordsieck history array.
+
+ This function is called by ARKode with k = 0 and t = tout, but
+ may also be called directly by the user.
+---------------------------------------------------------------*/
 int ARKodeGetDky(void *arkode_mem, realtype t, int k, N_Vector dky)
 {
   realtype s, c, r;
@@ -1317,13 +1344,15 @@ int ARKodeGetDky(void *arkode_mem, realtype t, int k, N_Vector dky)
   return(ARK_SUCCESS);
 }
 
-/* ARKodeFree
- *
- * This routine frees the problem memory allocated by ARKodeInit.
- * Such memory includes all the vectors allocated by ARKAllocVectors,
- * and the memory lmem for the linear solver (deallocated by a call
- * to lfree).
- */
+
+/*---------------------------------------------------------------
+ ARKodeFree:
+
+ This routine frees the problem memory allocated by ARKodeInit.
+ Such memory includes all the vectors allocated by 
+ ARKAllocVectors, and the memory lmem for the linear solver 
+ (deallocated by a call to lfree).
+---------------------------------------------------------------*/
 void ARKodeFree(void **arkode_mem)
 {
   ARKodeMem ark_mem;
@@ -1334,7 +1363,8 @@ void ARKodeFree(void **arkode_mem)
   
   ARKFreeVectors(ark_mem);
 
-  if (ark_mem->ark_iter == ARK_NEWTON && ark_mem->ark_lfree != NULL) ark_mem->ark_lfree(ark_mem);
+  if (ark_mem->ark_iter == ARK_NEWTON && ark_mem->ark_lfree != NULL) 
+    ark_mem->ark_lfree(ark_mem);
 
   if (ark_mem->ark_nrtfn > 0) {
     free(ark_mem->ark_glo);     ark_mem->ark_glo     = NULL;
@@ -1350,14 +1380,16 @@ void ARKodeFree(void **arkode_mem)
 }
 
 
-/* =================================================================
- *  Private Functions Implementation
- * ================================================================= */
+/*===============================================================
+   Private Functions Implementation
+===============================================================*/
 
-/* ARKCheckNvector
- * This routine checks if all required vector operations are present.
- * If any of them is missing it returns FALSE.
- */
+/*---------------------------------------------------------------
+ ARKCheckNvector:
+
+ This routine checks if all required vector operations are 
+ present.  If any of them is missing it returns FALSE.
+---------------------------------------------------------------*/
 static booleantype ARKCheckNvector(N_Vector tmpl)
 {
   if ((tmpl->ops->nvclone     == NULL) ||
@@ -1378,16 +1410,18 @@ static booleantype ARKCheckNvector(N_Vector tmpl)
     return(TRUE);
 }
 
-/* ARKAllocVectors
- *
- * This routine allocates the ARKODE vectors ewt, acor, tempv, ftemp, and
- * zn[0], ..., zn[maxord].
- * If all memory allocations are successful, ARKAllocVectors returns TRUE. 
- * Otherwise all allocated memory is freed and ARKAllocVectors returns FALSE.
- * This routine also sets the optional outputs lrw and liw, which are
- * (respectively) the lengths of the real and integer work spaces
- * allocated here.
- */
+
+/*---------------------------------------------------------------
+ ARKAllocVectors
+
+ This routine allocates the ARKODE vectors ewt, acor, tempv, ftemp, and
+ zn[0], ..., zn[maxord].
+ If all memory allocations are successful, ARKAllocVectors returns TRUE. 
+ Otherwise all allocated memory is freed and ARKAllocVectors returns FALSE.
+ This routine also sets the optional outputs lrw and liw, which are
+ (respectively) the lengths of the real and integer work spaces
+ allocated here.
+---------------------------------------------------------------*/
 static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
 {
   int i, j;
@@ -1437,9 +1471,12 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
   return(TRUE);
 }
 
-/* ARKFreeVectors
- *
- * This routine frees the ARKODE vectors allocated in ARKAllocVectors. */
+
+/*---------------------------------------------------------------
+ ARKFreeVectors
+
+ This routine frees the ARKODE vectors allocated in ARKAllocVectors.
+---------------------------------------------------------------*/
 static void ARKFreeVectors(ARKodeMem ark_mem)
 {
   int j, maxord;
@@ -1462,11 +1499,14 @@ static void ARKFreeVectors(ARKodeMem ark_mem)
   }
 }
 
-/* ARKInitialSetup
- *
- * This routine performs input consistency checks at the first step.
- * If needed, it also checks the linear solver module and calls the
- * linear solver initialization routine. */
+
+/*---------------------------------------------------------------
+ ARKInitialSetup
+
+ This routine performs input consistency checks at the first step.
+ If needed, it also checks the linear solver module and calls the
+ linear solver initialization routine.
+---------------------------------------------------------------*/
 static int ARKInitialSetup(ARKodeMem ark_mem)
 {
   int ier;
@@ -1510,41 +1550,43 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
 }
 
 
-/* -----------------------------------------------------------------
- * PRIVATE FUNCTIONS FOR ARKODE
- * ----------------------------------------------------------------- */
+/*---------------------------------------------------------------
+ PRIVATE FUNCTIONS FOR ARKODE
+---------------------------------------------------------------*/
 
-/* ARKHin
- *
- * This routine computes a tentative initial step size h0. 
- * If tout is too close to tn (= t0), then ARKHin returns ARK_TOO_CLOSE
- * and h remains uninitialized. Note that here tout is either the value
- * passed to ARKode at the first call or the value of tstop (if tstop is 
- * enabled and it is closer to t0=tn than tout).
- * If the RHS function fails unrecoverably, ARKHin returns ARK_RHSFUNC_FAIL.
- * If the RHS function fails recoverably too many times and recovery is
- * not possible, ARKHin returns ARK_REPTD_RHSFUNC_ERR.
- * Otherwise, ARKHin sets h to the chosen value h0 and returns ARK_SUCCESS.
- *
- * The algorithm used seeks to find h0 as a solution of
- *       (WRMS norm of (h0^2 ydd / 2)) = 1, 
- * where ydd = estimated second derivative of y.
- *
- * We start with an initial estimate equal to the geometric mean of the
- * lower and upper bounds on the step size.
- *
- * Loop up to MAX_ITERS times to find h0.
- * Stop if new and previous values differ by a factor < 2.
- * Stop if hnew/hg > 2 after one iteration, as this probably means
- * that the ydd value is bad because of cancellation error.        
- *  
- * For each new proposed hg, we allow MAX_ITERS attempts to
- * resolve a possible recoverable failure from f() by reducing
- * the proposed stepsize by a factor of 0.2. If a legal stepsize
- * still cannot be found, fall back on a previous value if possible,
- * or else return ARK_REPTD_RHSFUNC_ERR.
- *
- * Finally, we apply a bias (0.5) and verify that h0 is within bounds. */
+/*---------------------------------------------------------------
+ ARKHin
+
+ This routine computes a tentative initial step size h0. 
+ If tout is too close to tn (= t0), then ARKHin returns ARK_TOO_CLOSE
+ and h remains uninitialized. Note that here tout is either the value
+ passed to ARKode at the first call or the value of tstop (if tstop is 
+ enabled and it is closer to t0=tn than tout).
+ If the RHS function fails unrecoverably, ARKHin returns ARK_RHSFUNC_FAIL.
+ If the RHS function fails recoverably too many times and recovery is
+ not possible, ARKHin returns ARK_REPTD_RHSFUNC_ERR.
+ Otherwise, ARKHin sets h to the chosen value h0 and returns ARK_SUCCESS.
+
+ The algorithm used seeks to find h0 as a solution of
+       (WRMS norm of (h0^2 ydd / 2)) = 1, 
+ where ydd = estimated second derivative of y.
+
+ We start with an initial estimate equal to the geometric mean of the
+ lower and upper bounds on the step size.
+
+ Loop up to MAX_ITERS times to find h0.
+ Stop if new and previous values differ by a factor < 2.
+ Stop if hnew/hg > 2 after one iteration, as this probably means
+ that the ydd value is bad because of cancellation error.        
+  
+ For each new proposed hg, we allow MAX_ITERS attempts to
+ resolve a possible recoverable failure from f() by reducing
+ the proposed stepsize by a factor of 0.2. If a legal stepsize
+ still cannot be found, fall back on a previous value if possible,
+ or else return ARK_REPTD_RHSFUNC_ERR.
+
+ Finally, we apply a bias (0.5) and verify that h0 is within bounds.
+---------------------------------------------------------------*/
 static int ARKHin(ARKodeMem ark_mem, realtype tout)
 {
   int retval, sign, count1, count2;
@@ -1639,10 +1681,13 @@ static int ARKHin(ARKodeMem ark_mem, realtype tout)
   return(ARK_SUCCESS);
 }
 
-/* ARKUpperBoundH0
- *
- * This routine sets an upper bound on abs(h0) based on
- * tdist = tn - t0 and the values of y[i]/y'[i]. */
+
+/*---------------------------------------------------------------
+ ARKUpperBoundH0
+
+ This routine sets an upper bound on abs(h0) based on
+ tdist = tn - t0 and the values of y[i]/y'[i].
+---------------------------------------------------------------*/
 static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
 {
   realtype hub_inv, hub;
@@ -1674,16 +1719,19 @@ static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
   return(hub);
 }
 
-/* ARKYddNorm
- *
- * This routine computes an estimate of the second derivative of y
- * using a difference quotient, and returns its WRMS norm. */
+
+/*---------------------------------------------------------------
+ ARKYddNorm
+
+ This routine computes an estimate of the second derivative of y
+ using a difference quotient, and returns its WRMS norm.
+---------------------------------------------------------------*/
 static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
 {
   int retval;
 
   N_VLinearSum(hg, ark_mem->ark_zn[1], ONE, ark_mem->ark_zn[0], ark_mem->ark_y);
-  retval = ark_mem->ark_f(ark_mem->ark_tn+hg, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
+  retval = ark_mem->ark_fi(ark_mem->ark_tn+hg, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
   ark_mem->ark_nfe++;
   if (retval < 0) return(ARK_RHSFUNC_FAIL);
   if (retval > 0) return(RHSFUNC_RECVR);
@@ -1696,22 +1744,25 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
   return(ARK_SUCCESS);
 }
 
-/* ARKStep
- *
- * This routine performs one internal arkode step, from tn to tn + h.
- * It calls other routines to do all the work.
- *
- * The main operations done here are as follows:
- * - preliminary adjustments if a new step size was chosen;
- * - prediction of the Nordsieck history array zn at tn + h;
- * - setting of multistep method coefficients and test quantities;
- * - solution of the nonlinear system;
- * - testing the local error;
- * - updating zn and other state data if successful;
- * - resetting stepsize and order for the next step.
- * - if SLDET is on, check for stability, reduce order if necessary.
- * On a failure in the nonlinear system solution or error test, the
- * step may be reattempted, depending on the nature of the failure. */
+
+/*---------------------------------------------------------------
+ ARKStep
+
+ This routine performs one internal arkode step, from tn to tn + h.
+ It calls other routines to do all the work.
+
+ The main operations done here are as follows:
+ - preliminary adjustments if a new step size was chosen;
+ - prediction of the Nordsieck history array zn at tn + h;
+ - setting of multistep method coefficients and test quantities;
+ - solution of the nonlinear system;
+ - testing the local error;
+ - updating zn and other state data if successful;
+ - resetting stepsize and order for the next step.
+ - if SLDET is on, check for stability, reduce order if necessary.
+ On a failure in the nonlinear system solution or error test, the
+ step may be reattempted, depending on the nature of the failure.
+---------------------------------------------------------------*/
 static int ARKStep(ARKodeMem ark_mem)
 {
   realtype saved_t, dsm;
@@ -1771,13 +1822,16 @@ static int ARKStep(ARKodeMem ark_mem)
       
 }
 
-/* ARKAdjustParams
- *
- * This routine is called when a change in step size was decided upon,
- * and it handles the required adjustments to the history array zn.
- * If there is to be a change in order, we call ARKAdjustOrder and reset
- * q, L = q+1, and qwait.  Then in any case, we call ARKRescale, which
- * resets h and rescales the Nordsieck array. */
+
+/*---------------------------------------------------------------
+ ARKAdjustParams
+
+ This routine is called when a change in step size was decided upon,
+ and it handles the required adjustments to the history array zn.
+ If there is to be a change in order, we call ARKAdjustOrder and reset
+ q, L = q+1, and qwait.  Then in any case, we call ARKRescale, which
+ resets h and rescales the Nordsieck array.
+---------------------------------------------------------------*/
 static void ARKAdjustParams(ARKodeMem ark_mem)
 {
   if (ark_mem->ark_qprime != ark_mem->ark_q) {
@@ -1789,13 +1843,16 @@ static void ARKAdjustParams(ARKodeMem ark_mem)
   ARKRescale(ark_mem);
 }
 
-/* ARKAdjustOrder
- *
- * This routine is a high level routine which handles an order
- * change by an amount deltaq (= +1 or -1). If a decrease in order
- * is requested and q==2, then the routine returns immediately.
- * Otherwise ARKAdjustAdams or ARKAdjustBDF is called to handle the
- * order change (depending on the value of lmm). */
+
+/*---------------------------------------------------------------
+ ARKAdjustOrder
+
+ This routine is a high level routine which handles an order
+ change by an amount deltaq (= +1 or -1). If a decrease in order
+ is requested and q==2, then the routine returns immediately.
+ Otherwise ARKAdjustAdams or ARKAdjustBDF is called to handle the
+ order change (depending on the value of lmm).
+---------------------------------------------------------------*/
 static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq)
 {
   if ((ark_mem->ark_q==2) && (deltaq != 1)) return;
@@ -1810,10 +1867,13 @@ static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq)
   }
 }
 
-/* ARKAdjustAdams
- *
- * This routine adjusts the history array on a change of order q by
- * deltaq, in the case that lmm == ARK_ADAMS. */
+
+/*---------------------------------------------------------------
+ ARKAdjustAdams
+
+ This routine adjusts the history array on a change of order q by
+ deltaq, in the case that lmm == ARK_ADAMS. 
+---------------------------------------------------------------*/
 static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq)
 {
   int i, j;
@@ -1846,12 +1906,15 @@ static void ARKAdjustAdams(ARKodeMem ark_mem, int deltaq)
     N_VLinearSum(-ark_mem->ark_l[j], ark_mem->ark_zn[ark_mem->ark_q], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
 }
 
-/* ARKAdjustBDF
- *
- * This is a high level routine which handles adjustments to the
- * history array on a change of order by deltaq in the case that 
- * lmm == ARK_BDF.  ARKAdjustBDF calls ARKIncreaseBDF if deltaq = +1 and 
- * ARKDecreaseBDF if deltaq = -1 to do the actual work. */
+
+/*---------------------------------------------------------------
+ ARKAdjustBDF
+
+ This is a high level routine which handles adjustments to the
+ history array on a change of order by deltaq in the case that 
+ lmm == ARK_BDF.  ARKAdjustBDF calls ARKIncreaseBDF if deltaq = +1 and 
+ ARKDecreaseBDF if deltaq = -1 to do the actual work.
+---------------------------------------------------------------*/
 static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq)
 {
   switch(deltaq) {
@@ -1864,15 +1927,18 @@ static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq)
   }
 }
 
-/* ARKIncreaseBDF
- *
- * This routine adjusts the history array on an increase in the 
- * order q in the case that lmm == ARK_BDF.  
- * A new column zn[q+1] is set equal to a multiple of the saved 
- * vector (= acor) in zn[indx_acor].  Then each zn[j] is adjusted by
- * a multiple of zn[q+1].  The coefficients in the adjustment are the 
- * coefficients of the polynomial x*x*(x+xi_1)*...*(x+xi_j),
- * where xi_j = [t_n - t_(n-j)]/h. */
+
+/*---------------------------------------------------------------
+ ARKIncreaseBDF
+
+ This routine adjusts the history array on an increase in the 
+ order q in the case that lmm == ARK_BDF.  
+ A new column zn[q+1] is set equal to a multiple of the saved 
+ vector (= acor) in zn[indx_acor].  Then each zn[j] is adjusted by
+ a multiple of zn[q+1].  The coefficients in the adjustment are the 
+ coefficients of the polynomial x*x*(x+xi_1)*...*(x+xi_j),
+ where xi_j = [t_n - t_(n-j)]/h. 
+---------------------------------------------------------------*/
 static void ARKIncreaseBDF(ARKodeMem ark_mem)
 {
   realtype alpha0, alpha1, prod, xi, xiold, hsum, A1;
@@ -1900,13 +1966,16 @@ static void ARKIncreaseBDF(ARKodeMem ark_mem)
   }  
 }
 
-/* ARKDecreaseBDF
- *
- * This routine adjusts the history array on a decrease in the 
- * order q in the case that lmm == ARK_BDF.  
- * Each zn[j] is adjusted by a multiple of zn[q].  The coefficients
- * in the adjustment are the coefficients of the polynomial
- *   x*x*(x+xi_1)*...*(x+xi_j), where xi_j = [t_n - t_(n-j)]/h. */
+
+/*---------------------------------------------------------------
+ ARKDecreaseBDF
+
+ This routine adjusts the history array on a decrease in the 
+ order q in the case that lmm == ARK_BDF.  
+ Each zn[j] is adjusted by a multiple of zn[q].  The coefficients
+ in the adjustment are the coefficients of the polynomial
+   x*x*(x+xi_1)*...*(x+xi_j), where xi_j = [t_n - t_(n-j)]/h. 
+---------------------------------------------------------------*/
 static void ARKDecreaseBDF(ARKodeMem ark_mem)
 {
   realtype hsum, xi;
@@ -1925,11 +1994,14 @@ static void ARKDecreaseBDF(ARKodeMem ark_mem)
     N_VLinearSum(-ark_mem->ark_l[j], ark_mem->ark_zn[ark_mem->ark_q], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j]);
 }
 
-/* ARKRescale
- *
- * This routine rescales the Nordsieck array by multiplying the
- * jth column zn[j] by eta^j, j = 1, ..., q.  Then the value of
- * h is rescaled by eta, and hscale is reset to h. */
+
+/*---------------------------------------------------------------
+ ARKRescale
+
+ This routine rescales the Nordsieck array by multiplying the
+ jth column zn[j] by eta^j, j = 1, ..., q.  Then the value of
+ h is rescaled by eta, and hscale is reset to h.
+---------------------------------------------------------------*/
 static void ARKRescale(ARKodeMem ark_mem)
 {
   int j;
@@ -1946,13 +2018,16 @@ static void ARKRescale(ARKodeMem ark_mem)
   ark_mem->ark_nscon = 0;
 }
 
-/* ARKPredict
- *
- * This routine advances tn by the tentative step size h, and computes
- * the predicted array z_n(0), which is overwritten on zn.  The
- * prediction of zn is done by repeated additions.
- * If tstop is enabled, it is possible for tn + h to be past tstop by roundoff,
- * and in that case, we reset tn (after incrementing by h) to tstop. */
+
+/*---------------------------------------------------------------
+ ARKPredict
+
+ This routine advances tn by the tentative step size h, and computes
+ the predicted array z_n(0), which is overwritten on zn.  The
+ prediction of zn is done by repeated additions.
+ If tstop is enabled, it is possible for tn + h to be past tstop by roundoff,
+ and in that case, we reset tn (after incrementing by h) to tstop.
+---------------------------------------------------------------*/
 static void ARKPredict(ARKodeMem ark_mem)
 {
   int j, k;
@@ -1966,21 +2041,24 @@ static void ARKPredict(ARKodeMem ark_mem)
       N_VLinearSum(ONE, ark_mem->ark_zn[j-1], ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j-1]); 
 }
 
-/* ARKSet
- *
- * This routine is a high level routine which calls ARKSetAdams or
- * ARKSetBDF to set the polynomial l, the test quantity array tq, 
- * and the related variables  rl1, gamma, and gamrat.
- *
- * The array tq is loaded with constants used in the control of estimated
- * local errors and in the nonlinear convergence test.  Specifically, while
- * running at order q, the components of tq are as follows:
- *   tq[1] = a coefficient used to get the est. local error at order q-1
- *   tq[2] = a coefficient used to get the est. local error at order q
- *   tq[3] = a coefficient used to get the est. local error at order q+1
- *   tq[4] = constant used in nonlinear iteration convergence test
- *   tq[5] = coefficient used to get the order q+2 derivative vector used in
- *           the est. local error at order q+1 */
+
+/*---------------------------------------------------------------
+ ARKSet
+
+ This routine is a high level routine which calls ARKSetAdams or
+ ARKSetBDF to set the polynomial l, the test quantity array tq, 
+ and the related variables  rl1, gamma, and gamrat.
+
+ The array tq is loaded with constants used in the control of estimated
+ local errors and in the nonlinear convergence test.  Specifically, while
+ running at order q, the components of tq are as follows:
+   tq[1] = a coefficient used to get the est. local error at order q-1
+   tq[2] = a coefficient used to get the est. local error at order q
+   tq[3] = a coefficient used to get the est. local error at order q+1
+   tq[4] = constant used in nonlinear iteration convergence test
+   tq[5] = coefficient used to get the order q+2 derivative vector used in
+           the est. local error at order q+1
+---------------------------------------------------------------*/
 static void ARKSet(ARKodeMem ark_mem)
 {
   switch(ark_mem->ark_lmm) {
@@ -1997,21 +2075,24 @@ static void ARKSet(ARKodeMem ark_mem)
   ark_mem->ark_gamrat = (ark_mem->ark_nst > 0) ? ark_mem->ark_gamma / ark_mem->ark_gammap : ONE;  /* protect x / x != 1.0 */
 }
 
-/* ARKSetAdams
- *
- * This routine handles the computation of l and tq for the
- * case lmm == ARK_ADAMS.
- *
- * The components of the array l are the coefficients of a
- * polynomial Lambda(x) = l_0 + l_1 x + ... + l_q x^q, given by
- *                          q-1
- * (d/dx) Lambda(x) = c * PRODUCT (1 + x / xi_i) , where
- *                          i=1
- *  Lambda(-1) = 0, Lambda(0) = 1, and c is a normalization factor.
- * Here xi_i = [t_n - t_(n-i)] / h.
- *
- * The array tq is set to test quantities used in the convergence
- * test, the error test, and the selection of h at a new order. */
+
+/*---------------------------------------------------------------
+ ARKSetAdams
+
+ This routine handles the computation of l and tq for the
+ case lmm == ARK_ADAMS.
+
+ The components of the array l are the coefficients of a
+ polynomial Lambda(x) = l_0 + l_1 x + ... + l_q x^q, given by
+                          q-1
+ (d/dx) Lambda(x) = c * PRODUCT (1 + x / xi_i) , where
+                          i=1
+  Lambda(-1) = 0, Lambda(0) = 1, and c is a normalization factor.
+ Here xi_i = [t_n - t_(n-i)] / h.
+
+ The array tq is set to test quantities used in the convergence
+ test, the error test, and the selection of h at a new order.
+---------------------------------------------------------------*/
 static void ARKSetAdams(ARKodeMem ark_mem)
 {
   realtype m[L_MAX], M[3], hsum;
@@ -2032,10 +2113,13 @@ static void ARKSetAdams(ARKodeMem ark_mem)
   ARKAdamsFinish(ark_mem, m, M, hsum);
 }
 
-/* ARKAdamsStart
- *
- * This routine generates in m[] the coefficients of the product
- * polynomial needed for the Adams l and tq coefficients for q > 1. */
+
+/*---------------------------------------------------------------
+ ARKAdamsStart
+
+ This routine generates in m[] the coefficients of the product
+ polynomial needed for the Adams l and tq coefficients for q > 1.
+---------------------------------------------------------------*/
 static realtype ARKAdamsStart(ARKodeMem ark_mem, realtype m[])
 {
   realtype hsum, xi_inv, sum;
@@ -2057,9 +2141,12 @@ static realtype ARKAdamsStart(ARKodeMem ark_mem, realtype m[])
   return(hsum);
 }
 
-/* ARKAdamsFinish
- *
- * This routine completes the calculation of the Adams l and tq. */
+
+/*---------------------------------------------------------------
+ ARKAdamsFinish
+
+ This routine completes the calculation of the Adams l and tq.
+---------------------------------------------------------------*/
 static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], realtype M[], realtype hsum)
 {
   int i;
@@ -2084,13 +2171,16 @@ static void ARKAdamsFinish(ARKodeMem ark_mem, realtype m[], realtype M[], realty
   ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];
 }
 
-/* ARKAltSum
- *
- * ARKAltSum returns the value of the alternating sum
- *   sum (i= 0 ... iend) [ (-1)^i * (a[i] / (i + k)) ].
- * If iend < 0 then ARKAltSum returns 0.
- * This operation is needed to compute the integral, from -1 to 0,
- * of a polynomial x^(k-1) M(x) given the coefficients of M(x). */
+
+/*---------------------------------------------------------------
+ ARKAltSum
+
+ ARKAltSum returns the value of the alternating sum
+   sum (i= 0 ... iend) [ (-1)^i * (a[i] / (i + k)) ].
+ If iend < 0 then ARKAltSum returns 0.
+ This operation is needed to compute the integral, from -1 to 0,
+ of a polynomial x^(k-1) M(x) given the coefficients of M(x).
+---------------------------------------------------------------*/
 static realtype ARKAltSum(int iend, realtype a[], int k)
 {
   int i, sign;
@@ -2107,21 +2197,24 @@ static realtype ARKAltSum(int iend, realtype a[], int k)
   return(sum);
 }
 
-/* ARKSetBDF
- *
- * This routine computes the coefficients l and tq in the case
- * lmm == ARK_BDF.  ARKSetBDF calls ARKSetTqBDF to set the test
- * quantity array tq. 
- * 
- * The components of the array l are the coefficients of a
- * polynomial Lambda(x) = l_0 + l_1 x + ... + l_q x^q, given by
- *                                 q-1
- * Lambda(x) = (1 + x / xi*_q) * PRODUCT (1 + x / xi_i) , where
- *                                 i=1
- *  xi_i = [t_n - t_(n-i)] / h.
- *
- * The array tq is set to test quantities used in the convergence
- * test, the error test, and the selection of h at a new order. */
+
+/*---------------------------------------------------------------
+ ARKSetBDF
+
+ This routine computes the coefficients l and tq in the case
+ lmm == ARK_BDF.  ARKSetBDF calls ARKSetTqBDF to set the test
+ quantity array tq. 
+ 
+ The components of the array l are the coefficients of a
+ polynomial Lambda(x) = l_0 + l_1 x + ... + l_q x^q, given by
+                                 q-1
+ Lambda(x) = (1 + x / xi*_q) * PRODUCT (1 + x / xi_i) , where
+                                 i=1
+  xi_i = [t_n - t_(n-i)] / h.
+
+ The array tq is set to test quantities used in the convergence
+ test, the error test, and the selection of h at a new order. 
+---------------------------------------------------------------*/
 static void ARKSetBDF(ARKodeMem ark_mem)
 {
   realtype alpha0, alpha0_hat, xi_inv, xistar_inv, hsum;
@@ -2152,10 +2245,13 @@ static void ARKSetBDF(ARKodeMem ark_mem)
   ARKSetTqBDF(ark_mem, hsum, alpha0, alpha0_hat, xi_inv, xistar_inv);
 }
 
-/* ARKSetTqBDF
- *
- * This routine sets the test quantity array tq in the case
- * lmm == ARK_BDF. */
+
+/*---------------------------------------------------------------
+ ARKSetTqBDF
+
+ This routine sets the test quantity array tq in the case
+ lmm == ARK_BDF.
+---------------------------------------------------------------*/
 static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
                        realtype alpha0_hat, realtype xi_inv, realtype xistar_inv)
 {
@@ -2185,12 +2281,15 @@ static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
   ark_mem->ark_tq[4] = ark_mem->ark_nlscoef / ark_mem->ark_tq[2];
 }
 
-/* ARKNls
- *
- * This routine attempts to solve the nonlinear system associated
- * with a single implicit step of the linear multistep method.
- * Depending on iter, it calls ARKNlsFunctional or ARKNlsNewton
- * to do the work. */
+
+/*---------------------------------------------------------------
+ ARKNls
+
+ This routine attempts to solve the nonlinear system associated
+ with a single implicit step of the linear multistep method.
+ Depending on iter, it calls ARKNlsFunctional or ARKNlsNewton
+ to do the work.
+---------------------------------------------------------------*/
 static int ARKNls(ARKodeMem ark_mem, int nflag)
 {
   int flag = ARK_SUCCESS;
@@ -2207,20 +2306,22 @@ static int ARKNls(ARKodeMem ark_mem, int nflag)
   return(flag);
 }
 
-/* ARKNlsFunctional
- *
- * This routine attempts to solve the nonlinear system using 
- * functional iteration (no matrices involved).
- *
- * Possible return values are:
- *
- *   ARK_SUCCESS      --->  continue with error test
- *
- *   ARK_RHSFUNC_FAIL --->  halt the integration
- *
- *   CONV_FAIL       -+
- *   RHSFUNC_RECVR   -+->  predict again or stop if too many
- */
+
+/*---------------------------------------------------------------
+ ARKNlsFunctional
+
+ This routine attempts to solve the nonlinear system using 
+ functional iteration (no matrices involved).
+
+ Possible return values are:
+
+   ARK_SUCCESS      --->  continue with error test
+
+   ARK_RHSFUNC_FAIL --->  halt the integration
+
+   CONV_FAIL       -+
+   RHSFUNC_RECVR   -+->  predict again or stop if too many
+---------------------------------------------------------------*/
 static int ARKNlsFunctional(ARKodeMem ark_mem)
 {
   int retval, m;
@@ -2230,7 +2331,7 @@ static int ARKNlsFunctional(ARKodeMem ark_mem)
   ark_mem->ark_crate = ONE;
   m = 0;
 
-  retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
+  retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
   ark_mem->ark_nfe++;
   if (retval < 0) return(ARK_RHSFUNC_FAIL);
   if (retval > 0) return(RHSFUNC_RECVR);
@@ -2271,7 +2372,7 @@ static int ARKNlsFunctional(ARKodeMem ark_mem)
     /* Save norm of correction, evaluate f, and loop again */
     delp = del;
 
-    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_tempv, ark_mem->ark_user_data);
     ark_mem->ark_nfe++;
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) return(RHSFUNC_RECVR);
@@ -2279,23 +2380,25 @@ static int ARKNlsFunctional(ARKodeMem ark_mem)
   }
 }
 
-/* ARKNlsNewton
- *
- * This routine handles the Newton iteration. It calls lsetup if 
- * indicated, calls ARKNewtonIteration to perform the iteration, and 
- * retries a failed attempt at Newton iteration if that is indicated.
- *
- * Possible return values:
- *
- *   ARK_SUCCESS       ---> continue with error test
- *
- *   ARK_RHSFUNC_FAIL  -+  
- *   ARK_LSETUP_FAIL    |-> halt the integration 
- *   ARK_LSOLVE_FAIL   -+
- *
- *   CONV_FAIL        -+
- *   RHSFUNC_RECVR    -+-> predict again or stop if too many
- */
+
+/*---------------------------------------------------------------
+ ARKNlsNewton
+
+ This routine handles the Newton iteration. It calls lsetup if 
+ indicated, calls ARKNewtonIteration to perform the iteration, and 
+ retries a failed attempt at Newton iteration if that is indicated.
+
+ Possible return values:
+
+   ARK_SUCCESS       ---> continue with error test
+
+   ARK_RHSFUNC_FAIL  -+  
+   ARK_LSETUP_FAIL    |-> halt the integration 
+   ARK_LSOLVE_FAIL   -+
+
+   CONV_FAIL        -+
+   RHSFUNC_RECVR    -+-> predict again or stop if too many
+---------------------------------------------------------------*/
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 {
   N_Vector vtemp1, vtemp2, vtemp3;
@@ -2325,7 +2428,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
      call ARKNewtonIteration for the Newton iteration itself.      */
   for(;;) {
 
-    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_ftemp, ark_mem->ark_user_data);
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_ftemp, ark_mem->ark_user_data);
     ark_mem->ark_nfe++; 
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) return(RHSFUNC_RECVR);
@@ -2361,16 +2464,19 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
   }
 }
 
-/* ARKNewtonIteration
- *
- * This routine performs the Newton iteration. If the iteration succeeds,
- * it returns the value ARK_SUCCESS. If not, it may signal the ARKNlsNewton 
- * routine to call lsetup again and reattempt the iteration, by
- * returning the value TRY_AGAIN. (In this case, ARKNlsNewton must set 
- * convfail to ARK_FAIL_BAD_J before calling setup again). 
- * Otherwise, this routine returns one of the appropriate values 
- * ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, CONV_FAIL, or RHSFUNC_RECVR back 
- * to ARKNlsNewton. */
+
+/*---------------------------------------------------------------
+ ARKNewtonIteration
+
+ This routine performs the Newton iteration. If the iteration succeeds,
+ it returns the value ARK_SUCCESS. If not, it may signal the ARKNlsNewton 
+ routine to call lsetup again and reattempt the iteration, by
+ returning the value TRY_AGAIN. (In this case, ARKNlsNewton must set 
+ convfail to ARK_FAIL_BAD_J before calling setup again). 
+ Otherwise, this routine returns one of the appropriate values 
+ ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, CONV_FAIL, or RHSFUNC_RECVR back 
+ to ARKNlsNewton.
+---------------------------------------------------------------*/
 static int ARKNewtonIteration(ARKodeMem ark_mem)
 {
   int m, retval;
@@ -2433,7 +2539,7 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
     
     /* Save norm of correction, evaluate f, and loop again */
     delp = del;
-    retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_ftemp, ark_mem->ark_user_data);
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, ark_mem->ark_ftemp, ark_mem->ark_user_data);
     ark_mem->ark_nfe++;
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) {
@@ -2444,34 +2550,37 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
   } /* end loop */
 }
 
-/* ARKHandleFlag
- *
- * This routine takes action on the return value nflag = *nflagPtr
- * returned by ARKNls, as follows:
- *
- * If ARKNls succeeded in solving the nonlinear system, then
- * ARKHandleNFlag returns the constant DO_ERROR_TEST, which tells ARKStep
- * to perform the error test.
- *
- * If the nonlinear system was not solved successfully, then ncfn and
- * ncf = *ncfPtr are incremented and Nordsieck array zn is restored.
- *
- * If the solution of the nonlinear system failed due to an
- * unrecoverable failure by setup, we return the value ARK_LSETUP_FAIL.
- * 
- * If it failed due to an unrecoverable failure in solve, then we return
- * the value ARK_LSOLVE_FAIL.
- *
- * If it failed due to an unrecoverable failure in rhs, then we return
- * the value ARK_RHSFUNC_FAIL.
- *
- * Otherwise, a recoverable failure occurred when solving the 
- * nonlinear system (ARKNls returned nflag == CONV_FAIL or RHSFUNC_RECVR). 
- * In this case, if ncf is now equal to maxncf or |h| = hmin, 
- * we return the value ARK_CONV_FAILURE (if nflag=CONV_FAIL) or
- * ARK_REPTD_RHSFUNC_ERR (if nflag=RHSFUNC_RECVR).
- * If not, we set *nflagPtr = PREV_CONV_FAIL and return the value
- * PREDICT_AGAIN, telling ARKStep to reattempt the step. */
+
+/*---------------------------------------------------------------
+ ARKHandleFlag
+
+ This routine takes action on the return value nflag = *nflagPtr
+ returned by ARKNls, as follows:
+
+ If ARKNls succeeded in solving the nonlinear system, then
+ ARKHandleNFlag returns the constant DO_ERROR_TEST, which tells ARKStep
+ to perform the error test.
+
+ If the nonlinear system was not solved successfully, then ncfn and
+ ncf = *ncfPtr are incremented and Nordsieck array zn is restored.
+
+ If the solution of the nonlinear system failed due to an
+ unrecoverable failure by setup, we return the value ARK_LSETUP_FAIL.
+ 
+ If it failed due to an unrecoverable failure in solve, then we return
+ the value ARK_LSOLVE_FAIL.
+
+ If it failed due to an unrecoverable failure in rhs, then we return
+ the value ARK_RHSFUNC_FAIL.
+
+ Otherwise, a recoverable failure occurred when solving the 
+ nonlinear system (ARKNls returned nflag == CONV_FAIL or RHSFUNC_RECVR). 
+ In this case, if ncf is now equal to maxncf or |h| = hmin, 
+ we return the value ARK_CONV_FAILURE (if nflag=CONV_FAIL) or
+ ARK_REPTD_RHSFUNC_ERR (if nflag=RHSFUNC_RECVR).
+ If not, we set *nflagPtr = PREV_CONV_FAIL and return the value
+ PREDICT_AGAIN, telling ARKStep to reattempt the step.
+---------------------------------------------------------------*/
 static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, 
 			  realtype saved_t, int *ncfPtr)
 {
@@ -2509,11 +2618,14 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
   return(PREDICT_AGAIN);
 }
 
-/* ARKRestore
- *
- * This routine restores the value of tn to saved_t and undoes the
- * prediction.  After execution of ARKRestore, the Nordsieck array zn has
- * the same values as before the call to ARKPredict. */
+
+/*---------------------------------------------------------------
+ ARKRestore
+
+ This routine restores the value of tn to saved_t and undoes the
+ prediction.  After execution of ARKRestore, the Nordsieck array zn has
+ the same values as before the call to ARKPredict. 
+---------------------------------------------------------------*/
 static void ARKRestore(ARKodeMem ark_mem, realtype saved_t)
 {
   int j, k;
@@ -2524,26 +2636,28 @@ static void ARKRestore(ARKodeMem ark_mem, realtype saved_t)
       N_VLinearSum(ONE, ark_mem->ark_zn[j-1], -ONE, ark_mem->ark_zn[j], ark_mem->ark_zn[j-1]);
 }
 
-/* ARKDoErrorTest
- *
- * This routine performs the local error test. 
- * The weighted local error norm dsm is loaded into *dsmPtr, and 
- * the test dsm ?<= 1 is made.
- *
- * If the test passes, ARKDoErrorTest returns ARK_SUCCESS. 
- *
- * If the test fails, we undo the step just taken (call ARKRestore) and 
- *
- *   - if maxnef error test failures have occurred or if ABS(h) = hmin,
- *     we return ARK_ERR_FAILURE.
- *
- *   - if more than MXNEF1 error test failures have occurred, an order
- *     reduction is forced. If already at order 1, restart by reloading 
- *     zn from scratch. If f() fails we return either ARK_RHSFUNC_FAIL
- *     or ARK_UNREC_RHSFUNC_ERR (no recovery is possible at this stage).
- *
- *   - otherwise, set *nflagPtr to PREV_ERR_FAIL, and return TRY_AGAIN. 
- */
+
+/*---------------------------------------------------------------
+ ARKDoErrorTest
+
+ This routine performs the local error test. 
+ The weighted local error norm dsm is loaded into *dsmPtr, and 
+ the test dsm ?<= 1 is made.
+
+ If the test passes, ARKDoErrorTest returns ARK_SUCCESS. 
+
+ If the test fails, we undo the step just taken (call ARKRestore) and 
+
+   - if maxnef error test failures have occurred or if ABS(h) = hmin,
+     we return ARK_ERR_FAILURE.
+
+   - if more than MXNEF1 error test failures have occurred, an order
+     reduction is forced. If already at order 1, restart by reloading 
+     zn from scratch. If f() fails we return either ARK_RHSFUNC_FAIL
+     or ARK_UNREC_RHSFUNC_ERR (no recovery is possible at this stage).
+
+   - otherwise, set *nflagPtr to PREV_ERR_FAIL, and return TRY_AGAIN. 
+---------------------------------------------------------------*/
 static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 				  realtype saved_t, int *nefPtr, realtype *dsmPtr)
 {
@@ -2596,7 +2710,7 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_qwait = LONG_WAIT;
   ark_mem->ark_nscon = 0;
 
-  retval = ark_mem->ark_f(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
+  retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], ark_mem->ark_tempv, ark_mem->ark_user_data);
   ark_mem->ark_nfe++;
   if (retval < 0)  return(ARK_RHSFUNC_FAIL);
   if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
@@ -2607,19 +2721,21 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 }
 
 
-/* =================================================================
- *  Private Functions Implementation after succesful step
- * ================================================================= */
+/*===============================================================
+  Private Functions Implementation after succesful step
+===============================================================*/
 
-/* ARKCompleteStep
- *
- * This routine performs various update operations when the solution
- * to the nonlinear system has passed the local error test. 
- * We increment the step counter nst, record the values hu and qu,
- * update the tau array, and apply the corrections to the zn array.
- * The tau[i] are the last q values of h, with tau[1] the most recent.
- * The counter qwait is decremented, and if qwait == 1 (and q < qmax)
- * we save acor and tq[5] for a possible order increase. */
+/*---------------------------------------------------------------
+ ARKCompleteStep
+
+ This routine performs various update operations when the solution
+ to the nonlinear system has passed the local error test. 
+ We increment the step counter nst, record the values hu and qu,
+ update the tau array, and apply the corrections to the zn array.
+ The tau[i] are the last q values of h, with tau[1] the most recent.
+ The counter qwait is decremented, and if qwait == 1 (and q < qmax)
+ we save acor and tq[5] for a possible order increase. 
+---------------------------------------------------------------*/
 static void ARKCompleteStep(ARKodeMem ark_mem)
 {
   int i, j;
@@ -2643,12 +2759,15 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
   }
 }
 
-/* ARKprepareNextStep
- *
- * This routine handles the setting of stepsize and order for the
- * next step -- hprime and qprime.  Along with hprime, it sets the
- * ratio eta = hprime/h.  It also updates other state variables 
- * related to a change of step size or order. */
+
+/*---------------------------------------------------------------
+ ARKprepareNextStep
+
+ This routine handles the setting of stepsize and order for the
+ next step -- hprime and qprime.  Along with hprime, it sets the
+ ratio eta = hprime/h.  It also updates other state variables 
+ related to a change of step size or order.
+---------------------------------------------------------------*/
  static void ARKPrepareNextStep(ARKodeMem ark_mem, realtype dsm)
 {
   /* If etamax = 1, defer step size or order changes */
@@ -2681,11 +2800,14 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
   ARKSetEta(ark_mem);
 }
 
-/* ARKsetEta
- *
- * This routine adjusts the value of eta according to the various
- * heuristic limits and the optional input hmax.  It also resets
- * etamax to be the estimated local error vector. */
+
+/*---------------------------------------------------------------
+ ARKsetEta
+
+ This routine adjusts the value of eta according to the various
+ heuristic limits and the optional input hmax.  It also resets
+ etamax to be the estimated local error vector. 
+---------------------------------------------------------------*/
 static void ARKSetEta(ARKodeMem ark_mem)
 {
 
@@ -2704,10 +2826,13 @@ static void ARKSetEta(ARKodeMem ark_mem)
   /* Reset etamax for the next step size change, and scale acor */
 }
 
-/* ARKComputeEtaqm1
- *
- * This routine computes and returns the value of etaqm1 for a
- * possible decrease in order by 1. */
+
+/*---------------------------------------------------------------
+ ARKComputeEtaqm1
+
+ This routine computes and returns the value of etaqm1 for a
+ possible decrease in order by 1.
+---------------------------------------------------------------*/
 static realtype ARKComputeEtaqm1(ARKodeMem ark_mem)
 {
   realtype ddn;
@@ -2720,10 +2845,13 @@ static realtype ARKComputeEtaqm1(ARKodeMem ark_mem)
   return(ark_mem->ark_etaqm1);
 }
 
-/* ARKComputeEtaqp1
- *
- * This routine computes and returns the value of etaqp1 for a
- * possible increase in order by 1. */
+
+/*---------------------------------------------------------------
+ ARKComputeEtaqp1
+
+ This routine computes and returns the value of etaqp1 for a
+ possible increase in order by 1.
+---------------------------------------------------------------*/
 static realtype ARKComputeEtaqp1(ARKodeMem ark_mem)
 {
   realtype dup, cquot;
@@ -2739,15 +2867,18 @@ static realtype ARKComputeEtaqp1(ARKodeMem ark_mem)
   return(ark_mem->ark_etaqp1);
 }
 
-/* ARKChooseEta
- * Given etaqm1, etaq, etaqp1 (the values of eta for qprime =
- * q - 1, q, or q + 1, respectively), this routine chooses the 
- * maximum eta value, sets eta to that value, and sets qprime to the
- * corresponding value of q.  If there is a tie, the preference
- * order is to (1) keep the same order, then (2) decrease the order,
- * and finally (3) increase the order.  If the maximum eta value
- * is below the threshhold THRESH, the order is kept unchanged and
- * eta is set to 1. */
+
+/*---------------------------------------------------------------
+ ARKChooseEta
+ Given etaqm1, etaq, etaqp1 (the values of eta for qprime =
+ q - 1, q, or q + 1, respectively), this routine chooses the 
+ maximum eta value, sets eta to that value, and sets qprime to the
+ corresponding value of q.  If there is a tie, the preference
+ order is to (1) keep the same order, then (2) decrease the order,
+ and finally (3) increase the order.  If the maximum eta value
+ is below the threshhold THRESH, the order is kept unchanged and
+ eta is set to 1.
+---------------------------------------------------------------*/
 static void ARKChooseEta(ARKodeMem ark_mem)
 {
   realtype etam;
@@ -2784,11 +2915,14 @@ static void ARKChooseEta(ARKodeMem ark_mem)
   }
 }
 
-/* ARKHandleFailure
- *
- * This routine prints error messages for all cases of failure by
- * ARKHin and ARKStep. It returns to ARKode the value that ARKode is 
- * to return to the user. */
+
+/*---------------------------------------------------------------
+ ARKHandleFailure
+
+ This routine prints error messages for all cases of failure by
+ ARKHin and ARKStep. It returns to ARKode the value that ARKode is 
+ to return to the user.
+---------------------------------------------------------------*/
 static int ARKHandleFailure(ARKodeMem ark_mem, int flag)
 {
 
@@ -2829,19 +2963,21 @@ static int ARKHandleFailure(ARKodeMem ark_mem, int flag)
 }
 
 
-/* =================================================================
- * BDF Stability Limit Detection                       
- * ================================================================= */
+/*===============================================================
+ BDF Stability Limit Detection                       
+===============================================================*/
 
-/* ARKBDFStab
- *
- * This routine handles the BDF Stability Limit Detection Algorithm
- * STALD.  It is called if lmm = ARK_BDF and the SLDET option is on.
- * If the order is 3 or more, the required norm data is saved.
- * If a decision to reduce order has not already been made, and
- * enough data has been saved, ARKsldet is called.  If it signals
- * a stability limit violation, the order is reduced, and the step
- * size is reset accordingly. */
+/*---------------------------------------------------------------
+ ARKBDFStab
+
+ This routine handles the BDF Stability Limit Detection Algorithm
+ STALD.  It is called if lmm = ARK_BDF and the SLDET option is on.
+ If the order is 3 or more, the required norm data is saved.
+ If a decision to reduce order has not already been made, and
+ enough data has been saved, ARKsldet is called.  If it signals
+ a stability limit violation, the order is reduced, and the step
+ size is reset accordingly. 
+---------------------------------------------------------------*/
 void ARKBDFStab(ARKodeMem ark_mem)
 {
   int i,k, ldflag, factorial;
@@ -2888,39 +3024,42 @@ void ARKBDFStab(ARKodeMem ark_mem)
   }
 }
 
-/* ARKsldet
- *
- * This routine detects stability limitation using stored scaled 
- * derivatives data. ARKsldet returns the magnitude of the
- * dominate characteristic root, rr. The presents of a stability
- * limit is indicated by rr > "something a little less then 1.0",  
- * and a positive kflag. This routine should only be called if
- * order is greater than or equal to 3, and data has been collected
- * for 5 time steps. 
- * 
- * Returned values:
- *    kflag = 1 -> Found stable characteristic root, normal matrix case
- *    kflag = 2 -> Found stable characteristic root, quartic solution
- *    kflag = 3 -> Found stable characteristic root, quartic solution,
- *                 with Newton correction
- *    kflag = 4 -> Found stability violation, normal matrix case
- *    kflag = 5 -> Found stability violation, quartic solution
- *    kflag = 6 -> Found stability violation, quartic solution,
- *                 with Newton correction
- *
- *    kflag < 0 -> No stability limitation, 
- *                 or could not compute limitation.
- *
- *    kflag = -1 -> Min/max ratio of ssdat too small.
- *    kflag = -2 -> For normal matrix case, vmax > vrrt2*vrrt2
- *    kflag = -3 -> For normal matrix case, The three ratios
- *                  are inconsistent.
- *    kflag = -4 -> Small coefficient prevents elimination of quartics.  
- *    kflag = -5 -> R value from quartics not consistent.
- *    kflag = -6 -> No corrected root passes test on qk values
- *    kflag = -7 -> Trouble solving for sigsq.
- *    kflag = -8 -> Trouble solving for B, or R via B.
- *    kflag = -9 -> R via sigsq[k] disagrees with R from data. */
+
+/*---------------------------------------------------------------
+ ARKsldet
+
+ This routine detects stability limitation using stored scaled 
+ derivatives data. ARKsldet returns the magnitude of the
+ dominate characteristic root, rr. The presents of a stability
+ limit is indicated by rr > "something a little less then 1.0",  
+ and a positive kflag. This routine should only be called if
+ order is greater than or equal to 3, and data has been collected
+ for 5 time steps. 
+ 
+ Returned values:
+    kflag = 1 -> Found stable characteristic root, normal matrix case
+    kflag = 2 -> Found stable characteristic root, quartic solution
+    kflag = 3 -> Found stable characteristic root, quartic solution,
+                 with Newton correction
+    kflag = 4 -> Found stability violation, normal matrix case
+    kflag = 5 -> Found stability violation, quartic solution
+    kflag = 6 -> Found stability violation, quartic solution,
+                 with Newton correction
+
+    kflag < 0 -> No stability limitation, 
+                 or could not compute limitation.
+
+    kflag = -1 -> Min/max ratio of ssdat too small.
+    kflag = -2 -> For normal matrix case, vmax > vrrt2*vrrt2
+    kflag = -3 -> For normal matrix case, The three ratios
+                  are inconsistent.
+    kflag = -4 -> Small coefficient prevents elimination of quartics.  
+    kflag = -5 -> R value from quartics not consistent.
+    kflag = -6 -> No corrected root passes test on qk values
+    kflag = -7 -> Trouble solving for sigsq.
+    kflag = -8 -> Trouble solving for B, or R via B.
+    kflag = -9 -> R via sigsq[k] disagrees with R from data. 
+---------------------------------------------------------------*/
 static int ARKsldet(ARKodeMem ark_mem)
 {
   int i, k, j, it, kmin, kflag = 0;
@@ -3186,23 +3325,23 @@ static int ARKsldet(ARKodeMem ark_mem)
   return(kflag);
 }
 
-/*-----------------------------------------------------------------*/
 
 
-/* =================================================================
- * Root finding   
- * ================================================================= */
+/*===============================================================
+ Root finding   
+===============================================================*/
 
-/* ARKRcheck1
- *
- * This routine completes the initialization of rootfinding memory
- * information, and checks whether g has a zero both at and very near
- * the initial point of the IVP.
- *
- * This routine returns an int equal to:
- *  ARK_RTFUNC_FAIL = -12  if the g function failed, or
- *  ARK_SUCCESS     =   0  otherwise.
- */
+/*---------------------------------------------------------------
+ ARKRcheck1
+
+ This routine completes the initialization of rootfinding memory
+ information, and checks whether g has a zero both at and very near
+ the initial point of the IVP.
+
+ This routine returns an int equal to:
+  ARK_RTFUNC_FAIL = -12  if the g function failed, or
+  ARK_SUCCESS     =   0  otherwise.
+---------------------------------------------------------------*/
 static int ARKRcheck1(ARKodeMem ark_mem)
 {
   int i, retval;
@@ -3247,25 +3386,27 @@ static int ARKRcheck1(ARKodeMem ark_mem)
   return(ARK_SUCCESS);
 }
 
-/* ARKRcheck2
- *
- * This routine checks for exact zeros of g at the last root found,
- * if the last return was a root.  It then checks for a close pair of
- * zeros (an error condition), and for a new root at a nearby point.
- * The array glo = g(tlo) at the left endpoint of the search interval
- * is adjusted if necessary to assure that all g_i are nonzero
- * there, before returning to do a root search in the interval.
- *
- * On entry, tlo = tretlast is the last value of tret returned by
- * ARKode.  This may be the previous tn, the previous tout value, or
- * the last root location.
- *
- * This routine returns an int equal to:
- *      ARK_RTFUNC_FAIL = -12 if the g function failed, or
- *      CLOSERT        =  3  if a close pair of zeros was found, or
- *      RTFOUND        =  1  if a new zero of g was found near tlo, or
- *      ARK_SUCCESS     =  0  otherwise.
- */
+
+/*---------------------------------------------------------------
+ ARKRcheck2
+
+ This routine checks for exact zeros of g at the last root found,
+ if the last return was a root.  It then checks for a close pair of
+ zeros (an error condition), and for a new root at a nearby point.
+ The array glo = g(tlo) at the left endpoint of the search interval
+ is adjusted if necessary to assure that all g_i are nonzero
+ there, before returning to do a root search in the interval.
+
+ On entry, tlo = tretlast is the last value of tret returned by
+ ARKode.  This may be the previous tn, the previous tout value, or
+ the last root location.
+
+ This routine returns an int equal to:
+      ARK_RTFUNC_FAIL = -12 if the g function failed, or
+      CLOSERT        =  3  if a close pair of zeros was found, or
+      RTFOUND        =  1  if a new zero of g was found near tlo, or
+      ARK_SUCCESS     =  0  otherwise.
+---------------------------------------------------------------*/
 static int ARKRcheck2(ARKodeMem ark_mem)
 {
   int i, retval;
@@ -3321,17 +3462,19 @@ static int ARKRcheck2(ARKodeMem ark_mem)
   return(ARK_SUCCESS);
 }
 
-/* ARKRcheck3
- *
- * This routine interfaces to ARKRootfind to look for a root of g
- * between tlo and either tn or tout, whichever comes first.
- * Only roots beyond tlo in the direction of integration are sought.
- *
- * This routine returns an int equal to:
- *      ARK_RTFUNC_FAIL = -12 if the g function failed, or
- *      RTFOUND        =  1  if a root of g was found, or
- *      ARK_SUCCESS     =  0  otherwise.
- */
+
+/*---------------------------------------------------------------
+ ARKRcheck3
+
+ This routine interfaces to ARKRootfind to look for a root of g
+ between tlo and either tn or tout, whichever comes first.
+ Only roots beyond tlo in the direction of integration are sought.
+
+ This routine returns an int equal to:
+      ARK_RTFUNC_FAIL = -12 if the g function failed, or
+      RTFOUND        =  1  if a root of g was found, or
+      ARK_SUCCESS     =  0  otherwise.
+---------------------------------------------------------------*/
 static int ARKRcheck3(ARKodeMem ark_mem)
 {
   int i, retval, ier;
@@ -3374,81 +3517,83 @@ static int ARKRcheck3(ARKodeMem ark_mem)
 
 }
 
-/* ARKRootfind
- *
- * This routine solves for a root of g(t) between tlo and thi, if
- * one exists.  Only roots of odd multiplicity (i.e. with a change
- * of sign in one of the g_i), or exact zeros, are found.
- * Here the sign of tlo - thi is arbitrary, but if multiple roots
- * are found, the one closest to tlo is returned.
- *
- * The method used is the Illinois algorithm, a modified secant method.
- * Reference: Kathie L. Hiebert and Lawrence F. Shampine, Implicitly
- * Defined Output Points for Solutions of ODEs, Sandia National
- * Laboratory Report SAND80-0180, February 1980.
- *
- * This routine uses the following parameters for communication:
- *
- * nrtfn    = number of functions g_i, or number of components of
- *            the vector-valued function g(t).  Input only.
- *
- * gfun     = user-defined function for g(t).  Its form is
- *            (void) gfun(t, y, gt, user_data)
- *
- * rootdir  = in array specifying the direction of zero-crossings.
- *            If rootdir[i] > 0, search for roots of g_i only if
- *            g_i is increasing; if rootdir[i] < 0, search for
- *            roots of g_i only if g_i is decreasing; otherwise
- *            always search for roots of g_i.
- *
- * gactive  = array specifying whether a component of g should
- *            or should not be monitored. gactive[i] is initially
- *            set to TRUE for all i=0,...,nrtfn-1, but it may be
- *            reset to FALSE if at the first step g[i] is 0.0
- *            both at the I.C. and at a small perturbation of them.
- *            gactive[i] is then set back on TRUE only after the 
- *            corresponding g function moves away from 0.0.
- *
- * nge      = cumulative counter for gfun calls.
- *
- * ttol     = a convergence tolerance for trout.  Input only.
- *            When a root at trout is found, it is located only to
- *            within a tolerance of ttol.  Typically, ttol should
- *            be set to a value on the order of
- *               100 * UROUND * max (ABS(tlo), ABS(thi))
- *            where UROUND is the unit roundoff of the machine.
- *
- * tlo, thi = endpoints of the interval in which roots are sought.
- *            On input, and must be distinct, but tlo - thi may
- *            be of either sign.  The direction of integration is
- *            assumed to be from tlo to thi.  On return, tlo and thi
- *            are the endpoints of the final relevant interval.
- *
- * glo, ghi = arrays of length nrtfn containing the vectors g(tlo)
- *            and g(thi) respectively.  Input and output.  On input,
- *            none of the glo[i] should be zero.
- *
- * trout    = root location, if a root was found, or thi if not.
- *            Output only.  If a root was found other than an exact
- *            zero of g, trout is the endpoint thi of the final
- *            interval bracketing the root, with size at most ttol.
- *
- * grout    = array of length nrtfn containing g(trout) on return.
- *
- * iroots   = int array of length nrtfn with root information.
- *            Output only.  If a root was found, iroots indicates
- *            which components g_i have a root at trout.  For
- *            i = 0, ..., nrtfn-1, iroots[i] = 1 if g_i has a root
- *            and g_i is increasing, iroots[i] = -1 if g_i has a
- *            root and g_i is decreasing, and iroots[i] = 0 if g_i
- *            has no roots or g_i varies in the direction opposite
- *            to that indicated by rootdir[i].
- *
- * This routine returns an int equal to:
- *      ARK_RTFUNC_FAIL = -12 if the g function failed, or
- *      RTFOUND        =  1  if a root of g was found, or
- *      ARK_SUCCESS     =  0  otherwise.
- */
+
+/*---------------------------------------------------------------
+ ARKRootfind
+
+ This routine solves for a root of g(t) between tlo and thi, if
+ one exists.  Only roots of odd multiplicity (i.e. with a change
+ of sign in one of the g_i), or exact zeros, are found.
+ Here the sign of tlo - thi is arbitrary, but if multiple roots
+ are found, the one closest to tlo is returned.
+
+ The method used is the Illinois algorithm, a modified secant method.
+ Reference: Kathie L. Hiebert and Lawrence F. Shampine, Implicitly
+ Defined Output Points for Solutions of ODEs, Sandia National
+ Laboratory Report SAND80-0180, February 1980.
+
+ This routine uses the following parameters for communication:
+
+ nrtfn    = number of functions g_i, or number of components of
+            the vector-valued function g(t).  Input only.
+
+ gfun     = user-defined function for g(t).  Its form is
+            (void) gfun(t, y, gt, user_data)
+
+ rootdir  = in array specifying the direction of zero-crossings.
+            If rootdir[i] > 0, search for roots of g_i only if
+            g_i is increasing; if rootdir[i] < 0, search for
+            roots of g_i only if g_i is decreasing; otherwise
+            always search for roots of g_i.
+
+ gactive  = array specifying whether a component of g should
+            or should not be monitored. gactive[i] is initially
+            set to TRUE for all i=0,...,nrtfn-1, but it may be
+            reset to FALSE if at the first step g[i] is 0.0
+            both at the I.C. and at a small perturbation of them.
+            gactive[i] is then set back on TRUE only after the 
+            corresponding g function moves away from 0.0.
+
+ nge      = cumulative counter for gfun calls.
+
+ ttol     = a convergence tolerance for trout.  Input only.
+            When a root at trout is found, it is located only to
+            within a tolerance of ttol.  Typically, ttol should
+            be set to a value on the order of
+               100 * UROUND * max (ABS(tlo), ABS(thi))
+            where UROUND is the unit roundoff of the machine.
+
+ tlo, thi = endpoints of the interval in which roots are sought.
+            On input, and must be distinct, but tlo - thi may
+            be of either sign.  The direction of integration is
+            assumed to be from tlo to thi.  On return, tlo and thi
+            are the endpoints of the final relevant interval.
+
+ glo, ghi = arrays of length nrtfn containing the vectors g(tlo)
+            and g(thi) respectively.  Input and output.  On input,
+            none of the glo[i] should be zero.
+
+ trout    = root location, if a root was found, or thi if not.
+            Output only.  If a root was found other than an exact
+            zero of g, trout is the endpoint thi of the final
+            interval bracketing the root, with size at most ttol.
+
+ grout    = array of length nrtfn containing g(trout) on return.
+
+ iroots   = int array of length nrtfn with root information.
+            Output only.  If a root was found, iroots indicates
+            which components g_i have a root at trout.  For
+            i = 0, ..., nrtfn-1, iroots[i] = 1 if g_i has a root
+            and g_i is increasing, iroots[i] = -1 if g_i has a
+            root and g_i is decreasing, and iroots[i] = 0 if g_i
+            has no roots or g_i varies in the direction opposite
+            to that indicated by rootdir[i].
+
+ This routine returns an int equal to:
+      ARK_RTFUNC_FAIL = -12 if the g function failed, or
+      RTFOUND        =  1  if a root of g was found, or
+      ARK_SUCCESS     =  0  otherwise.
+---------------------------------------------------------------*/
 static int ARKRootfind(ARKodeMem ark_mem)
 {
   realtype alpha, tmid, gfrac, maxfrac, fracint, fracsub;
@@ -3600,25 +3745,27 @@ static int ARKRootfind(ARKodeMem ark_mem)
 }
 
 
-/* =================================================================
- * Internal EWT function
- * ================================================================= */
+/*===============================================================
+  Internal EWT function
+===============================================================*/
 
-/* ARKEwtSet
- *
- * This routine is responsible for setting the error weight vector ewt,
- * according to tol_type, as follows:
- *
- * (1) ewt[i] = 1 / (reltol * ABS(ycur[i]) + *abstol), i=0,...,neq-1
- *     if tol_type = ARK_SS
- * (2) ewt[i] = 1 / (reltol * ABS(ycur[i]) + abstol[i]), i=0,...,neq-1
- *     if tol_type = ARK_SV
- *
- * ARKEwtSet returns 0 if ewt is successfully set as above to a
- * positive vector and -1 otherwise. In the latter case, ewt is
- * considered undefined.
- *
- * All the real work is done in the routines ARKEwtSetSS, ARKEwtSetSV. */
+/*---------------------------------------------------------------
+ ARKEwtSet
+
+ This routine is responsible for setting the error weight vector ewt,
+ according to tol_type, as follows:
+
+ (1) ewt[i] = 1 / (reltol * ABS(ycur[i]) + *abstol), i=0,...,neq-1
+     if tol_type = ARK_SS
+ (2) ewt[i] = 1 / (reltol * ABS(ycur[i]) + abstol[i]), i=0,...,neq-1
+     if tol_type = ARK_SV
+
+ ARKEwtSet returns 0 if ewt is successfully set as above to a
+ positive vector and -1 otherwise. In the latter case, ewt is
+ considered undefined.
+
+ All the real work is done in the routines ARKEwtSetSS, ARKEwtSetSV.
+---------------------------------------------------------------*/
 int ARKEwtSet(N_Vector ycur, N_Vector weight, void *data)
 {
   ARKodeMem ark_mem;
@@ -3639,12 +3786,15 @@ int ARKEwtSet(N_Vector ycur, N_Vector weight, void *data)
   return(flag);
 }
 
-/* ARKEwtSetSS
- *
- * This routine sets ewt as decribed above in the case tol_type = ARK_SS.
- * It tests for non-positive components before inverting. ARKEwtSetSS
- * returns 0 if ewt is successfully set to a positive vector
- * and -1 otherwise. In the latter case, ewt is considered undefined. */
+
+/*---------------------------------------------------------------
+ ARKEwtSetSS
+
+ This routine sets ewt as decribed above in the case tol_type = ARK_SS.
+ It tests for non-positive components before inverting. ARKEwtSetSS
+ returns 0 if ewt is successfully set to a positive vector
+ and -1 otherwise. In the latter case, ewt is considered undefined.
+---------------------------------------------------------------*/
 static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 {
   N_VAbs(ycur, ark_mem->ark_tempv);
@@ -3655,12 +3805,15 @@ static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
   return(0);
 }
 
-/* ARKEwtSetSV
- *
- * This routine sets ewt as decribed above in the case tol_type = ARK_SV.
- * It tests for non-positive components before inverting. ARKEwtSetSV
- * returns 0 if ewt is successfully set to a positive vector
- * and -1 otherwise. In the latter case, ewt is considered undefined. */
+
+/*---------------------------------------------------------------
+ ARKEwtSetSV
+
+ This routine sets ewt as decribed above in the case tol_type = ARK_SV.
+ It tests for non-positive components before inverting. ARKEwtSetSV
+ returns 0 if ewt is successfully set to a positive vector
+ and -1 otherwise. In the latter case, ewt is considered undefined.
+---------------------------------------------------------------*/
 static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 {
   N_VAbs(ycur, ark_mem->ark_tempv);
@@ -3671,17 +3824,19 @@ static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 }
 
 
-/* =================================================================
- * ARKODE Error Handling function   
- * ================================================================= */
+/*===============================================================
+  ARKODE Error Handling function   
+===============================================================*/
 
-/* ARKProcessError is a high level error handling function
- * - if ark_mem==NULL it prints the error message to stderr
- * - otherwise, it sets-up and calls the error handling function 
- *   pointed to by ark_ehfun */
-void ARKProcessError(ARKodeMem ark_mem, int error_code, 
-		     const char *module, const char *fname, 
-		     const char *msgfmt, ...)
+/*---------------------------------------------------------------
+ ARKProcessError is a high level error handling function
+ - if ark_mem==NULL it prints the error message to stderr
+ - otherwise, it sets-up and calls the error handling function 
+   pointed to by ark_ehfun 
+---------------------------------------------------------------*/
+void ARKProcessError(ARKodeMem ark_mem, 
+                    int error_code, const char *module, const char *fname, 
+                    const char *msgfmt, ...)
 {
   va_list ap;
   char msg[256];
@@ -3714,8 +3869,10 @@ void ARKProcessError(ARKodeMem ark_mem, int error_code,
   return;
 }
 
-/* ARKErrHandler is the default error handling function.
-   It sends the error message to the stream pointed to by ark_errfp */
+/*---------------------------------------------------------------
+ ARKErrHandler is the default error handling function.
+   It sends the error message to the stream pointed to by ark_errfp 
+---------------------------------------------------------------*/
 void ARKErrHandler(int error_code, const char *module,
                   const char *function, char *msg, void *data)
 {
@@ -3740,7 +3897,7 @@ void ARKErrHandler(int error_code, const char *module,
   return;
 }
 
-/*=================================================================*/
-/*             EOF                                                 */
-/*=================================================================*/
+/*===============================================================
+   EOF
+===============================================================*/
 

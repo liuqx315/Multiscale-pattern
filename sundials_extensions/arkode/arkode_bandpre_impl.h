@@ -1,15 +1,11 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Implementation header file for the ARKBANDPRE module.
- * -----------------------------------------------------------------
- ***** UNTOUCHED *****
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Implementation header file for the ARKBANDPRE module.
+---------------------------------------------------------------*/
 
 #ifndef _ARKBANDPRE_IMPL_H
 #define _ARKBANDPRE_IMPL_H
@@ -22,40 +18,33 @@ extern "C" {
 #include <sundials/sundials_band.h>
 #include <sundials/sundials_direct.h>
 
-/*
- * -----------------------------------------------------------------
- * Type: ARKBandPrecData
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ Type: ARKBandPrecData
+---------------------------------------------------------------*/
 
 typedef struct ARKBandPrecDataRec {
 
   /* Data set by user in ARKBandPrecInit */
-
   long int N;
   long int ml, mu;
 
   /* Data set by ARKBandPrecSetup */
-
   DlsMat savedJ;
   DlsMat savedP;
   long int *lpivots;
 
   /* Rhs calls */
-
   long int nfeBP;
 
   /* Pointer to arkode_mem */
-
   void *arkode_mem;
 
 } *ARKBandPrecData;
 
-/*
- * -----------------------------------------------------------------
- * ARKBANDPRE error messages
- * -----------------------------------------------------------------
- */
+
+/*---------------------------------------------------------------
+ ARKBANDPRE error messages
+---------------------------------------------------------------*/
 
 #define MSGBP_MEM_NULL       "Integrator memory is NULL."
 #define MSGBP_LMEM_NULL      "Linear solver memory is NULL. One of the SPILS linear solvers must be attached."

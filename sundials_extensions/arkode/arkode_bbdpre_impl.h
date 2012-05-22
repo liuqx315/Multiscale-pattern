@@ -1,15 +1,11 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Implementation header file for the ARKBBDPRE module.
- * -----------------------------------------------------------------
- ***** UNTOUCHED *****
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Implementation header file for the ARKBBDPRE module.
+---------------------------------------------------------------*/
 
 #ifndef _ARKBBDPRE_IMPL_H
 #define _ARKBBDPRE_IMPL_H
@@ -21,48 +17,40 @@ extern "C" {
 #include <arkode/arkode_bbdpre.h>
 #include <sundials/sundials_band.h>
 
-/*
- * -----------------------------------------------------------------
- * Type: ARKBBDPrecData
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ Type: ARKBBDPrecData
+---------------------------------------------------------------*/
 typedef struct ARKBBDPrecDataRec {
 
   /* passed by user to ARKBBDPrecAlloc and used by PrecSetup/PrecSolve */
-
   long int mudq, mldq, mukeep, mlkeep;
   realtype dqrely;
   ARKLocalFn gloc;
   ARKCommFn cfn;
 
   /* set by ARKBBDPrecSetup and used by ARKBBDPrecSolve */
-
   DlsMat savedJ;
   DlsMat savedP;
   long int *lpivots;
 
   /* set by ARKBBDPrecAlloc and used by ARKBBDPrecSetup */
-
   long int n_local;
 
   /* available for optional output */
-
   long int rpwsize;
   long int ipwsize;
   long int nge;
 
   /* pointer to arkode_mem */
-
   void *arkode_mem;
 
 } *ARKBBDPrecData;
 
-/*
- * -----------------------------------------------------------------
- * ARKBBDPRE error messages
- * -----------------------------------------------------------------
- */
+
+/*---------------------------------------------------------------
+ ARKBBDPRE error messages
+---------------------------------------------------------------*/
 
 #define MSGBBD_MEM_NULL    "Integrator memory is NULL."
 #define MSGBBD_LMEM_NULL   "Linear solver memory is NULL. One of the SPILS linear solvers must be attached."

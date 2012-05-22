@@ -1,15 +1,11 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * This is the header file for the ARKODE band linear solver, ARKBAND.
- * -----------------------------------------------------------------
- ***** UNTOUCHED *****
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Header file for the ARKODE band linear solver, ARKBAND.
+---------------------------------------------------------------*/
 
 #ifndef _ARKBAND_H
 #define _ARKBAND_H
@@ -21,34 +17,33 @@ extern "C" {
 #include <arkode/arkode_direct.h>
 #include <sundials/sundials_band.h>
  
-/*
- * -----------------------------------------------------------------
- * Function : ARKBand
- * -----------------------------------------------------------------
- * A call to the ARKBand function links the main ARKODE integrator
- * with the ARKBAND linear solver.
- *
- * arkode_mem is the pointer to the integrator memory returned by
- *           ARKodeCreate.
- *
- * N is the size of the ODE system.
- *
- * mupper is the upper bandwidth of the band Jacobian
- *        approximation.
- *
- * mlower is the lower bandwidth of the band Jacobian
- *        approximation.
- *
- * The return value of ARKBand is one of:
- *    ARKDLS_SUCCESS   if successful
- *    ARKDLS_MEM_NULL  if the arkode memory was NULL
- *    ARKDLS_MEM_FAIL  if there was a memory allocation failure
- *    ARKDLS_ILL_INPUT if a required vector operation is missing or
- *                       if a bandwidth has an illegal value.
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ ARKBand:
 
-SUNDIALS_EXPORT int ARKBand(void *arkode_mem, long int N, long int mupper, long int mlower);
+ A call to the ARKBand function links the main ARKODE integrator
+ with the ARKBAND linear solver.
+
+ arkode_mem is the pointer to the integrator memory returned by
+           ARKodeCreate.
+
+ N is the size of the ODE system.
+
+ mupper is the upper bandwidth of the band Jacobian
+        approximation.
+
+ mlower is the lower bandwidth of the band Jacobian
+        approximation.
+
+ The return value of ARKBand is one of:
+    ARKDLS_SUCCESS   if successful
+    ARKDLS_MEM_NULL  if the arkode memory was NULL
+    ARKDLS_MEM_FAIL  if there was a memory allocation failure
+    ARKDLS_ILL_INPUT if a required vector operation is missing or
+                       if a bandwidth has an illegal value.
+---------------------------------------------------------------*/
+
+SUNDIALS_EXPORT int ARKBand(void *arkode_mem, long int N, 
+			    long int mupper, long int mlower);
 
 #ifdef __cplusplus
 }

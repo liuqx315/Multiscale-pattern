@@ -1,15 +1,11 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date:  $
- * ----------------------------------------------------------------- 
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * This is the implementation file for the ARKSPILS linear solvers.
- * -----------------------------------------------------------------
- ***** UNTOUCHED *****
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+ $Revision: 1.0 $
+ $Date:  $
+----------------------------------------------------------------- 
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ This is the implementation file for the ARKSPILS linear solvers.
+---------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,63 +13,20 @@
 #include "arkode_impl.h"
 #include "arkode_spils_impl.h"
 
-/* Private constants */
-
+/* constants */
+#define MAX_ITERS  3  /* max. number of attempts to recover in DQ J*v */
 #define ZERO   RCONST(0.0)
 #define PT25   RCONST(0.25)
 #define ONE    RCONST(1.0)
 
-/* Algorithmic constants */
 
-#define MAX_ITERS  3  /* max. number of attempts to recover in DQ J*v */
+/*===============================================================
+   OPTIONAL INPUT and OUTPUT
+===============================================================*/
 
-/* Readability Replacements */
-
-#define lrw1      (ark_mem->ark_lrw1)
-#define liw1      (ark_mem->ark_liw1)
-#define tq        (ark_mem->ark_tq)
-#define tn        (ark_mem->ark_tn)
-#define h         (ark_mem->ark_h)
-#define gamma     (ark_mem->ark_gamma)
-#define nfe       (ark_mem->ark_nfe)
-#define f         (ark_mem->ark_f)
-#define user_data (ark_mem->ark_user_data)
-#define ewt       (ark_mem->ark_ewt)
-#define lmem      (ark_mem->ark_lmem)
-
-#define ils_type  (arkspils_mem->s_type)
-#define sqrtN     (arkspils_mem->s_sqrtN)   
-#define ytemp     (arkspils_mem->s_ytemp)
-#define x         (arkspils_mem->s_x)
-#define ycur      (arkspils_mem->s_ycur)
-#define fcur      (arkspils_mem->s_fcur)
-#define delta     (arkspils_mem->s_delta)
-#define npe       (arkspils_mem->s_npe)
-#define nli       (arkspils_mem->s_nli)
-#define nps       (arkspils_mem->s_nps)
-#define ncfl      (arkspils_mem->s_ncfl)
-#define njtimes   (arkspils_mem->s_njtimes)
-#define nfes      (arkspils_mem->s_nfes)
-
-#define jtimesDQ  (arkspils_mem->s_jtimesDQ)
-#define jtimes    (arkspils_mem->s_jtimes)
-#define j_data    (arkspils_mem->s_j_data)
-
-#define last_flag (arkspils_mem->s_last_flag)
-
-/*
- * -----------------------------------------------------------------
- * OPTIONAL INPUT and OUTPUT
- * -----------------------------------------------------------------
- */
-
-
-/*
- * -----------------------------------------------------------------
- * ARKSpilsSetPrecType
- * -----------------------------------------------------------------
- */
-
+/*---------------------------------------------------------------
+ ARKSpilsSetPrecType
+---------------------------------------------------------------*/
 int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
 {
   ARKodeMem ark_mem;
@@ -81,21 +34,24 @@ int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsSetPrecType", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetPrecType", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsSetPrecType", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetPrecType", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
       (pretype != PREC_RIGHT) && (pretype != PREC_BOTH)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", "ARKSpilsSetPrecType", MSGS_BAD_PRETYPE);
+    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+		    "ARKSpilsSetPrecType", MSGS_BAD_PRETYPE);
     return(ARKSPILS_ILL_INPUT);
   }
 
@@ -104,12 +60,10 @@ int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsSetGSType
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsSetGSType
+---------------------------------------------------------------*/
 int ARKSpilsSetGSType(void *arkode_mem, int gstype)
 {
   ARKodeMem ark_mem;
@@ -117,39 +71,40 @@ int ARKSpilsSetGSType(void *arkode_mem, int gstype)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsSetGSType", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetGSType", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsSetGSType", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetGSType", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  if (ils_type != SPILS_SPGMR) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", "ARKSpilsSetGSType", MSGS_BAD_LSTYPE);
+  if (arkspils_mem->s_type != SPILS_SPGMR) {
+    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+		    "ARKSpilsSetGSType", MSGS_BAD_LSTYPE);
     return(ARKSPILS_ILL_INPUT);
   }
 
   /* Check for legal gstype */
   if ((gstype != MODIFIED_GS) && (gstype != CLASSICAL_GS)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", "ARKSpilsSetGSType", MSGS_BAD_GSTYPE);
+    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+		    "ARKSpilsSetGSType", MSGS_BAD_GSTYPE);
     return(ARKSPILS_ILL_INPUT);
   }
-
   arkspils_mem->s_gstype = gstype;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * Function : ARKSpilsSetMaxl
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ Function : ARKSpilsSetMaxl
+---------------------------------------------------------------*/
 int ARKSpilsSetMaxl(void *arkode_mem, int maxl)
 {
   ARKodeMem ark_mem;
@@ -158,19 +113,22 @@ int ARKSpilsSetMaxl(void *arkode_mem, int maxl)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsSetMaxl", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetMaxl", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsSetMaxl", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(NULL, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetMaxl", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  if (ils_type == SPILS_SPGMR) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", "ARKSpilsSetMaxl", MSGS_BAD_LSTYPE);
+  if (arkspils_mem->s_type == SPILS_SPGMR) {
+    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+		    "ARKSpilsSetMaxl", MSGS_BAD_LSTYPE);
     return(ARKSPILS_ILL_INPUT);
   }
 
@@ -181,12 +139,9 @@ int ARKSpilsSetMaxl(void *arkode_mem, int maxl)
 }
 
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsSetEpsLin
- * -----------------------------------------------------------------
- */
-
+/*---------------------------------------------------------------
+ ARKSpilsSetEpsLin
+---------------------------------------------------------------*/
 int ARKSpilsSetEpsLin(void *arkode_mem, realtype eplifac)
 {
   ARKodeMem ark_mem;
@@ -194,52 +149,55 @@ int ARKSpilsSetEpsLin(void *arkode_mem, realtype eplifac)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsSetEpsLin", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetEpsLin", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsSetEpsLin", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetEpsLin", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   /* Check for legal eplifac */
   if(eplifac < ZERO) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", "ARKSpilsSetEpsLin", MSGS_BAD_EPLIN);
+    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+		    "ARKSpilsSetEpsLin", MSGS_BAD_EPLIN);
     return(ARKSPILS_ILL_INPUT);
   }
-
   arkspils_mem->s_eplifac = (eplifac == ZERO) ? ARKSPILS_EPLIN : eplifac;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsSetPrecSetupFn
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsSetPrecSetupFn
+---------------------------------------------------------------*/
 int ARKSpilsSetPreconditioner(void *arkode_mem, 
-                             ARKSpilsPrecSetupFn pset, ARKSpilsPrecSolveFn psolve)
+			      ARKSpilsPrecSetupFn pset, 
+			      ARKSpilsPrecSolveFn psolve)
 {
   ARKodeMem ark_mem;
   ARKSpilsMem arkspils_mem;
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsSetPreconditioner", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetPreconditioner", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsSetPreconditioner", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetPreconditioner", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   arkspils_mem->s_pset = pset;
   arkspils_mem->s_psolve = psolve;
@@ -247,47 +205,47 @@ int ARKSpilsSetPreconditioner(void *arkode_mem,
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsSetJacTimesVecFn
- * -----------------------------------------------------------------
- */
 
-int ARKSpilsSetJacTimesVecFn(void *arkode_mem, ARKSpilsJacTimesVecFn jtv)
+/*---------------------------------------------------------------
+ ARKSpilsSetJacTimesVecFn
+---------------------------------------------------------------*/
+int ARKSpilsSetJacTimesVecFn(void *arkode_mem, 
+			     ARKSpilsJacTimesVecFn jtv)
 {
   ARKodeMem ark_mem;
   ARKSpilsMem arkspils_mem;
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsSetJacTimesVecFn", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetJacTimesVecFn", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsSetJacTimesVecFn", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsSetJacTimesVecFn", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   if (jtv != NULL) {
-    jtimesDQ = FALSE;
-    jtimes = jtv;
+    arkspils_mem->s_jtimesDQ = FALSE;
+    arkspils_mem->s_jtimes = jtv;
   } else {
-    jtimesDQ = TRUE;
+    arkspils_mem->s_jtimesDQ = TRUE;
   }
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetWorkSpace
- * -----------------------------------------------------------------
- */
 
-int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
+/*---------------------------------------------------------------
+ ARKSpilsGetWorkSpace
+---------------------------------------------------------------*/
+int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS, 
+			 long int *leniwLS)
 {
   ARKodeMem ark_mem;
   ARKSpilsMem arkspils_mem;
@@ -295,44 +253,42 @@ int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetWorkSpace", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetWorkSpace", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetWorkSpace", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetWorkSpace", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  
-  switch(ils_type) {
+  switch(arkspils_mem->s_type) {
   case SPILS_SPGMR:
     maxl = arkspils_mem->s_maxl;
-    *lenrwLS = lrw1*(maxl + 5) + maxl*(maxl + 4) + 1;
-    *leniwLS = liw1*(maxl + 5);
+    *lenrwLS = ark_mem->ark_lrw1*(maxl + 5) + maxl*(maxl + 4) + 1;
+    *leniwLS = ark_mem->ark_liw1*(maxl + 5);
     break;
   case SPILS_SPBCG:
-    *lenrwLS = lrw1 * 9;
-    *leniwLS = liw1 * 9;
+    *lenrwLS = ark_mem->ark_lrw1 * 9;
+    *leniwLS = ark_mem->ark_liw1 * 9;
     break;
   case SPILS_SPTFQMR:
-    *lenrwLS = lrw1*11;
-    *leniwLS = liw1*11;
+    *lenrwLS = ark_mem->ark_lrw1*11;
+    *leniwLS = ark_mem->ark_liw1*11;
     break;
   }
-
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetNumPrecEvals
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetNumPrecEvals
+---------------------------------------------------------------*/
 int ARKSpilsGetNumPrecEvals(void *arkode_mem, long int *npevals)
 {
   ARKodeMem ark_mem;
@@ -340,28 +296,28 @@ int ARKSpilsGetNumPrecEvals(void *arkode_mem, long int *npevals)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetNumPrecEvals", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumPrecEvals", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetNumPrecEvals", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumPrecEvals", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *npevals = npe;
+  *npevals = arkspils_mem->s_npe;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetNumPrecSolves
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetNumPrecSolves
+---------------------------------------------------------------*/
 int ARKSpilsGetNumPrecSolves(void *arkode_mem, long int *npsolves)
 {
   ARKodeMem ark_mem;
@@ -369,28 +325,28 @@ int ARKSpilsGetNumPrecSolves(void *arkode_mem, long int *npsolves)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetNumPrecSolves", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumPrecSolves", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetNumPrecSolves", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumPrecSolves", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *npsolves = nps;
+  *npsolves = arkspils_mem->s_nps;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetNumLinIters
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetNumLinIters
+---------------------------------------------------------------*/
 int ARKSpilsGetNumLinIters(void *arkode_mem, long int *nliters)
 {
   ARKodeMem ark_mem;
@@ -398,28 +354,28 @@ int ARKSpilsGetNumLinIters(void *arkode_mem, long int *nliters)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetNumLinIters", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumLinIters", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetNumLinIters", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumLinIters", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *nliters = nli;
+  *nliters = arkspils_mem->s_nli;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetNumConvFails
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetNumConvFails
+---------------------------------------------------------------*/
 int ARKSpilsGetNumConvFails(void *arkode_mem, long int *nlcfails)
 {
   ARKodeMem ark_mem;
@@ -427,28 +383,28 @@ int ARKSpilsGetNumConvFails(void *arkode_mem, long int *nlcfails)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetNumConvFails", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumConvFails", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetNumConvFails", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumConvFails", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *nlcfails = ncfl;
+  *nlcfails = arkspils_mem->s_ncfl;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetNumJtimesEvals
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetNumJtimesEvals
+---------------------------------------------------------------*/
 int ARKSpilsGetNumJtimesEvals(void *arkode_mem, long int *njvevals)
 {
   ARKodeMem ark_mem;
@@ -456,28 +412,28 @@ int ARKSpilsGetNumJtimesEvals(void *arkode_mem, long int *njvevals)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetNumJtimesEvals", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumJtimesEvals", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetNumJtimesEvals", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumJtimesEvals", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *njvevals = njtimes;
+  *njvevals = arkspils_mem->s_njtimes;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetNumRhsEvals
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetNumRhsEvals
+---------------------------------------------------------------*/
 int ARKSpilsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 {
   ARKodeMem ark_mem;
@@ -485,28 +441,28 @@ int ARKSpilsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetNumRhsEvals", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumRhsEvals", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetNumRhsEvals", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetNumRhsEvals", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *nfevalsLS = nfes;
+  *nfevalsLS = arkspils_mem->s_nfes;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetLastFlag
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetLastFlag
+---------------------------------------------------------------*/
 int ARKSpilsGetLastFlag(void *arkode_mem, long int *flag)
 {
   ARKodeMem ark_mem;
@@ -514,33 +470,31 @@ int ARKSpilsGetLastFlag(void *arkode_mem, long int *flag)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", "ARKSpilsGetLastFlag", MSGS_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetLastFlag", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", "ARKSpilsGetLastFlag", MSGS_LMEM_NULL);
+  if (ark_mem->ark_lmem == NULL) {
+    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+		    "ARKSpilsGetLastFlag", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  *flag = last_flag;
+  *flag = arkspils_mem->s_last_flag;
 
   return(ARKSPILS_SUCCESS);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsGetReturnFlagName
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsGetReturnFlagName
+---------------------------------------------------------------*/
 char *ARKSpilsGetReturnFlagName(long int flag)
 {
-  char *name;
-
-  name = (char *)malloc(30*sizeof(char));
+  char *name = (char *)malloc(30*sizeof(char));
 
   switch(flag) {
   case ARKSPILS_SUCCESS:
@@ -568,33 +522,20 @@ char *ARKSpilsGetReturnFlagName(long int flag)
   return(name);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSPILS private functions
- * -----------------------------------------------------------------
- */
 
+/*===============================================================
+   ARKSPILS private functions
+===============================================================*/
 
-/* Additional readability Replacements */
+/*---------------------------------------------------------------
+ ARKSpilsAtimes:
 
-#define pretype (arkspils_mem->s_pretype)
-#define eplifac (arkspils_mem->s_eplifac)
-#define maxl    (arkspils_mem->s_maxl)
-#define psolve  (arkspils_mem->s_psolve)
-#define P_data  (arkspils_mem->s_P_data)
-
-/*
- * -----------------------------------------------------------------
- * ARKSpilsAtimes
- * -----------------------------------------------------------------
- * This routine generates the matrix-vector product z = Mv, where
- * M = I - gamma*J. The product J*v is obtained by calling the jtimes 
- * routine. It is then scaled by -gamma and added to v to obtain M*v.
- * The return value is the same as the value returned by jtimes --
- * 0 if successful, nonzero otherwise.
- * -----------------------------------------------------------------
- */
-
+ This routine generates the matrix-vector product z = Mv, where
+ M = I - gamma*J. The product J*v is obtained by calling the 
+ jtimes routine. It is then scaled by -gamma and added to v to 
+ obtain M*v. The return value is the same as the value returned 
+ by jtimes -- 0 if successful, nonzero otherwise.
+---------------------------------------------------------------*/
 int ARKSpilsAtimes(void *arkode_mem, N_Vector v, N_Vector z)
 {
   ARKodeMem   ark_mem;
@@ -602,32 +543,34 @@ int ARKSpilsAtimes(void *arkode_mem, N_Vector v, N_Vector z)
   int jtflag;
 
   ark_mem = (ARKodeMem) arkode_mem;
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  jtflag = jtimes(v, z, tn, ycur, fcur, j_data, ytemp);
-  njtimes++;
+  jtflag = arkspils_mem->s_jtimes(v, z, ark_mem->ark_tn, 
+				  arkspils_mem->s_ycur, 
+				  arkspils_mem->s_fcur, 
+				  arkspils_mem->s_j_data, 
+				  arkspils_mem->s_ytemp);
+  arkspils_mem->s_njtimes++;
   if (jtflag != 0) return(jtflag);
 
-  N_VLinearSum(ONE, v, -gamma, z, z);
+  N_VLinearSum(ONE, v, -ark_mem->ark_gamma, z, z);
 
   return(0);
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsPSolve
- * -----------------------------------------------------------------
- * This routine interfaces between the generic Sp***Solve routine
- * (within the SPGMR, SPBCG, or SPTFQMR solver) and the
- * user's psolve routine.  It passes to psolve all required state 
- * information from arkode_mem.  Its return value is the same as that
- * returned by psolve. Note that the generic SP*** solver guarantees
- * that ARKSpilsPSolve will not be called in the case in which
- * preconditioning is not done. This is the only case in which the
- * user's psolve routine is allowed to be NULL.
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsPSolve:
+
+ This routine interfaces between the generic Sp***Solve routine
+ (within the SPGMR, SPBCG, or SPTFQMR solver) and the user's 
+ psolve routine.  It passes to psolve all required state 
+ information from arkode_mem.  Its return value is the same as 
+ that returned by psolve. Note that the generic SP*** solver 
+ guarantees that ARKSpilsPSolve will not be called in the case 
+ in which preconditioning is not done. This is the only case in 
+ which the user's psolve routine is allowed to be NULL.
+---------------------------------------------------------------*/
 int ARKSpilsPSolve(void *arkode_mem, N_Vector r, N_Vector z, int lr)
 {
   ARKodeMem   ark_mem;
@@ -635,28 +578,32 @@ int ARKSpilsPSolve(void *arkode_mem, N_Vector r, N_Vector z, int lr)
   int retval;
 
   ark_mem = (ARKodeMem) arkode_mem;
-  arkspils_mem = (ARKSpilsMem)lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   /* This call is counted in nps within the ARKSp***Solve routine */
-  retval = psolve(tn, ycur, fcur, r, z, gamma, delta, lr, P_data, ytemp);
+  retval = arkspils_mem->s_psolve(ark_mem->ark_tn, 
+				  arkspils_mem->s_ycur, 
+				  arkspils_mem->s_fcur, r, z, 
+				  ark_mem->ark_gamma, 
+				  arkspils_mem->s_delta, lr, 
+				  arkspils_mem->s_P_data, 
+				  arkspils_mem->s_ytemp);
 
   return(retval);     
 }
 
-/*
- * -----------------------------------------------------------------
- * ARKSpilsDQJtimes
- * -----------------------------------------------------------------
- * This routine generates a difference quotient approximation to
- * the Jacobian times vector f_y(t,y) * v. The approximation is 
- * Jv = vnrm[f(y + v/vnrm) - f(y)], where vnrm = (WRMS norm of v) is
- * input, i.e. the WRMS norm of v/vnrm is 1.
- * -----------------------------------------------------------------
- */
 
+/*---------------------------------------------------------------
+ ARKSpilsDQJtimes:
+
+ This routine generates a difference quotient approximation to
+ the Jacobian times vector f_y(t,y) * v. The approximation is 
+ Jv = vnrm[f(y + v/vnrm) - f(y)], where vnrm = (WRMS norm of v) 
+ is input, i.e. the WRMS norm of v/vnrm is 1.
+---------------------------------------------------------------*/
 int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t, 
-                    N_Vector y, N_Vector fy,
-                    void *data, N_Vector work)
+		     N_Vector y, N_Vector fy,
+		     void *data, N_Vector work)
 {
   ARKodeMem ark_mem;
   ARKSpilsMem arkspils_mem;
@@ -665,10 +612,10 @@ int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
 
   /* data is arkode_mem */
   ark_mem = (ARKodeMem) data;
-  arkspils_mem = (ARKSpilsMem) lmem;
+  arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   /* Initialize perturbation to 1/||v|| */
-  sig = ONE/N_VWrmsNorm(v, ewt);
+  sig = ONE/N_VWrmsNorm(v, ark_mem->ark_ewt);
 
   for (iter=0; iter<MAX_ITERS; iter++) {
 
@@ -676,8 +623,8 @@ int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
     N_VLinearSum(sig, v, ONE, y, work);
 
     /* Set Jv = f(tn, y+sig*v) */
-    retval = f(t, work, Jv, user_data); 
-    nfes++;
+    retval = ark_mem->ark_fi(t, work, Jv, ark_mem->ark_user_data); 
+    arkspils_mem->s_nfes++;
     if (retval == 0) break;
     if (retval < 0)  return(-1);
 
@@ -692,3 +639,8 @@ int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
 
   return(0);
 }
+
+
+/*---------------------------------------------------------------
+    EOF
+---------------------------------------------------------------*/
