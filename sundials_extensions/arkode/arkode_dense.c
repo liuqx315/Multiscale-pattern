@@ -197,15 +197,13 @@ static int arkDenseSetup(ARKodeMem ark_mem, int convfail,
     (convfail == ARK_FAIL_OTHER);
   jok = !jbad;
  
+  /* If jok = TRUE, use saved copy of J */
   if (jok) {
-
-    /* If jok = TRUE, use saved copy of J */
     *jcurPtr = FALSE;
     DenseCopy(arkdls_mem->d_savedJ, arkdls_mem->d_M);
 
+  /* If jok = FALSE, call jac routine for new J value */
   } else {
-
-    /* If jok = FALSE, call jac routine for new J value */
     arkdls_mem->d_nje++;
     arkdls_mem->d_nstlj = ark_mem->ark_nst;
     *jcurPtr = TRUE;

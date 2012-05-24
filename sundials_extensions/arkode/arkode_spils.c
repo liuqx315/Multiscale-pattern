@@ -14,7 +14,7 @@
 #include "arkode_spils_impl.h"
 
 /* constants */
-#define MAX_ITERS  3  /* max. number of attempts to recover in DQ J*v */
+#define MAX_DQITERS  3  /* max. # of attempts to recover in DQ J*v */
 #define ZERO   RCONST(0.0)
 #define PT25   RCONST(0.25)
 #define ONE    RCONST(1.0)
@@ -617,7 +617,7 @@ int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
   /* Initialize perturbation to 1/||v|| */
   sig = ONE/N_VWrmsNorm(v, ark_mem->ark_ewt);
 
-  for (iter=0; iter<MAX_ITERS; iter++) {
+  for (iter=0; iter<MAX_DQITERS; iter++) {
 
     /* Set work = y + sig*v */
     N_VLinearSum(sig, v, ONE, y, work);

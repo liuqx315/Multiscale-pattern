@@ -25,6 +25,58 @@
 ===============================================================*/
 
 /*---------------------------------------------------------------
+ ARKodeSetDefaults:
+
+ Resets all optional inputs to ARKode default values.  Does not 
+ change problem-defining function pointers fe and fi or 
+ user_data pointer.  Also leaves alone any data 
+ structures/options related to root-finding (those can be reset 
+ using ARKodeRootInit).
+---------------------------------------------------------------*/
+int ARKodeSetDefaults(void *arkode_mem)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetDefaults", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* Set default values for integrator optional inputs */
+  ark_mem->ark_expstab     = ARKExpStab;
+  ark_mem->ark_estab_data  = ark_mem;
+  ark_mem->ark_hadapt      = ARKAdapt;
+  ark_mem->ark_hadapt_data = ark_mem;
+  ark_mem->ark_itol        = ARK_NN;
+  ark_mem->ark_user_efun   = FALSE;
+  ark_mem->ark_linear      = FALSE;
+  ark_mem->ark_explicit    = FALSE;
+  ark_mem->ark_implicit    = FALSE;
+  ark_mem->ark_user_Ae     = FALSE;
+  ark_mem->ark_user_Ai     = FALSE;
+  ark_mem->ark_efun        = NULL;
+  ark_mem->ark_e_data      = NULL;
+  ark_mem->ark_ehfun       = ARKErrHandler;
+  ark_mem->ark_eh_data     = ark_mem;
+  ark_mem->ark_errfp       = stderr;
+  ark_mem->ark_qmax        = Q_MAX;
+  ark_mem->ark_mxstep      = MXSTEP_DEFAULT;
+  ark_mem->ark_mxhnil      = 10;
+  ark_mem->ark_hin         = ZERO;
+  ark_mem->ark_hmin        = RCONST(0.0);
+  ark_mem->ark_hmax_inv    = RCONST(0.0);
+  ark_mem->ark_tstopset    = FALSE;
+  ark_mem->ark_maxcor      = 3;
+  ark_mem->ark_maxnef      = 7;
+  ark_mem->ark_maxncf      = 10;
+  ark_mem->ark_nlscoef     = RCONST(0.1);
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKodeSetErrHandlerFn:
 
  Specifies the error handler function
@@ -101,8 +153,6 @@ int ARKodeSetUserData(void *arkode_mem, void *user_data)
 ---------------------------------------------------------------*/
 int ARKodeSetOrd(void *arkode_mem, int ord)
 {
-  /* UPDATE THIS ROUTINE TO ALLOW FOR ORDER INCREASES AS WELL!!! */
-  
   ARKodeMem ark_mem;
   int qmax_alloc;
 
@@ -130,7 +180,31 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
     return(ARK_ILL_INPUT);
   }
 
+  /***** CHANGE THIS TO ARK_MEM->ARK_Q = ORD WHEN WE TRANSITION TO ARK METHOD!!! *****/
   ark_mem->ark_qmax = ord;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetLinear:
+
+ Specifies that the implicit portion of the problem is linear, 
+ and to tighten the linear solver tolerances while taking only 
+ one Newton iteration.
+---------------------------------------------------------------*/
+int ARKodeSetLinear(void *arkode_mem)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetMaxOrd", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  ark_mem = (ARKodeMem) arkode_mem;
+  ark_mem->ark_linear = TRUE;
 
   return(ARK_SUCCESS);
 }
@@ -144,7 +218,25 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
 ---------------------------------------------------------------*/
 int ARKodeSetERK(void *arkode_mem)
 {
-  /* FILL THIS IN!!!! */
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetERK", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* ensure that fe is defined */
+  if (ark_mem->ark_fe == NULL) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetERK", MSGARK_MISSING_FE);
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set the relevant parameters */
+  ark_mem->ark_explicit = TRUE;
+  ark_mem->ark_implicit = FALSE;
+
   return(ARK_SUCCESS);
 }
 
@@ -157,7 +249,25 @@ int ARKodeSetERK(void *arkode_mem)
 ---------------------------------------------------------------*/
 int ARKodeSetIRK(void *arkode_mem)
 {
-  /* FILL THIS IN!!!! */
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetIRK", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* ensure that fi is defined */
+  if (ark_mem->ark_fi == NULL) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetIRK", MSGARK_MISSING_FI);
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set the relevant parameters */
+  ark_mem->ark_implicit = TRUE;
+  ark_mem->ark_explicit = FALSE;
+
   return(ARK_SUCCESS);
 }
 
@@ -166,13 +276,89 @@ int ARKodeSetIRK(void *arkode_mem)
  ARKodeSetERKTable:
 
  Specifies to use a customized Butcher table for the explicit 
- portion of the system.
+ portion of the system.  Of these, the only optional argument is 
+ bdense (which can be NULL).
 ---------------------------------------------------------------*/
-int ARKodeSetERKTable(void *arkode_mem, realtype s, realtype *c, 
-		      realtype *A, realtype *b, 
-		      realtype *bembed, realtype *bdense)
+int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
+		      realtype *c, realtype **A, realtype *b, 
+		      realtype *bembed, realtype **bdense)
 {
-  /* FILL THIS IN!!!! */
+  int i, j;
+  ARKodeMem ark_mem;
+  booleantype match;
+  realtype tol = RCONST(1.0e-12);
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetERKTable", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check for legal inputs */
+  if (s > S_MAX) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetERKTable", "s exceeds S_MAX");
+    return(ARK_ILL_INPUT);
+  }
+  if ((c == NULL) || (A == NULL) || (b == NULL) || (bembed == NULL)) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetERKTable", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  /* if IRK table already set, ensure that shared coeffs match */
+  if (ark_mem->ark_user_Ai) {
+    match = TRUE;
+    if (ark_mem->ark_stages != s)  match = FALSE;
+    if (!match) {
+      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKodeSetERKTable", "s does not match Ai table");
+      return(ARK_ILL_INPUT);
+    }
+    if (ark_mem->ark_q != q)  match = FALSE;
+    if (ark_mem->ark_p != p)  match = FALSE;
+    for (i=0; i<s; i++) {
+      if (ABS(ark_mem->ark_c[i]  - c[i])      > tol)  match = FALSE;
+      if (ABS(ark_mem->ark_b[i]  - b[i])      > tol)  match = FALSE;
+      if (ABS(ark_mem->ark_b2[i] - bembed[i]) > tol)  match = FALSE;
+    }
+    if ((ark_mem->ark_bd[0][0] != ZERO) && (bdense != NULL)) {
+      for (i=0; i<s; i++) 
+	for (j=0; j<s; j++) 
+	  if (ABS(ark_mem->ark_bd[i][j] - bdense[i][j]) > tol)  match = FALSE;
+    }
+    if (!match) {
+      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKodeSetERKTable", "shared Butcher coeffs don't match");
+      return(ARK_ILL_INPUT);
+    }
+  }
+
+  /* set the relevant parameters */
+  ark_mem->ark_stages = s;
+  ark_mem->ark_q = q;
+  ark_mem->ark_p = p;
+  for (i=0; i<s; i++) {
+    ark_mem->ark_c[i]  = c[i];
+    ark_mem->ark_b[i]  = b[i];
+    ark_mem->ark_b2[i] = bembed[i];
+    for (j=0; j<s; j++) {
+      ark_mem->ark_Ae[i][j] = A[i][j];
+    }
+  }
+
+  /* set the dense coefficients (if supplied) */
+  if (bdense != NULL) {
+    for (i=0; i<s; i++) {
+      for (j=0; j<s; j++) {
+	ark_mem->ark_bd[i][j] = bdense[i][j];
+      }
+    }
+  }
+
+  /* remark that this table was supplied by the user */
+  ark_mem->ark_user_Ae = TRUE;
+
   return(ARK_SUCCESS);
 }
 
@@ -183,11 +369,86 @@ int ARKodeSetERKTable(void *arkode_mem, realtype s, realtype *c,
  Specifies to use a customized Butcher table for the implicit 
  portion of the system.
 ---------------------------------------------------------------*/
-int ARKodeSetIRKTable(void *arkode_mem, realtype s, realtype *c, 
-		      realtype *A, realtype *b, 
-		      realtype *bembed, realtype *bdense)
+int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
+		      realtype *c, realtype **A, realtype *b, 
+		      realtype *bembed, realtype **bdense)
 {
-  /* FILL THIS IN!!!! */
+  int i, j;
+  ARKodeMem ark_mem;
+  booleantype match;
+  realtype tol = RCONST(1.0e-12);
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetIRKTable", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check for legal inputs */
+  if (s > S_MAX) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetIRKTable", "s exceeds S_MAX");
+    return(ARK_ILL_INPUT);
+  }
+  if ((c == NULL) || (A == NULL) || (b == NULL) || (bembed == NULL)) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetIRKTable", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  /* if ERK table already set, ensure that shared coeffs match */
+  if (ark_mem->ark_user_Ae) {
+    match = TRUE;
+    if (ark_mem->ark_stages != s)  match = FALSE;
+    if (!match) {
+      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKodeSetIRKTable", "s does not match Ae table");
+      return(ARK_ILL_INPUT);
+    }
+    if (ark_mem->ark_q != q)  match = FALSE;
+    if (ark_mem->ark_p != p)  match = FALSE;
+    for (i=0; i<s; i++) {
+      if (ABS(ark_mem->ark_c[i]  - c[i])      > tol)  match = FALSE;
+      if (ABS(ark_mem->ark_b[i]  - b[i])      > tol)  match = FALSE;
+      if (ABS(ark_mem->ark_b2[i] - bembed[i]) > tol)  match = FALSE;
+    }
+    if ((ark_mem->ark_bd[0][0] != ZERO) && (bdense != NULL)) {
+      for (i=0; i<s; i++) 
+	for (j=0; j<s; j++) 
+	  if (ABS(ark_mem->ark_bd[i][j] - bdense[i][j]) > tol)  match = FALSE;
+    }
+    if (!match) {
+      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKodeSetIRKTable", "shared Butcher coeffs don't match");
+      return(ARK_ILL_INPUT);
+    }
+  }
+
+  /* set the relevant parameters */
+  ark_mem->ark_stages = s;
+  ark_mem->ark_q = q;
+  ark_mem->ark_p = p;
+  for (i=0; i<s; i++) {
+    ark_mem->ark_c[i]  = c[i];
+    ark_mem->ark_b[i]  = b[i];
+    ark_mem->ark_b2[i] = bembed[i];
+    for (j=0; j<s; j++) {
+      ark_mem->ark_Ai[i][j] = A[i][j];
+    }
+  }
+
+  /* set the dense coefficients (if supplied) */
+  if (bdense != NULL) {
+    for (i=0; i<s; i++) {
+      for (j=0; j<s; j++) {
+	ark_mem->ark_bd[i][j] = bdense[i][j];
+      }
+    }
+  }
+
+  /* remark that this table was supplied by the user */
+  ark_mem->ark_user_Ai = TRUE;
+
   return(ARK_SUCCESS);
 }
 
@@ -210,7 +471,6 @@ int ARKodeSetMaxNumSteps(void *arkode_mem, long int mxsteps)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* Passing mxsteps=0 sets the default. Passing mxsteps<0 disables the test. */
-
   if (mxsteps == 0)
     ark_mem->ark_mxstep = MXSTEP_DEFAULT;
   else
@@ -291,7 +551,7 @@ int ARKodeSetMinStep(void *arkode_mem, realtype hmin)
 
   /* Passing 0 sets hmin = zero */
   if (hmin == ZERO) {
-    ark_mem->ark_hmin = HMIN_DEFAULT;
+    ark_mem->ark_hmin = RCONST(0.0);
     return(ARK_SUCCESS);
   }
 
@@ -333,7 +593,7 @@ int ARKodeSetMaxStep(void *arkode_mem, realtype hmax)
 
   /* Passing 0 sets hmax = infinity */
   if (hmax == ZERO) {
-    ark_mem->ark_hmax_inv = HMAX_INV_DEFAULT;
+    ark_mem->ark_hmax_inv = RCONST(0.0);
     return(ARK_SUCCESS);
   }
 

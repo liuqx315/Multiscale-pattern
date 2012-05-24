@@ -247,10 +247,27 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  Integrator optional input specification functions
 -----------------------------------------------------------------
  The following functions can be called to set optional inputs
- to values other than the defaults given below:
+ to values other than the defaults given below.  
+
+ In general, all ARKodeSet* routines should be called after
+ ARKodeInit and before ARKode, however it may be more efficient 
+ if the following routines are called between ARKodeCreate and 
+ ARKodeInit:
+    ARKodeSetOrd, ARKodeSetERK, ARKodeSetIRK, ARKodeSetERKTable
+    and ARKodeSetIRKTable
+
 
  Function                 |  Optional input / [ default value ]
 -----------------------------------------------------------------
+ ARKodeSetDefaults        | resets all optional inputs to ARKode 
+                          | default values.  Does not change 
+                          | problem-defining function pointers 
+                          | fe and fi or user_data pointer.  Also
+                          | leaves alone any data structures/options
+                          | related to root-finding (those can be 
+                          | reset using ARKodeRootInit).
+                          | [internal]
+                          |
  ARKodeSetErrHandlerFn    | user-provided ErrHandler function.
                           | [internal]
                           |
@@ -275,24 +292,36 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  ARKodeSetOrd             | method order to be used by the solver.
                           | [4]
                           |
+ ARKodeSetLinear          | specifies that the implicit portion of 
+                          | the problem is linear, and to tighten 
+                          | the linear solver tolerances while 
+                          | taking only one Newton iteration.
+                          | [FALSE]
+                          |
  ARKodeSetERK             | specifies that implicit portion of 
                           | problem is disabled, and to use an 
                           | explicit RK method.
-                          | [0]
+                          | [FALSE]
                           |
  ARKodeSetIRK             | specifies that explicit portion of 
                           | problem is disabled, and to use an 
                           | implicit RK method.
-                          | [0]
+                          | [FALSE]
                           |
  ARKodeSetERKTable        | specifies to use a customized Butcher 
                           | table for the explicit portion of the 
-                          | system.
+                          | system.  Of the arguments, only bdense 
+                          | is optional (set to NULL if not used).
                           | [determined by ARKODE based on order]
                           |
  ARKodeSetIRKTable        | specifies to use a customized Butcher 
                           | table for the implicit portion of the 
-                          | system.
+                          | system.  Of the arguments, only bdense 
+                          | is optional (set to NULL if not used).
+                          ! NOTE: if both ARKodeSetERKTable and 
+                          | ARKodeSetIRKTable are called, the 
+                          ! methods must specify identical s, p, 
+                          | q, c, b and b2 coefficients.
                           | [determined by ARKODE based on order]
                           |
  ARKodeSetMaxNumSteps     | maximum number of internal steps to be
@@ -364,6 +393,7 @@ SUNDIALS_EXPORT void *ARKodeCreate();
    ARK_MEM_NULL  if the arkode memory is NULL
    ARK_ILL_INPUT if an argument has an illegal value
 ---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKodeSetDefaults(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetErrHandlerFn(void *arkode_mem, 
 					  ARKErrHandlerFn ehfun, 
 					  void *eh_data);
@@ -374,14 +404,14 @@ SUNDIALS_EXPORT int ARKodeSetUserData(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeSetOrd(void *arkode_mem, int maxord);
 SUNDIALS_EXPORT int ARKodeSetERK(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetIRK(void *arkode_mem);
-SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, realtype s, 
-				      realtype *c, realtype *A, 
-				      realtype *b, realtype *bembed, 
-				      realtype *bdense);
-SUNDIALS_EXPORT int ARKodeSetIRKTable(void *arkode_mem, realtype s, 
-				      realtype *c, realtype *A, 
-				      realtype *b, realtype *bembed, 
-				      realtype *bdense);
+SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, int s, 
+				      int q, int p, realtype *c, 
+				      realtype **A, realtype *b, 
+				      realtype *bembed, realtype **bdense);
+SUNDIALS_EXPORT int ARKodeSetIRKTable(void *arkode_mem, int s, 
+				      int q, int p, realtype *c, 
+				      realtype **A, realtype *b, 
+				      realtype *bembed, realtype **bdense);
 SUNDIALS_EXPORT int ARKodeSetMaxNumSteps(void *arkode_mem, 
 					 long int mxsteps);
 SUNDIALS_EXPORT int ARKodeSetMaxHnilWarns(void *arkode_mem, 
@@ -646,18 +676,18 @@ SUNDIALS_EXPORT int ARKodeRootInit(void *arkode_mem,
                    error message for more details.
 
  ARK_TOO_MUCH_WORK: The solver took mxstep internal steps but
-                   could not reach tout. The default value for
-                   mxstep is MXSTEP_DEFAULT = 500.
+                   could not reach tout prior to the maximum number
+		   of steps (ark_mxstep).
 
  ARK_TOO_MUCH_ACC: The solver could not satisfy the accuracy
                    demanded by the user for some internal step.
 
  ARK_ERR_FAILURE:  Error test failures occurred too many times
-                   (= MXNEF = 7) during one internal time step or
-                   occurred with |h| = hmin.
+                   (= ark_maxnef) during one internal time step 
+                   or occurred with |h| = hmin.
 
  ARK_CONV_FAILURE: Convergence test failures occurred too many
-                   times (= MXNCF = 10) during one internal time
+                   times (= ark_maxncf) during one internal time
                    step or occurred with |h| = hmin.
 
  ARK_LINIT_FAIL:   The linear solver's initialization function 

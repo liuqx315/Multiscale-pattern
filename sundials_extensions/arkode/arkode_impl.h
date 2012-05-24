@@ -18,20 +18,155 @@ extern "C" {
 
 #include <arkode/arkode.h>
 
+
 /*===============================================================
-    M A I N    I N T E G R A T O R    M E M O R Y    B L O C K
+             ARKODE Private Constants                             
 ===============================================================*/
 
 /* Basic ARKODE constants */
-#define Q_MAX        5       /* max value of q */
-#define L_MAX    (Q_MAX+1)   /* max value of L */
-#define NUM_TESTS    5       /* number of error test quantities */
+#define Q_MAX            5       /* max value of q */
+#define L_MAX        (Q_MAX+1)   /* max value of L */
+#define S_MAX            8       /* max number of stages */
+#define NUM_TESTS        5       /* # of error test quantities */
+#define MXSTEP_DEFAULT   500     /* mxstep default value */
 
-#define HMIN_DEFAULT     RCONST(0.0)  /* hmin default value     */
-#define HMAX_INV_DEFAULT RCONST(0.0)  /* hmax_inv default value */
-#define MXHNIL_DEFAULT   10           /* mxhnil default value   */
-#define MXSTEP_DEFAULT   500          /* mxstep default value   */
+/* Numeric constants */
+#define ZERO   RCONST(0.0)      /* real 0.0     */
+#define TINY   RCONST(1.0e-10)  /* small number */
+#define TENTH  RCONST(0.1)      /* real 0.1     */
+#define POINT2 RCONST(0.2)      /* real 0.2     */
+#define FOURTH RCONST(0.25)     /* real 0.25    */
+#define HALF   RCONST(0.5)      /* real 0.5     */
+#define ONE    RCONST(1.0)      /* real 1.0     */
+#define TWO    RCONST(2.0)      /* real 2.0     */
+#define THREE  RCONST(3.0)      /* real 3.0     */
+#define FOUR   RCONST(4.0)      /* real 4.0     */
+#define FIVE   RCONST(5.0)      /* real 5.0     */
+#define TWELVE RCONST(12.0)     /* real 12.0    */
+#define HUN    RCONST(100.0)    /* real 100.0   */
 
+/* Control constants for tolerances */
+#define ARK_NN  0
+#define ARK_SS  1
+#define ARK_SV  2
+#define ARK_WF  3
+
+
+/*===============================================================
+             ARKODE Routine-Specific Constants                   
+===============================================================*/
+
+/*---------------------------------------------------------------
+ Control constants for lower-level functions used by ARKStep:
+-----------------------------------------------------------------
+ ARKHin return values:  ARK_SUCCESS, ARK_RHSFUNC_FAIL, or 
+    ARK_TOO_CLOSE
+
+ ARKStep control constants:  DO_ERROR_TEST or PREDICT_AGAIN
+
+ ARKStep return values:  ARK_SUCCESS, ARK_LSETUP_FAIL, 
+    ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, ARK_RTFUNC_FAIL,
+    ARK_CONV_FAILURE, ARK_ERR_FAILURE or ARK_FIRST_RHSFUNC_ERR
+
+ ARKNls input nflag values:  FIRST_CALL, PREV_CONV_FAIL or 
+    PREV_ERR_FAIL
+    
+ ARKNls return values:  ARK_SUCCESS, ARK_LSETUP_FAIL,
+    ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, CONV_FAIL or
+    RHSFUNC_RECVR
+ 
+ ARKNewtonIteration return values:  ARK_SUCCESS, ARK_LSOLVE_FAIL,
+    ARK_RHSFUNC_FAIL, CONV_FAIL, RHSFUNC_RECVR or TRY_AGAIN
+---------------------------------------------------------------*/
+#define DO_ERROR_TEST    +2
+#define PREDICT_AGAIN    +3
+
+#define CONV_FAIL        +4 
+#define TRY_AGAIN        +5
+
+#define FIRST_CALL       +6
+#define PREV_CONV_FAIL   +7
+#define PREV_ERR_FAIL    +8
+
+#define RHSFUNC_RECVR    +9
+
+
+/*---------------------------------------------------------------
+ Return values for lower-level rootfinding functions
+-----------------------------------------------------------------
+ ARKRootCheck1:  ARK_SUCCESS or ARK_RTFUNC_FAIL
+
+ ARKRootCheck2:  ARK_SUCCESS, ARK_RTFUNC_FAIL, CLOSERT or RTFOUND
+
+ ARKRootCheck3:  ARK_SUCCESS, ARK_RTFUNC_FAIL or RTFOUND
+
+ ARKRootfind:  ARK_SUCCESS, ARK_RTFUNC_FAIL or RTFOUND
+---------------------------------------------------------------*/
+#define RTFOUND          +1
+#define CLOSERT          +3
+
+
+/*---------------------------------------------------------------
+ Algorithmic constants
+-----------------------------------------------------------------
+ ARKodeGetDky and ARKStep:  FUZZ_FACTOR
+
+ ARKHin:  HLB_FACTOR, HUB_FACTOR, H_BIAS and MAX_ITERS
+
+ ARKStep:  
+    THRESH, ETAMX1, ETAMX2, ETAMX3, ETAMXF, ETAMIN, ETACF,
+    ADDON, BIAS1, BIAS2, BIAS3 and ONEPSM are general constants.
+    SMALL_NST   nst > SMALL_NST => use ETAMX3 
+    MXNEF1      max no. of error test failures before forcing a 
+                reduction of order
+    SMALL_NEF   if an error failure occurs and 
+                SMALL_NEF <= nef <= MXNEF1, then reset 
+                eta = MIN(eta, ETAMXF)
+    LONG_WAIT   number of steps to wait before considering an 
+                order change when q==1 and MXNEF1 error test 
+                failures have occurred
+
+ ARKNls:
+    CRDOWN      constant used in the estimation of the 
+                convergence rate (crate) of the iterates for 
+                the nonlinear equation
+    DGMAX       if |gamma/gammap-1| > DGMAX then call lsetup
+    RDIV        declare divergence if ratio del/delp > RDIV
+    MSBP        max no. of steps between lsetup calls
+---------------------------------------------------------------*/
+#define FUZZ_FACTOR RCONST(100.0)
+
+#define HLB_FACTOR  RCONST(100.0)
+#define HUB_FACTOR  RCONST(0.1)
+#define H_BIAS      HALF
+#define MAX_ITERS   4
+
+#define THRESH      RCONST(1.5)
+#define ETAMX1      RCONST(10000.0) 
+#define ETAMX2      RCONST(10.0)
+#define ETAMX3      RCONST(10.0)
+#define ETAMXF      RCONST(0.2)
+#define ETAMIN      RCONST(0.1)
+#define ETACF       RCONST(0.25)
+#define ADDON       RCONST(0.000001)
+#define BIAS1       RCONST(6.0)
+#define BIAS2       RCONST(6.0)
+#define BIAS3       RCONST(10.0)
+#define ONEPSM      RCONST(1.000001)
+#define SMALL_NST   10
+#define MXNEF1      3
+#define SMALL_NEF   2
+#define LONG_WAIT   10
+
+#define CRDOWN      RCONST(0.3)
+#define DGMAX       RCONST(0.3)
+#define RDIV        TWO
+#define MSBP        20
+
+
+/*===============================================================
+  MAIN INTEGRATOR MEMORY BLOCK
+===============================================================*/
 
 /*---------------------------------------------------------------
  Types : struct ARKodeMemRec, ARKodeMem
@@ -59,14 +194,22 @@ typedef struct ARKodeMemRec {
   booleantype ark_user_efun;  /* TRUE if user sets efun                */
   ARKEwtFn ark_efun;          /* function to set ewt                   */
   void *ark_e_data;           /* user pointer passed to efun           */
+  booleantype ark_linear;     /* TRUE if implicit problem is linear    */
+  booleantype ark_explicit;   /* TRUE if implicit problem is disabled  */
+  booleantype ark_implicit;   /* TRUE if explicit problem is disabled  */
 
   /*-----------------------
     Nordsieck History Array 
     -----------------------*/
-  N_Vector ark_zn[L_MAX];  /* Nordsieck array, of size N x (q+1).
-			      zn[j] is a vector of length N (j=0,...,q) 
-			      zn[j] = [1/factorial(j)] * h^j * (jth      
-			      derivative of the interpolating polynomial */
+  N_Vector ark_zn[L_MAX];    /* Nordsieck array, of size N x (q+1).
+			        zn[j] is a vector of length N (j=0,...,q) 
+			        zn[j] = [1/factorial(j)] * h^j * (jth      
+			        derivative of the interpolating polynomial
+			          zn[0] -> current solution 
+			          zn[1] -> current derivative (i.e. f value)
+			          zn[2]-zn[L_MAX]  ->  extras */
+  N_Vector ark_Fe[S_MAX];    /* Storage for explicit RHS at each RK stage */
+  N_Vector ark_Fi[S_MAX];    /* Storage for implicit RHS at each RK stage */
 
   /*--------------------------
     other vectors of length N 
@@ -87,10 +230,21 @@ typedef struct ARKodeMemRec {
   booleantype ark_tstopset;
   realtype ark_tstop;
 
-  /*---------
-    Step Data 
-    ---------*/  
-  int ark_q;                    /* current order                            */
+  /*-----------
+    Method Data 
+    -----------*/  
+  int ark_q;                      /* method order                           */
+  int ark_p;                      /* embedding order                        */
+  int ark_stages;                 /* number of stages in integration method */
+  realtype ark_Ae[S_MAX][S_MAX];  /* ERK Butcher table                      */
+  realtype ark_Ai[S_MAX][S_MAX];  /* IRK Butcher table                      */
+  realtype ark_c[S_MAX];          /* RK method canopy nodes                 */
+  realtype ark_b[S_MAX];          /* RK method root nodes                   */
+  realtype ark_b2[S_MAX];         /* RK method embedding root nodes         */
+  realtype ark_bd[S_MAX][S_MAX];  /* dense output coefficients              */
+  booleantype ark_user_Ae;        /* TRUE if user sets Ae                   */
+  booleantype ark_user_Ai;        /* TRUE if user sets Ai                   */
+
   int ark_qprime;               /* order to be used on the next step  
 				   = q-1, q, or q+1                         */
   int ark_next_q;               /* order to be used on the next step        */
@@ -98,6 +252,9 @@ typedef struct ARKodeMemRec {
 				   considering a change in q                */
   int ark_L;                    /* L = q + 1                                */
 
+  /*---------
+    Step Data 
+    ---------*/  
   realtype ark_hin;             /* initial step size                        */
   realtype ark_h;               /* current step size                        */
   realtype ark_hprime;          /* step size to be used on the next step    */ 
@@ -135,8 +292,8 @@ typedef struct ARKodeMemRec {
 			    solution of the nonlinear equation             */
   int ark_mxhnil;        /* max number of warning messages issued to the
 			    user that t+h == t for the next internal step  */
-  int ark_maxnef;        /* max number of error test failures              */
-  int ark_maxncf;        /* max number of nonlinear convergence failures   */
+  int ark_maxnef;        /* max number of error test failures in one step  */
+  int ark_maxncf;        /* max number of nonlin. conv. fails in one step  */
 
   realtype ark_hmin;     /* |h| >= hmin                                    */
   realtype ark_hmax_inv; /* |h| <= 1/hmax_inv                              */
@@ -189,6 +346,7 @@ typedef struct ARKodeMemRec {
   booleantype ark_jcur;         /* is Jacobian info. for lin. solver current? */
   realtype ark_tolsf;           /* tolerance scale factor                     */
   int ark_qmax_alloc;           /* value of qmax used when allocating memory  */
+  int ark_smax_alloc;           /* value of smax used when allocating memory  */
   int ark_indx_acor;            /* index of the zn vector with saved acor     */
   booleantype ark_setupNonNull; /* does setup do anything?                    */
 
@@ -416,7 +574,7 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 #define MSGARK_BAD_ABSTOL    "abstol has negative component(s) (illegal)."
 #define MSGARK_NULL_ABSTOL   "abstol = NULL illegal."
 #define MSGARK_NULL_Y0       "y0 = NULL illegal."
-#define MSGARK_NULL_F        "f = NULL illegal."
+#define MSGARK_NULL_F        "Must specify at least one of fe, fi (both NULL)."
 #define MSGARK_NULL_G        "g = NULL illegal."
 #define MSGARK_BAD_NVECTOR   "A required vector operation is not implemented."
 #define MSGARK_BAD_K         "Illegal value for k."
@@ -454,6 +612,8 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 #define MSGARK_CLOSE_ROOTS    "Root found at and very near " MSG_TIME "."
 #define MSGARK_BAD_TSTOP      "The value " MSG_TIME_TSTOP " is behind current " MSG_TIME " in the direction of integration."
 #define MSGARK_INACTIVE_ROOTS "At the end of the first step, there are still some root functions identically 0. This warning will not be issued again."
+#define MSGARK_MISSING_FE     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
+#define MSGARK_MISSING_FI     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 
 #ifdef __cplusplus
 }
