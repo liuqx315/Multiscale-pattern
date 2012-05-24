@@ -45,6 +45,28 @@ extern "C" {
 #define TWELVE RCONST(12.0)     /* real 12.0    */
 #define HUN    RCONST(100.0)    /* real 100.0   */
 
+/* Time step controller default values */
+#define CFLFAC    RCONST(0.5);
+#define SAFETY    RCONST(0.9);
+#define GROWTH    RCONST(10.0);
+#define HFIXED_LB RCONST(1.0);
+#define HFIXED_UB RCONST(1.1);
+#define AD0_K1    RCONST(0.49);
+#define AD0_K2    RCONST(0.34);
+#define AD0_K3    RCONST(0.1);
+#define AD1_K1    RCONST(0.7);
+#define AD1_K2    RCONST(0.4);
+#define AD2_K1    RCONST(1.0);
+#define AD3_K1    RCONST(0.4);
+#define AD3_K2    RCONST(0.3);
+#define AD3_K3    RCONST(1.0);
+#define AD4_K1    RCONST(1.0);
+#define AD4_K2    RCONST(1.0);
+#define AD5_K1    RCONST(0.4);
+#define AD5_K2    RCONST(0.3);
+#define AD5_K3    RCONST(1.0);
+
+
 /* Control constants for tolerances */
 #define ARK_NN  0
 #define ARK_SS  1
@@ -264,9 +286,6 @@ typedef struct ARKodeMemRec {
   realtype ark_tn;              /* current internal value of t              */
   realtype ark_tretlast;        /* value of tret last returned by ARKode    */
 
-  ARKAdaptFn ark_hadapt;        /* function to set the new time step size   */
-  void *ark_hadapt_data;        /* user pointer passed to hadapt            */
-
   realtype ark_tau[L_MAX+1];    /* array of previous q+1 successful step 
 				   sizes indexed from 1 to q+1              */
   realtype ark_tq[NUM_TESTS+1]; /* array of test quantities indexed from 
@@ -282,6 +301,26 @@ typedef struct ARKodeMemRec {
   realtype ark_acnrm;           /* | acor | wrms                            */
   realtype ark_nlscoef;         /* coeficient in nonlinear convergence test */
   int  ark_mnewt;               /* Newton iteration counter                 */
+
+  /*-------------------------
+    Time Step Adaptivity Data 
+    -------------------------*/
+  ARKAdaptFn ark_hadapt;         /* function to set the new time step size   */
+  void *ark_hadapt_data;         /* user pointer passed to hadapt            */
+  int ark_hadapt_imethod;        /* time step adaptivity method to use:
+				       0 -> PID controller
+				       1 -> PI controller
+				       2 -> I controller
+				       3 -> explicit Gustafsson controller
+				       4 -> implicit Gustafsson controller
+				       5 -> imex Gustafsson controller       */
+  realtype ark_hadapt_params[8]; /* time step adaptivity parameters:
+				       0 -> cfl safety factor
+				       1 -> accuracy safety factor
+				       2 -> step growth safety factor
+				       3/4 -> lower/upper bounds on window to 
+                                              leave h unchanged
+                                       5/6/7 -> method-specific              */
 
   /*------
     Limits 

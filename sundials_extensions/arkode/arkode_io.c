@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "arkode_impl.h"
+#include <sundials/sundials_math.h>
 #include <sundials/sundials_types.h>
 
 
@@ -44,33 +45,42 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* Set default values for integrator optional inputs */
-  ark_mem->ark_expstab     = ARKExpStab;
-  ark_mem->ark_estab_data  = ark_mem;
-  ark_mem->ark_hadapt      = ARKAdapt;
-  ark_mem->ark_hadapt_data = ark_mem;
-  ark_mem->ark_itol        = ARK_NN;
-  ark_mem->ark_user_efun   = FALSE;
-  ark_mem->ark_linear      = FALSE;
-  ark_mem->ark_explicit    = FALSE;
-  ark_mem->ark_implicit    = FALSE;
-  ark_mem->ark_user_Ae     = FALSE;
-  ark_mem->ark_user_Ai     = FALSE;
-  ark_mem->ark_efun        = NULL;
-  ark_mem->ark_e_data      = NULL;
-  ark_mem->ark_ehfun       = ARKErrHandler;
-  ark_mem->ark_eh_data     = ark_mem;
-  ark_mem->ark_errfp       = stderr;
-  ark_mem->ark_qmax        = Q_MAX;
-  ark_mem->ark_mxstep      = MXSTEP_DEFAULT;
-  ark_mem->ark_mxhnil      = 10;
-  ark_mem->ark_hin         = ZERO;
-  ark_mem->ark_hmin        = RCONST(0.0);
-  ark_mem->ark_hmax_inv    = RCONST(0.0);
-  ark_mem->ark_tstopset    = FALSE;
-  ark_mem->ark_maxcor      = 3;
-  ark_mem->ark_maxnef      = 7;
-  ark_mem->ark_maxncf      = 10;
-  ark_mem->ark_nlscoef     = RCONST(0.1);
+  ark_mem->ark_expstab          = ARKExpStab;
+  ark_mem->ark_estab_data       = ark_mem;
+  ark_mem->ark_hadapt           = ARKAdapt;
+  ark_mem->ark_hadapt_data      = ark_mem;
+  ark_mem->ark_hadapt_imethod   = 0;
+  ark_mem->ark_hadapt_params[0] = CFLFAC;
+  ark_mem->ark_hadapt_params[1] = SAFETY;
+  ark_mem->ark_hadapt_params[2] = GROWTH;
+  ark_mem->ark_hadapt_params[3] = HFIXED_LB;
+  ark_mem->ark_hadapt_params[4] = HFIXED_UB;
+  ark_mem->ark_hadapt_params[5] = AD0_K1;
+  ark_mem->ark_hadapt_params[6] = AD0_K2;
+  ark_mem->ark_hadapt_params[7] = AD0_K3;
+  ark_mem->ark_itol             = ARK_NN;
+  ark_mem->ark_user_efun        = FALSE;
+  ark_mem->ark_linear           = FALSE;
+  ark_mem->ark_explicit         = FALSE;
+  ark_mem->ark_implicit         = FALSE;
+  ark_mem->ark_user_Ae          = FALSE;
+  ark_mem->ark_user_Ai          = FALSE;
+  ark_mem->ark_efun             = NULL;
+  ark_mem->ark_e_data           = NULL;
+  ark_mem->ark_ehfun            = ARKErrHandler;
+  ark_mem->ark_eh_data          = ark_mem;
+  ark_mem->ark_errfp            = stderr;
+  ark_mem->ark_qmax             = Q_MAX;
+  ark_mem->ark_mxstep           = MXSTEP_DEFAULT;
+  ark_mem->ark_mxhnil           = 10;
+  ark_mem->ark_hin              = ZERO;
+  ark_mem->ark_hmin             = RCONST(0.0);
+  ark_mem->ark_hmax_inv         = RCONST(0.0);
+  ark_mem->ark_tstopset         = FALSE;
+  ark_mem->ark_maxcor           = 3;
+  ark_mem->ark_maxnef           = 7;
+  ark_mem->ark_maxncf           = 10;
+  ark_mem->ark_nlscoef          = RCONST(0.1);
 
   return(ARK_SUCCESS);
 }
@@ -627,20 +637,18 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* If ARKode was called at least once, test if tstop is legal
-   * (i.e. if it was not already passed).
-   * If ARKodeSetStopTime is called before the first call to ARKode,
-   * tstop will be checked in ARKode. */
+     (i.e. if it was not already passed).
+     If ARKodeSetStopTime is called before the first call to ARKode,
+     tstop will be checked in ARKode. */
   if (ark_mem->ark_nst > 0) {
-
     if ( (tstop - ark_mem->ark_tn) * ark_mem->ark_h < ZERO ) {
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		      "ARKodeSetStopTime", MSGARK_BAD_TSTOP, ark_mem->ark_tn);
       return(ARK_ILL_INPUT);
     }
-
   }
 
-  ark_mem->ark_tstop = tstop;
+  ark_mem->ark_tstop    = tstop;
   ark_mem->ark_tstopset = TRUE;
 
   return(ARK_SUCCESS);
@@ -650,13 +658,97 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
 /*---------------------------------------------------------------
  ARKodeSetAdaptMethod:
 
- Specifies the time step adaptivity algorithm (and associated 
- parameters) to use.
+ Specifies the built-in time step adaptivity algorithm (and 
+ associated parameters) to use.  Any zero-valued parameter will 
+ imply a reset to the default value.  Any negative parameter will 
+ be left unchanged from the previous value.
 ---------------------------------------------------------------*/
 int ARKodeSetAdaptMethod(void *arkode_mem, int imethod, 
 			 realtype *adapt_params)
 {
-  /* FILL THIS IN!!!! */
+  int i, nparams;
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetStopTime", MSGARK_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check for allowable parameters */
+  if (imethod > 5) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetAdaptMethod", "Illegal imethod");
+    return(ARK_ILL_INPUT);
+  }
+
+  if (adapt_params == NULL) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetAdaptMethod", "Illegal adapt_params");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set method if change requested */
+  if (imethod >= 0)
+    ark_mem->ark_hadapt_imethod = imethod;
+ 
+
+  /* insert postive-valued parameters into ark_mem */
+  nparams = 8;
+  for (i=0; i<nparams; i++) 
+    if (adapt_params[i] > 0) 
+      ark_mem->ark_hadapt_params[i] = adapt_params[i];
+  
+  /* reset zero-valued inputs to method defaults */
+  if (adapt_params[0] == ZERO) 
+    ark_mem->ark_hadapt_params[0] = CFLFAC;
+  if (adapt_params[1] == ZERO) 
+    ark_mem->ark_hadapt_params[1] = SAFETY;
+  if (adapt_params[2] == ZERO) 
+    ark_mem->ark_hadapt_params[2] = GROWTH;
+  if (adapt_params[3] == ZERO) 
+    ark_mem->ark_hadapt_params[3] = HFIXED_LB;
+  if (adapt_params[4] == ZERO) 
+    ark_mem->ark_hadapt_params[4] = HFIXED_UB;
+  if (adapt_params[5] == ZERO)
+    switch (ark_mem->ark_hadapt_imethod) {
+    case (0):
+      ark_mem->ark_hadapt_params[5] = AD0_K1; break;
+    case (1):
+      ark_mem->ark_hadapt_params[5] = AD1_K1; break;
+    case (2):
+      ark_mem->ark_hadapt_params[5] = AD2_K1; break;
+    case (3):
+      ark_mem->ark_hadapt_params[5] = AD3_K1; break;
+    case (4):
+      ark_mem->ark_hadapt_params[5] = AD4_K1; break;
+    case (5):
+      ark_mem->ark_hadapt_params[5] = AD5_K1; break;
+    }
+  if (adapt_params[6] == ZERO)
+    switch (ark_mem->ark_hadapt_imethod) {
+    case (0):
+      ark_mem->ark_hadapt_params[6] = AD0_K2; break;
+    case (1):
+      ark_mem->ark_hadapt_params[6] = AD1_K2; break;
+    case (3):
+      ark_mem->ark_hadapt_params[6] = AD3_K2; break;
+    case (4):
+      ark_mem->ark_hadapt_params[6] = AD4_K2; break;
+    case (5):
+      ark_mem->ark_hadapt_params[6] = AD5_K2; break;
+    }
+  if (adapt_params[7] == ZERO)
+    switch (ark_mem->ark_hadapt_imethod) {
+    case (0):
+      ark_mem->ark_hadapt_params[7] = AD0_K3; break;
+    case (3):
+      ark_mem->ark_hadapt_params[7] = AD3_K3; break;
+    case (5):
+      ark_mem->ark_hadapt_params[7] = AD5_K3; break;
+    }
+
   return(ARK_SUCCESS);
 }
 
