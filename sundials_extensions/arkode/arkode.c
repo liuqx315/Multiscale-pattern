@@ -28,9 +28,11 @@ static booleantype ARKCheckNvector(N_Vector tmpl);
 
 static int ARKInitialSetup(ARKodeMem ark_mem);
 static int ARKSetButcherTables(ARKodeMem ark_mem);
+static int ARKBuildDense(ARKodeMem ark_mem);
 
 static booleantype ARKAllocVectors(ARKodeMem ark_mem, 
 				   N_Vector tmpl);
+static int ARKAllocRKVectors(ARKodeMem ark_mem);
 static void ARKFreeVectors(ARKodeMem ark_mem);
 
 static int ARKEwtSetSS(ARKodeMem ark_mem, N_Vector ycur, 
@@ -194,7 +196,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ARKodeMem ark_mem;
   booleantype nvectorOK, allocOK;
   long int lrw1, liw1;
-  int iret;
 
   /* Check arkode_mem */
   if (arkode_mem==NULL) {
@@ -215,7 +216,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   if (fe == NULL) ark_mem->ark_implicit = TRUE;
   if (fi == NULL) ark_mem->ark_explicit = TRUE;
 
-  /* Check that one of fe or fi is supplied, and is to be used */
+  /* Check that at least one of fe,fi is supplied and is to be used */
   if (ark_mem->ark_implicit && ark_mem->ark_explicit) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE",
   		    "ARKodeInit", MSGARK_NULL_F);
@@ -241,16 +242,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_liw1 = liw1;
 
 
-  /* Determine the RK method to use, based on desired 
-     accuracy, explicit vs implicit vs imex, etc. */
-  iret = ARKSetButcherTables(ark_mem);
-  if (iret != ARK_SUCCESS) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeInit", "Could not find relevant Butcher table");
-    return(ARK_ILL_INPUT);
-  }
-
-  /* Allocate the vectors (using y0 as a template) */
+  /* Allocate the solver vectors (using y0 as a template) */
   allocOK = ARKAllocVectors(ark_mem, y0);
   if (!allocOK) {
     ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", 
@@ -270,7 +262,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_L      = 2;
   ark_mem->ark_qwait  = ark_mem->ark_L;
   ark_mem->ark_etamax = ETAMX1;
-
   ark_mem->ark_qu    = 0;
   ark_mem->ark_hu    = ZERO;
   ark_mem->ark_tolsf = ONE;
@@ -296,7 +287,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nhnil   = 0;
   ark_mem->ark_nstlp   = 0;
   ark_mem->ark_nge     = 0;
-
   ark_mem->ark_irfnd   = 0;
 
   /* Initialize other integrator optional outputs */
@@ -357,10 +347,9 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_L      = 2;
   ark_mem->ark_qwait  = ark_mem->ark_L;
   ark_mem->ark_etamax = ETAMX1;
-
-  ark_mem->ark_qu    = 0;
-  ark_mem->ark_hu    = ZERO;
-  ark_mem->ark_tolsf = ONE;
+  ark_mem->ark_qu     = 0;
+  ark_mem->ark_hu     = ZERO;
+  ark_mem->ark_tolsf  = ONE;
 
   /* Initialize zn[0] in the history array */
   N_VScale(ONE, y0, ark_mem->ark_zn[0]);
@@ -375,13 +364,12 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_nhnil   = 0;
   ark_mem->ark_nstlp   = 0;
   ark_mem->ark_nge     = 0;
-
   ark_mem->ark_irfnd   = 0;
 
   /* Initialize other integrator optional outputs */
-  ark_mem->ark_h0u      = ZERO;
-  ark_mem->ark_next_h   = ZERO;
-  ark_mem->ark_next_q   = 0;
+  ark_mem->ark_h0u    = ZERO;
+  ark_mem->ark_next_h = ZERO;
+  ark_mem->ark_next_q = 0;
 
   /* Problem has been successfully re-initialized */
   return(ARK_SUCCESS);
@@ -437,12 +425,12 @@ int ARKodeSStolerances(void *arkode_mem, realtype reltol,
   }
 
   /* Copy tolerances into memory */
-  ark_mem->ark_reltol = reltol;
-  ark_mem->ark_Sabstol = abstol;
-  ark_mem->ark_itol = ARK_SS;
+  ark_mem->ark_reltol    = reltol;
+  ark_mem->ark_Sabstol   = abstol;
+  ark_mem->ark_itol      = ARK_SS;
   ark_mem->ark_user_efun = FALSE;
-  ark_mem->ark_efun = ARKEwtSet;
-  ark_mem->ark_e_data = NULL; /* set to arkode_mem in InitialSetup */
+  ark_mem->ark_efun      = ARKEwtSet;
+  ark_mem->ark_e_data    = NULL; /* set to arkode_mem in InitialSetup */
 
   return(ARK_SUCCESS);
 }
@@ -484,13 +472,12 @@ int ARKodeSVtolerances(void *arkode_mem, realtype reltol,
     ark_mem->ark_liw += ark_mem->ark_liw1;
     ark_mem->ark_VabstolMallocDone = TRUE;
   }
-
-  ark_mem->ark_reltol = reltol;
   N_VScale(ONE, abstol, ark_mem->ark_Vabstol);
-  ark_mem->ark_itol = ARK_SV;
+  ark_mem->ark_reltol    = reltol;
+  ark_mem->ark_itol      = ARK_SV;
   ark_mem->ark_user_efun = FALSE;
-  ark_mem->ark_efun = ARKEwtSet;
-  ark_mem->ark_e_data = NULL; /* set to arkode_mem in InitialSetup */
+  ark_mem->ark_efun      = ARKEwtSet;
+  ark_mem->ark_e_data    = NULL; /* set to arkode_mem in InitialSetup */
 
   return(ARK_SUCCESS);
 }
@@ -512,10 +499,12 @@ int ARKodeWFtolerances(void *arkode_mem, ARKEwtFn efun)
     return(ARK_NO_MALLOC);
   }
 
-  ark_mem->ark_itol = ARK_WF;
+  /* Copy tolerance data into memory */
+  ark_mem->ark_itol      = ARK_WF;
   ark_mem->ark_user_efun = TRUE;
-  ark_mem->ark_efun = efun;
-  ark_mem->ark_e_data = NULL; /* set to user_data in InitialSetup */
+  ark_mem->ark_efun      = efun;
+  ark_mem->ark_e_data    = NULL; /* set to user_data in InitialSetup */
+
   return(ARK_SUCCESS);
 }
 
@@ -750,6 +739,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   if (itask == ARK_NORMAL) ark_mem->ark_toutc = tout;
   ark_mem->ark_taskc = itask;
 
+
   /*----------------------------------------
     2. Initializations performed only at
        the first step (nst=0):
@@ -759,7 +749,6 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
        - check for approach to tstop
        - check for approach to a root
   ----------------------------------------*/
-
   if (ark_mem->ark_nst == 0) {
 
     ier = ARKInitialSetup(ark_mem);
@@ -1190,8 +1179,8 @@ int ARKodeGetDky(void *arkode_mem, realtype t, int k, N_Vector dky)
 
  This routine frees the problem memory allocated by ARKodeInit.
  Such memory includes all the vectors allocated by 
- ARKAllocVectors, and the memory lmem for the linear solver 
- (deallocated by a call to lfree).
+ ARKAllocVectors, and ARKAllocRKVectors, and the memory lmem for
+ the linear solver (deallocated by a call to lfree).
 ---------------------------------------------------------------*/
 void ARKodeFree(void **arkode_mem)
 {
@@ -1263,7 +1252,7 @@ static booleantype ARKCheckNvector(N_Vector tmpl)
  Otherwise all vector memory is freed and ARKAllocVectors 
  returns FALSE. This routine also updates the optional outputs 
  lrw and liw, which are (respectively) the lengths of the real 
- and integer work spaces allocated here.
+ and integer work spaces.
 ---------------------------------------------------------------*/
 static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
 {
@@ -1335,14 +1324,43 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
   ark_mem->ark_qmax_alloc = 
     MAX(ark_mem->ark_qmax_alloc, ark_mem->ark_qmax);
 
+  return(TRUE);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAllocRKVectors
+
+ This routine allocates the ARKODE vectors 
+ Fe[0], ..., Fe[stages-1], and 
+ Fi[0], ..., Fi[stages-1].  
+ If any of these vectors already exist, they are left alone.  
+ Otherwise, it will allocate each vector by cloning the input 
+ vector. If all memory allocations are successful, 
+ ARKAllocRKVectors returns TRUE.  Otherwise all vector memory is 
+ freed and ARKAllocRKVectors returns FALSE. This routine also 
+ updates the optional outputs lrw and liw, which are 
+ (respectively) the lengths of the real and integer work spaces.
+
+ NOTE: this routine is separate from ARKAllocVectors, since that
+ routine is called in ARKodeInit, which may be called by a user
+ prior to determining their desired method order, 
+ implicit/explicit/imex problem, and number of RK stages.  Hence
+ this routine is called during ARKInitialStep, which is called 
+ on the first call to the ARKode() integrator.
+---------------------------------------------------------------*/
+static int ARKAllocRKVectors(ARKodeMem ark_mem)
+{
+  int j;
+
   /* Allocate Fe[0] ... Fe[stages] if needed */
   if (!ark_mem->ark_implicit) {
     for (j=0; j<ark_mem->ark_stages; j++) {
       if (ark_mem->ark_Fe[j] == NULL) {
-	ark_mem->ark_Fe[j] = N_VClone(tmpl);
+	ark_mem->ark_Fe[j] = N_VClone(ark_mem->ark_ewt);
 	if (ark_mem->ark_Fe[j] == NULL) {
 	  ARKFreeVectors(ark_mem);
-	  return(FALSE);
+	  return(ARK_MEM_FAIL);
 	} else {
 	  ark_mem->ark_lrw += ark_mem->ark_lrw1;
 	  ark_mem->ark_liw += ark_mem->ark_liw1;
@@ -1355,10 +1373,10 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
   if (!ark_mem->ark_explicit) {
     for (j=0; j<ark_mem->ark_stages; j++) {
       if (ark_mem->ark_Fi[j] == NULL) {
-	ark_mem->ark_Fi[j] = N_VClone(tmpl);
+	ark_mem->ark_Fi[j] = N_VClone(ark_mem->ark_ewt);
 	if (ark_mem->ark_Fi[j] == NULL) {
 	  ARKFreeVectors(ark_mem);
-	  return(FALSE);
+	  return(ARK_MEM_FAIL);
 	} else {
 	  ark_mem->ark_lrw += ark_mem->ark_lrw1;
 	  ark_mem->ark_liw += ark_mem->ark_liw1;
@@ -1371,14 +1389,15 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
   ark_mem->ark_smax_alloc = 
     MAX(ark_mem->ark_smax_alloc, ark_mem->ark_stages);
 
-  return(TRUE);
+  return(ARK_SUCCESS);
 }
 
 
 /*---------------------------------------------------------------
  ARKFreeVectors
 
- This routine frees the ARKODE vectors allocated in ARKAllocVectors.
+ This routine frees the ARKODE vectors allocated in 
+ ARKAllocVectors and ARKAllocRKVectors.
 ---------------------------------------------------------------*/
 static void ARKFreeVectors(ARKodeMem ark_mem)
 {
@@ -1454,6 +1473,28 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKInitialSetup", MSGARK_NO_TOLS);
     return(ARK_ILL_INPUT);
+  }
+
+  /* Create Butcher tables and fill in dense output coeffs */
+  ier = ARKSetButcherTables(ark_mem);
+  if (ier != ARK_SUCCESS) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKInitialStep", "Could not create Butcher table");
+    return(ARK_ILL_INPUT);
+  }
+  ier = ARKBuildDense(ark_mem);
+  if (ier != ARK_SUCCESS) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKInitialStep", "Could not create dense output");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* Allocate ARK RHS vector memory */
+  ier = ARKAllocRKVectors(ark_mem);
+  if (ier != ARK_SUCCESS) {
+    ARKProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", 
+		    "ARKInitialSetup", MSGARK_MEM_FAIL);
+    return(ARK_MEM_FAIL);
   }
 
   /* Set data for efun */
@@ -3336,6 +3377,21 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
  is explicit, implicit or both.
 ---------------------------------------------------------------*/
 static int ARKSetButcherTables(ARKodeMem ark_mem)
+{
+  /***** FILL THIS IN!!! *****/
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKBuildDense
+
+ This routine will build a set of dense output coefficients for 
+ a given Butcher table.  Since more optimal coefficients may be 
+ possible for specific methods, it will only build the dense 
+ output coefficient table if one is not already provided.
+---------------------------------------------------------------*/
+static int ARKBuildDense(ARKodeMem ark_mem)
 {
   /***** FILL THIS IN!!! *****/
   return(ARK_SUCCESS);
