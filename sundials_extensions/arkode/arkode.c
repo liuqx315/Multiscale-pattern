@@ -48,6 +48,14 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg,
 
 static int ARKStep(ARKodeMem ark_mem);
 
+static int ARKAdapt(ARKodeMem ark_mem, realtype *hnew);
+static int ARKAdaptPID(ARKodeMem ark_mem, realtype *hnew);
+static int ARKAdaptPI(ARKodeMem ark_mem, realtype *hnew);
+static int ARKAdaptI(ARKodeMem ark_mem, realtype *hnew);
+static int ARKAdaptExpGus(ARKodeMem ark_mem, realtype *hnew);
+static int ARKAdaptImpGus(ARKodeMem ark_mem, realtype *hnew);
+static int ARKAdaptImExGus(ARKodeMem ark_mem, realtype *hnew);
+
 static void ARKAdjustParams(ARKodeMem ark_mem);
 static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq);
 static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq);
@@ -277,8 +285,16 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   /* Initialize zn[0] in the history array */
   N_VScale(ONE, y0, ark_mem->ark_zn[0]);
 
+  /* Initialize error history (1 => met target accuracy) */
+  ark_mem->ark_hadapt_ehist[0] = ONE;
+  ark_mem->ark_hadapt_ehist[1] = ONE;
+  ark_mem->ark_hadapt_ehist[2] = ONE;
+
   /* Initialize all the counters */
   ark_mem->ark_nst     = 0;
+  ark_mem->ark_nst_acc = 0;
+  ark_mem->ark_nst_exp = 0;
+  ark_mem->ark_nst_con = 0;
   ark_mem->ark_nfe     = 0;
   ark_mem->ark_ncfn    = 0;
   ark_mem->ark_netf    = 0;
@@ -356,6 +372,9 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
  
   /* Initialize all the counters */
   ark_mem->ark_nst     = 0;
+  ark_mem->ark_nst_acc = 0;
+  ark_mem->ark_nst_exp = 0;
+  ark_mem->ark_nst_con = 0;
   ark_mem->ark_nfe     = 0;
   ark_mem->ark_ncfn    = 0;
   ark_mem->ark_netf    = 0;
@@ -3344,17 +3363,259 @@ void ARKErrHandler(int error_code, const char *module,
 }
 
 /*---------------------------------------------------------------
- ARKAdapt is the default time step adaptivity function.
+ ARKAdapt is the time step adaptivity wrapper function.  This 
+ should be called after ARKCompleteStep, as it depends on the 
+ values updated by that routine.
 ---------------------------------------------------------------*/
-int ARKAdapt(N_Vector y, realtype t, realtype h, 
-	     realtype e1, realtype e2, 
-	     realtype e3, int q, int p, 
-	     realtype *hnew, void *data)
+static int ARKAdapt(ARKodeMem ark_mem, realtype *hnew)
 {
-  /* FILL THIS IN!!! */
-  *hnew = h;
+  int ier;
+  realtype h_acc, h_cfl, cflfac, safety, growth, lbound, ubound;
+  cflfac = ark_mem->ark_hadapt_params[0];
+  safety = ark_mem->ark_hadapt_params[1];
+  growth = ark_mem->ark_hadapt_params[2];
+  lbound = ark_mem->ark_hadapt_params[3];
+  ubound = ark_mem->ark_hadapt_params[4];
 
-  return(0);
+  /* Call algorithm-specific error adaptivity method */
+  switch (ark_mem->ark_adapt_imethod) {
+  case(0):    /* PID controller */
+    ier = ARKAdaptPID(ark_mem, &h_acc);
+    break;
+  case(1):    /* PI controller */
+    ier = ARKAdaptPI(ark_mem, &h_acc);
+    break;
+  case(2):    /* I controller */
+    ier = ARKAdaptI(ark_mem, &h_acc);
+    break;
+  case(3):    /* explicit Gustafsson controller */
+    ier = ARKAdaptExpGus(ark_mem, &h_acc);
+    break;
+  case(4):    /* implicit Gustafsson controller */
+    ier = ARKAdaptImpGus(ark_mem, &h_acc);
+    break;
+  case(5):    /* imex Gustafsson controller */
+    ier = ARKAdaptImExGus(ark_mem, &h_acc);
+    break;
+  case(-1):   /* user-supplied controller */
+    ier = ark_mem->ark_hadapt(ark_mem->ark_zn[0], 
+			      ark_mem->ark_tn, ark_mem->ark_h, 
+			      ark_mem->ark_hadapt_ehist[0],
+			      ark_mem->ark_hadapt_ehist[1],
+			      ark_mem->ark_hadapt_ehist[2],
+			      ark_mem->ark_q, ark_mem->ark_p, 
+			      &h_acc, ark_mem->ark_hadapt_data);
+    break;
+  default:
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKAdapt", 
+		    "Illegal adapt_imethod.");
+    return (ARK_ILL_INPUT);
+  }
+  if (ier != ARK_SUCCESS) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKAdapt", 
+		    "Error in accuracy-based adaptivity function.");
+    return (ARK_ILL_INPUT);
+  }
+
+
+  /* Call explicit stability function */
+  ier = ark_mem->ark_expstab(ark_mem->ark_zn[0], ark_mem->ark_tn, 
+			     &h_cfl, ark_mem->ark_estab_data);
+  if (ier != ARK_SUCCESS) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKAdapt", 
+		    "Error in explicit stability function.");
+    return (ARK_ILL_INPUT);
+  }
+
+  /* enforce safety factors, growth bound */
+  h_acc *= safety;
+  h_cfl *= cflfac;
+  h_acc = MIN(h_acc, growth*ark_mem->ark_h);
+
+  /* increment the relevant step counter, set desired step */
+  if (h_acc < h_cfl)
+    ark_mem->ark_nst_acc++;
+  else
+    ark_mem->ark_nst_exp++;
+  h_acc = MIN(h_acc, h_cfl);
+
+  /* enforce adaptivity bounds */
+  if ((h_acc > lbound*ark_mem->ark_h) && (h_acc < ubound*ark_mem->ark_h))
+    h_acc = ark_mem->ark_h;
+  h_acc = MAX(h_acc, ark_mem->ark_hmin);
+
+  /* set the output and return */
+  *hnew = h_acc;
+
+  return(ier);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdaptPID implements a PID time step control algorithm.
+---------------------------------------------------------------*/
+static int ARKAdaptPID(ARKodeMem ark_mem, realtype *hnew)
+{
+  realtype k1, k2, k3, e1, e2, e3, hcur, h_acc;
+
+  /* set usable time-step adaptivity parameters */
+  k1 = -ark_mem->ark_hadapt_params[5] / ark_mem->ark_p;
+  k2 =  ark_mem->ark_hadapt_params[6] / ark_mem->ark_p;
+  k3 = -ark_mem->ark_hadapt_params[7] / ark_mem->ark_p;
+  e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
+  e2 = MAX(ark_mem->ark_hadapt_ehist[1], TINY);
+  e3 = MAX(ark_mem->ark_hadapt_ehist[2], TINY);
+  hcur = ark_mem->ark_h;
+  
+  /* compute estimated optimal time step size, set into output */
+  h_acc = hcur * RPowerR(e1,k1) * RPowerR(e2,k2) * RPowerR(e3,k3);
+  *hnew = h_acc;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdaptPI implements a PI time step control algorithm.
+---------------------------------------------------------------*/
+static int ARKAdaptPI(ARKodeMem ark_mem, realtype *hnew)
+{
+  realtype k1, k2, e1, e2, hcur, h_acc;
+
+  /* set usable time-step adaptivity parameters */
+  k1 = -ark_mem->ark_hadapt_params[5] / ark_mem->ark_p;
+  k2 =  ark_mem->ark_hadapt_params[6] / ark_mem->ark_p;
+  e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
+  e2 = MAX(ark_mem->ark_hadapt_ehist[1], TINY);
+  hcur = ark_mem->ark_h;
+  
+  /* compute estimated optimal time step size, set into output */
+  h_acc = hcur * RPowerR(e1,k1) * RPowerR(e2,k2);
+  *hnew = h_acc;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdaptI implements an I time step control algorithm.
+---------------------------------------------------------------*/
+static int ARKAdaptI(ARKodeMem ark_mem, realtype *hnew)
+{
+  realtype k1, e1, hcur, h_acc;
+
+  /* set usable time-step adaptivity parameters */
+  k1 = -ark_mem->ark_hadapt_params[5] / ark_mem->ark_p;
+  e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
+  hcur = ark_mem->ark_h;
+  
+  /* compute estimated optimal time step size, set into output */
+  h_acc = hcur * RPowerR(e1,k1);
+  *hnew = h_acc;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdaptExpGus implements the explicit Gustafsson time step
+ control algorithm.
+---------------------------------------------------------------*/
+static int ARKAdaptExpGus(ARKodeMem ark_mem, realtype *hnew)
+{
+  realtype k1, k2, e1, e2, hcur, h_acc;
+
+  /* modified method for first step */
+  if (ark_mem->ark_nst < 2) {
+
+    k1 = -ONE / ark_mem->ark_p;
+    hcur = ark_mem->ark_h;
+    h_acc = hcur * RPowerR(e1,k1);
+
+  /* general estimate */
+  } else {
+
+    k1 = -ark_mem->ark_hadapt_params[5] / ark_mem->ark_p;
+    k2 = -ark_mem->ark_hadapt_params[6] / ark_mem->ark_p;
+    e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
+    e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
+    hcur = ark_mem->ark_h;
+    h_acc = hcur * RPowerR(e1,k1) * RPowerR(e2,k2);
+
+  }
+  *hnew = h_acc;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdaptImpGus implements the implicit Gustafsson time step 
+ control algorithm.
+---------------------------------------------------------------*/
+static int ARKAdaptImpGus(ARKodeMem ark_mem, realtype *hnew)
+{
+  realtype k1, k2, e1, e2, hcur, hrat, h_acc;
+
+  /* modified method for first step */
+  if (ark_mem->ark_nst < 2) {
+
+    k1 = -ONE / ark_mem->ark_p;
+    hcur = ark_mem->ark_h;
+    h_acc = hcur * RPowerR(e1,k1);
+
+  /* general estimate */
+  } else {
+
+    k1 = -ark_mem->ark_hadapt_params[5] / ark_mem->ark_p;
+    k2 = -ark_mem->ark_hadapt_params[6] / ark_mem->ark_p;
+    e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
+    e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
+    hcur = ark_mem->ark_h;
+    hrat = hcur / ark_mem->ark_hold;
+    h_acc = hcur * hrat * RPowerR(e1,k1) * RPowerR(e2,k2);
+
+  }
+  *hnew = h_acc;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdaptImExGus implements a combination implicit/explicit 
+ Gustafsson time step control algorithm.
+---------------------------------------------------------------*/
+static int ARKAdaptImExGus(ARKodeMem ark_mem, realtype *hnew)
+{
+  realtype k1, k2, k3, e1, e2, hcur, hrat, h_acc;
+
+  /* modified method for first step */
+  if (ark_mem->ark_nst < 2) {
+
+    k1 = -ONE / ark_mem->ark_p;
+    hcur = ark_mem->ark_h;
+    h_acc = hcur * RPowerR(e1,k1);
+
+  /* general estimate */
+  } else {
+
+    k1 = -ark_mem->ark_hadapt_params[5] / ark_mem->ark_p;
+    k2 = -ark_mem->ark_hadapt_params[6] / ark_mem->ark_p;
+    k3 = -ark_mem->ark_hadapt_params[7] / ark_mem->ark_p;
+    e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
+    e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
+    hcur = ark_mem->ark_h;
+    hrat = hcur / ark_mem->ark_hold;
+    /* implicit estimate */
+    h_acc = hcur * hrat * RPowerR(e1,k3) * RPowerR(e2,k3);
+    /* explicit estimate */
+    h_acc = MIN(h_acc, hcur * RPowerR(e1,k1) * RPowerR(e2,k2));
+
+  }
+  *hnew = h_acc;
+
+  return(ARK_SUCCESS);
 }
 
 
@@ -3366,7 +3627,7 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
   /* FILL THIS IN!!! */
   *hstab = RCONST(1.0e200);
 
-  return(0);
+  return(ARK_SUCCESS);
 }
 
 /*---------------------------------------------------------------

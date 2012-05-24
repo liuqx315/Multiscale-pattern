@@ -47,8 +47,8 @@ int ARKodeSetDefaults(void *arkode_mem)
   /* Set default values for integrator optional inputs */
   ark_mem->ark_expstab          = ARKExpStab;
   ark_mem->ark_estab_data       = ark_mem;
-  ark_mem->ark_hadapt           = ARKAdapt;
-  ark_mem->ark_hadapt_data      = ark_mem;
+  ark_mem->ark_hadapt           = NULL;
+  ark_mem->ark_hadapt_data      = NULL;
   ark_mem->ark_hadapt_imethod   = 0;
   ark_mem->ark_hadapt_params[0] = CFLFAC;
   ark_mem->ark_hadapt_params[1] = SAFETY;
@@ -743,8 +743,6 @@ int ARKodeSetAdaptMethod(void *arkode_mem, int imethod,
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
       ark_mem->ark_hadapt_params[7] = AD0_K3; break;
-    case (3):
-      ark_mem->ark_hadapt_params[7] = AD3_K3; break;
     case (5):
       ark_mem->ark_hadapt_params[7] = AD5_K3; break;
     }
@@ -771,8 +769,9 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
 
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_hadapt = hfun;
-  ark_mem->ark_hadapt_data = h_data;
+  ark_mem->ark_hadapt         = hfun;
+  ark_mem->ark_hadapt_data    = h_data;
+  ark_mem->ark_hadapt_imethod = -1;
 
   return(ARK_SUCCESS);
 }
@@ -797,7 +796,7 @@ int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab,
 
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_expstab = EStab;
+  ark_mem->ark_expstab    = EStab;
   ark_mem->ark_estab_data = estab_data;
 
   return(ARK_SUCCESS);
@@ -978,6 +977,69 @@ int ARKodeGetNumSteps(void *arkode_mem, long int *nsteps)
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nsteps = ark_mem->ark_nst;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeGetNumExpSteps:
+
+ Returns the current number of stability-limited steps
+---------------------------------------------------------------*/
+int ARKodeGetNumExpSteps(void *arkode_mem, long int *nsteps)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  *nsteps = ark_mem->ark_nst_exp;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeGetNumAccSteps:
+
+ Returns the current number of accuracy-limited steps
+---------------------------------------------------------------*/
+int ARKodeGetNumAccSteps(void *arkode_mem, long int *nsteps)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  *nsteps = ark_mem->ark_nst_acc;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeGetNumConvSteps:
+
+ Returns the current number of convergence-limited steps
+---------------------------------------------------------------*/
+int ARKodeGetNumConvSteps(void *arkode_mem, long int *nsteps)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  *nsteps = ark_mem->ark_nst_con;
 
   return(ARK_SUCCESS);
 }
@@ -1306,6 +1368,9 @@ int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps,
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nsteps = ark_mem->ark_nst;
+  *expsteps = ark_mem->ark_nst_exp;
+  *accsteps = ark_mem->ark_nst_acc;
+  *convsteps = ark_mem->ark_nst_con;
   *nfevals = ark_mem->ark_nfe;
   *nlinsetups = ark_mem->ark_nsetups;
   *netfails = ark_mem->ark_netf;

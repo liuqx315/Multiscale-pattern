@@ -57,9 +57,8 @@ extern "C" {
 #define AD1_K1    RCONST(0.7);
 #define AD1_K2    RCONST(0.4);
 #define AD2_K1    RCONST(1.0);
-#define AD3_K1    RCONST(0.4);
-#define AD3_K2    RCONST(0.3);
-#define AD3_K3    RCONST(1.0);
+#define AD3_K1    RCONST(0.3);
+#define AD3_K2    RCONST(0.4);
 #define AD4_K1    RCONST(1.0);
 #define AD4_K2    RCONST(1.0);
 #define AD5_K1    RCONST(0.4);
@@ -279,6 +278,7 @@ typedef struct ARKodeMemRec {
     ---------*/  
   realtype ark_hin;             /* initial step size                        */
   realtype ark_h;               /* current step size                        */
+  realtype ark_hold;            /* previous step size                       */
   realtype ark_hprime;          /* step size to be used on the next step    */ 
   realtype ark_next_h;          /* step size to be used on the next step    */ 
   realtype ark_eta;             /* eta = hprime / h                         */
@@ -307,7 +307,9 @@ typedef struct ARKodeMemRec {
     -------------------------*/
   ARKAdaptFn ark_hadapt;         /* function to set the new time step size   */
   void *ark_hadapt_data;         /* user pointer passed to hadapt            */
+  realtype ark_hadapt_ehist[3];  /* error history for time adaptivity        */
   int ark_hadapt_imethod;        /* time step adaptivity method to use:
+				      -1 -> User-specified function above
 				       0 -> PID controller
 				       1 -> PI controller
 				       2 -> I controller
@@ -342,6 +344,9 @@ typedef struct ARKodeMemRec {
     Counters 
     --------*/
   long int ark_nst;         /* number of internal steps taken              */
+  long int ark_nst_acc;     /* number of accuracy-limited internal steps   */
+  long int ark_nst_exp;     /* number of stability-limited internal steps  */
+  long int ark_nst_con;     /* number of convergence-limited int. steps    */
   long int ark_nfe;         /* number of f calls                           */
   long int ark_ncfn;        /* number of corrector convergence failures    */
   long int ark_netf;        /* number of error test failures               */
@@ -559,12 +564,6 @@ void ARKProcessError(ARKodeMem ark_mem, int error_code,
 /* Prototype of internal errHandler function */
 void ARKErrHandler(int error_code, const char *module, 
 		   const char *function, char *msg, void *data);
-
-/* Prototype of internal time step adaptivity function */
-int ARKAdapt(N_Vector y, realtype t, realtype h, 
-	     realtype e1, realtype e2, 
-	     realtype e3, int q, int p, 
-	     realtype *hnew, void *data);
 
 /* Prototype of internal explicit stability estimation function */
 int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);

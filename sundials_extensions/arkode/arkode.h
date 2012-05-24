@@ -761,7 +761,7 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
                        limited steps taken by the solver
 
  ARKodeGetNumRhsEvals returns the number of calls to the user's
-                      f function
+                      fi function (called more often than fe)
 
  ARKodeGetNumLinSolvSetups returns the number of calls made to
                            the linear solver's setup routine

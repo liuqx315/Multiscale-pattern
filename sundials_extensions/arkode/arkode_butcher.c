@@ -12,10 +12,11 @@
 #include <stdlib.h>
 
 #include "arkode_impl.h"
-#include "math.h"
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_types.h>
 
+
+#define SQRT2 RSqrt(RCONST(2.0))
 
 /*---------------------------------------------------------------
  Returns butcher table for Runge Kutta methods.  
@@ -122,21 +123,21 @@ int ARKodeGetButcherTable(int imethod, int *s, int *q,
     *q = 3;
     *p = 2;
 
-    A[1][0] = RCONST((2.0-sqrt(2.0)))/RCONST(2.0);
-    A[1][1] = RCONST((2.0-sqrt(2.0)))/RCONST(2.0);
-    A[2][0] = RCONST(sqrt(2.0))/RCONST(4.0);
-    A[2][1] = RCONST(sqrt(2.0))/RCONST(4.0);
-    A[2][2] = RCONST((2.0-sqrt(2.0)))/RCONST(2.0);
+    A[1][0] = RCONST((2.0-SQRT2))/RCONST(2.0);
+    A[1][1] = RCONST((2.0-SQRT2))/RCONST(2.0);
+    A[2][0] = RCONST(SQRT2)/RCONST(4.0);
+    A[2][1] = RCONST(SQRT2)/RCONST(4.0);
+    A[2][2] = RCONST((2.0-SQRT2))/RCONST(2.0);
 
-    b[0] = RCONST(sqrt(2.0))/RCONST(4.0);
-    b[1] = RCONST(sqrt(2.0))/RCONST(4.0);
-    b[2] = RCONST((2.0-sqrt(2.0)))/RCONST(2.0);
+    b[0] = RCONST(SQRT2)/RCONST(4.0);
+    b[1] = RCONST(SQRT2)/RCONST(4.0);
+    b[2] = RCONST((2.0-SQRT2))/RCONST(2.0);
 
-    b2[0] = RCONST((1.0-sqrt(2.0))/RCONST(4.0))/RCONST(3.0);
-    b2[1] = RCONST((3.0*sqrt(2.0))/RCONST(4.0+1.0))/RCONST(3.0);
-    b2[2] = RCONST((2.0-sqrt(2.0)))/RCONST(6.0);
+    b2[0] = RCONST((1.0-SQRT2)/RCONST(4.0))/RCONST(3.0);
+    b2[1] = RCONST((3.0*SQRT2)/RCONST(4.0+1.0))/RCONST(3.0);
+    b2[2] = RCONST((2.0-SQRT2))/RCONST(6.0);
 
-    c[1] = RCONST(2.0-sqrt(2.0));
+    c[1] = RCONST(2.0-SQRT2);
     c[2] = RCONST(1.0);
     break;
 
