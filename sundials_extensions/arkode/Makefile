@@ -19,6 +19,7 @@ OBJ = arkode.o \
       arkode_band.o \
       arkode_bandpre.o \
       arkode_bbdpre.o \
+      arkode_butcher.o \
       arkode_dense.o \
       arkode_direct.o \
       arkode_io.o \
@@ -43,6 +44,9 @@ arkode_bandpre.o : arkode_bandpre.c arkode_impl.h arkode_bandpre_impl.h arkode_s
 
 arkode_bbdpre.o : arkode_bbdpre.c arkode_impl.h arkode_bbdpre_impl.h arkode_spils_impl.h arkode_sptfqmr.h arkode_spbcgs.h arkode_spgmr.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_bbdpre.c -o $@
+
+arkode_butcher.o : arkode_butcher.c arkode_impl.h
+	${CC} -c ${CFLAGS_} ${INCS} arkode_butcher.c -o $@
 
 arkode_dense.o : arkode_dense.c arkode_dense.h arkode_direct_impl.h arkode_impl.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_dense.c -o $@
