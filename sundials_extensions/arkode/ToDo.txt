@@ -1,0 +1,168 @@
+Remaining components to build:
+
+
+Easy:
+[ ] ARK nonlinear residual function.
+[ ] Add an ark_mem integer member denoting the current stage
+[ ] Dense output evaluation routine, both for solution value and
+    derivatives.
+[ ] Predictor routine to fill in all stage RHS functions Fe (since
+    that is only filled in after a successful stage solve) with
+    appropriate prediction for that stage.  This will be called once
+    at the end of a successful step to generate predictions for the
+    next one.
+[ ] Code in InitialSetup routine to fill Fe array with initial
+    condition (trivial predictor) for stages in first step.
+[ ] Routine to do actual step prediction [use existing ARKPredict]:
+    this will copy the value from Fe into the nonlinear solver initial
+    guess (for early stages), or it will use already-generated stage
+    solutions to predict subsequent stages (for later stages).  This
+    will be called prior to every stage solve. 
+[ ] Routine to calculate time step solution and embedding, along with 
+    time accuracy error estimate.
+[ ] Routine to select appropriate Butcher table for the problem, given 
+    the relevant user-defined constraints.
+[ ] Set routine to manually choose a pre-existing Butcher table
+    (i.e. not user-supplied, and not the default choice).
+[ ] Get routine to output the Butcher table name (and relevant integer 
+    flag) to screen and/or in return arguments.
+[ ] Code to clean/check Butcher tables -- this should check that ERK
+    and IRK tables share root & canopy nodes, that all necessary
+    coefficients are defined, and that will call dense coefficient
+    table generator if necessary.  This should be called inside
+    ARKInitialSetup, where I currently call ARKBuildDense (and I'll
+    move ARKBuildDense inside the new routine at that time).
+[ ] stageprep routine, to evaluate Fe on current solution (unless I
+    can include this stuff in something that already exists)
+[ ] Code to increment ark_nst_con counter when we experience a
+    convergence failure and need to take a smaller step.  The
+    code/logic may already be there in using ark_ncfn.  However,
+    consider whether this counter should differ at all from
+    ark_nst_con (I can't think of any difference at the moment).
+[ ] Update the total real/integer work length estimates in
+    ARKodeCreate. 
+[ ] Initialize and update ark_mem->ark_hold within time-stepping.  Or
+    maybe it is already stored in ark_hu??
+[ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
+    0), that none of the stuff I put into ARKInitialSetup will
+    backfire if called again.
+[ ] If I need to use any currently-unused N_Vector operations, add
+    them to ARKCheckNvector routine.
+[ ] Consider removing integer parameter ark_smax_alloc, since I can
+    always check whether the N_Vector is NULL or not and
+    allocate/deallocate appropriately.
+[ ] Expand statistics to count, store and return fe and fi calls
+    separately.
+[ ] In all set routines, update code to allow specification of the
+    defaults through supplying zeros/NULL to the function.
+
+
+Medium:
+[ ] Build a new linear solver to directly tackle the stage solves;
+    call this when the user has specified that the system is linear
+    (so J only needs to be set up once).  Consider calling this to
+    handle calculation of the updated solution and embedding when 
+    M != I (of course, this would mean that I only allow linear
+    operators for M, but that's a reasonable restriction).
+[ ] Update ARKStep loop to do stage-specific solves.  Add
+    code to always check the diagonal value inside Ai.  If it's zero
+    (ERK or ESDIRK) I just declare success (unless M != I).  If I just
+    declare success, I should be certain to still evaluate Fi at the
+    "solution" of the stage, since it would occur already within an
+    implicit solve, and then I can just trust that it is still
+    available for subsequent stages.  This is also where I could have
+    logic to decide between calling Newton or just a linear solver for
+    the stage solution.
+[ ] User-defined operator M : R^n -> R^n, and logic to account for
+    this in step solution & embedding.  Update time step
+    solution/embedding routine to now do solves to compute these.
+[ ] Routine to create dense output table in case it is not already 
+    filled in (or for now, I could just pre-process all of my Butcher 
+    tables to create dense output tables and hard-code them in).
+[ ] Code to allow a change in the Butcher table, both to allow an
+    increased/decreased number of stages (no real issue for decrease,
+    don't even need to free the N_Vectors if I don't want to; need to
+    malloc the new vectors for an increase, though), and to do the
+    relevant checking/cleaning of the Butcher table to add dense
+    output coeffs, etc..  This could occur only inside ARKodeReInit,
+    since that's the moment where I would allow this kind of thing
+    (and would need to reset accuracy history data).
+[ ] Check all linear solvers to ensure that they setup/solve the
+    correct system, and access all of the correct data out of ark_mem.
+[ ] Insert calls to my ARKAdapt function wherever CVODE currently
+    decides on accuracy- or stability-based time step adaptivity.
+[ ] Think about scenario in which ARK method's first stage doesn't set
+    c[0] = 0.0:  
+    * Do I actually need that Fe[0] and Fi[0] are the RHS values at
+      the old time step solution?
+    * If I do really need fe(tn,yn) and fi(tn,yn), and they aren't
+      stored in Fe[0] and Fi[0], what recourse do I have?  I could
+      force any implicit method to be an ESDIRK through adjusting the
+      Butcher tables (would need to account for user-supplied tables),
+      or I could just store these separately (redundant
+      storage/calculation when c[0] really is 0.0).
+[ ] Think about scenario where an attempted step has too much error
+    (but still converges within iteration limits).  I would have
+    over-written all of the Fe and Fi data to generate implicit stage
+    predictors at shorter times.  Would it be better to duplicate the
+    data (could be non-trivial), or would it be better to use a
+    simpler predictor?  Alternatively, if all of my implicit
+    predictors just use the old time step (or a linear extrapolation
+    from existing stage solutions), this would not be a problem, but
+    it could take more effort to solve each stage.  Investigate this
+    further.  Put relevant "undo" code into ARKRestore().
+[ ] Go through new and existing routines to determine whether we need
+    additional #define control constants, return values and error
+    messages; also prune out unused ones.
+
+
+Hard:
+[ ] Add in code for ARK_FIXED_STEP operating mode.
+[ ] Enable my solver and disable BDF solver.  This will require
+    searching through the code for all of the marked locations where I
+    made notes to myself (in all caps, and usually preceded by /*****)
+[ ] Remove BDF code.
+[ ] Look into root-finding stuff.
+[ ] Move all fancy logic determination stuff that's currently located
+    in specific solve routines (including linear solvers) to reside in
+    a self-contained set of functions that ARKode provides.  Attach
+    these functions to linear solver data structures where relevant.
+[ ] Form corresponding nonlinear solver data structures that will
+    contain function pointers for logic arguments, nonlinear residual
+    calculations, tolerances, etc., and have Newton method use
+    information from that structure instead of calling items that are
+    hard-coded into ark_mem.
+
+
+Unknown/Questions:
+[ ] Code for customization of time accuracy norm?  Since SUNDIALS does 
+    not implement a general p-norm, I could swap between WRMS and WMax
+    norms, though the Wmax norm will require a bit of work (product
+    followed by max).  This might break all of our other heuristics,
+    especially since the nonlinear/linear solvers all use WRMS, so
+    maybe I should NOT do this?
+[ ] Code to select the best time step estimation method & parameters
+    for a specific method?  I don't actually know what this would be
+    for ERK, DIRK, ESDIRK, ARK, etc., but if I did then I should pick
+    the best.  Maybe I should build the functionality first, but leave
+    it disabled until after I can run exhaustive testing of the full
+    suite of implemented methods on a range of test problems?
+[ ] Code to perform automated explicit time step stability estimates.
+    This could be approximate, using a "random" vector and
+    approximating the Jacobian of Fe via finite differencing, and then
+    computing the Ritz quotient to estimate the largest eigenvalue.
+    Of course, since each ERK has a different stability region, maybe
+    some of that information should be included as well?  Also, if Fe
+    has complex eigenvalues, the Ritz quotient cannot output complex
+    values since it is the ratio of 2 real numbers.  What could I do
+    in that scenario?  Need to read up on this kind of thing: has it
+    been done before, what did they do, can I do it with the tools at
+    my disposal? 
+[ ] Consider changing logic for initial timestep estimate, since I
+    do not need to start the calculation with a 1st order method and
+    bootstrap my way up.
+[ ] Consider whether a non-identity matrix M will change how
+    preconditioning occurs, i.e. whether it disables either right or
+    left preconditioning.
+
+

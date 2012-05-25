@@ -52,33 +52,31 @@ typedef struct ARKSpilsMemRec {
                            difference quotient Jacobian-vector products */
 
   N_Vector s_ytemp;     /* temp vector passed to jtimes and psolve      */
-  N_Vector s_x;         /* temp vector used by ARKSpilsSolve             */
-  N_Vector s_ycur;      /* ARKODE current y vector in Newton Iteration   */
+  N_Vector s_x;         /* temp vector used by ARKSpilsSolve            */
+  N_Vector s_ycur;      /* ARKODE current y vector in Newton Iteration  */
   N_Vector s_fcur;      /* fcur = f(tn, ycur)                           */
 
   void* s_spils_mem;    /* memory used by the generic solver            */
 
   /* Preconditioner computation
-   * (a) user-provided:
-   *     - P_data == user_data
-   *     - pfree == NULL (the user dealocates memory for user_data)
-   * (b) internal preconditioner module
-   *     - P_data == arkode_mem
-   *     - pfree == set by the prec. module and called in ARKodeFree
-   */
+    (a) user-provided:
+        - P_data == user_data
+        - pfree == NULL (the user dealocates memory for user_data)
+    (b) internal preconditioner module
+        - P_data == arkode_mem
+        - pfree == set by the prec. module and called in ARKodeFree  */
   ARKSpilsPrecSetupFn s_pset;
   ARKSpilsPrecSolveFn s_psolve;
   void (*s_pfree)(ARKodeMem ark_mem);
   void *s_P_data;
 
   /* Jacobian times vector compuation
-   * (a) jtimes function provided by the user:
-   *     - j_data == user_data
-   *     - jtimesDQ == FALSE
-   * (b) internal jtimes
-   *     - j_data == arkode_mem
-   *     - jtimesDQ == TRUE
-   */
+    (a) jtimes function provided by the user:
+        - j_data == user_data
+        - jtimesDQ == FALSE
+    (b) internal jtimes
+        - j_data == arkode_mem
+        - jtimesDQ == TRUE   */
   booleantype s_jtimesDQ;
   ARKSpilsJacTimesVecFn s_jtimes;
   void *s_j_data;

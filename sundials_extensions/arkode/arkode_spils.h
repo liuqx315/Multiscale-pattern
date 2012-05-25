@@ -34,18 +34,18 @@ extern "C" {
  ARKSPILS solver constants:
 
  ARKSPILS_MAXL   : default value for the maximum Krylov
-                  dimension
+                   dimension
 
  ARKSPILS_MSBPRE : maximum number of steps between
-                  preconditioner evaluations
+                   preconditioner evaluations
 
  ARKSPILS_DGMAX  : maximum change in gamma between
-                  preconditioner evaluations
+                   preconditioner evaluations
 
  ARKSPILS_EPLIN  : default value for factor by which the
-                  tolerance on the nonlinear iteration is
-                  multiplied to get a tolerance on the linear
-                  iteration
+                   tolerance on the nonlinear iteration is
+                   multiplied to get a tolerance on the linear
+                   iteration
 ---------------------------------------------------------------*/
 #define ARKSPILS_MAXL   5
 #define ARKSPILS_MSBPRE 50

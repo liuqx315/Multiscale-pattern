@@ -477,7 +477,6 @@ int ARKodeSetMaxNumSteps(void *arkode_mem, long int mxsteps)
 		    "ARKodeSetMaxNumSteps", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* Passing mxsteps=0 sets the default. Passing mxsteps<0 disables the test. */
@@ -504,7 +503,6 @@ int ARKodeSetMaxHnilWarns(void *arkode_mem, int mxhnil)
 		    "ARKodeSetMaxHnilWarns", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_mxhnil = mxhnil;
@@ -527,7 +525,6 @@ int ARKodeSetInitStep(void *arkode_mem, realtype hin)
 		    "ARKodeSetInitStep", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_hin = hin;
@@ -550,7 +547,6 @@ int ARKodeSetMinStep(void *arkode_mem, realtype hmin)
 		    "ARKodeSetMinStep", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (hmin<0) {
@@ -592,7 +588,6 @@ int ARKodeSetMaxStep(void *arkode_mem, realtype hmax)
 		    "ARKodeSetMaxStep", MSGARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (hmax < 0) {
@@ -766,7 +761,6 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
 		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_hadapt         = hfun;
@@ -793,7 +787,6 @@ int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab,
 		    "ARKodeSetStabilityFn", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_expstab    = EStab;
@@ -818,7 +811,6 @@ int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef)
 		    "ARKodeSetMaxErrTestFails", MSGARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_maxnef = maxnef;
@@ -842,7 +834,6 @@ int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf)
 		    "ARKodeSetMaxConvFails", MSGARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_maxncf = maxncf;
@@ -866,7 +857,6 @@ int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
 		    "ARKodeSetMaxNonlinIters", MSGARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_maxcor = maxcor;
@@ -878,8 +868,8 @@ int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
 /*---------------------------------------------------------------
  ARKodeSetNonlinConvCoef:
 
- Specifies the coeficient in the nonlinear solver convergence
- test
+ Specifies the coefficient in the nonlinear solver convergence
+ test.
 ---------------------------------------------------------------*/
 int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef)
 {
@@ -890,7 +880,6 @@ int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef)
 		    "ARKodeSetNonlinConvCoef", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_nlscoef = nlscoef;
@@ -915,7 +904,6 @@ int ARKodeSetRootDirection(void *arkode_mem, int *rootdir)
 		    "ARKodeSetRootDirection", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   nrt = ark_mem->ark_nrtfn;
@@ -946,7 +934,6 @@ int ARKodeSetNoInactiveRootWarn(void *arkode_mem)
 		    "ARKodeSetNoInactiveRootWarn", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_mxgnull = 0;
@@ -967,13 +954,11 @@ int ARKodeSetNoInactiveRootWarn(void *arkode_mem)
 int ARKodeGetNumSteps(void *arkode_mem, long int *nsteps)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nsteps = ark_mem->ark_nst;
@@ -1053,13 +1038,11 @@ int ARKodeGetNumConvSteps(void *arkode_mem, long int *nsteps)
 int ARKodeGetNumRhsEvals(void *arkode_mem, long int *nfevals)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumRhsEvals", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nfevals = ark_mem->ark_nfe;
@@ -1076,13 +1059,11 @@ int ARKodeGetNumRhsEvals(void *arkode_mem, long int *nfevals)
 int ARKodeGetNumLinSolvSetups(void *arkode_mem, long int *nlinsetups)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumLinSolvSetups", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nlinsetups = ark_mem->ark_nsetups;
@@ -1099,13 +1080,11 @@ int ARKodeGetNumLinSolvSetups(void *arkode_mem, long int *nlinsetups)
 int ARKodeGetNumErrTestFails(void *arkode_mem, long int *netfails)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumErrTestFails", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *netfails = ark_mem->ark_netf;
@@ -1122,13 +1101,11 @@ int ARKodeGetNumErrTestFails(void *arkode_mem, long int *netfails)
 int ARKodeGetLastOrder(void *arkode_mem, int *qlast)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetLastOrder", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *qlast = ark_mem->ark_qu;
@@ -1145,13 +1122,11 @@ int ARKodeGetLastOrder(void *arkode_mem, int *qlast)
 int ARKodeGetCurrentOrder(void *arkode_mem, int *qcur)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetCurrentOrder", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *qcur = ark_mem->ark_next_q;
@@ -1191,13 +1166,11 @@ int ARKodeGetActualInitStep(void *arkode_mem, realtype *hinused)
 int ARKodeGetLastStep(void *arkode_mem, realtype *hlast)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetLastStep", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *hlast = ark_mem->ark_hu;
@@ -1214,13 +1187,11 @@ int ARKodeGetLastStep(void *arkode_mem, realtype *hlast)
 int ARKodeGetCurrentStep(void *arkode_mem, realtype *hcur)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetCurrentStep", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
   
   *hcur = ark_mem->ark_next_h;
@@ -1237,13 +1208,11 @@ int ARKodeGetCurrentStep(void *arkode_mem, realtype *hcur)
 int ARKodeGetCurrentTime(void *arkode_mem, realtype *tcur)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetCurrentTime", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *tcur = ark_mem->ark_tn;
@@ -1260,13 +1229,11 @@ int ARKodeGetCurrentTime(void *arkode_mem, realtype *tcur)
 int ARKodeGetTolScaleFactor(void *arkode_mem, realtype *tolsfact)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetTolScaleFactor", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *tolsfact = ark_mem->ark_tolsf;
@@ -1283,13 +1250,11 @@ int ARKodeGetTolScaleFactor(void *arkode_mem, realtype *tolsfact)
 int ARKodeGetErrWeights(void *arkode_mem, N_Vector eweight)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetErrWeights", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   N_VScale(ONE, ark_mem->ark_ewt, eweight);
@@ -1306,13 +1271,11 @@ int ARKodeGetErrWeights(void *arkode_mem, N_Vector eweight)
 int ARKodeGetEstLocalErrors(void *arkode_mem, N_Vector ele)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetEstLocalErrors", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   N_VScale(ONE, ark_mem->ark_acor, ele);
@@ -1329,13 +1292,11 @@ int ARKodeGetEstLocalErrors(void *arkode_mem, N_Vector ele)
 int ARKodeGetWorkSpace(void *arkode_mem, long int *lenrw, long int *leniw)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetWorkSpace", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *leniw = ark_mem->ark_liw;
@@ -1358,13 +1319,11 @@ int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps,
 			     realtype *hcur, realtype *tcur)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetIntegratorStats", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nsteps = ark_mem->ark_nst;
@@ -1391,13 +1350,11 @@ int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps,
 int ARKodeGetNumGEvals(void *arkode_mem, long int *ngevals)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumGEvals", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *ngevals = ark_mem->ark_nge;
@@ -1413,15 +1370,13 @@ int ARKodeGetNumGEvals(void *arkode_mem, long int *ngevals)
 ---------------------------------------------------------------*/
 int ARKodeGetRootInfo(void *arkode_mem, int *rootsfound)
 {
-  ARKodeMem ark_mem;
   int i, nrt;
-
+  ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetRootInfo", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   nrt = ark_mem->ark_nrtfn;
@@ -1440,13 +1395,11 @@ int ARKodeGetRootInfo(void *arkode_mem, int *rootsfound)
 int ARKodeGetNumNonlinSolvIters(void *arkode_mem, long int *nniters)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumNonlinSolvIters", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nniters = ark_mem->ark_nni;
@@ -1464,13 +1417,11 @@ int ARKodeGetNumNonlinSolvIters(void *arkode_mem, long int *nniters)
 int ARKodeGetNumNonlinSolvConvFails(void *arkode_mem, long int *nncfails)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNumNonlinSolvConvFails", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nncfails = ark_mem->ark_ncfn;
@@ -1488,13 +1439,11 @@ int ARKodeGetNonlinSolvStats(void *arkode_mem, long int *nniters,
                             long int *nncfails)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeGetNonlinSolvStats", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   *nniters = ark_mem->ark_nni;
@@ -1508,7 +1457,6 @@ int ARKodeGetNonlinSolvStats(void *arkode_mem, long int *nniters,
 char *ARKodeGetReturnFlagName(long int flag)
 {
   char *name;
-
   name = (char *)malloc(24*sizeof(char));
 
   switch(flag) {

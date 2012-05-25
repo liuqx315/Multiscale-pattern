@@ -270,9 +270,9 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_L      = 2;
   ark_mem->ark_qwait  = ark_mem->ark_L;
   ark_mem->ark_etamax = ETAMX1;
-  ark_mem->ark_qu    = 0;
-  ark_mem->ark_hu    = ZERO;
-  ark_mem->ark_tolsf = ONE;
+  ark_mem->ark_qu     = 0;
+  ark_mem->ark_hu     = ZERO;
+  ark_mem->ark_tolsf  = ONE;
 
   /* Set the linear solver addresses to NULL.
      (We check != NULL later, in ARKode.) */
@@ -285,7 +285,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   /* Initialize zn[0] in the history array */
   N_VScale(ONE, y0, ark_mem->ark_zn[0]);
 
-  /* Initialize error history (1 => met target accuracy) */
+  /* Initialize error history (1.0 => met target accuracy) */
   ark_mem->ark_hadapt_ehist[0] = ONE;
   ark_mem->ark_hadapt_ehist[1] = ONE;
   ark_mem->ark_hadapt_ehist[2] = ONE;
@@ -370,6 +370,11 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   /* Initialize zn[0] in the history array */
   N_VScale(ONE, y0, ark_mem->ark_zn[0]);
  
+  /* Initialize error history (1.0 => met target accuracy) */
+  ark_mem->ark_hadapt_ehist[0] = ONE;
+  ark_mem->ark_hadapt_ehist[1] = ONE;
+  ark_mem->ark_hadapt_ehist[2] = ONE;
+
   /* Initialize all the counters */
   ark_mem->ark_nst     = 0;
   ark_mem->ark_nst_acc = 0;
@@ -1228,6 +1233,7 @@ void ARKodeFree(void **arkode_mem)
 }
 
 
+
 /*===============================================================
    Private Functions Implementation
 ===============================================================*/
@@ -1363,7 +1369,7 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
 
  NOTE: this routine is separate from ARKAllocVectors, since that
  routine is called in ARKodeInit, which may be called by a user
- prior to determining their desired method order, 
+ prior to setting their desired method order, 
  implicit/explicit/imex problem, and number of RK stages.  Hence
  this routine is called during ARKInitialStep, which is called 
  on the first call to the ARKode() integrator.
@@ -1415,7 +1421,7 @@ static int ARKAllocRKVectors(ARKodeMem ark_mem)
 /*---------------------------------------------------------------
  ARKFreeVectors
 
- This routine frees the ARKODE vectors allocated in 
+ This routine frees the ARKODE vectors allocated in both
  ARKAllocVectors and ARKAllocRKVectors.
 ---------------------------------------------------------------*/
 static void ARKFreeVectors(ARKodeMem ark_mem)
@@ -3378,7 +3384,7 @@ static int ARKAdapt(ARKodeMem ark_mem, realtype *hnew)
   ubound = ark_mem->ark_hadapt_params[4];
 
   /* Call algorithm-specific error adaptivity method */
-  switch (ark_mem->ark_adapt_imethod) {
+  switch (ark_mem->ark_hadapt_imethod) {
   case(0):    /* PID controller */
     ier = ARKAdaptPID(ark_mem, &h_acc);
     break;
@@ -3530,6 +3536,7 @@ static int ARKAdaptExpGus(ARKodeMem ark_mem, realtype *hnew)
 
     k1 = -ONE / ark_mem->ark_p;
     hcur = ark_mem->ark_h;
+    e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     h_acc = hcur * RPowerR(e1,k1);
 
   /* general estimate */
@@ -3562,6 +3569,7 @@ static int ARKAdaptImpGus(ARKodeMem ark_mem, realtype *hnew)
 
     k1 = -ONE / ark_mem->ark_p;
     hcur = ark_mem->ark_h;
+    e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     h_acc = hcur * RPowerR(e1,k1);
 
   /* general estimate */
@@ -3595,6 +3603,7 @@ static int ARKAdaptImExGus(ARKodeMem ark_mem, realtype *hnew)
 
     k1 = -ONE / ark_mem->ark_p;
     hcur = ark_mem->ark_h;
+    e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     h_acc = hcur * RPowerR(e1,k1);
 
   /* general estimate */
