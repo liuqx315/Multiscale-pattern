@@ -2,20 +2,35 @@ Remaining components to build:
 
 
 Easy:
-[ ] ARK nonlinear residual function.
-[ ] Add an ark_mem integer member denoting the current stage
+[X] Add an ark_mem integer member denoting the current stage
+[X] ARK nonlinear residual function.
+[X] Code to increment ark_nst_con counter when we experience a
+    convergence failure and need to take a smaller step.  The
+    code/logic may already be there in using ark_ncfn.  However,
+    consider whether this counter should differ at all from
+    ark_nst_con (I can't think of any difference at the moment).
+[X] Expand statistics to count, store and return fe and fi calls
+    separately.
 [ ] Dense output evaluation routine, both for solution value and
-    derivatives.  From Hairer, Norsett & Wanner, they mentioned that a
-    good idea for building dense output of accuracy O(h^3) is to use
-    the data {yn,yp,fn,fp} to generate the Hermite cubic interpolant,
+    derivatives.  From Hairer, Norsett & Wanner (pp 190-191), we can
+    build dense output of accuracy O(h^3) using the data {yn,yp,fn,fp}
+    via the Hermite cubic interpolant, 
+       y(tau) = (1-tau)*yn + tau*yp 
+              + tau*(tau-1)*((1-2*tau)(yp-yn) + (tau-1)*h*fn + tau*h*fp)
+    where 0\le tau\le 1 transitions us between tn and tp.  This is
+    O(h^3) for y, but only O(h^2) for y'.  If higher order accuracy is
+    desired, we may increase the order of the polynomial by evaluating
+    f at intermediate points, with argument as the interpolated
+    version of the function at the current order.  Each stage of this
+    will increase the order by 1, and all intermediate stages must be
+    chosen to be independent of one another.
     and then to evaluate that in the interval.  For methods that need
     increased accuracy, we could evaluate f at additional points as
     necessary to build an interpolant of requisite degree.
-[ ] Predictor routine to fill in all stage RHS functions Fe (since
-    that is only filled in after a successful stage solve) with
-    appropriate prediction for that stage.  This will be called once
-    at the end of a successful step to generate predictions for the
-    next one.
+[ ] Predictor routine to store guesses in Fe array (since
+    that is only filled in after a successful stage solve).  This will
+    be called once at the end of a successful step to generate
+    predictions for the next one.
 [ ] Code in InitialSetup routine to fill Fe array with initial
     condition (trivial predictor) for stages in first step.
 [ ] Routine to do actual step prediction [use existing ARKPredict]:
@@ -39,11 +54,6 @@ Easy:
     move ARKBuildDense inside the new routine at that time).
 [ ] stageprep routine, to evaluate Fe on current solution (unless I
     can include this stuff in something that already exists)
-[ ] Code to increment ark_nst_con counter when we experience a
-    convergence failure and need to take a smaller step.  The
-    code/logic may already be there in using ark_ncfn.  However,
-    consider whether this counter should differ at all from
-    ark_nst_con (I can't think of any difference at the moment).
 [ ] Update the total real/integer work length estimates in
     ARKodeCreate. 
 [ ] Initialize and update ark_mem->ark_hold within time-stepping.  Or
@@ -56,8 +66,6 @@ Easy:
 [ ] Consider removing integer parameter ark_smax_alloc, since I can
     always check whether the N_Vector is NULL or not and
     allocate/deallocate appropriately.
-[ ] Expand statistics to count, store and return fe and fi calls
-    separately.
 [ ] In all set routines, update code to allow specification of the
     defaults through supplying zeros/NULL to the function.
 
