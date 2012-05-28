@@ -348,7 +348,8 @@ typedef struct ARKodeMemRec {
   long int ark_nst_acc;     /* number of accuracy-limited internal steps   */
   long int ark_nst_exp;     /* number of stability-limited internal steps  */
   long int ark_nst_con;     /* number of convergence-limited int. steps    */
-  long int ark_nfe;         /* number of f calls                           */
+  long int ark_nfe;         /* number of fe calls                          */
+  long int ark_nfi;         /* number of fi calls                          */
   long int ark_ncfn;        /* number of corrector convergence failures    */
   long int ark_netf;        /* number of error test failures               */
   long int ark_nni;         /* number of Newton iterations performed       */

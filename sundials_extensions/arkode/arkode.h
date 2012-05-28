@@ -761,7 +761,7 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
                        limited steps taken by the solver
 
  ARKodeGetNumRhsEvals returns the number of calls to the user's
-                      fi function (called more often than fe)
+                      fe and fi functions
 
  ARKodeGetNumLinSolvSetups returns the number of calls made to
                            the linear solver's setup routine
@@ -818,7 +818,8 @@ SUNDIALS_EXPORT int ARKodeGetNumAccSteps(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeGetNumConvSteps(void *arkode_mem, 
 					  long int *convsteps);
 SUNDIALS_EXPORT int ARKodeGetNumRhsEvals(void *arkode_mem, 
-					 long int *nfevals);
+					 long int *nfe_evals, 
+					 long int *nfi_evals);
 SUNDIALS_EXPORT int ARKodeGetNumLinSolvSetups(void *arkode_mem, 
 					      long int *nlinsetups);
 SUNDIALS_EXPORT int ARKodeGetNumErrTestFails(void *arkode_mem, 
@@ -851,7 +852,8 @@ SUNDIALS_EXPORT int ARKodeGetIntegratorStats(void *arkode_mem,
 					     long int *expsteps, 
 					     long int *accsteps, 
 					     long int *convsteps, 
-					     long int *nfevals, 
+					     long int *nfe_evals, 
+					     long int *nfi_evals, 
 					     long int *nlinsetups, 
 					     long int *netfails,
 					     realtype *hinused, 

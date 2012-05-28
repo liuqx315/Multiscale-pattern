@@ -72,7 +72,8 @@ static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum,
 			realtype alpha0, realtype alpha0_hat, 
 			realtype xi_inv, realtype xistar_inv);
 
-static int ARKNlsResid(ARKodeMem ark_mem, N_Vector fy, N_Vector r);
+static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y, 
+		       N_Vector fy, N_Vector r);
 static int ARKNls(ARKodeMem ark_mem, int nflag);
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag);
 static int ARKNewtonIteration(ARKodeMem ark_mem);
@@ -297,6 +298,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nst_exp = 0;
   ark_mem->ark_nst_con = 0;
   ark_mem->ark_nfe     = 0;
+  ark_mem->ark_nfi     = 0;
   ark_mem->ark_ncfn    = 0;
   ark_mem->ark_netf    = 0;
   ark_mem->ark_nni     = 0;
@@ -382,6 +384,7 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_nst_exp = 0;
   ark_mem->ark_nst_con = 0;
   ark_mem->ark_nfe     = 0;
+  ark_mem->ark_nfi     = 0;
   ark_mem->ark_ncfn    = 0;
   ark_mem->ark_netf    = 0;
   ark_mem->ark_nni     = 0;
@@ -784,7 +787,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
        Also check for zeros of root function g at and near t0.    */
     retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
 			     ark_mem->ark_zn[1], ark_mem->ark_user_data); 
-    ark_mem->ark_nfe++;
+    ark_mem->ark_nfi++;
     if (retval < 0) {
       ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", 
 		      "ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
@@ -1746,7 +1749,7 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
 	       ark_mem->ark_zn[0], ark_mem->ark_y);
   retval = ark_mem->ark_fi(ark_mem->ark_tn+hg, ark_mem->ark_y, 
 			   ark_mem->ark_tempv, ark_mem->ark_user_data);
-  ark_mem->ark_nfe++;
+  ark_mem->ark_nfi++;
   if (retval < 0) return(ARK_RHSFUNC_FAIL);
   if (retval > 0) return(RHSFUNC_RECVR);
 
@@ -2147,11 +2150,11 @@ static int ARKNls(ARKodeMem ark_mem, int nflag)
 
  Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
-static int ARKNlsResid(ARKodeMem ark_mem, N_Vector fy, N_Vector r)
+static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y, 
+		       N_Vector fy, N_Vector r)
 {
   /* Evaluate the residual of the nonlinear system */
-  N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], 
-	       ONE, ark_mem->ark_acor, r);
+  N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], ONE, y, r);
   N_VLinearSum(ark_mem->ark_gamma, fy, -ONE, r, r);
   return(ARK_SUCCESS);
 }
@@ -2168,16 +2171,21 @@ static int ARKNlsResid(ARKodeMem ark_mem, N_Vector fy, N_Vector r)
 
  Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
-static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector fy, N_Vector r)
+static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y, 
+			N_Vector fy, N_Vector r)
 {
   /* At the ith stage, we compute 
-       r = zi - yn - h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) - h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
-       r = zi - gamma*Fi(zi) - yn - data
+       r = -zi + yn + h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) + h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
+       r = -zi + gamma*Fi(zi) + yn + data
      where
-       zi is stored in ark_mem->ark_acor
+       zi is stored in y
        Fi(zi) is stored in fy
-       (-yn-data) is stored in ark_mem->ark_Fe[i].
+       (yn+data) is stored in ark_mem->ark_Fe[i],
+     so we really just compute
+       r = -y + gamma*fy + ark_mem->ark_Fe[i]
    */
+  N_VLinearSum(-ONE, y, ONE, ark_mem->ark_Fe[ark_mem->ark_istage], r);
+  N_VLinearSum(ark_mem->ark_gamma, fy, ONE, r, r);
 
   return(ARK_SUCCESS);
 }
@@ -2233,7 +2241,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 
     retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
 			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
-    ark_mem->ark_nfe++; 
+    ark_mem->ark_nfi++; 
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) return(RHSFUNC_RECVR);
 
@@ -2297,7 +2305,8 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
   for(;;) {
 
     /* Evaluate the nonlinear system residual, put result into tempv */
-    retval = ARKNlsResid(ark_mem, ark_mem->ark_ftemp, ark_mem->ark_tempv);
+    retval = ARKNlsResid(ark_mem, ark_mem->ark_acor, 
+			 ark_mem->ark_ftemp, ark_mem->ark_tempv);
     if (retval != ARK_SUCCESS) return(ARK_RHSFUNC_FAIL);
 
     /* Call the lsolve function */
@@ -2353,7 +2362,7 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
     delp = del;
     retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, 
 			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
-    ark_mem->ark_nfe++;
+    ark_mem->ark_nfi++;
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) {
       if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
@@ -2430,6 +2439,7 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_eta = MAX(ETACF, ark_mem->ark_hmin / ABS(ark_mem->ark_h));
   *nflagPtr = PREV_CONV_FAIL;
   ARKRescale(ark_mem);
+  ark_mem->ark_nst_con++;
 
   return(PREDICT_AGAIN);
 }
@@ -2530,7 +2540,7 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 
   retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
 			   ark_mem->ark_tempv, ark_mem->ark_user_data);
-  ark_mem->ark_nfe++;
+  ark_mem->ark_nfi++;
   if (retval < 0)  return(ARK_RHSFUNC_FAIL);
   if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
 
