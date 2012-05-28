@@ -5,7 +5,12 @@ Easy:
 [ ] ARK nonlinear residual function.
 [ ] Add an ark_mem integer member denoting the current stage
 [ ] Dense output evaluation routine, both for solution value and
-    derivatives.
+    derivatives.  From Hairer, Norsett & Wanner, they mentioned that a
+    good idea for building dense output of accuracy O(h^3) is to use
+    the data {yn,yp,fn,fp} to generate the Hermite cubic interpolant,
+    and then to evaluate that in the interval.  For methods that need
+    increased accuracy, we could evaluate f at additional points as
+    necessary to build an interpolant of requisite degree.
 [ ] Predictor routine to fill in all stage RHS functions Fe (since
     that is only filled in after a successful stage solve) with
     appropriate prediction for that stage.  This will be called once
@@ -114,6 +119,11 @@ Medium:
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
+[ ] Build a Matlab routine to check the analytical order of accuracy
+    and B-stability of a generic Butcher table.  Could even have a
+    routine that would evaluate the stability function for a variety
+    of h*lambda values to test for A-stability (and even L-stability).
+
 
 
 Hard:
