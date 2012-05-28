@@ -35,27 +35,27 @@
 
  Allowed 'method' names and properties:
 
-   imeth    name             type   s    q    p   dense output
-  --------------------------------------------------------------
-    0     Heun-Euler          ERK   2    2    1       no
-    1     Billington        SDIRK   3    3    2       no
-    2     TRBDF2           ESDIRK   3    3    2       no
-    3     TRX2             ESDIRK   3    3    2       no
-    4     Bogacki-Shampine    ERK   4    4    3       no
-    5     ARK3(2)4L[2]SA      ERK   4    3    2       yes
-    6     ARK3(2)4L[2]SA   ESDIRK   4    3    2       yes
-    7     SDIRK-5-4         SDIRK   5    5    4       yes
-    8     Cash(5,2,4)       SDIRK   5    5    4       no
-    9     Cash(5,3,4)       SDIRK   5    5    4       no
-    10    Cash-Karp           ERK   6    5    4       no
-    11    Fehlberg            ERK   6    5    5       no
-    12    ARK4(3)6L[2]SA      ERK   6    4    3       yes
-    13    ARK4(3)6L[2]SA   ESDIRK   6    4    3       yes
-    14    Dormand-Prince      ERK   7    5    4       no
-    15    Ismail(7,4,5)    ESDIRK   7    7    5       no
-    16    ARK5(4)8L[2]SA      ERK   8    5    4       yes
-    17    ARK5(4)8L[2]SA   ESDIRK   8    5    4       yes
-  --------------------------------------------------------------
+   imeth    name             type   s    q    p  dense  A  L 
+  -----------------------------------------------------------
+    0     Heun-Euler          ERK   2    2    1   no    -  - 
+    1     Billington        SDIRK   3    3    2   no    -  - 
+    2     TRBDF2           ESDIRK   3    3    2   no    -  - 
+    3     TRX2             ESDIRK   3    4    2   no    -  - 
+    4     Bogacki-Shampine    ERK   4    4?   3?  no    -  - 
+    5     ARK3(2)4L[2]SA      ERK   4    3    2   yes   -  - 
+    6     ARK3(2)4L[2]SA   ESDIRK   4    3    2   yes   X  X 
+    7     SDIRK-5-4         SDIRK   5    5?   4?  yes   X  X 
+    8     Cash(5,2,4)       SDIRK   5    5?   4?  no    X  X 
+    9     Cash(5,3,4)       SDIRK   5    5?   4?  no    X  X 
+    10    Cash-Karp           ERK   6    5?   4?  no    -  - 
+    11    Fehlberg            ERK   6    5?   5?  no    -  - 
+    12    ARK4(3)6L[2]SA      ERK   6    4?   3   yes   -  - 
+    13    ARK4(3)6L[2]SA   ESDIRK   6    4    3   yes   X  X 
+    14    Dormand-Prince      ERK   7    5?   4?  no    -  - 
+    15    Ismail(7,4,5)    ESDIRK   7    7?   5?  no    X  - 
+    16    ARK5(4)8L[2]SA      ERK   8    5?   4?  yes   -  - 
+    17    ARK5(4)8L[2]SA   ESDIRK   8    5?   4   yes   X  - 
+  -----------------------------------------------------------
 
 ---------------------------------------------------------------*/
 int ARKodeGetButcherTable(int imethod, int *s, int *q, 
@@ -129,13 +129,13 @@ int ARKodeGetButcherTable(int imethod, int *s, int *q,
     A[2][1] = RCONST(SQRT2)/RCONST(4.0);
     A[2][2] = RCONST((2.0-SQRT2))/RCONST(2.0);
 
-    b[0] = RCONST(SQRT2)/RCONST(4.0);
-    b[1] = RCONST(SQRT2)/RCONST(4.0);
-    b[2] = RCONST((2.0-SQRT2))/RCONST(2.0);
+    b[0] = RCONST((1.0-SQRT2)/RCONST(4.0))/RCONST(3.0);
+    b[1] = RCONST((3.0*SQRT2)/RCONST(4.0+1.0))/RCONST(3.0);
+    b[2] = RCONST((2.0-SQRT2))/RCONST(6.0);
 
-    b2[0] = RCONST((1.0-SQRT2)/RCONST(4.0))/RCONST(3.0);
-    b2[1] = RCONST((3.0*SQRT2)/RCONST(4.0+1.0))/RCONST(3.0);
-    b2[2] = RCONST((2.0-SQRT2))/RCONST(6.0);
+    b2[0] = RCONST(SQRT2)/RCONST(4.0);
+    b2[1] = RCONST(SQRT2)/RCONST(4.0);
+    b2[2] = RCONST((2.0-SQRT2))/RCONST(2.0);
 
     c[1] = RCONST(2.0-SQRT2);
     c[2] = RCONST(1.0);
@@ -152,13 +152,13 @@ int ARKodeGetButcherTable(int imethod, int *s, int *q,
     A[2][1] = RCONST(0.5);
     A[2][2] = RCONST(0.25);
 
-    b[0] = RCONST(0.25);
-    b[1] = RCONST(0.5);
-    b[2] = RCONST(0.25);
+    b[0] = RCONST(1.0)/RCONST(6.0);
+    b[1] = RCONST(2.0)/RCONST(3.0);
+    b[2] = RCONST(1.0)/RCONST(6.0);
 
-    b2[0] = RCONST(1.0)/RCONST(6.0);
-    b2[1] = RCONST(2.0)/RCONST(3.0);
-    b2[2] = RCONST(1.0)/RCONST(6.0);
+    b2[0] = RCONST(0.25);
+    b2[1] = RCONST(0.5);
+    b2[2] = RCONST(0.25);
 
     c[1] = RCONST(0.5);
     c[2] = RCONST(1.0);
@@ -452,17 +452,17 @@ int ARKodeGetButcherTable(int imethod, int *s, int *q,
     A[5][3] = RCONST(1859.0)/RCONST(4104.0);
     A[5][4] = RCONST(-11.0)/RCONST(40.0);
 
-    b[0] = RCONST(16.0)/RCONST(135.0);
-    b[2] = RCONST(6656.0)/RCONST(12825.0);
-    b[3] = RCONST(28561.0)/RCONST(56430.0);
-    b[4] = RCONST(-9.0)/RCONST(50.0);
-    b[5] = RCONST(2.0)/RCONST(55.0);
-
-    b2[0] = RCONST(25.0)/RCONST(216.0);
-    b2[2] = RCONST(1408.0)/RCONST(2565.0);
-    b2[3] = RCONST(2197.0)/RCONST(4104.0);
-    b2[4] = RCONST(-1.0)/RCONST(5.0);
+    b[0] = RCONST(25.0)/RCONST(216.0);
+    b[2] = RCONST(1408.0)/RCONST(2565.0);
+    b[3] = RCONST(2197.0)/RCONST(4104.0);
+    b[4] = RCONST(-1.0)/RCONST(5.0);
       
+    b2[0] = RCONST(16.0)/RCONST(135.0);
+    b2[2] = RCONST(6656.0)/RCONST(12825.0);
+    b2[3] = RCONST(28561.0)/RCONST(56430.0);
+    b2[4] = RCONST(-9.0)/RCONST(50.0);
+    b2[5] = RCONST(2.0)/RCONST(55.0);
+
     c[1] = RCONST(1.0)/RCONST(4.0);
     c[2] = RCONST(3.0)/RCONST(8.0);
     c[3] = RCONST(12.0)/RCONST(13.0);
