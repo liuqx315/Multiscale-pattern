@@ -256,6 +256,7 @@ typedef struct ARKodeMemRec {
     -----------*/  
   int ark_q;                      /* method order                           */
   int ark_p;                      /* embedding order                        */
+  int ark_istage;                 /* current stages in integration method   */
   int ark_stages;                 /* number of stages in integration method */
   realtype ark_Ae[S_MAX][S_MAX];  /* ERK Butcher table                      */
   realtype ark_Ai[S_MAX][S_MAX];  /* IRK Butcher table                      */

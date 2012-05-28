@@ -144,6 +144,7 @@ void *ARKodeCreate()
 
   /* Initialize internal RK parameters and coefficients */
   ark_mem->ark_stages = 0;
+  ark_mem->ark_istage = 0;
   ark_mem->ark_q = 0;
   ark_mem->ark_p = 0;
   for (i=0; i<S_MAX; i++) {
@@ -2152,6 +2153,32 @@ static int ARKNlsResid(ARKodeMem ark_mem, N_Vector fy, N_Vector r)
   N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], 
 	       ONE, ark_mem->ark_acor, r);
   N_VLinearSum(ark_mem->ark_gamma, fy, -ONE, r, r);
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKNlsResid2
+
+ This routine evaluates the nonlinaer residual for the additive 
+ Runge-Kutta method.  It assumes that any data from previous time 
+ steps/stages is contained in ark_mem, and merely combines this
+ old data with the current RHS vector, fy = f(t,y), to compute
+ the nonlinear residual r.
+
+ Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
+---------------------------------------------------------------*/
+static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector fy, N_Vector r)
+{
+  /* At the ith stage, we compute 
+       r = zi - yn - h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) - h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
+       r = zi - gamma*Fi(zi) - yn - data
+     where
+       zi is stored in ark_mem->ark_acor
+       Fi(zi) is stored in fy
+       (-yn-data) is stored in ark_mem->ark_Fe[i].
+   */
+
   return(ARK_SUCCESS);
 }
 
