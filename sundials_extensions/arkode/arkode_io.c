@@ -45,6 +45,7 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* Set default values for integrator optional inputs */
+  ark_mem->ark_dense_q          = 3;
   ark_mem->ark_expstab          = ARKExpStab;
   ark_mem->ark_estab_data       = ark_mem;
   ark_mem->ark_hadapt           = NULL;
@@ -192,6 +193,44 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
 
   /***** CHANGE THIS TO ARK_MEM->ARK_Q = ORD WHEN WE TRANSITION TO ARK METHOD!!! *****/
   ark_mem->ark_qmax = ord;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetDenseOrder:
+
+ Specifies the polynomial order for dense output.  Allowed values
+ range from 0 to min(q,5), where q is the order of the time 
+ integration method.
+---------------------------------------------------------------*/
+int ARKodeSetDenseOrder(void *arkode_mem, int dord)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetMaxOrd", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check inputs */
+  if (dord < 0) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetMaxOrd", "Dense output order cannot be negative");
+    return(ARK_ILL_INPUT);
+  }
+  if (dord > 5) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetMaxOrd", "Dense output order must be <= 5");
+    return(ARK_ILL_INPUT);
+  }
+  /* NOTE: we check that dord < q internally, to allow for subsequent 
+     changes via ARKodeSetOrd */
+
+  /* set value */
+  ark_mem->ark_dense_q = dord;
 
   return(ARK_SUCCESS);
 }

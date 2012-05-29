@@ -294,6 +294,12 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  ARKodeSetOrd             | method order to be used by the solver.
                           | [4]
                           |
+ ARKodeSetDenseOrder      | polynomial order to be used for dense 
+                          | output.  Allowed values are between 0
+                          | and min(q,5) (where q is the order of
+                          | the integrator)
+                          | [3]
+                          |
  ARKodeSetLinear          | specifies that the implicit portion of 
                           | the problem is linear, and to tighten 
                           | the linear solver tolerances while 
@@ -404,6 +410,7 @@ SUNDIALS_EXPORT int ARKodeSetErrFile(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeSetUserData(void *arkode_mem, 
 				      void *user_data);
 SUNDIALS_EXPORT int ARKodeSetOrd(void *arkode_mem, int maxord);
+SUNDIALS_EXPORT int ARKodeSetDenseOrder(void *arkode_mem, int dord);
 SUNDIALS_EXPORT int ARKodeSetERK(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetIRK(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, int s, 
@@ -700,10 +707,11 @@ SUNDIALS_EXPORT int ARKode(void *arkode_mem, realtype tout,
  time t, where tn-hu <= t <= tn, tn denotes the current
  internal time reached, and hu is the last internal step size
  successfully used by the solver. The user may request
- k=0, 1, ..., s-1, where s is the number of stages taken by the 
- RK method. The derivative vector is returned in dky. This vector 
- must be allocated by the caller. It is only legal to call this
- function after a successful return from ARKode.
+ k=0, 1, ..., d, where d = min(5,q), with q the order of accuracy 
+ for the time integration method. The derivative vector is 
+ returned in dky. This vector must be allocated by the caller. It 
+ is only legal to call this function after a successful return 
+ from ARKode.
 
  arkode_mem is the pointer to ARKODE memory returned by
             ARKodeCreate.

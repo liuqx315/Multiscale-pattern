@@ -42,6 +42,8 @@ extern "C" {
 #define THREE  RCONST(3.0)      /* real 3.0     */
 #define FOUR   RCONST(4.0)      /* real 4.0     */
 #define FIVE   RCONST(5.0)      /* real 5.0     */
+#define SIX    RCONST(6.0)      /* real 6.0     */
+#define SEVEN  RCONST(7.0)      /* real 7.0     */
 #define TWELVE RCONST(12.0)     /* real 12.0    */
 #define HUN    RCONST(100.0)    /* real 100.0   */
 
@@ -248,6 +250,8 @@ typedef struct ARKodeMemRec {
   N_Vector ark_fnew;    /* f(t,y) at end of last successful step             */
   N_Vector ark_yold;    /* y at beginning of last successful step            */
   N_Vector ark_ynew;    /* y at end of last successful step                  */
+  N_Vector ark_fa;      /* f at h/3 through step (high order dense output)   */
+  N_Vector ark_fb;      /* f at h*2/3 through step (high order dense output) */
 
   /*-----------------
     Tstop information
@@ -262,6 +266,7 @@ typedef struct ARKodeMemRec {
   int ark_p;                      /* embedding order                        */
   int ark_istage;                 /* current stages in integration method   */
   int ark_stages;                 /* number of stages in integration method */
+  int ark_dense_q;                /* polynomial order for dense output      */
   realtype ark_Ae[S_MAX][S_MAX];  /* ERK Butcher table                      */
   realtype ark_Ai[S_MAX][S_MAX];  /* IRK Butcher table                      */
   realtype ark_c[S_MAX];          /* RK method canopy nodes                 */
@@ -283,6 +288,7 @@ typedef struct ARKodeMemRec {
     ---------*/  
   realtype ark_hin;             /* initial step size                        */
   realtype ark_h;               /* current step size                        */
+  realtype ark_told;            /* start time for last successful step      */
   realtype ark_hold;            /* previous step size                       */
   realtype ark_hprime;          /* step size to be used on the next step    */ 
   realtype ark_next_h;          /* step size to be used on the next step    */ 

@@ -11,7 +11,7 @@ Easy:
     ark_nst_con (I can't think of any difference at the moment).
 [X] Expand statistics to count, store and return fe and fi calls
     separately.
-[ ] Dense output evaluation routine, both for solution value and
+[X] Dense output evaluation routine, both for solution value and
     derivatives.  From Hairer, Norsett & Wanner (pp 190-191), we can
     build dense output of accuracy O(h^3) using the data {yn,yp,fn,fp}
     via the Hermite cubic interpolant, 
@@ -24,17 +24,28 @@ Easy:
     version of the function at the current order.  Each stage of this
     will increase the order by 1, and all intermediate stages must be
     chosen to be independent of one another.
-[ ] Predictor routine to store guesses in Fe array (since
-    that is only filled in after a successful stage solve).  This will
-    be called once at the end of a successful step to generate
+[X] Convert dense output order to a Set routine, so that default is 
+    always 3 unless otherwise specified.  Moreover, if it IS specified 
+    to be higher than 3, we could then allocate storage for fa and fb
+    in memory, along with a flag denoting whether these were current,
+    and if they are current then we don't need to evaluate them.
+[X] Predictor routine to store guesses in Fi array (since
+    that is only filled in after setting the initial guess).  This
+    will be called once at the end of a successful step to generate
     predictions for the next one.
-[ ] Code in InitialSetup routine to fill Fe array with initial
+[ ] Code to fill in values for last successful step: told, hold, yold,
+    ynew, fold, fnew.  For arrays, use pointer swap to omit need to
+    copy values from ynew to yold or fnew to fold.  Still do the copy
+    to fill ynew and fnew, since user may input y itself into code,
+    and pointer should remain fixed.
+[ ] Code in InitialSetup routine to fill Fi array with initial
     condition (trivial predictor) for stages in first step.
-[ ] Routine to do actual step prediction [use existing ARKPredict]:
-    this will copy the value from Fe into the nonlinear solver initial
-    guess (for early stages), or it will use already-generated stage
-    solutions to predict subsequent stages (for later stages).  This
-    will be called prior to every stage solve. 
+[ ] Routine to do actual step prediction [put inside existing
+    ARKPredict]: this will copy the value from Fi into the nonlinear
+    solver initial guess (for early stages), or it can use
+    already-generated stage solutions to predict subsequent stages
+    (for later stages).  This will be called prior to every stage
+    solve.
 [ ] Routine to calculate time step solution and embedding, along with 
     time accuracy error estimate.
 [ ] Routine to select appropriate Butcher table for the problem, given 
@@ -97,23 +108,14 @@ Medium:
 [ ] Insert calls to my ARKAdapt function wherever CVODE currently
     decides on accuracy- or stability-based time step adaptivity.
 [ ] Think about scenario in which ARK method's first stage doesn't set
-    c[0] = 0.0:  
-    * Do I actually need that Fe[0] and Fi[0] are the RHS values at
-      the old time step solution?  Yes, for my dense output method.
-    * If I do really need fe(tn,yn) and fi(tn,yn), and they aren't
-      stored in Fe[0] and Fi[0], what recourse do I have?  I could
-      just store these separately (redundant storage/calculation when
-      c[0] really is 0.0 and c[s] is 1.0).
+    c[0] = 0.0:  I need to fill in fold and fnew for dense output and
+    predictors, so if they are already stored in Fe[0],Fi[0] or
+    Fe[1],Fi[1] I could just copy them; otherwise I'll need to
+    compute them at the end of each successful step.
 [ ] Think about scenario where an attempted step has too much error
-    (but still converges within iteration limits).  I would have
-    over-written all of the Fe and Fi data to generate implicit stage
-    predictors at shorter times.  Would it be better to duplicate the
-    data (could be non-trivial), or would it be better to use a
-    simpler predictor?  Alternatively, if all of my implicit
-    predictors just use the old time step (or a linear extrapolation
-    from existing stage solutions), this would not be a problem, but
-    it could take more effort to solve each stage.  Investigate this
-    further.  Put relevant "undo" code into ARKRestore().
+    (but still converges within iteration limits).  Add code to
+    ARKRestore() to recompute predictions for implicit solutions at
+    these shorter times. 
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
@@ -121,6 +123,8 @@ Medium:
     and B-stability of a generic Butcher table.  Could even have a
     routine that would evaluate the stability function for a variety
     of h*lambda values to test for A-stability (and even L-stability).
+[ ] Go through logic of when everything is updated, especially wrt the
+    predictor data (and if it's ever called after a failed step).
 
 
 
@@ -171,5 +175,7 @@ Unknown/Questions:
 [ ] Consider whether a non-identity matrix M will change how
     preconditioning occurs, i.e. whether it disables either right or
     left preconditioning.
-
-
+[ ] Consider all the places where I use Fe[] and Fi[] for temporary
+    data.  If I'm running a purely implicit or explicit calculation,
+    then the other set of these is never allocated!!  Figure out how
+    to deal with this situation!
