@@ -28,7 +28,6 @@ static booleantype ARKCheckNvector(N_Vector tmpl);
 
 static int ARKInitialSetup(ARKodeMem ark_mem);
 static int ARKSetButcherTables(ARKodeMem ark_mem);
-static int ARKBuildDense(ARKodeMem ark_mem);
 
 static booleantype ARKAllocVectors(ARKodeMem ark_mem, 
 				   N_Vector tmpl);
@@ -704,15 +703,13 @@ int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
  calling ARKStep to do internal time steps.
 
  The first time that ARKode is called for a successfully 
- initialized problem, it computes a tentative initial step size h.
+ initialized problem, it computes a tentative initial step size.
 
- ARKode supports three modes, specified by itask: ARK_NORMAL, 
- ARK_ONE_STEP and ARK_FIXED_STEP.  In the ARK_NORMAL mode, the 
- solver steps until it reaches or passes tout and then 
- interpolates to obtain y(tout).  In the ARK_ONE_STEP mode, it 
- takes one internal step and returns.  In the ARK_FIXED_STEP mode, 
- it takes fixed step sizes (given by hmin) and turns of all time 
- adaptivity.
+ ARKode supports two modes as specified by itask: ARK_NORMAL and
+ ARK_ONE_STEP.  In the ARK_NORMAL mode, the solver steps until 
+ it reaches or passes tout and then interpolates to obtain 
+ y(tout).  In the ARK_ONE_STEP mode, it takes one internal step 
+ and returns.
 ---------------------------------------------------------------*/
 int ARKode(void *arkode_mem, realtype tout, N_Vector yout, 
 	   realtype *tret, int itask)
@@ -1335,6 +1332,54 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
     }
   }
 
+  /* Allocate fold if needed */
+  if (ark_mem->ark_fold == NULL) {
+    ark_mem->ark_fold = N_VClone(tmpl);
+    if (ark_mem->ark_fold == NULL) {
+      ARKFreeVectors(ark_mem);
+      return(FALSE);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate fnew if needed */
+  if (ark_mem->ark_fnew == NULL) {
+    ark_mem->ark_fnew = N_VClone(tmpl);
+    if (ark_mem->ark_fnew == NULL) {
+      ARKFreeVectors(ark_mem);
+      return(FALSE);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate yold if needed */
+  if (ark_mem->ark_yold == NULL) {
+    ark_mem->ark_yold = N_VClone(tmpl);
+    if (ark_mem->ark_yold == NULL) {
+      ARKFreeVectors(ark_mem);
+      return(FALSE);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ynew if needed */
+  if (ark_mem->ark_ynew == NULL) {
+    ark_mem->ark_ynew = N_VClone(tmpl);
+    if (ark_mem->ark_ynew == NULL) {
+      ARKFreeVectors(ark_mem);
+      return(FALSE);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
   /* Allocate zn[0] ... zn[qmax] if needed */
   for (j=0; j <= ark_mem->ark_qmax; j++) {
     if (ark_mem->ark_zn[j] == NULL) {
@@ -1463,6 +1508,30 @@ static void ARKFreeVectors(ARKodeMem ark_mem)
       ark_mem->ark_liw -= ark_mem->ark_liw1;
     }
   }
+  if (ark_mem->ark_fold != NULL) {
+    N_VDestroy(ark_mem->ark_fold);
+    ark_mem->ark_fold = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+  if (ark_mem->ark_fnew != NULL) {
+    N_VDestroy(ark_mem->ark_fnew);
+    ark_mem->ark_fnew = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+  if (ark_mem->ark_yold != NULL) {
+    N_VDestroy(ark_mem->ark_yold);
+    ark_mem->ark_yold = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+  if (ark_mem->ark_ynew != NULL) {
+    N_VDestroy(ark_mem->ark_ynew);
+    ark_mem->ark_ynew = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
   for(j=0; j<ark_mem->ark_smax_alloc; j++) {
     if (ark_mem->ark_Fe[j] != NULL) {
       N_VDestroy(ark_mem->ark_Fe[j]);
@@ -1504,17 +1573,11 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
     return(ARK_ILL_INPUT);
   }
 
-  /* Create Butcher tables and fill in dense output coeffs */
+  /* Create Butcher tables */
   ier = ARKSetButcherTables(ark_mem);
   if (ier != ARK_SUCCESS) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKInitialStep", "Could not create Butcher table");
-    return(ARK_ILL_INPUT);
-  }
-  ier = ARKBuildDense(ark_mem);
-  if (ier != ARK_SUCCESS) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKInitialStep", "Could not create dense output");
     return(ARK_ILL_INPUT);
   }
 
@@ -3691,15 +3754,35 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 
 
 /*---------------------------------------------------------------
- ARKBuildDense
+ ARKDenseEval
 
- This routine will build a set of dense output coefficients for 
- a given Butcher table.  Since more optimal coefficients may be 
- possible for specific methods, it will only build the dense 
- output coefficient table if one is not already provided.
+ This routine evaluates the dense output formula for the method,
+ using a cubic Hermite interpolating formula with the data 
+ {yn,yp,fn,fp}, where yn,yp are the stored solution values and 
+ fn,fp are the sotred RHS function values at the endpoints of the
+ last successful time step [tn,tp].  If greater order than 3 is
+ requested (and the method order allows it), then we can 
+ bootstrap up to a 5th-order accurate interpolant.  The lowest 
+ order interpolant we'll provide is cubic (even if a lower order 
+ is requested).
+ 
+ Derivatives have reduced accuracy than the dense output function
+ itself, losing one order per derivative.  We will provide 
+ derivatives up to d = min(5,q).
+
+ The input 'tau' specifies the time at which to return derivative
+ information, the formula is 
+    t = tn + tau*h,
+ where h = tp-tn, i.e. values 0<tau<1 provide interpolation, 
+ otherwise the formula results in extrapolation.
 ---------------------------------------------------------------*/
-static int ARKBuildDense(ARKodeMem ark_mem)
+static int ARKDenseEval(ARKodeMem ark_mem, realtype tau, 
+			int d, int order, N_Vector yout)
 {
+  realtype a0, a1, a2, a3, a4;
+  /* coefficients for cubic interpolating polynomial */
+
+
   /***** FILL THIS IN!!! *****/
   return(ARK_SUCCESS);
 }

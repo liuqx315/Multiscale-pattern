@@ -44,16 +44,18 @@ extern "C" {
         return an approximate value of y(tout). The ARK_ONE_STEP
         option tells the solver to just take one internal step
         and return the solution at the point reached by that 
-	step.  The ARK_FIXED_STEP option tells the solver to 
-	take fixed steps of size hmin (as provided through 
-	ARKodeSetMinStep) and to disable all temporal error 
-	control.
+	step.  If fixed time steps are desired, then the user 
+	can run in ARK_ONE_STEP mode, and set hmin and hmax to
+	be the desired time step -- this will effectively 
+	disable all temporal error control, and the user may
+	need to increase the iteration counts for the nonlinear 
+	and linear solvers to guarantee convergence for larger 
+	step sizes.
 ---------------------------------------------------------------*/
 
 /* itask */
 #define ARK_NORMAL         1
 #define ARK_ONE_STEP       2
-#define ARK_FIXED_STEP     3
 
 
 /* ARKODE return flags */
@@ -592,8 +594,8 @@ SUNDIALS_EXPORT int ARKodeRootInit(void *arkode_mem,
 -----------------------------------------------------------------
  ARKode integrates the ODE over an interval in t.
 
- ARKode may be run in one of three modes (ARK_NORMAL, ARK_ONE_STEP, 
- or ARK_FIXED_STEP), as determined by the itask argument:
+ ARKode may be run in one of two modes (ARK_NORMAL or 
+ ARK_ONE_STEP), as determined by the itask argument:
 
  If itask is ARK_NORMAL, then the solver integrates from its
  current internal t value to a point at or beyond tout, then
@@ -619,16 +621,6 @@ SUNDIALS_EXPORT int ARKodeRootInit(void *arkode_mem,
  assuming that the requested step is smaller than the step taken 
  by the method. 
 
- If itask is ARK_FIXED_STEP, then the solver will take a single 
- step from the current time (either the t0 value specified in 
- ARKodeInit or ARKodeReInit, or the time at which the solver 
- last returned a value) to the time requested in tout.  In this
- mode, no attempt is made at satisfying temporal error 
- requirements as specified through the reltol and abstol 
- tolerances.  It is strongly suggested that before using this 
- mode, the user increase the allowable work limits for the 
- nonlinear and linear solvers.
-
  The time reached by the solver is placed in (*tret). The
  user is responsible for allocating the memory for this value.
 
@@ -644,8 +636,7 @@ SUNDIALS_EXPORT int ARKodeRootInit(void *arkode_mem,
        the time reached by the solver and returns
        yout=y(*tret).
 
- itask is ARK_NORMAL, ARK_ONE_STEP or ARK_FIXED_STEP. These three 
- modes are described above.
+ itask is ARK_NORMAL or ARK_ONE_STEP, as described above.
 
  Here is a brief description of each return value:
 

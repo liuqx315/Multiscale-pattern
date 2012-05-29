@@ -24,9 +24,6 @@ Easy:
     version of the function at the current order.  Each stage of this
     will increase the order by 1, and all intermediate stages must be
     chosen to be independent of one another.
-    and then to evaluate that in the interval.  For methods that need
-    increased accuracy, we could evaluate f at additional points as
-    necessary to build an interpolant of requisite degree.
 [ ] Predictor routine to store guesses in Fe array (since
     that is only filled in after a successful stage solve).  This will
     be called once at the end of a successful step to generate
@@ -48,10 +45,8 @@ Easy:
     flag) to screen and/or in return arguments.
 [ ] Code to clean/check Butcher tables -- this should check that ERK
     and IRK tables share root & canopy nodes, that all necessary
-    coefficients are defined, and that will call dense coefficient
-    table generator if necessary.  This should be called inside
-    ARKInitialSetup, where I currently call ARKBuildDense (and I'll
-    move ARKBuildDense inside the new routine at that time).
+    coefficients are defined.  This should be called inside
+    ARKInitialSetup.
 [ ] stageprep routine, to evaluate Fe on current solution (unless I
     can include this stuff in something that already exists)
 [ ] Update the total real/integer work length estimates in
@@ -89,17 +84,14 @@ Medium:
 [ ] User-defined operator M : R^n -> R^n, and logic to account for
     this in step solution & embedding.  Update time step
     solution/embedding routine to now do solves to compute these.
-[ ] Routine to create dense output table in case it is not already 
-    filled in (or for now, I could just pre-process all of my Butcher 
-    tables to create dense output tables and hard-code them in).
 [ ] Code to allow a change in the Butcher table, both to allow an
     increased/decreased number of stages (no real issue for decrease,
     don't even need to free the N_Vectors if I don't want to; need to
     malloc the new vectors for an increase, though), and to do the
-    relevant checking/cleaning of the Butcher table to add dense
-    output coeffs, etc..  This could occur only inside ARKodeReInit,
-    since that's the moment where I would allow this kind of thing
-    (and would need to reset accuracy history data).
+    relevant checking/cleaning of the Butcher table, etc..  This could
+    occur only inside ARKodeReInit, since that's the moment where I
+    would allow this kind of thing (and would need to reset accuracy
+    history data). 
 [ ] Check all linear solvers to ensure that they setup/solve the
     correct system, and access all of the correct data out of ark_mem.
 [ ] Insert calls to my ARKAdapt function wherever CVODE currently
@@ -107,13 +99,11 @@ Medium:
 [ ] Think about scenario in which ARK method's first stage doesn't set
     c[0] = 0.0:  
     * Do I actually need that Fe[0] and Fi[0] are the RHS values at
-      the old time step solution?
+      the old time step solution?  Yes, for my dense output method.
     * If I do really need fe(tn,yn) and fi(tn,yn), and they aren't
       stored in Fe[0] and Fi[0], what recourse do I have?  I could
-      force any implicit method to be an ESDIRK through adjusting the
-      Butcher tables (would need to account for user-supplied tables),
-      or I could just store these separately (redundant
-      storage/calculation when c[0] really is 0.0).
+      just store these separately (redundant storage/calculation when
+      c[0] really is 0.0 and c[s] is 1.0).
 [ ] Think about scenario where an attempted step has too much error
     (but still converges within iteration limits).  I would have
     over-written all of the Fe and Fi data to generate implicit stage
@@ -135,7 +125,6 @@ Medium:
 
 
 Hard:
-[ ] Add in code for ARK_FIXED_STEP operating mode.
 [ ] Enable my solver and disable BDF solver.  This will require
     searching through the code for all of the marked locations where I
     made notes to myself (in all caps, and usually preceded by /*****)

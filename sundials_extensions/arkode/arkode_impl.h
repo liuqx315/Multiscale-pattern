@@ -244,6 +244,10 @@ typedef struct ARKodeMemRec {
 			   this vector is scaled to give the est. local err. */
   N_Vector ark_tempv;   /* temporary storage vector                          */
   N_Vector ark_ftemp;   /* temporary storage vector                          */
+  N_Vector ark_fold;    /* f(t,y) at beginning of last successful step       */
+  N_Vector ark_fnew;    /* f(t,y) at end of last successful step             */
+  N_Vector ark_yold;    /* y at beginning of last successful step            */
+  N_Vector ark_ynew;    /* y at end of last successful step                  */
 
   /*-----------------
     Tstop information
