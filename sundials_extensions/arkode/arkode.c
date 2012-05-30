@@ -3912,9 +3912,15 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
  This routine determines the ERK/DIRK/ARK method to use, based 
  on the desired accuracy and information on whether the problem
  is explicit, implicit or imex.
+
+ VERIFIED TO CORRECTLY FILL IN TABLES!
 ---------------------------------------------------------------*/
 static int ARKSetButcherTables(ARKodeMem ark_mem)
 {
+  /* TEMPORARY */
+  int qsave = ark_mem->ark_q;
+  ark_mem->ark_q = 4;
+  /*************/
 
   /**** explicit methods ****/
   if (ark_mem->ark_explicit) {
@@ -4101,6 +4107,10 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
     }
 
   }
+
+  /* TEMPORARY */
+  ark_mem->ark_q = qsave;
+  /*************/
 
   return(ARK_SUCCESS);
 }

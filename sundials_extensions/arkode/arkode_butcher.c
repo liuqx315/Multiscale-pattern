@@ -6,6 +6,8 @@
 -----------------------------------------------------------------
  This is the implementation file for the known Butcher tables 
  for the ARKODE solver.
+
+ VERIFIED TO CORRECTLY FILL IN TABLES!
 ---------------------------------------------------------------*/
 
 #include <stdio.h>
