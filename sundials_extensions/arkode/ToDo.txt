@@ -51,6 +51,8 @@ Easy:
     copy values from ynew to yold or fnew to fold.  Still do the copy
     to fill ynew and fnew, since user may input y itself into code,
     and pointer should remain fixed.
+[ ] Remove ark_bd data arrays since we're using a different form of
+    dense output.
 [ ] Routine to do actual step prediction [put inside existing
     ARKPredict]: this will copy the value from Fi into the nonlinear
     solver initial guess (for early stages), or it can use
@@ -62,9 +64,19 @@ Easy:
     coefficients are defined.  This should be called inside
     ARKInitialSetup.  DO I WANT TO STORE DIFFERENT ROOT/CANOPY NODES
     FOR EACH METHOD AT FIRST, AND THEN CHECK THESE TO BE CERTAIN
-    THEY'RE LEGAL?
-[ ] stageprep routine, to evaluate Fe on current solution (unless I
-    can include this stuff in something that already exists)
+    THEY'RE LEGAL?  (These checks are already in place for
+    user-supplied Butcher tables; so they would only be necessary for
+    tables chosen via ARKodeSetERKTableNum and ARKodeSetIRKTableNum.
+    Add these checks in, and consider how to head off possibility that
+    user will hand-supply his own ERK table and grab the IRK table
+    via AKRodeSetIRKTableNum, or not set an IRK table at all.  Maybe
+    the easiest way to do all of this is to just store two sets of c,
+    b and b2 coeffs, check consistency within InitialStep, and only
+    use one within integrator?)
+[ ] stageprep routine, to evaluate Fe on current solution (unless I'd
+    rather do this *after* a successful stage in preparing for the
+    next one).  This routine could also call the implicit predictor
+    (if not included elsewhere). 
 [ ] Initialize and update ark_mem->ark_hold within time-stepping.  Or
     maybe it is already stored in ark_hu??
 [ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
@@ -75,8 +87,6 @@ Easy:
 [ ] Consider removing integer parameter ark_smax_alloc, since I can
     always check whether the N_Vector is NULL or not and
     allocate/deallocate appropriately.
-[ ] Remove ark_bd data arrays since we're using a different form of
-    dense output.
 [ ] Update the total real/integer work length estimates in
     ARKodeCreate. 
 

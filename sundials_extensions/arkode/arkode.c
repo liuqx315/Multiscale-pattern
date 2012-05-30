@@ -156,7 +156,6 @@ void *ARKodeCreate()
     for (j=0; j<ARK_S_MAX; j++) {
       ark_mem->ark_Ae[i][j] = ZERO;
       ark_mem->ark_Ai[i][j] = ZERO;
-      ark_mem->ark_bd[i][j] = ZERO;
     }
     ark_mem->ark_c[i]  = ZERO;
     ark_mem->ark_b[i]  = ZERO;
@@ -3942,8 +3941,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(3):    /* ERK-3-2: q=3, p=2, s=3 */
@@ -3953,8 +3951,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
 
@@ -3965,8 +3962,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(5):    /* Dormand-Prince: q=5, p=4, s=7 */
@@ -3976,8 +3972,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(6):    /* Verner: q=6, p=5, s=8 */
@@ -3987,8 +3982,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     default:    /* no available method, set default */
@@ -4001,8 +3995,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
     }
 
@@ -4019,8 +4012,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(4):    /* Cash(5,3,4): q=4, p=3, s=5, A/L stable */
@@ -4030,8 +4022,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(5):    /* ARK5(4)8L[2]SA: q=5, p=4, s=8, A stable */
@@ -4041,8 +4032,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     default:    /* no available method, set default */
@@ -4055,8 +4045,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
     }
  
@@ -4073,16 +4062,14 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       ARKodeLoadButcherTable(7, &ark_mem->ark_stages, 
 			     &ark_mem->ark_q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(4):    /* ARK4(3)6L[2]SA: q=4, p=3, s=6, DIRK is A/L stable */
@@ -4092,16 +4079,14 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       ARKodeLoadButcherTable(16, &ark_mem->ark_stages, 
 			     &ark_mem->ark_q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     case(5):    /* ARK5(4)8L[2]SA: q=5, p=4, s=8, DIRK is A stable */
@@ -4111,16 +4096,14 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       ARKodeLoadButcherTable(23, &ark_mem->ark_stages, 
 			     &ark_mem->ark_q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
 
     default:    /* no available method, set default */
@@ -4133,16 +4116,14 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       ARKodeLoadButcherTable(23, &ark_mem->ark_stages, 
 			     &ark_mem->ark_q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
-			     ark_mem->ark_b2, 
-			     ark_mem->ark_bd);
+			     ark_mem->ark_b2);
       break;
     }
 

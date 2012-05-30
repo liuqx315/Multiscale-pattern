@@ -941,8 +941,7 @@ SUNDIALS_EXPORT int ARKodeLoadButcherTable(int imethod, int *s,
 					   int *q, int *p, 
 					   realtype (*A)[ARK_S_MAX], 
 					   realtype *b, realtype *c, 
-					   realtype *b2, 
-					   realtype (*bd)[ARK_S_MAX]);
+					   realtype *b2);
 
 /*---------------------------------------------------------------
  The following function returns the name of the constant 

@@ -271,7 +271,6 @@ typedef struct ARKodeMemRec {
   realtype ark_c[ARK_S_MAX];              /* RK method canopy nodes         */
   realtype ark_b[ARK_S_MAX];              /* RK method root nodes           */
   realtype ark_b2[ARK_S_MAX];             /* RK method embedding root nodes */
-  realtype ark_bd[ARK_S_MAX][ARK_S_MAX];  /* dense output coefficients      */
   booleantype ark_user_Ae;        /* TRUE if user sets Ae                   */
   booleantype ark_user_Ai;        /* TRUE if user sets Ai                   */
 

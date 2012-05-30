@@ -445,11 +445,6 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
       if (ABS(ark_mem->ark_b[i]  - b[i])      > tol)  match = FALSE;
       if (ABS(ark_mem->ark_b2[i] - bembed[i]) > tol)  match = FALSE;
     }
-    if ((ark_mem->ark_bd[0][0] != ZERO) && (bdense != NULL)) {
-      for (i=0; i<s; i++) 
-	for (j=0; j<s; j++) 
-	  if (ABS(ark_mem->ark_bd[i][j] - bdense[i][j]) > tol)  match = FALSE;
-    }
     if (!match) {
       ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTable", 
 		      "shared Butcher coeffs don't match");
@@ -467,15 +462,6 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
     ark_mem->ark_b2[i] = bembed[i];
     for (j=0; j<s; j++) {
       ark_mem->ark_Ae[i][j] = A[i][j];
-    }
-  }
-
-  /* set the dense coefficients (if supplied) */
-  if (bdense != NULL) {
-    for (i=0; i<s; i++) {
-      for (j=0; j<s; j++) {
-	ark_mem->ark_bd[i][j] = bdense[i][j];
-      }
     }
   }
 
@@ -546,11 +532,6 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
       if (ABS(ark_mem->ark_b[i]  - b[i])      > tol)  match = FALSE;
       if (ABS(ark_mem->ark_b2[i] - bembed[i]) > tol)  match = FALSE;
     }
-    if ((ark_mem->ark_bd[0][0] != ZERO) && (bdense != NULL)) {
-      for (i=0; i<s; i++) 
-	for (j=0; j<s; j++) 
-	  if (ABS(ark_mem->ark_bd[i][j] - bdense[i][j]) > tol)  match = FALSE;
-    }
     if (!match) {
       ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTable", 
 		      "shared Butcher coeffs don't match");
@@ -568,15 +549,6 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
     ark_mem->ark_b2[i] = bembed[i];
     for (j=0; j<s; j++) {
       ark_mem->ark_Ai[i][j] = A[i][j];
-    }
-  }
-
-  /* set the dense coefficients (if supplied) */
-  if (bdense != NULL) {
-    for (i=0; i<s; i++) {
-      for (j=0; j<s; j++) {
-	ark_mem->ark_bd[i][j] = bdense[i][j];
-      }
     }
   }
 
@@ -612,15 +584,11 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
 				 ark_mem->ark_Ae, 
 				 ark_mem->ark_b, 
 				 ark_mem->ark_c, 
-				 ark_mem->ark_b2, 
-				 ark_mem->ark_bd);
+				 ark_mem->ark_b2);
   /* if illegal itable specified, reset to zeros and return */
   if (iflag != ARK_SUCCESS) {
     for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++) {
-	ark_mem->ark_Ae[i][j] = ZERO;
-	ark_mem->ark_bd[i][j] = ZERO;
-      }
+      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ae[i][j] = ZERO;
       ark_mem->ark_c[i]  = ZERO;
       ark_mem->ark_b[i]  = ZERO;
       ark_mem->ark_b2[i] = ZERO;
@@ -638,10 +606,7 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
       if (ABS(ark_mem->ark_Ae[i][j]) > TINY)  implicit = TRUE;
   if (implicit) {
     for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++) {
-	ark_mem->ark_Ae[i][j] = ZERO;
-	ark_mem->ark_bd[i][j] = ZERO;
-      }
+      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ae[i][j] = ZERO;
       ark_mem->ark_c[i]  = ZERO;
       ark_mem->ark_b[i]  = ZERO;
       ark_mem->ark_b2[i] = ZERO;
@@ -683,15 +648,11 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 				 ark_mem->ark_Ai, 
 				 ark_mem->ark_b, 
 				 ark_mem->ark_c, 
-				 ark_mem->ark_b2, 
-				 ark_mem->ark_bd);
+				 ark_mem->ark_b2);
   /* if illegal itable specified, reset to default and return */
   if (iflag != ARK_SUCCESS) {
     for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++) {
-	ark_mem->ark_Ai[i][j] = ZERO;
-	ark_mem->ark_bd[i][j] = ZERO;
-      }
+      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ai[i][j] = ZERO;
       ark_mem->ark_c[i]  = ZERO;
       ark_mem->ark_b[i]  = ZERO;
       ark_mem->ark_b2[i] = ZERO;
@@ -709,10 +670,7 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
       if (ABS(ark_mem->ark_Ai[i][j]) > TINY)  implicit = TRUE;
   if (!implicit) {
     for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++) {
-	ark_mem->ark_Ai[i][j] = ZERO;
-	ark_mem->ark_bd[i][j] = ZERO;
-      }
+      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ai[i][j] = ZERO;
       ark_mem->ark_c[i]  = ZERO;
       ark_mem->ark_b[i]  = ZERO;
       ark_mem->ark_b2[i] = ZERO;
