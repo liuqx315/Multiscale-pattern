@@ -43,6 +43,8 @@ Easy:
 [X] Set routine to manually choose a pre-existing Butcher table (by
     number?, by name?) -- i.e. not user-supplied, and not the default
     choice.
+[ ] In all set routines, update code to allow specification of the
+    defaults through supplying zeros/NULL to the function.
 [ ] Code to fill in values for last successful step: told, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
     copy values from ynew to yold or fnew to fold.  Still do the copy
@@ -60,8 +62,6 @@ Easy:
     ARKInitialSetup.  DO I WANT TO STORE DIFFERENT ROOT/CANOPY NODES
     FOR EACH METHOD AT FIRST, AND THEN CHECK THESE TO BE CERTAIN
     THEY'RE LEGAL?
-[ ] In all set routines, update code to allow specification of the
-    defaults through supplying zeros/NULL to the function.
 [ ] stageprep routine, to evaluate Fe on current solution (unless I
     can include this stuff in something that already exists)
 [ ] Initialize and update ark_mem->ark_hold within time-stepping.  Or

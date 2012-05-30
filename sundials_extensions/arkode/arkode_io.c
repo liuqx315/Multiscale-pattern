@@ -75,8 +75,8 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_mxstep           = MXSTEP_DEFAULT;
   ark_mem->ark_mxhnil           = 10;
   ark_mem->ark_hin              = ZERO;
-  ark_mem->ark_hmin             = RCONST(0.0);
-  ark_mem->ark_hmax_inv         = RCONST(0.0);
+  ark_mem->ark_hmin             = ZERO;
+  ark_mem->ark_hmax_inv         = ZERO;
   ark_mem->ark_tstopset         = FALSE;
   ark_mem->ark_maxcor           = 3;
   ark_mem->ark_maxnef           = 7;
@@ -92,20 +92,25 @@ int ARKodeSetDefaults(void *arkode_mem)
 
  Specifies the error handler function
 ---------------------------------------------------------------*/
-int ARKodeSetErrHandlerFn(void *arkode_mem, ARKErrHandlerFn ehfun, void *eh_data)
+int ARKodeSetErrHandlerFn(void *arkode_mem, ARKErrHandlerFn ehfun, 
+			  void *eh_data)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetErrHandlerFn", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_ehfun = ehfun;
-  ark_mem->ark_eh_data = eh_data;
+  /* set user-provided values, or defaults, depending on argument */
+  if (ehfun == NULL) {
+    ark_mem->ark_ehfun = ARKErrHandler;
+    ark_mem->ark_eh_data = ark_mem;
+  } else {
+    ark_mem->ark_ehfun   = ehfun;
+    ark_mem->ark_eh_data = eh_data;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -119,13 +124,11 @@ int ARKodeSetErrHandlerFn(void *arkode_mem, ARKErrHandlerFn ehfun, void *eh_data
 int ARKodeSetErrFile(void *arkode_mem, FILE *errfp)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetErrFile", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_errfp = errfp;
@@ -142,13 +145,11 @@ int ARKodeSetErrFile(void *arkode_mem, FILE *errfp)
 int ARKodeSetUserData(void *arkode_mem, void *user_data)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetUserData", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
   ark_mem->ark_user_data = user_data;
@@ -164,18 +165,18 @@ int ARKodeSetUserData(void *arkode_mem, void *user_data)
 ---------------------------------------------------------------*/
 int ARKodeSetOrd(void *arkode_mem, int ord)
 {
-  ARKodeMem ark_mem;
   int qmax_alloc;
 
+  ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetMaxOrd", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
-
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (ord <= 0) {
+  /* check argument */
+  if (ord < 0) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetMaxOrd", MSGARK_NEG_MAXORD);
     return(ARK_ILL_INPUT);
@@ -191,8 +192,13 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
     return(ARK_ILL_INPUT);
   }
 
+  /* set user-provided value, or default, depending on argument */
   /***** CHANGE THIS TO ARK_MEM->ARK_Q = ORD WHEN WE TRANSITION TO ARK METHOD!!! *****/
-  ark_mem->ark_qmax = ord;
+  if (ord == 0) {
+    ark_mem->ark_qmax = Q_MAX;
+  } else {
+    ark_mem->ark_qmax = ord;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -203,7 +209,7 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
 
  Specifies the polynomial order for dense output.  Allowed values
  range from 0 to min(q,5), where q is the order of the time 
- integration method.
+ integration method.  Negative values imply to use the default.
 ---------------------------------------------------------------*/
 int ARKodeSetDenseOrder(void *arkode_mem, int dord)
 {
@@ -215,12 +221,7 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* check inputs */
-  if (dord < 0) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetMaxOrd", "Dense output order cannot be negative");
-    return(ARK_ILL_INPUT);
-  }
+  /* check input */
   if (dord > 5) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetMaxOrd", "Dense output order must be <= 5");
@@ -229,8 +230,12 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
   /* NOTE: we check that dord < q internally, to allow for subsequent 
      changes via ARKodeSetOrd */
 
-  /* set value */
-  ark_mem->ark_dense_q = dord;
+  /* set user-provided value, or default, depending on argument */
+  if (dord < 0) {
+    ark_mem->ark_dense_q = 3;
+  } else {
+    ark_mem->ark_dense_q = dord;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -248,12 +253,34 @@ int ARKodeSetLinear(void *arkode_mem)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetMaxOrd", MSGARK_NO_MEM);
+		    "ARKodeSetLinear", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
 
   ark_mem = (ARKodeMem) arkode_mem;
   ark_mem->ark_linear = TRUE;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetNonlinear:
+
+ Specifies that the implicit portion of the problem is nonlinear.
+ Used to undo a previous call to ARKodeSetLinear.
+---------------------------------------------------------------*/
+int ARKodeSetNonlinear(void *arkode_mem)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetNonlinear", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  ark_mem = (ARKodeMem) arkode_mem;
+  ark_mem->ark_linear = FALSE;
 
   return(ARK_SUCCESS);
 }
@@ -316,6 +343,42 @@ int ARKodeSetImplicit(void *arkode_mem)
   /* set the relevant parameters */
   ark_mem->ark_implicit = TRUE;
   ark_mem->ark_explicit = FALSE;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetImEx:
+
+ Specifies that the specifies that problem has both implicit and
+ explicit parts, and to use an ARK method.
+---------------------------------------------------------------*/
+int ARKodeSetImEx(void *arkode_mem)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetImEx", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* ensure that fe and fi are defined */
+  if (ark_mem->ark_fe == NULL) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetImEx", MSGARK_MISSING_FE);
+    return(ARK_ILL_INPUT);
+  }
+  if (ark_mem->ark_fi == NULL) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetImEx", MSGARK_MISSING_FI);
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set the relevant parameters */
+  ark_mem->ark_explicit = FALSE;
+  ark_mem->ark_implicit = FALSE;
 
   return(ARK_SUCCESS);
 }
@@ -674,7 +737,6 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 int ARKodeSetMaxNumSteps(void *arkode_mem, long int mxsteps)
 {
   ARKodeMem ark_mem;
-
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetMaxNumSteps", MSGARK_NO_MEM);
@@ -708,7 +770,12 @@ int ARKodeSetMaxHnilWarns(void *arkode_mem, int mxhnil)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_mxhnil = mxhnil;
+  /* Passing mxhnil=0 sets the default, otherwise use input. */
+  if (mxhnil == 0) {
+    ark_mem->ark_mxhnil = 10;
+  } else {
+    ark_mem->ark_mxhnil = mxhnil;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -730,7 +797,12 @@ int ARKodeSetInitStep(void *arkode_mem, realtype hin)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_hin = hin;
+  /* Passing hin<=0 sets the default, otherwise use input. */
+  if (hin <= ZERO) {
+    ark_mem->ark_hin = ZERO;
+  } else {
+    ark_mem->ark_hin = hin;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -966,9 +1038,16 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_hadapt         = hfun;
-  ark_mem->ark_hadapt_data    = h_data;
-  ark_mem->ark_hadapt_imethod = -1;
+  /* NULL argument sets default, otherwise set inputs */
+  if (hfun == NULL) {
+    ark_mem->ark_hadapt         = NULL;
+    ark_mem->ark_hadapt_data    = NULL;
+    ark_mem->ark_hadapt_imethod = 0;
+  } else {
+    ark_mem->ark_hadapt         = hfun;
+    ark_mem->ark_hadapt_data    = h_data;
+    ark_mem->ark_hadapt_imethod = -1;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -992,8 +1071,14 @@ int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab,
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_expstab    = EStab;
-  ark_mem->ark_estab_data = estab_data;
+  /* NULL argument sets default, otherwise set inputs */
+  if (EStab == NULL) {
+    ark_mem->ark_expstab    = ARKExpStab;
+    ark_mem->ark_estab_data = ark_mem;
+  } else {
+    ark_mem->ark_expstab    = EStab;
+    ark_mem->ark_estab_data = estab_data;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -1016,7 +1101,12 @@ int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_maxnef = maxnef;
+  /* argument <= 0 sets default, otherwise set input */
+  if (maxnef <= 0) {
+    ark_mem->ark_maxnef = 7;
+  } else {
+    ark_mem->ark_maxnef = maxnef;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -1039,7 +1129,12 @@ int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_maxncf = maxncf;
+  /* argument <= 0 sets default, otherwise set input */
+  if (maxncf <= 0) {
+    ark_mem->ark_maxncf = 10;
+  } else {
+    ark_mem->ark_maxncf = maxncf;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -1062,7 +1157,12 @@ int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_maxcor = maxcor;
+  /* argument <= 0 sets default, otherwise set input */
+  if (maxcor <= 0) {
+    ark_mem->ark_maxcor = 3;
+  } else {
+    ark_mem->ark_maxcor = maxcor;
+  }
 
   return(ARK_SUCCESS);
 }
@@ -1085,7 +1185,12 @@ int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  ark_mem->ark_nlscoef = nlscoef;
+  /* argument <= 0 sets default, otherwise set input */
+  if (nlscoef <= ZERO) {
+    ark_mem->ark_nlscoef = RCONST(0.1);
+  } else {
+    ark_mem->ark_nlscoef = nlscoef;
+  }
 
   return(ARK_SUCCESS);
 }

@@ -254,13 +254,6 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  The following functions can be called to set optional inputs
  to values other than the defaults given below.  
 
- In general, all ARKodeSet* routines should be called after
- ARKodeInit and before ARKode, however it may be more efficient 
- if the following routines are called between ARKodeCreate and 
- ARKodeInit:
-    ARKodeSetOrd, ARKodeSetExplicit, ARKodeSetImplicit, 
-    ARKodeSetERKTable and ARKodeSetIRKTable
-
 
  Function                 |  Optional input / [ default value ]
 -----------------------------------------------------------------
@@ -309,6 +302,11 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | taking only one Newton iteration.
                           | [FALSE]
                           |
+ ARKodeSetNonlinear       | specifies that the implicit portion of 
+                          | the problem is nonlinear.  Used to undo
+                          | a previous call to ARKodeSetLinear.
+                          | [TRUE]
+                          |
  ARKodeSetExplicit        | specifies that implicit portion of 
                           | problem is disabled, and to use an 
                           | explicit RK method.
@@ -318,6 +316,11 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | problem is disabled, and to use an 
                           | implicit RK method.
                           | [FALSE]
+                          |
+ ARKodeSetImEx            | specifies that problem has both 
+                          | implicit and explicit parts, and to 
+                          | use an ARK method.
+                          | [TRUE]
                           |
  ARKodeSetERKTable        | specifies to use a customized Butcher 
                           | table for the explicit portion of the 
@@ -440,8 +443,11 @@ SUNDIALS_EXPORT int ARKodeSetUserData(void *arkode_mem,
 				      void *user_data);
 SUNDIALS_EXPORT int ARKodeSetOrd(void *arkode_mem, int maxord);
 SUNDIALS_EXPORT int ARKodeSetDenseOrder(void *arkode_mem, int dord);
+SUNDIALS_EXPORT int ARKodeSetLinear(void *arkode_mem);
+SUNDIALS_EXPORT int ARKodeSetNonlinear(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetExplicit(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetImplicit(void *arkode_mem);
+SUNDIALS_EXPORT int ARKodeSetImEx(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, int s, 
 				      int q, int p, realtype *c, 
 				      realtype **A, realtype *b, 
