@@ -39,24 +39,30 @@
 
    imeth    name             type   s    q    p  dense  A  L 
   -----------------------------------------------------------
-    0     Heun-Euler          ERK   2    2    1   no    -  - 
-    1     Billington        SDIRK   3    3    2   no    -  - 
-    2     TRBDF2           ESDIRK   3    3    2   no    -  - 
-    3     TRX2             ESDIRK   3    4    2   no    -  - 
-    4     Bogacki-Shampine    ERK   4    4?   3?  no    -  - 
-    5     ARK3(2)4L[2]SA      ERK   4    3    2   yes   -  - 
-    6     ARK3(2)4L[2]SA   ESDIRK   4    3    2   yes   X  X 
-    7     SDIRK-5-4         SDIRK   5    5?   4?  yes   X  X 
-    8     Cash(5,2,4)       SDIRK   5    5?   4?  no    X  X 
-    9     Cash(5,3,4)       SDIRK   5    5?   4?  no    X  X 
-    10    Cash-Karp           ERK   6    5?   4?  no    -  - 
-    11    Fehlberg            ERK   6    5?   5?  no    -  - 
-    12    ARK4(3)6L[2]SA      ERK   6    4?   3   yes   -  - 
-    13    ARK4(3)6L[2]SA   ESDIRK   6    4    3   yes   X  X 
-    14    Dormand-Prince      ERK   7    5?   4?  no    -  - 
-    15    Ismail(7,4,5)    ESDIRK   7    7?   5?  no    X  - 
-    16    ARK5(4)8L[2]SA      ERK   8    5?   4?  yes   -  - 
-    17    ARK5(4)8L[2]SA   ESDIRK   8    5?   4   yes   X  - 
+     0    Heun-Euler          ERK   2    2    1   no    -  - 
+     1    ERK-3-2             ERK   3    3    2   no    -  -
+     2    Billington        SDIRK   3    3    2   no    -  - 
+     3    TRBDF2           ESDIRK   3    3    2   no    -  - 
+     4    TRX2             ESDIRK   3    4    2   no    -  - 
+     5    Bogacki-Shampine    ERK   4    3    2   no    -  - 
+     6    ARK3(2)4L[2]SA      ERK   4    3    2   yes   -  - 
+     7    ARK3(2)4L[2]SA   ESDIRK   4    3    2   yes   X  X 
+     8    Merson              ERK   5    4    3   no    -  -
+     9    Zonneveld           ERK   5    4    3   no    -  -
+     10   SDIRK-5-4         SDIRK   5    4    3   yes   X  X 
+     11   Cash(5,2,4)       SDIRK   5    4    2   no    X  X 
+     12   Cash(5,3,4)       SDIRK   5    4    3   no    X  X 
+     13   Cash-Karp           ERK   6    5    4   no    -  - 
+     14   Fehlberg            ERK   6    5    4   no    -  - 
+     15   ARK4(3)6L[2]SA      ERK   6    4    3   yes   -  - 
+     16   ARK4(3)6L[2]SA   ESDIRK   6    4    3   yes   X  X 
+     17   Sayfy-Aburub-4-3    ERK   6    4    3   no    -  - 
+     18   Sayfy-Aburub-4-3  EDIRK   6    4    3   no    X  - 
+     19   Dormand-Prince      ERK   7    5    4   no    -  - 
+     20   Ismail(7,4,5)    ESDIRK   7    5    4   no    -  - 
+     21   Verner-6-5          ERK   8    6    5   no    -  -
+     22   ARK5(4)8L[2]SA      ERK   8    5    4   yes   -  - 
+     23   ARK5(4)8L[2]SA   ESDIRK   8    5    4   yes   X  - 
   -----------------------------------------------------------
 
 ---------------------------------------------------------------*/
@@ -97,7 +103,25 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[1] = RCONST(1.0);
     break;
 
-  case(1):    /* Billington-SDIRK */
+  case(1):  /* ERK-3-2 */
+    *s = 3;
+    *q = 3;
+    *p = 2;
+
+    A[1][0] = RCONST(0.5);
+    A[2][0] = -RCONST(1.0);
+    A[2][1] = RCONST(2.0);
+
+    b[0] = RCONST(1.0)/RCONST(6.0);
+    b[1] = RCONST(2.0)/RCONST(3.0);
+    b[2] = RCONST(1.0)/RCONST(6.0);
+
+    b2[1] = RCONST(1.0);
+
+    c[1] = RCONST(0.5);
+    c[2] = RCONST(1.0);
+
+  case(2):    /* Billington-SDIRK */
     *s = 3;
     *q = 3;
     *p = 2;
@@ -121,7 +145,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[2] = RCONST(1.292893218813);
     break;
 
-  case(2):    /* TRBDF2-ESDIRK */
+  case(3):    /* TRBDF2-ESDIRK */
     *s = 3;
     *q = 3;
     *p = 2;
@@ -144,7 +168,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[2] = RCONST(1.0);
     break;
 
-  case(3):    /* TRX2-ESDIRK */
+  case(4):    /* TRX2-ESDIRK */
     *s = 3;
     *q = 3;
     *p = 2;
@@ -167,7 +191,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[2] = RCONST(1.0);
     break;
 
-  case(4):    /* Bogacki-Shampine-ERK */
+  case(5):    /* Bogacki-Shampine-ERK */
     *s = 4;
     *q = 4;
     *p = 3;
@@ -192,7 +216,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[3] = RCONST(1.0);
     break;
 
-  case(5):    /* ARK3(2)4L[2]SA-ERK */
+  case(6):    /* ARK3(2)4L[2]SA-ERK */
     *s = 4;
     *q = 3;
     *p = 2;
@@ -228,7 +252,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     bd[3][1] = RCONST(2508943948391.0)/RCONST(7218656332882.0);
     break;
 
-  case(6):    /* ARK3(2)4L[2]SA-ESDIRK */
+  case(7):    /* ARK3(2)4L[2]SA-ESDIRK */
     *s = 4;
     *q = 3;
     *p = 2;
@@ -264,7 +288,67 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     bd[3][1] = RCONST(2508943948391.0)/RCONST(7218656332882.0);
     break;
 
-  case(7):    /* SDIRK-5-4 */
+  case(8):    /* Merson */
+    *s = 5;
+    *q = 4;
+    *p = 3;
+
+    A[1][0] = RCONST(1.0)/RCONST(3.0);
+    A[2][0] = RCONST(1.0)/RCONST(6.0);
+    A[2][1] = RCONST(1.0)/RCONST(6.0);
+    A[3][0] = RCONST(1.0)/RCONST(8.0);
+    A[3][2] = RCONST(3.0)/RCONST(8.0);
+    A[4][0] = RCONST(5.0);
+    A[4][2] = RCONST(-3.0)/RCONST(2.0);
+    A[4][3] = RCONST(2.0);
+
+    b[0] = RCONST(1.0)/RCONST(6.0);
+    b[3] = RCONST(2.0)/RCONST(3.0);
+    b[4] = RCONST(1.0)/RCONST(6.0);
+
+    b2[0] = RCONST(0.1);
+    b2[2] = RCONST(0.3);
+    b2[3] = RCONST(0.4);
+    b2[4] = RCONST(0.2);
+
+    c[1] = RCONST(1.0)/RCONST(3.0);
+    c[2] = RCONST(1.0)/RCONST(3.0);
+    c[3] = RCONST(0.5);
+    c[4] = RCONST(1.0);
+    break;
+
+  case(9):    /* Zonneveld */
+    *s = 5;
+    *q = 4;
+    *p = 3;
+
+    A[1][0] = RCONST(0.5);
+    A[2][1] = RCONST(0.5);
+    A[3][2] = RCONST(1.0);
+    A[4][0] = RCONST(5.0)/RCONST(32.0);
+    A[4][1] = RCONST(7.0)/RCONST(32.0);
+    A[4][2] = RCONST(13.0)/RCONST(32.0);
+    A[4][3] = RCONST(-1.0)/RCONST(32.0);
+
+    b[0] = RCONST(1.0)/RCONST(6.0);
+    b[1] = RCONST(1.0)/RCONST(3.0);
+    b[2] = RCONST(1.0)/RCONST(3.0);
+    b[3] = RCONST(1.0)/RCONST(6.0);
+
+    b2[0] = RCONST(-1.0)/RCONST(2.0);
+    b2[1] = RCONST(7.0)/RCONST(3.0);
+    b2[2] = RCONST(7.0)/RCONST(3.0);
+    b2[3] = RCONST(13.0)/RCONST(6.0);
+    b2[4] = RCONST(-16.0)/RCONST(3.0);
+
+    c[1] = RCONST(0.5);
+    c[2] = RCONST(0.5);
+    c[3] = RCONST(1.0);
+    c[4] = RCONST(0.75);
+
+    break;
+
+  case(10):    /* SDIRK-5-4 */
     *s = 5;
     *q = 5;
     *p = 4;
@@ -321,10 +405,10 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     bd[4][3] = RCONST(80.0)/RCONST(27.0);
     break;
 
-  case(8):    /* Cash(5,2,4)-SDIRK */
+  case(11):    /* Cash(5,2,4)-SDIRK */
     *s = 5;
-    *q = 5;
-    *p = 4;
+    *q = 4;
+    *p = 2;
     A[0][0] = RCONST(0.435866521508);
     A[1][0] = RCONST(-1.13586652150);
     A[1][1] = RCONST(0.435866521508);
@@ -357,10 +441,10 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[4] = RCONST(1.0);
     break;
 
-  case(9):    /* Cash(5,3,4)-SDIRK */
+  case(12):    /* Cash(5,3,4)-SDIRK */
     *s = 5;
-    *q = 5;
-    *p = 4;
+    *q = 4;
+    *p = 3;
     A[0][0] = RCONST(0.435866521508);
     A[1][0] = RCONST(-1.13586652150);
     A[1][1] = RCONST(0.435866521508);
@@ -395,7 +479,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[4] = RCONST(1.0);
     break;
 
-  case(10):    /* Cash-Karp-ERK */
+  case(13):    /* Cash-Karp-ERK */
     *s = 6;
     *q = 5;
     *p = 4;
@@ -434,10 +518,10 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[5] = RCONST(7.0)/RCONST(8.0);
     break;
 
-  case(11):    /* Fehlberg-ERK */
+  case(14):    /* Fehlberg-ERK */
     *s = 6;
     *q = 5;
-    *p = 5;
+    *p = 4;
 
     A[1][0] = RCONST(1.0)/RCONST(4.0);
     A[2][0] = RCONST(3.0)/RCONST(32.0);
@@ -473,7 +557,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[5] = RCONST(1.0)/RCONST(2.0);
     break;
 
-  case(12):    /* ARK4(3)6L[2]SA-ERK */
+  case(15):    /* ARK4(3)6L[2]SA-ERK */
     *s = 6;
     *q = 4;
     *p = 3;
@@ -529,7 +613,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     bd[5][2] = RCONST(-17219254887155.0)/RCONST(4939391667607.0);
     break;
 
-  case(13):    /* ARK4(3)6L[2]SA-ESDIRK */
+  case(16):    /* ARK4(3)6L[2]SA-ESDIRK */
     *s = 6;
     *q = 4;
     *p = 3;
@@ -589,7 +673,88 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     bd[5][2] = RCONST(-17219254887155.0)/RCONST(4939391667607.0);
     break;
 
-  case(14):    /* Dormand-Prince-ERK */
+
+  case(17):    /* Sayfy-Aburub-4-3-ERK */
+    *s = 6;
+    *q = 4;
+    *p = 3;
+
+    A[1][0] = RCONST(1.0)/RCONST(2.0); 
+    A[2][0] = RCONST(-1.0); 
+    A[2][1] = RCONST(2.0); 
+    A[3][0] = RCONST(1.0)/RCONST(6.0);
+    A[3][1] = RCONST(2.0)/RCONST(3.0);
+    A[3][2] = RCONST(1.0)/RCONST(6.0);
+    A[4][0] = RCONST(0.137);
+    A[4][1] = RCONST(0.226);
+    A[4][2] = RCONST(0.137);
+    A[5][0] = RCONST(0.452);
+    A[5][1] = RCONST(-0.904);
+    A[5][2] = RCONST(-0.548);
+    A[5][4] = RCONST(2.0);
+
+    b[0] = RCONST(1.0)/RCONST(6.0);
+    b[1] = RCONST(1.0)/RCONST(3.0);
+    b[2] = RCONST(1.0)/RCONST(12.0);
+    b[3] = RCONST(0.0);
+    b[4] = RCONST(1.0)/RCONST(3.0);
+    b[5] = RCONST(1.0)/RCONST(12.0);
+
+    b2[0] = RCONST(1.0)/RCONST(6.0);
+    b2[1] = RCONST(2.0)/RCONST(3.0);
+    b2[2] = RCONST(1.0)/RCONST(6.0);
+
+    c[1] = RCONST(1.0)/RCONST(2.0);
+    c[2] = RCONST(1.0);
+    c[3] = RCONST(1.0);
+    c[4] = RCONST(1.0)/RCONST(2.0);
+    c[5] = RCONST(1.0);
+    break;
+
+
+  case(18):    /* Sayfy-Aburub-4-3-EDIRK */
+    *s = 6;
+    *q = 4;
+    *p = 3;
+
+    A[1][0] = RCONST(1.0);
+    A[1][1] = RCONST(0.788675134594813);
+    A[2][0] = RCONST(2.943375672974064);
+    A[2][1] = RCONST(-2.732050807568877);
+    A[2][2] = RCONST(0.788675134594813);
+    A[3][0] = RCONST(1.0)/RCONST(6.0);
+    A[3][1] = RCONST(2.0)/RCONST(3.0);
+    A[3][2] = RCONST(1.0)/RCONST(6.0);
+    A[4][0] = RCONST(-0.423883252702594);
+    A[4][1] = RCONST(0.20464164);
+    A[4][2] = RCONST(0.719241612702594);
+    A[4][4] = RCONST(1.9318);
+    A[5][0] = RCONST(2.695533010810374);
+    A[5][1] = RCONST(-5.391066021620748);
+    A[5][2] = RCONST(1.695533010810374);
+    A[5][4] = RCONST(2.0);
+    A[5][5] = RCONST(1.9318);
+
+    b[0] = RCONST(1.0)/RCONST(6.0);
+    b[1] = RCONST(1.0)/RCONST(3.0);
+    b[2] = RCONST(1.0)/RCONST(12.0);
+    b[3] = RCONST(0.0);
+    b[4] = RCONST(1.0)/RCONST(3.0);
+    b[5] = RCONST(1.0)/RCONST(12.0);
+
+    b2[0] = RCONST(1.0)/RCONST(6.0);
+    b2[1] = RCONST(2.0)/RCONST(3.0);
+    b2[2] = RCONST(1.0)/RCONST(6.0);
+
+    c[1] = RCONST(1.0)/RCONST(2.0);
+    c[2] = RCONST(1.0);
+    c[3] = RCONST(1.0);
+    c[4] = RCONST(1.0)/RCONST(2.0);
+    c[5] = RCONST(1.0);
+    break;
+
+
+  case(19):    /* Dormand-Prince-ERK */
     *s = 7;
     *q = 5;
     *p = 4;
@@ -636,60 +801,117 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[6] = RCONST(1.0);
     break;
 
-  case(15):    /* Ismail(7,4,5)-ESDIRK */
+  case(20):    /* Ismail(7,4,5)-ESDIRK */
     *s = 7;
-    *q = 7;
-    *p = 5;
+    *q = 5;
+    *p = 4;
 
-    A[1][0] = RCONST(0.28589);
-    A[1][1] = RCONST(0.28589);
-    A[2][0] = RCONST(0.142945);
-    A[2][1] = RCONST(0.924011005);
-    A[2][2] = RCONST(0.28589);
-    A[3][0] = RCONST(0.16803599);
-    A[3][1] = RCONST(-0.049416510);
-    A[3][2] = RCONST(-0.004509476);
-    A[3][3] = RCONST(0.28589);
-    A[4][0] = RCONST(0.182315);
-    A[4][1] = RCONST(-0.112951603);
-    A[4][2] = RCONST(-0.027793233);
-    A[4][3] = RCONST(0.422539833);
-    A[4][4] = RCONST(0.28589);
-    A[5][0] = RCONST(0.24756392);
-    A[5][1] = RCONST(-0.425378071);
-    A[5][2] = RCONST(-0.107036282);
-    A[5][3] = RCONST(0.395700134);
-    A[5][4] = RCONST(0.503260302);
-    A[5][5] = RCONST(0.28589);
-    A[6][0] = RCONST(0.13001804);
+    A[1][0] = RCONST(0.28589); 
+    A[1][1] = RCONST(0.28589); 
+    A[2][0] = RCONST(0.142945000375866); 
+    A[2][1] = RCONST(0.924011005); 
+    A[2][2] = RCONST(0.28589); 
+    A[3][0] = RCONST(0.168035986); 
+    A[3][1] = RCONST(-0.04941651); 
+    A[3][2] = RCONST(-0.004509476); 
+    A[3][3] = RCONST(0.28589); 
+    A[4][0] = RCONST(0.182315003); 
+    A[4][1] = RCONST(-0.112951603); 
+    A[4][2] = RCONST(-0.027793233); 
+    A[4][3] = RCONST(0.422539833); 
+    A[4][4] = RCONST(0.28589); 
+    A[5][0] = RCONST(0.247563917); 
+    A[5][1] = RCONST(-0.425378071); 
+    A[5][2] = RCONST(-0.107036282); 
+    A[5][3] = RCONST(0.395700134); 
+    A[5][4] = RCONST(0.503260302); 
+    A[5][5] = RCONST(0.28589); 
+    A[6][0] = RCONST(0.130018035);
     A[6][2] = RCONST(-0.019290177);
     A[6][3] = RCONST(0.535386266);
     A[6][4] = RCONST(0.234313169);
     A[6][5] = RCONST(-0.166317293);
     A[6][6] = RCONST(0.28589);
 
-    b[0] = RCONST(0.13001804);
+    b[0] = RCONST(0.130018035);
     b[2] = RCONST(-0.019290177);
     b[3] = RCONST(0.535386266);
     b[4] = RCONST(0.234313169);
     b[5] = RCONST(-0.166317293);
     b[6] = RCONST(0.28589);
 
-    b2[0] = RCONST(0.094388663);
+    b2[0] = RCONST(-0.094388662);
     b2[2] = RCONST(-0.039782614);
     b2[3] = RCONST(0.745608552);
     b2[4] = RCONST(-0.505129807);
     b2[5] = RCONST(0.704915206);
+    b2[6] = RCONST(0.28589);
 
     c[1] = RCONST(0.57178);
-    c[2] = RCONST(1.352846);
+    c[2] = RCONST(1.352846005375866);
     c[3] = RCONST(0.4);
     c[4] = RCONST(0.75);
     c[5] = RCONST(0.9);
-    c[6] = RCONST(1.0);
+    c[6] = RCONST(1);
+
     break;
 
-  case(16):    /* ARK5(4)8L[2]SA-ERK */
+  case(21):    /* Verner-6-5 */
+    *s = 8;
+    *q = 6;
+    *p = 5;
+
+    A[1][0] = RCONST(1.0)/RCONST(6.0);
+    A[2][0] = RCONST(4.0)/RCONST(75.0);
+    A[2][1] = RCONST(16.0)/RCONST(75.0);
+    A[3][0] = RCONST(5.0)/RCONST(6.0);
+    A[3][1] = RCONST(-8.0)/RCONST(3.0);
+    A[3][2] = RCONST(5.0)/RCONST(2.0);
+    A[4][0] = RCONST(-165.0)/RCONST(64.0);
+    A[4][1] = RCONST(55.0)/RCONST(6.0);
+    A[4][2] = RCONST(-425.0)/RCONST(64.0);
+    A[4][3] = RCONST(85.0)/RCONST(96.0);
+    A[5][0] = RCONST(12.0)/RCONST(5.0);
+    A[5][1] = RCONST(-8.0);
+    A[5][2] = RCONST(4015.0)/RCONST(612.0);
+    A[5][3] = RCONST(-11.0)/RCONST(36.0);
+    A[5][4] = RCONST(88.0)/RCONST(255.0);
+    A[6][0] = RCONST(-8263.0)/RCONST(15000.0);
+    A[6][1] = RCONST(124.0)/RCONST(75.0);
+    A[6][2] = RCONST(-643.0)/RCONST(680.0);
+    A[6][3] = RCONST(-81.0)/RCONST(250.0);
+    A[6][4] = RCONST(2484.0)/RCONST(10625.0);
+    A[7][0] = RCONST(3501.0)/RCONST(1720.0);
+    A[7][1] = RCONST(-300.0)/RCONST(43.0);
+    A[7][2] = RCONST(297275.0)/RCONST(52632.0);
+    A[7][3] = RCONST(-319.0)/RCONST(2322.0);
+    A[7][4] = RCONST(24068.0)/RCONST(84065.0);
+    A[7][6] = RCONST(3850.0)/RCONST(26703.0);
+
+    b[0] = RCONST(3.0)/RCONST(40.0);
+    b[2] = RCONST(875.0)/RCONST(2244.0);
+    b[3] = RCONST(23.0)/RCONST(72.0);
+    b[4] = RCONST(264.0)/RCONST(1955.0);
+    b[6] = RCONST(125.0)/RCONST(11592.0);
+    b[7] = RCONST(43.0)/RCONST(616.0);
+
+    b2[0] = RCONST(13.0)/RCONST(160.0);
+    b2[2] = RCONST(2375.0)/RCONST(5984.0);
+    b2[3] = RCONST(5.0)/RCONST(16.0);
+    b2[4] = RCONST(12.0)/RCONST(85.0);
+    b2[5] = RCONST(3.0)/RCONST(44.0);
+
+    c[0] = RCONST(0.0);
+    c[1] = RCONST(1.0)/RCONST(6.0);
+    c[2] = RCONST(4.0)/RCONST(15.0);
+    c[3] = RCONST(2.0)/RCONST(3.0);
+    c[4] = RCONST(5.0)/RCONST(6.0);
+    c[5] = RCONST(1.0);
+    c[6] = RCONST(1.0)/RCONST(15.0);
+    c[7] = RCONST(1.0);
+    break;
+
+  case(22):    /* ARK5(4)8L[2]SA-ERK */
     *s = 8;
     *q = 5;
     *p = 4;
@@ -760,7 +982,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     bd[7][2] = RCONST(-5289405421727.0)/RCONST(3760307252460.0);
     break;
 
-  case(17):    /* ARK5(4)8L[2]SA-ESDIRK */
+  case(23):    /* ARK5(4)8L[2]SA-ESDIRK */
     *s = 8;
     *q = 5;
     *p = 4;

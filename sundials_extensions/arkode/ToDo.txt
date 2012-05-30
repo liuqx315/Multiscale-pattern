@@ -43,8 +43,9 @@ Easy:
 [X] Set routine to manually choose a pre-existing Butcher table (by
     number?, by name?) -- i.e. not user-supplied, and not the default
     choice.
-[ ] In all set routines, update code to allow specification of the
+[X] In all set routines, update code to allow specification of the
     defaults through supplying zeros/NULL to the function.
+[X] Add more Butcher tables to complete our set for low-order methods.
 [ ] Code to fill in values for last successful step: told, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
     copy values from ynew to yold or fnew to fold.  Still do the copy
