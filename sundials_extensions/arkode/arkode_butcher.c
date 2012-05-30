@@ -25,7 +25,7 @@
  Input:
      imeth -- integer key for the desired method (see below)
  Outputs:
-     s -- int number of stages for the requested method [s <= S_MAX = 8]
+     s -- int number of stages for the requested method [s <= ARK_S_MAX = 8]
      q -- integer, theoretical order of accuracy for the method
      p -- integer, theoretical order of accuracy for the embedding
      A[s][s] -- realtype Butcher table coefficients
@@ -60,20 +60,20 @@
   -----------------------------------------------------------
 
 ---------------------------------------------------------------*/
-int ARKLoadButcherTable(int imethod, int *s, int *q, int *p, 
-			realtype (*A)[S_MAX], realtype *b, 
-			realtype *c, realtype *b2, 
-			realtype (*bd)[S_MAX]) 
+int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p, 
+			   realtype (*A)[ARK_S_MAX], realtype *b, 
+			   realtype *c, realtype *b2, 
+			   realtype (*bd)[ARK_S_MAX]) 
 {
 
   int i, j;
 
   /* initialize output tables to zero */
-  for (i=0; i<S_MAX; i++) {
+  for (i=0; i<ARK_S_MAX; i++) {
     b[i]  = ZERO;
     c[i]  = ZERO;
     b2[i] = ZERO;
-    for (j=0; j<S_MAX; j++) {
+    for (j=0; j<ARK_S_MAX; j++) {
       A[i][j]  = ZERO;
       bd[i][j] = ZERO;
     }

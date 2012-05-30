@@ -26,7 +26,6 @@ extern "C" {
 /* Basic ARKODE constants */
 #define Q_MAX            5       /* max value of q */
 #define L_MAX        (Q_MAX+1)   /* max value of L */
-#define S_MAX            8       /* max number of stages */
 #define NUM_TESTS        5       /* # of error test quantities */
 #define MXSTEP_DEFAULT   500     /* mxstep default value */
 
@@ -199,7 +198,7 @@ extern "C" {
 ---------------------------------------------------------------*/
 typedef struct ARKodeMemRec {
 
-  realtype ark_uround;    /* machine unit roundoff */
+  realtype ark_uround;        /* machine unit roundoff */
 
   /*-------------------------- 
     Problem Specification Data 
@@ -224,15 +223,15 @@ typedef struct ARKodeMemRec {
   /*-----------------------
     Nordsieck History Array 
     -----------------------*/
-  N_Vector ark_zn[L_MAX];    /* Nordsieck array, of size N x (q+1).
-			        zn[j] is a vector of length N (j=0,...,q) 
-			        zn[j] = [1/factorial(j)] * h^j * (jth      
-			        derivative of the interpolating polynomial
-			          zn[0] -> current solution 
-			          zn[1] -> current derivative (i.e. f value)
-			          zn[2]-zn[L_MAX]  ->  extras */
-  N_Vector ark_Fe[S_MAX];    /* Storage for explicit RHS at each RK stage */
-  N_Vector ark_Fi[S_MAX];    /* Storage for implicit RHS at each RK stage */
+  N_Vector ark_zn[L_MAX];     /* Nordsieck array, of size N x (q+1).
+			         zn[j] is a vector of length N (j=0,...,q) 
+			         zn[j] = [1/factorial(j)] * h^j * (jth      
+			         derivative of the interpolating polynomial
+			           zn[0] -> current solution 
+			           zn[1] -> current derivative (i.e. f value)
+			           zn[2]-zn[L_MAX]  ->  extras */
+  N_Vector ark_Fe[ARK_S_MAX]; /* Storage for explicit RHS at each RK stage */
+  N_Vector ark_Fi[ARK_S_MAX]; /* Storage for implicit RHS at each RK stage */
 
   /*--------------------------
     other vectors of length N 
@@ -267,12 +266,12 @@ typedef struct ARKodeMemRec {
   int ark_istage;                 /* current stages in integration method   */
   int ark_stages;                 /* number of stages in integration method */
   int ark_dense_q;                /* polynomial order for dense output      */
-  realtype ark_Ae[S_MAX][S_MAX];  /* ERK Butcher table                      */
-  realtype ark_Ai[S_MAX][S_MAX];  /* IRK Butcher table                      */
-  realtype ark_c[S_MAX];          /* RK method canopy nodes                 */
-  realtype ark_b[S_MAX];          /* RK method root nodes                   */
-  realtype ark_b2[S_MAX];         /* RK method embedding root nodes         */
-  realtype ark_bd[S_MAX][S_MAX];  /* dense output coefficients              */
+  realtype ark_Ae[ARK_S_MAX][ARK_S_MAX];  /* ERK Butcher table              */
+  realtype ark_Ai[ARK_S_MAX][ARK_S_MAX];  /* IRK Butcher table              */
+  realtype ark_c[ARK_S_MAX];              /* RK method canopy nodes         */
+  realtype ark_b[ARK_S_MAX];              /* RK method root nodes           */
+  realtype ark_b2[ARK_S_MAX];             /* RK method embedding root nodes */
+  realtype ark_bd[ARK_S_MAX][ARK_S_MAX];  /* dense output coefficients      */
   booleantype ark_user_Ae;        /* TRUE if user sets Ae                   */
   booleantype ark_user_Ai;        /* TRUE if user sets Ai                   */
 

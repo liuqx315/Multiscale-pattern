@@ -260,17 +260,17 @@ int ARKodeSetLinear(void *arkode_mem)
 
 
 /*---------------------------------------------------------------
- ARKodeSetERK:
+ ARKodeSetExplicit:
 
  Specifies that the implicit portion of the problem is disabled, 
  and to use an explicit RK method.
 ---------------------------------------------------------------*/
-int ARKodeSetERK(void *arkode_mem)
+int ARKodeSetExplicit(void *arkode_mem)
 {
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetERK", MSGARK_NO_MEM);
+		    "ARKodeSetExplicit", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -278,7 +278,7 @@ int ARKodeSetERK(void *arkode_mem)
   /* ensure that fe is defined */
   if (ark_mem->ark_fe == NULL) {
     ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetERK", MSGARK_MISSING_FE);
+		    "ARKodeSetExplicit", MSGARK_MISSING_FE);
     return(ARK_ILL_INPUT);
   }
 
@@ -291,17 +291,17 @@ int ARKodeSetERK(void *arkode_mem)
 
 
 /*---------------------------------------------------------------
- ARKodeSetIRK:
+ ARKodeSetImplicit:
 
  Specifies that the explicit portion of the problem is disabled, 
  and to use an implicit RK method.
 ---------------------------------------------------------------*/
-int ARKodeSetIRK(void *arkode_mem)
+int ARKodeSetImplicit(void *arkode_mem)
 {
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetIRK", MSGARK_NO_MEM);
+		    "ARKodeSetImplicit", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -309,7 +309,7 @@ int ARKodeSetIRK(void *arkode_mem)
   /* ensure that fi is defined */
   if (ark_mem->ark_fi == NULL) {
     ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetIRK", MSGARK_MISSING_FI);
+		    "ARKodeSetImplicit", MSGARK_MISSING_FI);
     return(ARK_ILL_INPUT);
   }
 
@@ -344,15 +344,26 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* check for legal inputs */
-  if (s > S_MAX) {
+  if (s > ARK_S_MAX) {
     ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetERKTable", "s exceeds S_MAX");
+		    "ARKodeSetERKTable", "s exceeds ARK_S_MAX");
     return(ARK_ILL_INPUT);
   }
   if ((c == NULL) || (A == NULL) || (b == NULL) || (bembed == NULL)) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetERKTable", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
+  }
+
+  /* check that supplied table is explicit */
+  booleantype implicit = FALSE;
+  for (i=0; i<s; i++)
+    for (j=i; j<s; j++)
+      if (ABS(A[i][j]) > TINY)  implicit = TRUE;
+  if (implicit) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTable", 
+		    "Supplied table is implicit!");
+    return(ARK_ILL_INPUT);
   }
 
   /* if IRK table already set, ensure that shared coeffs match */
@@ -377,8 +388,8 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
 	  if (ABS(ark_mem->ark_bd[i][j] - bdense[i][j]) > tol)  match = FALSE;
     }
     if (!match) {
-      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		      "ARKodeSetERKTable", "shared Butcher coeffs don't match");
+      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTable", 
+		      "shared Butcher coeffs don't match");
       return(ARK_ILL_INPUT);
     }
   }
@@ -434,15 +445,26 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* check for legal inputs */
-  if (s > S_MAX) {
+  if (s > ARK_S_MAX) {
     ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetIRKTable", "s exceeds S_MAX");
+		    "ARKodeSetIRKTable", "s exceeds ARK_S_MAX");
     return(ARK_ILL_INPUT);
   }
   if ((c == NULL) || (A == NULL) || (b == NULL) || (bembed == NULL)) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTable", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
+  }
+
+  /* check that supplied table is implicit */
+  booleantype implicit = FALSE;
+  for (i=0; i<s; i++)
+    for (j=i; j<s; j++)
+      if (ABS(A[i][j]) > TINY)  implicit = TRUE;
+  if (!implicit) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTable", 
+		    "Supplied table is explicit!");
+    return(ARK_ILL_INPUT);
   }
 
   /* if ERK table already set, ensure that shared coeffs match */
@@ -467,8 +489,8 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
 	  if (ABS(ark_mem->ark_bd[i][j] - bdense[i][j]) > tol)  match = FALSE;
     }
     if (!match) {
-      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		      "ARKodeSetIRKTable", "shared Butcher coeffs don't match");
+      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTable", 
+		      "shared Butcher coeffs don't match");
       return(ARK_ILL_INPUT);
     }
   }
@@ -497,6 +519,148 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
 
   /* remark that this table was supplied by the user */
   ark_mem->ark_user_Ai = TRUE;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetERKTableNum:
+
+ Specifies to use a pre-existing Butcher table for the explicit 
+ portion of the problem, based on the integer flag held in 
+ ARKodeLoadButcherTable() within the file arkode_butcher.c.
+---------------------------------------------------------------*/
+int ARKodeSetERKTableNum(void *arkode_mem, int itable)
+{
+  int i, j, iflag;
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetERKTableNum", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* fill in table based on argument */
+  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
+				 &ark_mem->ark_q, 
+				 &ark_mem->ark_p, 
+				 ark_mem->ark_Ae, 
+				 ark_mem->ark_b, 
+				 ark_mem->ark_c, 
+				 ark_mem->ark_b2, 
+				 ark_mem->ark_bd);
+  /* if illegal itable specified, reset to zeros and return */
+  if (iflag != ARK_SUCCESS) {
+    for (i=0; i<ARK_S_MAX; i++) {
+      for (j=0; j<ARK_S_MAX; j++) {
+	ark_mem->ark_Ae[i][j] = ZERO;
+	ark_mem->ark_bd[i][j] = ZERO;
+      }
+      ark_mem->ark_c[i]  = ZERO;
+      ark_mem->ark_b[i]  = ZERO;
+      ark_mem->ark_b2[i] = ZERO;
+    }
+    ark_mem->ark_q = 0;
+    ark_mem->ark_p = 0;
+    ark_mem->ark_stages = 0;
+    return(ARK_ILL_INPUT);
+  }
+
+  /* ensure that requested table is explicit, if not reset and return */
+  booleantype implicit = FALSE;
+  for (i=0; i<ark_mem->ark_stages; i++)
+    for (j=i; j<ark_mem->ark_stages; j++)
+      if (ABS(ark_mem->ark_Ae[i][j]) > TINY)  implicit = TRUE;
+  if (implicit) {
+    for (i=0; i<ARK_S_MAX; i++) {
+      for (j=0; j<ARK_S_MAX; j++) {
+	ark_mem->ark_Ae[i][j] = ZERO;
+	ark_mem->ark_bd[i][j] = ZERO;
+      }
+      ark_mem->ark_c[i]  = ZERO;
+      ark_mem->ark_b[i]  = ZERO;
+      ark_mem->ark_b2[i] = ZERO;
+    }
+    ark_mem->ark_q = 0;
+    ark_mem->ark_p = 0;
+    ark_mem->ark_stages = 0;
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTableNum", 
+		    "Requested table is implicit!");
+    return(ARK_ILL_INPUT);
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetIRKTableNum:
+
+ Specifies to use a pre-existing Butcher table for the implicit 
+ portion of the problem, based on the integer flag held in 
+ ARKodeLoadButcherTable() within the file arkode_butcher.c.
+---------------------------------------------------------------*/
+int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
+{
+  int i, j, iflag;
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetImplicit", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* fill in table based on argument */
+  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
+				 &ark_mem->ark_q, 
+				 &ark_mem->ark_p, 
+				 ark_mem->ark_Ai, 
+				 ark_mem->ark_b, 
+				 ark_mem->ark_c, 
+				 ark_mem->ark_b2, 
+				 ark_mem->ark_bd);
+  /* if illegal itable specified, reset to default and return */
+  if (iflag != ARK_SUCCESS) {
+    for (i=0; i<ARK_S_MAX; i++) {
+      for (j=0; j<ARK_S_MAX; j++) {
+	ark_mem->ark_Ai[i][j] = ZERO;
+	ark_mem->ark_bd[i][j] = ZERO;
+      }
+      ark_mem->ark_c[i]  = ZERO;
+      ark_mem->ark_b[i]  = ZERO;
+      ark_mem->ark_b2[i] = ZERO;
+    }
+    ark_mem->ark_q = 0;
+    ark_mem->ark_p = 0;
+    ark_mem->ark_stages = 0;
+    return(ARK_ILL_INPUT);
+  }
+
+  /* ensure that requested table is implicit, if not reset and return */
+  booleantype implicit = FALSE;
+  for (i=0; i<ark_mem->ark_stages; i++)
+    for (j=i; j<ark_mem->ark_stages; j++)
+      if (ABS(ark_mem->ark_Ai[i][j]) > TINY)  implicit = TRUE;
+  if (!implicit) {
+    for (i=0; i<ARK_S_MAX; i++) {
+      for (j=0; j<ARK_S_MAX; j++) {
+	ark_mem->ark_Ai[i][j] = ZERO;
+	ark_mem->ark_bd[i][j] = ZERO;
+      }
+      ark_mem->ark_c[i]  = ZERO;
+      ark_mem->ark_b[i]  = ZERO;
+      ark_mem->ark_b2[i] = ZERO;
+    }
+    ark_mem->ark_q = 0;
+    ark_mem->ark_p = 0;
+    ark_mem->ark_stages = 0;
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTableNum", 
+		    "Requested table is explicit!");
+    return(ARK_ILL_INPUT);
+  }
 
   return(ARK_SUCCESS);
 }
@@ -1257,6 +1421,47 @@ int ARKodeGetCurrentTime(void *arkode_mem, realtype *tcur)
   ark_mem = (ARKodeMem) arkode_mem;
 
   *tcur = ark_mem->ark_tn;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeGetCurrentButcherTables:
+
+ Returns the explicit and implicit Butcher tables currently in 
+ use.  The tables should be declared statically as 
+ Ae[ARK_S_MAX][ARK_S_MAX] and Ai[ARK_S_MAX][ARK_S_MAX], and the 
+ arrays c, b and b2 should all have length ARK_S_MAX.
+---------------------------------------------------------------*/
+int ARKodeGetCurrentButcherTables(void *arkode_mem, 
+				  int *s, int *q, int *p,
+				  realtype (*Ae)[ARK_S_MAX], 
+				  realtype (*Ai)[ARK_S_MAX], 
+				  realtype *c, realtype *b,
+				  realtype *b2)
+{
+  int i,j;
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeGetCurrentTime", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  *s = ark_mem->ark_stages;
+  *q = ark_mem->ark_q;
+  *p = ark_mem->ark_p;
+  for (i=0; i<ARK_S_MAX; i++) {
+    for (j=0; j<ARK_S_MAX; j++) {
+      Ae[i][j] = ark_mem->ark_Ae[i][j];
+      Ai[i][j] = ark_mem->ark_Ai[i][j];
+    }
+    c[i]  = ark_mem->ark_c[i];
+    b[i]  = ark_mem->ark_b[i];
+    b2[i] = ark_mem->ark_b2[i];
+  }
 
   return(ARK_SUCCESS);
 }

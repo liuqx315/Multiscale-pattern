@@ -39,11 +39,10 @@ Easy:
     condition (trivial predictor) for stages in first step.
 [X] Routine to select appropriate Butcher table for the problem, given 
     the relevant user-defined constraints.
-[ ] Get routine to output the Butcher table name (and relevant integer 
-    flag) to screen and/or in return arguments.
-[ ] Set routine to manually choose a pre-existing Butcher table (by
+[X] Get routine to output the Butcher tables.
+[X] Set routine to manually choose a pre-existing Butcher table (by
     number?, by name?) -- i.e. not user-supplied, and not the default
-     choice.
+    choice.
 [ ] Code to fill in values for last successful step: told, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
     copy values from ynew to yold or fnew to fold.  Still do the copy
