@@ -289,10 +289,10 @@ int main()
     
 
   /* Print some final statistics */
-  long int nst, nfe, nsetups, nje, nfeLS, nni, ncfn, netf;
+  long int nst, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
-  flag = ARKodeGetNumRhsEvals(arkode_mem, &nfe);
+  flag = ARKodeGetNumRhsEvals(arkode_mem, &nfe, &nfi);
   check_flag(&flag, "ARKodeGetNumRhsEvals", 1);
   flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
   check_flag(&flag, "ARKodeGetNumLinSolvSetups", 1);
@@ -309,7 +309,7 @@ int main()
 
   printf("\nFinal Solver Statistics:\n");
   printf("   Total internal solver steps = %li\n", nst);
-  printf("   Total RHS evals = %li\n", nfe);
+  printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
