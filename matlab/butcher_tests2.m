@@ -37,6 +37,13 @@ B = butcher(mname);
 [q,p,Bs,As,Ls] = check_butcher(B);
 fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
 
+%    Sayfy-Aburub-4-3-ERK
+mname = 'Sayfy-Aburub-4-3-ERK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
 %    Ascher(2,3,3)-ERK
 mname = 'Ascher(2,3,3)-ERK';
 fprintf(' %22s',mname);
@@ -149,6 +156,34 @@ B = butcher(mname);
 [q,p,Bs,As,Ls] = check_butcher(B);
 fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
 
+%    Merson-4-5-ERK
+mname = 'Merson-4-5-ERK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+%    Zonneveld-4-3-ERK
+mname = 'Zonneveld-4-3-ERK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+%    Verner-6-5-ERK
+mname = 'Verner-6-5-ERK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+%    Fehlberg-8-7-ERK
+mname = 'Fehlberg-8-7-ERK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
 
 %%%%%%%%%%%%%%%%%%% DIRK Methods %%%%%%%%%%%%%%%%%%%
 
@@ -169,6 +204,13 @@ fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
 
 %    ARK5(4)8L[2]SA-ESDIRK
 mname = 'ARK5(4)8L[2]SA-ESDIRK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+%    Sayfy-Aburub-4-3-DIRK
+mname = 'Sayfy-Aburub-4-3-DIRK';
 fprintf(' %22s',mname);
 B = butcher(mname);
 [q,p,Bs,As,Ls] = check_butcher(B);

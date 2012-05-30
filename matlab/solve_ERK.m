@@ -49,14 +49,23 @@ else
    embedded = 0;
 end
 
-% determine method order (and embedding order)
+% estimate method order (and embedding order)
 if (s == 4) 
    q_method = 3;
    p_method = 2;
+elseif (s == 5)
+   q_method = 4;
+   p_method = 3;
 elseif (s == 6)
    q_method = 4;
    p_method = 3;
+elseif (s == 7)
+   q_method = 5;
+   p_method = 4;
 elseif (s == 8)
+   q_method = 5;
+   p_method = 4;
+else
    q_method = 5;
    p_method = 4;
 end   
@@ -202,8 +211,8 @@ end
 
 
 % output diagnostics
-fprintf('solve_ERK: took %i accuracy and %i stability steps (%i failures)\n',...
-    h_a, h_s, a_fails);
+% $$$ fprintf('solve_ERK: took %i accuracy and %i stability steps (%i failures)\n',...
+% $$$     h_a, h_s, a_fails);
 
 
 % end function

@@ -51,7 +51,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ARK3(2)4L[2]SA-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  ARK3(2)E' , norm(diff,inf) , norm(diff) };
@@ -60,7 +60,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ARK4(3)6L[2]SA-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  ARK4(3)E' , norm(diff,inf) , norm(diff) };
@@ -69,16 +69,25 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ARK5(4)8L[2]SA-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  ARK5(4)E' , norm(diff,inf) , norm(diff) };
+   
+   %    Sayfy-Aburub-4-3-ERK
+   imethod = imethod + 1;
+   mname = 'Sayfy-Aburub-4-3-ERK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { ' SaAb4(3)E' , norm(diff,inf) , norm(diff) };
    
    %    Ascher(2,3,3)-ERK
    imethod = imethod + 1;
    mname = 'Ascher(2,3,3)-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(2,3,3)E' , norm(diff,inf) , norm(diff) };
@@ -87,7 +96,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(2,3,2)-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(2,3,2)E' , norm(diff,inf) , norm(diff) };
@@ -96,7 +105,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(2,2,2)-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(2,2,2)E' , norm(diff,inf) , norm(diff) };
@@ -105,7 +114,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(3,4,3)-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(3,4,3)E' , norm(diff,inf) , norm(diff) };
@@ -114,7 +123,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(4,4,3)-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(4,4,3)E' , norm(diff,inf) , norm(diff) };
@@ -123,7 +132,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cooper4-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  Cooper4E' , norm(diff,inf) , norm(diff) };
@@ -132,7 +141,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cooper6-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  Cooper6E' , norm(diff,inf) , norm(diff) };
@@ -141,7 +150,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Heun-Euler-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { 'Heun-Euler' , norm(diff,inf) , norm(diff) };
@@ -150,7 +159,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Bogacki-Shampine-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  BogShamp' , norm(diff,inf) , norm(diff) };
@@ -159,7 +168,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Fehlberg-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  Fehlberg' , norm(diff,inf) , norm(diff) };
@@ -168,7 +177,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cash-Karp-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  CashKarp' , norm(diff,inf) , norm(diff) };
@@ -177,7 +186,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Dormand-Prince-ERK';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { 'DormPrince' , norm(diff,inf) , norm(diff) };
@@ -186,7 +195,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ERK-1-1';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   ERK-1-1' , norm(diff,inf) , norm(diff) };
@@ -195,7 +204,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ERK-2-2';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   ERK-2-2' , norm(diff,inf) , norm(diff) };
@@ -204,7 +213,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ERK-3-3';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   ERK-3-3' , norm(diff,inf) , norm(diff) };
@@ -213,10 +222,46 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ERK-4-4';
    B = butcher(mname);
-   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   ERK-4-4' , norm(diff,inf) , norm(diff) };
+
+   %    Merson-4-5-ERK
+   imethod = imethod + 1;
+   mname = 'Merson-4-5-ERK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { '    M4(5)E' , norm(diff,inf) , norm(diff) };
+
+   %    Zonneveld-4-3-ERK
+   imethod = imethod + 1;
+   mname = 'Zonneveld-4-3-ERK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { '    Z4(3)E' , norm(diff,inf) , norm(diff) };
+
+   %    Verner-6-5-ERK
+   imethod = imethod + 1;
+   mname = 'Verner-6-5-ERK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { '    V6(5)E' , norm(diff,inf) , norm(diff) };
+
+   %    Fehlberg-8-7-ERK
+   imethod = imethod + 1;
+   mname = 'Fehlberg-8-7-ERK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_ERK('f_test', 'EStab_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { '    F8(7)E' , norm(diff,inf) , norm(diff) };
 
    
    %%%%%%%%%%%%%%%%%%% DIRK Methods %%%%%%%%%%%%%%%%%%%
@@ -226,7 +271,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ARK3(2)4L[2]SA-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  ARK3(2)I' , norm(diff,inf) , norm(diff) };
@@ -235,7 +280,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ARK4(3)6L[2]SA-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  ARK4(3)I' , norm(diff,inf) , norm(diff) };
@@ -244,16 +289,25 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ARK5(4)8L[2]SA-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  ARK5(4)I' , norm(diff,inf) , norm(diff) };
+   
+   %    Sayfy-Aburub-4-3-DIRK
+   imethod = imethod + 1;
+   mname = 'Sayfy-Aburub-4-3-DIRK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { ' SaAb4(3)I' , norm(diff,inf) , norm(diff) };
    
    %    Ascher(2,3,3)-SDIRK
    imethod = imethod + 1;
    mname = 'Ascher(2,3,3)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(2,3,3)I' , norm(diff,inf) , norm(diff) };
@@ -262,7 +316,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(3,4,3)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(3,4,3)I' , norm(diff,inf) , norm(diff) };
@@ -271,7 +325,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(2,3,2)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(2,3,2)I' , norm(diff,inf) , norm(diff) };
@@ -280,7 +334,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(2,2,2)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(2,2,2)I' , norm(diff,inf) , norm(diff) };
@@ -289,7 +343,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ascher(4,4,3)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' A(4,4,3)I' , norm(diff,inf) , norm(diff) };
@@ -298,7 +352,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cooper4-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  Cooper4I' , norm(diff,inf) , norm(diff) };
@@ -307,7 +361,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cooper6-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  Cooper6I' , norm(diff,inf) , norm(diff) };
@@ -316,7 +370,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'TRBDF2-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '    TRBDF2' , norm(diff,inf) , norm(diff) };
@@ -325,7 +379,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'TRX2-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '      TRX2' , norm(diff,inf) , norm(diff) };
@@ -334,7 +388,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Billington-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { 'Billington' , norm(diff,inf) , norm(diff) };
@@ -343,7 +397,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cash(5,2,4)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  C(5,2,4)' , norm(diff,inf) , norm(diff) };
@@ -352,7 +406,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Cash(5,3,4)-SDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  C(5,3,4)' , norm(diff,inf) , norm(diff) };
@@ -361,7 +415,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Ismail(7,4,5)-ESDIRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  I(7,4,5)' , norm(diff,inf) , norm(diff) };
@@ -370,7 +424,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'SDIRK-2-2';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' SDIRK 2-2' , norm(diff,inf) , norm(diff) };
@@ -379,7 +433,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'SDIRK-4-5';
    B = butcher(mname);
-   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' SDIRK 4-5' , norm(diff,inf) , norm(diff) };
@@ -646,6 +700,15 @@ for i = 1:length(hvals)
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { 'Gauss 6-12' , norm(diff,inf) , norm(diff) };
+
+   %    Qualifying exam
+   imethod = imethod + 1;
+   mname = 'Qualifying Exam';
+   B = [0, 0, 0, 0; 1/2, 1/4, 1/4, 0; 1, 1/4, 1/2, 1/4; 0, 1/6, 2/3, 1/6];
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { '  QualExam' , norm(diff,inf) , norm(diff) };
 
 end
 

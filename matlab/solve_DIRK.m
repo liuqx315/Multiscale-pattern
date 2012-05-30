@@ -49,14 +49,23 @@ c = B(1:s,1);
 b = (B(s+1,2:s+1))';
 A = B(1:s,2:s+1);
 
-% determine method order (and embedding order)
+% estimate method order (and embedding order)
 if (s == 4) 
    q_method = 3;
    p_method = 2;
+elseif (s == 5)
+   q_method = 4;
+   p_method = 3;
 elseif (s == 6)
    q_method = 4;
    p_method = 3;
+elseif (s == 7)
+   q_method = 5;
+   p_method = 4;
 elseif (s == 8)
+   q_method = 5;
+   p_method = 4;
+else
    q_method = 5;
    p_method = 4;
 end   
@@ -210,7 +219,7 @@ for tstep = 2:length(tvals)
    
 end
 
-fprintf('solve_DIRK: step failures:  %i convergence,  %i accuracy\n',...
-    c_fails,a_fails);
+% $$$ fprintf('solve_DIRK: step failures:  %i convergence,  %i accuracy\n',...
+% $$$     c_fails,a_fails);
 
 % end function
