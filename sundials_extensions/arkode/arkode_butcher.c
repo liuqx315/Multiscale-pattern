@@ -58,9 +58,10 @@
   -----------------------------------------------------------
 
 ---------------------------------------------------------------*/
-int ARKodeGetButcherTable(int imethod, int *s, int *q, 
-			  int *p, realtype **A, realtype *b, 
-			  realtype *c, realtype *b2, realtype **bd) 
+int ARKLoadButcherTable(int imethod, int *s, int *q, int *p, 
+			realtype (*A)[S_MAX], realtype *b, 
+			realtype *c, realtype *b2, 
+			realtype (*bd)[S_MAX]) 
 {
 
   int i, j;

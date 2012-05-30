@@ -28,6 +28,10 @@ static booleantype ARKCheckNvector(N_Vector tmpl);
 
 static int ARKInitialSetup(ARKodeMem ark_mem);
 static int ARKSetButcherTables(ARKodeMem ark_mem);
+int ARKLoadButcherTable(int imethod, int *s, int *q, int *p, 
+			realtype (*A)[S_MAX], realtype *b, 
+			realtype *c, realtype *b2, 
+			realtype (*bd)[S_MAX]);
 
 static booleantype ARKAllocVectors(ARKodeMem ark_mem, 
 				   N_Vector tmpl);
@@ -86,8 +90,10 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
 static void ARKRestore(ARKodeMem ark_mem, realtype saved_t);
 
 static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
-                         realtype saved_t, int *nefPtr, 
+			  realtype saved_t, int *nefPtr, 
 			  realtype *dsmPtr);
+
+static realtype ARKComputeSolutions(ARKodeMem ark_mem);
 
 static void ARKCompleteStep(ARKodeMem ark_mem);
 
@@ -1608,7 +1614,7 @@ static void ARKFreeVectors(ARKodeMem ark_mem)
 ---------------------------------------------------------------*/
 static int ARKInitialSetup(ARKodeMem ark_mem)
 {
-  int ier;
+  int i, ier;
 
   /* Did the user specify tolerances? */
   if (ark_mem->ark_itol == ARK_NN) {
@@ -1632,6 +1638,11 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
 		    "ARKInitialSetup", MSGARK_MEM_FAIL);
     return(ARK_MEM_FAIL);
   }
+
+  /* Fill in implicit guesses for first step with initial condition */
+  if (!ark_mem->ark_explicit) 
+    for (i=0; i<ark_mem->ark_stages; i++)
+      N_VScale(ONE, ark_mem->ark_zn[0], ark_mem->ark_Fi[i]);
 
   /* Set data for efun */
   if (ark_mem->ark_user_efun) 
@@ -2631,6 +2642,58 @@ static void ARKRestore(ARKodeMem ark_mem, realtype saved_t)
 
 
 /*---------------------------------------------------------------
+ ARKComputeSolutions
+
+ This routine calculates the final RK solution using the existing 
+ RHS data.  This solution is placed in ark_ftemp, which will be
+ copied into the relevant locations is the error test passes.  
+ This routine also computes the error estimate ||y-ytilde||_WRMS, 
+ where ytilde is the embedded solution, and the norm weights come
+ from ark_ewt.  This norm value is returned.  The vector form of
+ this estimated error (y-ytilde) is stored in ark_tempv, in case
+ the calling routine wishes to examine the error locations.
+
+ For now, we assume that the ODE is of the form 
+    y' = fe(t,y) + fi(t,y)
+ so that both y and ytilde can be formed from existing data.  
+ However, once we extend the solver to allow for non-identity
+ mass matrices, this routine will perform two additional solves
+ to compute the solution and embedding.
+---------------------------------------------------------------*/
+static realtype ARKComputeSolutions(ARKodeMem ark_mem)
+{
+  /* local data */
+  realtype hb;
+  int j;
+  N_Vector y    = ark_mem->ark_ftemp;
+  N_Vector yerr = ark_mem->ark_tempv;
+
+  /* Initialize solution to yn, error estimate to zero */
+  N_VScale(ONE, ark_mem->ark_ynew, y);
+  N_VConst(ZERO, yerr);
+
+  /* Iterate over each stage, updating solution and error estimate */
+  for (j=0; j<ark_mem->ark_stages; j++) {
+
+    /* solution */
+    hb = ark_mem->ark_h * ark_mem->ark_b[j];
+    N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, y, y);
+    N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, y, y);
+
+    /* error */
+    hb = ark_mem->ark_h * (ark_mem->ark_b[j] - ark_mem->ark_b2[j]);
+    N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, yerr, yerr);
+    N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, yerr, yerr);
+
+  }
+
+  /* return error norm */
+  return(N_VWrmsNorm(yerr, ark_mem->ark_ewt));
+  
+}
+
+
+/*---------------------------------------------------------------
  ARKDoErrorTest
 
  This routine performs the local error test. 
@@ -2714,6 +2777,7 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 
   return(TRY_AGAIN);
 }
+
 
 
 /*===============================================================
@@ -3847,11 +3911,197 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
 
  This routine determines the ERK/DIRK/ARK method to use, based 
  on the desired accuracy and information on whether the problem
- is explicit, implicit or both.
+ is explicit, implicit or imex.
 ---------------------------------------------------------------*/
 static int ARKSetButcherTables(ARKodeMem ark_mem)
 {
-  /***** FILL THIS IN!!! *****/
+
+  /**** explicit methods ****/
+  if (ark_mem->ark_explicit) {
+
+    switch (ark_mem->ark_q) {
+    case(2):    /* Heun-Euler: q=2, p=1, s=2 */
+      ARKLoadButcherTable(0, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    case(3):
+    case(4):    /* Bogacki-Shampine: q=4, p=3, s=4 */
+      ARKLoadButcherTable(4, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    case(5):
+    case(6):    /* Dormand-Prince: q=5, p=4, s=7 */
+      ARKLoadButcherTable(14, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    default:    /* no available method, set default */
+      ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKSetButcherTables", 
+		      "No explicit method at requested order, using q=6.");
+      ARKLoadButcherTable(14, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+    }
+
+  /**** implicit methods ****/
+  } else if (ark_mem->ark_implicit) {
+
+    switch (ark_mem->ark_q) {
+
+    case(2):
+    case(3):    /* TRBDF2: q=3, p=2, s=3 */
+      ARKLoadButcherTable(2, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    case(4):
+    case(5):    /* SDIRK-5-4: q=5, p=4, s=5, A/L stable */
+      ARKLoadButcherTable(7, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    default:    /* no available method, set default */
+      ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKSetButcherTables", 
+		      "No implicit method at requested order, using q=5.");
+      ARKLoadButcherTable(7, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+    }
+ 
+  /**** imex methods ****/
+  } else {
+
+    switch (ark_mem->ark_q) {
+
+    case(2):
+    case(3):    /* ARK3(2)4L[2]SA: q=3, p=2, s=4, DIRK is A/L stable */
+      ARKLoadButcherTable(5, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      ARKLoadButcherTable(6, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    case(4):    /* ARK4(3)6L[2]SA: q=4, p=3, s=6, DIRK is A/L stable */
+      ARKLoadButcherTable(12, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      ARKLoadButcherTable(13, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    case(5):    /* ARK5(4)8L[2]SA: q=5, p=4, s=8, DIRK is A stable */
+      ARKLoadButcherTable(16, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      ARKLoadButcherTable(17, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+
+    default:    /* no available method, set default */
+      ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKSetButcherTables", 
+		      "No imex method at requested order, using q=5.");
+      ARKLoadButcherTable(16, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ae, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      ARKLoadButcherTable(17, &ark_mem->ark_stages, 
+			  &ark_mem->ark_q, 
+			  &ark_mem->ark_p, 
+			  ark_mem->ark_Ai, 
+			  ark_mem->ark_b, 
+			  ark_mem->ark_c, 
+			  ark_mem->ark_b2, 
+			  ark_mem->ark_bd);
+      break;
+    }
+
+  }
+
   return(ARK_SUCCESS);
 }
 
@@ -3864,7 +4114,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
  {yn,yp,fn,fp}, where yn,yp are the stored solution values and 
  fn,fp are the sotred RHS function values at the endpoints of the
  last successful time step [tn,tp].  If greater polynomial order 
- than 3 is requested (and the method order allows it), then we 
+ than 3 is requested (and the method order allows it, then we 
  can bootstrap up to a 5th-order accurate interpolant.  For lower 
  order interpolants than cubic, we use {yn,yp,fp} for 
  quadratic, {yn,yp} for linear, and {0.5*(yn+yp)} for constant.

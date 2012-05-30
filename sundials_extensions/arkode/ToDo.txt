@@ -33,35 +33,38 @@ Easy:
     that is only filled in after setting the initial guess).  This
     will be called once at the end of a successful step to generate
     predictions for the next one.
+[X] Routine to calculate time step solution and embedding, along with 
+    time accuracy error estimate.
+[X] Code in InitialSetup routine to fill Fi array with initial
+    condition (trivial predictor) for stages in first step.
+[X] Routine to select appropriate Butcher table for the problem, given 
+    the relevant user-defined constraints.
+[ ] Get routine to output the Butcher table name (and relevant integer 
+    flag) to screen and/or in return arguments.
+[ ] Set routine to manually choose a pre-existing Butcher table (by
+    number?, by name?) -- i.e. not user-supplied, and not the default
+     choice.
 [ ] Code to fill in values for last successful step: told, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
     copy values from ynew to yold or fnew to fold.  Still do the copy
     to fill ynew and fnew, since user may input y itself into code,
     and pointer should remain fixed.
-[ ] Code in InitialSetup routine to fill Fi array with initial
-    condition (trivial predictor) for stages in first step.
 [ ] Routine to do actual step prediction [put inside existing
     ARKPredict]: this will copy the value from Fi into the nonlinear
     solver initial guess (for early stages), or it can use
     already-generated stage solutions to predict subsequent stages
     (for later stages).  This will be called prior to every stage
     solve.
-[ ] Routine to calculate time step solution and embedding, along with 
-    time accuracy error estimate.
-[ ] Routine to select appropriate Butcher table for the problem, given 
-    the relevant user-defined constraints.
-[ ] Set routine to manually choose a pre-existing Butcher table
-    (i.e. not user-supplied, and not the default choice).
-[ ] Get routine to output the Butcher table name (and relevant integer 
-    flag) to screen and/or in return arguments.
 [ ] Code to clean/check Butcher tables -- this should check that ERK
     and IRK tables share root & canopy nodes, that all necessary
     coefficients are defined.  This should be called inside
-    ARKInitialSetup.
+    ARKInitialSetup.  DO I WANT TO STORE DIFFERENT ROOT/CANOPY NODES
+    FOR EACH METHOD AT FIRST, AND THEN CHECK THESE TO BE CERTAIN
+    THEY'RE LEGAL?
+[ ] In all set routines, update code to allow specification of the
+    defaults through supplying zeros/NULL to the function.
 [ ] stageprep routine, to evaluate Fe on current solution (unless I
     can include this stuff in something that already exists)
-[ ] Update the total real/integer work length estimates in
-    ARKodeCreate. 
 [ ] Initialize and update ark_mem->ark_hold within time-stepping.  Or
     maybe it is already stored in ark_hu??
 [ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
@@ -72,8 +75,10 @@ Easy:
 [ ] Consider removing integer parameter ark_smax_alloc, since I can
     always check whether the N_Vector is NULL or not and
     allocate/deallocate appropriately.
-[ ] In all set routines, update code to allow specification of the
-    defaults through supplying zeros/NULL to the function.
+[ ] Remove ark_bd data arrays since we're using a different form of
+    dense output.
+[ ] Update the total real/integer work length estimates in
+    ARKodeCreate. 
 
 
 Medium:
