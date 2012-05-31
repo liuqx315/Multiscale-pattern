@@ -261,18 +261,25 @@ typedef struct ARKodeMemRec {
   /*-----------
     Method Data 
     -----------*/  
-  int ark_q;                      /* method order                           */
-  int ark_p;                      /* embedding order                        */
-  int ark_istage;                 /* current stages in integration method   */
-  int ark_stages;                 /* number of stages in integration method */
-  int ark_dense_q;                /* polynomial order for dense output      */
+  int ark_q;                              /* method order                   */
+  int ark_p;                              /* embedding order                */
+  int ark_istage;                         /* current stage                  */
+  int ark_stages;                         /* number of stages               */
+  int ark_dense_q;                        /* dense output polynomial order  */
   realtype ark_Ae[ARK_S_MAX][ARK_S_MAX];  /* ERK Butcher table              */
   realtype ark_Ai[ARK_S_MAX][ARK_S_MAX];  /* IRK Butcher table              */
   realtype ark_c[ARK_S_MAX];              /* RK method canopy nodes         */
-  realtype ark_b[ARK_S_MAX];              /* RK method root nodes           */
-  realtype ark_b2[ARK_S_MAX];             /* RK method embedding root nodes */
-  booleantype ark_user_Ae;        /* TRUE if user sets Ae                   */
-  booleantype ark_user_Ai;        /* TRUE if user sets Ai                   */
+  realtype ark_b[ARK_S_MAX];              /* RK method solution coeffs      */
+  realtype ark_b2[ARK_S_MAX];             /* RK method embedding coeffs     */
+  booleantype ark_user_Ae;                /* TRUE if user sets Ae           */
+  booleantype ark_user_Ai;                /* TRUE if user sets Ai           */
+
+  int ark_qE;                   /* ERK method data (should match IRK)       */
+  int ark_pE;
+  int ark_stagesE;
+  realtype ark_cE[ARK_S_MAX];
+  realtype ark_bE[ARK_S_MAX];
+  realtype ark_b2E[ARK_S_MAX];
 
   int ark_qprime;               /* order to be used on the next step  
 				   = q-1, q, or q+1                         */

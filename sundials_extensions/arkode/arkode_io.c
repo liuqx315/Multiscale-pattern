@@ -397,8 +397,6 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
 {
   int i, j;
   ARKodeMem ark_mem;
-  booleantype match;
-  realtype tol = RCONST(1.0e-12);
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetERKTable", MSGARK_NO_MEM);
@@ -418,48 +416,14 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
     return(ARK_MEM_NULL);
   }
 
-  /* check that supplied table is explicit */
-  booleantype implicit = FALSE;
-  for (i=0; i<s; i++)
-    for (j=i; j<s; j++)
-      if (ABS(A[i][j]) > TINY)  implicit = TRUE;
-  if (implicit) {
-    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTable", 
-		    "Supplied table is implicit!");
-    return(ARK_ILL_INPUT);
-  }
-
-  /* if IRK table already set, ensure that shared coeffs match */
-  if (ark_mem->ark_user_Ai) {
-    match = TRUE;
-    if (ark_mem->ark_stages != s)  match = FALSE;
-    if (!match) {
-      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		      "ARKodeSetERKTable", "s does not match Ai table");
-      return(ARK_ILL_INPUT);
-    }
-    if (ark_mem->ark_q != q)  match = FALSE;
-    if (ark_mem->ark_p != p)  match = FALSE;
-    for (i=0; i<s; i++) {
-      if (ABS(ark_mem->ark_c[i]  - c[i])      > tol)  match = FALSE;
-      if (ABS(ark_mem->ark_b[i]  - b[i])      > tol)  match = FALSE;
-      if (ABS(ark_mem->ark_b2[i] - bembed[i]) > tol)  match = FALSE;
-    }
-    if (!match) {
-      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTable", 
-		      "shared Butcher coeffs don't match");
-      return(ARK_ILL_INPUT);
-    }
-  }
-
   /* set the relevant parameters */
-  ark_mem->ark_stages = s;
-  ark_mem->ark_q = q;
-  ark_mem->ark_p = p;
+  ark_mem->ark_stagesE = s;
+  ark_mem->ark_qE = q;
+  ark_mem->ark_pE = p;
   for (i=0; i<s; i++) {
-    ark_mem->ark_c[i]  = c[i];
-    ark_mem->ark_b[i]  = b[i];
-    ark_mem->ark_b2[i] = bembed[i];
+    ark_mem->ark_cE[i]  = c[i];
+    ark_mem->ark_bE[i]  = b[i];
+    ark_mem->ark_b2E[i] = bembed[i];
     for (j=0; j<s; j++) {
       ark_mem->ark_Ae[i][j] = A[i][j];
     }
@@ -484,8 +448,6 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
 {
   int i, j;
   ARKodeMem ark_mem;
-  booleantype match;
-  realtype tol = RCONST(1.0e-12);
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTable", MSGARK_NO_MEM);
@@ -503,40 +465,6 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTable", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
-  }
-
-  /* check that supplied table is implicit */
-  booleantype implicit = FALSE;
-  for (i=0; i<s; i++)
-    for (j=i; j<s; j++)
-      if (ABS(A[i][j]) > TINY)  implicit = TRUE;
-  if (!implicit) {
-    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTable", 
-		    "Supplied table is explicit!");
-    return(ARK_ILL_INPUT);
-  }
-
-  /* if ERK table already set, ensure that shared coeffs match */
-  if (ark_mem->ark_user_Ae) {
-    match = TRUE;
-    if (ark_mem->ark_stages != s)  match = FALSE;
-    if (!match) {
-      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
-		      "ARKodeSetIRKTable", "s does not match Ae table");
-      return(ARK_ILL_INPUT);
-    }
-    if (ark_mem->ark_q != q)  match = FALSE;
-    if (ark_mem->ark_p != p)  match = FALSE;
-    for (i=0; i<s; i++) {
-      if (ABS(ark_mem->ark_c[i]  - c[i])      > tol)  match = FALSE;
-      if (ABS(ark_mem->ark_b[i]  - b[i])      > tol)  match = FALSE;
-      if (ABS(ark_mem->ark_b2[i] - bembed[i]) > tol)  match = FALSE;
-    }
-    if (!match) {
-      ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTable", 
-		      "shared Butcher coeffs don't match");
-      return(ARK_ILL_INPUT);
-    }
   }
 
   /* set the relevant parameters */
@@ -568,7 +496,7 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
 ---------------------------------------------------------------*/
 int ARKodeSetERKTableNum(void *arkode_mem, int itable)
 {
-  int i, j, iflag;
+  int iflag;
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
@@ -578,44 +506,18 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* fill in table based on argument */
-  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
-				 &ark_mem->ark_q, 
-				 &ark_mem->ark_p, 
+  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stagesE, 
+				 &ark_mem->ark_qE, 
+				 &ark_mem->ark_pE, 
 				 ark_mem->ark_Ae, 
-				 ark_mem->ark_b, 
-				 ark_mem->ark_c, 
-				 ark_mem->ark_b2);
-  /* if illegal itable specified, reset to zeros and return */
+				 ark_mem->ark_bE, 
+				 ark_mem->ark_cE, 
+				 ark_mem->ark_b2E);
+  /* check that requested table is legal */
   if (iflag != ARK_SUCCESS) {
-    for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ae[i][j] = ZERO;
-      ark_mem->ark_c[i]  = ZERO;
-      ark_mem->ark_b[i]  = ZERO;
-      ark_mem->ark_b2[i] = ZERO;
-    }
-    ark_mem->ark_q = 0;
-    ark_mem->ark_p = 0;
-    ark_mem->ark_stages = 0;
-    return(ARK_ILL_INPUT);
-  }
-
-  /* ensure that requested table is explicit, if not reset and return */
-  booleantype implicit = FALSE;
-  for (i=0; i<ark_mem->ark_stages; i++)
-    for (j=i; j<ark_mem->ark_stages; j++)
-      if (ABS(ark_mem->ark_Ae[i][j]) > TINY)  implicit = TRUE;
-  if (implicit) {
-    for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ae[i][j] = ZERO;
-      ark_mem->ark_c[i]  = ZERO;
-      ark_mem->ark_b[i]  = ZERO;
-      ark_mem->ark_b2[i] = ZERO;
-    }
-    ark_mem->ark_q = 0;
-    ark_mem->ark_p = 0;
-    ark_mem->ark_stages = 0;
-    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetERKTableNum", 
-		    "Requested table is implicit!");
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetERKTableNum", 
+		    "Illegal ERK table number");
     return(ARK_ILL_INPUT);
   }
 
@@ -632,7 +534,7 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
 ---------------------------------------------------------------*/
 int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 {
-  int i, j, iflag;
+  int iflag;
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
@@ -649,37 +551,11 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 				 ark_mem->ark_b, 
 				 ark_mem->ark_c, 
 				 ark_mem->ark_b2);
-  /* if illegal itable specified, reset to default and return */
+  /* check that requested table is legal */
   if (iflag != ARK_SUCCESS) {
-    for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ai[i][j] = ZERO;
-      ark_mem->ark_c[i]  = ZERO;
-      ark_mem->ark_b[i]  = ZERO;
-      ark_mem->ark_b2[i] = ZERO;
-    }
-    ark_mem->ark_q = 0;
-    ark_mem->ark_p = 0;
-    ark_mem->ark_stages = 0;
-    return(ARK_ILL_INPUT);
-  }
-
-  /* ensure that requested table is implicit, if not reset and return */
-  booleantype implicit = FALSE;
-  for (i=0; i<ark_mem->ark_stages; i++)
-    for (j=i; j<ark_mem->ark_stages; j++)
-      if (ABS(ark_mem->ark_Ai[i][j]) > TINY)  implicit = TRUE;
-  if (!implicit) {
-    for (i=0; i<ARK_S_MAX; i++) {
-      for (j=0; j<ARK_S_MAX; j++)  ark_mem->ark_Ai[i][j] = ZERO;
-      ark_mem->ark_c[i]  = ZERO;
-      ark_mem->ark_b[i]  = ZERO;
-      ark_mem->ark_b2[i] = ZERO;
-    }
-    ark_mem->ark_q = 0;
-    ark_mem->ark_p = 0;
-    ark_mem->ark_stages = 0;
-    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", "ARKodeSetIRKTableNum", 
-		    "Requested table is explicit!");
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetIRKTableNum", 
+		    "Illegal IRK table number");
     return(ARK_ILL_INPUT);
   }
 
