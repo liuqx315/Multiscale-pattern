@@ -1,0 +1,11 @@
+Calling ode45 for reference solution
+{??? Operation terminated by user during ==> <a href="matlab: opentoline('/usr/local/MATLAB/R2011a/toolbox/matlab/funfun/private/ntrp45.m',37,0)">ntrp45 at 37</a>
+
+In ==> <a href="matlab: opentoline('/usr/local/MATLAB/R2011a/toolbox/matlab/funfun/ode45.m',456,0)">ode45 at 456</a>
+      yout_new = [ntrp45(tref,t,y,[],[],h,f,idxNonNegative), ynew];
+
+In ==> <a href="matlab: opentoline('/home/dreynolds/research/ARKode/matlab/butcher_tests.m',31,0)">butcher_tests at 31</a>
+[t,Ytrue] = ode45('f_test', tout, Y0, opts);
+} 
+butcher_tests3
+rm: cannot remove `butcher_tests3.txt': No such file or directory

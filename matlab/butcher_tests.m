@@ -728,8 +728,8 @@ for imethod = 1:nmethods
       fprintf('  %10.2e  %10.2e  %10.2e\n',hvals(ih),errI(ih),err2(ih))
    end
    fprintf('  --------------------------------------\n')
-   p1 = polyfit(log(hvals),log(errI),1);
-   p2 = polyfit(log(hvals),log(err2),1);
+   p1 = polyfit(log(hvals(2:end-2)),log(errI(2:end-2)),1);
+   p2 = polyfit(log(hvals(2:end-2)),log(err2(2:end-2)),1);
    p = (p1(1)+p2(1))/2;
    fprintf('  Measured order of accuracy = %g\n\n\n',p);
    
