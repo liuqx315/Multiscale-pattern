@@ -321,6 +321,29 @@ B = butcher(mname);
 [q,p,Bs,As,Ls] = check_butcher(B);
 fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
 
+%    Kvaerno(4,2,3)-ESDIRK 
+mname = 'Kvaerno(4,2,3)-ESDIRK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+%    Kvaerno(5,3,4)-ESDIRK 
+mname = 'Kvaerno(5,3,4)-ESDIRK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+%    Kvaerno(7,4,5)-ESDIRK 
+mname = 'Kvaerno(7,4,5)-ESDIRK';
+fprintf(' %22s',mname);
+B = butcher(mname);
+[q,p,Bs,As,Ls] = check_butcher(B);
+fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
+
+
+
 %%%%%%%%%%%%%%%%%%% IRK Methods %%%%%%%%%%%%%%%%%%%
 
 %    IRK-1-1

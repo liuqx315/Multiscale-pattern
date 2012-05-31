@@ -43,6 +43,9 @@
    Ismail(7,4,5)-ESDIRK   1   0   0    1    0
               SDIRK-2-2   2   0   0    1    1
               SDIRK-4-5   3   3   0    1    1
+  Kvaerno(4,2,3)-ESDIRK   3   2   0    1    1
+  Kvaerno(5,3,4)-ESDIRK   4   3   0    1    0
+  Kvaerno(7,4,5)-ESDIRK   4   4   0    1    1
                 IRK-1-1   1   0   1    1    1
  Crank-Nicolson-2-2-IRK   2   0   0    1    0
                SIRK-2-2   2   0   0    1    1
@@ -62,20 +65,12 @@
     LobattoIIIA-3-4-IRK   4   0   0    1    0
     LobattoIIIB-3-4-IRK   4   0   0    0    0
     LobattoIIIC-3-4-IRK   4   0   0    1    1
-     LobattoIII-4-6-IRK{Warning: Matrix is close to singular or badly scaled.
-         Results may be inaccurate. RCOND = 1.101481e-16.} 
-> In <a href="matlab: opentoline('/home/dreynolds/research/ARKode/matlab/check_butcher.m',178,1)">check_butcher at 178</a>
-  In <a href="matlab: opentoline('/home/dreynolds/research/ARKode/matlab/butcher_tests2.m',463,1)">butcher_tests2 at 463</a>
-   6   0   0    0    0
+     LobattoIII-4-6-IRK   6   0   0    0    0
     LobattoIIIA-4-6-IRK   6   0   0    1    0
     LobattoIIIB-4-6-IRK   6   0   0    0    0
     LobattoIIIC-4-6-IRK   6   0   0    1    1
        RadauIIA-5-9-IRK   9   0   0    1    0
-     LobattoIII-5-8-IRK{Warning: Matrix is close to singular or badly scaled.
-         Results may be inaccurate. RCOND = 9.566823e-17.} 
-> In <a href="matlab: opentoline('/home/dreynolds/research/ARKode/matlab/check_butcher.m',178,1)">check_butcher at 178</a>
-  In <a href="matlab: opentoline('/home/dreynolds/research/ARKode/matlab/butcher_tests2.m',498,1)">butcher_tests2 at 498</a>
-   8   0   0    0    0
+     LobattoIII-5-8-IRK   8   0   0    0    0
     LobattoIIIA-5-8-IRK   8   0   0    0    0
     LobattoIIIB-5-8-IRK   8   0   0    0    0
     LobattoIIIC-5-8-IRK   8   0   0    1    1

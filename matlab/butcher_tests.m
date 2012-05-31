@@ -410,7 +410,7 @@ for i = 1:length(hvals)
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  C(5,3,4)' , norm(diff,inf) , norm(diff) };
-   
+
    %    Ismail(7,4,5)-ESDIRK
    imethod = imethod + 1;
    mname = 'Ismail(7,4,5)-ESDIRK';
@@ -438,6 +438,34 @@ for i = 1:length(hvals)
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' SDIRK 4-5' , norm(diff,inf) , norm(diff) };
 
+   %    Kvaerno(4,2,3)-ESDIRK 
+   imethod = imethod + 1;
+   mname = 'Kvaerno(4,2,3)-ESDIRK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { ' Kv(4,2,3)' , norm(diff,inf) , norm(diff) };
+   
+   %    Kvaerno(5,3,4)-ESDIRK 
+   imethod = imethod + 1;
+   mname = 'Kvaerno(5,3,4)-ESDIRK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { ' Kv(5,3,4)' , norm(diff,inf) , norm(diff) };
+   
+   %    Kvaerno(7,4,5)-ESDIRK 
+   imethod = imethod + 1;
+   mname = 'Kvaerno(7,4,5)-ESDIRK';
+   B = butcher(mname);
+   [t,Y,ns] = solve_DIRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
+   [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
+   diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
+   m(imethod,i,1:3) = { ' Kv(7,4,5)' , norm(diff,inf) , norm(diff) };
+   
+   
    %%%%%%%%%%%%%%%%%%% IRK Methods %%%%%%%%%%%%%%%%%%%
 
    %    IRK-1-1
