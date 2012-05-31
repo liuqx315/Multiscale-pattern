@@ -3989,7 +3989,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		      "ARKSetButcherTables", 
 		      "No explicit method at requested order, using q=6.");
-      ARKodeLoadButcherTable(19, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(21, &ark_mem->ark_stages, 
 			     &ark_mem->ark_q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -4015,8 +4015,8 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_b2);
       break;
 
-    case(4):    /* Cash(5,3,4): q=4, p=3, s=5, A/L stable */
-      ARKodeLoadButcherTable(12, &ark_mem->ark_stages, 
+    case(4):    /* SDIRK-5-4: q=4, p=3, s=5, A/L stable */
+      ARKodeLoadButcherTable(10, &ark_mem->ark_stages, 
 			     &ark_mem->ark_q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 

@@ -51,7 +51,7 @@ Easy:
     copy values from ynew to yold or fnew to fold.  Still do the copy
     to fill ynew and fnew, since user may input y itself into code,
     and pointer should remain fixed.
-[ ] Remove ark_bd data arrays since we're using a different form of
+[X] Remove ark_bd data arrays since we're using a different form of
     dense output.
 [ ] Routine to do actual step prediction [put inside existing
     ARKPredict]: this will copy the value from Fi into the nonlinear
