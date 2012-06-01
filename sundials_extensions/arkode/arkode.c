@@ -2322,17 +2322,18 @@ static int ARKNls(ARKodeMem ark_mem, int nflag)
 /*---------------------------------------------------------------
  ARKNlsResid
 
- This routine evaluates the nonlinaer residual.  It assumes that 
- any data from previous time steps/stages is contained in 
- ark_mem, and merely combines this old data with the current RHS
- vector, fy = f(t,y), to compute the nonlinear residual r.
+ This routine evaluates the negative nonlinear residual.  It 
+ assumes that any data from previous time steps/stages is 
+ contained in ark_mem, and merely combines this old data with the
+ current RHS vector, fy = f(t,y), to compute the nonlinear 
+ residual r.
 
  Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
 static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y, 
 		       N_Vector fy, N_Vector r)
 {
-  /* Evaluate the residual of the nonlinear system */
+  /* Evaluate the negative residual of the nonlinear system */
   N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], ONE, y, r);
   N_VLinearSum(ark_mem->ark_gamma, fy, -ONE, r, r);
   return(ARK_SUCCESS);
@@ -2342,11 +2343,11 @@ static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y,
 /*---------------------------------------------------------------
  ARKNlsResid2
 
- This routine evaluates the nonlinaer residual for the additive 
- Runge-Kutta method.  It assumes that any data from previous time 
- steps/stages is contained in ark_mem, and merely combines this
- old data with the current RHS vector, fy = f(t,y), to compute
- the nonlinear residual r.
+ This routine evaluates the negative nonlinear residual for the 
+ additive Runge-Kutta method.  It assumes that any data from 
+ previous time steps/stages is contained in ark_mem, and merely 
+ combines this old data with the current RHS vector, fy = f(t,y), 
+ to compute the nonlinear residual r.
 
  Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
@@ -2373,9 +2374,10 @@ static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y,
 /*---------------------------------------------------------------
  ARKNlsNewton
 
- This routine handles the Newton iteration. It calls lsetup if 
- indicated, calls ARKNewtonIteration to perform the iteration, and 
- retries a failed attempt at Newton iteration if that is indicated.
+ This routine handles the Newton iteration for the additive 
+ Runge-Kutta method. It calls lsetup if indicated, calls 
+ ARKNewtonIteration to perform the iteration, and retries a 
+ failed attempt at Newton iteration if that is indicated.
 
  Possible return values:
 
@@ -2390,14 +2392,15 @@ static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y,
 ---------------------------------------------------------------*/
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 {
-  N_Vector vtemp1, vtemp2, vtemp3;
+  N_Vector vtemp1, vtemp2, vtemp3, ycur;
   int convfail, retval, ier;
   booleantype callSetup;
   
   vtemp1 = ark_mem->ark_acor;  /* rename acor as vtemp1 for readability  */
   vtemp2 = ark_mem->ark_y;     /* rename y as vtemp2 for readability     */
   vtemp3 = ark_mem->ark_tempv; /* rename tempv as vtemp3 for readability */
-  
+  ycur   = ark_mem->ark_zn[0]; /* rename zn[0] as ycur for readability   */
+
   /* Set flag convfail, input to lsetup for its evaluation decision */
   convfail = ((nflag == FIRST_CALL) || (nflag == PREV_ERR_FAIL)) ?
     ARK_NO_FAILURES : ARK_FAIL_OTHER;
@@ -2418,14 +2421,14 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
      call ARKNewtonIteration for the Newton iteration itself.      */
   for(;;) {
 
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ycur, 
 			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
     ark_mem->ark_nfi++; 
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
     if (retval > 0) return(RHSFUNC_RECVR);
 
     if (callSetup) {
-      ier = ark_mem->ark_lsetup(ark_mem, convfail, ark_mem->ark_zn[0], 
+      ier = ark_mem->ark_lsetup(ark_mem, convfail, ycur, 
 				ark_mem->ark_ftemp, &ark_mem->ark_jcur, 
 				vtemp1, vtemp2, vtemp3);
       ark_mem->ark_nsetups++;
@@ -2441,7 +2444,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 
     /* Set acor to zero and load prediction into y vector */
     N_VConst(ZERO, ark_mem->ark_acor);
-    N_VScale(ONE, ark_mem->ark_zn[0], ark_mem->ark_y);
+    N_VScale(ONE, ycur, ark_mem->ark_y);
 
     /* Do the Newton iteration */
     ier = ARKNewtonIteration(ark_mem);
@@ -2473,23 +2476,25 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
 {
   int m, retval;
   realtype del, delp, dcon;
-  N_Vector b;
+  N_Vector b, ycur;
 
+  ycur = ark_mem->ark_zn[0];   /* rename zn[0] as ycur for readability */
+  b    = ark_mem->ark_tempv;   /* rename tempv as b for readability    */
+
+
+  /* Initialize temporary variables for use in iteration */
   ark_mem->ark_mnewt = m = 0;
-
-  /* Initialize delp to avoid compiler warning message */
   del = delp = ZERO;
 
   /* Looping point for Newton iteration */
   for(;;) {
 
-    /* Evaluate the nonlinear system residual, put result into tempv */
+    /* Evaluate the nonlinear system residual, put result into b */
     retval = ARKNlsResid(ark_mem, ark_mem->ark_acor, 
-			 ark_mem->ark_ftemp, ark_mem->ark_tempv);
+			 ark_mem->ark_ftemp, b);
     if (retval != ARK_SUCCESS) return(ARK_RHSFUNC_FAIL);
 
     /* Call the lsolve function */
-    b = ark_mem->ark_tempv;
     retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
 				 ark_mem->ark_y, ark_mem->ark_ftemp); 
     ark_mem->ark_nni++;
@@ -2508,8 +2513,7 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
     /* Get WRMS norm of correction; add correction to acor and y */
     del = N_VWrmsNorm(b, ark_mem->ark_ewt);
     N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
-    N_VLinearSum(ONE, ark_mem->ark_zn[0], ONE, 
-		 ark_mem->ark_acor, ark_mem->ark_y);
+    N_VLinearSum(ONE, ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
     
     /* Test for convergence.  If m > 0, an estimate of the convergence
        rate constant is stored in crate, and used in the test */

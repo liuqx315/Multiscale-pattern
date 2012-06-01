@@ -52,6 +52,9 @@ Easy:
     and IRK tables share root & canopy nodes, that all necessary
     coefficients are defined.  This should be called inside
     ARKInitialSetup.
+[ ] Create Newton solver for stage systems that uses clearly-named
+    arrays, etc., as opposed to shortcut names to unintelligible
+    temporary arrays.
 [ ] Code to fill in values for last successful step: told, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
     copy values from ynew to yold or fnew to fold.  Still do the copy
@@ -130,7 +133,13 @@ Medium:
     predictor data (and if it's ever called after a failed step).
 [ ] Create flowchart of which vectors are used when, and trim down
     memory footprint by reusing some as temporary data.  Then update
-    the total real/integer work length estimates in ARKodeCreate. 
+    the total real/integer work length estimates in ARKodeCreate.  I
+    may even be able to leverage the fact that be = bi, through
+    initializing RHS vectors for each stage, and just updating each
+    one with the appropriate multiple of fe() and fi(), and then only
+    storing (fe() + fi()).  Would this actually save any data storage,
+    or just make things more complicated?  It might save a bit for ARK
+    methods, but cost a bit more for IRK/ERK methods.  Think about it.
 
 
 
