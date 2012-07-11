@@ -2328,13 +2328,17 @@ static int ARKNls(ARKodeMem ark_mem, int nflag)
  current RHS vector, fy = f(t,y), to compute the nonlinear 
  residual r.
 
- Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
+ The array ark_mem->ark_zn[1] contains both old data and the
+ initial solution guess, so the current value of y only requires 
+ addition of acor.
+
+ Possible return values:  ARK_SUCCESS  or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
-static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y, 
+static int ARKNlsResid(ARKodeMem ark_mem, N_Vector acor, 
 		       N_Vector fy, N_Vector r)
 {
   /* Evaluate the negative residual of the nonlinear system */
-  N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], ONE, y, r);
+  N_VLinearSum(ark_mem->ark_rl1, ark_mem->ark_zn[1], ONE, acor, r);
   N_VLinearSum(ark_mem->ark_gamma, fy, -ONE, r, r);
   return(ARK_SUCCESS);
 }
@@ -2349,7 +2353,7 @@ static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y,
  combines this old data with the current RHS vector, fy = f(t,y), 
  to compute the nonlinear residual r.
 
- Possible return values:  ARK_SUCCESS or  ARK_RHSFUNC_FAIL
+ Possible return values:  ARK_SUCCESS  or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
 static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y, 
 			N_Vector fy, N_Vector r)
@@ -2378,6 +2382,10 @@ static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y,
  Runge-Kutta method. It calls lsetup if indicated, calls 
  ARKNewtonIteration to perform the iteration, and retries a 
  failed attempt at Newton iteration if that is indicated.
+
+ Upon entry, the predicted solution is held in ark_mem->ark_zn[0].
+
+ Upon a successful solve, the solution is held in ark_mem->ark_y.
 
  Possible return values:
 
@@ -2416,9 +2424,14 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
     callSetup = FALSE;
   }
   
-  /* Looping point for the solution of the nonlinear system.
-     Evaluate f at the predicted y, call lsetup if indicated, and
-     call ARKNewtonIteration for the Newton iteration itself.      */
+  /* Looping point for the solution of the nonlinear system:
+       Evaluate f at predicted y, store result in ark_mem->ark_ftemp.
+       Call lsetup if indicated, setting statistics and gamma factors.
+       Zero out the correction array (ark_mem->ark_acor).
+       Copy the predicted y (ycur) into the output (ark_mem->ark_y).
+       Call ARKNewtonIteration for the Newton iteration itself.
+       Repeat process if a recoverable failure occurred (convergence
+	  failure with stale Jacobian). */
   for(;;) {
 
     retval = ark_mem->ark_fi(ark_mem->ark_tn, ycur, 
@@ -2463,14 +2476,31 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 /*---------------------------------------------------------------
  ARKNewtonIteration
 
- This routine performs the Newton iteration. If the iteration 
- succeeds, it returns the value ARK_SUCCESS. If not, it may 
- signal the ARKNlsNewton routine to call lsetup again and 
- reattempt the iteration, by returning the value TRY_AGAIN. (In 
- this case, ARKNlsNewton must set convfail to ARK_FAIL_BAD_J 
- before calling setup again). Otherwise, this routine returns 
- one of the appropriate values ARK_LSOLVE_FAIL, CONV_FAIL, 
- ARK_RHSFUNC_FAIL, or RHSFUNC_RECVR back to ARKNlsNewton.
+ This routine performs the Newton iteration, reusing a single call 
+ to ark_mem->ark_lsetup (called within the enclosing routine). 
+
+ Upon entry, the predicted solution is held in ark_mem->ark_zn[0].
+
+ The array ark_mem->ark_acor accumulates the difference between 
+ the predictor and the final solution to the time step, and is 
+ thrown away if the Newton iteration fails to converge.
+
+ Upon a successful solve, the solution is held in ark_mem->ark_y.
+
+ If the iteration succeeds, it returns the value ARK_SUCCESS. 
+
+ If the iteration does not succeed:
+   * It may signal the enclosing routine to call lsetup again and
+     reattempt the iteration, by returning TRY_AGAIN. The enclosing
+     program sets convfail to ARK_FAIL_BAD_J before calling lsetup. 
+   * It may return ARK_LSOLVE_FAIL, signifying that the linear 
+     solver failed to converge.
+   * It may return CONV_FAIL, signifying that the Newton iteration 
+     failed to converge.
+   * It may return ARK_RHSFUNC_FAIL, signifying that the nonlinear 
+     residual or implicit RHS function failed.
+   * It may return RHSFUNC_RECVR, signifying that a recoverable 
+     error occurred in the implicit RHS function.
 ---------------------------------------------------------------*/
 static int ARKNewtonIteration(ARKodeMem ark_mem)
 {
@@ -2528,12 +2558,13 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
       ark_mem->ark_jcur = FALSE;
       return(ARK_SUCCESS); /* Nonlinear system was solved successfully */
     }
-    
+
+    /* update Newton iteration counter */
     ark_mem->ark_mnewt = ++m;
     
-    /* Stop at maxcor iterations or if iter. seems to be diverging.
-       If still not converged and Jacobian data is not current, 
-       signal to try the solution again */
+    /* Stop at maxcor iterations or if iteration seems to be diverging.
+       If still not converged and Jacobian data is not current, signal 
+       to try the solution again */
     if ((m == ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV*delp))) {
       if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
 	return(TRY_AGAIN);
@@ -2541,7 +2572,7 @@ static int ARKNewtonIteration(ARKodeMem ark_mem)
 	return(CONV_FAIL);
     }
     
-    /* Save norm of correction, evaluate f, and loop again */
+    /* Save norm of correction, evaluate fi, and loop again */
     delp = del;
     retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, 
 			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
