@@ -84,7 +84,7 @@ static int ARKLs(ARKodeMem ark_mem, int nflag);
 static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, 
 			  realtype saved_t, int *ncfPtr);
 
-static void ARKRestore(ARKodeMem ark_mem, realtype saved_t);
+static void ARKRestore(ARKodeMem ark_mem);
 
 static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 			  realtype saved_t, int *nefPtr, 
@@ -2728,9 +2728,10 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
   
   if (nflag == ARK_SUCCESS) return(DO_ERROR_TEST);
 
-  /* The nonlinear soln. failed; increment ncfn and restore zn */
+  /* The nonlinear soln. failed; increment ncfn and restore tn, zn */
   ark_mem->ark_ncfn++;
-  ARKRestore(ark_mem, saved_t);
+  ark_mem->ark_tn = saved_t;
+  ARKRestore(ark_mem);
   
   /* Return if lsetup, lsolve, or rhs failed unrecoverably */
   if (nflag == ARK_LSETUP_FAIL)  return(ARK_LSETUP_FAIL);
@@ -2762,15 +2763,13 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
 /*---------------------------------------------------------------
  ARKRestore
 
- This routine restores the value of tn to saved_t and undoes the
- prediction.  After execution of ARKRestore, the Nordsieck array zn has
- the same values as before the call to ARKPredict. 
+ This routine undoes the prediction.  After execution of 
+ ARKRestore, the Nordsieck array zn has the same values as 
+ before the call to ARKPredict. 
 ---------------------------------------------------------------*/
-static void ARKRestore(ARKodeMem ark_mem, realtype saved_t)
+static void ARKRestore(ARKodeMem ark_mem)
 {
   int j, k;
-  
-  ark_mem->ark_tn = saved_t;
   for (k = 1; k <= ark_mem->ark_q; k++)
     for (j = ark_mem->ark_q; j >= k; j--)
       N_VLinearSum(ONE, ark_mem->ark_zn[j-1], -ONE, 
@@ -2863,11 +2862,12 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   *dsmPtr = dsm; 
   if (dsm <= ONE) return(ARK_SUCCESS);
   
-  /* Test failed; increment counters, set nflag, and restore zn array */
+  /* Test failed; increment counters, set nflag, and restore tn and zn */
   (*nefPtr)++;
   ark_mem->ark_netf++;
   *nflagPtr = PREV_ERR_FAIL;
-  ARKRestore(ark_mem, saved_t);
+  ark_mem->ark_tn = saved_t;
+  ARKRestore(ark_mem);
 
   /* At maxnef failures or |h| = hmin, return ARK_ERR_FAILURE */
   if ((ABS(ark_mem->ark_h) <= ark_mem->ark_hmin*ONEPSM) || 
