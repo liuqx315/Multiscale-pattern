@@ -79,7 +79,7 @@ static int ARKNlsResid(ARKodeMem ark_mem, N_Vector y,
 		       N_Vector fy, N_Vector r);
 static int ARKNls(ARKodeMem ark_mem, int nflag);
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag);
-static int ARKNewtonIteration(ARKodeMem ark_mem);
+static int ARKLs(ARKodeMem ark_mem, int nflag);
 
 static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, 
 			  realtype saved_t, int *ncfPtr);
@@ -93,6 +93,7 @@ static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 static realtype ARKComputeSolutions(ARKodeMem ark_mem);
 
 static void ARKCompleteStep(ARKodeMem ark_mem);
+static int ARKCompleteStage(ARKodeMem ark_mem);
 
 static void ARKPrepareNextStep(ARKodeMem ark_mem, realtype dsm);
 static void ARKSetEta(ARKodeMem ark_mem);
@@ -100,7 +101,7 @@ static realtype ARKComputeEtaqm1(ARKodeMem ark_mem);
 static realtype ARKComputeEtaqp1(ARKodeMem ark_mem);
 static void ARKChooseEta(ARKodeMem ark_mem);
 
-static int  ARKHandleFailure(ARKodeMem ark_mem,int flag);
+static int ARKHandleFailure(ARKodeMem ark_mem,int flag);
 
 static int ARKRootCheck1(ARKodeMem ark_mem);
 static int ARKRootCheck2(ARKodeMem ark_mem);
@@ -282,8 +283,8 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_L      = 2;
   ark_mem->ark_qwait  = ark_mem->ark_L;
   ark_mem->ark_etamax = ETAMX1;
-  ark_mem->ark_qu     = 0;
-  ark_mem->ark_hu     = ZERO;
+  ark_mem->ark_qold   = 0;
+  ark_mem->ark_hold   = ZERO;
   ark_mem->ark_tolsf  = ONE;
 
   /* Set the linear solver addresses to NULL.
@@ -376,8 +377,8 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_L      = 2;
   ark_mem->ark_qwait  = ark_mem->ark_L;
   ark_mem->ark_etamax = ETAMX1;
-  ark_mem->ark_qu     = 0;
-  ark_mem->ark_hu     = ZERO;
+  ark_mem->ark_qold   = 0;
+  ark_mem->ark_hold   = ZERO;
   ark_mem->ark_tolsf  = ONE;
 
   /* Initialize zn[0] in the history array */
@@ -790,21 +791,23 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     ier = ARKInitialSetup(ark_mem);
     if (ier!= ARK_SUCCESS) return(ier);
     
-    /* Call f at (t0,y0), set zn[1] = y'(t0), 
+    /* Call fi at (t0,y0), set zn[1] = y'(t0), 
        set initial h (from H0 or ARKHin), and scale zn[1] by h.
        Also check for zeros of root function g at and near t0.    */
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
-			     ark_mem->ark_zn[1], ark_mem->ark_user_data); 
-    ark_mem->ark_nfi++;
-    if (retval < 0) {
-      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", 
-		      "ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
-      return(ARK_RHSFUNC_FAIL);
-    }
-    if (retval > 0) {
-      ARKProcessError(ark_mem, ARK_FIRST_RHSFUNC_ERR, "ARKODE", 
-		      "ARKode", MSGARK_RHSFUNC_FIRST);
-      return(ARK_FIRST_RHSFUNC_ERR);
+    if (!ark_mem->ark_explicit) {
+      retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
+			       ark_mem->ark_zn[1], ark_mem->ark_user_data); 
+      ark_mem->ark_nfi++;
+      if (retval < 0) {
+	ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", 
+			"ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
+	return(ARK_RHSFUNC_FAIL);
+      }
+      if (retval > 0) {
+	ARKProcessError(ark_mem, ARK_FIRST_RHSFUNC_ERR, "ARKODE", 
+			"ARKode", MSGARK_RHSFUNC_FIRST);
+	return(ARK_FIRST_RHSFUNC_ERR);
+      }
     }
 
     /* Set initial h (from H0 or ARKHin). */
@@ -1181,13 +1184,13 @@ int ARKodeGetDky(void *arkode_mem, realtype t, int k, N_Vector dky)
   
   /* Allow for some slack */
   tfuzz = FUZZ_FACTOR * ark_mem->ark_uround * 
-    (ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_hu));
-  if (ark_mem->ark_hu < ZERO) tfuzz = -tfuzz;
-  tp = ark_mem->ark_tn - ark_mem->ark_hu - tfuzz;
+    (ABS(ark_mem->ark_tn) + ABS(ark_mem->ark_hold));
+  if (ark_mem->ark_hold < ZERO) tfuzz = -tfuzz;
+  tp = ark_mem->ark_tn - ark_mem->ark_hold - tfuzz;
   tn1 = ark_mem->ark_tn + tfuzz;
   if ((t-tp)*(t-tn1) > ZERO) {
     ARKProcessError(ark_mem, ARK_BAD_T, "ARKODE", "ARKodeGetDky", 
-		    MSGARK_BAD_T, t, ark_mem->ark_tn-ark_mem->ark_hu, 
+		    MSGARK_BAD_T, t, ark_mem->ark_tn-ark_mem->ark_hold, 
 		    ark_mem->ark_tn);
     return(ARK_BAD_T);
   }
@@ -1867,12 +1870,13 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
 
   N_VLinearSum(hg, ark_mem->ark_zn[1], ONE, 
 	       ark_mem->ark_zn[0], ark_mem->ark_y);
-  retval = ark_mem->ark_fi(ark_mem->ark_tn+hg, ark_mem->ark_y, 
-			   ark_mem->ark_tempv, ark_mem->ark_user_data);
-  ark_mem->ark_nfi++;
-  if (retval < 0) return(ARK_RHSFUNC_FAIL);
-  if (retval > 0) return(RHSFUNC_RECVR);
-
+  if (!ark_mem->ark_explicit) {
+    retval = ark_mem->ark_fi(ark_mem->ark_tn+hg, ark_mem->ark_y, 
+			     ark_mem->ark_tempv, ark_mem->ark_user_data);
+    ark_mem->ark_nfi++;
+    if (retval < 0) return(ARK_RHSFUNC_FAIL);
+    if (retval > 0) return(RHSFUNC_RECVR);
+  }
   N_VLinearSum(ONE, ark_mem->ark_tempv, -ONE, 
 	       ark_mem->ark_zn[1], ark_mem->ark_tempv);
   N_VScale(ONE/hg, ark_mem->ark_tempv, ark_mem->ark_tempv);
@@ -1916,7 +1920,19 @@ static int ARKStep(ARKodeMem ark_mem)
   /* Looping point for attempts to take a step */
   for(;;) {  
 
+    /* Update current time with new time step.  If tstop is enabled, it is
+       possible for tn + h to be past tstop by roundoff, and in that case, 
+       we reset tn (after incrementing by h) to tstop. */
+    ark_mem->ark_tn += ark_mem->ark_h;
+    if (ark_mem->ark_tstopset) {
+      if ((ark_mem->ark_tn - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO) 
+	ark_mem->ark_tn = ark_mem->ark_tstop;
+    }
+
+    /* Call predictor */
     ARKPredict(ark_mem);  
+
+    /* Set up internal data structures for evaluation of BDF residual */
     ARKSet(ark_mem);
 
     nflag = ARKNls(ark_mem, nflag);
@@ -2111,21 +2127,13 @@ static void ARKRescale(ARKodeMem ark_mem)
 /*---------------------------------------------------------------
  ARKPredict
 
- This routine advances tn by the tentative step size h, and computes
- the predicted array z_n(0), which is overwritten on zn.  The
- prediction of zn is done by repeated additions.
- If tstop is enabled, it is possible for tn + h to be past tstop by roundoff,
- and in that case, we reset tn (after incrementing by h) to tstop.
+ This routine computes the predicted array z_n(0), which is 
+ overwritten on zn.  The prediction of zn is done by repeated 
+ additions.  
 ---------------------------------------------------------------*/
 static void ARKPredict(ARKodeMem ark_mem)
 {
   int j, k;
-  
-  ark_mem->ark_tn += ark_mem->ark_h;
-  if (ark_mem->ark_tstopset) {
-    if ((ark_mem->ark_tn - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO) 
-      ark_mem->ark_tn = ark_mem->ark_tstop;
-  }
   for (k = 1; k <= ark_mem->ark_q; k++)
     for (j = ark_mem->ark_q; j >= k; j--) 
       N_VLinearSum(ONE, ark_mem->ark_zn[j-1], ONE, 
@@ -2157,7 +2165,7 @@ static void ARKPredict2(ARKodeMem ark_mem)
       ark_mem->ark_tn = ark_mem->ark_tstop;
   }
 
-#define PRED2
+#define PRED0
 
 #ifdef PRED0
   /***** Trivial Predictor *****/
@@ -2312,6 +2320,8 @@ static void ARKSetTqBDF(ARKodeMem ark_mem, realtype hsum, realtype alpha0,
  This routine attempts to solve the nonlinear system associated
  with a single implicit step of the linear multistep method.
  It calls ARKNlsNewton to do the work.
+
+ Upon a successful solve, the solution is held in ark_mem->ark_y.
 ---------------------------------------------------------------*/
 static int ARKNls(ARKodeMem ark_mem, int nflag)
 {
@@ -2378,10 +2388,10 @@ static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y,
 /*---------------------------------------------------------------
  ARKNlsNewton
 
- This routine handles the Newton iteration for the additive 
- Runge-Kutta method. It calls lsetup if indicated, calls 
- ARKNewtonIteration to perform the iteration, and retries a 
- failed attempt at Newton iteration if that is indicated.
+ This routine handles the Newton iteration for the BDF method. It 
+ calls lsetup if indicated, performs a modified Newton iteration 
+ (using a fixed Jacobian / precond), and retries a failed attempt 
+ at Newton iteration if that is indicated. 
 
  Upon entry, the predicted solution is held in ark_mem->ark_zn[0].
 
@@ -2400,13 +2410,15 @@ static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y,
 ---------------------------------------------------------------*/
 static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 {
-  N_Vector vtemp1, vtemp2, vtemp3, ycur;
-  int convfail, retval, ier;
+  N_Vector vtemp1, vtemp2, vtemp3, ycur, b;
+  int convfail, retval, ier, m;
   booleantype callSetup;
+  realtype del, delp, dcon;
   
   vtemp1 = ark_mem->ark_acor;  /* rename acor as vtemp1 for readability  */
   vtemp2 = ark_mem->ark_y;     /* rename y as vtemp2 for readability     */
   vtemp3 = ark_mem->ark_tempv; /* rename tempv as vtemp3 for readability */
+  b      = ark_mem->ark_tempv; /* also rename tempv as b for readability */
   ycur   = ark_mem->ark_zn[0]; /* rename zn[0] as ycur for readability   */
 
   /* Set flag convfail, input to lsetup for its evaluation decision */
@@ -2429,16 +2441,18 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
        Call lsetup if indicated, setting statistics and gamma factors.
        Zero out the correction array (ark_mem->ark_acor).
        Copy the predicted y (ycur) into the output (ark_mem->ark_y).
-       Call ARKNewtonIteration for the Newton iteration itself.
+       Performs the modified Newton iteration using the existing lsetup.
        Repeat process if a recoverable failure occurred (convergence
 	  failure with stale Jacobian). */
   for(;;) {
 
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ycur, 
-			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
-    ark_mem->ark_nfi++; 
-    if (retval < 0) return(ARK_RHSFUNC_FAIL);
-    if (retval > 0) return(RHSFUNC_RECVR);
+    if (!ark_mem->ark_explicit) {
+      retval = ark_mem->ark_fi(ark_mem->ark_tn, ycur, 
+			       ark_mem->ark_ftemp, ark_mem->ark_user_data);
+      ark_mem->ark_nfi++; 
+      if (retval < 0) return(ARK_RHSFUNC_FAIL);
+      if (retval > 0) return(RHSFUNC_RECVR);
+    }
 
     if (callSetup) {
       ier = ark_mem->ark_lsetup(ark_mem, convfail, ycur, 
@@ -2459,9 +2473,107 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
     N_VConst(ZERO, ark_mem->ark_acor);
     N_VScale(ONE, ycur, ark_mem->ark_y);
 
-    /* Do the Newton iteration */
-    ier = ARKNewtonIteration(ark_mem);
 
+    /***********************************
+     Do the modified Newton iteration:
+     - Reuses a single call to ark_mem->ark_lsetup (called by the enclosing loop). 
+     - Upon entry, the predicted solution is held in ark_mem->ark_zn[0].
+     - Here, ark_mem->ark_acor accumulates the difference between the predictor 
+       and the final solution to the time step.
+     - Upon a successful solve, the solution is held in ark_mem->ark_y. 
+    */
+
+    /* Initialize temporary variables for use in iteration */
+    ark_mem->ark_mnewt = m = 0;
+    del = delp = ZERO;
+
+    /* Looping point for Newton iteration */
+    for(;;) {
+
+      /* Evaluate the nonlinear system residual, put result into b */
+      retval = ARKNlsResid(ark_mem, ark_mem->ark_acor, 
+			   ark_mem->ark_ftemp, b);
+      if (retval != ARK_SUCCESS) {
+	ier = ARK_RHSFUNC_FAIL;
+	break;
+      }
+
+      /* Call the lsolve function */
+      retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
+				   ark_mem->ark_y, ark_mem->ark_ftemp); 
+      ark_mem->ark_nni++;
+    
+      if (retval < 0) {
+	ier = ARK_LSOLVE_FAIL;
+	break;
+      }
+    
+      /* If lsolve had a recoverable failure and Jacobian data is
+	 not current, signal to try the solution again */
+      if (retval > 0) { 
+	if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
+	  ier = TRY_AGAIN;
+	else 
+	  ier = CONV_FAIL;
+	break;
+      }
+
+      /* Get WRMS norm of correction; add correction to acor and y */
+      del = N_VWrmsNorm(b, ark_mem->ark_ewt);
+      N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
+      N_VLinearSum(ONE, ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
+    
+      /* Test for convergence.  If m > 0, an estimate of the convergence
+	 rate constant is stored in crate, and used in the test */
+      if (m > 0) {
+	ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del/delp);
+      }
+      dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_tq[4];
+    
+      if (dcon <= ONE) {
+	ark_mem->ark_acnrm = (m==0) ? 
+	  del : N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
+	ark_mem->ark_jcur = FALSE;
+	ier = ARK_SUCCESS;
+	break;
+      }
+
+      /* update Newton iteration counter */
+      ark_mem->ark_mnewt = ++m;
+    
+      /* Stop at maxcor iterations or if iteration seems to be diverging.
+	 If still not converged and Jacobian data is not current, signal 
+	 to try the solution again */
+      if ((m == ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV*delp))) {
+	if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
+	  ier = TRY_AGAIN;
+	else
+	  ier = CONV_FAIL;
+	break;
+      }
+    
+      /* Save norm of correction, evaluate fi, and loop again */
+      delp = del;
+      if (!ark_mem->ark_explicit) {
+	retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, 
+				 ark_mem->ark_ftemp, ark_mem->ark_user_data);
+	ark_mem->ark_nfi++;
+	if (retval < 0) {
+	  ier = ARK_RHSFUNC_FAIL;
+	  break;
+	}
+	if (retval > 0) {
+	  if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
+	    ier = TRY_AGAIN;
+	  else
+	    ier = RHSFUNC_RECVR;
+	  break;
+	}
+      }
+    } 
+    /* end modified Newton iteration */
+    /*********************************/
+    
     /* If there is a convergence failure and the Jacobian-related 
        data appears not to be current, loop again with a call to lsetup
        in which convfail=ARK_FAIL_BAD_J.  Otherwise return. */
@@ -2474,118 +2586,106 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 
 
 /*---------------------------------------------------------------
- ARKNewtonIteration
+ ARKLs
 
- This routine performs the Newton iteration, reusing a single call 
- to ark_mem->ark_lsetup (called within the enclosing routine). 
+ This routine attempts to solve the linear system associated
+ with a single implicit step of the ARK method.  This should 
+ only be called if the user has specified that the implicit 
+ problem is linear.  In this routine, we assume that the problem 
+ depends linearly on the solution, and that linear dependence 
+ does not change as a function of time.  It therefore calls
+ lsetup on only changes to gamma.  It then calls the 
+ user-specified linear solver (with a tight tolerance) to compute 
+ the time-evolved solution.  
 
  Upon entry, the predicted solution is held in ark_mem->ark_zn[0].
 
- The array ark_mem->ark_acor accumulates the difference between 
- the predictor and the final solution to the time step, and is 
- thrown away if the Newton iteration fails to converge.
-
  Upon a successful solve, the solution is held in ark_mem->ark_y.
 
- If the iteration succeeds, it returns the value ARK_SUCCESS. 
+ Possible return values:
 
- If the iteration does not succeed:
-   * It may signal the enclosing routine to call lsetup again and
-     reattempt the iteration, by returning TRY_AGAIN. The enclosing
-     program sets convfail to ARK_FAIL_BAD_J before calling lsetup. 
-   * It may return ARK_LSOLVE_FAIL, signifying that the linear 
-     solver failed to converge.
-   * It may return CONV_FAIL, signifying that the Newton iteration 
-     failed to converge.
-   * It may return ARK_RHSFUNC_FAIL, signifying that the nonlinear 
-     residual or implicit RHS function failed.
-   * It may return RHSFUNC_RECVR, signifying that a recoverable 
-     error occurred in the implicit RHS function.
+   ARK_SUCCESS       ---> continue with error test
+
+   ARK_RHSFUNC_FAIL  -+  
+   ARK_LSETUP_FAIL    |-> halt the integration 
+   ARK_LSOLVE_FAIL   -+
+
+   RHSFUNC_RECVR     --> predict again or stop if too many
 ---------------------------------------------------------------*/
-static int ARKNewtonIteration(ARKodeMem ark_mem)
+static int ARKLs(ARKodeMem ark_mem, int nflag)
 {
-  int m, retval;
-  realtype del, delp, dcon;
-  N_Vector b, ycur;
+  N_Vector vtemp1, vtemp2, vtemp3, ycur, b;
+  int convfail, retval, ier;
+  booleantype callSetup;
+  
+  vtemp1 = ark_mem->ark_acor;  /* rename acor as vtemp1 for readability  */
+  vtemp2 = ark_mem->ark_y;     /* rename y as vtemp2 for readability     */
+  vtemp3 = ark_mem->ark_tempv; /* rename tempv as vtemp3 for readability */
+  b      = ark_mem->ark_tempv; /* also rename tempv as b for readability */
+  ycur   = ark_mem->ark_zn[0]; /* rename zn[0] as ycur for readability   */
 
-  ycur = ark_mem->ark_zn[0];   /* rename zn[0] as ycur for readability */
-  b    = ark_mem->ark_tempv;   /* rename tempv as b for readability    */
+  /* Set flag convfail, input to lsetup for its evaluation decision */
+  convfail = ((nflag == FIRST_CALL) || (nflag == PREV_ERR_FAIL)) ?
+    ARK_NO_FAILURES : ARK_FAIL_OTHER;
 
-
-  /* Initialize temporary variables for use in iteration */
-  ark_mem->ark_mnewt = m = 0;
-  del = delp = ZERO;
-
-  /* Looping point for Newton iteration */
-  for(;;) {
-
-    /* Evaluate the nonlinear system residual, put result into b */
-    retval = ARKNlsResid(ark_mem, ark_mem->ark_acor, 
-			 ark_mem->ark_ftemp, b);
-    if (retval != ARK_SUCCESS) return(ARK_RHSFUNC_FAIL);
-
-    /* Call the lsolve function */
-    retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
-				 ark_mem->ark_y, ark_mem->ark_ftemp); 
-    ark_mem->ark_nni++;
-    
-    if (retval < 0) return(ARK_LSOLVE_FAIL);
-    
-    /* If lsolve had a recoverable failure and Jacobian data is
-       not current, signal to try the solution again */
-    if (retval > 0) { 
-      if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
-	return(TRY_AGAIN);
-      else
-	return(CONV_FAIL);
-    }
-
-    /* Get WRMS norm of correction; add correction to acor and y */
-    del = N_VWrmsNorm(b, ark_mem->ark_ewt);
-    N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
-    N_VLinearSum(ONE, ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
-    
-    /* Test for convergence.  If m > 0, an estimate of the convergence
-       rate constant is stored in crate, and used in the test */
-    if (m > 0) {
-      ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del/delp);
-    }
-    dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_tq[4];
-    
-    if (dcon <= ONE) {
-      ark_mem->ark_acnrm = (m==0) ? 
-	del : N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
-      ark_mem->ark_jcur = FALSE;
-      return(ARK_SUCCESS); /* Nonlinear system was solved successfully */
-    }
-
-    /* update Newton iteration counter */
-    ark_mem->ark_mnewt = ++m;
-    
-    /* Stop at maxcor iterations or if iteration seems to be diverging.
-       If still not converged and Jacobian data is not current, signal 
-       to try the solution again */
-    if ((m == ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV*delp))) {
-      if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
-	return(TRY_AGAIN);
-      else
-	return(CONV_FAIL);
-    }
-    
-    /* Save norm of correction, evaluate fi, and loop again */
-    delp = del;
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_y, 
+  /* Decide whether or not to call setup routine (if one exists) */
+  if (ark_mem->ark_setupNonNull) {      
+    callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
+      (ark_mem->ark_nst == 0) || 
+      (ABS(ark_mem->ark_gamrat-ONE) > TINY);
+  } else {  
+    ark_mem->ark_crate = ONE;
+    callSetup = FALSE;
+  }
+  
+  /* Evaluate fi at predicted y, store result in ark_mem->ark_ftemp, and 
+     call lsetup if indicated, setting statistics and gamma factors. */
+  if (!ark_mem->ark_explicit) {
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ycur, 
 			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
-    ark_mem->ark_nfi++;
+    ark_mem->ark_nfi++; 
     if (retval < 0) return(ARK_RHSFUNC_FAIL);
-    if (retval > 0) {
-      if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
-	return(TRY_AGAIN);
-      else
-	return(RHSFUNC_RECVR);
-    }
+    if (retval > 0) return(RHSFUNC_RECVR);
+  }
 
-  } /* end loop */
+  if (callSetup) {
+    ier = ark_mem->ark_lsetup(ark_mem, convfail, ycur, 
+			      ark_mem->ark_ftemp, &ark_mem->ark_jcur, 
+			      vtemp1, vtemp2, vtemp3);
+    ark_mem->ark_nsetups++;
+    callSetup = FALSE;
+    ark_mem->ark_gamrat = ark_mem->ark_crate = ONE; 
+    ark_mem->ark_gammap = ark_mem->ark_gamma;
+    
+    /* Return if lsetup failed */
+    if (ier < 0) return(ARK_LSETUP_FAIL);
+    if (ier > 0) return(CONV_FAIL);
+  }
+
+  /* Set acor to zero and load prediction into y vector */
+  N_VConst(ZERO, ark_mem->ark_acor);
+  N_VScale(ONE, ycur, ark_mem->ark_y);
+
+
+  /* Initialize temporary variable for communication with linear solvers */
+  ark_mem->ark_mnewt = 0;
+  
+  /* Evaluate the linear system residual, put result into b */
+  retval = ARKNlsResid(ark_mem, ark_mem->ark_acor, 
+		       ark_mem->ark_ftemp, b);
+  if (retval != ARK_SUCCESS)  return(ARK_RHSFUNC_FAIL);
+  
+  /* Call the lsolve function */
+  retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
+			       ark_mem->ark_y, ark_mem->ark_ftemp); 
+  ark_mem->ark_nni++;
+  if (retval < 0)  return(ARK_LSOLVE_FAIL);
+  
+  /* Get WRMS norm of correction; add correction to acor and y */
+  ark_mem->ark_acnrm = N_VWrmsNorm(b, ark_mem->ark_ewt);
+  N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
+  N_VLinearSum(ONE, ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
+  return(ARK_SUCCESS);
 }
 
 
@@ -2804,12 +2904,13 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_hscale = ark_mem->ark_h;
   ark_mem->ark_qwait = LONG_WAIT;
 
-  retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
-			   ark_mem->ark_tempv, ark_mem->ark_user_data);
-  ark_mem->ark_nfi++;
-  if (retval < 0)  return(ARK_RHSFUNC_FAIL);
-  if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
-
+  if (!ark_mem->ark_explicit) {
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
+			     ark_mem->ark_tempv, ark_mem->ark_user_data);
+    ark_mem->ark_nfi++;
+    if (retval < 0)  return(ARK_RHSFUNC_FAIL);
+    if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
+  }
   N_VScale(ark_mem->ark_h, ark_mem->ark_tempv, ark_mem->ark_zn[1]);
 
   return(TRY_AGAIN);
@@ -2818,7 +2919,7 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 
 
 /*===============================================================
-  Private Functions Implementation after succesful step
+  Private Functions Implementation after succesful stage/step
 ===============================================================*/
 
 /*---------------------------------------------------------------
@@ -2826,20 +2927,48 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 
  This routine performs various update operations when the solution
  to the nonlinear system has passed the local error test. 
- We increment the step counter nst, record the values hu and qu,
- update the tau array, and apply the corrections to the zn array.
- The tau[i] are the last q values of h, with tau[1] the most recent.
- The counter qwait is decremented, and if qwait == 1 (and q < qmax)
- we save acor and tq[5] for a possible order increase. 
+ We increment the step counter nst, record the values hold, told 
+ and qold, update the yold and fold arrays, fill in the ynew and
+ fnew arrays, update the tau array, and apply the corrections to 
+ the zn array.  The tau[i] are the last q values of h, with 
+ tau[1] the most recent.  The counter qwait is decremented, and 
+ if qwait == 1 (and q < qmax) we save acor and tq[5] for a 
+ possible order increase. 
 ---------------------------------------------------------------*/
 static void ARKCompleteStep(ARKodeMem ark_mem)
 {
   int i, j;
-  
-  ark_mem->ark_nst++;
-  ark_mem->ark_hu = ark_mem->ark_h;
-  ark_mem->ark_qu = ark_mem->ark_q;
+  N_Vector tempvec;
 
+  /* update scalar quantities */
+  ark_mem->ark_nst++;
+  ark_mem->ark_hold = ark_mem->ark_h;
+  ark_mem->ark_told = ark_mem->ark_tn;
+  ark_mem->ark_qold = ark_mem->ark_q;
+  
+  /* swap yold and ynew arrays */
+  tempvec = ark_mem->ark_yold;
+  ark_mem->ark_yold = ark_mem->ark_ynew;
+  ark_mem->ark_ynew = tempvec;
+
+  /* swap fold and fnew arrays */
+  tempvec = ark_mem->ark_fold;
+  ark_mem->ark_fold = ark_mem->ark_fnew;
+  ark_mem->ark_fnew = tempvec;
+
+  /* update fnew array using explicit and implicit RHS */
+  N_VConst(ZERO, ark_mem->ark_fnew);
+  if (!ark_mem->ark_explicit) 
+    N_VLinearSum(ONE, ark_mem->ark_Fi[ark_mem->ark_stages-1], 
+		 ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
+  if (!ark_mem->ark_implicit) 
+    N_VLinearSum(ONE, ark_mem->ark_Fe[ark_mem->ark_stages-1], 
+		 ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
+
+  /* update ynew (cannot swap since ark_y is a pointer to user-supplied data) */
+  N_VScale(ONE, ark_mem->ark_y, ark_mem->ark_ynew);
+  
+  /* update LMM data and statistics */
   for (i=ark_mem->ark_q; i >= 2; i--)  
     ark_mem->ark_tau[i] = ark_mem->ark_tau[i-1];
   if ((ark_mem->ark_q==1) && (ark_mem->ark_nst > 1)) 
@@ -2855,6 +2984,29 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
     ark_mem->ark_saved_tq5 = ark_mem->ark_tq[5];
     ark_mem->ark_indx_acor = ark_mem->ark_qmax;
   }
+}
+
+
+/*---------------------------------------------------------------
+ ARKCompleteStage
+
+ This routine performs various update operations when the solution
+ to the nonlinear system for a given stage has completed.  
+---------------------------------------------------------------*/
+static int ARKCompleteStage(ARKodeMem ark_mem)
+{
+  int retval;
+
+  /* fill in explicit RHS at current time and solution */
+  if (!ark_mem->ark_implicit) {
+    retval = ark_mem->ark_fe(ark_mem->ark_tn, ark_mem->ark_y, 
+			     ark_mem->ark_tempv, ark_mem->ark_user_data);
+    ark_mem->ark_nfe++;
+    if (retval < 0)  return(ARK_RHSFUNC_FAIL);
+    if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
+  }
+
+  return(ARK_SUCCESS);
 }
 
 
@@ -4295,6 +4447,10 @@ static int ARKCheckButcherTables(ARKodeMem ark_mem)
 		      "IRK stages < 1!");
       return(ARK_ILL_INPUT);
     }
+
+  /* if purely explicit, update ark_stages */
+  if (ark_mem->ark_explicit)
+    ark_mem->ark_stages = ark_mem->ark_stagesE;
 
   /* if purely explicit or purely implicit, return */
   if (ark_mem->ark_implicit || ark_mem->ark_explicit)

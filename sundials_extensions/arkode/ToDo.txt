@@ -52,26 +52,29 @@ Easy:
     and IRK tables share root & canopy nodes, that all necessary
     coefficients are defined.  This should be called inside
     ARKInitialSetup.
-[ ] Create Newton solver for stage systems that uses clearly-named
+[X] Create Newton solver for stage systems that uses clearly-named
     arrays, etc., as opposed to shortcut names to unintelligible
     temporary arrays.
-[ ] Code to fill in values for last successful step: told, hold, yold,
+[X] Build a new linear solver (ARKLs) to directly tackle the stage
+    solves; call this when the user has specified that the system is
+    linear (so J only needs to be set up at changes to the time step
+    size).  Consider calling this to handle calculation of the updated 
+    solution and embedding when M != I (of course, this would mean
+    that I only allow linear operators for M, but that's a reasonable
+    restriction). 
+[X] Code to fill in values for last successful step: told, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
-    copy values from ynew to yold or fnew to fold.  Still do the copy
+    copy values from ynew to yold and fnew to fold.  Still do the copy
     to fill ynew and fnew, since user may input y itself into code,
     and pointer should remain fixed.
+[X] ARKCompleteStage routine, to evaluate Fe on current solution and
+    perform any other necessary cleanup operations.
 [ ] Routine to do actual step prediction [put inside existing
     ARKPredict]: this will copy the value from Fi into the nonlinear
     solver initial guess (for early stages), or it can use
     already-generated stage solutions to predict subsequent stages
     (for later stages).  This will be called prior to every stage
     solve.
-[ ] stageprep routine, to evaluate Fe on current solution (unless I'd
-    rather do this *after* a successful stage in preparing for the
-    next one).  This routine could also call the implicit predictor
-    (if not included elsewhere). 
-[ ] Initialize and update ark_mem->ark_hold within time-stepping.  Or
-    maybe it is already stored in ark_hu??
 [ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
     0), that none of the stuff I put into ARKInitialSetup will
     backfire if called again.
@@ -83,12 +86,12 @@ Easy:
 
 
 Medium:
-[ ] Build a new linear solver to directly tackle the stage solves;
-    call this when the user has specified that the system is linear
-    (so J only needs to be set up once).  Consider calling this to
-    handle calculation of the updated solution and embedding when 
-    M != I (of course, this would mean that I only allow linear
-    operators for M, but that's a reasonable restriction).
+[ ] Tighten tolerance for iterative linear solvers when running in
+    linearly implicit mode.
+[ ] Add a solver option and update linear solve routine for the
+    scenario that a problem depends linearly on y, but that the linear 
+    dependence changes as a function of time.  In this case, we must
+    call lsetup once prior to EVERY time step.
 [ ] Update ARKStep loop to do stage-specific solves.  Add
     code to always check the diagonal value inside Ai.  If it's zero
     (ERK or ESDIRK) I just declare success (unless M != I).  If I just
@@ -148,6 +151,9 @@ Hard:
     searching through the code for all of the marked locations where I
     made notes to myself (in all caps, and usually preceded by /*****)
 [ ] Remove BDF code.
+[ ] Implement a new nonlinear solver that can allow for a full Newton
+    iteration instead of just the modified Newton iteration currently
+    present.
 [ ] Look into root-finding stuff.
 [ ] Move all fancy logic determination stuff that's currently located
     in specific solve routines (including linear solvers) to reside in

@@ -1252,7 +1252,7 @@ int ARKodeGetLastOrder(void *arkode_mem, int *qlast)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  *qlast = ark_mem->ark_qu;
+  *qlast = ark_mem->ark_qold;
 
   return(ARK_SUCCESS);
 }
@@ -1317,7 +1317,7 @@ int ARKodeGetLastStep(void *arkode_mem, realtype *hlast)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  *hlast = ark_mem->ark_hu;
+  *hlast = ark_mem->ark_hold;
 
   return(ARK_SUCCESS);
 }
@@ -1521,7 +1521,7 @@ int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps,
   *nlinsetups = ark_mem->ark_nsetups;
   *netfails   = ark_mem->ark_netf;
   *hinused    = ark_mem->ark_h0u;
-  *hlast      = ark_mem->ark_hu;
+  *hlast      = ark_mem->ark_hold;
   *hcur       = ark_mem->ark_next_h;
   *tcur       = ark_mem->ark_tn;
 

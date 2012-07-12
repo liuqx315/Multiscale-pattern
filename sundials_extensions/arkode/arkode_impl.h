@@ -274,9 +274,9 @@ typedef struct ARKodeMemRec {
   booleantype ark_user_Ae;                /* TRUE if user sets Ae           */
   booleantype ark_user_Ai;                /* TRUE if user sets Ai           */
 
-  int ark_qE;                   /* ERK method data (should match IRK)       */
-  int ark_pE;
-  int ark_stagesE;
+  int ark_qE;                   /* ERK method data (should match IRK, we    */
+  int ark_pE;                   /* store it here to allow error-checking on */
+  int ark_stagesE;              /* user-supplied ARK Butcher tables.        */
   realtype ark_cE[ARK_S_MAX];
   realtype ark_bE[ARK_S_MAX];
   realtype ark_b2E[ARK_S_MAX];
@@ -293,8 +293,6 @@ typedef struct ARKodeMemRec {
     ---------*/  
   realtype ark_hin;             /* initial step size                        */
   realtype ark_h;               /* current step size                        */
-  realtype ark_told;            /* start time for last successful step      */
-  realtype ark_hold;            /* previous step size                       */
   realtype ark_hprime;          /* step size to be used on the next step    */ 
   realtype ark_next_h;          /* step size to be used on the next step    */ 
   realtype ark_eta;             /* eta = hprime / h                         */
@@ -399,10 +397,11 @@ typedef struct ARKodeMemRec {
   /*------------
     Saved Values
     ------------*/
-  int ark_qu;                   /* last successful q value used               */
+  int ark_qold;                 /* last successful q value used               */
   long int ark_nstlp;           /* step number of last setup call             */
   realtype ark_h0u;             /* actual initial stepsize                    */
-  realtype ark_hu;              /* last successful h value used               */
+  realtype ark_told;            /* start time for last successful step        */
+  realtype ark_hold;            /* last successful h value used               */
   realtype ark_saved_tq5;       /* saved value of tq[5]                       */
   booleantype ark_jcur;         /* is Jacobian info. for lin. solver current? */
   realtype ark_tolsf;           /* tolerance scale factor                     */
@@ -593,7 +592,7 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 
 #define MSG_TIME        "t = %Lg"
 #define MSG_TIME_H      "t = %Lg and h = %Lg"
-#define MSG_TIME_INT    "t = %Lg is not between tcur - hu = %Lg and tcur = %Lg."
+#define MSG_TIME_INT    "t = %Lg is not between tcur - hold = %Lg and tcur = %Lg."
 #define MSG_TIME_TOUT   "tout = %Lg"
 #define MSG_TIME_TSTOP  "tstop = %Lg"
 
@@ -601,7 +600,7 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 
 #define MSG_TIME        "t = %lg"
 #define MSG_TIME_H      "t = %lg and h = %lg"
-#define MSG_TIME_INT    "t = %lg is not between tcur - hu = %lg and tcur = %lg."
+#define MSG_TIME_INT    "t = %lg is not between tcur - hold = %lg and tcur = %lg."
 #define MSG_TIME_TOUT   "tout = %lg"
 #define MSG_TIME_TSTOP  "tstop = %lg"
 
@@ -609,7 +608,7 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 
 #define MSG_TIME        "t = %g"
 #define MSG_TIME_H      "t = %g and h = %g"
-#define MSG_TIME_INT    "t = %g is not between tcur - hu = %g and tcur = %g."
+#define MSG_TIME_INT    "t = %g is not between tcur - hold = %g and tcur = %g."
 #define MSG_TIME_TOUT   "tout = %g"
 #define MSG_TIME_TSTOP  "tstop = %g"
 
