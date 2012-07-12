@@ -209,7 +209,7 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
 
  Specifies the polynomial order for dense output.  Allowed values
  range from 0 to min(q,5), where q is the order of the time 
- integration method.  Negative values imply to use the default.
+ integration method.  Illegal values imply to use the default.
 ---------------------------------------------------------------*/
 int ARKodeSetDenseOrder(void *arkode_mem, int dord)
 {
@@ -231,7 +231,7 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
      changes via ARKodeSetOrd */
 
   /* set user-provided value, or default, depending on argument */
-  if (dord < 0) {
+  if ((dord < 0) || (dord > 5)) {
     ark_mem->ark_dense_q = 3;
   } else {
     ark_mem->ark_dense_q = dord;

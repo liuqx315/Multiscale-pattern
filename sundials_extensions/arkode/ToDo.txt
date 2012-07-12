@@ -1,7 +1,5 @@
 Remaining components to build:
 
-
-Easy:
 [X] Add an ark_mem integer member denoting the current stage
 [X] ARK nonlinear residual function.
 [X] Code to increment ark_nst_con counter when we experience a
@@ -69,49 +67,47 @@ Easy:
     and pointer should remain fixed.
 [X] ARKCompleteStage routine, to evaluate Fe on current solution and
     perform any other necessary cleanup operations.
-[ ] Routine to do actual step prediction [put inside existing
-    ARKPredict]: this will copy the value from Fi into the nonlinear
-    solver initial guess (for early stages), or it can use
-    already-generated stage solutions to predict subsequent stages
-    (for later stages).  This will be called prior to every stage
-    solve.
-[ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
-    0), that none of the stuff I put into ARKInitialSetup will
-    backfire if called again.
-[ ] If I need to use any currently-unused N_Vector operations, add
-    them to ARKCheckNvector routine.
-[ ] Consider removing integer parameter ark_smax_alloc, since I can
+[X] ARKPredict2 routine to do stage prediction [to replace ARKPredict]: 
+    This can use dense output formulae and/or existing solution values
+    for prediction, depending on performance and/or time step sizes.
+[X] Consider removing integer parameter ark_smax_alloc, since I can
     always check whether the N_Vector is NULL or not and
     allocate/deallocate appropriately.
-
-
-Medium:
-[ ] Tighten tolerance for iterative linear solvers when running in
-    linearly implicit mode.
-[ ] Add a solver option and update linear solve routine for the
-    scenario that a problem depends linearly on y, but that the linear 
-    dependence changes as a function of time.  In this case, we must
-    call lsetup once prior to EVERY time step.
-[ ] Update ARKStep loop to do stage-specific solves.  Add
-    code to always check the diagonal value inside Ai.  If it's zero
-    (ERK or ESDIRK) I just declare success (unless M != I).  If I just
-    declare success, I should be certain to still evaluate Fi at the
-    "solution" of the stage, since it would occur already within an
-    implicit solve, and then I can just trust that it is still
-    available for subsequent stages.  This is also where I could have
-    logic to decide between calling Newton or just a linear solver for
-    the stage solution.
-[ ] User-defined operator M : R^n -> R^n, and logic to account for
-    this in step solution & embedding.  Update time step
-    solution/embedding routine to now do solves to compute these.
-[ ] Code to allow a change in the Butcher table, both to allow an
-    increased/decreased number of stages (no real issue for decrease,
-    don't even need to free the N_Vectors if I don't want to; need to
-    malloc the new vectors for an increase, though), and to do the
-    relevant checking/cleaning of the Butcher table, etc..  This could
-    occur only inside ARKodeReInit, since that's the moment where I
-    would allow this kind of thing (and would need to reset accuracy
-    history data). 
+[X] Create ARKStep2 routine to emulate ARKStep, repeating the process
+    for each internal stage.  Add code to always check the diagonal
+    value inside Ai.  If it's zero (ERK or ESDIRK) just declare
+    success (unless M != I).  If I just declare success, I should be
+    certain to still evaluate Fi at the "solution" of the stage, since
+    it would occur already within an implicit solve, and then I can
+    just trust that it is still available for subsequent stages.
+[X] Create ARKSet2 routine to set up data used in either the explicit
+    or implicit RK method for a given stage.  At the ith stage, we  
+    compute 
+       r = -zi + yn + h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) 
+                    + h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
+    so this routine should compute
+       gamma = h * Ai(i,i)
+       data = yn + h*sum_{j=0}^{i-1} [Ae(i,j)*Fe(j) + Ai(i,j)*Fi(j)]
+    and store these in ark_mem->ark_gamma and ark_mem->ark_Fe[i],
+    respectively.  All other gamma-related statistics should be
+    updated appropriately, as is done with the BDF approach.
+[ ] Create ARKAdjustParams2 routine to do all of the same things as
+    for BDF method, but with all order changes removed.
+[ ] Revise ARKRestore, ARKStep and ARKNlsNewton to account for the
+    fact that we now store both ynew and tnew (the last accurate
+    solution and when it is valid), so we can just copy those instead
+    of requiring us to un-apply modifications that have been made to
+    the last valid solution.
+[ ] Add code to ARKInitialSetup to fill in yold=ynew and fold=fnew
+    with values from initial condition so that they can be reused
+    later, both for dense output and for calculation of the initial h
+    value.
+[ ] Currently, I use Fe for temporary storage within the solver.
+    Unfortunately, this will not exist for an implicit-only problem.
+    Figure out a different temporary array to use (preferrably one
+    that is unused at these stages of the calculation).
+[ ] Update ARKHin to use ynew and fnew (already filled in by
+    ARKInitialSetup) in estimation of initial time step.
 [ ] Check all linear solvers to ensure that they setup/solve the
     correct system, and access all of the correct data out of ark_mem.
 [ ] Insert calls to my ARKAdapt function wherever CVODE currently
@@ -125,6 +121,17 @@ Medium:
     (but still converges within iteration limits).  Add code to
     ARKRestore() to recompute predictions for implicit solutions at
     these shorter times. 
+[ ] User-defined operator M : R^n -> R^n, and logic to account for
+    this in step solution & embedding.  Update time step
+    solution/embedding routine to now do solves to compute these.
+[ ] Code to allow a change in the Butcher table, both to allow an
+    increased/decreased number of stages (no real issue for decrease,
+    don't even need to free the N_Vectors if I don't want to; need to
+    malloc the new vectors for an increase, though), and to do the
+    relevant checking/cleaning of the Butcher table, etc..  This could
+    occur only inside ARKodeReInit, since that's the moment where I
+    would allow this kind of thing (and would need to reset accuracy
+    history data). 
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
@@ -143,6 +150,17 @@ Medium:
     storing (fe() + fi()).  Would this actually save any data storage,
     or just make things more complicated?  It might save a bit for ARK
     methods, but cost a bit more for IRK/ERK methods.  Think about it.
+[ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
+    0), that none of the stuff I put into ARKInitialSetup will
+    backfire if called again.
+[ ] Tighten tolerance for iterative linear solvers when running in
+    linearly implicit mode.
+[ ] Add a solver option and update linear solve routine for the
+    scenario that a problem depends linearly on y, but that the linear 
+    dependence changes as a function of time.  In this case, we must
+    call lsetup once prior to EVERY time step.
+[ ] If I need to use any currently-unused N_Vector operations, add
+    them to ARKCheckNvector routine.
 
 
 

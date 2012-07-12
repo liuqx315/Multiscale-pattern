@@ -136,9 +136,8 @@ extern "C" {
  ARKHin:  HLB_FACTOR, HUB_FACTOR, H_BIAS and MAX_ITERS
 
  ARKStep:  
-    THRESH, ETAMX1, ETAMX2, ETAMX3, ETAMXF, ETAMIN, ETACF,
+    THRESH, ETAMX1, ETAMX2, ETAMXF, ETAMIN, ETACF,
     ADDON, BIAS1, BIAS2, BIAS3 and ONEPSM are general constants.
-    SMALL_NST   nst > SMALL_NST => use ETAMX3 
     MXNEF1      max no. of error test failures before forcing a 
                 reduction of order
     SMALL_NEF   if an error failure occurs and 
@@ -166,7 +165,6 @@ extern "C" {
 #define THRESH      RCONST(1.5)
 #define ETAMX1      RCONST(10000.0) 
 #define ETAMX2      RCONST(10.0)
-#define ETAMX3      RCONST(10.0)
 #define ETAMXF      RCONST(0.2)
 #define ETAMIN      RCONST(0.1)
 #define ETACF       RCONST(0.25)
@@ -175,7 +173,6 @@ extern "C" {
 #define BIAS2       RCONST(6.0)
 #define BIAS3       RCONST(10.0)
 #define ONEPSM      RCONST(1.000001)
-#define SMALL_NST   10
 #define MXNEF1      3
 #define SMALL_NEF   2
 #define LONG_WAIT   10
