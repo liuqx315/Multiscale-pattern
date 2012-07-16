@@ -41,6 +41,7 @@ static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur,
 		       N_Vector weight);
 
 static int ARKHin(ARKodeMem ark_mem, realtype tout);
+static int ARKHin2(ARKodeMem ark_mem, realtype tout);
 static realtype ARKUpperBoundH0(ARKodeMem ark_mem, 
 				realtype tdist);
 static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, 
@@ -62,6 +63,8 @@ static void ARKAdjustOrder(ARKodeMem ark_mem, int deltaq);
 static void ARKAdjustBDF(ARKodeMem ark_mem, int deltaq);
 static void ARKIncreaseBDF(ARKodeMem ark_mem);
 static void ARKDecreaseBDF(ARKodeMem ark_mem);
+
+static void ARKAdjustParams2(ARKodeMem ark_mem);
 
 static void ARKRescale(ARKodeMem ark_mem);
 
@@ -113,6 +116,9 @@ static int ARKRootCheck1(ARKodeMem ark_mem);
 static int ARKRootCheck2(ARKodeMem ark_mem);
 static int ARKRootCheck3(ARKodeMem ark_mem);
 static int ARKRootfind(ARKodeMem ark_mem);
+
+static int ARKFullRHS(ARKodeMem ark_mem, realtype t, 
+		      N_Vector y, N_Vector tmp, N_Vector f);
 
 
 /*===============================================================
@@ -796,25 +802,10 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     ier = ARKInitialSetup(ark_mem);
     if (ier!= ARK_SUCCESS) return(ier);
     
-    /* Call fi at (t0,y0), set zn[1] = y'(t0), 
-       set initial h (from H0 or ARKHin), and scale zn[1] by h.
-       Also check for zeros of root function g at and near t0.    */
-    if (!ark_mem->ark_explicit) {
-      retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
-			       ark_mem->ark_zn[1], ark_mem->ark_user_data); 
-      ark_mem->ark_nfi++;
-      if (retval < 0) {
-	ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", 
-			"ARKode", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
-	return(ARK_RHSFUNC_FAIL);
-      }
-      if (retval > 0) {
-	ARKProcessError(ark_mem, ARK_FIRST_RHSFUNC_ERR, "ARKODE", 
-			"ARKode", MSGARK_RHSFUNC_FIRST);
-	return(ARK_FIRST_RHSFUNC_ERR);
-      }
-    }
-
+    /* Copy f(t0,y0) into ark_zn[1]. */
+    if (!ark_mem->ark_explicit)
+      N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_zn[1]);
+    
     /* Set initial h (from H0 or ARKHin). */
     ark_mem->ark_h = ark_mem->ark_hin;
     if ( (ark_mem->ark_h != ZERO) && 
@@ -1684,6 +1675,12 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
       return(ARK_LINIT_FAIL);
     }
   }
+
+  /* Fill initial ynew and fnew arrays */
+  N_VScale(ONE, ark_mem->ark_zn[0], ark_mem->ark_ynew);
+  ier = ARKFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_zn[0], 
+		   ark_mem->ark_ftemp, ark_mem->ark_fnew);
+  if (ier != 0)  return(ARK_RHSFUNC_FAIL);
   
   return(ARK_SUCCESS);
 }
@@ -1838,12 +1835,12 @@ static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
   temp1 = ark_mem->ark_tempv;
   temp2 = ark_mem->ark_acor;
 
-  N_VAbs(ark_mem->ark_zn[0], temp2);
-  ark_mem->ark_efun(ark_mem->ark_zn[0], temp1, ark_mem->ark_e_data);
+  N_VAbs(ark_mem->ark_ynew, temp2);
+  ark_mem->ark_efun(ark_mem->ark_ynew, temp1, ark_mem->ark_e_data);
   N_VInv(temp1, temp1);
   N_VLinearSum(HUB_FACTOR, temp2, ONE, temp1, temp1);
 
-  N_VAbs(ark_mem->ark_zn[1], temp2);
+  N_VAbs(ark_mem->ark_fnew, temp2);
 
   N_VDiv(temp2, temp1, temp1);
   hub_inv = N_VMaxNorm(temp1);
@@ -1860,6 +1857,71 @@ static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
 
 
 /*---------------------------------------------------------------
+ ARKFullRHS
+
+ This routine computes the full ODE RHS [fe(t,y) + fi(t,y)].
+
+ Inputs (unchanged): ark_mem, t, y
+ Output: f
+ Temporary: tmp
+---------------------------------------------------------------*/
+static int ARKFullRHS(ARKodeMem ark_mem, realtype t, 
+		      N_Vector y, N_Vector tmp, N_Vector f)
+{
+  int retval;
+
+  /* explicit problem -- only call fe */
+  if (ark_mem->ark_explicit) {
+
+    retval = ark_mem->ark_fe(t, y, f, ark_mem->ark_user_data);
+    ark_mem->ark_nfe++;
+    if (retval != 0) {
+      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKFullRHS", 
+		      MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
+      return(ARK_RHSFUNC_FAIL);
+    }
+
+
+  /* implicit problem -- only call fi */
+  } else if (ark_mem->ark_implicit) {
+
+    retval = ark_mem->ark_fi(t, y, f, ark_mem->ark_user_data);
+    ark_mem->ark_nfi++;
+    if (retval != 0) {
+      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", 
+		      "ARKFullRHS", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
+      return(ARK_RHSFUNC_FAIL);
+    }
+
+
+  /* imex problem */
+  } else {
+    
+    /* explicit portion */
+    retval = ark_mem->ark_fe(t, y, f, ark_mem->ark_user_data);
+    ark_mem->ark_nfe++;
+    if (retval != 0) {
+      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", "ARKFullRHS", 
+		      MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
+      return(ARK_RHSFUNC_FAIL);
+    }
+
+    /* implicit portion */
+    retval = ark_mem->ark_fi(t, y, tmp, ark_mem->ark_user_data);
+    ark_mem->ark_nfi++;
+    if (retval != 0) {
+      ARKProcessError(ark_mem, ARK_RHSFUNC_FAIL, "ARKODE", 
+		      "ARKFullRHS", MSGARK_RHSFUNC_FAILED, ark_mem->ark_tn);
+      return(ARK_RHSFUNC_FAIL);
+    }
+    N_VLinearSum(ONE, tmp, ONE, f, f);
+  }
+  
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKYddNorm
 
  This routine computes an estimate of the second derivative of y
@@ -1869,17 +1931,13 @@ static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
 {
   int retval;
 
-  N_VLinearSum(hg, ark_mem->ark_zn[1], ONE, 
-	       ark_mem->ark_zn[0], ark_mem->ark_y);
-  if (!ark_mem->ark_explicit) {
-    retval = ark_mem->ark_fi(ark_mem->ark_tn+hg, ark_mem->ark_y, 
-			     ark_mem->ark_tempv, ark_mem->ark_user_data);
-    ark_mem->ark_nfi++;
-    if (retval < 0) return(ARK_RHSFUNC_FAIL);
-    if (retval > 0) return(RHSFUNC_RECVR);
-  }
+  N_VLinearSum(hg, ark_mem->ark_fnew, ONE, 
+	       ark_mem->ark_ynew, ark_mem->ark_y);
+  retval = ARKFullRHS(ark_mem, ark_mem->ark_tn+hg, ark_mem->ark_y, 
+		      ark_mem->ark_ftemp, ark_mem->ark_tempv);
+  if (retval != 0) return(ARK_RHSFUNC_FAIL);
   N_VLinearSum(ONE, ark_mem->ark_tempv, -ONE, 
-	       ark_mem->ark_zn[1], ark_mem->ark_tempv);
+	       ark_mem->ark_fnew, ark_mem->ark_tempv);
   N_VScale(ONE/hg, ark_mem->ark_tempv, ark_mem->ark_tempv);
 
   *yddnrm = N_VWrmsNorm(ark_mem->ark_tempv, ark_mem->ark_ewt);
@@ -2001,7 +2059,7 @@ static int ARKStep2(ARKodeMem ark_mem)
   nflag = FIRST_CALL;
 
   if ((ark_mem->ark_nst > 0) && (ark_mem->ark_hprime != ark_mem->ark_h)) 
-    ARKAdjustParams(ark_mem);
+    ARKAdjustParams2(ark_mem);
   
   /* Looping point for attempts to take a step */
   for(;;) {  
@@ -2122,6 +2180,20 @@ static void ARKAdjustParams(ARKodeMem ark_mem)
     ark_mem->ark_qwait = ark_mem->ark_L;
   }
   ARKRescale(ark_mem);
+}
+
+
+/*---------------------------------------------------------------
+ ARKAdjustParams2
+
+ This routine is called when a change in step size was decided upon,
+ and it resets h and updates the related statistics.
+---------------------------------------------------------------*/
+static void ARKAdjustParams2(ARKodeMem ark_mem)
+{
+  ark_mem->ark_h = ark_mem->ark_hscale * ark_mem->ark_eta;
+  ark_mem->ark_next_h = ark_mem->ark_h;
+  ark_mem->ark_hscale = ark_mem->ark_h;
 }
 
 
@@ -2286,34 +2358,40 @@ static void ARKPredict2(ARKodeMem ark_mem, int istage)
 {
   int retval, ord;
   realtype tau, tau_tol = 1.5;
+  N_Vector yguess = ark_mem->ark_zn[0];
 
 #define PRED0
 
+  /* if this is the first step, use initial condition as guess */
+  if (ark_mem->ark_nst == 0) {
+    N_VScale(ONE, ark_mem->ark_ynew, yguess);
+    return;
+  }
+
 #ifdef PRED0
   /***** Trivial Predictor *****/
-  N_VScale(ONE, ark_mem->ark_ynew, ark_mem->ark_zn[0]);
+  N_VScale(ONE, ark_mem->ark_ynew, yguess);
 #endif
   
 #ifdef PRED1
   /***** Dense Output Predictor 1 -- all to max order *****/
   tau = ONE + ark_mem->ark_c[istage]*ark_mem->ark_h/ark_mem->ark_hold;
-  retval = ARKDenseEval(ark_mem, tau, 0, ark_mem->ark_dense_q, 
-			ark_mem->ark_zn[0]);
+  retval = ARKDenseEval(ark_mem, tau, 0, ark_mem->ark_dense_q, yguess);
 
   /* if predictor fails, use trivial prediction (shouldn't happen) */
   if (retval != ARK_SUCCESS) 
-    N_VScale(ONE, ark_mem->ark_ynew, ark_mem->ark_zn[0]);
+    N_VScale(ONE, ark_mem->ark_ynew, yguess);
 #endif
 
 #ifdef PRED2
   /***** Dense Output Predictor 2 -- decrease order w/ increasing stage *****/
   tau = ONE + ark_mem->ark_c[istage]*ark_mem->ark_h/ark_mem->ark_hold;
   ord = MAX(ark_mem->ark_dense_q - istage, 1);
-  retval = ARKDenseEval(ark_mem, tau, 0, ord, ark_mem->ark_zn[0]);
+  retval = ARKDenseEval(ark_mem, tau, 0, ord, yguess);
 
   /* if predictor fails, use trivial prediction (shouldn't happen) */
   if (retval != ARK_SUCCESS) 
-    N_VScale(ONE, ark_mem->ark_ynew, ark_mem->ark_zn[0]);
+    N_VScale(ONE, ark_mem->ark_ynew, yguess);
 #endif
 
 #ifdef PRED3
@@ -2322,14 +2400,14 @@ static void ARKPredict2(ARKodeMem ark_mem, int istage)
   tau = ONE + ark_mem->ark_c[istage]*ark_mem->ark_h/ark_mem->ark_hold;
   if (tau < tau_tol) {
     ord = MAX(ark_mem->ark_dense_q - istage, 1);
-    retval = ARKDenseEval(ark_mem, tau, 0, ord, ark_mem->ark_zn[0]);
+    retval = ARKDenseEval(ark_mem, tau, 0, ord, yguess);
   } else {
-    N_VScale(ONE, ark_mem->ark_y, ark_mem->ark_zn[0]);
+    N_VScale(ONE, ark_mem->ark_y, yguess);
   }    
 
   /* if predictor fails, use trivial prediction (shouldn't happen) */
   if (retval != ARK_SUCCESS) 
-    N_VScale(ONE, ark_mem->ark_ynew, ark_mem->ark_zn[0]);
+    N_VScale(ONE, ark_mem->ark_ynew, yguess);
 #endif
 
 }
@@ -2567,7 +2645,11 @@ static int ARKNlsResid2(ARKodeMem ark_mem, N_Vector y,
  (using a fixed Jacobian / precond), and retries a failed attempt 
  at Newton iteration if that is indicated. 
 
- Upon entry, the predicted solution is held in ark_mem->ark_zn[0].
+ Upon entry, the predicted solution is held in ark_mem->ark_zn[0]; 
+ this array is never changed throughout this routine.  If an 
+ initial attempt at solving the nonlinear system fail (e.g. due to 
+ a stale Jacobian), this allows for new attempts that first revert 
+ ark_mem->ark_y back to this initial guess before trying again. 
 
  Upon a successful solve, the solution is held in ark_mem->ark_y.
 
@@ -2610,7 +2692,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
     callSetup = FALSE;
   }
   
-  /* Looping point for the solution of the nonlinear system:
+  /* Looping point for attempts at solution of the nonlinear system:
        Evaluate f at predicted y, store result in ark_mem->ark_ftemp.
        Call lsetup if indicated, setting statistics and gamma factors.
        Zero out the correction array (ark_mem->ark_acor).
@@ -2940,6 +3022,9 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
  This routine undoes the prediction.  After execution of 
  ARKRestore, the Nordsieck array zn has the same values as 
  before the call to ARKPredict. 
+
+ *** When I switch from BDF to ARK, remove ***
+ *** this routine and all calls to it.     ***
 ---------------------------------------------------------------*/
 static void ARKRestore(ARKodeMem ark_mem)
 {
@@ -3080,13 +3165,9 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_hscale = ark_mem->ark_h;
   ark_mem->ark_qwait = LONG_WAIT;
 
-  if (!ark_mem->ark_explicit) {
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_zn[0], 
-			     ark_mem->ark_tempv, ark_mem->ark_user_data);
-    ark_mem->ark_nfi++;
-    if (retval < 0)  return(ARK_RHSFUNC_FAIL);
-    if (retval > 0)  return(ARK_UNREC_RHSFUNC_ERR);
-  }
+  retval = ARKFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_zn[0], 
+		      ark_mem->ark_ftemp, ark_mem->ark_tempv);
+  if (retval != 0) return(ARK_RHSFUNC_FAIL);
   N_VScale(ark_mem->ark_h, ark_mem->ark_tempv, ark_mem->ark_zn[1]);
 
   return(TRY_AGAIN);
@@ -3102,7 +3183,8 @@ static booleantype ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 
  If the test passes, ARKDoErrorTest returns ARK_SUCCESS. 
 
- If the test fails, we undo the step just taken (call ARKRestore) and 
+ If the test fails, we revert to the last successful solution 
+ time, and:
    - if maxnef error test failures have occurred or if 
      ABS(h) = hmin, we return ARK_ERR_FAILURE.
    - otherwise: update time step factor eta based on local error 
@@ -3120,7 +3202,6 @@ static booleantype ARKDoErrorTest2(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_netf++;
   *nflagPtr = PREV_ERR_FAIL;
   ark_mem->ark_tn = saved_t;
-  ARKRestore(ark_mem);
 
   /* At maxnef failures or |h| = hmin, return ARK_ERR_FAILURE */
   if ((ABS(ark_mem->ark_h) <= ark_mem->ark_hmin*ONEPSM) || 
@@ -4849,19 +4930,8 @@ static int ARKDenseEval(ARKodeMem ark_mem, realtype tau,
     fa = ark_mem->ark_fa;
     ftmp = ark_mem->ark_ftemp;
     tval = ark_mem->ark_told + h/THREE;
-    if (ark_mem->ark_implicit)  N_VConst(ZERO, fa);
-    else {
-      retval = ark_mem->ark_fe(tval, yout, fa, ark_mem->ark_user_data); 
-      ark_mem->ark_nfe++;
-      if (retval != 0)  return(ARK_RHSFUNC_FAIL);
-    }
-    if (ark_mem->ark_explicit)  N_VConst(ZERO, ftmp);
-    else {
-      retval = ark_mem->ark_fi(tval, yout, ftmp, ark_mem->ark_user_data); 
-      ark_mem->ark_nfi++;
-      if (retval != 0)  return(ARK_RHSFUNC_FAIL);
-    }
-    N_VLinearSum(ONE, ftmp, ONE, fa, fa);
+    retval = ARKFullRHS(ark_mem, tval, yout, ftmp, fa);
+    if (retval != 0)  return(ARK_RHSFUNC_FAIL);
 
     /* evaluate desired function */
     if (d == 0) {
@@ -4912,19 +4982,8 @@ static int ARKDenseEval(ARKodeMem ark_mem, realtype tau,
     fb = ark_mem->ark_fb;
     ftmp = ark_mem->ark_ftemp;
     tval = ark_mem->ark_told + h*TWO/THREE;
-    if (ark_mem->ark_implicit)  N_VConst(ZERO, fb);
-    else {
-      retval = ark_mem->ark_fe(tval, yout, fb, ark_mem->ark_user_data); 
-      ark_mem->ark_nfe++;
-      if (retval != 0)  return(ARK_RHSFUNC_FAIL);
-    }
-    if (ark_mem->ark_explicit)  N_VConst(ZERO, ftmp);
-    else {
-      retval = ark_mem->ark_fi(tval, yout, ftmp, ark_mem->ark_user_data); 
-      ark_mem->ark_nfi++;
-      if (retval != 0)  return(ARK_RHSFUNC_FAIL);
-    }
-    N_VLinearSum(ONE, ftmp, ONE, fb, fb);
+    retval = ARKFullRHS(ark_mem, tval, yout, ftmp, fb);
+    if (retval != 0)  return(ARK_RHSFUNC_FAIL);
 
     /* third, evaluate quartic interpolant at tau=1/3 */
     tval = ONE/THREE;
@@ -4936,19 +4995,8 @@ static int ARKDenseEval(ARKodeMem ark_mem, realtype tau,
     fa = ark_mem->ark_fa;
     ftmp = ark_mem->ark_ftemp;
     tval = ark_mem->ark_told + h/THREE;
-    if (ark_mem->ark_implicit)  N_VConst(ZERO, fa);
-    else {
-      retval = ark_mem->ark_fe(tval, yout, fa, ark_mem->ark_user_data); 
-      ark_mem->ark_nfe++;
-      if (retval != 0)  return(ARK_RHSFUNC_FAIL);
-    }
-    if (ark_mem->ark_explicit)  N_VConst(ZERO, ftmp);
-    else {
-      retval = ark_mem->ark_fi(tval, yout, ftmp, ark_mem->ark_user_data); 
-      ark_mem->ark_nfi++;
-      if (retval != 0)  return(ARK_RHSFUNC_FAIL);
-    }
-    N_VLinearSum(ONE, ftmp, ONE, fa, fa);
+    retval = ARKFullRHS(ark_mem, tval, yout, ftmp, fa);
+    if (retval != 0)  return(ARK_RHSFUNC_FAIL);
 
     /* evaluate desired function */
     if (d == 0) {
