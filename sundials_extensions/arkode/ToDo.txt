@@ -28,9 +28,7 @@ Remaining components to build:
     in memory, along with a flag denoting whether these were current,
     and if they are current then we don't need to evaluate them.
 [X] Predictor routine to store guesses in Fi array (since
-    that is only filled in after setting the initial guess).  This
-    will be called once at the end of a successful step to generate
-    predictions for the next one.
+    that is only filled in after setting the initial guess).
 [X] Routine to calculate time step solution and embedding, along with 
     time accuracy error estimate.
 [X] Code in InitialSetup routine to fill Fi array with initial
@@ -91,25 +89,25 @@ Remaining components to build:
     and store these in ark_mem->ark_gamma and ark_mem->ark_Fe[i],
     respectively.  All other gamma-related statistics should be
     updated appropriately, as is done with the BDF approach.
-[ ] Create ARKAdjustParams2 routine to do all of the same things as
+[X] Create ARKAdjustParams2 routine to do all of the same things as
     for BDF method, but with all order changes removed.
-[ ] Revise ARKRestore, ARKStep and ARKNlsNewton to account for the
-    fact that we now store both ynew and tnew (the last accurate
-    solution and when it is valid), so we can just copy those instead
-    of requiring us to un-apply modifications that have been made to
-    the last valid solution.
-[ ] Add code to ARKInitialSetup to fill in yold=ynew and fold=fnew
+[X] Revise ARKStep and ARKNlsNewton to account for the fact that we
+    now store both ynew and tnew (the last accurate solution and when
+    it is valid), so we can just copy those instead of requiring us to
+    un-apply modifications that have been made to the last valid
+    solution.
+[X] Add code to ARKInitialSetup to fill in yold=ynew and fold=fnew
     with values from initial condition so that they can be reused
     later, both for dense output and for calculation of the initial h
     value.
-[ ] Currently, I use Fe for temporary storage within the solver.
-    Unfortunately, this will not exist for an implicit-only problem.
-    Figure out a different temporary array to use (preferrably one
-    that is unused at these stages of the calculation).
-[ ] Update ARKHin to use ynew and fnew (already filled in by
+[X] Update ARKHin to use ynew and fnew (already filled in by
     ARKInitialSetup) in estimation of initial time step.
 [ ] Check all linear solvers to ensure that they setup/solve the
     correct system, and access all of the correct data out of ark_mem.
+[ ] Investigate what is held in ark_mem->ark_tq[4].  This is currently
+    used in the iterative linear solver convergence tests, so either I
+    need to set the value myself (not so good) or replace what is
+    currently there with my own ark_mem->ark_delta value.
 [ ] Insert calls to my ARKAdapt function wherever CVODE currently
     decides on accuracy- or stability-based time step adaptivity.
 [ ] Think about scenario in which ARK method's first stage doesn't set
@@ -161,7 +159,15 @@ Remaining components to build:
     call lsetup once prior to EVERY time step.
 [ ] If I need to use any currently-unused N_Vector operations, add
     them to ARKCheckNvector routine.
-
+[ ] Rename ark_zn[0] to ark_ycur, and remove all references to other
+    ark_zn[i].  Also check that I am consistent in which vector is
+    chosen as the initial guess for the nonlinear problems.  In some
+    places I call this ark_Fi[i] and in others I call this ark_zn[0].
+    Settle on something.
+[ ] Currently, I use Fe for temporary storage within the solver.
+    Unfortunately, this will not exist for an implicit-only problem.
+    Figure out a different temporary array to use (preferrably one
+    that is unused at these stages of the calculation).
 
 
 Hard:
@@ -214,6 +220,11 @@ Unknown/Questions:
 [ ] Consider whether a non-identity matrix M will change how
     preconditioning occurs, i.e. whether it disables either right or
     left preconditioning.
+[ ] Update ARKSpilsAtimes function (and similar, e.g. arkDenseSetup) 
+    to accommodate a non-identity mass matrix.  This may also change 
+    how gamma/gammap are handled, since changes to gamma may have 
+    more/less effect with a non-identity mass matrix.  Think about 
+    this.
 [ ] Consider all the places where I use Fe[] and Fi[] for temporary
     data.  If I'm running a purely implicit or explicit calculation,
     then the other set of these is never allocated!!  Figure out how
