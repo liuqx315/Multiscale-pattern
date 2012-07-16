@@ -78,7 +78,10 @@ static void arkLapackBandFree(ARKodeMem ark_mem);
        of the NVECTOR package. Therefore, ARKLapackDense will 
        first test for a compatible N_Vector internal 
        representation by checking that N_VGetArrayPointer and 
-       N_VSetArrayPointer exist.
+       N_VSetArrayPointer exist.  Of course, other vector 
+       implementations may also have these functions set, so 
+       this test is not sufficient to guarantee use of the 
+       serial NVECTOR package.
 ---------------------------------------------------------------*/
 int ARKLapackDense(void *arkode_mem, int N)
 {
@@ -190,7 +193,8 @@ int ARKLapackDense(void *arkode_mem, int N)
        of the NVECTOR package. Therefore, ARKLapackBand will first 
        test for compatible a compatible N_Vector internal
        representation by checking that the function 
-       N_VGetArrayPointer exists.
+       N_VGetArrayPointer exists.  Again, this test is insufficient
+       to guarantee the serial NVECTOR package, but it's a start.
 ---------------------------------------------------------------*/                  
 int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
 {

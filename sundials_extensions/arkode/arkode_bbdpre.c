@@ -6,8 +6,8 @@
 -----------------------------------------------------------------
  This file contains implementations of routines for a
  band-block-diagonal preconditioner, i.e. a block-diagonal
- matrix with banded blocks, for use with ARKODE, a ARKSPILS linear
- solver, and the parallel implementation of NVECTOR.
+ matrix with banded blocks, for use with ARKODE, a ARKSPILS 
+ linear solver, and the parallel implementation of NVECTOR.
 ---------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -78,7 +78,8 @@ int ARKBBDPrecInit(void *arkode_mem, long int Nlocal,
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  /* Test if the NVECTOR package is compatible with the BLOCK BAND preconditioner */
+  /* Test if the NVECTOR package is compatible with the BLOCK 
+     BAND preconditioner */
   if(ark_mem->ark_tempv->ops->nvgetarraypointer == NULL) {
     ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKBBDPRE", 
 		    "ARKBBDPrecInit", MSGBBD_BAD_NVECTOR);

@@ -39,20 +39,22 @@ int ARKDlsSetDenseJacFn(void *arkode_mem, ARKDlsDenseJacFn jac)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", "ARKDlsSetDenseJacFn", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsSetDenseJacFn", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsSetDenseJacFn", MSGD_LMEM_NULL);
+    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", 
+		    "ARKDlsSetDenseJacFn", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   if (jac != NULL) {
     arkdls_mem->d_jacDQ = FALSE;
-    arkdls_mem->d_djac = jac;
+    arkdls_mem->d_djac  = jac;
   } else {
     arkdls_mem->d_jacDQ = TRUE;
   }
@@ -71,20 +73,22 @@ int ARKDlsSetBandJacFn(void *arkode_mem, ARKDlsBandJacFn jac)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", "ARKDlsSetBandJacFn", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsSetBandJacFn", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsSetBandJacFn", MSGD_LMEM_NULL);
+    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", 
+		    "ARKDlsSetBandJacFn", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   if (jac != NULL) {
     arkdls_mem->d_jacDQ = FALSE;
-    arkdls_mem->d_bjac = jac;
+    arkdls_mem->d_bjac  = jac;
   } else {
     arkdls_mem->d_jacDQ = TRUE;
   }
@@ -104,13 +108,15 @@ int ARKDlsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", "ARKDlsGetWorkSpace", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetWorkSpace", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetWorkSpace", MSGD_LMEM_NULL);
+    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetWorkSpace", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
@@ -137,13 +143,15 @@ int ARKDlsGetNumJacEvals(void *arkode_mem, long int *njevals)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", "ARKDlsGetNumJacEvals", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetNumJacEvals", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetNumJacEvals", MSGD_LMEM_NULL);
+    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetNumJacEvals", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
@@ -165,13 +173,15 @@ int ARKDlsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", "ARKDlsGetNumRhsEvals", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetNumRhsEvals", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetNumRhsEvals", MSGD_LMEM_NULL);
+    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetNumRhsEvals", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
@@ -232,13 +242,15 @@ int ARKDlsGetLastFlag(void *arkode_mem, long int *flag)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", "ARKDlsGetLastFlag", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetLastFlag", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", "ARKDlsGetLastFlag", MSGD_LMEM_NULL);
+    ARKProcessError(ark_mem, ARKDLS_LMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetLastFlag", MSGD_LMEM_NULL);
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
@@ -389,7 +401,8 @@ int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
     }
 
     /* Evaluate f with incremented y */
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ytemp, ftemp, ark_mem->ark_user_data);
+    retval = ark_mem->ark_fi(ark_mem->ark_tn, ytemp, ftemp, 
+			     ark_mem->ark_user_data);
     arkdls_mem->d_nfeDQ++;
     if (retval != 0) break;
 

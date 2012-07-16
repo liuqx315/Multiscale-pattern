@@ -345,8 +345,10 @@ static int ARKSpgmrSolve(ARKodeMem ark_mem, N_Vector b,
     return(0);
     break;
   case SPGMR_RES_REDUCED:
+    /* allow reduction but not solution on first Newton iteration, 
+       otherwise return with a recoverable failure */
     if (ark_mem->ark_mnewt == 0) return(0);
-    else            return(1);
+    else                         return(1);
     break;
   case SPGMR_CONV_FAIL:
     return(1);

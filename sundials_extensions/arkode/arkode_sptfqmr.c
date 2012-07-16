@@ -312,7 +312,7 @@ static int ARKSptfqmrSolve(ARKodeMem ark_mem, N_Vector b,
 
   sptfqmr_mem = (SptfqmrMem) arkspils_mem->s_spils_mem;
 
-  /* Test norm(b); if small, return x = 0 or x = b */
+  /* Test norm(b); if small, return x = 0 */
   arkspils_mem->s_deltar = arkspils_mem->s_eplifac * ark_mem->ark_tq[4]; 
 
   bnorm = N_VWrmsNorm(b, weight);
@@ -342,7 +342,6 @@ static int ARKSptfqmrSolve(ARKodeMem ark_mem, N_Vector b,
   if (retval != SPTFQMR_SUCCESS) arkspils_mem->s_ncfl++;
 
   /* Interpret return value from SpgmrSolve */
-
   arkspils_mem->s_last_flag = retval;
 
   switch(retval) {
@@ -351,8 +350,10 @@ static int ARKSptfqmrSolve(ARKodeMem ark_mem, N_Vector b,
     return(0);
     break;
   case SPTFQMR_RES_REDUCED:
+    /* allow reduction but not solution on first Newton iteration, 
+       otherwise return with a recoverable failure */
     if (ark_mem->ark_mnewt == 0) return(0);
-    else            return(1);
+    else                         return(1);
     break;
   case SPTFQMR_CONV_FAIL:
     return(1);

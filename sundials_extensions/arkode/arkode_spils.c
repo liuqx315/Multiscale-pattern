@@ -48,7 +48,7 @@ int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   /* Check for legal pretype */ 
-  if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
+  if ((pretype != PREC_NONE)  && (pretype != PREC_LEFT) &&
       (pretype != PREC_RIGHT) && (pretype != PREC_BOTH)) {
     ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetPrecType", MSGS_BAD_PRETYPE);
@@ -199,7 +199,7 @@ int ARKSpilsSetPreconditioner(void *arkode_mem,
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  arkspils_mem->s_pset = pset;
+  arkspils_mem->s_pset   = pset;
   arkspils_mem->s_psolve = psolve;
 
   return(ARKSPILS_SUCCESS);
@@ -232,7 +232,7 @@ int ARKSpilsSetJacTimesVecFn(void *arkode_mem,
 
   if (jtv != NULL) {
     arkspils_mem->s_jtimesDQ = FALSE;
-    arkspils_mem->s_jtimes = jtv;
+    arkspils_mem->s_jtimes   = jtv;
   } else {
     arkspils_mem->s_jtimesDQ = TRUE;
   }

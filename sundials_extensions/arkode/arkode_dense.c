@@ -60,7 +60,8 @@ int ARKDense(void *arkode_mem, long int N)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDENSE", "ARKDense", MSGD_ARKMEM_NULL);
+    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDENSE", 
+		    "ARKDense", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -68,7 +69,8 @@ int ARKDense(void *arkode_mem, long int N)
   /* Test if the NVECTOR package is compatible with the DENSE solver */
   if (ark_mem->ark_tempv->ops->nvgetarraypointer == NULL ||
       ark_mem->ark_tempv->ops->nvsetarraypointer == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKDENSE", "ARKDense", MSGD_BAD_NVECTOR);
+    ARKProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKDENSE", 
+		    "ARKDense", MSGD_BAD_NVECTOR);
     return(ARKDLS_ILL_INPUT);
   }
 
@@ -84,7 +86,8 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem = NULL;
   arkdls_mem = (ARKDlsMem) malloc(sizeof(struct ARKDlsMemRec));
   if (arkdls_mem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", "ARKDense", MSGD_MEM_FAIL);
+    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+		    "ARKDense", MSGD_MEM_FAIL);
     return(ARKDLS_MEM_FAIL);
   }
 
@@ -92,30 +95,29 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem->d_type = SUNDIALS_DENSE;
 
   /* Initialize Jacobian-related data */
-  arkdls_mem->d_jacDQ = TRUE;
-  arkdls_mem->d_djac = NULL;
+  arkdls_mem->d_jacDQ  = TRUE;
+  arkdls_mem->d_djac   = NULL;
   arkdls_mem->d_J_data = NULL;
-
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
-
   ark_mem->ark_setupNonNull = TRUE;
 
   /* Set problem dimension */
   arkdls_mem->d_n = N;
 
   /* Allocate memory for M, savedJ, and pivot array */
-
   arkdls_mem->d_M = NULL;
   arkdls_mem->d_M = NewDenseMat(N, N);
   if (arkdls_mem->d_M == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", "ARKDense", MSGD_MEM_FAIL);
+    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+		    "ARKDense", MSGD_MEM_FAIL);
     free(arkdls_mem); arkdls_mem = NULL;
     return(ARKDLS_MEM_FAIL);
   }
   arkdls_mem->d_savedJ = NULL;
   arkdls_mem->d_savedJ = NewDenseMat(N, N);
   if (arkdls_mem->d_savedJ == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", "ARKDense", MSGD_MEM_FAIL);
+    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+		    "ARKDense", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     free(arkdls_mem); arkdls_mem = NULL;
     return(ARKDLS_MEM_FAIL);
@@ -123,7 +125,8 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem->d_lpivots = NULL;
   arkdls_mem->d_lpivots = NewLintArray(N);
   if (arkdls_mem->d_lpivots == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", "ARKDense", MSGD_MEM_FAIL);
+    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+		    "ARKDense", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     DestroyMat(arkdls_mem->d_savedJ);
     free(arkdls_mem); arkdls_mem = NULL;
@@ -155,7 +158,7 @@ static int arkDenseInit(ARKodeMem ark_mem)
 
   /* Set Jacobian function and data, depending on jacDQ */
   if (arkdls_mem->d_jacDQ) {
-    arkdls_mem->d_djac = arkDlsDenseDQJac;
+    arkdls_mem->d_djac   = arkDlsDenseDQJac;
     arkdls_mem->d_J_data = ark_mem;
   } else {
     arkdls_mem->d_J_data = ark_mem->ark_user_data;
