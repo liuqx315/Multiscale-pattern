@@ -102,12 +102,22 @@ Remaining components to build:
     value.
 [X] Update ARKHin to use ynew and fnew (already filled in by
     ARKInitialSetup) in estimation of initial time step.
-[ ] Check all linear solvers to ensure that they setup/solve the
+[X] Check all linear solvers to ensure that they setup/solve the
     correct system, and access all of the correct data out of ark_mem.
-[ ] Investigate what is held in ark_mem->ark_tq[4].  This is currently
-    used in the iterative linear solver convergence tests, so either I
-    need to set the value myself (not so good) or replace what is
-    currently there with my own ark_mem->ark_delta value.
+[X] Replace ark_mem->ark_tq[4] with a different parameter to enforce
+    nonlinear and linear solver tolerances.  For now, since I do not
+    have a general and robust estimate for the actual local truncation
+    error (at least not until the end of the step), go ahead and use
+    the approach promoted by Hairer & Wanner.  Naming the new
+    parameter ark_mem->ark_eLTE (based on its role in CVODE, and our
+    eventual goal for its role in ARKODE), we should have
+        eLTE = nlscoef * (1 - crate),  if crate < 1, 
+    or 
+        eLTE = 0.1 * nlscoef,  otherwise.
+    Then the Newton solver test will use
+        dcon = del * min(1, crate) / eLTE
+    Similarly, the Krylov solver tolerance will use
+        s_deltar = s_eplifac * eLTE
 [ ] Insert calls to my ARKAdapt function wherever CVODE currently
     decides on accuracy- or stability-based time step adaptivity.
 [ ] Think about scenario in which ARK method's first stage doesn't set
@@ -229,3 +239,15 @@ Unknown/Questions:
     data.  If I'm running a purely implicit or explicit calculation,
     then the other set of these is never allocated!!  Figure out how
     to deal with this situation!
+[ ] Consider the possibility of estimating the actual local truncation
+    error (used in the nonlinear and linear solver tolerances) based
+    on results from the previous time step and an assumption that this
+    step will not deviate too much from the last.  It would be optimal
+    if this could relate to the deviation between the predictor and
+    corrector, since that is what Newton is actually solving for.
+    These differences could be measured at the end of one step to be
+    used in the next, and due to the varying efficacy of the predictor
+    for each stage, those tolerances could also be stored/set
+    separately for each stage. Moreover, if a time step fails the
+    accuracy test, these tolerances can be reduced for the next step
+    to acknowledge a change in the dynamics.
