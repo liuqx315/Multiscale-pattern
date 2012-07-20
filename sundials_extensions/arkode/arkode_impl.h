@@ -66,6 +66,9 @@ extern "C" {
 #define AD5_K2    RCONST(0.3);
 #define AD5_K3    RCONST(1.0);
 
+/* Default solver tolerances */
+#define NLSCOEF   RCONST(0.1);     /* BDF */
+/* #define NLSCOEF   RCONST(0.003);   /\* RK  *\/ */
 
 /* Control constants for tolerances */
 #define ARK_NN  0
@@ -310,6 +313,8 @@ typedef struct ARKodeMemRec {
 
   realtype ark_crate;           /* estimated corrector convergence rate     */
   realtype ark_acnrm;           /* | acor | wrms                            */
+  realtype ark_eLTE;            /* estimated local truncation error, used in
+				   nonlinear and linear solver tolerances   */
   realtype ark_nlscoef;         /* coeficient in nonlinear convergence test */
   int  ark_mnewt;               /* Newton iteration counter                 */
 

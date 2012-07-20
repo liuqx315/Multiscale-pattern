@@ -81,7 +81,7 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_maxcor           = 3;
   ark_mem->ark_maxnef           = 7;
   ark_mem->ark_maxncf           = 10;
-  ark_mem->ark_nlscoef          = RCONST(0.1);
+  ark_mem->ark_nlscoef          = NLSCOEF;
 
   return(ARK_SUCCESS);
 }
@@ -1021,7 +1021,7 @@ int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef)
 
   /* argument <= 0 sets default, otherwise set input */
   if (nlscoef <= ZERO) {
-    ark_mem->ark_nlscoef = RCONST(0.1);
+    ark_mem->ark_nlscoef = NLSCOEF;
   } else {
     ark_mem->ark_nlscoef = nlscoef;
   }

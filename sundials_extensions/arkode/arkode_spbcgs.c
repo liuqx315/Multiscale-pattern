@@ -311,7 +311,7 @@ static int ARKSpbcgSolve(ARKodeMem ark_mem, N_Vector b,
   spbcg_mem = (SpbcgMem) arkspils_mem->s_spils_mem;
 
   /* Test norm(b); if small, return x = 0 or x = b */
-  arkspils_mem->s_deltar = arkspils_mem->s_eplifac * ark_mem->ark_tq[4]; 
+  arkspils_mem->s_deltar = arkspils_mem->s_eplifac * ark_mem->ark_eLTE; 
 
   bnorm = N_VWrmsNorm(b, weight);
   if (bnorm <= arkspils_mem->s_deltar) {

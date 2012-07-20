@@ -41,7 +41,6 @@ static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur,
 		       N_Vector weight);
 
 static int ARKHin(ARKodeMem ark_mem, realtype tout);
-static int ARKHin2(ARKodeMem ark_mem, realtype tout);
 static realtype ARKUpperBoundH0(ARKodeMem ark_mem, 
 				realtype tdist);
 static int ARKYddNorm(ARKodeMem ark_mem, realtype hg, 
@@ -1706,7 +1705,13 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
 
  The algorithm used seeks to find h0 as a solution of
        (WRMS norm of (h0^2 ydd / 2)) = 1, 
- where ydd = estimated second derivative of y.
+ where ydd = estimated second derivative of y.  Although this 
+ choice is based on an error expansion of the Backward Euler
+ method, and hence results in an overly-conservative time step 
+ for our higher-order ARK methods, it does find an order-of-
+ magnitude estimate of the initial time scale of the solution.
+ Since this method is only used on the first time step, the
+ additional caution will not overly hinder solver efficiency.
 
  We start with an initial estimate equal to the geometric mean 
  of the lower and upper bounds on the step size.
@@ -2784,7 +2789,12 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
       if (m > 0) {
 	ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del/delp);
       }
-      dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_tq[4];
+      ark_mem->ark_eLTE = ark_mem->ark_nlscoef / ark_mem->ark_tq[2]; /* BDF */
+      /* if (ark_mem->ark_crate < ONE)                                  /\* RK *\/ */
+      /* 	ark_mem->ark_eLTE = ark_mem->ark_nlscoef * (ONE - ark_mem->ark_crate); */
+      /* else */
+      /* 	ark_mem->ark_eLTE = ark_mem->ark_nlscoef * RCONST(0.1); */
+      dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_eLTE;
     
       if (dcon <= ONE) {
 	ark_mem->ark_acnrm = (m==0) ? 
