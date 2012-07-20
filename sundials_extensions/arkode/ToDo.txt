@@ -118,13 +118,13 @@ Remaining components to build:
         dcon = del * min(1, crate) / eLTE
     Similarly, the Krylov solver tolerance will use
         s_deltar = s_eplifac * eLTE
+[X] Think about scenario in which the ARK method has first stage with
+    c[0] = 0.0 or last stage with c[s] = 1.0.  Since I need to fill in
+    fold and fnew for dense output and predictors, if their components
+    are already stored in Fe[0],Fi[0] or Fe[s],Fi[s] I could just copy
+    them instead of recomputing. 
 [ ] Insert calls to my ARKAdapt function wherever CVODE currently
     decides on accuracy- or stability-based time step adaptivity.
-[ ] Think about scenario in which ARK method's first stage doesn't set
-    c[0] = 0.0:  I need to fill in fold and fnew for dense output and
-    predictors, so if they are already stored in Fe[0],Fi[0] or
-    Fe[1],Fi[1] I could just copy them; otherwise I'll need to
-    compute them at the end of each successful step.
 [ ] Think about scenario where an attempted step has too much error
     (but still converges within iteration limits).  Add code to
     ARKRestore() to recompute predictions for implicit solutions at

@@ -100,7 +100,7 @@ static int ARKDoErrorTest2(ARKodeMem ark_mem, int *nflagPtr,
 
 static realtype ARKComputeSolutions(ARKodeMem ark_mem);
 
-static void ARKCompleteStep(ARKodeMem ark_mem);
+static int ARKCompleteStep(ARKodeMem ark_mem, realtype dsm);
 static int ARKCompleteStage(ARKodeMem ark_mem);
 
 static void ARKPrepareNextStep(ARKodeMem ark_mem, realtype dsm);
@@ -2023,8 +2023,9 @@ static int ARKStep(ARKodeMem ark_mem)
   }
 
   /* Nonlinear system solve and error test were both successful.
-     Update data, and consider change of step and/or order.       */
-  ARKCompleteStep(ark_mem); 
+     Update data, and consider change of step and/or order. */
+  eflag = ARKCompleteStep(ark_mem, dsm); 
+  if (eflag != ARK_SUCCESS) return(eflag);
   ARKPrepareNextStep(ark_mem, dsm); 
 
   ark_mem->ark_etamax = ETAMX2;
@@ -2157,7 +2158,8 @@ static int ARKStep2(ARKodeMem ark_mem)
 
   /* Nonlinear system solves and error test were all successful.
      Update data, and consider change of step. */
-  ARKCompleteStep(ark_mem); 
+  eflag = ARKCompleteStep(ark_mem, dsm); 
+  if (eflag != ARK_SUCCESS)  return(eflag);
   ARKPrepareNextStep(ark_mem, dsm); 
 
   /* Reset growth factor for subsequent time step */
@@ -3248,9 +3250,9 @@ static booleantype ARKDoErrorTest2(ARKodeMem ark_mem, int *nflagPtr,
  qwait == 1 (and q < qmax) we save acor and tq[5] for a 
  possible order increase. 
 ---------------------------------------------------------------*/
-static void ARKCompleteStep(ARKodeMem ark_mem)
+static int ARKCompleteStep(ARKodeMem ark_mem, realtype dsm)
 {
-  int i, j;
+  int i, j, retval;
   N_Vector tempvec;
 
   /* Set current time to the end of the step (in case the last 
@@ -3269,6 +3271,11 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
   ark_mem->ark_hold = ark_mem->ark_h;
   ark_mem->ark_told = ark_mem->ark_tn;
   ark_mem->ark_qold = ark_mem->ark_q;
+
+  /* update error history array */
+  ark_mem->ark_hadapt_ehist[2] = ark_mem->ark_hadapt_ehist[1];
+  ark_mem->ark_hadapt_ehist[1] = ark_mem->ark_hadapt_ehist[0];
+  ark_mem->ark_hadapt_ehist[0] = dsm;
   
   /* swap yold and ynew arrays */
   tempvec = ark_mem->ark_yold;
@@ -3280,14 +3287,23 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
   ark_mem->ark_fold = ark_mem->ark_fnew;
   ark_mem->ark_fnew = tempvec;
 
-  /* update fnew array using explicit and implicit RHS */
+  /* update fnew array using explicit and implicit RHS:
+     if c[s-1] = 1.0 use already-computed RHS values, 
+     otherwise compute from scratch */
   N_VConst(ZERO, ark_mem->ark_fnew);
-  if (!ark_mem->ark_explicit) 
-    N_VLinearSum(ONE, ark_mem->ark_Fi[ark_mem->ark_stages-1], 
-		 ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
-  if (!ark_mem->ark_implicit) 
-    N_VLinearSum(ONE, ark_mem->ark_Fe[ark_mem->ark_stages-1], 
-		 ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
+  if (ABS(ark_mem->ark_c[ark_mem->ark_stages-1] - ONE) < TINY) {
+    if (!ark_mem->ark_explicit) 
+      N_VLinearSum(ONE, ark_mem->ark_Fi[ark_mem->ark_stages-1], 
+		   ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
+    if (!ark_mem->ark_implicit) 
+      N_VLinearSum(ONE, ark_mem->ark_Fe[ark_mem->ark_stages-1], 
+		   ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
+  } else {
+    /* NOTE: new y value is currently in yold, due to swap above */
+    retval = ARKFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_yold, 
+			ark_mem->ark_ftemp, ark_mem->ark_fnew);
+    if (retval != 0) return(ARK_RHSFUNC_FAIL);
+  }
 
   /* update ynew (cannot swap since ark_y is a pointer to user-supplied data) */
   N_VScale(ONE, ark_mem->ark_y, ark_mem->ark_ynew);
@@ -3308,6 +3324,8 @@ static void ARKCompleteStep(ARKodeMem ark_mem)
     ark_mem->ark_saved_tq5 = ark_mem->ark_tq[5];
     ark_mem->ark_indx_acor = ark_mem->ark_qmax;
   }
+
+  return(ARK_SUCCESS);
 }
 
 
