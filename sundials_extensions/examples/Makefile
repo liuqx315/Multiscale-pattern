@@ -19,10 +19,16 @@ TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
         nvector_parallel_grid_test.exe \
         cv_analytic.exe \
+        cv_analytic_sys.exe \
+        cv_analytic_nonlin.exe \
         cv_VanderPol.exe \
         cv_brusselator.exe \
         cv_brusselator1D.exe \
         ida_brusselator1D_FEM.exe \
+        ark_analytic.exe \
+        ark_analytic_sys.exe \
+        ark_analytic_nonlin.exe \
+        ark_brusselator.exe \
         ark_brusselator1D.exe
 
 # target to build all test executables
@@ -40,6 +46,12 @@ nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
 cv_analytic.exe : cv_analytic.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
+cv_analytic_sys.exe : cv_analytic_sys.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+cv_analytic_nonlin.exe : cv_analytic_nonlin.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
 cv_VanderPol.exe : cv_VanderPol.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
@@ -50,6 +62,18 @@ cv_brusselator1D.exe : cv_brusselator1D.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 ida_brusselator1D_FEM.exe : ida_brusselator1D_FEM.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+ark_analytic.exe : ark_analytic.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+ark_analytic_sys.exe : ark_analytic_sys.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+ark_analytic_nonlin.exe : ark_analytic_nonlin.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+
+ark_brusselator.exe : ark_brusselator.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 ark_brusselator1D.exe : ark_brusselator1D.c

@@ -41,8 +41,8 @@
  * Also in the input file, we allow specification of the desired 
  * relative and absolute tolerances.
  * 
- * This program solves the problem with the BDF method, using a
- * Newton iteration with the CVDENSE dense linear solver, and a
+ * This program solves the problem with the DIRK method, using a
+ * Newton iteration with the ARKDENSE dense linear solver, and a
  * user-supplied Jacobian routine.
  *
  * 100 outputs are printed at equal intervals, and run statistics 
@@ -53,9 +53,9 @@
 #include <math.h>
 
 /* Header files with a description of contents used */
-#include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
+#include <arkode/arkode.h>           /* prototypes for ARKODE fcts., consts. */
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <cvode/cvode_dense.h>       /* prototype for CVDense */
+#include <arkode/arkode_dense.h>     /* prototype for ARKDense */
 #include <sundials/sundials_dense.h> /* definitions DlsMat DENSE_ELEM */
 #include <sundials/sundials_types.h> /* definition of type realtype */
 
@@ -76,9 +76,9 @@ static int check_flag(void *flagvalue, char *funcname, int opt);
 int main()
 {
   /* general problem parameters */
-  realtype T0 = 0.0;
-  realtype Tf = 10.0;
-  realtype dTout = 1.0;
+  realtype T0 = RCONST(0.0);
+  realtype Tf = RCONST(10.0);
+  realtype dTout = RCONST(1.0);
   int Nt = ceil(Tf/dTout);
   realtype a, b, ep, u0, v0, w0;
   long int NEQ = 3;
@@ -86,7 +86,7 @@ int main()
   /* general problem variables */
   int flag;
   N_Vector y = NULL;
-  void *cvode_mem = NULL;
+  void *arkode_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
      test   - test problem choice
@@ -148,35 +148,34 @@ int main()
   NV_Ith_S(y,1) = v0;
   NV_Ith_S(y,2) = w0;
 
-  /* Call CVodeCreate to create the solver memory and specify the 
-     Backward Differentiation Formula and the use of a Newton iteration */
-  cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  /* Call ARKodeCreate to create the solver memory */
+  arkode_mem = ARKodeCreate();
+  if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return(1);
   
-  /* Call CVodeInit to initialize the integrator memory and specify the
+  /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
-  flag = CVodeInit(cvode_mem, f, T0, y);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
+  if (check_flag(&flag, "ARKodeInit", 1)) return(1);
 
-  /* Call CVodeSetUserData to pass rdata to user functions */
-  flag = CVodeSetUserData(cvode_mem, (void *) rdata);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  /* Call ARKodeSetUserData to pass rdata to user functions */
+  flag = ARKodeSetUserData(arkode_mem, (void *) rdata);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
 
-  /* Call CVodeSStolerances to specify the scalar relative and absolute
+  /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
-  flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
 
-  /* Call CVDense to specify the CVDENSE dense linear solver */
-  flag = CVDense(cvode_mem, NEQ);
-  if (check_flag(&flag, "CVDense", 1)) return(1);
+  /* Call ARKDense to specify the ARKDENSE dense linear solver */
+  flag = ARKDense(arkode_mem, NEQ);
+  if (check_flag(&flag, "ARKDense", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
-  flag = CVDlsSetDenseJacFn(cvode_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
+  flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
+  if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
-  /* In loop, call CVode, print results, and test for error.
+  /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype tout = dTout;
@@ -185,14 +184,14 @@ int main()
   printf("   ----------------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
-    flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
+    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = NV_Ith_S(y,0);
     v = NV_Ith_S(y,1);
     w = NV_Ith_S(y,2);
     printf("  %10.6f  %10.6f  %10.6f  %10.6f\n", t, u, v, w);
 
-    if (check_flag(&flag, "CVode", 1)) break;
-    if (flag == CV_SUCCESS) {
+    if (check_flag(&flag, "ARKode", 1)) break;
+    if (flag == ARK_SUCCESS) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }
@@ -200,27 +199,32 @@ int main()
   printf("   ----------------------------------------------\n");
 
   /* Print some final statistics */
-  long int nst, nfe, nsetups, nje, nfeLS, nni, ncfn, netf;
-  flag = CVodeGetNumSteps(cvode_mem, &nst);
-  check_flag(&flag, "CVodeGetNumSteps", 1);
-  flag = CVodeGetNumRhsEvals(cvode_mem, &nfe);
-  check_flag(&flag, "CVodeGetNumRhsEvals", 1);
-  flag = CVodeGetNumLinSolvSetups(cvode_mem, &nsetups);
-  check_flag(&flag, "CVodeGetNumLinSolvSetups", 1);
-  flag = CVodeGetNumErrTestFails(cvode_mem, &netf);
-  check_flag(&flag, "CVodeGetNumErrTestFails", 1);
-  flag = CVodeGetNumNonlinSolvIters(cvode_mem, &nni);
-  check_flag(&flag, "CVodeGetNumNonlinSolvIters", 1);
-  flag = CVodeGetNumNonlinSolvConvFails(cvode_mem, &ncfn);
-  check_flag(&flag, "CVodeGetNumNonlinSolvConvFails", 1);
-  flag = CVDlsGetNumJacEvals(cvode_mem, &nje);
-  check_flag(&flag, "CVDlsGetNumJacEvals", 1);
-  flag = CVDlsGetNumRhsEvals(cvode_mem, &nfeLS);
-  check_flag(&flag, "CVDlsGetNumRhsEvals", 1);
+  long int nst, nst_a, nst_c, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  check_flag(&flag, "ARKodeGetNumSteps", 1);
+  flag = ARKodeGetNumAccSteps(arkode_mem, &nst_a);
+  check_flag(&flag, "ARKodeGetNumAccSteps", 1);
+  flag = ARKodeGetNumConvSteps(arkode_mem, &nst_c);
+  check_flag(&flag, "ARKodeGetNumConvSteps", 1);
+  flag = ARKodeGetNumRhsEvals(arkode_mem, &nfe, &nfi);
+  check_flag(&flag, "ARKodeGetNumRhsEvals", 1);
+  flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+  check_flag(&flag, "ARKodeGetNumLinSolvSetups", 1);
+  flag = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  check_flag(&flag, "ARKodeGetNumErrTestFails", 1);
+  flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+  check_flag(&flag, "ARKodeGetNumNonlinSolvIters", 1);
+  flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+  check_flag(&flag, "ARKodeGetNumNonlinSolvConvFails", 1);
+  flag = ARKDlsGetNumJacEvals(arkode_mem, &nje);
+  check_flag(&flag, "ARKDlsGetNumJacEvals", 1);
+  flag = ARKDlsGetNumRhsEvals(arkode_mem, &nfeLS);
+  check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
 
   printf("\nFinal Solver Statistics:\n");
-  printf("   Total internal solver steps = %li\n", nst);
-  printf("   Total RHS evals = %li\n", nfe);
+  printf("   Total internal solver steps = %li (acc = %li,  conv = %li)\n", 
+	 nst, nst_a, nst_c);
+  printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
@@ -232,7 +236,7 @@ int main()
   N_VDestroy_Serial(y);
 
   /* Free integrator memory */
-  CVodeFree(&cvode_mem);
+  ARKodeFree(&arkode_mem);
 
   return(0);
 }

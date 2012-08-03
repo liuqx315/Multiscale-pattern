@@ -8,16 +8,10 @@
  * 
  * The following is a simple example problem with analytical 
  * solution,
- *    dy/dt = lamda*y + 1/(1+t^2) - lamda*atan(t)
+ *     dy/dt = (t+1)*exp(-y)
  * for t in the interval [0.0, 10.0], with initial condition: y=0. 
- * 
- * The stiffness of the problem is directly proportional to the 
- * value of "lamda", which is specified through an input file, along 
- * with the desired relative and absolute tolerances.  The value of
- * lamda should be negative to result in a well-posed ODE; for values
- * with magnitude larger than 100 the problem becomes quite stiff.
- *
- * In the example input file, we choose lamda = -100.
+ * This has analytical solution 
+ *      y(t) = log(0.5*t^2 + t + 1)
  * 
  * This program solves the problem with the BDF method,
  * Newton iteration with the CVDENSE dense linear solver, and a
@@ -30,7 +24,6 @@
 #include <math.h>
 
 /* Header files with a description of contents used */
-
 #include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
 #include <cvode/cvode_dense.h>       /* prototype for CVDense */
@@ -68,10 +61,9 @@ int main()
      lamda  - problem stiffness parameter
      reltol - desired relative tolerance
      abstol - desired absolute tolerance */
-  double reltol_, abstol_, lamda_;
+  double reltol_, abstol_;
   FILE *FID;
-  FID=fopen("input_analytic.txt","r");
-  fscanf(FID,"  lamda = %lf\n", &lamda_);
+  FID=fopen("input_analytic_nonlin.txt","r");
   fscanf(FID,"  reltol = %lf\n", &reltol_);
   fscanf(FID,"  abstol = %lf\n", &abstol_);
   fclose(FID);
@@ -79,12 +71,10 @@ int main()
   /* convert the inputs to 'realtype' format */
   realtype reltol = reltol_;
   realtype abstol = abstol_;
-  realtype lamda  = lamda_;
 
   /* Initial problem output */
   printf("\nAnalytical ODE test problem:\n");
-  printf("    lamda = %g\n",lamda);
-  printf("   reltol = %.1e\n",reltol);
+  printf("   reltol = %.1e\n",  reltol);
   printf("   abstol = %.1e\n\n",abstol);
 
 
@@ -105,10 +95,6 @@ int main()
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
   if (check_flag(&flag, "CVodeInit", 1)) return(1);
-
-  /* Call CVodeSetUserData to pass lamda to user functions */
-  flag = CVodeSetUserData(cvode_mem, (void *) &lamda);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -133,7 +119,7 @@ int main()
   while (Tf - t > 1.0e-15) {
     flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
     u = NV_Ith_S(y,0);
-    printf("  %10.6f  %10.6f  %12.5e\n", t, u, atan(t)-u);
+    printf("  %10.6f  %10.6f  %12.5e\n", t, u, log(0.5*t*t+t+1.0)-u);
 
     if (check_flag(&flag, "CVode", 1)) break;
     if (flag == CV_SUCCESS) {
@@ -187,28 +173,18 @@ int main()
  *-------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
-
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype lamda = rdata[0];
-  realtype u = NV_Ith_S(y,0);
-
-  NV_Ith_S(ydot,0) = lamda*u + 1.0/(1.0+t*t) - lamda*atan(t);
-
+  NV_Ith_S(ydot,0) = (t+1.0)*exp(-NV_Ith_S(y,0));
   return(0);
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
-
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype lamda = rdata[0];
-  DENSE_ELEM(J,0,0) = lamda;
-
+  DENSE_ELEM(J,0,0) = -(t+1.0)*exp(-NV_Ith_S(y,0));
   return(0);
 }
 
