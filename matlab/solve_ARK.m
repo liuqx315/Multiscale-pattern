@@ -208,8 +208,8 @@ for tstep = 2:length(tvals)
 	 
 	 % call newton solver to compute new stage solution
 	 Fdata.t = t;
-	 [Ynew,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
-	     newt_tol, newt_maxit, newt_alpha);
+	 [Ynew,inewt,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, ...
+	     Fdata, newt_tol, newt_maxit, newt_alpha);
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 

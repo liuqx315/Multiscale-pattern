@@ -87,6 +87,9 @@ newt_maxit = 20;
 newt_tol   = 1e-11;
 newt_alpha = 1;
 dt_reduce  = 0.1;
+ONEMSM     = 1.0-sqrt(eps);
+ONEPSM     = 1.0+sqrt(eps);
+ERRTOL     = 1.2;
 
 % store temporary states
 t = tvals(1);
@@ -112,7 +115,7 @@ nsteps = 0;
 for tstep = 2:length(tvals)
 
    % loop over internal time steps to get to desired output time
-   while (t < tvals(tstep))
+   while (t < tvals(tstep)*ONEMSM)
       
       % limit internal time step if needed
       h = max([h, hmin]);            % enforce minimum time step size
@@ -126,6 +129,9 @@ for tstep = 2:length(tvals)
 
       % reset stage failure flag
       st_fail = 0;
+
+% $$$       fprintf('\n');
+% $$$       fprintf('  Attempting internal step of size h = %g\n',h);      
       
       % loop over stages
       for stage=1:s
@@ -146,12 +152,25 @@ for tstep = 2:length(tvals)
 	 for j=1:stage-1
 	    Fdata.rhs = Fdata.rhs + h*A(stage,j)*feval(fcn, t+h*c(j), z(:,j));
 	 end
-	 
+
+% $$$          fprintf('    stage %i: yguess = ', stage);
+% $$$          for entry=1:length(Yguess), fprintf('%g, ',Yguess(entry)); end
+% $$$          fprintf('\n');
+
+% $$$          fprintf('             rhs = ');
+% $$$          for entry=1:length(Fdata.rhs), fprintf('%g, ',Fdata.rhs(entry)); end
+% $$$          fprintf('\n');
+
+
 	 % call newton solver to compute new stage solution
 	 Fdata.t = t;
-	 [Ynew,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
-	     newt_tol, newt_maxit, newt_alpha);
-	 
+	 [Ynew,inewt,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, ...
+	     Fdata, newt_tol, newt_maxit, newt_alpha);
+
+% $$$          fprintf('             ynew = ');
+% $$$          for entry=1:length(Ynew), fprintf('%g, ',Ynew(entry)); end
+% $$$          fprintf('\n');
+
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
 	    % fprintf('solve_DIRK warning: stage failure, cutting timestep\n');
@@ -170,6 +189,9 @@ for tstep = 2:length(tvals)
       % compute new solution, embedding (if available)
       [Ynew,Y2] = Y_DIRK(z,Fdata);
 
+% $$$       fprintf('  step solution: Ynew = ');
+% $$$       for entry=1:length(Ynew), fprintf('%g, ',Ynew(entry)); end
+% $$$       fprintf('\n');
 
       % check whether step accuracy meets tolerances (only if stages successful)
       if ((st_fail == 0) & embedded)
@@ -177,8 +199,10 @@ for tstep = 2:length(tvals)
 	 % compute error in current step
 	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
 	 
+% $$$          fprintf('  error estimate = %g\n',err_step);
+
 	 % if error too high, flag step as a failure (to be recomputed)
-	 if (err_step > 1.2) 
+	 if (err_step > ERRTOL*ONEPSM) 
 	    a_fails = a_fails + 1;
 	    st_fail = 1;
 	 end
@@ -199,20 +223,28 @@ for tstep = 2:length(tvals)
 	 else
 	    h = hmin;
 	 end
-	 
+
+% $$$          fprintf('  successful step, next h = %g\n',h);
+
       % if step failed, reduce step size and retry
       else
 	 
 	 % reset solution guess, update work counter, reduce time step
 	 Ynew = Y0;
 	 h = h * dt_reduce;
-         if (h <= hmin) 
+         if (h <= hmin*ONEMSM) 
             return
          end
-      
+
+% $$$          fprintf('    failed step, next h = %g\n',h);
+
       end
       
    end
+
+% $$$    fprintf('Output solution = ');
+% $$$    for entry=1:length(Ynew), fprintf('%g, ',Ynew(entry)); end
+% $$$    fprintf('\n');
 
    % store updated solution
    Y(:,tstep) = Ynew;

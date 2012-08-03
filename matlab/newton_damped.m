@@ -1,5 +1,5 @@
-function [y,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
-% usage: [y,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
+function [y,inewt,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
+% usage: [y,inewt,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
 %
 % Damped Newton iteration for the nonlinear function defined by the
 % function Fcn,
@@ -18,6 +18,7 @@ function [y,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
 %          maxit = maximum allowed FP iterations
 %          alpha = damping parameter, 0 < alpha <= 1
 % Outputs: y = solution to root-finding problem
+%          inewt = number of Newton iterations to convergence
 %          ierr = output flag denoting success (0) or failure (1)
 %
 % Daniel R. Reynolds
@@ -43,14 +44,18 @@ F = feval(Fcn,y,Fdata);
 A = feval(Afn,y,Fdata);
 
 % perform iterations
-for i=1:maxit
+% $$$ fprintf('             res = ');
+for inewt=1:maxit
    
    % check residual for stopping
    if (norm(F,inf) < tol)
 %      fprintf('  newton_damped: converged to tol %g in %i iters\n',norm(F,inf),i-1);
       ierr = 0;
+% $$$       fprintf('\n');
       return
    end
+
+% $$$    fprintf('%g, ',norm(F,inf));
    
    % perform Newton update
    y = y - alpha*A\F;
@@ -60,6 +65,7 @@ for i=1:maxit
    A = feval(Afn,y,Fdata);
    
 end
+% $$$ fprintf('\n');
 
 % if we've made it to this point, the Newton iteration did not converge
 ierr = 1;

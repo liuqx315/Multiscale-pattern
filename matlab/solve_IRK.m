@@ -80,8 +80,8 @@ for tstep = 2:length(tvals)
       for i = 0:s-1
 	 z(i*m+1:(i+1)*m) = Ynew;
       end
-      [z,ierr] = newton_damped('F_IRK', 'A_IRK', z, Fdata, newt_tol, ...
-	  newt_maxit, newt_alpha);
+      [z,inewt,ierr] = newton_damped('F_IRK', 'A_IRK', z, Fdata, ...
+	  newt_tol, newt_maxit, newt_alpha);
       Ynew = Y_IRK(z,Fdata);
       
       % check newton error flag, if failure return with error
