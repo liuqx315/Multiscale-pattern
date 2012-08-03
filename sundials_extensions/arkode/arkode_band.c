@@ -158,9 +158,7 @@ int ARKBand(void *arkode_mem, long int N, long int mupper, long int mlower)
 static int arkBandInit(ARKodeMem ark_mem)
 {
   ARKDlsMem arkdls_mem;
-
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
-
   arkdls_mem->d_nje   = 0;
   arkdls_mem->d_nfeDQ  = 0;
   arkdls_mem->d_nstlj = 0;

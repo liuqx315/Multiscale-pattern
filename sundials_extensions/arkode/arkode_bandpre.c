@@ -424,7 +424,6 @@ static int ARKBandPDQJac(ARKBandPrecData pdata,
     }
 
     /* Evaluate f with incremented y. */
-
     retval = ark_mem->ark_fi(t, ytemp, ftemp, ark_mem->ark_user_data);
     pdata->nfeBP++;
     if (retval != 0) return(retval);

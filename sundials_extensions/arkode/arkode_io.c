@@ -16,11 +16,6 @@
 #include <sundials/sundials_types.h>
 
 
-#define ZERO RCONST(0.0)
-#define ONE  RCONST(1.0)
-
-
-
 /*===============================================================
  ARKODE optional input functions
 ===============================================================*/
@@ -45,20 +40,21 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* Set default values for integrator optional inputs */
-  ark_mem->ark_dense_q          = 3;
+  ark_mem->ark_dense_q          = QDENSE_DEF;
   ark_mem->ark_expstab          = ARKExpStab;
   ark_mem->ark_estab_data       = ark_mem;
   ark_mem->ark_hadapt           = NULL;
   ark_mem->ark_hadapt_data      = NULL;
   ark_mem->ark_hadapt_imethod   = 0;
-  ark_mem->ark_hadapt_params[0] = CFLFAC;
-  ark_mem->ark_hadapt_params[1] = SAFETY;
-  ark_mem->ark_hadapt_params[2] = GROWTH;
-  ark_mem->ark_hadapt_params[3] = HFIXED_LB;
-  ark_mem->ark_hadapt_params[4] = HFIXED_UB;
-  ark_mem->ark_hadapt_params[5] = AD0_K1;
-  ark_mem->ark_hadapt_params[6] = AD0_K2;
-  ark_mem->ark_hadapt_params[7] = AD0_K3;
+  ark_mem->ark_hadapt_cfl       = CFLFAC;
+  ark_mem->ark_hadapt_safety    = SAFETY;
+  ark_mem->ark_hadapt_bias      = BIAS;
+  ark_mem->ark_hadapt_growth    = GROWTH;
+  ark_mem->ark_hadapt_lbound    = HFIXED_LB;
+  ark_mem->ark_hadapt_ubound    = HFIXED_UB;
+  ark_mem->ark_hadapt_k1        = AD0_K1;
+  ark_mem->ark_hadapt_k2        = AD0_K2;
+  ark_mem->ark_hadapt_k3        = AD0_K3;
   ark_mem->ark_itol             = ARK_NN;
   ark_mem->ark_user_efun        = FALSE;
   ark_mem->ark_linear           = FALSE;
@@ -71,16 +67,16 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_ehfun            = ARKErrHandler;
   ark_mem->ark_eh_data          = ark_mem;
   ark_mem->ark_errfp            = stderr;
-  ark_mem->ark_qmax             = Q_MAX;
+  ark_mem->ark_q                = Q_DEFAULT;
   ark_mem->ark_mxstep           = MXSTEP_DEFAULT;
-  ark_mem->ark_mxhnil           = 10;
+  ark_mem->ark_mxhnil           = MXHNIL;
   ark_mem->ark_hin              = ZERO;
   ark_mem->ark_hmin             = ZERO;
   ark_mem->ark_hmax_inv         = ZERO;
   ark_mem->ark_tstopset         = FALSE;
-  ark_mem->ark_maxcor           = 3;
-  ark_mem->ark_maxnef           = 7;
-  ark_mem->ark_maxncf           = 10;
+  ark_mem->ark_maxcor           = MAXCOR;
+  ark_mem->ark_maxnef           = MAXNEF;
+  ark_mem->ark_maxncf           = MAXNCF;
   ark_mem->ark_nlscoef          = NLSCOEF;
 
   return(ARK_SUCCESS);
@@ -162,10 +158,16 @@ int ARKodeSetUserData(void *arkode_mem, void *user_data)
  ARKodeSetOrd:
 
  Specifies the method order
+
+ ** Note in documentation that this should not be called along with
+    ARKodeSetERKTable, ARKodeSetIRKTable, ARKodeSetERKTableNum or 
+    ARKodeSetIRKTableNum.  This routine is used to specify a desired 
+    method order using a default Butcher table, whereas any user-
+    supplied table will have their own order associated with them.
 ---------------------------------------------------------------*/
 int ARKodeSetOrd(void *arkode_mem, int ord)
 {
-  int qmax_alloc;
+  int i, j;
 
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
@@ -182,22 +184,32 @@ int ARKodeSetOrd(void *arkode_mem, int ord)
     return(ARK_ILL_INPUT);
   }
   
-  /* Cannot increase maximum order beyond the value that
-     was used when allocating memory */
-  qmax_alloc = ark_mem->ark_qmax_alloc;
-
-  if (ord > qmax_alloc) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetMaxOrd", MSGARK_BAD_MAXORD);
-    return(ARK_ILL_INPUT);
+  /* set user-provided value, or default, depending on argument */
+  if (ord == 0) {
+    ark_mem->ark_q = Q_DEFAULT;
+  } else {
+    ark_mem->ark_q = ord;
   }
 
-  /* set user-provided value, or default, depending on argument */
-  /***** CHANGE THIS TO ARK_MEM->ARK_Q = ORD WHEN WE TRANSITION TO ARK METHOD!!! *****/
-  if (ord == 0) {
-    ark_mem->ark_qmax = Q_MAX;
-  } else {
-    ark_mem->ark_qmax = ord;
+  /* clear Butcher tables, since user is requesting a change in method
+     or a reset to defaults.  Tables will be set in ARKInitialSetup. */
+  ark_mem->ark_stages = 0;
+  ark_mem->ark_istage = 0;
+  ark_mem->ark_p = 0;
+  ark_mem->ark_stagesE = 0;
+  ark_mem->ark_qE = 0;
+  ark_mem->ark_pE = 0;
+  for (i=0; i<ARK_S_MAX; i++) {
+    for (j=0; j<ARK_S_MAX; j++) {
+      ark_mem->ark_Ae[i][j] = ZERO;
+      ark_mem->ark_Ai[i][j] = ZERO;
+    }
+    ark_mem->ark_c[i]   = ZERO;
+    ark_mem->ark_b[i]   = ZERO;
+    ark_mem->ark_b2[i]  = ZERO;
+    ark_mem->ark_cE[i]  = ZERO;
+    ark_mem->ark_bE[i]  = ZERO;
+    ark_mem->ark_b2E[i] = ZERO;
   }
 
   return(ARK_SUCCESS);
@@ -352,7 +364,7 @@ int ARKodeSetImplicit(void *arkode_mem)
  ARKodeSetImEx:
 
  Specifies that the specifies that problem has both implicit and
- explicit parts, and to use an ARK method.
+ explicit parts, and to use an ARK method (this is the default).
 ---------------------------------------------------------------*/
 int ARKodeSetImEx(void *arkode_mem)
 {
@@ -388,12 +400,11 @@ int ARKodeSetImEx(void *arkode_mem)
  ARKodeSetERKTable:
 
  Specifies to use a customized Butcher table for the explicit 
- portion of the system.  Of these, the only optional argument is 
- bdense (which can be NULL).
+ portion of the system.
 ---------------------------------------------------------------*/
 int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
 		      realtype *c, realtype **A, realtype *b, 
-		      realtype *bembed, realtype **bdense)
+		      realtype *bembed)
 {
   int i, j;
   ARKodeMem ark_mem;
@@ -444,7 +455,7 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
 ---------------------------------------------------------------*/
 int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
 		      realtype *c, realtype **A, realtype *b, 
-		      realtype *bembed, realtype **bdense)
+		      realtype *bembed)
 {
   int i, j;
   ARKodeMem ark_mem;
@@ -664,12 +675,6 @@ int ARKodeSetMinStep(void *arkode_mem, realtype hmin)
     return(ARK_ILL_INPUT);
   }
 
-  /* Passing 0 sets hmin = zero */
-  if (hmin == ZERO) {
-    ark_mem->ark_hmin = RCONST(0.0);
-    return(ARK_SUCCESS);
-  }
-
   if (hmin * ark_mem->ark_hmax_inv > ONE) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetMinStep", MSGARK_BAD_HMIN_HMAX);
@@ -707,7 +712,7 @@ int ARKodeSetMaxStep(void *arkode_mem, realtype hmax)
 
   /* Passing 0 sets hmax = infinity */
   if (hmax == ZERO) {
-    ark_mem->ark_hmax_inv = RCONST(0.0);
+    ark_mem->ark_hmax_inv = ZERO;
     return(ARK_SUCCESS);
   }
 
@@ -770,7 +775,6 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
 int ARKodeSetAdaptMethod(void *arkode_mem, int imethod, 
 			 realtype *adapt_params)
 {
-  int i, nparams;
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
@@ -796,59 +800,72 @@ int ARKodeSetAdaptMethod(void *arkode_mem, int imethod,
   /* set method if change requested */
   if (imethod >= 0)
     ark_mem->ark_hadapt_imethod = imethod;
- 
 
-  /* insert postive-valued parameters into ark_mem */
-  nparams = 8;
-  for (i=0; i<nparams; i++) 
-    if (adapt_params[i] > 0) 
-      ark_mem->ark_hadapt_params[i] = adapt_params[i];
-  
-  /* reset zero-valued inputs to method defaults */
+  /* set positive-valued paramters into ark_mem, 
+     otherwise set defaults for the chosen method */
+  ark_mem->ark_hadapt_cfl = adapt_params[0];
   if (adapt_params[0] == ZERO) 
-    ark_mem->ark_hadapt_params[0] = CFLFAC;
+    ark_mem->ark_hadapt_cfl = CFLFAC;
+    
+  ark_mem->ark_hadapt_safety = adapt_params[1];
   if (adapt_params[1] == ZERO) 
-    ark_mem->ark_hadapt_params[1] = SAFETY;
+    ark_mem->ark_hadapt_safety = SAFETY;
+
+  ark_mem->ark_hadapt_bias = adapt_params[2];
   if (adapt_params[2] == ZERO) 
-    ark_mem->ark_hadapt_params[2] = GROWTH;
+    ark_mem->ark_hadapt_bias = BIAS;
+
+  ark_mem->ark_hadapt_growth = adapt_params[3];
   if (adapt_params[3] == ZERO) 
-    ark_mem->ark_hadapt_params[3] = HFIXED_LB;
+    ark_mem->ark_hadapt_growth = GROWTH;
+
+  ark_mem->ark_hadapt_lbound = adapt_params[4];
   if (adapt_params[4] == ZERO) 
-    ark_mem->ark_hadapt_params[4] = HFIXED_UB;
-  if (adapt_params[5] == ZERO)
+    ark_mem->ark_hadapt_lbound = HFIXED_LB;
+
+  ark_mem->ark_hadapt_ubound = adapt_params[5];
+  if (adapt_params[5] == ZERO) 
+    ark_mem->ark_hadapt_ubound = HFIXED_UB;
+
+  ark_mem->ark_hadapt_k1 = adapt_params[6];
+  if (adapt_params[6] == ZERO) 
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
-      ark_mem->ark_hadapt_params[5] = AD0_K1; break;
+      ark_mem->ark_hadapt_k1 = AD0_K1; break;
     case (1):
-      ark_mem->ark_hadapt_params[5] = AD1_K1; break;
+      ark_mem->ark_hadapt_k1 = AD1_K1; break;
     case (2):
-      ark_mem->ark_hadapt_params[5] = AD2_K1; break;
+      ark_mem->ark_hadapt_k1 = AD2_K1; break;
     case (3):
-      ark_mem->ark_hadapt_params[5] = AD3_K1; break;
+      ark_mem->ark_hadapt_k1 = AD3_K1; break;
     case (4):
-      ark_mem->ark_hadapt_params[5] = AD4_K1; break;
+      ark_mem->ark_hadapt_k1 = AD4_K1; break;
     case (5):
-      ark_mem->ark_hadapt_params[5] = AD5_K1; break;
+      ark_mem->ark_hadapt_k1 = AD5_K1; break;
     }
-  if (adapt_params[6] == ZERO)
+
+  ark_mem->ark_hadapt_k2 = adapt_params[7];
+  if (adapt_params[7] == ZERO) 
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
-      ark_mem->ark_hadapt_params[6] = AD0_K2; break;
+      ark_mem->ark_hadapt_k2 = AD0_K2; break;
     case (1):
-      ark_mem->ark_hadapt_params[6] = AD1_K2; break;
+      ark_mem->ark_hadapt_k2 = AD1_K2; break;
     case (3):
-      ark_mem->ark_hadapt_params[6] = AD3_K2; break;
+      ark_mem->ark_hadapt_k2 = AD3_K2; break;
     case (4):
-      ark_mem->ark_hadapt_params[6] = AD4_K2; break;
+      ark_mem->ark_hadapt_k2 = AD4_K2; break;
     case (5):
-      ark_mem->ark_hadapt_params[6] = AD5_K2; break;
+      ark_mem->ark_hadapt_k2 = AD5_K2; break;
     }
-  if (adapt_params[7] == ZERO)
+
+  ark_mem->ark_hadapt_k3 = adapt_params[8];
+  if (adapt_params[8] == ZERO) 
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
-      ark_mem->ark_hadapt_params[7] = AD0_K3; break;
+      ark_mem->ark_hadapt_k3 = AD0_K3; break;
     case (5):
-      ark_mem->ark_hadapt_params[7] = AD5_K3; break;
+      ark_mem->ark_hadapt_k3 = AD5_K3; break;
     }
 
   return(ARK_SUCCESS);
@@ -937,7 +954,7 @@ int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef)
 
   /* argument <= 0 sets default, otherwise set input */
   if (maxnef <= 0) {
-    ark_mem->ark_maxnef = 7;
+    ark_mem->ark_maxnef = MAXNEF;
   } else {
     ark_mem->ark_maxnef = maxnef;
   }
@@ -965,7 +982,7 @@ int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf)
 
   /* argument <= 0 sets default, otherwise set input */
   if (maxncf <= 0) {
-    ark_mem->ark_maxncf = 10;
+    ark_mem->ark_maxncf = MAXNCF;
   } else {
     ark_mem->ark_maxncf = maxncf;
   }
@@ -993,7 +1010,7 @@ int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
 
   /* argument <= 0 sets default, otherwise set input */
   if (maxcor <= 0) {
-    ark_mem->ark_maxcor = 3;
+    ark_mem->ark_maxcor = MAXCOR;
   } else {
     ark_mem->ark_maxcor = maxcor;
   }
@@ -1198,7 +1215,7 @@ int ARKodeGetNumRhsEvals(void *arkode_mem, long int *fe_evals,
 /*---------------------------------------------------------------
  ARKodeGetNumLinSolvSetups:
 
- Returns the current number of calls to the linear solver setup routine
+ Returns the current number of calls to the lsetup routine
 ---------------------------------------------------------------*/
 int ARKodeGetNumLinSolvSetups(void *arkode_mem, long int *nlinsetups)
 {
@@ -1232,48 +1249,6 @@ int ARKodeGetNumErrTestFails(void *arkode_mem, long int *netfails)
   ark_mem = (ARKodeMem) arkode_mem;
 
   *netfails = ark_mem->ark_netf;
-
-  return(ARK_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
- ARKodeGetLastOrder:
-
- Returns the order on the last succesful step
----------------------------------------------------------------*/
-int ARKodeGetLastOrder(void *arkode_mem, int *qlast)
-{
-  ARKodeMem ark_mem;
-  if (arkode_mem==NULL) {
-    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetLastOrder", MSGARK_NO_MEM);
-    return(ARK_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem) arkode_mem;
-
-  *qlast = ark_mem->ark_qold;
-
-  return(ARK_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
- ARKodeGetCurrentOrder:
-
- Returns the order to be attempted on the next step
----------------------------------------------------------------*/
-int ARKodeGetCurrentOrder(void *arkode_mem, int *qcur)
-{
-  ARKodeMem ark_mem;
-  if (arkode_mem==NULL) {
-    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetCurrentOrder", MSGARK_NO_MEM);
-    return(ARK_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem) arkode_mem;
-
-  *qcur = ark_mem->ark_next_q;
 
   return(ARK_SUCCESS);
 }
@@ -1449,7 +1424,7 @@ int ARKodeGetErrWeights(void *arkode_mem, N_Vector eweight)
 
 
 /*---------------------------------------------------------------
- ARKodeGetEstLocalErrors:
+ ARKodeGetEstLocalErrors:  (to be updated)
 
  Returns an estimate of the local error
 ---------------------------------------------------------------*/
@@ -1577,7 +1552,7 @@ int ARKodeGetRootInfo(void *arkode_mem, int *rootsfound)
 /*---------------------------------------------------------------
  ARKodeGetNumNonlinSolvIters:
 
- Returns the current number of iterations in the nonlinear solver
+ Returns the current number of nonlinear solver iterations 
 ---------------------------------------------------------------*/
 int ARKodeGetNumNonlinSolvIters(void *arkode_mem, long int *nniters)
 {
@@ -1598,8 +1573,7 @@ int ARKodeGetNumNonlinSolvIters(void *arkode_mem, long int *nniters)
 /*---------------------------------------------------------------
  ARKodeGetNumNonlinSolvConvFails:
 
- Returns the current number of convergence failures in the
- nonlinear solver
+ Returns the current number of nonlinear solver convergence fails
 ---------------------------------------------------------------*/
 int ARKodeGetNumNonlinSolvConvFails(void *arkode_mem, long int *nncfails)
 {
@@ -1623,7 +1597,7 @@ int ARKodeGetNumNonlinSolvConvFails(void *arkode_mem, long int *nncfails)
  Returns nonlinear solver statistics
 ---------------------------------------------------------------*/
 int ARKodeGetNonlinSolvStats(void *arkode_mem, long int *nniters, 
-                            long int *nncfails)
+			     long int *nncfails)
 {
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {

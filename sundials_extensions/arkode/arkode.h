@@ -451,11 +451,11 @@ SUNDIALS_EXPORT int ARKodeSetImEx(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, int s, 
 				      int q, int p, realtype *c, 
 				      realtype **A, realtype *b, 
-				      realtype *bembed, realtype **bdense);
+				      realtype *bembed);
 SUNDIALS_EXPORT int ARKodeSetIRKTable(void *arkode_mem, int s, 
 				      int q, int p, realtype *c, 
 				      realtype **A, realtype *b, 
-				      realtype *bembed, realtype **bdense);
+				      realtype *bembed);
 SUNDIALS_EXPORT int ARKodeSetERKTableNum(void *arkode_mem, int itable);
 SUNDIALS_EXPORT int ARKodeSetIRKTableNum(void *arkode_mem, int itable);
 SUNDIALS_EXPORT int ARKodeSetMaxNumSteps(void *arkode_mem, 
@@ -757,7 +757,7 @@ SUNDIALS_EXPORT int ARKode(void *arkode_mem, realtype tout,
      The legal range for t is [tn-hu,tn] as described above.
 
  k   is the order of the derivative of y to be computed. The
-     legal range for k is [0,s-1] as described above.
+     legal range for k is [0,min(q,5)] as described above.
 
  dky is the output derivative vector [((d/dy)^k)y](t).
 

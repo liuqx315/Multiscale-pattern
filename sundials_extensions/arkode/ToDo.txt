@@ -57,7 +57,7 @@ Completed components:
     solution and embedding when M != I (of course, this would mean
     that I only allow linear operators for M, but that's a reasonable
     restriction). 
-[X] Code to fill in values for last successful step: told, hold, yold,
+[X] Code to fill in values for last successful step: tnew, hold, yold,
     ynew, fold, fnew.  For arrays, use pointer swap to omit need to
     copy values from ynew to yold and fnew to fold.  Still do the copy
     to fill ynew and fnew, since user may input y itself into code,
@@ -122,16 +122,38 @@ Completed components:
     fold and fnew for dense output and predictors, if their components
     are already stored in Fe[0],Fi[0] or Fe[s],Fi[s] I could just copy
     them instead of recomputing. 
+[X] Go through logic of when everything is updated, especially wrt the
+    predictor data (and if it's ever called after a failed step).
+[X] Ensure that after calling ARKodeReInit (and ark_nst is reset to
+    0), that none of the stuff I put into ARKInitialSetup will
+    backfire if called again.
 [?] Build a Matlab routine to check the analytical order of accuracy
     and B-stability of a generic Butcher table.  Could even have a
     routine that would evaluate the stability function for a variety
     of h*lambda values to test for A-stability (and even L-stability).
     [didn't I already do this?]
-
+[X] Currently, I use Fe for temporary storage of the stage RHS within
+    the solver.  Unfortunately, this will not exist for an
+    implicit-only problem.  Create a new array to use (call it
+    ark_sdata). 
+[X] Rename ark_zn[0] to ark_ycur, rename ark_zn[1] to ark_fcur (for
+    root-finding), and remove all references to other ark_zn[i].
+[X] Enable my solver and disable BDF solver.
+[X] Remove BDF code.
+[X] Insert calls to my ARKAdapt function wherever CVODE currently
+    decides on accuracy- or stability-based time step adaptivity
+    (these are currently located in ARKPrepareNextStep and ARKSetEta).
+[X] Get a simple DIRK example running in ARKode (actually, I got a lot
+    of DIRK examples running -- linear/nonlinear, scalar/vector,
+    fixed-h/adaptive-h).
 
 
 
 Remaining components to build:
+[ ] Extend remaining example problems to using ARKode.
+[ ] Test ERK and ARK methods.
+[ ] Begin tuning solver parameters for increased efficiency on all
+    test problems.
 [ ] Code to allow a change in the Butcher table, both to allow an
     increased/decreased number of stages (no real issue for decrease,
     don't even need to free the N_Vectors if I don't want to; need to
@@ -140,25 +162,12 @@ Remaining components to build:
     occur only inside ARKodeReInit, since that's the moment where I
     would allow this kind of thing (and would need to reset accuracy
     history data). 
-[ ] Insert calls to my ARKAdapt function wherever CVODE currently
-    decides on accuracy- or stability-based time step adaptivity.
-[ ] Go through logic of when everything is updated, especially wrt the
-    predictor data (and if it's ever called after a failed step).
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
-[ ] Ensure that after calling ARKodeReInit (and ark_nst is reset to
-    0), that none of the stuff I put into ARKInitialSetup will
-    backfire if called again.
-[ ] Currently, I use Fe for temporary storage within the solver.
-    Unfortunately, this will not exist for an implicit-only problem.
-    Figure out a different temporary array to use (preferrably one
-    that is unused at these stages of the calculation).
-[ ] Rename ark_zn[0] to ark_ycur, and remove all references to other
-    ark_zn[i].  Also check that I am consistent in which vector is
-    chosen as the initial guess for the nonlinear problems.  In some
-    places I call this ark_Fi[i] and in others I call this ark_zn[0].
-    Settle on something.
+[ ] Set up code to enable user-defined flag for a linearly-implicit
+    problem (only calls linear solver, etc.).  Already have
+    "ark_linear" boolean, just need to use it.
 [ ] Tighten tolerance for iterative linear solvers when running in
     linearly implicit mode.
 [ ] Add a solver option and update linear solve routine for the
@@ -169,21 +178,17 @@ Remaining components to build:
     (but still converges within iteration limits).  Add code to
     ARKRestore() to recompute predictions for implicit solutions at
     these shorter times. 
-[ ] Enable my solver and disable BDF solver.  This will require
-    searching through the code for all of the marked locations where I
-    made notes to myself (in all caps, and usually preceded by /*****)
-[ ] Remove BDF code.
 [ ] If I need to use any currently-unused N_Vector operations, add
     them to ARKCheckNvector routine.
+[ ] Determine if I need ark_acor at all.  CVODE uses it to estimate
+    the local truncation error, but it won't really help us out for
+    that purpose, and we may be able to reformulate implicit solver to
+    use one less vector if we don't need it.
 [ ] Create flowchart of which vectors are used when, and trim down
     memory footprint by reusing some as temporary data.  Then update
-    the total real/integer work length estimates in ARKodeCreate.  I
-    may even be able to leverage the fact that be = bi, through
-    initializing RHS vectors for each stage, and just updating each
-    one with the appropriate multiple of fe() and fi(), and then only
-    storing (fe() + fi()).  Would this actually save any data storage,
-    or just make things more complicated?  It might save a bit for ARK
-    methods, but cost a bit more for IRK/ERK methods.  Think about it.
+    the total real/integer work length estimates in ARKodeCreate.  For
+    example, ark_fcur is only used in root-finding, so maybe we could
+    instead use ark_ftemp in those routines?
 [ ] User-defined operator M : R^n -> R^n, and logic to account for
     this in step solution & embedding.  Update time step
     solution/embedding routine to now do solves to compute these.

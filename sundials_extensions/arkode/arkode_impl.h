@@ -24,10 +24,13 @@ extern "C" {
 ===============================================================*/
 
 /* Basic ARKODE constants */
-#define Q_MAX            5       /* max value of q */
-#define L_MAX        (Q_MAX+1)   /* max value of L */
-#define NUM_TESTS        5       /* # of error test quantities */
+#define Q_DEFAULT        4       /* default RK order */
+#define QDENSE_DEF       3       /* default dense output order */
 #define MXSTEP_DEFAULT   500     /* mxstep default value */
+#define MAXNEF           7       /* maxnef default value */
+#define MAXNCF           10      /* maxncf default value */
+#define MXHNIL           10      /* mxhnil default value */
+#define MAXCOR           3       /* maxcor default value */
 
 /* Numeric constants */
 #define ZERO   RCONST(0.0)      /* real 0.0     */
@@ -48,10 +51,11 @@ extern "C" {
 
 /* Time step controller default values */
 #define CFLFAC    RCONST(0.5);
-#define SAFETY    RCONST(0.9);
-#define GROWTH    RCONST(10.0);
-#define HFIXED_LB RCONST(1.0);
-#define HFIXED_UB RCONST(1.1);
+#define SAFETY    RCONST(0.9);  /* CVODE uses 1.0 */
+#define BIAS      RCONST(1.0)   /* CVODE uses 6.0 */
+#define GROWTH    RCONST(10.0); /* CVODE uses 10, except on 1st step when it uses 10000 */
+#define HFIXED_LB RCONST(1.0);  /* CVODE uses 1.0 */
+#define HFIXED_UB RCONST(1.5);  /* CVODE uses 1.5 */
 #define AD0_K1    RCONST(0.49);
 #define AD0_K2    RCONST(0.34);
 #define AD0_K3    RCONST(0.1);
@@ -67,8 +71,8 @@ extern "C" {
 #define AD5_K3    RCONST(1.0);
 
 /* Default solver tolerances */
-#define NLSCOEF   RCONST(0.1);     /* BDF */
-/* #define NLSCOEF   RCONST(0.003);   /\* RK  *\/ */
+/* #define NLSCOEF   RCONST(0.003);   /\* Hairer & Wanner constant *\/ */
+#define NLSCOEF   RCONST(0.01);
 
 /* Control constants for tolerances */
 #define ARK_NN  0
@@ -87,7 +91,7 @@ extern "C" {
  ARKHin return values:  ARK_SUCCESS, ARK_RHSFUNC_FAIL, or 
     ARK_TOO_CLOSE
 
- ARKStep control constants:  DO_ERROR_TEST or PREDICT_AGAIN
+ ARKStep control constants:  SOLVE_SUCCESS or PREDICT_AGAIN
 
  ARKStep return values:  ARK_SUCCESS, ARK_LSETUP_FAIL, 
     ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, ARK_RTFUNC_FAIL,
@@ -103,7 +107,7 @@ extern "C" {
  ARKNewtonIteration return values:  ARK_SUCCESS, ARK_LSOLVE_FAIL,
     ARK_RHSFUNC_FAIL, CONV_FAIL, RHSFUNC_RECVR or TRY_AGAIN
 ---------------------------------------------------------------*/
-#define DO_ERROR_TEST    +2
+#define SOLVE_SUCCESS    +2
 #define PREDICT_AGAIN    +3
 
 #define CONV_FAIL        +4 
@@ -136,11 +140,19 @@ extern "C" {
 -----------------------------------------------------------------
  ARKodeGetDky and ARKStep:  FUZZ_FACTOR
 
- ARKHin:  HLB_FACTOR, HUB_FACTOR, H_BIAS and MAX_ITERS
+ ARKHin:  H0_LBFACTOR, H0_UBFACTOR, H0_BIAS and H0_ITERS
 
  ARKStep:  
-    THRESH, ETAMX1, ETAMX2, ETAMXF, ETAMIN, ETACF,
-    ADDON, BIAS1, BIAS2, BIAS3 and ONEPSM are general constants.
+    ETAMX1      maximum step size change on first step
+    ETAMXF      step size reduction factor on multiple error 
+                test failures (multiple implies >= SMALL_NEF)
+    ETAMIN      smallest allowable step size reduction factor 
+                on an error test failure
+    ETACF       step size reduction factor on nonlinear 
+                convergence failure
+    ADDON       safety increment used in step size adaptivity
+    ONEPSM      safety factor for floating point comparisons
+    ONEMSM      safety factor for floating point comparisons
     MXNEF1      max no. of error test failures before forcing a 
                 reduction of order
     SMALL_NEF   if an error failure occurs and 
@@ -160,22 +172,18 @@ extern "C" {
 ---------------------------------------------------------------*/
 #define FUZZ_FACTOR RCONST(100.0)
 
-#define HLB_FACTOR  RCONST(100.0)
-#define HUB_FACTOR  RCONST(0.1)
-#define H_BIAS      HALF
-#define MAX_ITERS   4
+#define H0_LBFACTOR RCONST(100.0)
+#define H0_UBFACTOR RCONST(0.1)
+#define H0_BIAS     HALF
+#define H0_ITERS    4
 
-#define THRESH      RCONST(1.5)
 #define ETAMX1      RCONST(10000.0) 
-#define ETAMX2      RCONST(10.0)
 #define ETAMXF      RCONST(0.2)
 #define ETAMIN      RCONST(0.1)
 #define ETACF       RCONST(0.25)
 #define ADDON       RCONST(0.000001)
-#define BIAS1       RCONST(6.0)
-#define BIAS2       RCONST(6.0)
-#define BIAS3       RCONST(10.0)
 #define ONEPSM      RCONST(1.000001)
+#define ONEMSM      RCONST(0.999999)
 #define MXNEF1      3
 #define SMALL_NEF   2
 #define LONG_WAIT   10
@@ -198,40 +206,35 @@ extern "C" {
 ---------------------------------------------------------------*/
 typedef struct ARKodeMemRec {
 
-  realtype ark_uround;        /* machine unit roundoff */
+  realtype ark_uround;         /* machine unit roundoff */
 
   /*-------------------------- 
     Problem Specification Data 
     --------------------------*/
-  ARKRhsFn ark_fe;            /* y' = fe(t,y(t)) + fi(t,y(t))          */
-  ARKRhsFn ark_fi;
-  void *ark_user_data;        /* user pointer passed to fe, fi         */
-  ARKExpStabFn ark_expstab;   /* time step stability function for fe   */
-  void *ark_estab_data;       /* user pointer passed to expstab        */
-  int ark_itol;               /* itol = ARK_SS, ARK_SV, ARK_WF, ARK_NN */
+  ARKRhsFn     ark_fe;         /* y' = fe(t,y(t)) + fi(t,y(t))          */
+  ARKRhsFn     ark_fi;
+  void        *ark_user_data;  /* user pointer passed to fe, fi         */
+  ARKExpStabFn ark_expstab;    /* time step stability function for fe   */
+  void        *ark_estab_data; /* user pointer passed to expstab        */
+  int          ark_itol;       /* itol = ARK_SS (scalar), 
+                                        ARK_SV (vector),
+                                        ARK_WF (user weight function), 
+                                        ARK_NN (default, not yet set)  */
+  realtype     ark_reltol;     /* relative tolerance                    */
+  realtype     ark_Sabstol;    /* scalar absolute tolerance             */
+  N_Vector     ark_Vabstol;    /* vector absolute tolerance             */
+  booleantype  ark_user_efun;  /* TRUE if user sets efun                */
+  ARKEwtFn     ark_efun;       /* function to set ewt                   */
+  void        *ark_e_data;     /* user pointer passed to efun           */
+  booleantype  ark_linear;     /* TRUE if implicit problem is linear    */
+  booleantype  ark_explicit;   /* TRUE if implicit problem is disabled  */
+  booleantype  ark_implicit;   /* TRUE if explicit problem is disabled  */
 
-  realtype ark_reltol;        /* relative tolerance                    */
-  realtype ark_Sabstol;       /* scalar absolute tolerance             */
-  N_Vector ark_Vabstol;       /* vector absolute tolerance             */
-  booleantype ark_user_efun;  /* TRUE if user sets efun                */
-  ARKEwtFn ark_efun;          /* function to set ewt                   */
-  void *ark_e_data;           /* user pointer passed to efun           */
-  booleantype ark_linear;     /* TRUE if implicit problem is linear    */
-  booleantype ark_explicit;   /* TRUE if implicit problem is disabled  */
-  booleantype ark_implicit;   /* TRUE if explicit problem is disabled  */
-
-  /*-----------------------
-    Nordsieck History Array 
-    -----------------------*/
-  N_Vector ark_zn[L_MAX];     /* Nordsieck array, of size N x (q+1).
-			         zn[j] is a vector of length N (j=0,...,q) 
-			         zn[j] = [1/factorial(j)] * h^j * (jth      
-			         derivative of the interpolating polynomial
-			           zn[0] -> current solution 
-			           zn[1] -> current derivative (i.e. f value)
-			           zn[2]-zn[L_MAX]  ->  extras */
-  N_Vector ark_Fe[ARK_S_MAX]; /* Storage for explicit RHS at each RK stage */
-  N_Vector ark_Fi[ARK_S_MAX]; /* Storage for implicit RHS at each RK stage */
+  /*-----------------
+    Stored RHS arrays
+    -----------------*/
+  N_Vector ark_Fe[ARK_S_MAX];  /* explicit RHS at each stage */
+  N_Vector ark_Fi[ARK_S_MAX];  /* implicit RHS at each stage */
 
   /*--------------------------
     other vectors of length N 
@@ -240,9 +243,14 @@ typedef struct ARKodeMemRec {
   N_Vector ark_y;       /* y is used as temporary storage by the solver
 			   The memory is provided by the user to ARKode
 			   where the vector is named yout.                   */
+  N_Vector ark_ycur;    /* ycur always holds the solver's current version of 
+                           the solution */
+  N_Vector ark_fcur;    /* fcur holds the solver's current version of the 
+			   ODE RHS (used in root-finding) */
   N_Vector ark_acor;    /* In the context of the solution of the nonlinear
 			   equation, acor = y_n(m) - y_n(0). On return, 
 			   this vector is scaled to give the est. local err. */
+  N_Vector ark_sdata;   /* Storage for old stage data in computing residual. */
   N_Vector ark_tempv;   /* temporary storage vector                          */
   N_Vector ark_ftemp;   /* temporary storage vector                          */
   N_Vector ark_fold;    /* f(t,y) at beginning of last successful step       */
@@ -256,7 +264,7 @@ typedef struct ARKodeMemRec {
     Tstop information
     -----------------*/
   booleantype ark_tstopset;
-  realtype ark_tstop;
+  realtype    ark_tstop;
 
   /*-----------
     Method Data 
@@ -271,22 +279,15 @@ typedef struct ARKodeMemRec {
   realtype ark_c[ARK_S_MAX];              /* RK method canopy nodes         */
   realtype ark_b[ARK_S_MAX];              /* RK method solution coeffs      */
   realtype ark_b2[ARK_S_MAX];             /* RK method embedding coeffs     */
-  booleantype ark_user_Ae;                /* TRUE if user sets Ae           */
-  booleantype ark_user_Ai;                /* TRUE if user sets Ai           */
+  booleantype ark_user_Ae;                /* TRUE if user provides Ae       */
+  booleantype ark_user_Ai;                /* TRUE if user provides Ai       */
 
-  int ark_qE;                   /* ERK method data (should match IRK, we    */
-  int ark_pE;                   /* store it here to allow error-checking on */
-  int ark_stagesE;              /* user-supplied ARK Butcher tables.        */
-  realtype ark_cE[ARK_S_MAX];
+  int ark_qE;                             /* ERK method data (should match  */
+  int ark_pE;                             /*   IRK). We store it for error  */
+  int ark_stagesE;                        /*   checking on user-supplied    */
+  realtype ark_cE[ARK_S_MAX];             /*   Butcher tables.              */
   realtype ark_bE[ARK_S_MAX];
   realtype ark_b2E[ARK_S_MAX];
-
-  int ark_qprime;               /* order to be used on the next step  
-				   = q-1, q, or q+1                         */
-  int ark_next_q;               /* order to be used on the next step        */
-  int ark_qwait;                /* number of internal steps to wait before
-				   considering a change in q                */
-  int ark_L;                    /* L = q + 1                                */
 
   /*---------
     Step Data 
@@ -296,35 +297,27 @@ typedef struct ARKodeMemRec {
   realtype ark_hprime;          /* step size to be used on the next step    */ 
   realtype ark_next_h;          /* step size to be used on the next step    */ 
   realtype ark_eta;             /* eta = hprime / h                         */
-  realtype ark_hscale;          /* value of h used in zn                    */
   realtype ark_tn;              /* current internal value of t              */
   realtype ark_tretlast;        /* value of tret last returned by ARKode    */
-
-  realtype ark_tau[L_MAX+1];    /* array of previous q+1 successful step 
-				   sizes indexed from 1 to q+1              */
-  realtype ark_tq[NUM_TESTS+1]; /* array of test quantities indexed from 
-				   1 to NUM_TESTS(=5)                       */
-  realtype ark_l[L_MAX];        /* coefficients of l(x) (degree q poly)     */
-
-  realtype ark_rl1;             /* the scalar 1/l[1]                        */
   realtype ark_gamma;           /* gamma = h * rl1                          */
   realtype ark_gammap;          /* gamma at the last setup call             */
   realtype ark_gamrat;          /* gamma / gammap                           */
-
   realtype ark_crate;           /* estimated corrector convergence rate     */
-  realtype ark_acnrm;           /* | acor | wrms                            */
   realtype ark_eLTE;            /* estimated local truncation error, used in
 				   nonlinear and linear solver tolerances   */
   realtype ark_nlscoef;         /* coeficient in nonlinear convergence test */
-  int  ark_mnewt;               /* Newton iteration counter                 */
+  int      ark_mnewt;           /* Newton iteration counter                 */
+
+  realtype ark_acnrm;           /* ||acor||_wrms  (to remove???)            */
+
 
   /*-------------------------
     Time Step Adaptivity Data 
     -------------------------*/
-  ARKAdaptFn ark_hadapt;         /* function to set the new time step size   */
-  void *ark_hadapt_data;         /* user pointer passed to hadapt            */
-  realtype ark_hadapt_ehist[3];  /* error history for time adaptivity        */
-  int ark_hadapt_imethod;        /* time step adaptivity method to use:
+  ARKAdaptFn ark_hadapt;           /* function to set the new time step size */
+  void      *ark_hadapt_data;      /* user pointer passed to hadapt          */
+  realtype   ark_hadapt_ehist[3];  /* error history for time adaptivity      */
+  int        ark_hadapt_imethod;   /* time step adaptivity method to use:
 				      -1 -> User-specified function above
 				       0 -> PID controller
 				       1 -> PI controller
@@ -332,29 +325,30 @@ typedef struct ARKodeMemRec {
 				       3 -> explicit Gustafsson controller
 				       4 -> implicit Gustafsson controller
 				       5 -> imex Gustafsson controller       */
-  realtype ark_hadapt_params[8]; /* time step adaptivity parameters:
-				       0 -> cfl safety factor
-				       1 -> accuracy safety factor
-				       2 -> step growth safety factor
-				       3/4 -> lower/upper bounds on window to 
-                                              leave h unchanged
-                                       5/6/7 -> method-specific              */
+  realtype   ark_hadapt_cfl;       /* cfl safety factor                      */
+  realtype   ark_hadapt_safety;    /* accuracy safety factor on h            */
+  realtype   ark_hadapt_bias;      /* accuracy safety factor on LTE          */
+  realtype   ark_hadapt_growth;    /* maximum step growth safety factor      */
+  realtype   ark_hadapt_lbound;    /* eta lower bound to leave h unchanged   */
+  realtype   ark_hadapt_ubound;    /* eta upper bound to leave h unchanged   */
+  realtype   ark_hadapt_k1;
+  realtype   ark_hadapt_k2;        /* method-specific adaptivity parameters  */
+  realtype   ark_hadapt_k3;
 
   /*------
     Limits 
     ------*/
-  int ark_qmax;          /* q <= qmax                                      */
   long int ark_mxstep;   /* max number of internal steps for one user call */
-  int ark_maxcor;        /* max number of corrector iterations for the
+  int      ark_maxcor;   /* max number of corrector iterations for the
 			    solution of the nonlinear equation             */
-  int ark_mxhnil;        /* max number of warning messages issued to the
+  int      ark_mxhnil;   /* max number of warning messages issued to the
 			    user that t+h == t for the next internal step  */
-  int ark_maxnef;        /* max number of error test failures in one step  */
-  int ark_maxncf;        /* max number of nonlin. conv. fails in one step  */
-
+  int      ark_maxnef;   /* max number of error test failures in one step  */
+  int      ark_maxncf;   /* max number of nonlin. conv. fails in one step  */
   realtype ark_hmin;     /* |h| >= hmin                                    */
   realtype ark_hmax_inv; /* |h| <= 1/hmax_inv                              */
   realtype ark_etamax;   /* eta <= etamax                                  */
+
 
   /*--------
     Counters 
@@ -369,12 +363,8 @@ typedef struct ARKodeMemRec {
   long int ark_netf;        /* number of error test failures               */
   long int ark_nni;         /* number of Newton iterations performed       */
   long int ark_nsetups;     /* number of setup calls                       */
-  int ark_nhnil;            /* number of messages issued to the user that 
+  int      ark_nhnil;       /* number of messages issued to the user that 
 			       t+h == t for the next iternal step          */
-
-  realtype ark_etaqm1;      /* ratio of new to old h for order q-1         */
-  realtype ark_etaq;        /* ratio of new to old h for order q           */
-  realtype ark_etaqp1;      /* ratio of new to old h for order q+1         */
 
   /*----------------------------
     Space requirements for ARKODE 
@@ -399,49 +389,44 @@ typedef struct ARKodeMemRec {
   /*------------
     Saved Values
     ------------*/
-  int ark_qold;                 /* last successful q value used               */
-  long int ark_nstlp;           /* step number of last setup call             */
-  realtype ark_h0u;             /* actual initial stepsize                    */
-  realtype ark_told;            /* start time for last successful step        */
-  realtype ark_hold;            /* last successful h value used               */
-  realtype ark_saved_tq5;       /* saved value of tq[5]                       */
+  long int    ark_nstlp;        /* step number of last setup call             */
+  realtype    ark_h0u;          /* actual initial stepsize                    */
+  realtype    ark_tnew;         /* time of last successful step               */
+  realtype    ark_hold;         /* last successful h value used               */
   booleantype ark_jcur;         /* is Jacobian info. for lin. solver current? */
-  realtype ark_tolsf;           /* tolerance scale factor                     */
-  int ark_qmax_alloc;           /* value of qmax used when allocating memory  */
-  int ark_smax_alloc;           /* value of smax used when allocating memory  */
-  int ark_indx_acor;            /* index of the zn vector with saved acor     */
+  realtype    ark_tolsf;        /* tolerance scale factor                     */
   booleantype ark_setupNonNull; /* does setup do anything?                    */
-
   booleantype ark_VabstolMallocDone;
   booleantype ark_MallocDone;  
+
 
   /*-------------------------------------------
     Error handler function and error ouput file 
     -------------------------------------------*/
-  ARKErrHandlerFn ark_ehfun;    /* error messages are handled by ehfun     */
-  void *ark_eh_data;            /* data pointer passed to ehfun            */
-  FILE *ark_errfp;              /* ARKODE error messages are sent to errfp */
+  ARKErrHandlerFn ark_ehfun;    /* error messages are handled by ehfun        */
+  void           *ark_eh_data;  /* data pointer passed to ehfun               */
+  FILE           *ark_errfp;    /* ARKODE error messages are sent to errfp    */
 
   /*----------------
     Rootfinding Data
     ----------------*/
-  ARKRootFn ark_gfun;       /* function g for roots sought                  */
-  int ark_nrtfn;            /* number of components of g                    */
-  int *ark_iroots;          /* array for root information                   */
-  int *ark_rootdir;         /* array specifying direction of zero-crossing  */
-  realtype ark_tlo;         /* nearest endpoint of interval in root search  */
-  realtype ark_thi;         /* farthest endpoint of interval in root search */
-  realtype ark_trout;       /* t value returned by rootfinding routine      */
-  realtype *ark_glo;        /* saved array of g values at t = tlo           */
-  realtype *ark_ghi;        /* saved array of g values at t = thi           */
-  realtype *ark_grout;      /* array of g values at t = trout               */
-  realtype ark_toutc;       /* copy of tout (if NORMAL mode)                */
-  realtype ark_ttol;        /* tolerance on root location                   */
-  int ark_taskc;            /* copy of parameter itask                      */
-  int ark_irfnd;            /* flag showing whether last step had a root    */
-  long int ark_nge;         /* counter for g evaluations                    */
-  booleantype *ark_gactive; /* array with active/inactive event functions   */
-  int ark_mxgnull;          /* num. warning messages about possible g==0    */
+  ARKRootFn    ark_gfun;        /* function g for roots sought                  */
+  int          ark_nrtfn;       /* number of components of g                    */
+  int         *ark_iroots;      /* array for root information                   */
+  int         *ark_rootdir;     /* array specifying direction of zero-crossing  */
+  realtype     ark_tlo;         /* nearest endpoint of interval in root search  */
+  realtype     ark_thi;         /* farthest endpoint of interval in root search */
+  realtype     ark_trout;       /* t value returned by rootfinding routine      */
+  realtype    *ark_glo;         /* saved array of g values at t = tlo           */
+  realtype    *ark_ghi;         /* saved array of g values at t = thi           */
+  realtype    *ark_grout;       /* array of g values at t = trout               */
+  realtype     ark_toutc;       /* copy of tout (if NORMAL mode)                */
+  realtype     ark_ttol;        /* tolerance on root location                   */
+  int          ark_taskc;       /* copy of parameter itask                      */
+  int          ark_irfnd;       /* flag showing whether last step had a root    */
+  long int     ark_nge;         /* counter for g evaluations                    */
+  booleantype *ark_gactive;     /* array with active/inactive event functions   */
+  int          ark_mxgnull;     /* num. warning messages about possible g==0    */
 
 } *ARKodeMem;
 
