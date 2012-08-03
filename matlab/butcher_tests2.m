@@ -314,8 +314,8 @@ B = butcher(mname);
 [q,p,Bs,As,Ls] = check_butcher(B);
 fprintf('   %i   %i   %i    %i    %i\n',q,p,Bs,As,Ls);
 
-%    SDIRK-4-5
-mname = 'SDIRK-4-5';
+%    SDIRK-5-4
+mname = 'SDIRK-5-4';
 fprintf(' %22s',mname);
 B = butcher(mname);
 [q,p,Bs,As,Ls] = check_butcher(B);

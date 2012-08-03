@@ -271,8 +271,8 @@ B = build_dense('LobattoIIIC-5-8-IRK');
 fprintf('\n\nLobattoIIIC-5-8-IRK dense output coefficients:\n')
 disp(B)
 
-B = build_dense('SDIRK-4-5');
-fprintf('\n\nSDIRK-4-5 dense output coefficients:\n')
+B = build_dense('SDIRK-5-4');
+fprintf('\n\nSDIRK-5-4 dense output coefficients:\n')
 disp(B)
 
 B = build_dense('Gauss-6-12-IRK');

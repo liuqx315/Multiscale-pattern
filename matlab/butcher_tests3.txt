@@ -703,7 +703,7 @@
   --------------------------------------
   Measured order of accuracy = 3.01029
 
-  Results for SDIRK-4-5:
+  Results for SDIRK-5-4:
       h           errI        err2
   --------------------------------------
     1.00e-01    1.63e-06    2.34e-06

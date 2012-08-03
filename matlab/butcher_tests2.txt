@@ -42,7 +42,7 @@
       Cash(5,3,4)-SDIRK   3   3   0    1    1
    Ismail(7,4,5)-ESDIRK   1   0   0    1    0
               SDIRK-2-2   2   0   0    1    1
-              SDIRK-4-5   3   3   0    1    1
+              SDIRK-5-4   3   3   0    1    1
   Kvaerno(4,2,3)-ESDIRK   3   2   0    1    1
   Kvaerno(5,3,4)-ESDIRK   4   3   0    1    0
   Kvaerno(7,4,5)-ESDIRK   4   4   0    1    1

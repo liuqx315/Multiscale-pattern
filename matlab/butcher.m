@@ -88,7 +88,6 @@ function B = butcher(method_name)
 %    LobattoIIIA-5-8-IRK
 %    LobattoIIIB-5-8-IRK
 %    LobattoIIIC-5-8-IRK
-%    SDIRK-4-5
 %    SDIRK-5-4
 %    Gauss-6-12-IRK
 %
@@ -984,7 +983,7 @@ elseif (strcmp(method_name,'LobattoIIIC-5-8-IRK'))
 
    B = [c, A; 0, b];
       
-elseif (strcmp(method_name,'SDIRK-4-5'))
+elseif (strcmp(method_name,'SDIRK-5-4'))
    
    A = [1/4, 0, 0, 0, 0; ...
       1/2, 1/4, 0, 0, 0; ...

@@ -121,8 +121,8 @@ mname = 'Cash(5,3,4)-SDIRK';
 B = butcher(mname);
 butcher_test_method(B,mname);
 
-% SDIRK-4-5 method
-mname = 'SDIRK-4-5';
+% SDIRK-5-4 method
+mname = 'SDIRK-5-4';
 B = butcher(mname);
 butcher_test_method(B,mname);
 
