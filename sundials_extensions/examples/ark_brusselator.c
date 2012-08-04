@@ -105,6 +105,10 @@ int main()
   realtype reltol = reltol_;
   realtype abstol = abstol_;
 
+  /* open solver diagnostics output file for writing */
+  FILE *DFID;
+  DFID=fopen("diags_ark_brusselator.txt","w");
+  
   /* set up the test problem according to the desired input */
   if (test == 1) {
     u0 = RCONST(3.9);
@@ -161,6 +165,10 @@ int main()
   /* Call ARKodeSetUserData to pass rdata to user functions */
   flag = ARKodeSetUserData(arkode_mem, (void *) rdata);
   if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+
+  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
+  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -237,6 +245,9 @@ int main()
 
   /* Free integrator memory */
   ARKodeFree(&arkode_mem);
+
+  /* close solver diagnostics output file */
+  fclose(DFID);
 
   return(0);
 }

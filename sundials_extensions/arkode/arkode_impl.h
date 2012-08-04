@@ -366,6 +366,12 @@ typedef struct ARKodeMemRec {
   int      ark_nhnil;       /* number of messages issued to the user that 
 			       t+h == t for the next iternal step          */
 
+  /*-----------------
+    Diagnostic output
+    -----------------*/
+  booleantype ark_report;   /* flag to enable/disable diagnostic output    */
+  FILE       *ark_diagfp;   /* diagnostic outputs are sent to ark_diagfp   */
+
   /*----------------------------
     Space requirements for ARKODE 
     ----------------------------*/
@@ -398,7 +404,6 @@ typedef struct ARKodeMemRec {
   booleantype ark_setupNonNull; /* does setup do anything?                    */
   booleantype ark_VabstolMallocDone;
   booleantype ark_MallocDone;  
-
 
   /*-------------------------------------------
     Error handler function and error ouput file 

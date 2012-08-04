@@ -287,6 +287,21 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | time f is called.
                           | [NULL]
                           |
+ ARKodeSetDiagnostics     | the file pointer for a diagnostics file 
+                          | where all ARKODE step adaptivity and solver 
+                          | information is written.  This parameter can 
+                          | be stdout or stderr, though the preferred 
+                          | approach is to specify a file pointer 
+                          | (corresponding to a user diagnostics file 
+                          | opened for writing) returned by fopen.  If 
+                          | not called, or if called with a NULL file
+                          | pointer, all diagnostics output is disabled.
+                          | NOTE: when run in parallel, only one process 
+                          | should set a non-NULL value for this pointer, 
+                          | since statistics from all processes would be 
+                          | identical.
+                          | [NULL]
+                          |
  ARKodeSetOrd             | method order to be used by the solver.
                           | [4]
                           |
@@ -441,6 +456,8 @@ SUNDIALS_EXPORT int ARKodeSetErrFile(void *arkode_mem,
 				     FILE *errfp);
 SUNDIALS_EXPORT int ARKodeSetUserData(void *arkode_mem, 
 				      void *user_data);
+SUNDIALS_EXPORT int ARKodeSetDiagnostics(void *arkode_mem, 
+					 FILE *diagfp);
 SUNDIALS_EXPORT int ARKodeSetOrd(void *arkode_mem, int maxord);
 SUNDIALS_EXPORT int ARKodeSetDenseOrder(void *arkode_mem, int dord);
 SUNDIALS_EXPORT int ARKodeSetLinear(void *arkode_mem);

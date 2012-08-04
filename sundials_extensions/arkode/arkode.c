@@ -165,6 +165,10 @@ void *ARKodeCreate()
   ark_mem->ark_gactive = NULL;
   ark_mem->ark_mxgnull = 1;
 
+  /* Initialize diagnostics reporting variables */
+  ark_mem->ark_report  = FALSE;
+  ark_mem->ark_diagfp  = NULL;
+
   /* Initialize lrw and liw */
   ark_mem->ark_lrw = 58;   /* to be updated */
   ark_mem->ark_liw = 40;   /* to be updated */
@@ -1977,9 +1981,14 @@ static int ARKStep2(ARKodeMem ark_mem)
       /* Set up data for evaluation of ARK stage residual (data stored in ark_sdata) */
       ARKSet2(ark_mem);
 
+      /* Solver diagnostics reporting */
+      if (ark_mem->ark_report) 	
+	fprintf(ark_mem->ark_diagfp, "step  %li  %g  %i  %g\n",
+		ark_mem->ark_nst, ark_mem->ark_h, is, ark_mem->ark_tn);
+
       /* solve implicit problem (if required) */
       if (ABS(ark_mem->ark_Ai[is][is]) > TINY) {
-	
+
 	/* perform implicit solve */
 	nflag = ARKNls(ark_mem, nflag);
 
@@ -2024,6 +2033,11 @@ static int ARKStep2(ARKodeMem ark_mem)
       
     /* compute time-evolved solution (in ark_y), error estimate (in dsm) */
     dsm = ARKComputeSolutions(ark_mem);
+
+    /* Solver diagnostics reporting */
+    if (ark_mem->ark_report) 
+      fprintf(ark_mem->ark_diagfp, "  etest  %li  %g  %g\n", 
+	      ark_mem->ark_nst, ark_mem->ark_h, dsm);
 
     /* Perform time accuracy error test (if failure, updates h for next try) */
     eflag = ARKDoErrorTest2(ark_mem, &nflag, saved_t, &nef, dsm);
@@ -2282,8 +2296,12 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
       if (retval < 0) return(ARK_RHSFUNC_FAIL);
       if (retval > 0) return(RHSFUNC_RECVR);
     }
-
+    
     if (callSetup) {
+
+      /* Solver diagnostics reporting */
+      if (ark_mem->ark_report)  fprintf(ark_mem->ark_diagfp, "  lsetup\n");
+
       ier = ark_mem->ark_lsetup(ark_mem, convfail, ark_mem->ark_ycur, 
 				ark_mem->ark_ftemp, &ark_mem->ark_jcur, 
 				vtemp1, vtemp2, vtemp3);
@@ -2362,6 +2380,10 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
       else
       	ark_mem->ark_eLTE = ark_mem->ark_nlscoef * RCONST(0.1);
       dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_eLTE;
+
+      /* Solver diagnostics reporting */
+      if (ark_mem->ark_report) 
+	fprintf(ark_mem->ark_diagfp, "    newt  %i  %g  %g\n", m, del, dcon);
     
       if (dcon <= ONE) {
 	ark_mem->ark_acnrm = (m==0) ? 
@@ -3546,6 +3568,12 @@ static int ARKAdapt(ARKodeMem ark_mem)
     return (ARK_ILL_INPUT);
   }
 
+  /* Solver diagnostics reporting */
+  if (ark_mem->ark_report) 
+    fprintf(ark_mem->ark_diagfp, "  adapt  %g  %g  %g  %g  %g  ",
+	    ark_mem->ark_hadapt_ehist[0], ark_mem->ark_hadapt_ehist[1], 
+	    ark_mem->ark_hadapt_ehist[2], h_acc, h_cfl);
+
   /* enforce safety factors */
   h_acc *= safety;
   h_cfl *= ark_mem->ark_hadapt_cfl;
@@ -3555,6 +3583,10 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
   /* enforce minimum bound time step reduction */
   h_acc = MAX(h_acc, ETAMIN*ark_mem->ark_h);
+
+  /* Solver diagnostics reporting */
+  if (ark_mem->ark_report) 
+    fprintf(ark_mem->ark_diagfp, "%g  %g  ", h_acc, h_cfl);
 
   /* increment the relevant step counter, set desired step */
   if (h_acc < h_cfl)
@@ -3578,6 +3610,10 @@ static int ARKAdapt(ARKodeMem ark_mem)
   /* enforce maximum time step size */
   ark_mem->ark_eta /= MAX(ONE, ABS(ark_mem->ark_h) * 
 			  ark_mem->ark_hmax_inv*ark_mem->ark_eta);
+
+  /* Solver diagnostics reporting */
+  if (ark_mem->ark_report) 
+    fprintf(ark_mem->ark_diagfp, "%g\n", ark_mem->ark_eta);
 
   return(ier);
 }

@@ -155,6 +155,33 @@ int ARKodeSetUserData(void *arkode_mem, void *user_data)
 
 
 /*---------------------------------------------------------------
+ ARKodeSetDiagnostics:
+
+ Specifies to enable solver diagnostics, and specifies the FILE
+ pointer for output (diagfp==NULL disables output)
+---------------------------------------------------------------*/
+int ARKodeSetDiagnostics(void *arkode_mem, FILE *diagfp)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetDiagnostics", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  ark_mem->ark_diagfp = diagfp;
+  if (diagfp != NULL) {
+    ark_mem->ark_report = TRUE;
+  } else {
+    ark_mem->ark_report = FALSE;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKodeSetOrd:
 
  Specifies the method order

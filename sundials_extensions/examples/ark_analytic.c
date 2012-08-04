@@ -81,6 +81,10 @@ int main()
   realtype abstol = abstol_;
   realtype lamda  = lamda_;
 
+  /* open solver diagnostics output file for writing */
+  FILE *DFID;
+  DFID=fopen("diags_ark_analytic.txt","w");
+  
   /* Initial problem output */
   printf("\nAnalytical ODE test problem:\n");
   printf("    lamda = %g\n",    lamda);
@@ -109,6 +113,10 @@ int main()
   /* Call ARKodeSetUserData to pass lamda to user functions */
   flag = ARKodeSetUserData(arkode_mem, (void *) &lamda);
   if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+
+  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
+  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -182,6 +190,9 @@ int main()
 
   /* Free integrator memory */
   ARKodeFree(&arkode_mem);
+
+  /* close solver diagnostics output file */
+  fclose(DFID);
 
   return(0);
 }

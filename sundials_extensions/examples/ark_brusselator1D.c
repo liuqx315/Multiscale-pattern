@@ -146,6 +146,10 @@ int main()
   udata->dw = dw;
   udata->ep = ep;
 
+  /* open solver diagnostics output file for writing */
+  FILE *DFID;
+  DFID=fopen("diags_ark_bruss1D.txt","w");
+  
   /* set total allocated vector length */
   NEQ = Nvar*udata->N;
 
@@ -223,6 +227,10 @@ int main()
   /* Call ARKodeSetUserData to pass rdata to user functions */
   flag = ARKodeSetUserData(arkode_mem, (void *) udata);
   if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+
+  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
+  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -333,6 +341,9 @@ int main()
 
   /* Free integrator memory */
   ARKodeFree(&arkode_mem);
+
+  /* close solver diagnostics output file */
+  fclose(DFID);
 
   return(0);
 }
