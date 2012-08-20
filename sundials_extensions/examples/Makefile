@@ -15,10 +15,7 @@ INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../
 LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 
 # listing of all test routines
-TESTS = nvector_serial_test.exe \
-        nvector_parallel_test.exe \
-        nvector_parallel_grid_test.exe \
-        cv_analytic.exe \
+TESTS = cv_analytic.exe \
         cv_analytic_sys.exe \
         cv_analytic_nonlin.exe \
         cv_VanderPol.exe \
