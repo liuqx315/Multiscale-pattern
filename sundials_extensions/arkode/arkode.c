@@ -259,7 +259,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_tn = t0;
 
   /* Set step parameters */
-  ark_mem->ark_etamax = ETAMX1;
+  ark_mem->ark_etamax = ark_mem->ark_etamx1;
   ark_mem->ark_hold   = ZERO;
   ark_mem->ark_tolsf  = ONE;
 
@@ -348,7 +348,7 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_tn = t0;
   
   /* Set step parameters */
-  ark_mem->ark_etamax = ETAMX1;
+  ark_mem->ark_etamax = ark_mem->ark_etamx1;
   ark_mem->ark_hold   = ZERO;
   ark_mem->ark_tolsf  = ONE;
 
@@ -2272,8 +2272,8 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
   if (ark_mem->ark_setupNonNull) {      
     callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
       (ark_mem->ark_nst+ark_mem->ark_istage == 0) || 
-      (ark_mem->ark_nst >= ark_mem->ark_nstlp + MSBP) || 
-      (ABS(ark_mem->ark_gamrat-ONE) > DGMAX);
+      (ark_mem->ark_nst >= ark_mem->ark_nstlp + ark_mem->ark_msbp) || 
+      (ABS(ark_mem->ark_gamrat-ONE) > ark_mem->ark_dgmax);
   } else {  
     ark_mem->ark_crate = ONE;
     callSetup = FALSE;
@@ -2372,9 +2372,8 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
     
       /* Test for convergence.  If m > 0, an estimate of the convergence
 	 rate constant is stored in crate, and used in the test */
-      if (m > 0) {
-	ark_mem->ark_crate = MAX(CRDOWN * ark_mem->ark_crate, del/delp);
-      }
+      if (m > 0) 
+	ark_mem->ark_crate = MAX(ark_mem->ark_crdown*ark_mem->ark_crate, del/delp);
       if (ark_mem->ark_crate < ONE)
       	ark_mem->ark_eLTE = ark_mem->ark_nlscoef * (ONE - ark_mem->ark_crate);
       else
@@ -2399,7 +2398,8 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
       /* Stop at maxcor iterations or if iteration seems to be diverging.
 	 If still not converged and Jacobian data is not current, signal 
 	 to try the solution again */
-      if ((m == ark_mem->ark_maxcor) || ((m >= 2) && (del > RDIV*delp))) {
+      if ((m == ark_mem->ark_maxcor) || 
+	  ((m >= 2) && (del > ark_mem->ark_rdiv*delp))) {
 	if ((!ark_mem->ark_jcur) && (ark_mem->ark_setupNonNull)) 
 	  ier = TRY_AGAIN;
 	else
@@ -2609,7 +2609,8 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
   }
 
   /* Reduce step size; return to reattempt the step */
-  ark_mem->ark_eta = MAX(ETACF, ark_mem->ark_hmin / ABS(ark_mem->ark_h));
+  ark_mem->ark_eta = MAX(ark_mem->ark_etacf, 
+			 ark_mem->ark_hmin / ABS(ark_mem->ark_h));
   ark_mem->ark_h *= ark_mem->ark_eta;
   ark_mem->ark_next_h = ark_mem->ark_h;
   *nflagPtr = PREV_CONV_FAIL;
@@ -2730,8 +2731,8 @@ static int ARKDoErrorTest2(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_hadapt_ehist[0] = ark_mem->ark_hadapt_ehist[1];
 
   /* Enforce failure bounds on eta, update h, and return for retry of step */
-  if (*nefPtr >= SMALL_NEF) 
-    ark_mem->ark_eta = MIN(ark_mem->ark_eta, ETAMXF);
+  if (*nefPtr >= ark_mem->ark_small_nef) 
+    ark_mem->ark_eta = MIN(ark_mem->ark_eta, ark_mem->ark_etamxf);
   ark_mem->ark_h *= ark_mem->ark_eta;
   ark_mem->ark_next_h = ark_mem->ark_h;
   return(TRY_AGAIN);

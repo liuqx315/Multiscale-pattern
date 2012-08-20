@@ -412,6 +412,18 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | function.
                           | [internal]
                           |
+ ARKodeSetAdaptivityConstants | user-provided time step adaptivity 
+                          | constants.
+                          | [internal]
+                          |
+ ARKodeSetNewtonConstants | user-provided nonlinear convergence
+                          | constants.
+                          | [internal]
+                          |
+ ARKodeSetLSetupConstants | user-provided linear setup decision
+                          | constants.
+                          | [internal]
+                          |
  ARKodeSetStabilityFn     | user-provided explicit time step 
                           | stability function.
                           | [internal]
@@ -493,6 +505,17 @@ SUNDIALS_EXPORT int ARKodeSetAdaptMethod(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeSetAdaptivityFn(void *arkode_mem, 
 					  ARKAdaptFn hfun, 
 					  void *h_data);
+SUNDIALS_EXPORT int ARKodeSetAdaptivityConstants(void *arkode_mem, 
+						 realtype etamx1,
+						 realtype etamxf, 
+						 realtype etacf,
+						 int small_nef);
+SUNDIALS_EXPORT int ARKodeSetNewtonConstants(void *arkode_mem, 
+					     realtype crdown,
+					     realtype rdiv);
+SUNDIALS_EXPORT int ARKodeSetLSetupConstants(void *arkode_mem, 
+					     realtype dgmax,
+					     int msbp);
 SUNDIALS_EXPORT int ARKodeSetStabilityFn(void *arkode_mem, 
 					 ARKExpStabFn EStab, 
 					 void *estab_data);

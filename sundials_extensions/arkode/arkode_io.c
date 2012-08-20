@@ -78,7 +78,14 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_maxnef           = MAXNEF;
   ark_mem->ark_maxncf           = MAXNCF;
   ark_mem->ark_nlscoef          = NLSCOEF;
-
+  ark_mem->ark_etamx1           = ETAMX1;
+  ark_mem->ark_etamxf           = ETAMXF;
+  ark_mem->ark_small_nef        = SMALL_NEF;
+  ark_mem->ark_etacf            = ETACF;
+  ark_mem->ark_crdown           = CRDOWN;
+  ark_mem->ark_rdiv             = RDIV;
+  ark_mem->ark_dgmax            = DGMAX;
+  ark_mem->ark_msbp             = MSBP;
   return(ARK_SUCCESS);
 }
 
@@ -925,6 +932,119 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
     ark_mem->ark_hadapt         = hfun;
     ark_mem->ark_hadapt_data    = h_data;
     ark_mem->ark_hadapt_imethod = -1;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetAdaptivityConstants:
+
+ Specifies the user-provided time step adaptivity constants
+ etamx1, etamxf, etacf and small_nef
+---------------------------------------------------------------*/
+int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
+				 realtype etamxf, realtype etacf,
+				 int small_nef)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* 0 or 0.0 argument sets default, otherwise set inputs */
+  if (etamx1 == 0.0) {
+    ark_mem->ark_etamx1 = ETAMX1;
+  } else {
+    ark_mem->ark_etamx1 = etamx1;
+  }
+  if (etamxf == 0.0) {
+    ark_mem->ark_etamxf = ETAMXF;
+  } else {
+    ark_mem->ark_etamxf = etamxf;
+  }
+  if (etacf == 0.0) {
+    ark_mem->ark_etacf = ETACF;
+  } else {
+    ark_mem->ark_etacf = etacf;
+  }
+  if (small_nef == 0) {
+    ark_mem->ark_small_nef = SMALL_NEF;
+  } else {
+    ark_mem->ark_small_nef = small_nef;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetNewtonConstants:
+
+ Specifies the user-provided nonlinear convergence constants
+ crdown and rdiv.
+---------------------------------------------------------------*/
+int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown,
+			     realtype rdiv)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* 0.0 argument sets default, otherwise set inputs */
+  if (crdown == 0.0) {
+    ark_mem->ark_crdown = CRDOWN;
+  } else {
+    ark_mem->ark_crdown = crdown;
+  }
+  if (rdiv == 0.0) {
+    ark_mem->ark_rdiv = RDIV;
+  } else {
+    ark_mem->ark_rdiv = rdiv;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetLSetupConstants:
+
+ Specifies the user-provided linear setup decision constants
+ dgmax and msbp.
+---------------------------------------------------------------*/
+int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax,
+			     int msbp)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* 0 or 0.0 argument sets default, otherwise set inputs */
+  if (dgmax == 0.0) {
+    ark_mem->ark_dgmax = DGMAX;
+  } else {
+    ark_mem->ark_dgmax = dgmax;
+  }
+  if (msbp == 0) {
+    ark_mem->ark_msbp = MSBP;
+  } else {
+    ark_mem->ark_msbp = msbp;
   }
 
   return(ARK_SUCCESS);

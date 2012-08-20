@@ -70,7 +70,7 @@ extern "C" {
 #define AD5_K2    RCONST(0.3);
 #define AD5_K3    RCONST(1.0);
 
-/* Default solver tolerances */
+/* Default solver tolerance factor */
 /* #define NLSCOEF   RCONST(0.003);   /\* Hairer & Wanner constant *\/ */
 #define NLSCOEF   RCONST(0.01);
 
@@ -150,17 +150,10 @@ extern "C" {
                 on an error test failure
     ETACF       step size reduction factor on nonlinear 
                 convergence failure
-    ADDON       safety increment used in step size adaptivity
     ONEPSM      safety factor for floating point comparisons
     ONEMSM      safety factor for floating point comparisons
-    MXNEF1      max no. of error test failures before forcing a 
-                reduction of order
-    SMALL_NEF   if an error failure occurs and 
-                SMALL_NEF <= nef <= MXNEF1, then reset 
-                eta = MIN(eta, ETAMXF)
-    LONG_WAIT   number of steps to wait before considering an 
-                order change when q==1 and MXNEF1 error test 
-                failures have occurred
+    SMALL_NEF   if an error failure occurs and SMALL_NEF <= nef,
+                then reset  eta = MIN(eta, ETAMXF)
 
  ARKNls:
     CRDOWN      constant used in the estimation of the 
@@ -177,21 +170,18 @@ extern "C" {
 #define H0_BIAS     HALF
 #define H0_ITERS    4
 
-#define ETAMX1      RCONST(10000.0) 
-#define ETAMXF      RCONST(0.2)
-#define ETAMIN      RCONST(0.1)
-#define ETACF       RCONST(0.25)
-#define ADDON       RCONST(0.000001)
+#define ETAMX1      RCONST(10000.0)     /* default */
+#define ETAMXF      RCONST(0.2)         /* default */
+#define ETAMIN      RCONST(0.1)         /* default */
+#define ETACF       RCONST(0.25)        /* default */
 #define ONEPSM      RCONST(1.000001)
 #define ONEMSM      RCONST(0.999999)
-#define MXNEF1      3
-#define SMALL_NEF   2
-#define LONG_WAIT   10
+#define SMALL_NEF   2                   /* default */
 
-#define CRDOWN      RCONST(0.3)
-#define DGMAX       RCONST(0.3)
-#define RDIV        TWO
-#define MSBP        20
+#define CRDOWN      RCONST(0.3)         /* default */
+#define DGMAX       RCONST(0.3)         /* default */
+#define RDIV        TWO                 /* default */
+#define MSBP        20                  /* default */
 
 
 /*===============================================================
@@ -349,6 +339,16 @@ typedef struct ARKodeMemRec {
   realtype ark_hmax_inv; /* |h| <= 1/hmax_inv                              */
   realtype ark_etamax;   /* eta <= etamax                                  */
 
+  realtype ark_etamx1;   /* max step size change on first step             */
+  realtype ark_etamxf;   /* h reduction factor on multiple error fails     */
+  int ark_small_nef;     /* bound to determine 'multiple' above            */
+  realtype ark_etacf;    /* h reduction factor on nonlinear conv fail      */
+
+  realtype ark_crdown;   /* nonlinear convergence rate estimation constant */
+  realtype ark_rdiv;     /* declare divergence if ratio del/delp > RDIV    */
+
+  realtype ark_dgmax;    /* if |gamma/gammap-1| > DGMAX then call lsetup   */
+  int ark_msbp;          /* max no. of time steps between lsetup calls     */
 
   /*--------
     Counters 
