@@ -19,7 +19,7 @@ Solver diagnostics:
 "  lsetup"  
 "    newt  <iter>  <del>  <dcon>"
 
-* the "setup" line will only be displayed when lsetup is called
+* the "lsetup" line will only be displayed when lsetup is called
 * the "newt" line will appear for each Newton iteration.
 * iter is the Newton iteration index (resets at 0 when lsetup is called).
 * del is the WRMS norm of the Newton correction.
