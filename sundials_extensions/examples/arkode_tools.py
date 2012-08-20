@@ -315,6 +315,61 @@ def plot_h_vs_t(TimeSteps,fname):
 
 
 ##########
+def plot_h_vs_iter(TimeSteps,fname):
+    """ This routine takes in the array of TimeSteps (returned from  """
+    """ load_diags), and plots the time step sizes h as a function   """
+    """ of the time step iteration index.  Failed time steps are     """
+    """ marked on the plot with either a red X or green O, where X   """
+    """ corresponds to an error test failure, and an O corresponds   """
+    """ to a Newton solver convergence failure.                      """
+    """                                                              """
+    """ The resulting plot is stored in the file <fname>, that       """
+    """ should include an extension appropriate for the matplotlib   """
+    """ 'savefig' command.                                           """
+    import pylab as plt
+    import numpy as np
+    hvals  = [];
+    ivals  = [];
+    EfailH = [];
+    EfailI = [];
+    CfailH = [];
+    CfailI = [];
+    for istep in range(len(TimeSteps)):
+
+        # store successful step size and time
+        hvals.append(TimeSteps[istep].h_final);
+        ivals.append(istep);
+
+        # account for convergence failures and error test failures
+        if (TimeSteps[istep].err_fails > 0):
+            EfailH.append(TimeSteps[istep].h_attempts[0]);
+            EfailI.append(istep);
+        if (TimeSteps[istep].conv_fails > 0):
+            CfailH.append(TimeSteps[istep].h_attempts[0]);
+            CfailI.append(istep);
+
+    # convert data to numpy arrays
+    h = np.array(hvals);
+    I = np.array(ivals);
+    eh = np.array(EfailH);
+    eI = np.array(EfailI);
+    ch = np.array(CfailH);
+    cI = np.array(CfailI);
+
+    # generate plot
+    plt.figure()
+    plt.plot(I,h,'b-')
+    plt.plot(eI,eh,'rx')
+    plt.plot(cI,ch,'go')
+    plt.xlabel('time step')
+    plt.ylabel('step size')
+    plt.title('Step size versus iteration')
+    plt.legend(('successful','error fails','conv. fails'), loc='upper left', shadow=True)
+    plt.grid()
+    plt.savefig(fname)
+
+
+##########
 def plot_work_vs_t(TimeSteps,fname):
     """ This routine takes in the array of TimeSteps (returned from  """
     """ load_diags), and plots the total number of Newton iterations """

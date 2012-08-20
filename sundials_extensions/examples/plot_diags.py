@@ -13,6 +13,7 @@ Tdiags = ark.load_diags(fname);
 
 # generate plots 
 ark.plot_h_vs_t(Tdiags,'h_vs_t.png');
+ark.plot_h_vs_iter(Tdiags,'h_vs_iter.png');
 ark.plot_work_vs_t(Tdiags,'work_vs_t.png');
 ark.plot_work_vs_h(Tdiags,'work_vs_h.png');
 ark.plot_oversolve_vs_t(Tdiags,'oversolve_vs_t.png');
