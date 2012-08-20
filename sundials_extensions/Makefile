@@ -15,6 +15,9 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 # extension directories
 EXTEN = nvector arkode
 
+# executable directories
+EXEC = examples regression
+
 
 # build all library source code and tests
 all : 
@@ -22,13 +25,17 @@ all :
 	  $(MAKE) -C $$dir; \
 	done
 	ar -cr sundials_extensions.a */*.o
-	make -C examples
+	for dir in ${EXEC}; do \
+	  $(MAKE) -C $$dir; \
+	done
 
 clean : 
 	for dir in ${EXTEN}; do \
 	  cd $$dir && $(MAKE) clean && cd -; \
 	done
-	cd examples && $(MAKE) clean
+	for dir in ${EXEC}; do \
+	  cd $$dir && $(MAKE) clean && cd -; \
+	done
 
 
 ####### End of Makefile #######
