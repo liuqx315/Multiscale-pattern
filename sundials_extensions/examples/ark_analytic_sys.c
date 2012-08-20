@@ -55,7 +55,6 @@ static int Jac(long int N, realtype t,
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
-static int sol(realtype t, realtype lam, N_Vector y);
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C);
 
 
@@ -70,9 +69,8 @@ int main()
   long int NEQ = 3;
 
   /* general problem variables */
-  int flag, flag2;
+  int flag;
   N_Vector y = NULL;
-  N_Vector ytrue = NULL;
   void *arkode_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
@@ -106,8 +104,6 @@ int main()
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
-  ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
 
   /* Initialize y to 0 */
   NV_Ith_S(y,0) = 1.0;
@@ -150,35 +146,16 @@ int main()
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype tout = dTout;
-  realtype y0, y1, y2, yt0, yt1, yt2;
-  realtype y0err, y1err, y2err, err2=0.0, errI=0.0;
-  int Nt=0;
-  printf("      t        y0        y1        y2        err0        err1        err2\n");
-  printf("   --------------------------------------------------------------------------\n");
+  realtype y0, y1, y2;
+  printf("      t        y0        y1        y2\n");
+  printf("   --------------------------------------\n");
   while (Tf - t > 1.0e-15) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     y0 = NV_Ith_S(y,0);
     y1 = NV_Ith_S(y,1);
     y2 = NV_Ith_S(y,2);
-
-    flag2 = sol(t, lamda, ytrue);
-    yt0 = NV_Ith_S(ytrue,0);
-    yt1 = NV_Ith_S(ytrue,1);
-    yt2 = NV_Ith_S(ytrue,2);
-    
-    y0err = fabs(y0-yt0);
-    y1err = fabs(y1-yt1);
-    y2err = fabs(y2-yt2);
-
-    errI = (errI > y0err) ? errI : y0err;
-    errI = (errI > y1err) ? errI : y1err;
-    errI = (errI > y2err) ? errI : y2err;
-    err2 += y0err*y0err + y1err*y1err + y2err*y2err;
-    Nt++;
-    
-    printf("  %8.4f  %8.5f  %8.5f  %8.5f  %10.3e  %10.3e  %10.3e\n", 
-	   t, y0, y1, y2, y0err, y1err, y2err);
+    printf("  %8.4f  %8.5f  %8.5f  %8.5f\n", t, y0, y1, y2);
 
     if (check_flag(&flag, "ARKode", 1)) break;
     if (flag == ARK_SUCCESS) {
@@ -186,8 +163,7 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
-  err2 = sqrt(err2 / 3.0 / Nt);
-  printf("   --------------------------------------------------------------------------\n");
+  printf("   --------------------------------------\n");
 
   /* Print some final statistics */
   long int nst, nst_a, nst_c, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -221,13 +197,10 @@ int main()
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
   printf("   Total number of linear solver convergence failures = %li\n", ncfn);
-  printf("   Total number of error test failures = %li\n", netf);
-  printf("   Error: max = %g, rms = %g\n", errI, err2);
-  printf("   Oversolve = %g\n\n", reltol/err2);
+  printf("   Total number of error test failures = %li\n\n", netf);
 
   /* Free y vector */
   N_VDestroy_Serial(y);
-  N_VDestroy_Serial(ytrue);
 
   /* Free integrator memory */
   ARKodeFree(&arkode_mem);
@@ -379,40 +352,6 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
     return(1); }
-
-  return(0);
-}
-
-/* sol routine to compute the ODE solution y(t). */
-static int sol(realtype t, realtype lam, N_Vector y)
-{
-  realtype y0, y1, y2;
-  realtype x0 = 1.0, x1 = 1.0, x2 = 1.0;
-
-  /* y = V*exp(D*t)*Vi*y0, where 
-        V = [1 -1 1; -1 2 1; 0 -1 2] 
-        Vi = 0.25*[5 1 -3; 2 2 -2; 1 1 1]
-        D = [-0.5 0 0; 0 -0.1 0; 0 0 lam]
-        y0 = [1, 1, 1]' */
-
-  /*   y = Vi*x [= Vi*y0] */
-  y0 = 0.25*(5.0*x0 + 1.0*x1 - 3.0*x2);
-  y1 = 0.25*(2.0*x0 + 2.0*x1 - 2.0*x2);
-  y2 = 0.25*(1.0*x0 + 1.0*x1 + 1.0*x2);
-
-  /*   x = exp(D*t)*y */
-  x0  = exp(-0.5*t)*y0;
-  x1  = exp(-0.1*t)*y1;
-  x2  = exp( lam*t)*y2;
-
-  /*   y = V*x */
-  y0 =  1.0*x0 - 1.0*x1 + 1.0*x2;
-  y1 = -1.0*x0 + 2.0*x1 + 1.0*x2;
-  y2 =  0.0*x0 - 1.0*x1 + 2.0*x2;
-
-  NV_Ith_S(y,0) = y0;
-  NV_Ith_S(y,1) = y1;
-  NV_Ith_S(y,2) = y2;
 
   return(0);
 }

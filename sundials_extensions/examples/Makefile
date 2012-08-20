@@ -31,15 +31,6 @@ TESTS = cv_analytic.exe \
 # target to build all test executables
 all : ${TESTS}
 
-nvector_serial_test.exe : nvector_serial_test.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
-
-nvector_parallel_test.exe : nvector_parallel_test.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
-
-nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
-
 cv_analytic.exe : cv_analytic.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 

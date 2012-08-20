@@ -99,15 +99,12 @@ int main()
   long int N, NEQ, i;
 
   /* general problem variables */
-  int flag, flag2;
+  int flag;
   N_Vector y = NULL;
-  N_Vector ytrue = NULL;
-  N_Vector yerr  = NULL;
   N_Vector umask = NULL;
   N_Vector vmask = NULL;
   N_Vector wmask = NULL;
   void *cvode_mem = NULL;
-  void *cvtrue_mem = NULL;
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
@@ -157,16 +154,10 @@ int main()
   printf("    diffusion coefficients:  du = %g,  dv = %g,  dw = %g\n", 
 	 udata->du, udata->dv, udata->dw);
   printf("    reltol = %.1e,  abstol = %.1e\n\n", reltol, abstol);
-  realtype reltol2 = reltol*1.0e-3;
-  realtype abstol2 = abstol*1.0e-3;
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
-  ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
-  yerr = N_VNew_Serial(NEQ);
-  if (check_flag((void *)yerr, "N_VNew_Serial", 0)) return(1);
 
   /* set spatial mesh spacing */
   udata->dx = ONE/(N-1);
@@ -181,14 +172,13 @@ int main()
   data = N_VGetArrayPointer(y);
   if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
 
-  /* Set initial conditions into y, ytrue */
+  /* Set initial conditions into y */
   realtype pi = RCONST(4.0)*atan(ONE);
   for (i=0; i<N; i++) {
     data[IDX(i,0)] =  a  + RCONST(0.1)*sin(pi*i*udata->dx);  /* u */
     data[IDX(i,1)] = b/a + RCONST(0.1)*sin(pi*i*udata->dx);  /* v */
     data[IDX(i,2)] =  b  + RCONST(0.1)*sin(pi*i*udata->dx);  /* w */
   }
-  N_VScale(1.0, y, ytrue);
 
   /* Create serial vector masks for each solution component */
   umask = N_VNew_Serial(NEQ);
@@ -219,40 +209,28 @@ int main()
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
   if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-  cvtrue_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvtrue_mem, "CVodeCreate", 0)) return(1);
   
   /* Call CVodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
   if (check_flag(&flag, "CVodeInit", 1)) return(1);
-  flag = CVodeInit(cvtrue_mem, f, T0, ytrue);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
   
   /* Call CVodeSetUserData to pass rdata to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) udata);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
-  flag = CVodeSetUserData(cvtrue_mem, (void *) udata);
   if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
   if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
-  flag = CVodeSStolerances(cvtrue_mem, reltol2, abstol2);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
 
   /* Call CVBand to specify the CVBAND band linear solver */
   flag = CVBand(cvode_mem, NEQ, 4, 4);
   if (check_flag(&flag, "CVBand", 1)) return(1);
-  flag = CVBand(cvtrue_mem, NEQ, 4, 4);
-  if (check_flag(&flag, "CVBand", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetBandJacFn(cvode_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return(1);
-  flag = CVDlsSetBandJacFn(cvtrue_mem, Jac);
   if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return(1);
 
   /* Open output stream for results, access data arrays */
@@ -273,12 +251,11 @@ int main()
   /* In loop, call CVode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t  = T0;
-  realtype t2 = T0;
   realtype dTout = Tf/Nt;
   realtype tout = dTout;
-  realtype u, v, w, uerr, verr, werr, errI=0.0, err2=0.0;
-  printf("        t      ||u||_rms   ||v||_rms   ||w||_rms     ||uerr||      ||verr||      ||werr||\n");
-  printf("   ---------------------------------------------------------------------------------------\n");
+  realtype u, v, w;
+  printf("        t      ||u||_rms   ||v||_rms   ||w||_rms\n");
+  printf("   ---------------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
 
@@ -289,19 +266,7 @@ int main()
     v = sqrt(v*v/N);
     w = N_VWL2Norm(y,wmask);
     w = sqrt(w*w/N);
-
-    flag2 = CVode(cvtrue_mem, tout, ytrue, &t2, CV_NORMAL);
-    N_VLinearSum( 1.0, ytrue, -1.0, y, yerr );
-    uerr = N_VWL2Norm(yerr,umask);  
-    uerr = sqrt(uerr*uerr/N);
-    verr = N_VWL2Norm(yerr,vmask);  
-    verr = sqrt(verr*verr/N);
-    werr = N_VWL2Norm(yerr,wmask);  
-    werr = sqrt(werr*werr/N);
-    errI = (errI > N_VMaxNorm(yerr)) ? errI : N_VMaxNorm(yerr);
-    err2 += uerr*uerr + verr*verr + werr*werr;
-    printf("  %10.6f  %10.6f  %10.6f  %10.6f  %12.5e  %12.5e  %12.5e\n", 
-	   t, u, v, w, uerr, verr, werr);
+    printf("  %10.6f  %10.6f  %10.6f  %10.6f\n", t, u, v, w);
 
     /* output results to disk */
     for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
@@ -317,8 +282,7 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
-  err2 = sqrt(err2 / 3.0 / N / Nt);
-  printf("   ---------------------------------------------------------------------------------------\n");
+  printf("   ---------------------------------------------\n");
   fclose(UFID);
   fclose(VFID);
   fclose(WFID);
@@ -351,14 +315,10 @@ int main()
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
   printf("   Total number of linear solver convergence failures = %li\n", ncfn);
-  printf("   Total number of error test failures = %li\n", netf);
-  printf("   Error: max = %g, rms = %g\n", errI, err2);
-  printf("   Oversolve = %g\n\n", reltol/err2);
+  printf("   Total number of error test failures = %li\n\n", netf);
 
   /* Free vectors */
   N_VDestroy_Serial(y);
-  N_VDestroy_Serial(ytrue);
-  N_VDestroy_Serial(yerr);
   N_VDestroy_Serial(umask);
   N_VDestroy_Serial(vmask);
   N_VDestroy_Serial(wmask);
@@ -368,7 +328,6 @@ int main()
 
   /* Free integrator memory */
   CVodeFree(&cvode_mem);
-  CVodeFree(&cvtrue_mem);
 
   return(0);
 }
