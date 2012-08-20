@@ -52,7 +52,6 @@
 #include <math.h>
 
 /* Header files with a description of contents used */
-
 #include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
 #include <cvode/cvode_dense.h>       /* prototype for CVDense */
@@ -82,9 +81,11 @@ int main()
   int Nt = 100;
 
   /* general problem variables */
-  int flag;
+  int flag, flag2;
   N_Vector y = NULL;
+  N_Vector ytrue = NULL;
   void *cvode_mem = NULL;
+  void *cvtrue_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
      test   - test problem choice
@@ -102,6 +103,8 @@ int main()
   /* convert the inputs to 'realtype' format */
   realtype reltol = reltol_;
   realtype abstol = abstol_;
+  realtype reltol2 = reltol_*1.0e-3;
+  realtype abstol2 = abstol_*1.0e-3;
 
   /* set up the test problem according to the desired input */
   if (test == 2) {
@@ -140,52 +143,79 @@ int main()
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  ytrue = N_VNew_Serial(NEQ);
+  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
 
-  /* Set initial conditions into y */
+  /* Set initial conditions into y, ytrue */
   NV_Ith_S(y,0) = u0;
   NV_Ith_S(y,1) = v0;
+  NV_Ith_S(ytrue,0) = u0;
+  NV_Ith_S(ytrue,1) = v0;
 
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
   if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  cvtrue_mem = CVodeCreate(CV_BDF, CV_NEWTON);
+  if (check_flag((void *)cvtrue_mem, "CVodeCreate", 0)) return(1);
   
   /* Call CVodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
   if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  flag = CVodeInit(cvtrue_mem, f, T0, ytrue);
+  if (check_flag(&flag, "CVodeInit", 1)) return(1);
 
   /* Call CVodeSetUserData to pass rdata to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) rdata);
   if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  flag = CVodeSetUserData(cvtrue_mem, (void *) rdata);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+
+  /* Set additional solver parameters for reference solution */
+  flag = CVodeSetMaxNumSteps(cvtrue_mem, 100000);
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
   if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  flag = CVodeSStolerances(cvtrue_mem, reltol2, abstol2);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
 
   /* Call CVDense to specify the CVDENSE dense linear solver */
   flag = CVDense(cvode_mem, NEQ);
+  if (check_flag(&flag, "CVDense", 1)) return(1);
+  flag = CVDense(cvtrue_mem, NEQ);
   if (check_flag(&flag, "CVDense", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetDenseJacFn(cvode_mem, Jac);
   if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
+  flag = CVDlsSetDenseJacFn(cvtrue_mem, Jac);
+  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
 
   /* In loop, call CVode, print results, and test for error.
      Break out of loop when the final output time has been reached */
-  realtype t = T0;
+  realtype t  = T0;
+  realtype t2 = T0;
   realtype tout = dTout;
-  realtype u, v;
-  printf("        t           u           v\n");
-  printf("   ----------------------------------\n");
+  realtype u, v, uerr, verr, errI=0.0, err2=0.0;
+  printf("        t           u           v        uerr          verr\n");
+  printf("   --------------------------------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
     flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
     u = NV_Ith_S(y,0);
     v = NV_Ith_S(y,1);
-    printf("  %10.6f  %10.6f  %10.6f\n", t, u, v);
+    flag2 = CVode(cvtrue_mem, tout, ytrue, &t2, CV_NORMAL);
+    uerr = fabs(NV_Ith_S(ytrue,0) - u);
+    verr = fabs(NV_Ith_S(ytrue,1) - v);
+    errI = (errI > verr) ? errI : verr;
+    errI = (errI > uerr) ? errI : uerr;
+    err2 += uerr*uerr + verr*verr;
+    printf("  %10.6f  %10.6f  %10.6f  %12.5e  %12.5e\n", 
+	   t, u, v, uerr, verr);
 
     if (check_flag(&flag, "CVode", 1)) break;
     if (flag == CV_SUCCESS) {
@@ -193,7 +223,8 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
-  printf("   ----------------------------------\n");
+  err2 = sqrt(err2 / 2.0 / Nt);
+  printf("   --------------------------------------------------------------\n");
 
   /* Print some final statistics */
   long int nst, nfe, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -222,13 +253,17 @@ int main()
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
   printf("   Total number of linear solver convergence failures = %li\n", ncfn);
-  printf("   Total number of error test failures = %li\n\n", netf);
+  printf("   Total number of error test failures = %li\n", netf);
+  printf("   Error: max = %g, rms = %g\n", errI, err2);
+  printf("   Oversolve = %g\n\n", reltol/err2);
 
   /* Free y vector */
   N_VDestroy_Serial(y);
+  N_VDestroy_Serial(ytrue);
 
   /* Free integrator memory */
   CVodeFree(&cvode_mem);
+  CVodeFree(&cvtrue_mem);
 
   return(0);
 }

@@ -84,9 +84,11 @@ int main()
   long int NEQ = 3;
 
   /* general problem variables */
-  int flag;
+  int flag, flag2;
   N_Vector y = NULL;
+  N_Vector ytrue = NULL;
   void *arkode_mem = NULL;
+  void *arktrue_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
      test   - test problem choice
@@ -104,6 +106,8 @@ int main()
   /* convert the inputs to 'realtype' format */
   realtype reltol = reltol_;
   realtype abstol = abstol_;
+  realtype reltol2 = reltol_*1.0e-3;
+  realtype abstol2 = abstol_*1.0e-3;
 
   /* open solver diagnostics output file for writing */
   FILE *DFID;
@@ -146,57 +150,89 @@ int main()
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  ytrue = N_VNew_Serial(NEQ);
+  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
 
   /* Set initial conditions into y */
   NV_Ith_S(y,0) = u0;
   NV_Ith_S(y,1) = v0;
   NV_Ith_S(y,2) = w0;
+  NV_Ith_S(ytrue,0) = u0;
+  NV_Ith_S(ytrue,1) = v0;
+  NV_Ith_S(ytrue,2) = w0;
 
   /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return(1);
+  arktrue_mem = ARKodeCreate();
+  if (check_flag((void *)arktrue_mem, "ARKodeCreate", 0)) return(1);
   
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+  flag = ARKodeInit(arktrue_mem, NULL, f, T0, ytrue);
+  if (check_flag(&flag, "ARKodeInit", 1)) return(1);
 
   /* Call ARKodeSetUserData to pass rdata to user functions */
   flag = ARKodeSetUserData(arkode_mem, (void *) rdata);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+  flag = ARKodeSetUserData(arktrue_mem, (void *) rdata);
   if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
+  flag = ARKodeSetDiagnostics(arktrue_mem, DFID);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
+
+  /* Set additional solver parameters for reference solution */
+  flag = ARKodeSetMaxNumSteps(arktrue_mem, 100000);
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
+  flag = ARKodeSStolerances(arktrue_mem, reltol2, abstol2);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
 
   /* Call ARKDense to specify the ARKDENSE dense linear solver */
   flag = ARKDense(arkode_mem, NEQ);
+  if (check_flag(&flag, "ARKDense", 1)) return(1);
+  flag = ARKDense(arktrue_mem, NEQ);
   if (check_flag(&flag, "ARKDense", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
+  flag = ARKDlsSetDenseJacFn(arktrue_mem, Jac);
+  if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
+  realtype t2 = T0;
   realtype tout = dTout;
-  realtype u, v, w;
-  printf("        t           u           v           w\n");
-  printf("   ----------------------------------------------\n");
+  realtype u, v, w, uerr, verr, werr, errI=0.0, err2=0.0;
+  printf("        t           u           v           w        uerr          verr          werr\n");
+  printf("   ---------------------------------------------------------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = NV_Ith_S(y,0);
     v = NV_Ith_S(y,1);
     w = NV_Ith_S(y,2);
-    printf("  %10.6f  %10.6f  %10.6f  %10.6f\n", t, u, v, w);
+    flag2 = ARKode(arktrue_mem, tout, ytrue, &t2, ARK_NORMAL);
+    uerr = fabs(NV_Ith_S(ytrue,0) - u);
+    verr = fabs(NV_Ith_S(ytrue,1) - v);
+    werr = fabs(NV_Ith_S(ytrue,2) - w);
+    errI = (errI > verr) ? errI : verr;
+    errI = (errI > uerr) ? errI : uerr;
+    errI = (errI > werr) ? errI : werr;
+    err2 += uerr*uerr + verr*verr + werr*werr;
+    printf("  %10.6f  %10.6f  %10.6f  %10.6f  %12.5e  %12.5e  %12.5e\n", 
+	   t, u, v, w, uerr, verr, werr);
 
     if (check_flag(&flag, "ARKode", 1)) break;
     if (flag == ARK_SUCCESS) {
@@ -204,7 +240,8 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
-  printf("   ----------------------------------------------\n");
+  err2 = sqrt(err2 / 3.0 / Nt);
+  printf("   ---------------------------------------------------------------------------------------\n");
 
   /* Print some final statistics */
   long int nst, nst_a, nst_c, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -238,13 +275,17 @@ int main()
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
   printf("   Total number of linear solver convergence failures = %li\n", ncfn);
-  printf("   Total number of error test failures = %li\n\n", netf);
+  printf("   Total number of error test failures = %li\n", netf);
+  printf("   Error: max = %g, rms = %g\n", errI, err2);
+  printf("   Oversolve = %g\n\n", reltol/err2);
 
   /* Free y vector */
   N_VDestroy_Serial(y);
+  N_VDestroy_Serial(ytrue);
 
   /* Free integrator memory */
   ARKodeFree(&arkode_mem);
+  ARKodeFree(&arktrue_mem);
 
   /* close solver diagnostics output file */
   fclose(DFID);

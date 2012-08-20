@@ -151,6 +151,8 @@ int main()
   realtype t = T0;
   realtype tout = dTout;
   realtype y0, y1, y2, yt0, yt1, yt2;
+  realtype y0err, y1err, y2err, err2=0.0, errI=0.0;
+  int Nt=0;
   printf("      t        y0        y1        y2        err0        err1        err2\n");
   printf("   --------------------------------------------------------------------------\n");
   while (Tf - t > 1.0e-15) {
@@ -164,9 +166,19 @@ int main()
     yt0 = NV_Ith_S(ytrue,0);
     yt1 = NV_Ith_S(ytrue,1);
     yt2 = NV_Ith_S(ytrue,2);
+    
+    y0err = fabs(y0-yt0);
+    y1err = fabs(y1-yt1);
+    y2err = fabs(y2-yt2);
 
+    errI = (errI > y0err) ? errI : y0err;
+    errI = (errI > y1err) ? errI : y1err;
+    errI = (errI > y2err) ? errI : y2err;
+    err2 += y0err*y0err + y1err*y1err + y2err*y2err;
+    Nt++;
+    
     printf("  %8.4f  %8.5f  %8.5f  %8.5f  %10.3e  %10.3e  %10.3e\n", 
-	   t, y0, y1, y2, yt0-y0, yt1-y1, yt2-y2);
+	   t, y0, y1, y2, y0err, y1err, y2err);
 
     if (check_flag(&flag, "ARKode", 1)) break;
     if (flag == ARK_SUCCESS) {
@@ -174,6 +186,7 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
+  err2 = sqrt(err2 / 3.0 / Nt);
   printf("   --------------------------------------------------------------------------\n");
 
   /* Print some final statistics */
@@ -208,7 +221,9 @@ int main()
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
   printf("   Total number of linear solver convergence failures = %li\n", ncfn);
-  printf("   Total number of error test failures = %li\n\n", netf);
+  printf("   Total number of error test failures = %li\n", netf);
+  printf("   Error: max = %g, rms = %g\n", errI, err2);
+  printf("   Oversolve = %g\n\n", reltol/err2);
 
   /* Free y vector */
   N_VDestroy_Serial(y);
