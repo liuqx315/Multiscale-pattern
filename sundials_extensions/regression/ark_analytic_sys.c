@@ -58,6 +58,8 @@ static int check_flag(void *flagvalue, char *funcname, int opt);
 static int sol(realtype t, realtype lam, N_Vector y);
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C);
 
+/* Helper routine to set all solver parameters from input file */
+int ark_SetParams(void *arkode_mem);
 
 
 /* Main Program */
@@ -70,7 +72,7 @@ int main()
   long int NEQ = 3;
 
   /* general problem variables */
-  int flag, flag2;
+  int flag;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   void *arkode_mem = NULL;
@@ -133,6 +135,14 @@ int main()
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
+  /* Call ark_SetParams to supply solver parameters */
+  flag = ark_SetParams(arkode_mem);
+  if (check_flag(&flag, "ark_SetParams", 1)) return(1);
+
+  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return(1);
+
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
@@ -146,6 +156,10 @@ int main()
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
+  /* Write all solver parameters to stdout */
+  flag = ARKodeWriteParameters(arkode_mem, stdout);
+  if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
+
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
@@ -157,16 +171,16 @@ int main()
   printf("   --------------------------------------------------------------------------\n");
   while (Tf - t > 1.0e-15) {
 
+    flag = sol(t, lamda, ytrue);
+    yt0 = NV_Ith_S(ytrue,0);
+    yt1 = NV_Ith_S(ytrue,1);
+    yt2 = NV_Ith_S(ytrue,2);
+    
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     y0 = NV_Ith_S(y,0);
     y1 = NV_Ith_S(y,1);
     y2 = NV_Ith_S(y,2);
 
-    flag2 = sol(t, lamda, ytrue);
-    yt0 = NV_Ith_S(ytrue,0);
-    yt1 = NV_Ith_S(ytrue,1);
-    yt2 = NV_Ith_S(ytrue,2);
-    
     y0err = fabs(y0-yt0);
     y1err = fabs(y1-yt1);
     y2err = fabs(y2-yt2);

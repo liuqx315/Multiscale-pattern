@@ -48,6 +48,8 @@ static int Jac(long int N, realtype t,
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
+/* Helper routine to set all solver parameters from input file */
+int ark_SetParams(void *arkode_mem);
 
 
 /* Main Program */
@@ -118,6 +120,14 @@ int main()
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
+  /* Call ark_SetParams to supply solver parameters */
+  flag = ark_SetParams(arkode_mem);
+  if (check_flag(&flag, "ark_SetParams", 1)) return(1);
+
+  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return(1);
+
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
@@ -131,14 +141,18 @@ int main()
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
+  /* Write all solver parameters to stdout */
+  flag = ARKodeWriteParameters(arkode_mem, stdout);
+  if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
+
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype tout = dTout;
   realtype u, uerr, errI=0.0, err2=0.0;
   int Nt=0;
-  printf("        t           u         error\n");
-  printf("   ------------------------------------\n");
+  printf("         t             u          error\n");
+  printf("   ----------------------------------------\n");
   while (Tf - t > 1.0e-15) {
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = NV_Ith_S(y,0);
@@ -146,7 +160,7 @@ int main()
     errI = (errI > uerr) ? errI : uerr;
     err2 += uerr*uerr;
     Nt++;
-    printf("  %10.6f  %10.6f  %12.5e\n", t, u, uerr);
+    printf("  %12.8f  %12.8f  %12.5e\n", t, u, uerr);
 
     if (check_flag(&flag, "ARKode", 1)) break;
     if (flag == ARK_SUCCESS) {
@@ -155,7 +169,8 @@ int main()
     }
   }
   err2 = sqrt(err2 / Nt);
-  printf("   ------------------------------------\n");
+  printf("   ----------------------------------------\n");
+
 
   /* Print some final statistics */
   long int nst, nst_a, nst_c, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;

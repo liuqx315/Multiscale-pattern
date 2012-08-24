@@ -70,6 +70,9 @@ static int Jac(long int N, realtype t,
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
+/* Helper routine to set all solver parameters from input file */
+int ark_SetParams(void *arkode_mem);
+
 
 
 /* Main Program */
@@ -84,7 +87,7 @@ int main()
   long int NEQ = 3;
 
   /* general problem variables */
-  int flag, flag2;
+  int flag;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   void *arkode_mem = NULL;
@@ -184,11 +187,17 @@ int main()
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
-  flag = ARKodeSetDiagnostics(arktrue_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
+
+  /* Call ark_SetParams to supply solver parameters */
+  flag = ark_SetParams(arkode_mem);
+  if (check_flag(&flag, "ark_SetParams", 1)) return(1);
 
   /* Set additional solver parameters for reference solution */
   flag = ARKodeSetMaxNumSteps(arktrue_mem, 100000);
+
+  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return(1);
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -209,6 +218,10 @@ int main()
   flag = ARKDlsSetDenseJacFn(arktrue_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
+  /* Write all solver parameters to stdout */
+  flag = ARKodeWriteParameters(arkode_mem, stdout);
+  if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
+
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
@@ -219,11 +232,11 @@ int main()
   printf("   ---------------------------------------------------------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
+    flag = ARKode(arktrue_mem, tout, ytrue, &t2, ARK_NORMAL);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = NV_Ith_S(y,0);
     v = NV_Ith_S(y,1);
     w = NV_Ith_S(y,2);
-    flag2 = ARKode(arktrue_mem, tout, ytrue, &t2, ARK_NORMAL);
     uerr = fabs(NV_Ith_S(ytrue,0) - u);
     verr = fabs(NV_Ith_S(ytrue,1) - v);
     werr = fabs(NV_Ith_S(ytrue,2) - w);

@@ -42,6 +42,8 @@ static int Jac(long int N, realtype t,
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
+/* Helper routine to set all solver parameters from input file */
+int ark_SetParams(void *arkode_mem);
 
 
 /* Main Program */
@@ -104,6 +106,14 @@ int main()
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
+  /* Call ark_SetParams to supply solver parameters */
+  flag = ark_SetParams(arkode_mem);
+  if (check_flag(&flag, "ark_SetParams", 1)) return(1);
+
+  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return(1);
+
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
@@ -116,6 +126,10 @@ int main()
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
+
+  /* Write all solver parameters to stdout */
+  flag = ARKodeWriteParameters(arkode_mem, stdout);
+  if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
 
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */

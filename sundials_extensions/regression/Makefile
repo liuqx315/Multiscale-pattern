@@ -64,19 +64,19 @@ cv_brusselator1D.exe : cv_brusselator1D.c
 ida_brusselator1D_FEM.exe : ida_brusselator1D_FEM.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
-ark_analytic.exe : ark_analytic.c
+ark_analytic.exe : ark_analytic.c ark_setparams.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
-ark_analytic_sys.exe : ark_analytic_sys.c
+ark_analytic_sys.exe : ark_analytic_sys.c ark_setparams.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
-ark_analytic_nonlin.exe : ark_analytic_nonlin.c
+ark_analytic_nonlin.exe : ark_analytic_nonlin.c ark_setparams.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
-ark_brusselator.exe : ark_brusselator.c
+ark_brusselator.exe : ark_brusselator.c ark_setparams.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
-ark_brusselator1D.exe : ark_brusselator1D.c
+ark_brusselator1D.exe : ark_brusselator1D.c ark_setparams.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
 
 clean :
