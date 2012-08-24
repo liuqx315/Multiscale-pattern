@@ -302,7 +302,7 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | identical.
                           | [NULL]
                           |
- ARKodeSetOrd             | method order to be used by the solver.
+ ARKodeSetOrder           | method order to be used by the solver.
                           | [4]
                           |
  ARKodeSetDenseOrder      | polynomial order to be used for dense 
@@ -405,7 +405,7 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | which the solution is not to proceed.
                           | [infinity]
                           |
- ARKodeSetAdaptMethod     | Method to use for time step adaptivity
+ ARKodeSetAdaptivityMethod | Method to use for time step adaptivity
                           | [0]
                           |
  ARKodeSetAdaptivityFn    | user-provided time step adaptivity 
@@ -423,6 +423,10 @@ SUNDIALS_EXPORT void *ARKodeCreate();
  ARKodeSetLSetupConstants | user-provided linear setup decision
                           | constants.
                           | [internal]
+                          |
+ ARKodeSetPredictorMethod | Method to use for predicting implicit 
+                          | solutions.
+                          | [0]
                           |
  ARKodeSetStabilityFn     | user-provided explicit time step 
                           | stability function.
@@ -470,7 +474,7 @@ SUNDIALS_EXPORT int ARKodeSetUserData(void *arkode_mem,
 				      void *user_data);
 SUNDIALS_EXPORT int ARKodeSetDiagnostics(void *arkode_mem, 
 					 FILE *diagfp);
-SUNDIALS_EXPORT int ARKodeSetOrd(void *arkode_mem, int maxord);
+SUNDIALS_EXPORT int ARKodeSetOrder(void *arkode_mem, int maxord);
 SUNDIALS_EXPORT int ARKodeSetDenseOrder(void *arkode_mem, int dord);
 SUNDIALS_EXPORT int ARKodeSetLinear(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetNonlinear(void *arkode_mem);
@@ -499,9 +503,9 @@ SUNDIALS_EXPORT int ARKodeSetMaxStep(void *arkode_mem,
 				     realtype hmax);
 SUNDIALS_EXPORT int ARKodeSetStopTime(void *arkode_mem, 
 				      realtype tstop);
-SUNDIALS_EXPORT int ARKodeSetAdaptMethod(void *arkode_mem, 
-					 int imethod, 
-					 realtype *adapt_params);
+SUNDIALS_EXPORT int ARKodeSetAdaptivityMethod(void *arkode_mem, 
+					      int imethod, 
+					      realtype *adapt_params);
 SUNDIALS_EXPORT int ARKodeSetAdaptivityFn(void *arkode_mem, 
 					  ARKAdaptFn hfun, 
 					  void *h_data);
@@ -516,6 +520,8 @@ SUNDIALS_EXPORT int ARKodeSetNewtonConstants(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeSetLSetupConstants(void *arkode_mem, 
 					     realtype dgmax,
 					     int msbp);
+SUNDIALS_EXPORT int ARKodeSetPredictorMethod(void *arkode_mem, 
+					     int method);
 SUNDIALS_EXPORT int ARKodeSetStabilityFn(void *arkode_mem, 
 					 ARKExpStabFn EStab, 
 					 void *estab_data);
@@ -988,6 +994,22 @@ SUNDIALS_EXPORT int ARKodeLoadButcherTable(int imethod, int *s,
  associated with a ARKODE return flag
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT char *ARKodeGetReturnFlagName(long int flag);
+
+/*---------------------------------------------------------------
+ Function : ARKodeWriteParameters
+-----------------------------------------------------------------
+ ARKodeWriteParameters outputs all solver parameters to the 
+ provided file pointer.
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKodeWriteParameters(void *arkode_mem, FILE *fp);
+
+/*---------------------------------------------------------------
+ Function : ARKodeWriteButcher
+-----------------------------------------------------------------
+ ARKodeWriteButcher outputs the Butcher tables to the 
+ provided file pointer.
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKodeWriteButcher(void *arkode_mem, FILE *fp);
 
 /*---------------------------------------------------------------
  Function : ARKodeFree
