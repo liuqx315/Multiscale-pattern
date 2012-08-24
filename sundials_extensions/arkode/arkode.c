@@ -2083,8 +2083,6 @@ static void ARKPredict2(ARKodeMem ark_mem, int istage)
   realtype tau, tau_tol = 1.5;
   N_Vector yguess = ark_mem->ark_ycur;
 
-#define PRED0
-
   /* if this is the first step, use initial condition as guess */
   if (ark_mem->ark_nst == 0) {
     N_VScale(ONE, ark_mem->ark_ynew, yguess);
@@ -2094,45 +2092,42 @@ static void ARKPredict2(ARKodeMem ark_mem, int istage)
   /* set evaluation time tau as fraction of previous successful step */
   tau = ONE + ark_mem->ark_c[istage]*ark_mem->ark_h/ark_mem->ark_hold;
 
-#ifdef PRED0
-  /***** Trivial Predictor *****/
-  N_VScale(ONE, ark_mem->ark_ynew, yguess);
-#endif
-  
-#ifdef PRED1
-  /***** Dense Output Predictor 1 -- all to max order *****/
-  retval = ARKDenseEval(ark_mem, tau, 0, ark_mem->ark_dense_q, yguess);
+  /* use requested predictor formula */
+  switch (ark_mem->ark_predictor) {
 
-  /* if predictor fails, use trivial prediction (shouldn't happen) */
-  if (retval != ARK_SUCCESS) 
-    N_VScale(ONE, ark_mem->ark_ynew, yguess);
-#endif
+  case 1:
 
-#ifdef PRED2
-  /***** Dense Output Predictor 2 -- decrease order w/ increasing stage *****/
-  ord = MAX(ark_mem->ark_dense_q - istage, 1);
-  retval = ARKDenseEval(ark_mem, tau, 0, ord, yguess);
+    /***** Dense Output Predictor 1 -- all to max order *****/
+    retval = ARKDenseEval(ark_mem, tau, 0, ark_mem->ark_dense_q, yguess);
+    if (retval == ARK_SUCCESS) return;
+    break;
 
-  /* if predictor fails, use trivial prediction (shouldn't happen) */
-  if (retval != ARK_SUCCESS) 
-    N_VScale(ONE, ark_mem->ark_ynew, yguess);
-#endif
+  case 2:
 
-#ifdef PRED3
-  /***** Dense Output Predictor for stages "close" to previous step, 
-	 existing solution for subsequent stages *****/
-  if (tau < tau_tol) {
+    /***** Dense Output Predictor 2 -- decrease order w/ increasing stage *****/
     ord = MAX(ark_mem->ark_dense_q - istage, 1);
     retval = ARKDenseEval(ark_mem, tau, 0, ord, yguess);
-  } else {
-    N_VScale(ONE, ark_mem->ark_y, yguess);
-  }    
+    if (retval == ARK_SUCCESS)  return;
+    break;
 
-  /* if predictor fails, use trivial prediction (shouldn't happen) */
-  if (retval != ARK_SUCCESS) 
-    N_VScale(ONE, ark_mem->ark_ynew, yguess);
-#endif
+  case 3:
 
+    /***** Dense Output Predictor for stages "close" to previous step, 
+	   existing solution for subsequent stages *****/
+    if (tau < tau_tol) {
+      ord = MAX(ark_mem->ark_dense_q - istage, 1);
+      retval = ARKDenseEval(ark_mem, tau, 0, ord, yguess);
+    } else {
+      N_VScale(ONE, ark_mem->ark_y, yguess);
+      retval = ARK_SUCCESS;
+    }
+    if (retval == ARK_SUCCESS)  return;
+    break;
+
+  }
+
+  /* if we made it here, use the trivial predictor */
+  N_VScale(ONE, ark_mem->ark_ynew, yguess);
 
 }
 
@@ -3808,8 +3803,6 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
  This routine determines the ERK/DIRK/ARK method to use, based 
  on the desired accuracy and information on whether the problem
  is explicit, implicit or imex.
-
- VERIFIED TO CORRECTLY FILL IN TABLES!
 ---------------------------------------------------------------*/
 static int ARKSetButcherTables(ARKodeMem ark_mem)
 {
@@ -3823,13 +3816,6 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
       if (ABS(ark_mem->ark_Ai[i][j]) > TINY)  A_set = TRUE;
     }
   if (A_set)  return (ARK_SUCCESS);
-
-
-  /* TEMPORARY */
-  int qsave = ark_mem->ark_q;
-  ark_mem->ark_q = 4;
-  /*************/
-
 
   /**** explicit methods ****/
   if (ark_mem->ark_explicit) {
@@ -3906,33 +3892,33 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 
     case(2):
     case(3):    /* TRBDF2 ESDIRK: q=3, p=2, s=3 */
-      ARKodeLoadButcherTable(14, &ark_mem->ark_stages, 
-			     &qi, 
-			     &ark_mem->ark_p, 
-			     ark_mem->ark_Ai, 
-			     ark_mem->ark_b, 
-			     ark_mem->ark_c, 
-			     ark_mem->ark_b2);
+      ARKodeLoadButcherTable(14, &ark_mem->ark_stages,
+    			     &qi,
+    			     &ark_mem->ark_p,
+    			     ark_mem->ark_Ai,
+    			     ark_mem->ark_b,
+    			     ark_mem->ark_c,
+    			     ark_mem->ark_b2);
       break;
 
     case(4):    /* SDIRK-5-4: q=4, p=3, s=5, A/L stable */
-      ARKodeLoadButcherTable(20, &ark_mem->ark_stages, 
-			     &qi, 
-			     &ark_mem->ark_p, 
-			     ark_mem->ark_Ai, 
-			     ark_mem->ark_b, 
-			     ark_mem->ark_c, 
-			     ark_mem->ark_b2);
+      ARKodeLoadButcherTable(20, &ark_mem->ark_stages,
+    			     &qi,
+    			     &ark_mem->ark_p,
+    			     ark_mem->ark_Ai,
+    			     ark_mem->ark_b,
+    			     ark_mem->ark_c,
+    			     ark_mem->ark_b2);
       break;
 
     case(5):    /* Kvaerno(7,4,5): q=5, p=4, s=7, A/L stable */
-      ARKodeLoadButcherTable(24, &ark_mem->ark_stages, 
-			     &qi, 
-			     &ark_mem->ark_p, 
-			     ark_mem->ark_Ai, 
-			     ark_mem->ark_b, 
-			     ark_mem->ark_c, 
-			     ark_mem->ark_b2);
+      ARKodeLoadButcherTable(24, &ark_mem->ark_stages,
+    			     &qi,
+    			     &ark_mem->ark_p,
+    			     ark_mem->ark_Ai,
+    			     ark_mem->ark_b,
+    			     ark_mem->ark_c,
+    			     ark_mem->ark_b2);
       break;
 
     default:    /* no available method, set default */
@@ -4028,10 +4014,6 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
     }
 
   }
-
-  /* TEMPORARY */
-  ark_mem->ark_q = qsave;
-  /*************/
 
   return(ARK_SUCCESS);
 }
