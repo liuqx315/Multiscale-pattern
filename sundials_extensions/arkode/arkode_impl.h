@@ -207,9 +207,9 @@ typedef struct ARKodeMemRec {
   ARKExpStabFn ark_expstab;    /* time step stability function for fe   */
   void        *ark_estab_data; /* user pointer passed to expstab        */
   int          ark_itol;       /* itol = ARK_SS (scalar), 
-                                        ARK_SV (vector),
-                                        ARK_WF (user weight function), 
-                                        ARK_NN (default, not yet set)  */
+                                         ARK_SV (vector),
+                                         ARK_WF (user weight function), 
+                                         ARK_NN (default, not yet set)  */
   realtype     ark_reltol;     /* relative tolerance                    */
   realtype     ark_Sabstol;    /* scalar absolute tolerance             */
   N_Vector     ark_Vabstol;    /* vector absolute tolerance             */
@@ -325,9 +325,9 @@ typedef struct ARKodeMemRec {
   realtype   ark_hadapt_k2;        /* method-specific adaptivity parameters  */
   realtype   ark_hadapt_k3;
 
-  /*------
-    Limits 
-    ------*/
+  /*-----------------------------------
+    Limits and varioussolver parameters
+    -----------------------------------*/
   long int ark_mxstep;   /* max number of internal steps for one user call */
   int      ark_maxcor;   /* max number of corrector iterations for the
 			    solution of the nonlinear equation             */
@@ -349,6 +349,7 @@ typedef struct ARKodeMemRec {
 
   realtype ark_dgmax;    /* if |gamma/gammap-1| > DGMAX then call lsetup   */
   int ark_msbp;          /* max no. of time steps between lsetup calls     */
+  int ark_predictor;     /* choice of prediction method */
 
   /*--------
     Counters 
