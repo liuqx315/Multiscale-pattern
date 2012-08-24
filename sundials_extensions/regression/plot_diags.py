@@ -1,4 +1,4 @@
-# matplotlib-based plotting script for RMHD3d tests
+# analysis script for ARKODE solver statistics
 # Daniel R. Reynolds, reynolds@smu.edu
 
 # imports

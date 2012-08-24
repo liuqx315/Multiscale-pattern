@@ -99,7 +99,7 @@ int main()
   long int N, NEQ, i;
 
   /* general problem variables */
-  int flag, flag2;
+  int flag;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   N_Vector yerr  = NULL;
@@ -282,6 +282,7 @@ int main()
   int iout;
   for (iout=0; iout<Nt; iout++) {
 
+    flag = CVode(cvtrue_mem, tout, ytrue, &t2, CV_NORMAL);
     flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
     u = N_VWL2Norm(y,umask);
     u = sqrt(u*u/N);
@@ -290,7 +291,6 @@ int main()
     w = N_VWL2Norm(y,wmask);
     w = sqrt(w*w/N);
 
-    flag2 = CVode(cvtrue_mem, tout, ytrue, &t2, CV_NORMAL);
     N_VLinearSum( 1.0, ytrue, -1.0, y, yerr );
     uerr = N_VWL2Norm(yerr,umask);  
     uerr = sqrt(uerr*uerr/N);

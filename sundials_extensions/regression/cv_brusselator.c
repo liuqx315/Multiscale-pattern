@@ -207,11 +207,11 @@ int main()
   printf("   ---------------------------------------------------------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
+    flag = CVode(cvtrue_mem, tout, ytrue, &t2, CV_NORMAL);
     flag = CVode(cvode_mem, tout, y, &t, CV_NORMAL);
     u = NV_Ith_S(y,0);
     v = NV_Ith_S(y,1);
     w = NV_Ith_S(y,2);
-    flag2 = CVode(cvtrue_mem, tout, ytrue, &t2, CV_NORMAL);
     uerr = fabs(NV_Ith_S(ytrue,0) - u);
     verr = fabs(NV_Ith_S(ytrue,1) - v);
     werr = fabs(NV_Ith_S(ytrue,2) - w);

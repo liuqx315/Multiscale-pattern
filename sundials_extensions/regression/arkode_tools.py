@@ -168,8 +168,6 @@ class TimeStep:
         for i in range(len(self.StageSteps)):
             self.StageSteps[i].Write();
 
-
-
 #### Utility functions ####
 
 def load_line(line):
@@ -246,6 +244,7 @@ def load_diags(fname):
             TimeSteps[step].AddErrorTest(entry);
         elif (linetype == 4):   # h adaptivity
             TimeSteps[step].AddHAdapt(entry);
+    f.close()
     for i in range(len(TimeSteps)):
         TimeSteps[i].Cleanup();
     return TimeSteps
@@ -626,6 +625,7 @@ def solver_stats(TimeSteps,fptr):
     fptr.write("     gmean = %g\n" % (np.prod(np.power(dcon,1.0/len(dcon)))))
     fptr.write("\n")
     
+   
 
 
 ##########
