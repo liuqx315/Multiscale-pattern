@@ -8,6 +8,9 @@
  It is independent of the ARKODE linear solver in use.
 ---------------------------------------------------------------*/
 
+#define SDEBUG
+
+
 /*===============================================================
              Import Header Files                                 
 ===============================================================*/
@@ -1960,6 +1963,10 @@ static int ARKStep2(ARKodeMem ark_mem)
   /* Looping point for attempts to take a step */
   for(;;) {  
 
+#ifdef SDEBUG
+    printf("Attempting step: t = %g, h = %g\n",ark_mem->ark_tnew, ark_mem->ark_h);
+#endif
+
     /* Loop over internal stages to the step */
     for (is=0; is<ark_mem->ark_stages; is++) {
 
@@ -1980,6 +1987,12 @@ static int ARKStep2(ARKodeMem ark_mem)
       
       /* Set up data for evaluation of ARK stage residual (data stored in ark_sdata) */
       ARKSet2(ark_mem);
+
+#ifdef SDEBUG
+      printf("Attempting stage %i: tstage = %g\n",is,ark_mem->ark_tn);
+      printf("prediction:\n");
+      N_VPrint_Serial(ark_mem->ark_ycur);
+#endif
 
       /* Solver diagnostics reporting */
       if (ark_mem->ark_report) 	
@@ -2033,6 +2046,12 @@ static int ARKStep2(ARKodeMem ark_mem)
       
     /* compute time-evolved solution (in ark_y), error estimate (in dsm) */
     dsm = ARKComputeSolutions(ark_mem);
+
+#ifdef SDEBUG
+    printf("Error estimate = %g\n",dsm);
+    printf("step solution:\n");
+    N_VPrint_Serial(ark_mem->ark_y);
+#endif
 
     /* Solver diagnostics reporting */
     if (ark_mem->ark_report) 
@@ -2340,6 +2359,12 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 	break;
       }
 
+#ifdef SDEBUG
+      printf("Newton rhs:\n");
+      N_VPrint_Serial(b);
+#endif
+
+
       /* Call the lsolve function */
       retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
 				   ark_mem->ark_y, ark_mem->ark_ftemp); 
@@ -2350,6 +2375,10 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 	break;
       }
     
+#ifdef SDEBUG
+      printf("Newton correction:\n");
+      N_VPrint_Serial(b);
+#endif
       /* If lsolve had a recoverable failure and Jacobian data is
 	 not current, signal to try the solution again */
       if (retval > 0) { 
