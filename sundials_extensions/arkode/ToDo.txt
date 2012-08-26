@@ -151,6 +151,9 @@ Completed components:
 
 Remaining components to build:
 [ ] Extend remaining example problems to using ARKode.
+[ ] Clone example problems so that we have two versions: one for
+    automated optimization and regression testing, and the second as
+    an example for new users.
 [ ] Test ERK and ARK methods.
 [ ] Begin tuning solver parameters for increased efficiency on all
     test problems.
