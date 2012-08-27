@@ -51,11 +51,11 @@ extern "C" {
 
 /* Time step controller default values */
 #define CFLFAC    RCONST(0.5);
-#define SAFETY    RCONST(0.9);  /* CVODE uses 1.0 */
-#define BIAS      RCONST(1.0)   /* CVODE uses 6.0 */
-#define GROWTH    RCONST(10.0); /* CVODE uses 10, except on 1st step when it uses 10000 */
-#define HFIXED_LB RCONST(1.0);  /* CVODE uses 1.0 */
-#define HFIXED_UB RCONST(1.5);  /* CVODE uses 1.5 */
+#define SAFETY    RCONST(0.9);  /* CVODE uses 1.0  */
+#define BIAS      RCONST(1.0)   /* CVODE uses 6.0  */
+#define GROWTH    RCONST(10.0); /* CVODE uses 10.0 */
+#define HFIXED_LB RCONST(1.0);  /* CVODE uses 1.0  */
+#define HFIXED_UB RCONST(1.5);  /* CVODE uses 1.5  */
 #define AD0_K1    RCONST(0.49);
 #define AD0_K2    RCONST(0.34);
 #define AD0_K3    RCONST(0.1);
