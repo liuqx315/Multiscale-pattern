@@ -59,7 +59,7 @@ static int sol(realtype t, realtype lam, N_Vector y);
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C);
 
 /* Helper routine to set all solver parameters from input file */
-int ark_SetParams(void *arkode_mem);
+int ark_SetParams(void *arkode_mem, int *idense);
 
 
 /* Main Program */
@@ -72,7 +72,7 @@ int main()
   long int NEQ = 3;
 
   /* general problem variables */
-  int flag;
+  int flag, idense;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   void *arkode_mem = NULL;
@@ -136,7 +136,7 @@ int main()
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
   /* Call ark_SetParams to supply solver parameters */
-  flag = ark_SetParams(arkode_mem);
+  flag = ark_SetParams(arkode_mem, &idense);
   if (check_flag(&flag, "ark_SetParams", 1)) return(1);
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
@@ -169,13 +169,15 @@ int main()
   int Nt=0;
   printf("      t        y0        y1        y2        err0        err1        err2\n");
   printf("   --------------------------------------------------------------------------\n");
-  while (Tf - t > 1.0e-15) {
+  while (Tf - t > 1.0e-8) {
 
     flag = sol(t, lamda, ytrue);
     yt0 = NV_Ith_S(ytrue,0);
     yt1 = NV_Ith_S(ytrue,1);
     yt2 = NV_Ith_S(ytrue,2);
     
+    if (!idense)
+      flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     y0 = NV_Ith_S(y,0);
     y1 = NV_Ith_S(y,1);
@@ -195,7 +197,7 @@ int main()
 	   t, y0, y1, y2, y0err, y1err, y2err);
 
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag == ARK_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }

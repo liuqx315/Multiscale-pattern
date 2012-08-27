@@ -15,11 +15,11 @@
 #include <arkode/arkode.h>
 
 
-int ark_SetParams(void *arkode_mem)
+int ark_SetParams(void *arkode_mem, int *idense)
 {
   /* declare solver parameters */
-  int flag, order, dense_order, adapt_method, small_nef, msbp, 
-    maxcor, predictor;
+  int flag, order, dense_order, btable, adapt_method, small_nef, 
+    msbp, maxcor, predictor;
   realtype adapt_params[9], etamx1, etamxf, etacf, crdown, rdiv, 
     dgmax, nlscoef;
 
@@ -28,6 +28,7 @@ int ark_SetParams(void *arkode_mem)
   FID=fopen("solve_params.txt","r");
   fscanf(FID,"order = %i\n",  &order);
   fscanf(FID,"dense_order = %i\n", &dense_order);
+  fscanf(FID,"btable = %i\n",  &btable);
   fscanf(FID,"adapt_method = %i\n", &adapt_method);
   fscanf(FID,"cflfac = %lf\n", &(adapt_params[0]));
   fscanf(FID,"safety = %lf\n", &(adapt_params[1]));
@@ -52,10 +53,18 @@ int ark_SetParams(void *arkode_mem)
   fclose(FID);
 
   /* Call ARKodeSet routines to insert solver parameters */
-  flag = ARKodeSetOrder(arkode_mem, order);
-  if (flag != 0) {
-    fprintf(stderr,"Error in ARKodeSetOrder = %i\n",flag);
-    return(1);
+  if (order != 0) {     /* order overrides btable */
+    flag = ARKodeSetOrder(arkode_mem, order);
+    if (flag != 0) {
+      fprintf(stderr,"Error in ARKodeSetOrder = %i\n",flag);
+      return(1);
+    }
+  } else if (btable != 0) {
+    flag = ARKodeSetIRKTableNum(arkode_mem, btable);
+    if (flag != 0) {
+      fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
+      return(1);
+    }
   }
   flag = ARKodeSetDenseOrder(arkode_mem, dense_order);
   if (flag != 0) {
@@ -98,7 +107,12 @@ int ark_SetParams(void *arkode_mem)
     return(1);
   }
 
-
+  /* If (dense_order != -1), tell integrator to use dense output */
+  if (dense_order != -1) {
+    *idense = 1;
+  } else {
+    *idense = 0;
+  }
 
   return(0);
 }

@@ -49,7 +49,7 @@ static int Jac(long int N, realtype t,
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
 /* Helper routine to set all solver parameters from input file */
-int ark_SetParams(void *arkode_mem);
+int ark_SetParams(void *arkode_mem, int *idense);
 
 
 /* Main Program */
@@ -62,7 +62,7 @@ int main()
   long int NEQ = 1;
 
   /* general problem variables */
-  int flag;
+  int flag, idense;
   N_Vector y = NULL;
   void *arkode_mem = NULL;
 
@@ -121,7 +121,7 @@ int main()
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
   /* Call ark_SetParams to supply solver parameters */
-  flag = ark_SetParams(arkode_mem);
+  flag = ark_SetParams(arkode_mem, &idense);
   if (check_flag(&flag, "ark_SetParams", 1)) return(1);
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
@@ -153,7 +153,9 @@ int main()
   int Nt=0;
   printf("         t             u          error\n");
   printf("   ----------------------------------------\n");
-  while (Tf - t > 1.0e-15) {
+  while (Tf - t > 1.0e-8) {
+    if (!idense) 
+      flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = NV_Ith_S(y,0);
     uerr = fabs(u - atan(t));
@@ -163,7 +165,7 @@ int main()
     printf("  %12.8f  %12.8f  %12.5e\n", t, u, uerr);
 
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag == ARK_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }

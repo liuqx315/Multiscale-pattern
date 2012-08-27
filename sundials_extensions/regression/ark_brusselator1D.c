@@ -88,7 +88,7 @@ static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata);
 static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata);
 
 /* Helper routine to set all solver parameters from input file */
-int ark_SetParams(void *arkode_mem);
+int ark_SetParams(void *arkode_mem, int *idense);
 
 
 /* Main Program */
@@ -104,7 +104,7 @@ int main()
   long int N, NEQ, i;
 
   /* general problem variables */
-  int flag;
+  int flag, idense;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   N_Vector yerr  = NULL;
@@ -250,7 +250,7 @@ int main()
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
   /* Call ark_SetParams to supply solver parameters */
-  flag = ark_SetParams(arkode_mem);
+  flag = ark_SetParams(arkode_mem, &idense);
   if (check_flag(&flag, "ark_SetParams", 1)) return(1);
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
@@ -307,7 +307,11 @@ int main()
   int iout;
   for (iout=0; iout<Nt; iout++) {
 
+    if (!idense)
+      flag = ARKodeSetStopTime(arktrue_mem, tout);
     flag = ARKode(arktrue_mem, tout, ytrue, &t2, ARK_NORMAL);
+    if (!idense)
+      flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = N_VWL2Norm(y,umask);
     u = sqrt(u*u/N);
@@ -337,7 +341,7 @@ int main()
     fprintf(WFID,"\n");
 
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag == ARK_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }

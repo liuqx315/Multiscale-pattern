@@ -1,8 +1,9 @@
 order = 3
 dense_order = -1
+btable = 0
 adapt_method = 2
 cflfac = 0.000000
-safety = 0.95
+safety = 0.0
 bias = 0.0
 growth = 0.000000
 hfixed_lb = 0.000000
@@ -20,4 +21,4 @@ dgmax = 0.000000
 predictor = 0
 msbp = 0
 maxcor = 0
-nlscoef = 0.001
+nlscoef = 0.03
