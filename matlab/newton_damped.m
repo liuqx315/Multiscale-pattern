@@ -15,7 +15,7 @@ function [y,inewt,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
 %          y0 = initial guess
 %          Fdata = structure containing extra information for evaluating F.
 %          tol = desired nonlinear tolerance
-%          maxit = maximum allowed FP iterations
+%          maxit = maximum allowed iterations
 %          alpha = damping parameter, 0 < alpha <= 1
 % Outputs: y = solution to root-finding problem
 %          inewt = number of Newton iterations to convergence
@@ -26,6 +26,8 @@ function [y,inewt,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
 % Southern Methodist University
 % August 2011
 % All Rights Reserved
+
+DO_OUTPUT = 0;
 
 % check solver inputs
 if (maxit < 1) 
@@ -38,34 +40,35 @@ if ((alpha <= 0) || (alpha > 1))
    error('newton_damped error: damping parameter not in (0,1] (alpha)');
 end
 
-% initialize result, residual, Jacobian
+% initialize result, increment vector
 y = y0;
-F = feval(Fcn,y,Fdata);
-A = feval(Afn,y,Fdata);
+s = ones(size(y));
 
 % perform iterations
-% $$$ fprintf('             res = ');
 for inewt=1:maxit
    
    % check residual for stopping
-   if (norm(F,inf) < tol)
-%      fprintf('  newton_damped: converged to tol %g in %i iters\n',norm(F,inf),i-1);
+   if (norm(s,inf) < tol)
+%      fprintf('  newton_damped: converged to tol %g in %i iters\n',norm(s,inf),i-1);
       ierr = 0;
-% $$$       fprintf('\n');
       return
    end
 
-% $$$    fprintf('%g, ',norm(F,inf));
-   
-   % perform Newton update
-   y = y - alpha*A\F;
-   
-   % update residual, Jacobian
+   % compute residual, Jacobian
    F = feval(Fcn,y,Fdata);
    A = feval(Afn,y,Fdata);
    
+   if (DO_OUTPUT)
+      fprintf('       newt rhs = ');
+      for entry=1:length(F), fprintf('%19.16g, ',F(entry)); end
+      fprintf('\n');
+   end
+
+   % perform Newton update
+   s = A\F;
+   y = y - alpha*s;
+   
 end
-% $$$ fprintf('\n');
 
 % if we've made it to this point, the Newton iteration did not converge
 ierr = 1;
