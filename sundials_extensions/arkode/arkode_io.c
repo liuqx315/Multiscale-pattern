@@ -942,7 +942,7 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
  ARKodeSetAdaptivityConstants:
 
  Specifies the user-provided time step adaptivity constants
- etamx1, etamxf, etacf and small_nef.  Zero-valued inputs imply 
+ etamx1, etamxf, etacf and small_nef.  Illegal inputs imply 
  a reset to the default value.
 ---------------------------------------------------------------*/
 int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
@@ -959,22 +959,22 @@ int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* 0 or 0.0 argument sets default, otherwise set inputs */
-  if (etamx1 == 0.0) {
+  if (etamx1 <= 0.0) {
     ark_mem->ark_etamx1 = ETAMX1;
   } else {
     ark_mem->ark_etamx1 = etamx1;
   }
-  if (etamxf == 0.0) {
+  if (etamxf <= 0.0) {
     ark_mem->ark_etamxf = ETAMXF;
   } else {
     ark_mem->ark_etamxf = etamxf;
   }
-  if (etacf == 0.0) {
+  if (etacf <= 0.0) {
     ark_mem->ark_etacf = ETACF;
   } else {
     ark_mem->ark_etacf = etacf;
   }
-  if (small_nef == 0) {
+  if (small_nef <= 0) {
     ark_mem->ark_small_nef = SMALL_NEF;
   } else {
     ark_mem->ark_small_nef = small_nef;
