@@ -46,7 +46,7 @@ m = zeros(length(hvals),2);
 for i = 1:length(hvals)
    h = hvals(i);
    if (irk == 1) 
-      [t,Y,ns] = solve_IRK('f_test','J_test',tout,Y0,B,h);
+      [t,Y,ns] = solve_IRK('f_test','J_test',tout,Y0,B,1e-2,1e-2,h,h,1);
    elseif (dirk == 1) 
       [t,Y,ns] = solve_DIRK('f_test','J_test',tout,Y0,B,1e-2,1e-2,h,h,1);
    else
@@ -90,7 +90,7 @@ m = zeros(length(hvals),2);
 for i = 1:length(hvals)
    h = hvals(i);
    if (irk == 1) 
-      [t,Y,ns] = solve_IRK('f_test','J_test',tout,Y0,B,h);
+      [t,Y,ns] = solve_IRK('f_test','J_test',tout,Y0,B,1e-2,1e-2,h,h,1);
    elseif (dirk == 1) 
       [t,Y,ns] = solve_DIRK('f_test','J_test',tout,Y0,B,1e-2,1e-2,h,h,1);
    else

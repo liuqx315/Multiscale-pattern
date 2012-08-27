@@ -472,7 +472,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'IRK-1-1';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   IRK 1-1' , norm(diff,inf) , norm(diff) };
@@ -481,7 +481,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Crank-Nicolson-2-2-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '    CN 2-2' , norm(diff,inf) , norm(diff) };
@@ -490,7 +490,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'SIRK-2-2';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  SIRK 2-2' , norm(diff,inf) , norm(diff) };
@@ -499,7 +499,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'ESIRK-2-2';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' ESIRK 2-2' , norm(diff,inf) , norm(diff) };
@@ -508,7 +508,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Gauss-2-4-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' Gauss 2-4' , norm(diff,inf) , norm(diff) };
@@ -517,7 +517,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'RadauIIA-2-3-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  RIIA 2-3' , norm(diff,inf) , norm(diff) };
@@ -526,7 +526,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIII-2-2-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  LIII 2-2' , norm(diff,inf) , norm(diff) };
@@ -535,7 +535,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIA-2-2-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIA 2-2' , norm(diff,inf) , norm(diff) };
@@ -544,7 +544,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIB-2-2-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIB 2-2' , norm(diff,inf) , norm(diff) };
@@ -553,7 +553,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIC-2-2-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIC 2-2' , norm(diff,inf) , norm(diff) };
@@ -562,7 +562,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Gauss-3-2-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' Gauss 3-2' , norm(diff,inf) , norm(diff) };
@@ -571,7 +571,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'RadauI-3-5-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '    RI 3-5' , norm(diff,inf) , norm(diff) };
@@ -580,7 +580,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'RadauIA-3-5-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   RIA 3-5' , norm(diff,inf) , norm(diff) };
@@ -589,7 +589,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'RadauII-3-5-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '   RII 3-5' , norm(diff,inf) , norm(diff) };
@@ -598,7 +598,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'RadauIIA-3-5-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  RIIA 3-5' , norm(diff,inf) , norm(diff) };
@@ -607,7 +607,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIII-3-4-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  LIII 3-4' , norm(diff,inf) , norm(diff) };
@@ -616,7 +616,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIA-3-4-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIA 3-4' , norm(diff,inf) , norm(diff) };
@@ -625,7 +625,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIB-3-4-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIB 3-4' , norm(diff,inf) , norm(diff) };
@@ -634,7 +634,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIC-3-4-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIC 3-4' , norm(diff,inf) , norm(diff) };
@@ -643,7 +643,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIII-4-6-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  LIII 4-6' , norm(diff,inf) , norm(diff) };
@@ -652,7 +652,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIA-4-6-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIA 4-6' , norm(diff,inf) , norm(diff) };
@@ -661,7 +661,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIB-4-6-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIB 4-6' , norm(diff,inf) , norm(diff) };
@@ -670,7 +670,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIC-4-6-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIC 4-6' , norm(diff,inf) , norm(diff) };
@@ -679,7 +679,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'RadauIIA-5-9-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  RIIA 5-9' , norm(diff,inf) , norm(diff) };
@@ -688,7 +688,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIII-5-8-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  LIII 5-8' , norm(diff,inf) , norm(diff) };
@@ -697,7 +697,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIA-5-8-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIA 5-8' , norm(diff,inf) , norm(diff) };
@@ -706,7 +706,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIB-5-8-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIB 5-8' , norm(diff,inf) , norm(diff) };
@@ -715,7 +715,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'LobattoIIIC-5-8-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { ' LIIIC 5-8' , norm(diff,inf) , norm(diff) };
@@ -724,7 +724,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Gauss-6-12-IRK';
    B = butcher(mname);
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { 'Gauss 6-12' , norm(diff,inf) , norm(diff) };
@@ -733,7 +733,7 @@ for i = 1:length(hvals)
    imethod = imethod + 1;
    mname = 'Qualifying Exam';
    B = [0, 0, 0, 0; 1/2, 1/4, 1/4, 0; 1, 1/4, 1/2, 1/4; 0, 1/6, 2/3, 1/6];
-   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, h);
+   [t,Y,ns] = solve_IRK('f_test', 'J_test', tout, Y0, B, 1e-2, 1e-2, h, h, 1);
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
    m(imethod,i,1:3) = { '  QualExam' , norm(diff,inf) , norm(diff) };
