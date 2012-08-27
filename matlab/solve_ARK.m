@@ -155,9 +155,11 @@ Fdata.Be = Be;
 % set initial time step size
 h = hmin;
 
-% reset time step controller
-h_estimate(0, 0, 0, 0, 0, 0, hmethod, 1);
+% initialize error weight vector
+ewt = rtol*Ynew + atol;
 
+% reset time step controller
+h_estimate(0, 0, 0, 0, hmethod, 1);
 
 % initialize work counter
 nsteps = 0;
@@ -227,14 +229,14 @@ for tstep = 2:length(tvals)
 
 
       % compute new solution, embedding (if available)
-      [Ynew,Y2] = Y_ARK(z,Fdata);
+      [Ynew,Yerr] = Y_ARK(z,Fdata);
 
       
       % check whether step accuracy meets tolerances (only if stages successful)
       if ((st_fail == 0) & embedded)
 
 	 % compute error in current step
-	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
+	 err_step = max(norm(Yerr./ewt,inf), eps);
 	 
 	 % if error too high, flag step as a failure (to be recomputed)
 	 if (err_step > 1.2) 
@@ -252,9 +254,12 @@ for tstep = 2:length(tvals)
 	 Y0 = Ynew;
 	 t = t + h;
    
+         % update error weight vector
+         ewt = rtol*Ynew + atol;
+         
 	 % for embedded methods, estimate error and update time step
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method, hmethod, 0);
+	    h = h_estimate(Yerr, h, ewt, q_method, hmethod, 0);
 	 else
 	    h = hmin;
 	 end

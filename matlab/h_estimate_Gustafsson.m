@@ -1,17 +1,17 @@
-function h = h_estimate_Gustafsson(Y1, Y2, h_cur, r_tol, a_tol, p, reset)
-% Usage: h = h_estimate_Gustafsson(Y1, Y2, h_cur, r_tol, a_tol, p, reset)
+function h = h_estimate_Gustafsson(Yerr, h_cur, ewt, p, hflag)
+% Usage: h = h_estimate_Gustafsson(Yerr, h_cur, ewt, p, hflag)
 %
 % Adaptive time step estimation routine, that attempts to guarantee a 
 % local truncation error satisfying the bound
 %    norm(local error,inf) < norm(rtol*y_i + atol_i,inf)
 %
-% Inputs:  Y1 -- first time-evolved solution (more accurate)
-%          Y2 -- second time-evolved solution (same size as Y1)
+% Inputs:
+%        Yerr -- estimated error in time-evolved solution (vector)
 %       h_cur -- previous time step size (scalar)
-%       r_tol -- desired relative tolerance (scalar)
-%       a_tol -- desired absolute tolerance (vector, size of Y1)
+%         ewt -- error weight vector (encodes tolerances)
 %           p -- order of accuracy for predictor
-%       reset -- flag to denote reset of history
+%       hflag -- flag to denote what to do with history:
+%                  1 => reset,  -1 => leave alone,  0 => update
 %
 % Output:   h -- new time step
 %
@@ -22,7 +22,7 @@ function h = h_estimate_Gustafsson(Y1, Y2, h_cur, r_tol, a_tol, p, reset)
 % All Rights Reserved
 
 
-if (reset == 1)
+if (hflag == 1)
    clear r_p;
    clear h_old;
    h = 1;
@@ -40,7 +40,7 @@ persistent h_old;
 if isempty(r_p)
 
    % compute new error estimate, time step
-   r_p = max(norm((Y1 - Y2)./(r_tol*Y1 + a_tol),inf), eps);
+   r_p = max(norm(Yerr.*ewt,inf), eps);
    h = r_p^(-k2) * h_cur;
 
 % general step
@@ -50,18 +50,29 @@ else
    r_n = r_p;
    
    % compute new error estimate
-   r_p = max(norm((Y1 - Y2)./(r_tol*Y1 + a_tol),inf), eps);
+   r_p = max(norm(Yerr.*ewt,inf), eps);
 
    % compute new time step
    h = (h_cur/h_old) * r_p^(-k2) * (r_p/r_n)^(-k1) * h_cur;
    
+   % revert to original history if requested
+   if (hflag == -1)
+      r_p = r_n;
+   end
+   
 end
 
 % store current time step for later
+h_save = h_old;
 h_old = h_cur;
 
 % enforce growth factor
 h = min(dt_growth*h_old, h);
 
+% revert to original history if requested
+if (hflag == -1)
+   h_old = h_save;
+end
+   
 
 % end of function

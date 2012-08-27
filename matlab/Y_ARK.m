@@ -1,11 +1,10 @@
-function [y,y2] = Y_ARK(z, Fdata)
-% usage: [y,y2] = Y_ARK(z, Fdata)
+function [y,yerr] = Y_ARK(z, Fdata)
+% usage: [y,yerr] = Y_ARK(z, Fdata)
 %
 % Inputs:  z = current guesses for [z1, ..., zs]
 %          Fdata = structure containing extra information for evaluating F.
 % Outputs: y = glued-together time-evolved solution
-%          y2 = alternate glued-together solution (if embedded coeffs
-%          included in Butcher table; otherwise the same as y)
+%          yerr = estimated solution error vector
 %
 % This routine takes as input the intermediate-time states (z) for a
 % multi-stage DIRK method, and pieces them together to form the time-evolved
@@ -68,9 +67,11 @@ for is=1:si
    fe(:,is) = feval(Fdata.fnameE, t, z(:,is));
 end
 
-% form the solutions
+% form the solution
 %    ynew = yol + h*sum_{j=1}^s (bi(j)*fi(zj) + be(j)*fe(zj))
 y  = Fdata.yold + Fdata.h*fi*bi  + Fdata.h*fe*be;
-y2 = Fdata.yold + Fdata.h*fi*bi2 + Fdata.h*fe*be2;
+
+% form the error estimate
+yerr = Fdata.h*fi*(bi-bi2) + Fdata.h*fe*(be-be2);
 
 % end of function

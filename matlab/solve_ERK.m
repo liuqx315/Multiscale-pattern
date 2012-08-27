@@ -99,9 +99,11 @@ Fdata.s = s;
 % set initial time step size
 h = hmin;
 
-% reset time step controller
-h_estimate(0, 0, 0, 0, 0, 0, hmethod, 1);
+% initialize error weight vector
+ewt = 1.0./(rtol*Ynew + atol);
 
+% reset time step controller
+h_estimate(0, 0, 0, 0, 0, hmethod, 1);
 
 % initialize work counter
 nsteps = 0;
@@ -154,7 +156,7 @@ for tstep = 2:length(tvals)
       if (embedded)
 
 	 % compute error in current step
-	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
+	 err_step = max(norm((Ynew - Y2)./ewt,inf), eps);
 	 
 	 % if error too high, flag step as a failure (to be recomputed)
 	 if (err_step > 1.2) 
@@ -171,10 +173,13 @@ for tstep = 2:length(tvals)
 	 Y0 = Ynew;
 	 t = t + h;
       
+         % update error weight vector
+         ewt = 1.0./(rtol*Ynew + atol);
+         
 	 % for embedded methods, estimate error and update time step,
 	 % assuming that method local truncation error order equals number of stages
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method, hmethod, 0);
+	    h = h_estimate(Ynew, Y2, h, ewt, q_method, hmethod, 0);
 	 else
 	    h = hmin;
 	 end

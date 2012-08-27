@@ -1,11 +1,10 @@
-function [y,y2] = Y_ERK(z, Fdata)
-% usage: [y,y2] = Y_ERK(z, Fdata)
+function [y,yerr] = Y_ERK(z, Fdata)
+% usage: [y,yerr] = Y_ERK(z, Fdata)
 %
 % Inputs:  z = current guesses for [z1, ..., zs]
 %          Fdata = structure containing extra information for evaluating F.
 % Outputs: y = glued-together time-evolved solution
-%          y2 = alternate glued-together solution (if embedded coeffs
-%          included in Butcher table; otherwise the same as y)
+%          yerr = estimated solution error vector
 %
 % This routine takes as input the intermediate-time states (z) for a
 % multi-stage ERK method, and pieces them together to form the time-evolved
@@ -45,9 +44,11 @@ for is=1:s
    f(:,is) = feval(Fdata.fname, t, z(:,is));
 end
 
-% form the solutions
+% form the solution
 %    ynew = yold + h*sum(b(j)*fj)
 y = Fdata.yold + Fdata.h*f*b;
-y2 = Fdata.yold + Fdata.h*f*b2;
+
+% form the error estimate
+yerr = Fdata.h*f*(b-b2);
 
 % end of function

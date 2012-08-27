@@ -1,33 +1,43 @@
-function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax, hmethod)
-% usage: [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin, hmax, hmethod)
+function [tvals,Y,nsteps] = solve_DIRK(fcn,Jfcn,tvals,Y0,B,rtol,atol,hmin,hmax,hmethod)
+% usage: [tvals,Y,nsteps] = solve_DIRK(fcn,Jfcn,tvals,Y0,B,rtol,atol,hmin,hmax,hmethod)
 %
-% Adaptive time step DIRK solver for the vector-valued ODE problem
-%     y' = F(t,Y), t in tspan,
+% Adaptive time step diagonally-implicit Runge-Kutta solver for the
+% vector-valued ODE problem 
+%     y' = F(t,Y), t in tvals, y in R^m,
 %     Y(t0) = [y1(t0), y2(t0), ..., ym(t0)]'.
 %
-% Inputs:  fcn = function name for ODE right-hand side, F(t,Y)
-%          Jfcn = function name for Jacobian of ODE right-hand side, J(t,Y)
-%          tvals = [t0, t1, t2, ..., tN]
-%          Y0 = initial values
-%          B = Butcher matrix for IRK coefficients, of the form
+% Inputs:
+%     fcn    = string holding function name for F(t,Y)
+%     Jfcn   = string holding function name for Jacobian of F, J(t,Y)
+%     tvals  = [t0, t1, t2, ..., tN]
+%     Y0     = initial value array (column vector of length m)
+%     B      = Butcher matrix for IRK coefficients, of the form
 %                 B = [c A;
-%                      0 b;
-%                      0 b2 ]
-%              The b2 row is optional, and provides coefficients for an
-%              embedded method.
-%          rtol = desired time accuracy relative tolerance 
-%          atol = desired time accuracy absolute tolerance 
-%          hmin = min internal time step size (must be smaller than t(i)-t(i-1))
-%          hmax = max internal time step size (can be smaller than t(i)-t(i-1))
-%          hmethod = integer flag denoting which time adaptivity strategy to use
+%                      q b;
+%                      p b2 ]
+%              Here, c is a vector of stage time fractions (s-by-1),
+%                    A is a matrix of Butcher coefficients (s-by-s),
+%                    q is an integer denoting the method order of accuracy,
+%                    b is a vector of solution weights (1-by-s),
+%                    p is an integer denoting the embedding order of accuracy,
+%                    b2 is a vector of embedding weights (1-by-s),
+%              The [p, b2] row is optional.  If that row is not
+%              provided the method will default to taking fixed
+%              step sizes of size hmin.
+%     rtol   = desired relative error of solution  (scalar)
+%     atol   = desired absolute error of solution  (vector or scalar)
+%     hmin   = minimum internal time step size (hmin <= t(i)-t(i-1), for all i)
+%     hmax   = maximum internal time step size (hmax >= hmin)
+%    hmethod = integer flag denoting which time adaptivity strategy to use
 %
-% Outputs: t = tspan
-%          y = [y(t0), y(t1), y(t2), ..., y(tN)], where each
-%              y(t*) is a column vector of length m.
-%          nsteps = number of internal time steps taken
+% Outputs: 
+%     tvals  = the same as the input array tvals
+%     y      = [y(t0), y(t1), y(t2), ..., y(tN)], where each
+%               y(t*) is a column vector of length m.
+%     nsteps = number of internal time steps taken by method
 %
-% Note: to run in fixed-step mode, just call the solver using hmin=hmax as
-% the desired time step size.
+% Note: to run in fixed-step mode, call with hmin=hmax as the desired 
+% time step size, and set the tolerances to large positive numbers.
 %
 % Daniel R. Reynolds
 % Department of Mathematics
@@ -35,40 +45,25 @@ function [tvals,Y,nsteps] = solve_DIRK(fcn, Jfcn, tvals, Y0, B, rtol, atol, hmin
 % August 2011
 % All Rights Reserved
 
-% get number of stages for DIRK method
-[Brows, Bcols] = size(B);
-s = Bcols - 1;
-if (Brows > Bcols) 
-   embedded = 1;
-else
-   embedded = 0;
-end
+DO_OUTPUT = 0;
 
 % extract DIRK method information from B
-c = B(1:s,1);
-b = (B(s+1,2:s+1))';
-A = B(1:s,2:s+1);
+[Brows, Bcols] = size(B);
+s = Bcols - 1;        % number of stages
+c = B(1:s,1);         % stage time fraction array
+b = (B(s+1,2:s+1))';  % solution weights (convert to column)
+A = B(1:s,2:s+1);     % RK coefficients
 
-% estimate method order (and embedding order)
-if (s == 4) 
-   q_method = 3;
-   p_method = 2;
-elseif (s == 5)
-   q_method = 4;
-   p_method = 3;
-elseif (s == 6)
-   q_method = 4;
-   p_method = 3;
-elseif (s == 7)
-   q_method = 5;
-   p_method = 4;
-elseif (s == 8)
-   q_method = 5;
-   p_method = 4;
-else
-   q_method = 5;
-   p_method = 4;
-end   
+% initialize as non-embedded, until proven otherwise
+embedded = 0;
+p = 0;
+if (Brows > Bcols)
+   if (max(abs(B(s+2,2:s+1))) > eps)
+      embedded = 1;
+      b2 = (B(s+2,2:s+1))';
+      p = B(s+2,1);
+   end
+end
 
 % initialize output arrays
 N = length(tvals);
@@ -81,35 +76,48 @@ c_fails = 0;
 a_fails = 0;
 
 % set the solver parameters
-newt_maxit = 20;
-%newt_tol   = 1e-10;
-%newt_tol   = 1e-12;
-newt_tol   = 1e-11;
-newt_alpha = 1;
-dt_reduce  = 0.1;
-ONEMSM     = 1.0-sqrt(eps);
-ONEPSM     = 1.0+sqrt(eps);
-ERRTOL     = 1.2;
+newt_maxit = 20;             % max number of Newton iterations
+newt_tol   = 1e-10;          % Newton solver tolerance
+newt_alpha = 1;              % Newton damping parameter
+h_reduce   = 0.1;            % failed step reduction factor 
+SMALL      = sqrt(eps);      % tolerance for floating-point comparisons
+ONEMSM     = 1.0-SMALL;      % coefficients to account for
+ONEPSM     = 1.0+SMALL;      %   floating-point roundoff
+ERRTOL     = 1.1;            % upper bound on allowed step error
+                             %   (in WRMS norm)
 
-% store temporary states
+% initialize temporary variables
 t = tvals(1);
 Ynew = Y0;
 
-% create Fdata structure
-Fdata.fname = fcn;
-Fdata.Jname = Jfcn;
-Fdata.B = B;
-Fdata.s = s;
+% create Fdata structure for Newton solver and step solutions
+Fdata.fname = fcn;    % ODE RHS function name
+Fdata.Jname = Jfcn;   % ODE RHS Jacobian function name
+Fdata.B     = B;      % Butcher table 
+Fdata.s     = s;      % number of stages
 
 % set initial time step size
 h = hmin;
 
-% reset time step controller
-h_estimate(0, 0, 0, 0, 0, 0, hmethod, 1);
+% initialize error weight vector
+ewt = 1.0/(rtol*Ynew + atol);
 
+if (DO_OUTPUT)
+   fprintf('updated ewt =');
+   for entry=1:length(ewt), fprintf('%19.16g, ',ewt(entry)); end
+   fprintf('\n');
+end
+
+% reset time step controller
+h_estimate(0, 0, 0, 0, hmethod, 1);
 
 % initialize work counter
 nsteps = 0;
+
+% initialize error failure counters
+small_nef = 2;
+nef = 0;
+last_fail = 0;
 
 % iterate over time steps
 for tstep = 2:length(tvals)
@@ -117,139 +125,187 @@ for tstep = 2:length(tvals)
    % loop over internal time steps to get to desired output time
    while (t < tvals(tstep)*ONEMSM)
       
-      % limit internal time step if needed
+      % bound internal time step 
       h = max([h, hmin]);            % enforce minimum time step size
       h = min([h, hmax]);            % maximum time step size
       h = min([h, tvals(tstep)-t]);  % stop at output time
-      Fdata.h = h;
-      Fdata.yold = Y0;
+
+      % look-ahead to avoid a small step to output time
+      if (abs(tvals(tstep)-(t+h)/tvals(tstep)) < SMALL)
+         h = tvals(tstep)-t;
+      end
+      
+      % set Fdata values for this step
+      Fdata.h    = h;    % current step size
+      Fdata.yold = Y0;   % solution from previous step
+      Fdata.t    = t;    % time of last successful step
 
       % initialize data storage for multiple stages
       z = zeros(m,s);
 
       % reset stage failure flag
       st_fail = 0;
-
-% $$$       fprintf('\n');
-% $$$       fprintf('  Attempting internal step of size h = %g\n',h);      
+      
+      if (DO_OUTPUT)
+         fprintf('\n');
+         fprintf('  Attempting internal step, t = %19.16g, h = %19.16g\n',t,h);
+      end
       
       % loop over stages
       for stage=1:s
 	 
-	 % set stage initial guess as previous stage solution
-	 Yguess = Ynew;
-      
-	 % set stage number into Fdata structure
-	 Fdata.stage = stage;
-	 
-	 % construct RHS comprised of old time data
-	 %    zi = y_n + h*sum_{j=1}^s (a(i,j)*fj)
-	 %    zi = y_n + h*sum_{j=1}^{i-1} (a(i,j)*fj) + h*(a(i,i)*fi)
-	 %    zi - h*(a(i,i)*fi) = y_n + h*sum_{j=1}^{i-1} (a(i,j)*fj)
-	 % =>
-	 %    rhs = y_n + h*sum_{j=1}^{i-1} (a(i,j)*fj)
-	 Fdata.rhs = Y0;
-	 for j=1:stage-1
-	    Fdata.rhs = Fdata.rhs + h*A(stage,j)*feval(fcn, t+h*c(j), z(:,j));
-	 end
+         % set Newton initial guess as previous stage solution
+         Yguess = Ynew;
+         
+         % set current stage index into Fdata structure
+         Fdata.stage = stage;
+         
+         % construct RHS comprised of old time data
+         %    zi = y_n + h*sum_{j=1}^s (a(i,j)*fj)
+         % <=>
+         %    zi - h*(a(i,i)*fi) = y_n + h*sum_{j=1}^{i-1} (a(i,j)*fj)
+         % =>
+         %    rhs = y_n + h*sum_{j=1}^{i-1} (a(i,j)*fj)
+         Fdata.rhs = Y0;
+         for j = 1:stage-1
+            Fdata.rhs = Fdata.rhs + h*A(stage,j)*feval(fcn, t+h*c(j), z(:,j));
+         end
+         
+         if (DO_OUTPUT)
+            fprintf('    stage %i: tstage = %19.16g\n', stage, t+h*c(stage));
+            fprintf('         yguess = ');
+            for entry=1:length(Yguess), fprintf('%19.16g, ',Yguess(entry)); end
+            fprintf('\n');
+         end
 
-% $$$          fprintf('    stage %i: yguess = ', stage);
-% $$$          for entry=1:length(Yguess), fprintf('%g, ',Yguess(entry)); end
-% $$$          fprintf('\n');
+         % call Newton solver to compute new stage solution
+         [Ynew,lin,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
+                                         newt_tol, newt_maxit, newt_alpha);
 
-% $$$          fprintf('             rhs = ');
-% $$$          for entry=1:length(Fdata.rhs), fprintf('%g, ',Fdata.rhs(entry)); end
-% $$$          fprintf('\n');
+         if (DO_OUTPUT)
+            fprintf('           ynew = ');
+            for entry=1:length(Ynew), fprintf('%19.16g, ',Ynew(entry)); end
+            fprintf('\n');
+         end
+         
+         % if Newton method failed, set relevant flags/statistics
+         % and break out of stage loop
+         if (ierr ~= 0) 
+            st_fail = 1;
+            c_fails = c_fails + 1;
+            break;
+         end
+         
+         % store stage solution
+         z(:,stage) = Ynew;
+         
+      end  % end stage loop
 
-
-	 % call newton solver to compute new stage solution
-	 Fdata.t = t;
-	 [Ynew,inewt,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, ...
-	     Fdata, newt_tol, newt_maxit, newt_alpha);
-
-% $$$          fprintf('             ynew = ');
-% $$$          for entry=1:length(Ynew), fprintf('%g, ',Ynew(entry)); end
-% $$$          fprintf('\n');
-
-	 % check newton error flag, if failure break out of stage loop
-	 if (ierr ~= 0) 
-	    % fprintf('solve_DIRK warning: stage failure, cutting timestep\n');
-	    st_fail = 1;
-	    c_fails = c_fails + 1;
-	    break;
-	 end
-	 
-	 % update stored solution with new value
-	 z(:,stage) = Ynew;
-	 
-      end
+      % increment number of internal time steps taken
       nsteps = nsteps + 1;
-      
-      
-      % compute new solution, embedding (if available)
-      [Ynew,Y2] = Y_DIRK(z,Fdata);
+       
+      % compute new solution (and embedding if available)
+      [Ynew,Yerr] = Y_DIRK(z,Fdata);
 
-% $$$       fprintf('  step solution: Ynew = ');
-% $$$       for entry=1:length(Ynew), fprintf('%g, ',Ynew(entry)); end
-% $$$       fprintf('\n');
-
-      % check whether step accuracy meets tolerances (only if stages successful)
+      if (DO_OUTPUT)
+         fprintf('  step solution: Ynew = ');
+         for entry=1:length(Ynew), fprintf('%19.16g, ',Ynew(entry)); end
+         fprintf('\n');
+      end
+ 
+      % if stages succeeded and time step adaptivity enabled, check step accuracy
       if ((st_fail == 0) & embedded)
 
 	 % compute error in current step
-	 err_step = max(norm((Ynew - Y2)./(rtol*Ynew + atol),inf), eps);
+	 err_step = norm(Yerr.*ewt,inf);
 	 
-% $$$          fprintf('  error estimate = %g\n',err_step);
-
-	 % if error too high, flag step as a failure (to be recomputed)
-	 if (err_step > ERRTOL*ONEPSM) 
-	    a_fails = a_fails + 1;
-	    st_fail = 1;
-	 end
-	 
+         if (DO_OUTPUT)
+            fprintf('  error estimate = %19.16g\n',err_step);
+         end
+         
+         % if error too high, flag step as a failure (will be be recomputed)
+         if (err_step > ERRTOL*ONEPSM) 
+            a_fails = a_fails + 1;
+            st_fail = 1;
+         end
+         
       end
 
-
-      % if step was successful
+      % if step was successful (solves succeeded, and error acceptable)
       if (st_fail == 0) 
-      
-	 % update old solution, current time
-	 Y0 = Ynew;
-	 t = t + h;
-   
+
+         % reset error failure counter
+         nef = 0;
+         
+         % update solution and time for last successful step
+         Y0 = Ynew;
+         t  = t + h;
+
 	 % estimate error and update time step
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, rtol, atol, q_method, hmethod, 0);
+	    hnew = h_estimate(Yerr, h, ewt, p, hmethod, 0);
 	 else
-	    h = hmin;
-	 end
+	    hnew = hmin;
+         end
+  
+         % if last step failed, disallow growth on this step and
+         % turn off flag, otherwise just update as normal
+         if (last_fail)
+            h = min(hnew, h);
+            last_fail = 0;
+         else
+            h = hnew;
+         end
 
-% $$$          fprintf('  successful step, next h = %g\n',h);
+         % update error weight vector
+         ewt = 1.0/(rtol*Ynew + atol);
+         
+         if (DO_OUTPUT)
+            fprintf('updated ewt =');
+            for entry=1:length(ewt), fprintf('%19.16g, ',ewt(entry)); end
+            fprintf('\n');
 
-      % if step failed, reduce step size and retry
+            fprintf('  successful step, next h = %19.16g\n',h);
+         end
+
+      % if step solves or error test failed
       else
 	 
-	 % reset solution guess, update work counter, reduce time step
-	 Ynew = Y0;
-	 h = h * dt_reduce;
-         if (h <= hmin*ONEMSM) 
+         % if already at minimum step, just return with failure
+         if (h <= hmin) 
+            fprintf('Cannot achieve desired accuracy.\n');
+            fprintf('Consider reducing hmin or increasing rtol.\n');
             return
          end
 
-% $$$          fprintf('    failed step, next h = %g\n',h);
+         % update error failure counter
+         nef = nef + 1;
+         last_fail = 1;
+         
+         % update time step
+         if (nef >= small_nef)
+            h = h * h_reduce;
+         else
+	    h = h_estimate(Yerr, h, ewt, p, hmethod, -1);
+         end
 
-      end
+         % reset guess, and try solve again
+         Ynew = Y0;
+
+      end  % end logic tests for step success/failure
       
+   end  % end while loop attempting to solve steps to next output time
+
+   if (DO_OUTPUT)
+      fprintf('Output solution = ');
+      for entry=1:length(Ynew), fprintf('%19.16g, ',Ynew(entry)); end
+      fprintf('\n');
    end
 
-% $$$    fprintf('Output solution = ');
-% $$$    for entry=1:length(Ynew), fprintf('%g, ',Ynew(entry)); end
-% $$$    fprintf('\n');
-
-   % store updated solution
+   % store updated solution in output array
    Y(:,tstep) = Ynew;
    
-end
+end  % time step loop
 
 % $$$ fprintf('solve_DIRK: step failures:  %i convergence,  %i accuracy\n',...
 % $$$     c_fails,a_fails);

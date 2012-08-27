@@ -1,17 +1,17 @@
-function h = h_estimate_Gustafsson_imex(Y1, Y2, h_old, r_tol, a_tol, p, reset)
-% Usage: h = h_estimate_Gustafsson_imex(Y1, Y2, h_old, r_tol, a_tol, p, reset)
+function h = h_estimate_Gustafsson_imex(Yerr, h_old, ewt, p, hflag)
+% Usage: h = h_estimate_Gustafsson_imex(Yerr, h_old, ewt, p, hflag)
 %
 % Adaptive time step estimation routine, that attempts to guarantee a 
 % local truncation error satisfying the bound
 %    norm(local error,inf) < norm(rtol*y_i + atol_i,inf)
 %
-% Inputs:  Y1 -- first time-evolved solution (more accurate)
-%          Y2 -- second time-evolved solution (same size as Y1)
+% Inputs:
+%        Yerr -- estimated error in time-evolved solution (vector)
 %       h_old -- previous time step size (scalar)
-%       r_tol -- desired relative tolerance (scalar)
-%       a_tol -- desired absolute tolerance (vector, size of Y1)
+%         ewt -- error weight vector (encodes tolerances)
 %           p -- order of accuracy for predictor
-%       reset -- flag to denote reset of history
+%       hflag -- flag to denote what to do with history:
+%                  1 => reset,  -1 => leave alone,  0 => update
 %
 % Output:   h -- new time step
 %
@@ -23,8 +23,8 @@ function h = h_estimate_Gustafsson_imex(Y1, Y2, h_old, r_tol, a_tol, p, reset)
 
 
 % get estimates from both implicit and explicit approaches
-h_imp = h_estimate_Gustafsson(Y1, Y2, h_old, r_tol, a_tol, p, reset);
-h_exp = h_estimate_Gustafsson_exp(Y1, Y2, h_old, r_tol, a_tol, p, reset);
+h_imp = h_estimate_Gustafsson(Yerr, h_old, ewt, p, hflag);
+h_exp = h_estimate_Gustafsson_exp(Yerr, h_old, ewt, p, hflag);
 
 % return minimum of these steps
 h = min([h_imp, h_exp]);
