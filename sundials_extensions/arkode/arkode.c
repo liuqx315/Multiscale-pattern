@@ -8,8 +8,7 @@
  It is independent of the ARKODE linear solver in use.
 ---------------------------------------------------------------*/
 
-#define SDEBUG
-
+/*#define SDEBUG*/
 
 /*===============================================================
              Import Header Files                                 
@@ -22,7 +21,9 @@
 #include "arkode_impl.h"
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_types.h>
-
+#ifdef SDEBUG
+#include <nvector/nvector_serial.h>
+#endif
 
 /*===============================================================
              Private Helper Functions Prototypes
@@ -262,7 +263,6 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_tn = t0;
 
   /* Set step parameters */
-  ark_mem->ark_etamax = ark_mem->ark_etamx1;
   ark_mem->ark_hold   = ZERO;
   ark_mem->ark_tolsf  = ONE;
 
@@ -351,7 +351,6 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
   ark_mem->ark_tn = t0;
   
   /* Set step parameters */
-  ark_mem->ark_etamax = ark_mem->ark_etamx1;
   ark_mem->ark_hold   = ZERO;
   ark_mem->ark_tolsf  = ONE;
 
@@ -968,6 +967,12 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
         N_VScale(ONE, ark_mem->ark_ycur, yout);
         break;
       }
+
+#ifdef SDEBUG
+      printf("Updated ewt:\n");
+      N_VPrint_Serial(ark_mem->ark_ewt);
+#endif
+
     }
     
     /* Check for too many steps */
@@ -1593,6 +1598,9 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
 		    "ARKInitialSetup", MSGARK_NO_TOLS);
     return(ARK_ILL_INPUT);
   }
+  
+  /* Set first step growth factor */
+  ark_mem->ark_etamax = ark_mem->ark_etamx1;
 
   /* Create Butcher tables (if not already set) */
   ier = ARKSetButcherTables(ark_mem);
@@ -1637,7 +1645,12 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
 		      "ARKInitialSetup", MSGARK_BAD_EWT);
     return(ARK_ILL_INPUT);
   }
-  
+
+#ifdef SDEBUG
+      printf("Updated ewt:\n");
+      N_VPrint_Serial(ark_mem->ark_ewt);
+#endif
+
   /* Check if lsolve function exists and call linit (if it exists) */
   if (ark_mem->ark_lsolve == NULL) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
@@ -1821,7 +1834,7 @@ static realtype ARKUpperBoundH0(ARKodeMem ark_mem, realtype tdist)
   N_VAbs(ark_mem->ark_ynew, temp2);
   ark_mem->ark_efun(ark_mem->ark_ynew, temp1, ark_mem->ark_e_data);
   N_VInv(temp1, temp1);
- N_VLinearSum(H0_UBFACTOR, temp2, ONE, temp1, temp1);
+  N_VLinearSum(H0_UBFACTOR, temp2, ONE, temp1, temp1);
 
   N_VAbs(ark_mem->ark_fnew, temp2);
 
@@ -1964,7 +1977,7 @@ static int ARKStep2(ARKodeMem ark_mem)
   for(;;) {  
 
 #ifdef SDEBUG
-    printf("Attempting step: t = %g, h = %g\n",ark_mem->ark_tnew, ark_mem->ark_h);
+    printf("Attempting step: t = %19.16g, h = %19.16g\n",ark_mem->ark_tnew, ark_mem->ark_h);
 #endif
 
     /* Loop over internal stages to the step */
@@ -1989,14 +2002,14 @@ static int ARKStep2(ARKodeMem ark_mem)
       ARKSet2(ark_mem);
 
 #ifdef SDEBUG
-      printf("Attempting stage %i: tstage = %g\n",is,ark_mem->ark_tn);
+      printf("Attempting stage %i: tstage = %19.16g\n",is,ark_mem->ark_tn);
       printf("prediction:\n");
       N_VPrint_Serial(ark_mem->ark_ycur);
 #endif
 
       /* Solver diagnostics reporting */
       if (ark_mem->ark_report) 	
-	fprintf(ark_mem->ark_diagfp, "step  %li  %g  %i  %g\n",
+	fprintf(ark_mem->ark_diagfp, "step  %li  %19.16g  %i  %19.16g\n",
 		ark_mem->ark_nst, ark_mem->ark_h, is, ark_mem->ark_tn);
 
       /* solve implicit problem (if required) */
@@ -2048,14 +2061,14 @@ static int ARKStep2(ARKodeMem ark_mem)
     dsm = ARKComputeSolutions(ark_mem);
 
 #ifdef SDEBUG
-    printf("Error estimate = %g\n",dsm);
+    printf("Error estimate = %19.16g\n",dsm);
     printf("step solution:\n");
     N_VPrint_Serial(ark_mem->ark_y);
 #endif
 
     /* Solver diagnostics reporting */
     if (ark_mem->ark_report) 
-      fprintf(ark_mem->ark_diagfp, "  etest  %li  %g  %g\n", 
+      fprintf(ark_mem->ark_diagfp, "  etest  %li  %19.16g  %19.16g\n", 
 	      ark_mem->ark_nst, ark_mem->ark_h, dsm);
 
     /* Perform time accuracy error test (if failure, updates h for next try) */
@@ -2131,21 +2144,19 @@ static void ARKPredict2(ARKodeMem ark_mem, int istage)
 
   case 3:
 
-    /***** Dense Output Predictor for stages "close" to previous step, 
-	   existing solution for subsequent stages *****/
+    /***** Max order dense output for stages "close" to previous step, 
+	   first-order dense output predictor for subsequent stages *****/
     if (tau < tau_tol) {
-      ord = MAX(ark_mem->ark_dense_q - istage, 1);
-      retval = ARKDenseEval(ark_mem, tau, 0, ord, yguess);
+      retval = ARKDenseEval(ark_mem, tau, 0, ark_mem->ark_dense_q, yguess);
     } else {
-      N_VScale(ONE, ark_mem->ark_y, yguess);
-      retval = ARK_SUCCESS;
+      retval = ARKDenseEval(ark_mem, tau, 0, 1, yguess);
     }
     if (retval == ARK_SUCCESS)  return;
     break;
 
   }
 
-  /* if we made it here, use the trivial predictor */
+  /* if we made it here, use the trivial predictor (previous step solution) */
   N_VScale(ONE, ark_mem->ark_ynew, yguess);
 
 }
@@ -2375,10 +2386,6 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 	break;
       }
     
-#ifdef SDEBUG
-      printf("Newton correction:\n");
-      N_VPrint_Serial(b);
-#endif
       /* If lsolve had a recoverable failure and Jacobian data is
 	 not current, signal to try the solution again */
       if (retval > 0) { 
@@ -2393,6 +2400,11 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
       del = N_VWrmsNorm(b, ark_mem->ark_ewt);
       N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
       N_VLinearSum(ONE, ark_mem->ark_ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
+
+#ifdef SDEBUG
+      printf("Newton solution:\n");
+      N_VPrint_Serial(ark_mem->ark_y);
+#endif
     
       /* Test for convergence.  If m > 0, an estimate of the convergence
 	 rate constant is stored in crate, and used in the test */
@@ -2406,7 +2418,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 
       /* Solver diagnostics reporting */
       if (ark_mem->ark_report) 
-	fprintf(ark_mem->ark_diagfp, "    newt  %i  %g  %g\n", m, del, dcon);
+	fprintf(ark_mem->ark_diagfp, "    newt  %i  %19.16g  %19.16g\n", m, del, dcon);
     
       if (dcon <= ONE) {
 	ark_mem->ark_acnrm = (m==0) ? 
@@ -2675,6 +2687,10 @@ static realtype ARKComputeSolutions(ARKodeMem ark_mem)
   N_VScale(ONE, ark_mem->ark_ynew, y);
   N_VConst(ZERO, yerr);
 
+#ifdef SDEBUG
+  printf("ComputeSol cp1:  %19.16g\n",N_VMaxNorm(yerr));
+#endif
+
   /* Iterate over each stage, updating solution and error estimate */
   for (j=0; j<ark_mem->ark_stages; j++) {
 
@@ -2692,6 +2708,11 @@ static realtype ARKComputeSolutions(ARKodeMem ark_mem)
     if (!ark_mem->ark_explicit)
       N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, yerr, yerr);
 
+#ifdef SDEBUG
+    printf("ComputeSol: hb = %19.16g,  fi = %19.16g,  yerr = %19.16g\n",
+	   hb, N_VMaxNorm(ark_mem->ark_Fi[j]), N_VMaxNorm(yerr));
+#endif
+  
   }
 
   /* return error norm */
@@ -2806,6 +2827,10 @@ static int ARKCompleteStep(ARKodeMem ark_mem, realtype dsm)
   ark_mem->ark_hadapt_ehist[2] = ark_mem->ark_hadapt_ehist[1];
   ark_mem->ark_hadapt_ehist[1] = ark_mem->ark_hadapt_ehist[0];
   ark_mem->ark_hadapt_ehist[0] = dsm*ark_mem->ark_hadapt_bias;
+#ifdef SDEBUG
+  printf("ARKCompleteStep: dsm = %g, ehist = %g, %g, %g\n", dsm,
+	 ark_mem->ark_hadapt_ehist[0], ark_mem->ark_hadapt_ehist[1], ark_mem->ark_hadapt_ehist[2]);
+#endif
 
   /* update ycur to current solution */
   N_VScale(ONE, ark_mem->ark_y, ark_mem->ark_ycur);
@@ -3595,7 +3620,7 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
   /* Solver diagnostics reporting */
   if (ark_mem->ark_report) 
-    fprintf(ark_mem->ark_diagfp, "  adapt  %g  %g  %g  %g  %g  ",
+    fprintf(ark_mem->ark_diagfp, "  adapt  %19.16g  %19.16g  %19.16g  %19.16g  %19.16g  ",
 	    ark_mem->ark_hadapt_ehist[0], ark_mem->ark_hadapt_ehist[1], 
 	    ark_mem->ark_hadapt_ehist[2], h_acc, h_cfl);
 
@@ -3611,7 +3636,7 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
   /* Solver diagnostics reporting */
   if (ark_mem->ark_report) 
-    fprintf(ark_mem->ark_diagfp, "%g  %g  ", h_acc, h_cfl);
+    fprintf(ark_mem->ark_diagfp, "%19.16g  %19.16g  ", h_acc, h_cfl);
 
   /* increment the relevant step counter, set desired step */
   if (h_acc < h_cfl)
@@ -3638,7 +3663,7 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
   /* Solver diagnostics reporting */
   if (ark_mem->ark_report) 
-    fprintf(ark_mem->ark_diagfp, "%g\n", ark_mem->ark_eta);
+    fprintf(ark_mem->ark_diagfp, "%19.16g\n", ark_mem->ark_eta);
 
   return(ier);
 }
