@@ -14,22 +14,21 @@ clear
 ep = 1e-2;
 
 % set the total integration time
-Tf = 0.1;
+Tf = 10.0;
 
 % set desired output times
 tout = linspace(0,Tf,11);
 
+
 % set the time step size bounds, tolerance
-%hmin = 1e-12;
-%hmax = 1.0;
-hmin = 0.01;
-hmax = 0.01;
+hmin = 1e-12;
+hmax = 1.0;
 rtol = 1e-6;
 atol = 1e-10*ones(1,1);
-hmethod = 3;
+hmethod = 1;
 
 % get the DIRK Butcher tables
-mname = 'SDIRK-5-4';
+mname = 'Billington-SDIRK';
 B = butcher(mname);
 
 
@@ -43,9 +42,8 @@ Pdata.ep = ep;
 
 fprintf('\nAnalytical test (rtol = %g, atol = %g)\n',rtol,atol(1))
 
-% get "true" solution
-opts = odeset('RelTol',1e-12, 'AbsTol',atol,'InitialStep',hmin/10, 'MaxStep',hmax);
-[t,Ytrue] = ode15s('f_analytic', tout, Y0, opts);
+% get true solution
+Ytrue = atan(tout);
 
 
 %%%%%%%%%%%%%%%%%%%%
@@ -56,9 +54,9 @@ fprintf('\nRunning with SDIRK integrator: %s\n',mname)
     atol, hmin, hmax, hmethod);
 
 % compute error
-err_max = max(max(abs(Y'-Ytrue)));
-err_rms = sum(sum((Y'-Ytrue).^2));
-err_rms = sqrt(err_rms/numel(Y));
+err_max = max(max(abs(Y-Ytrue)));
+err_rms = sum(sum((Y-Ytrue).^2));
+err_rms = sqrt(err_rms/(numel(Y)-1));  % subtract 1 since IC is exact
 fprintf('Accuracy/Work Results:\n')
 fprintf('   maxerr = %.5e,   rmserr = %.5e\n',err_max,err_rms);
 fprintf('   work = %i\n',ns);
