@@ -9,6 +9,7 @@ F90 = mpif90  # gnu
 
 # Fortran compile flags
 FFLAGS = -p -g -O0 -fbackslash -ffpe-trap=invalid # gfortran 
+#FFLAGS = -O2 -fbackslash -ffpe-trap=invalid # gfortran 
 
 # SUNDIALS-specific preprocessor directives (F-to-C conversion)
 SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
@@ -23,6 +24,10 @@ CFLAGS = -p -g -O0 -Wall # gcc
 
 # Location of C standard header files (stdlib.h, etc.)
 C_INCD = 
+
+# linking flags
+#LDFLAGS = -L/usr/lib -lefence
+LDFLAGS = 
 
 # SUNDIALS installation location, etc.
 SUNDROOT = /usr/local/sundials-2.5.0/gnu_debug
