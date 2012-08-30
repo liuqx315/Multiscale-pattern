@@ -120,7 +120,7 @@ def write_parameter_file(params):
     f = open('solve_params.txt', 'w')
     f.write("order = %i\n" % (params.order)) 
     f.write("dense_order = %i\n" % (params.dense_order)) 
-    f.write("btable = 0\n") 
+    f.write("btable = -1\n") 
     f.write("adapt_method = %i\n" % (params.adapt_method)) 
     f.write("cflfac = %f\n" % (params.cflfac)) 
     f.write("safety = %f\n" % (params.safety)) 

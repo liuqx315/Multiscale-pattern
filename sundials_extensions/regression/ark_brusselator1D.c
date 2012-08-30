@@ -87,9 +87,6 @@ static int check_flag(void *flagvalue, char *funcname, int opt);
 static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata);
 static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata);
 
-/* Helper routine to set all solver parameters from input file */
-int ark_SetParams(void *arkode_mem, int *idense);
-
 
 /* Main Program */
 int main()
@@ -103,8 +100,18 @@ int main()
   realtype *data;
   long int N, NEQ, i;
 
+  /* declare solver parameters */
+  int flag, order, dense_order, btable, adapt_method, small_nef, 
+    msbp, maxcor, predictor;
+  flag = order = adapt_method = small_nef = msbp = maxcor = predictor = 0;
+  dense_order = btable = -1;
+  double cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
+    k2, k3, etamx1, etamxf, etacf, crdown, rdiv, dgmax, nlscoef;
+  cflfac = safety = bias = growth = hfixed_lb = hfixed_ub = k1 = k2 = k3
+    = etamx1 = etamxf = etacf = crdown = rdiv = dgmax = nlscoef = 0.0;
+
   /* general problem variables */
-  int flag, idense;
+  int idense;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   N_Vector yerr  = NULL;
@@ -150,6 +157,37 @@ int main()
   udata->dv = dv;
   udata->dw = dw;
   udata->ep = ep;
+
+  /* read solver parameters from file */
+  FID=fopen("solve_params.txt","r");
+  fscanf(FID,"order = %i\n",  &order);
+  fscanf(FID,"dense_order = %i\n", &dense_order);
+  fscanf(FID,"btable = %i\n",  &btable);
+  fscanf(FID,"adapt_method = %i\n", &adapt_method);
+  fscanf(FID,"cflfac = %lf\n", &cflfac);
+  fscanf(FID,"safety = %lf\n", &safety);
+  fscanf(FID,"bias = %lf\n", &bias);
+  fscanf(FID,"growth = %lf\n", &growth);
+  fscanf(FID,"hfixed_lb = %lf\n", &hfixed_lb);
+  fscanf(FID,"hfixed_ub = %lf\n", &hfixed_ub);
+  fscanf(FID,"k1 = %lf\n", &k1);
+  fscanf(FID,"k2 = %lf\n", &k2);
+  fscanf(FID,"k3 = %lf\n", &k3);
+  fscanf(FID,"etamx1 = %lf\n", &etamx1);
+  fscanf(FID,"etamxf = %lf\n", &etamxf);
+  fscanf(FID,"etacf = %lf\n", &etacf);
+  fscanf(FID,"small_nef = %i\n", &small_nef);
+  fscanf(FID,"crdown = %lf\n", &crdown);
+  fscanf(FID,"rdiv = %lf\n", &rdiv);
+  fscanf(FID,"dgmax = %lf\n", &dgmax);
+  fscanf(FID,"predictor = %i\n", &predictor);
+  fscanf(FID,"msbp = %i\n", &msbp);
+  fscanf(FID,"maxcor = %i\n", &maxcor);
+  fscanf(FID,"nlscoef = %lf\n", &nlscoef);
+  fclose(FID);
+
+  realtype adapt_params[] = {cflfac, safety, bias, growth, 
+			     hfixed_lb, hfixed_ub, k1, k2, k3};
 
   /* open solver diagnostics output file for writing */
   FILE *DFID;
@@ -249,9 +287,83 @@ int main()
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
 
-  /* Call ark_SetParams to supply solver parameters */
-  flag = ark_SetParams(arkode_mem, &idense);
-  if (check_flag(&flag, "ark_SetParams", 1)) return(1);
+  /* Call ARKodeSet routines to insert solver parameters */
+  if (order != 0) {     /* order overrides btable */
+    printf("  Setting order = %i\n",order);
+    flag = ARKodeSetOrder(arkode_mem, order);
+    if (flag != 0) {
+      fprintf(stderr,"Error in ARKodeSetOrder = %i\n",flag);
+      return(1);
+    }
+  } else if (btable != -1) {
+    printf("  Setting IRK Table number = %i\n",btable);
+    flag = ARKodeSetIRKTableNum(arkode_mem, btable);
+    if (flag != 0) {
+      fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
+      return(1);
+    }
+  }
+  printf("  Setting dense order = %i\n",dense_order);
+  flag = ARKodeSetDenseOrder(arkode_mem, dense_order);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetDenseOrder = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting adaptivity method = %i\n",adapt_method);
+  printf("  Setting adaptivity params = %g %g %g %g %g %g %g %g %g\n",
+	 adapt_params[0], adapt_params[1], adapt_params[2], 
+	 adapt_params[3], adapt_params[4], adapt_params[5], 
+	 adapt_params[6], adapt_params[7], adapt_params[8]);
+  flag = ARKodeSetAdaptivityMethod(arkode_mem, adapt_method, adapt_params);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetAdaptMethod = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting adaptivity constants = %g %g %g %i\n",
+	 etamx1, etamxf, etacf, small_nef);
+  flag = ARKodeSetAdaptivityConstants(arkode_mem, etamx1, etamxf, etacf, small_nef);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetAdaptConstants = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting Newton constants = %g %g\n", crdown, rdiv);
+  flag = ARKodeSetNewtonConstants(arkode_mem, crdown, rdiv);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetNewtonConstants = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting LSetup constants = %g %i\n", dgmax, msbp);
+  flag = ARKodeSetLSetupConstants(arkode_mem, dgmax, msbp);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetLSetupConstants = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting predictor method = %i\n", predictor);
+  flag = ARKodeSetPredictorMethod(arkode_mem, predictor);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetPredictorMethod = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting max Newton iters = %i\n", maxcor);
+  flag = ARKodeSetMaxNonlinIters(arkode_mem, maxcor);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetMaxNonlinIters = %i\n",flag);
+    return(1);
+  }
+  printf("  Setting nonlinear solver coefficient = %g\n", nlscoef);
+  flag = ARKodeSetNonlinConvCoef(arkode_mem, nlscoef);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetMaxNonlinIters = %i\n",flag);
+    return(1);
+  }
+
+  /* If (dense_order == -1), tell integrator to use tstop */
+  if (dense_order == -1) {
+    idense = 0;
+  } else {    /* otherwise tell integrator to use dense output */
+    idense = 1;
+  }
+
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
@@ -313,6 +425,11 @@ int main()
     if (!idense)
       flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
+    if (check_flag(&flag, "ARKode", 1)) break;
+    if (flag >= 0) {
+      tout += dTout;
+      tout = (tout > Tf) ? Tf : tout;
+    }
     u = N_VWL2Norm(y,umask);
     u = sqrt(u*u/N);
     v = N_VWL2Norm(y,vmask);
@@ -339,12 +456,6 @@ int main()
     fprintf(UFID,"\n");
     fprintf(VFID,"\n");
     fprintf(WFID,"\n");
-
-    if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag >= 0) {
-      tout += dTout;
-      tout = (tout > Tf) ? Tf : tout;
-    }
   }
   err2 = sqrt(err2 / 3.0 / N / Nt);
   printf("   ---------------------------------------------------------------------------------------\n");
