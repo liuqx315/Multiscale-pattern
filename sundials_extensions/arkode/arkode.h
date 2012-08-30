@@ -55,6 +55,7 @@ extern "C" {
 
 /* max number of overall stages allowed */
 #define ARK_S_MAX          8
+#define ARK_A(A,i,j)       (A[i*ARK_S_MAX + j])
 
 /* itask */
 #define ARK_NORMAL         1
@@ -339,18 +340,19 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           |
  ARKodeSetERKTable        | specifies to use a customized Butcher 
                           | table for the explicit portion of the 
-                          | system.  Of the arguments, only bdense 
-                          | is optional (set to NULL if not used).
+                          | system.  This automatically calls 
+                          ! ARKodeSetExplicit.
                           | [determined by ARKODE based on order]
                           |
  ARKodeSetIRKTable        | specifies to use a customized Butcher 
                           | table for the implicit portion of the 
-                          | system.  Of the arguments, only bdense 
-                          | is optional (set to NULL if not used).
-                          ! NOTE: if both ARKodeSetERKTable and 
-                          | ARKodeSetIRKTable are called, the 
-                          ! methods must specify identical s, p, 
-                          | q, c, b and b2 coefficients.
+                          | system. This automatically calls 
+                          ! ARKodeSetImplicit.
+                          | [determined by ARKODE based on order]
+                          |
+ ARKodeSetARKTables       | specifies to use customized Butcher 
+                          | tables for the IMEX system.  This 
+                          ! automatically calls ARKodeSetImEx.
                           | [determined by ARKODE based on order]
                           |
  ARKodeSetERKTableNum     | specifies to use a built-in Butcher 
@@ -360,10 +362,8 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | ARKodeLoadButcherTable() within the file
                           | arkode_butcher.c.  Error-checking is
                           | performed to ensure that the table
-                          | exists, and is not implicit.  No 
-                          | error-checking is performed to ensure 
-                          | that this table matches the implicit 
-                          | table within an ARK method.
+                          | exists, and is not implicit.  This 
+                          ! automatically calls ARKodeSetExplicit.
                           | [determined by ARKODE based on order]
                           |
  ARKodeSetIRKTableNum     | specifies to use a built-in Butcher 
@@ -373,10 +373,21 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | ARKodeLoadButcherTable() within the file
                           | arkode_butcher.c.  Error-checking is
                           | performed to ensure that the table
-                          | exists, and is not explicit.  No 
-                          | error-checking is performed to ensure 
-                          | that this table matches the explicit 
-                          | table within an ARK method.
+                          | exists, and is not explicit.  This 
+                          ! automatically calls ARKodeSetImplicit.
+                          | [determined by ARKODE based on order]
+                          |
+ ARKodeSetARKTableNum     | specifies to use a built-in Butcher 
+                          | tables for the ImEx system.  The 
+                          ! integer arguments should match existing 
+                          | methods in ARKodeLoadButcherTable() 
+                          | within the file arkode_butcher.c.  
+                          | Error-checking is performed to ensure 
+                          | that the tables exist.  Subsequent 
+                          | error-checking is automatically performed
+                          | to ensure that the tables' stage times 
+                          | and solution coefficients match.  This 
+                          ! automatically calls ARKodeSetImEx.
                           | [determined by ARKODE based on order]
                           |
  ARKodeSetMaxNumSteps     | maximum number of internal steps to be
@@ -483,14 +494,20 @@ SUNDIALS_EXPORT int ARKodeSetImplicit(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetImEx(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetERKTable(void *arkode_mem, int s, 
 				      int q, int p, realtype *c, 
-				      realtype **A, realtype *b, 
+				      realtype *A, realtype *b, 
 				      realtype *bembed);
 SUNDIALS_EXPORT int ARKodeSetIRKTable(void *arkode_mem, int s, 
 				      int q, int p, realtype *c, 
-				      realtype **A, realtype *b, 
+				      realtype *A, realtype *b, 
 				      realtype *bembed);
+SUNDIALS_EXPORT int ARKodeSetARKTables(void *arkode_mem, int s, 
+				       int q, int p, realtype *c, 
+				       realtype *Ai, realtype *Ae, 
+				       realtype *b, realtype *bembed);
 SUNDIALS_EXPORT int ARKodeSetERKTableNum(void *arkode_mem, int itable);
 SUNDIALS_EXPORT int ARKodeSetIRKTableNum(void *arkode_mem, int itable);
+SUNDIALS_EXPORT int ARKodeSetARKTableNum(void *arkode_mem, 
+					 int itable, int etable);
 SUNDIALS_EXPORT int ARKodeSetMaxNumSteps(void *arkode_mem, 
 					 long int mxsteps);
 SUNDIALS_EXPORT int ARKodeSetMaxHnilWarns(void *arkode_mem, 
@@ -918,11 +935,10 @@ SUNDIALS_EXPORT int ARKodeGetCurrentStep(void *arkode_mem,
 SUNDIALS_EXPORT int ARKodeGetCurrentTime(void *arkode_mem, 
 					 realtype *tcur);
 SUNDIALS_EXPORT int ARKodeGetCurrentButcherTables(void *arkode_mem, 
-						  int *s, int *q, int *p,
-						  realtype (*Ae)[ARK_S_MAX], 
-						  realtype (*Ai)[ARK_S_MAX], 
-						  realtype *c, realtype *b,
-						  realtype *b2);
+						  int *s, int *q, 
+						  int *p, realtype *Ai, 
+						  realtype *Ae, realtype *c, 
+						  realtype *b, realtype *b2);
 SUNDIALS_EXPORT int ARKodeGetTolScaleFactor(void *arkode_mem, 
 					    realtype *tolsfac);
 SUNDIALS_EXPORT int ARKodeGetErrWeights(void *arkode_mem, 
@@ -985,9 +1001,8 @@ SUNDIALS_EXPORT int ARKodeGetNonlinSolvStats(void *arkode_mem,
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKodeLoadButcherTable(int imethod, int *s, 
 					   int *q, int *p, 
-					   realtype (*A)[ARK_S_MAX], 
-					   realtype *b, realtype *c, 
-					   realtype *b2);
+					   realtype *A, realtype *b, 
+					   realtype *c, realtype *b2);
 
 /*---------------------------------------------------------------
  The following function returns the name of the constant 

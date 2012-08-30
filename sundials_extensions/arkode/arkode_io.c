@@ -60,8 +60,6 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_linear           = FALSE;
   ark_mem->ark_explicit         = FALSE;
   ark_mem->ark_implicit         = FALSE;
-  ark_mem->ark_user_Ae          = FALSE;
-  ark_mem->ark_user_Ai          = FALSE;
   ark_mem->ark_efun             = NULL;
   ark_mem->ark_e_data           = NULL;
   ark_mem->ark_ehfun            = ARKErrHandler;
@@ -193,11 +191,13 @@ int ARKodeSetDiagnostics(void *arkode_mem, FILE *diagfp)
 
  Specifies the method order
 
- ** Note in documentation that this should not be called along with
-    ARKodeSetERKTable, ARKodeSetIRKTable, ARKodeSetERKTableNum or 
-    ARKodeSetIRKTableNum.  This routine is used to specify a desired 
-    method order using a default Butcher table, whereas any user-
-    supplied table will have their own order associated with them.
+ ** Note in documentation that this should not be called along 
+    with ARKodeSetERKTable, ARKodeSetIRKTable, ARKodeSetARKTable, 
+    ARKodeSetERKTableNum, ARKodeSetIRKTableNum or 
+    ARKodeSetARKTableNum.  This routine is used to specify a 
+    desired method order using default Butcher tables, whereas 
+    any user-supplied table will have their own order associated 
+    with them.
 ---------------------------------------------------------------*/
 int ARKodeSetOrder(void *arkode_mem, int ord)
 {
@@ -211,15 +211,8 @@ int ARKodeSetOrder(void *arkode_mem, int ord)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* check argument */
-  if (ord < 0) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetMaxOrd", MSGARK_NEG_MAXORD);
-    return(ARK_ILL_INPUT);
-  }
-  
   /* set user-provided value, or default, depending on argument */
-  if (ord == 0) {
+  if (ord <= 0) {
     ark_mem->ark_q = Q_DEFAULT;
   } else {
     ark_mem->ark_q = ord;
@@ -230,20 +223,14 @@ int ARKodeSetOrder(void *arkode_mem, int ord)
   ark_mem->ark_stages = 0;
   ark_mem->ark_istage = 0;
   ark_mem->ark_p = 0;
-  ark_mem->ark_stagesE = 0;
-  ark_mem->ark_qE = 0;
-  ark_mem->ark_pE = 0;
   for (i=0; i<ARK_S_MAX; i++) {
     for (j=0; j<ARK_S_MAX; j++) {
-      ark_mem->ark_Ae[i][j] = ZERO;
-      ark_mem->ark_Ai[i][j] = ZERO;
+      ARK_A(ark_mem->ark_Ae,i,j) = ZERO;
+      ARK_A(ark_mem->ark_Ai,i,j) = ZERO;
     }
     ark_mem->ark_c[i]   = ZERO;
     ark_mem->ark_b[i]   = ZERO;
     ark_mem->ark_b2[i]  = ZERO;
-    ark_mem->ark_cE[i]  = ZERO;
-    ark_mem->ark_bE[i]  = ZERO;
-    ark_mem->ark_b2E[i] = ZERO;
   }
 
   return(ARK_SUCCESS);
@@ -434,10 +421,10 @@ int ARKodeSetImEx(void *arkode_mem)
  ARKodeSetERKTable:
 
  Specifies to use a customized Butcher table for the explicit 
- portion of the system.
+ portion of the system (automatically calls ARKodeSetExplicit).
 ---------------------------------------------------------------*/
 int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
-		      realtype *c, realtype **A, realtype *b, 
+		      realtype *c, realtype *A, realtype *b, 
 		      realtype *bembed)
 {
   int i, j;
@@ -462,20 +449,24 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
   }
 
   /* set the relevant parameters */
-  ark_mem->ark_stagesE = s;
-  ark_mem->ark_qE = q;
-  ark_mem->ark_pE = p;
+  ark_mem->ark_stages = s;
+  ark_mem->ark_q = q;
+  ark_mem->ark_p = p;
   for (i=0; i<s; i++) {
-    ark_mem->ark_cE[i]  = c[i];
-    ark_mem->ark_bE[i]  = b[i];
-    ark_mem->ark_b2E[i] = bembed[i];
+    ark_mem->ark_c[i]  = c[i];
+    ark_mem->ark_b[i]  = b[i];
+    ark_mem->ark_b2[i] = bembed[i];
     for (j=0; j<s; j++) {
-      ark_mem->ark_Ae[i][j] = A[i][j];
+      ARK_A(ark_mem->ark_Ae,i,j) = A[i*s + j];
     }
   }
-
-  /* remark that this table was supplied by the user */
-  ark_mem->ark_user_Ae = TRUE;
+  
+  /* set method as purely explicit */
+  if (ARKodeSetExplicit(arkode_mem) != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetERKTable", MSGARK_MISSING_FE);
+    return(ARK_ILL_INPUT);
+  }
 
   return(ARK_SUCCESS);
 }
@@ -485,10 +476,10 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
  ARKodeSetIRKTable:
 
  Specifies to use a customized Butcher table for the implicit 
- portion of the system.
+ portion of the system (automatically calls ARKodeSetImplicit).
 ---------------------------------------------------------------*/
 int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
-		      realtype *c, realtype **A, realtype *b, 
+		      realtype *c, realtype *A, realtype *b, 
 		      realtype *bembed)
 {
   int i, j;
@@ -521,12 +512,73 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
     ark_mem->ark_b[i]  = b[i];
     ark_mem->ark_b2[i] = bembed[i];
     for (j=0; j<s; j++) {
-      ark_mem->ark_Ai[i][j] = A[i][j];
+      ARK_A(ark_mem->ark_Ai,i,j) = A[i*s + j];
     }
   }
 
-  /* remark that this table was supplied by the user */
-  ark_mem->ark_user_Ai = TRUE;
+  /* set method as purely implicit */
+  if (ARKodeSetImplicit(arkode_mem) != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetIRKTable", MSGARK_MISSING_FI);
+    return(ARK_ILL_INPUT);
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetARKTables:
+
+ Specifies to use customized Butcher tables for the ImEx system
+ (automatically calls ARKodeSetImEx).
+---------------------------------------------------------------*/
+int ARKodeSetARKTables(void *arkode_mem, int s, int q, int p,
+		       realtype *c, realtype *Ai, realtype *Ae, 
+		       realtype *b, realtype *bembed)
+{
+  int i, j;
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetARKTables", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check for legal inputs */
+  if (s > ARK_S_MAX) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetARKTables", "s exceeds ARK_S_MAX");
+    return(ARK_ILL_INPUT);
+  }
+  if ((c == NULL) || (Ai == NULL) || (Ae == NULL) || 
+      (b == NULL) || (bembed == NULL)) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetARKTables", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  /* set the relevant parameters */
+  ark_mem->ark_stages = s;
+  ark_mem->ark_q = q;
+  ark_mem->ark_p = p;
+  for (i=0; i<s; i++) {
+    ark_mem->ark_c[i]  = c[i];
+    ark_mem->ark_b[i]  = b[i];
+    ark_mem->ark_b2[i] = bembed[i];
+    for (j=0; j<s; j++) {
+      ARK_A(ark_mem->ark_Ai,i,j) = Ai[i*s + j];
+      ARK_A(ark_mem->ark_Ae,i,j) = Ae[i*s + j];
+    }
+  }
+
+  /* set method as ImEx */
+  if (ARKodeSetImEx(arkode_mem) != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetARKTables", MSGARK_MISSING_F);
+    return(ARK_ILL_INPUT);
+  }
 
   return(ARK_SUCCESS);
 }
@@ -537,7 +589,8 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
 
  Specifies to use a pre-existing Butcher table for the explicit 
  portion of the problem, based on the integer flag held in 
- ARKodeLoadButcherTable() within the file arkode_butcher.c.
+ ARKodeLoadButcherTable() within the file arkode_butcher.c 
+ (automatically calls ARKodeSetExplicit).
 ---------------------------------------------------------------*/
 int ARKodeSetERKTableNum(void *arkode_mem, int itable)
 {
@@ -551,18 +604,25 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* fill in table based on argument */
-  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stagesE, 
-				 &ark_mem->ark_qE, 
-				 &ark_mem->ark_pE, 
+  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
+				 &ark_mem->ark_q, 
+				 &ark_mem->ark_p, 
 				 ark_mem->ark_Ae, 
-				 ark_mem->ark_bE, 
-				 ark_mem->ark_cE, 
-				 ark_mem->ark_b2E);
+				 ark_mem->ark_b, 
+				 ark_mem->ark_c, 
+				 ark_mem->ark_b2);
   /* check that requested table is legal */
   if (iflag != ARK_SUCCESS) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetERKTableNum", 
 		    "Illegal ERK table number");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set method as purely explicit */
+  if (ARKodeSetExplicit(arkode_mem) != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetERKTableNum", MSGARK_MISSING_FE);
     return(ARK_ILL_INPUT);
   }
 
@@ -575,7 +635,8 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
 
  Specifies to use a pre-existing Butcher table for the implicit 
  portion of the problem, based on the integer flag held in 
- ARKodeLoadButcherTable() within the file arkode_butcher.c.
+ ARKodeLoadButcherTable() within the file arkode_butcher.c
+ (automatically calls ARKodeSetImplicit).
 ---------------------------------------------------------------*/
 int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 {
@@ -601,6 +662,85 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTableNum", 
 		    "Illegal IRK table number");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set method as purely implicit */
+  if (ARKodeSetImplicit(arkode_mem) != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetIRKTableNum", MSGARK_MISSING_FI);
+    return(ARK_ILL_INPUT);
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetARKTableNum:
+
+ Specifies to use pre-existing Butcher tables for the ImEx system,
+ based on the integer flags held in ARKodeLoadButcherTable() 
+ within the file arkode_butcher.c (automatically calls ARKodeSetImEx).
+---------------------------------------------------------------*/
+int ARKodeSetARKTableNum(void *arkode_mem, int itable, int etable)
+{
+  int iflag, eflag;
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetARKTableNum", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* ensure that tables match */
+  iflag = 1;
+  if ((itable == 3)  && (etable == 16))  iflag = 0;
+  if ((itable == 6)  && (etable == 22))  iflag = 0;
+  if ((itable == 7)  && (etable == 23))  iflag = 0;
+  if ((itable == 11) && (etable == 26))  iflag = 0;
+  if (iflag) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetARKTableNum", 
+		    "Incompatible Butcher tables for ARK method");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* fill in tables based on arguments */
+  iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
+				 &ark_mem->ark_q, 
+				 &ark_mem->ark_p, 
+				 ark_mem->ark_Ai, 
+				 ark_mem->ark_b, 
+				 ark_mem->ark_c, 
+				 ark_mem->ark_b2);
+  eflag = ARKodeLoadButcherTable(etable, &ark_mem->ark_stages, 
+				 &ark_mem->ark_q, 
+				 &ark_mem->ark_p, 
+				 ark_mem->ark_Ae, 
+				 ark_mem->ark_b, 
+				 ark_mem->ark_c, 
+				 ark_mem->ark_b2);
+
+  /* check that requested tables are legal */
+  if (iflag != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetARKTableNum", 
+		    "Illegal IRK table number");
+    return(ARK_ILL_INPUT);
+  }
+  if (eflag != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetARKTableNum", 
+		    "Illegal ERK table number");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set method as ImEx */
+  if (ARKodeSetImEx(arkode_mem) != ARK_SUCCESS) {
+    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetARKTableNum", MSGARK_MISSING_F);
     return(ARK_ILL_INPUT);
   }
 
@@ -1519,13 +1659,12 @@ int ARKodeGetCurrentTime(void *arkode_mem, realtype *tcur)
 
  Returns the explicit and implicit Butcher tables currently in 
  use.  The tables should be declared statically as 
- Ae[ARK_S_MAX][ARK_S_MAX] and Ai[ARK_S_MAX][ARK_S_MAX], and the 
+ Ae[ARK_S_MAX*ARK_S_MAX] and Ai[ARK_S_MAX*ARK_S_MAX], and the 
  arrays c, b and b2 should all have length ARK_S_MAX.
 ---------------------------------------------------------------*/
 int ARKodeGetCurrentButcherTables(void *arkode_mem, 
 				  int *s, int *q, int *p,
-				  realtype (*Ae)[ARK_S_MAX], 
-				  realtype (*Ai)[ARK_S_MAX], 
+				  realtype *Ai, realtype *Ae, 
 				  realtype *c, realtype *b,
 				  realtype *b2)
 {
@@ -1543,8 +1682,8 @@ int ARKodeGetCurrentButcherTables(void *arkode_mem,
   *p = ark_mem->ark_p;
   for (i=0; i<ARK_S_MAX; i++) {
     for (j=0; j<ARK_S_MAX; j++) {
-      Ae[i][j] = ark_mem->ark_Ae[i][j];
-      Ai[i][j] = ark_mem->ark_Ai[i][j];
+      ARK_A(Ae,i,j) = ARK_A(ark_mem->ark_Ae,i,j);
+      ARK_A(Ai,i,j) = ARK_A(ark_mem->ark_Ai,i,j);
     }
     c[i]  = ark_mem->ark_c[i];
     b[i]  = ark_mem->ark_b[i];
@@ -1884,7 +2023,6 @@ char *ARKodeGetReturnFlagName(long int flag)
 ---------------------------------------------------------------*/
 int ARKodeWriteParameters(void *arkode_mem, FILE *fp)
 {
-  int i, j;
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
@@ -1928,8 +2066,6 @@ int ARKodeWriteParameters(void *arkode_mem, FILE *fp)
       fprintf(fp, "  Vector-valued solver absolute tolerance\n");
     }
   }
-  if (ark_mem->ark_user_Ae) fprintf(fp, "  User provided explicit Butcher table\n");
-  if (ark_mem->ark_user_Ai) fprintf(fp, "  User provided implicit Butcher table\n");
   if (ark_mem->ark_hin != ZERO)  
     fprintf(fp, "  Initial step size = %g\n",ark_mem->ark_hin);
   if (ark_mem->ark_hmin != ZERO)  
@@ -1989,7 +2125,7 @@ int ARKodeWriteButcher(void *arkode_mem, FILE *fp)
     for (i=0; i<ark_mem->ark_stages; i++) {
       fprintf(fp, "     %.5f",ark_mem->ark_c[i]);
       for (j=0; j<ark_mem->ark_stages; j++) 
-	fprintf(fp, " %.5f",ark_mem->ark_Ae[i][j]);
+	fprintf(fp, " %.5f",ARK_A(ark_mem->ark_Ae,i,j));
       fprintf(fp,"\n");
     }
     fprintf(fp, "            ");
@@ -2006,7 +2142,7 @@ int ARKodeWriteButcher(void *arkode_mem, FILE *fp)
     for (i=0; i<ark_mem->ark_stages; i++) {
       fprintf(fp, "     %.5f",ark_mem->ark_c[i]);
       for (j=0; j<ark_mem->ark_stages; j++) 
-	fprintf(fp, " %.5f",ark_mem->ark_Ai[i][j]);
+	fprintf(fp, " %.5f",ARK_A(ark_mem->ark_Ai,i,j));
       fprintf(fp,"\n");
     }
     fprintf(fp, "            ");

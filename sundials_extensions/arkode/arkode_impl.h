@@ -264,20 +264,11 @@ typedef struct ARKodeMemRec {
   int ark_istage;                         /* current stage                  */
   int ark_stages;                         /* number of stages               */
   int ark_dense_q;                        /* dense output polynomial order  */
-  realtype ark_Ae[ARK_S_MAX][ARK_S_MAX];  /* ERK Butcher table              */
-  realtype ark_Ai[ARK_S_MAX][ARK_S_MAX];  /* IRK Butcher table              */
+  realtype ark_Ae[ARK_S_MAX*ARK_S_MAX];   /* ERK Butcher table              */
+  realtype ark_Ai[ARK_S_MAX*ARK_S_MAX];   /* IRK Butcher table              */
   realtype ark_c[ARK_S_MAX];              /* RK method canopy nodes         */
   realtype ark_b[ARK_S_MAX];              /* RK method solution coeffs      */
   realtype ark_b2[ARK_S_MAX];             /* RK method embedding coeffs     */
-  booleantype ark_user_Ae;                /* TRUE if user provides Ae       */
-  booleantype ark_user_Ai;                /* TRUE if user provides Ai       */
-
-  int ark_qE;                             /* ERK method data (should match  */
-  int ark_pE;                             /*   IRK). We store it for error  */
-  int ark_stagesE;                        /*   checking on user-supplied    */
-  realtype ark_cE[ARK_S_MAX];             /*   Butcher tables.              */
-  realtype ark_bE[ARK_S_MAX];
-  realtype ark_b2E[ARK_S_MAX];
 
   /*---------
     Step Data 
@@ -661,6 +652,7 @@ int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 #define MSGARK_INACTIVE_ROOTS "At the end of the first step, there are still some root functions identically 0. This warning will not be issued again."
 #define MSGARK_MISSING_FE     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 #define MSGARK_MISSING_FI     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
+#define MSGARK_MISSING_F      "Cannot specify that method is ImEx without providing function pointers to fi(t,y) and fe(t,y)."
 
 #ifdef __cplusplus
 }
