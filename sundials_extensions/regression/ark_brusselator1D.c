@@ -77,7 +77,13 @@ typedef struct {
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int Jac(long int N, long int mu, long int ml,
+               realtype t, N_Vector y, N_Vector fy, 
+               DlsMat J, void *user_data,
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int JacI(long int N, long int mu, long int ml,
                realtype t, N_Vector y, N_Vector fy, 
                DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
@@ -101,9 +107,9 @@ int main()
   long int N, NEQ, i;
 
   /* declare solver parameters */
-  int flag, order, dense_order, btable, adapt_method, small_nef, 
+  int flag, order, dense_order, imex, btable, adapt_method, small_nef, 
     msbp, maxcor, predictor;
-  flag = order = adapt_method = small_nef = msbp = maxcor = predictor = 0;
+  flag = order = imex = adapt_method = small_nef = msbp = maxcor = predictor = 0;
   dense_order = btable = -1;
   double cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
     k2, k3, etamx1, etamxf, etacf, crdown, rdiv, dgmax, nlscoef;
@@ -162,6 +168,7 @@ int main()
   FID=fopen("solve_params.txt","r");
   fscanf(FID,"order = %i\n",  &order);
   fscanf(FID,"dense_order = %i\n", &dense_order);
+  fscanf(FID,"imex = %i\n", &imex);
   fscanf(FID,"btable = %i\n",  &btable);
   fscanf(FID,"adapt_method = %i\n", &adapt_method);
   fscanf(FID,"cflfac = %lf\n", &cflfac);
@@ -272,8 +279,20 @@ int main()
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
-  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    printf("  Running in purely implicit mode\n");
+    flag = ARKodeInit(arkode_mem, NULL, f, T0, y);    break;
+  case 1:         /* purely explicit */
+    printf("  Running in purely explicit mode\n");
+    flag = ARKodeInit(arkode_mem, f, NULL, T0, y);    break;
+  default:        /* imex */
+    printf("  Running in ImEx mode\n");
+    flag = ARKodeInit(arkode_mem, fe, fi, T0, y);     break;
+  }
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+
+  /* Compute reference solution with default implicit method */
   flag = ARKodeInit(arktrue_mem, NULL, f, T0, ytrue);
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
   
@@ -296,11 +315,31 @@ int main()
       return(1);
     }
   } else if (btable != -1) {
-    printf("  Setting IRK Table number = %i\n",btable);
-    flag = ARKodeSetIRKTableNum(arkode_mem, btable);
-    if (flag != 0) {
-      fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
-      return(1);
+    if (imex == 1) {  
+      printf("  Setting ERK Table number = %i\n",btable);
+      flag = ARKodeSetERKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetERKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else if (imex == 0) {  
+      printf("  Setting IRK Table number = %i\n",btable);
+      flag = ARKodeSetIRKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else if (imex == 2) {  
+      int btable2;
+      if (btable == 3)   btable2 = 16;
+      if (btable == 6)   btable2 = 22;
+      if (btable == 11)  btable2 = 26;
+      printf("  Setting ARK Table numbers = %i %i\n",btable,btable2);
+      flag = ARKodeSetARKTableNum(arkode_mem, btable2, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetARKTableNum = %i\n",flag);
+	return(1);
+      }
     }
   }
   printf("  Setting dense order = %i\n",dense_order);
@@ -383,7 +422,14 @@ int main()
   if (check_flag(&flag, "ARKBand", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
-  flag = ARKDlsSetBandJacFn(arkode_mem, Jac);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    flag = ARKDlsSetBandJacFn(arkode_mem, Jac);   break;
+  case 1:         /* purely explicit */
+    break;
+  default:        /* imex */
+    flag = ARKDlsSetBandJacFn(arkode_mem, JacI);  break;
+  }
   if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return(1);
   flag = ARKDlsSetBandJacFn(arktrue_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return(1);
@@ -404,6 +450,7 @@ int main()
   fprintf(WFID,"\n");
 
   /* Write all solver parameters to stdout */
+  printf("\n");
   flag = ARKodeWriteParameters(arkode_mem, stdout);
   if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
 
@@ -585,6 +632,110 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 }
 
 
+/* fe routine to compute the diffusion portion of f(t,y). */
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  /* clear out ydot (to be careful) */
+  N_VConst(0.0, ydot);
+
+  /* problem data */
+  UserData udata = (UserData) user_data;
+
+  /* shortcuts to number of intervals, background values */
+  long int N  = udata->N;
+  realtype du = udata->du;
+  realtype dv = udata->dv;
+  realtype dw = udata->dw;
+  realtype dx = udata->dx;
+
+  /* access data arrays */
+  realtype *Ydata = N_VGetArrayPointer(y);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  realtype *dYdata = N_VGetArrayPointer(ydot);
+  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+
+  /* iterate over domain, computing all equations */
+  realtype uconst = du/dx/dx;
+  realtype vconst = dv/dx/dx;
+  realtype wconst = dw/dx/dx;
+  realtype u, ul, ur, v, vl, vr, w, wl, wr;
+  long int i;
+  for (i=1; i<N-1; i++) {
+
+    /* set shortcuts */
+    u = Ydata[IDX(i,0)];  ul = Ydata[IDX(i-1,0)];  ur = Ydata[IDX(i+1,0)];
+    v = Ydata[IDX(i,1)];  vl = Ydata[IDX(i-1,1)];  vr = Ydata[IDX(i+1,1)];
+    w = Ydata[IDX(i,2)];  wl = Ydata[IDX(i-1,2)];  wr = Ydata[IDX(i+1,2)];
+
+    /* u_t = du*u_xx */
+    dYdata[IDX(i,0)] = (ul - TWO*u + ur)*uconst;
+
+    /* v_t = dv*v_xx */
+    dYdata[IDX(i,1)] = (vl - TWO*v + vr)*vconst;
+
+    /* w_t = dw*w_xx */
+    dYdata[IDX(i,2)] = (wl - TWO*w + wr)*wconst;
+
+  }
+
+  /* enforce stationary boundaries */
+  dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
+  dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
+
+  return(0);
+}
+
+
+/* fi routine to compute the reaction portion of f(t,y). */
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  /* clear out ydot (to be careful) */
+  N_VConst(0.0, ydot);
+
+  /* problem data */
+  UserData udata = (UserData) user_data;
+
+  /* shortcuts to number of intervals, background values */
+  long int N  = udata->N;
+  realtype a  = udata->a;
+  realtype b  = udata->b;
+  realtype ep = udata->ep;
+
+  /* access data arrays */
+  realtype *Ydata = N_VGetArrayPointer(y);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  realtype *dYdata = N_VGetArrayPointer(ydot);
+  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+
+  /* iterate over domain, computing all equations */
+  realtype u, v, w;
+  long int i;
+  for (i=1; i<N-1; i++) {
+
+    /* set shortcuts */
+    u = Ydata[IDX(i,0)];
+    v = Ydata[IDX(i,1)];
+    w = Ydata[IDX(i,2)];
+
+    /* u_t = a - (w+1)*u + v*u^2 */
+    dYdata[IDX(i,0)] = a - (w+ONE)*u + v*u*u;
+
+    /* v_t = w*u - v*u^2 */
+    dYdata[IDX(i,1)] = w*u - v*u*u;
+
+    /* w_t = (b-w)/ep - w*u */
+    dYdata[IDX(i,2)] = (b-w)/ep - w*u;
+
+  }
+
+  /* enforce stationary boundaries */
+  dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
+  dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
+
+  return(0);
+}
+
+
 /* Jacobian routine to compute J(t,y) = df/dy. */
 static int Jac(long int M, long int mu, long int ml,
                realtype t, N_Vector y, N_Vector fy, 
@@ -602,6 +753,28 @@ static int Jac(long int M, long int mu, long int ml,
     printf("Jacobian calculation error in calling LaplaceMatrix!\n");
     return(1);
   }
+
+  /* Add in the Jacobian of the reaction terms matrix */
+  if (ReactionJac(ONE, y, J, udata)) {
+    printf("Jacobian calculation error in calling ReactionJac!\n");
+    return(1);
+  }
+
+  return(0);
+}
+
+
+/* Jacobian routine to compute J(t,y) = dfi/dy. */
+static int JacI(long int M, long int mu, long int ml,
+		realtype t, N_Vector y, N_Vector fy, 
+		DlsMat J, void *user_data,
+		N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+{
+  /* clear out Jacobian (to be careful) */
+  SetToZero(J);
+
+  /* problem data */
+  UserData udata = (UserData) user_data;
 
   /* Add in the Jacobian of the reaction terms matrix */
   if (ReactionJac(ONE, y, J, udata)) {

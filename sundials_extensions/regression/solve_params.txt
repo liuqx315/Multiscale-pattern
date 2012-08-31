@@ -1,6 +1,7 @@
-order = 0
+order = 5
 dense_order = -1
-btable = 26
+imex = 2
+btable = -1
 adapt_method = -1
 cflfac = 0.000000
 safety = 0.0

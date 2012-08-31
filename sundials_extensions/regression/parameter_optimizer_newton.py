@@ -40,6 +40,7 @@ CM3 = (0.0, 100.0, 1.0,   1.0, 1.0,  10.0,    0.0,    100000.0);  # imex, costly
 # maxcor = (2, 3, 4, 5);
 # nlscoef = (0.3, 0.1, 0.03, 0.01, 0.003, 0.001);
 dense_order  = [];  dense_order.append(-1);
+imex = 0;           # scalar: 0=>implicit, 1=>explicit, 2=>imex
 adapt_method = [];  adapt_method.append(0);
 cflfac = 0.0;       # must be a scalar
 safety = [];        safety.append(0.0);
@@ -67,7 +68,7 @@ nlscoef = (0.3, 0.1, 0.03, 0.01, 0.003, 0.001);
 nsaved = 25;
 
 # run parameter search for cost model 1, order 3
-opt_params13 = po.parameter_search(3, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params13 = po.parameter_search(3, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1);
@@ -79,7 +80,7 @@ for i in range(min(nsaved,len(opt_params13))):
 
 
 # run parameter search for cost model 1, order 4
-opt_params14 = po.parameter_search(4, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params14 = po.parameter_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1);
@@ -91,7 +92,7 @@ for i in range(min(nsaved,len(opt_params14))):
 
 
 # run parameter search for cost model 1, order 5
-opt_params15 = po.parameter_search(5, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params15 = po.parameter_search(5, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1);
@@ -105,7 +106,7 @@ for i in range(min(nsaved,len(opt_params15))):
 
 
 # run parameter search for cost model 2, order 3
-opt_params23 = po.parameter_search(3, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params23 = po.parameter_search(3, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM2);
@@ -117,7 +118,7 @@ for i in range(min(nsaved,len(opt_params23))):
 
 
 # run parameter search for cost model 2, order 4
-opt_params24 = po.parameter_search(4, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params24 = po.parameter_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM2);
@@ -143,7 +144,7 @@ for i in range(min(nsaved,len(opt_params25))):
 
 
 # run parameter search for cost model 3, order 3
-opt_params33 = po.parameter_search(3, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params33 = po.parameter_search(3, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM3);
@@ -155,7 +156,7 @@ for i in range(min(nsaved,len(opt_params33))):
 
 
 # run parameter search for cost model 3, order 4
-opt_params34 = po.parameter_search(4, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params34 = po.parameter_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM3);
@@ -167,7 +168,7 @@ for i in range(min(nsaved,len(opt_params34))):
 
 
 # run parameter search for cost model 1, order 5
-opt_params35 = po.parameter_search(5, dense_order, adapt_method, cflfac, safety, bias, 
+opt_params35 = po.parameter_search(5, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
                                 etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
                                 predictor, msbp, maxcor, nlscoef, nsaved, tests, CM3);

@@ -49,7 +49,12 @@
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int Jac(long int N, realtype t,
+               N_Vector y, N_Vector fy, DlsMat J, void *user_data,
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int JacI(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
@@ -69,9 +74,9 @@ int main()
   long int NEQ = 3;
 
   /* declare solver parameters */
-  int flag, order, dense_order, btable, adapt_method, small_nef, 
+  int flag, order, dense_order, imex, btable, adapt_method, small_nef, 
     msbp, maxcor, predictor;
-  flag = order = adapt_method = small_nef = msbp = maxcor = predictor = 0;
+  flag = order = imex = adapt_method = small_nef = msbp = maxcor = predictor = 0;
   dense_order = btable = -1;
   double cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
     k2, k3, etamx1, etamxf, etacf, crdown, rdiv, dgmax, nlscoef;
@@ -105,6 +110,7 @@ int main()
   FID=fopen("solve_params.txt","r");
   fscanf(FID,"order = %i\n",  &order);
   fscanf(FID,"dense_order = %i\n", &dense_order);
+  fscanf(FID,"imex = %i\n", &imex);
   fscanf(FID,"btable = %i\n",  &btable);
   fscanf(FID,"adapt_method = %i\n", &adapt_method);
   fscanf(FID,"cflfac = %lf\n", &cflfac);
@@ -162,7 +168,17 @@ int main()
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
-  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    printf("  Running in purely implicit mode\n");
+    flag = ARKodeInit(arkode_mem, NULL, f, T0, y);    break;
+  case 1:         /* purely explicit */
+    printf("  Running in purely explicit mode\n");
+    flag = ARKodeInit(arkode_mem, f, NULL, T0, y);    break;
+  default:        /* imex */
+    printf("  Running in ImEx mode\n");
+    flag = ARKodeInit(arkode_mem, fe, fi, T0, y);     break;
+  }
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
 
   /* Call ARKodeSetUserData to pass lamda to user functions */
@@ -182,11 +198,31 @@ int main()
       return(1);
     }
   } else if (btable != -1) {
-    printf("  Setting IRK Table number = %i\n",btable);
-    flag = ARKodeSetIRKTableNum(arkode_mem, btable);
-    if (flag != 0) {
-      fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
-      return(1);
+    if (imex == 1) {  
+      printf("  Setting ERK Table number = %i\n",btable);
+      flag = ARKodeSetERKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetERKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else if (imex == 0) {  
+      printf("  Setting IRK Table number = %i\n",btable);
+      flag = ARKodeSetIRKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else if (imex == 2) {  
+      int btable2;
+      if (btable == 3)   btable2 = 16;
+      if (btable == 6)   btable2 = 22;
+      if (btable == 11)  btable2 = 26;
+      printf("  Setting ARK Table numbers = %i %i\n",btable,btable2);
+      flag = ARKodeSetARKTableNum(arkode_mem, btable2, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetARKTableNum = %i\n",flag);
+	return(1);
+      }
     }
   }
   printf("  Setting dense order = %i\n",dense_order);
@@ -265,10 +301,18 @@ int main()
   if (check_flag(&flag, "ARKDense", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
-  flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);   break;
+  case 1:         /* purely explicit */
+    break;
+  default:        /* imex */
+    flag = ARKDlsSetDenseJacFn(arkode_mem, JacI);  break;
+  }
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
   /* Write all solver parameters to stdout */
+  printf("\n");
   flag = ARKodeWriteParameters(arkode_mem, stdout);
   if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
 
@@ -392,9 +436,82 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   yd2 = 0.25*(1.0*y0 + 1.0*y1 + 1.0*y2);
 
   /*   y = D*yd */
-  y0  = -0.5*yd0;
-  y1  = -0.1*yd1;
-  y2  =  lam*yd2;
+  y0 = -0.5*yd0;
+  y1 = -0.1*yd1;
+  y2 =  lam*yd2;
+
+  /*   yd = V*y */
+  yd0 =  1.0*y0 - 1.0*y1 + 1.0*y2;
+  yd1 = -1.0*y0 + 2.0*y1 + 1.0*y2;
+  yd2 =  0.0*y0 - 1.0*y1 + 2.0*y2;
+
+  NV_Ith_S(ydot,0) = yd0;
+  NV_Ith_S(ydot,1) = yd1;
+  NV_Ith_S(ydot,2) = yd2;
+
+  return(0);
+}
+
+/* fe routine to compute the explicit portion of f(t,y). */
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  realtype *rdata = (realtype *) user_data;
+  realtype y0 = NV_Ith_S(y,0);
+  realtype y1 = NV_Ith_S(y,1);
+  realtype y2 = NV_Ith_S(y,2);
+  realtype yd0, yd1, yd2;
+  
+  /* f(t,y) = V*D*Vi*y, where 
+        V = [1 -1 1; -1 2 1; 0 -1 2] 
+        Vi = 0.25*[5 1 -3; 2 2 -2; 1 1 1]
+        D = [-0.5 0 0; 0 -0.1 0; 0 0 0] */
+
+  /*   yd = Vi*y */
+  yd0 = 0.25*(5.0*y0 + 1.0*y1 - 3.0*y2);
+  yd1 = 0.25*(2.0*y0 + 2.0*y1 - 2.0*y2);
+  yd2 = 0.25*(1.0*y0 + 1.0*y1 + 1.0*y2);
+
+  /*   y = D*yd */
+  y0 = -0.5*yd0;
+  y1 = -0.1*yd1;
+  y2 =  0.0;
+
+  /*   yd = V*y */
+  yd0 =  1.0*y0 - 1.0*y1 + 1.0*y2;
+  yd1 = -1.0*y0 + 2.0*y1 + 1.0*y2;
+  yd2 =  0.0*y0 - 1.0*y1 + 2.0*y2;
+
+  NV_Ith_S(ydot,0) = yd0;
+  NV_Ith_S(ydot,1) = yd1;
+  NV_Ith_S(ydot,2) = yd2;
+
+  return(0);
+}
+
+/* fi routine to compute the implicit portion of f(t,y). */
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  realtype *rdata = (realtype *) user_data;
+  realtype lam = rdata[0];
+  realtype y0 = NV_Ith_S(y,0);
+  realtype y1 = NV_Ith_S(y,1);
+  realtype y2 = NV_Ith_S(y,2);
+  realtype yd0, yd1, yd2;
+  
+  /* f(t,y) = V*D*Vi*y, where 
+        V = [1 -1 1; -1 2 1; 0 -1 2] 
+        Vi = 0.25*[5 1 -3; 2 2 -2; 1 1 1]
+        D = [0 0 0; 0 0 0; 0 0 lam] */
+
+  /*   yd = Vi*y */
+  yd0 = 0.25*(5.0*y0 + 1.0*y1 - 3.0*y2);
+  yd1 = 0.25*(2.0*y0 + 2.0*y1 - 2.0*y2);
+  yd2 = 0.25*(1.0*y0 + 1.0*y1 + 1.0*y2);
+
+  /*   y = D*yd */
+  y0 = 0.0;
+  y1 = 0.0;
+  y2 = lam*yd2;
 
   /*   yd = V*y */
   yd0 =  1.0*y0 - 1.0*y1 + 1.0*y2;
@@ -450,6 +567,69 @@ static int Jac(long int N, realtype t,
 
   DENSE_ELEM(D,0,0) = -0.5;
   DENSE_ELEM(D,1,1) = -0.1;
+  DENSE_ELEM(D,2,2) = lam;
+
+  /* J = D*Vi */
+  if (dense_MM(D,Vi,J) != 0) {
+    fprintf(stderr, "matmul error\n");
+    return(1);
+  }
+
+  /* D = V*J [= V*D*Vi] */
+  if (dense_MM(V,J,D) != 0) {
+    fprintf(stderr, "matmul error\n");
+    return(1);
+  }
+
+  /* J = D [= V*D*Vi] */
+  DenseCopy(D, J);
+
+  return(0);
+}
+
+
+/* Jacobian routine to compute J(t,y) = dfi/dy. */
+static int JacI(long int N, realtype t,
+		N_Vector y, N_Vector fy, DlsMat J, void *user_data,
+		N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+{
+  realtype *rdata = (realtype *) user_data;
+  realtype lam = rdata[0];
+  DlsMat V  = NewDenseMat(3,3);
+  DlsMat D  = NewDenseMat(3,3);
+  DlsMat Vi = NewDenseMat(3,3);
+
+  /* initialize temporary matrices to zero */
+  DenseScale(0.0, V);
+  DenseScale(0.0, D);
+  DenseScale(0.0, Vi);
+
+  /* J = V*D*Vi, where 
+        V = [1 -1 1; -1 2 1; 0 -1 2] 
+        Vi = 0.25*[5 1 -3; 2 2 -2; 1 1 1]
+        D = [0 0 0; 0 0 0; 0 0 lam] */
+  DENSE_ELEM(V,0,0) =  1.0;
+  DENSE_ELEM(V,0,1) = -1.0;
+  DENSE_ELEM(V,0,2) =  1.0;
+  DENSE_ELEM(V,1,0) = -1.0;
+  DENSE_ELEM(V,1,1) =  2.0;
+  DENSE_ELEM(V,1,2) =  1.0;
+  DENSE_ELEM(V,2,0) =  0.0;
+  DENSE_ELEM(V,2,1) = -1.0;
+  DENSE_ELEM(V,2,2) =  2.0;
+
+  DENSE_ELEM(Vi,0,0) =  0.25*5.0;
+  DENSE_ELEM(Vi,0,1) =  0.25*1.0;
+  DENSE_ELEM(Vi,0,2) = -0.25*3.0;
+  DENSE_ELEM(Vi,1,0) =  0.25*2.0;
+  DENSE_ELEM(Vi,1,1) =  0.25*2.0;
+  DENSE_ELEM(Vi,1,2) = -0.25*2.0;
+  DENSE_ELEM(Vi,2,0) =  0.25*1.0;
+  DENSE_ELEM(Vi,2,1) =  0.25*1.0;
+  DENSE_ELEM(Vi,2,2) =  0.25*1.0;
+
+  DENSE_ELEM(D,0,0) = 0.0;
+  DENSE_ELEM(D,1,1) = 0.0;
   DENSE_ELEM(D,2,2) = lam;
 
   /* J = D*Vi */

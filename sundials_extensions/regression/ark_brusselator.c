@@ -63,7 +63,12 @@
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int Jac(long int N, realtype t,
+               N_Vector y, N_Vector fy, DlsMat J, void *user_data,
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int JacI(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
@@ -84,9 +89,9 @@ int main()
   long int NEQ = 3;
 
   /* declare solver parameters */
-  int flag, order, dense_order, btable, adapt_method, small_nef, 
+  int flag, order, dense_order, imex, btable, adapt_method, small_nef, 
     msbp, maxcor, predictor;
-  flag = order = adapt_method = small_nef = msbp = maxcor = predictor = 0;
+  flag = order = imex = adapt_method = small_nef = msbp = maxcor = predictor = 0;
   dense_order = btable = -1;
   double cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
     k2, k3, etamx1, etamxf, etacf, crdown, rdiv, dgmax, nlscoef;
@@ -123,6 +128,7 @@ int main()
   FID=fopen("solve_params.txt","r");
   fscanf(FID,"order = %i\n",  &order);
   fscanf(FID,"dense_order = %i\n", &dense_order);
+  fscanf(FID,"imex = %i\n", &imex);
   fscanf(FID,"btable = %i\n",  &btable);
   fscanf(FID,"adapt_method = %i\n", &adapt_method);
   fscanf(FID,"cflfac = %lf\n", &cflfac);
@@ -211,8 +217,20 @@ int main()
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
-  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    printf("  Running in purely implicit mode\n");
+    flag = ARKodeInit(arkode_mem, NULL, f, T0, y);    break;
+  case 1:         /* purely explicit */
+    printf("  Running in purely explicit mode\n");
+    flag = ARKodeInit(arkode_mem, f, NULL, T0, y);    break;
+  default:        /* imex */
+    printf("  Running in ImEx mode\n");
+    flag = ARKodeInit(arkode_mem, fe, fi, T0, y);     break;
+  }
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+
+  /* Compute reference solution with default implicit method */
   flag = ARKodeInit(arktrue_mem, NULL, f, T0, ytrue);
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
 
@@ -235,11 +253,31 @@ int main()
       return(1);
     }
   } else if (btable != -1) {
-    printf("  Setting IRK Table number = %i\n",btable);
-    flag = ARKodeSetIRKTableNum(arkode_mem, btable);
-    if (flag != 0) {
-      fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
-      return(1);
+    if (imex == 1) {  
+      printf("  Setting ERK Table number = %i\n",btable);
+      flag = ARKodeSetERKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetERKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else if (imex == 0) {  
+      printf("  Setting IRK Table number = %i\n",btable);
+      flag = ARKodeSetIRKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else if (imex == 2) {  
+      int btable2;
+      if (btable == 3)   btable2 = 16;
+      if (btable == 6)   btable2 = 22;
+      if (btable == 11)  btable2 = 26;
+      printf("  Setting ARK Table numbers = %i %i\n",btable,btable2);
+      flag = ARKodeSetARKTableNum(arkode_mem, btable2, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetARKTableNum = %i\n",flag);
+	return(1);
+      }
     }
   }
   printf("  Setting dense order = %i\n",dense_order);
@@ -324,12 +362,20 @@ int main()
   if (check_flag(&flag, "ARKDense", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */
-  flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);   break;
+  case 1:         /* purely explicit */
+    break;
+  default:        /* imex */
+    flag = ARKDlsSetDenseJacFn(arkode_mem, JacI);  break;
+  }
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
   flag = ARKDlsSetDenseJacFn(arktrue_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
   /* Write all solver parameters to stdout */
+  printf("\n");
   flag = ARKodeWriteParameters(arkode_mem, stdout);
   if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
 
@@ -427,7 +473,6 @@ int main()
  *-------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
-
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   realtype *rdata = (realtype *) user_data;
@@ -450,8 +495,48 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   return(0);
 }
 
-/* Jacobian routine to compute J(t,y) = df/dy. */
+/* fe routine to compute the explicit portion of f(t,y). */
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  realtype *rdata = (realtype *) user_data;
+  realtype a  = rdata[0];
+  realtype u = NV_Ith_S(y,0);
+  realtype v = NV_Ith_S(y,1);
+  realtype w = NV_Ith_S(y,2);
 
+  /* du/dt = a - (w+1)*u + v*u^2 */
+  NV_Ith_S(ydot,0) = a - (w+1.0)*u + v*u*u;
+
+  /* dv/dt = w*u - v*u^2 */
+  NV_Ith_S(ydot,1) = w*u - v*u*u;
+
+  /* dw/dt = -w*u */
+  NV_Ith_S(ydot,2) = -w*u;
+
+  return(0);
+}
+
+/* fi routine to compute the implicit portion of f(t,y). */
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  realtype *rdata = (realtype *) user_data;
+  realtype b  = rdata[1];
+  realtype ep = rdata[2];
+  realtype w = NV_Ith_S(y,2);
+
+  /* du/dt = a - (w+1)*u + v*u^2 */
+  NV_Ith_S(ydot,0) = 0.0;
+
+  /* dv/dt = w*u - v*u^2 */
+  NV_Ith_S(ydot,1) = 0.0;
+
+  /* dw/dt = (b-w)/ep - w*u */
+  NV_Ith_S(ydot,2) = (b-w)/ep;
+
+  return(0);
+}
+
+/* Jacobian routine to compute J(t,y) = df/dy. */
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
@@ -477,6 +562,18 @@ static int Jac(long int N, realtype t,
   DENSE_ELEM(J,2,1) = 0.0;
   DENSE_ELEM(J,2,2) = -1.0/ep - u;
 
+  return(0);
+}
+
+/* Jacobian routine to compute J(t,y) = dfi/dy. */
+static int JacI(long int N, realtype t,
+		N_Vector y, N_Vector fy, DlsMat J, void *user_data,
+		N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+{
+  realtype *rdata = (realtype *) user_data;
+  realtype ep = rdata[2];
+  SetToZero(J);
+  DENSE_ELEM(J,2,2) = -1.0/ep;
   return(0);
 }
 

@@ -53,9 +53,9 @@ int main()
   long int NEQ = 1;
 
   /* declare solver parameters */
-  int flag, order, dense_order, btable, adapt_method, small_nef, 
+  int flag, order, dense_order, imex, btable, adapt_method, small_nef, 
     msbp, maxcor, predictor;
-  flag = order = adapt_method = small_nef = msbp = maxcor = predictor = 0;
+  flag = order = imex = adapt_method = small_nef = msbp = maxcor = predictor = 0;
   dense_order = btable = -1;
   double cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
     k2, k3, etamx1, etamxf, etacf, crdown, rdiv, dgmax, nlscoef;
@@ -86,6 +86,7 @@ int main()
   FID=fopen("solve_params.txt","r");
   fscanf(FID,"order = %i\n",  &order);
   fscanf(FID,"dense_order = %i\n", &dense_order);
+  fscanf(FID,"imex = %i\n", &imex);
   fscanf(FID,"btable = %i\n",  &btable);
   fscanf(FID,"adapt_method = %i\n", &adapt_method);
   fscanf(FID,"cflfac = %lf\n", &cflfac);
@@ -122,7 +123,6 @@ int main()
   printf("   reltol = %.1e\n",  reltol);
   printf("   abstol = %.1e\n\n",abstol);
 
-
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
@@ -137,7 +137,19 @@ int main()
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
-  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
+  switch (imex) {
+  case 0:         /* purely implicit */
+    printf("  Running in purely implicit mode\n");
+    flag = ARKodeInit(arkode_mem, NULL, f, T0, y);    break;
+  case 1:         /* purely explicit */
+    printf("  Running in purely explicit mode\n");
+    flag = ARKodeInit(arkode_mem, f, NULL, T0, y);    break;
+  default:        /* imex */
+    if (imex == 2) {
+      printf("Error: ark_analytic_nonlin cannot be called in ImEx mode\n");
+      return(1);
+    }
+  }
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
@@ -153,11 +165,20 @@ int main()
       return(1);
     }
   } else if (btable != -1) {
-    printf("  Setting IRK Table number = %i\n",btable);
-    flag = ARKodeSetIRKTableNum(arkode_mem, btable);
-    if (flag != 0) {
-      fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
-      return(1);
+    if (imex == 1) {  
+      printf("  Setting ERK Table number = %i\n",btable);
+      flag = ARKodeSetERKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetERKTableNum = %i\n",flag);
+	return(1);
+      }
+    } else {  
+      printf("  Setting IRK Table number = %i\n",btable);
+      flag = ARKodeSetIRKTableNum(arkode_mem, btable);
+      if (flag != 0) {
+	fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
+	return(1);
+      }
     }
   }
   printf("  Setting dense order = %i\n",dense_order);
@@ -239,6 +260,7 @@ int main()
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
 
   /* Write all solver parameters to stdout */
+  printf("\n");
   flag = ARKodeWriteParameters(arkode_mem, stdout);
   if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
 
