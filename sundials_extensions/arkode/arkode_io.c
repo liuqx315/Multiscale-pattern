@@ -696,10 +696,9 @@ int ARKodeSetARKTableNum(void *arkode_mem, int itable, int etable)
 
   /* ensure that tables match */
   iflag = 1;
-  if ((itable == 3)  && (etable == 16))  iflag = 0;
-  if ((itable == 6)  && (etable == 22))  iflag = 0;
-  if ((itable == 7)  && (etable == 23))  iflag = 0;
-  if ((itable == 11) && (etable == 26))  iflag = 0;
+  if ((etable == 3)  && (itable == 16))  iflag = 0;
+  if ((etable == 6)  && (itable == 22))  iflag = 0;
+  if ((etable == 11) && (itable == 26))  iflag = 0;
   if (iflag) {
     ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetARKTableNum", 
