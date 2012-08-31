@@ -6,8 +6,6 @@
 -----------------------------------------------------------------
  This is the implementation file for the known Butcher tables 
  for the ARKODE solver.
-
- VERIFIED TO CORRECTLY FILL IN TABLES!
 ---------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -37,14 +35,14 @@
    imeth    name             type   s   q   p   A   L 
   ----------------------------------------------------
     0     Heun-Euler          ERK   2   2   1   -   - 
-    1     ERK-3-2             ERK   3   3   2   -   -
+    1     ERK-3-2             ERK   3   3   2   -   -   **not very accurate 
     2     Bogacki-Shampine    ERK   4   3   2   -   - 
     3*    ARK3(2)4L[2]SA      ERK   4   3   2   -   - 
-    4     Merson              ERK   5   4   3   -   -
+    4     Merson              ERK   5   4   3   -   -   **not at all accurate
     5     Zonneveld           ERK   5   4   3   -   -
     6*    ARK4(3)6L[2]SA      ERK   6   4   3   -   - 
     7*    Sayfy-Aburub-4-3    ERK   6   4   3   -   - 
-    8     Cash-Karp           ERK   6   5   4   -   - 
+    8     Cash-Karp           ERK   6   5   4   -   -
     9     Fehlberg            ERK   6   5   4   -   - 
     10    Dormand-Prince      ERK   7   5   4   -   - 
     11*   ARK5(4)8L[2]SA      ERK   8   5   4   -   - 
@@ -103,7 +101,6 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     *s = 3;
     *q = 3;
     *p = 2;
-
     ARK_A(A,1,0) = RCONST(0.5);
     ARK_A(A,2,0) = -RCONST(1.0);
     ARK_A(A,2,1) = RCONST(2.0);

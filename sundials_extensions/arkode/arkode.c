@@ -3880,8 +3880,8 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_b2);
       break;
 
-    case(3):    /* ERK-3-2: q=3, p=2, s=3 */
-      ARKodeLoadButcherTable(1, &ark_mem->ark_stages, 
+    case(3):    /* Bogacki-Shampine: q=3, p=2, s=4 */
+      ARKodeLoadButcherTable(2, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -3890,8 +3890,8 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_b2);
       break;
 
-    case(4):    /* Merson: q=4, p=3, s=5 */
-      ARKodeLoadButcherTable(4, &ark_mem->ark_stages, 
+    case(4):    /* Zonneveld: q=4, p=3, s=5 */
+      ARKodeLoadButcherTable(5, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -3900,8 +3900,8 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
 			     ark_mem->ark_b2);
       break;
 
-    case(5):    /* Dormand-Prince: q=5, p=4, s=7 */
-      ARKodeLoadButcherTable(10, &ark_mem->ark_stages, 
+    case(5):    /* Cash-Karp: q=5, p=4, s=6 */
+      ARKodeLoadButcherTable(8, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -3940,8 +3940,8 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
     switch (ark_mem->ark_q) {
 
     case(2):
-    case(3):    /* TRBDF2 ESDIRK: q=3, p=2, s=3 */
-      ARKodeLoadButcherTable(14, &ark_mem->ark_stages,
+    case(3):    /* Billington: q=3, p=2, s=3 */
+      ARKodeLoadButcherTable(13, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
     			     ark_mem->ark_Ai,
@@ -3961,7 +3961,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(5):    /* Kvaerno(7,4,5): q=5, p=4, s=7, A/L stable */
-      ARKodeLoadButcherTable(24, &ark_mem->ark_stages,
+      ARKodeLoadButcherTable(25, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
     			     ark_mem->ark_Ai,
