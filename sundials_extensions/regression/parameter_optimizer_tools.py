@@ -90,7 +90,7 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
     cutoff = 100.0;
 
     # create parameter file of all defaults, set baseline cost
-    p = ark.SolParams(-1.0, 0, -1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);

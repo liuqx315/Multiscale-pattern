@@ -97,9 +97,9 @@ def run_test(testname):
             lsetups = int(txt[5]);
         elif ("Jacobian" in txt):
             nJe = int(txt[6]);
-        elif ("Newton" in txt):
+        elif (("Newton" in txt) and ("iterations" in txt)):
             nnewt = int(txt[6]);
-        elif ("convergence" in txt):
+        elif (("convergence" in txt) and ("Total" in txt)):
             ncf = int(txt[8]);
         elif (("error" in txt) and ("test" in txt)):
             nef = int(txt[7]);
