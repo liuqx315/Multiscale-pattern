@@ -1,0 +1,110 @@
+# script to perform regression tests on ARKODE solvers.
+# Daniel R. Reynolds, reynolds@smu.edu
+
+# imports
+import sys
+import numpy as np
+import arkode_tools as ark
+
+#### Utility functions ####
+
+def check_tests(testlist,nsttol,ovtol):
+    """ This routine takes in a string containing a set of      """
+    """ executable names, a tolerance on the minimum number of  """
+    """ steps that must be run to consider the test 'completed' """
+    """ and a tolerance on the allowable oversolve (larger is   """
+    """ better).  It then runs the desired tests, and checks    """
+    """ whether the tests pass.                                 """
+    import shlex
+    import os
+    import subprocess
+    iret = 0;
+    for i in range(len(testlist)):
+        [nst,ast,cst,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov] = ark.run_test(testlist[i]);
+        # check for nst >= nsttol (in case something fails at initialization)
+        if (nst < nsttol):
+            iret = 1;
+            sys.stdout.write("\n  %s failure (too few steps)" % (testlist[i]))
+        # check for oversolve >= ovtol (fits within allowable error)
+        if (ov < ovtol):
+            iret = 1;
+            sys.stdout.write("\n  %s failure (too much error)" % (testlist[i]))
+    if (iret == 0):
+        sys.stdout.write("  pass\n")
+    else:
+        sys.stdout.write("\n")
+    return iret
+    
+#############
+
+
+# set up a list of executable names to use in tests
+tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
+tests2 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
+nsttol = 10;
+ovtol  = 0.1;
+
+# run tests with base set of parameters to ensure everything runs
+sys.stdout.write("Base tests:")
+p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+ark.write_parameter_file(p);
+iret = check_tests(tests,nsttol,ovtol);
+
+# check ERK method orders {2,3,4,5,6}
+ords = (2,3,4,5,6);
+for i in range(len(ords)):
+    sys.stdout.write("ERK order %i tests:" % (ords[i]))
+    p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+    ark.write_parameter_file(p);
+    iret = check_tests(tests,nsttol,ovtol);
+
+# check DIRK method orders {3,4,5}
+ords = (3,4,5);
+for i in range(len(ords)):
+    sys.stdout.write("DIRK order %i tests:" % (ords[i]))
+    p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+    ark.write_parameter_file(p);
+    iret = check_tests(tests,nsttol,ovtol);
+
+# check ARK method orders {3,4,5}
+ords = (3,4,5);
+for i in range(len(ords)):
+    sys.stdout.write("ARK order %i tests:" % (ords[i]))
+    p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+    ark.write_parameter_file(p);
+    iret = check_tests(tests2,nsttol,ovtol);
+
+# check dense output orders {0,1,2,3,4,5} (DIRK order 5 only)
+ords = (0,1,2,3,4,5);
+for i in range(len(ords)):
+    sys.stdout.write("Dense output order %i tests:" % (ords[i]))
+    p = ark.SolParams(-1.0, 5, ords[i], 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+    ark.write_parameter_file(p);
+    iret = check_tests(tests,nsttol,ovtol);
+
+# check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
+algs = (0,1,2,3,4,5);
+for i in range(len(algs)):
+    sys.stdout.write("H-adaptivity method %i tests:" % (algs[i]))
+    p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+    ark.write_parameter_file(p);
+    iret = check_tests(tests,nsttol,ovtol);
+
+# check predictor methods {0,1,2,3} (DIRK only)
+algs = (0,1,2,3);
+for i in range(len(algs)):
+    sys.stdout.write("Predictor method %i tests:" % (algs[i]))
+    p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0);
+    ark.write_parameter_file(p);
+    iret = check_tests(tests,nsttol,ovtol);
+
+    
+
+##### end of script #####
