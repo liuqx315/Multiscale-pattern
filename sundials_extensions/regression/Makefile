@@ -29,7 +29,8 @@ TESTS = nvector_serial_test.exe \
         ark_analytic_sys.exe \
         ark_analytic_nonlin.exe \
         ark_brusselator.exe \
-        ark_brusselator1D.exe
+        ark_brusselator1D.exe \
+        ark_set_check.exe
 
 # target to build all test executables
 all : ${TESTS}
@@ -77,6 +78,9 @@ ark_brusselator.exe : ark_brusselator.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_brusselator1D.exe : ark_brusselator1D.c 
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_set_check.exe : ark_set_check.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 clean :
