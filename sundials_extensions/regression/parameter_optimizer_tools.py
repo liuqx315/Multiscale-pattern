@@ -82,18 +82,38 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
             len(etamxf) * len(etacf) * len(small_nef) * len(crdown) * 
             len(rdiv) * len(dgmax) * len(predictor) * len(msbp) * 
             len(maxcor) * len(nlscoef));
-    print 'Total number of tests for each cost model: ', ntot
-
-    # create list of saved choices
-    optimal = [];
-    isaved = 0;
-    cutoff = 100.0;
+    print 'Total number of tests: ', ntot
+    # print '  len(dense_order): ',len(dense_order)
+    # print '  len(adapt_method): ',len(adapt_method)
+    # print '  len(safety): ', len(safety)
+    # print '  len(bias): ',len(bias)
+    # print '  len(growth): ',len(growth)
+    # print '  len(k1): ',len(k1)
+    # print '  len(k2): ',len(k2)
+    # print '  len(k3): ',len(k3)
+    # print '  len(etamx1): ',len(etamx1)
+    # print '  len(etamxf): ',len(etamxf)
+    # print '  len(etacf): ',len(etacf)
+    # print '  len(small_nef): ',len(small_nef)
+    # print '  len(crdown): ',len(crdown)
+    # print '  len(rdiv): ',len(rdiv)
+    # print '  len(dgmax): ',len(dgmax)
+    # print '  len(predictor): ',len(predictor)
+    # print '  len(msbp): ',len(msbp)
+    # print '  len(maxcor): ',len(maxcor)
+    # print '  len(nlscoef): ',len(nlscoef)
 
     # create parameter file of all defaults, set baseline cost
     p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);
+
+    # create list of saved choices
+    optimal = [];  
+    optimal.append(p);
+    isaved = 0;
+    cutoff = 100.0;
 
     # loop over all possible parameters combinations
     ntested = 0;
