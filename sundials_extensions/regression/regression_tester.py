@@ -20,17 +20,22 @@ def check_tests(testlist,nsttol,ovtol):
     import subprocess
     iret = 0;
     for i in range(len(testlist)):
+        tret = 0
         [nst,ast,cst,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov] = ark.run_test(testlist[i]);
         # check for nst >= nsttol (in case something fails at initialization)
         if (nst < nsttol):
-            iret = 1;
-            sys.stdout.write("\n  %s failure (too few steps)" % (testlist[i]))
+            tret = 1;
+            sys.stdout.write("\n  %s failure (too few steps: %i < %i)" % (testlist[i], nst, nsttol))
         # check for oversolve >= ovtol (fits within allowable error)
-        if (ov < ovtol):
-            iret = 1;
-            sys.stdout.write("\n  %s failure (too much error)" % (testlist[i]))
+        if ((ov < ovtol) or (ov != ov)):
+            tret = 1;
+            sys.stdout.write("\n  %s failure (too much error: %g < %g)" % (testlist[i], ov, ovtol))
+        if (tret == 0):
+            sys.stdout.write("\n  %s pass (steps: %i > %i;  oversolve %g > %g)" % (testlist[i], nst, nsttol, ov, ovtol))
+        iret += tret;
     if (iret == 0):
-        sys.stdout.write("  pass\n")
+#        sys.stdout.write("  pass\n")
+        sys.stdout.write("\n")
     else:
         sys.stdout.write("\n")
     return iret
@@ -42,7 +47,7 @@ def check_tests(testlist,nsttol,ovtol):
 tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
 tests2 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
 nsttol = 10;
-ovtol  = 0.1;
+ovtol  = 0.05;
 
 # run tests with base set of parameters to ensure everything runs
 sys.stdout.write("Base tests:")
@@ -77,15 +82,6 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     iret = check_tests(tests2,nsttol,ovtol);
-
-# check dense output orders {0,1,2,3,4,5} (DIRK order 5 only)
-ords = (0,1,2,3,4,5);
-for i in range(len(ords)):
-    sys.stdout.write("Dense output order %i tests:" % (ords[i]))
-    p = ark.SolParams(-1.0, 5, ords[i], 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
-    ark.write_parameter_file(p);
-    iret = check_tests(tests,nsttol,ovtol);
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
 algs = (0,1,2,3,4,5);
