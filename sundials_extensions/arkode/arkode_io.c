@@ -31,6 +31,7 @@
 ---------------------------------------------------------------*/
 int ARKodeSetDefaults(void *arkode_mem)
 {
+  int i, j;
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
@@ -55,6 +56,7 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_hadapt_k1        = AD0_K1;
   ark_mem->ark_hadapt_k2        = AD0_K2;
   ark_mem->ark_hadapt_k3        = AD0_K3;
+  ark_mem->ark_predictor        = 3;
   ark_mem->ark_itol             = ARK_NN;
   ark_mem->ark_user_efun        = FALSE;
   ark_mem->ark_linear           = FALSE;
@@ -71,6 +73,7 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_hin              = ZERO;
   ark_mem->ark_hmin             = ZERO;
   ark_mem->ark_hmax_inv         = ZERO;
+  ark_mem->ark_tstopset         = ZERO;
   ark_mem->ark_tstopset         = FALSE;
   ark_mem->ark_maxcor           = MAXCOR;
   ark_mem->ark_maxnef           = MAXNEF;
@@ -84,6 +87,20 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_rdiv             = RDIV;
   ark_mem->ark_dgmax            = DGMAX;
   ark_mem->ark_msbp             = MSBP;
+  ark_mem->ark_diagfp           = NULL;
+  ark_mem->ark_report           = FALSE;
+  ark_mem->ark_stages           = 0;
+  ark_mem->ark_istage           = 0;
+  ark_mem->ark_p                = 0;
+  for (i=0; i<ARK_S_MAX; i++) {
+    for (j=0; j<ARK_S_MAX; j++) {
+      ARK_A(ark_mem->ark_Ae,i,j) = ZERO;
+      ARK_A(ark_mem->ark_Ai,i,j) = ZERO;
+    }
+    ark_mem->ark_c[i]   = ZERO;
+    ark_mem->ark_b[i]   = ZERO;
+    ark_mem->ark_b2[i]  = ZERO;
+  }
   return(ARK_SUCCESS);
 }
 
