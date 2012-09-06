@@ -24,7 +24,7 @@ extern "C" {
 ===============================================================*/
 
 /* Basic ARKODE constants */
-#define Q_DEFAULT        4       /* default RK order */
+#define Q_DEFAULT        5       /* default RK order */
 #define QDENSE_DEF       3       /* default dense output order */
 #define MXSTEP_DEFAULT   500     /* mxstep default value */
 #define MAXNEF           7       /* maxnef default value */
