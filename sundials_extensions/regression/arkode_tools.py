@@ -38,7 +38,7 @@ class SolParams:
         self.maxcor = maxcor;
         self.nlscoef = nlscoef;
     def WriteHeader(self):
-        print '   cost   ord dord adpt cfl   safe  bias  grow  h0l  h0b    k1     k2     k3     emx1     emxf   ecf   smf  crdn  rdiv   dgmx  prd  msbp  mxcr  nlsc'
+        print '   cost    q  dq  imx  adp  cfl   safe  bias  grow  h0l  h0b    k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  mxcr   nlsc'
     def Write(self):
         sys.stdout.write(" %f %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %.1e\n" % 
                          (self.cost, self.order, self.dense_order, self.imex, self.adapt_method, self.cflfac, 
