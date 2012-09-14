@@ -257,8 +257,8 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_tn = t0;
 
   /* Set step parameters */
-  ark_mem->ark_hold   = ZERO;
-  ark_mem->ark_tolsf  = ONE;
+  ark_mem->ark_hold  = ZERO;
+  ark_mem->ark_tolsf = ONE;
 
   /* Set the linear solver addresses to NULL.
      (We check != NULL later, in ARKode.) */
@@ -293,8 +293,8 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_irfnd   = 0;
 
   /* Initialize other integrator optional outputs */
-  ark_mem->ark_h0u      = ZERO;
-  ark_mem->ark_next_h   = ZERO;
+  ark_mem->ark_h0u    = ZERO;
+  ark_mem->ark_next_h = ZERO;
 
   /* Problem has been successfully initialized */
   ark_mem->ark_MallocDone = TRUE;
@@ -315,7 +315,8 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
  The return value is ARK_SUCCESS = 0 if no errors occurred, or
  a negative value otherwise.
 ---------------------------------------------------------------*/
-int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
+int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi, 
+		 realtype t0, N_Vector y0)
 {
   ARKodeMem ark_mem;
  
@@ -341,12 +342,30 @@ int ARKodeReInit(void *arkode_mem, realtype t0, N_Vector y0)
     return(ARK_ILL_INPUT);
   }
   
+  /* Set implicit/explicit problem based on function pointers */
+  ark_mem->ark_implicit = ark_mem->ark_explicit = FALSE;
+  if (fe == NULL) ark_mem->ark_implicit = TRUE;
+  if (fi == NULL) ark_mem->ark_explicit = TRUE;
+
+  /* Check that at least one of fe,fi is supplied and is to be used */
+  if (ark_mem->ark_implicit && ark_mem->ark_explicit) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE",
+  		    "ARKodeInit", MSGARK_NULL_F);
+    return(ARK_ILL_INPUT);
+  }
+
   /* Copy the input parameters into ARKODE state */
+  ark_mem->ark_fe = fe;
+  ark_mem->ark_fi = fi;
   ark_mem->ark_tn = t0;
   
   /* Set step parameters */
-  ark_mem->ark_hold   = ZERO;
-  ark_mem->ark_tolsf  = ONE;
+  ark_mem->ark_hold  = ZERO;
+  ark_mem->ark_tolsf = ONE;
+
+  /* Do not reset the linear solver addresses to NULL.  This means 
+     that if the user does not re-set these manually, we'll re-use 
+     the linear solver routines that were set during ARKodeInit. */
 
   /* Initialize ycur */
   N_VScale(ONE, y0, ark_mem->ark_ycur);

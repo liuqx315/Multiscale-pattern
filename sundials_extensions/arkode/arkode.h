@@ -593,13 +593,8 @@ SUNDIALS_EXPORT int ARKodeInit(void *arkode_mem, ARKRhsFn fe,
  where a prior call to ARKodeInit has been made with the same
  problem size N. ARKodeReInit performs the same input checking
  and initializations that ARKodeInit does, but it does no memory
- allocation, assuming that the existing internal memory is 
- sufficient for the new problem.
-
- The use of ARKodeReInit requires that the method order, ord, is 
- no larger for the new problem than for the problem specified in
- the last call to ARKodeInit.  This condition is automatically 
- fulfilled if the default value for ord is specified.
+ allocation, since the basic data structures initialized in 
+ ARKodeInit may be reused.
 
  All of the arguments to ARKodeReInit have names and meanings
  identical to those of ARKodeInit.
@@ -615,8 +610,8 @@ SUNDIALS_EXPORT int ARKodeInit(void *arkode_mem, ARKRhsFn fe,
                     (including an attempt to increase maxord).
  In case of an error return, an error message is also printed.
  --------------------------------------------------------------*/
-SUNDIALS_EXPORT int ARKodeReInit(void *arkode_mem, realtype t0, 
-				 N_Vector y0);
+SUNDIALS_EXPORT int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, 
+				 ARKRhsFn fi, realtype t0, N_Vector y0);
 
 /*---------------------------------------------------------------
  Functions : ARKodeSStolerances
