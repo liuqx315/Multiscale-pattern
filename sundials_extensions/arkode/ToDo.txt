@@ -146,25 +146,22 @@ Completed components:
 [X] Get a simple DIRK example running in ARKode (actually, I got a lot
     of DIRK examples running -- linear/nonlinear, scalar/vector,
     fixed-h/adaptive-h).
+[X] Extend remaining example problems to using ARKode.
+[X] Clone example problems so that we have two versions: one for
+    automated optimization and regression testing, and the second as
+    an example for new users.
+[X] Test ERK and ARK methods.
+[X] Code to allow a change in the Butcher table, both to allow an
+    increased/decreased number of stages (no real issue for decrease,
+    don't even need to free the N_Vectors if I don't want to; need to
+    malloc the new vectors for an increase, though), and to do the
+    relevant checking/cleaning of the Butcher table, etc.
 
 
 
 Remaining components to build:
-[ ] Extend remaining example problems to using ARKode.
-[ ] Clone example problems so that we have two versions: one for
-    automated optimization and regression testing, and the second as
-    an example for new users.
-[ ] Test ERK and ARK methods.
 [ ] Begin tuning solver parameters for increased efficiency on all
     test problems.
-[ ] Code to allow a change in the Butcher table, both to allow an
-    increased/decreased number of stages (no real issue for decrease,
-    don't even need to free the N_Vectors if I don't want to; need to
-    malloc the new vectors for an increase, though), and to do the
-    relevant checking/cleaning of the Butcher table, etc..  This could
-    occur only inside ARKodeReInit, since that's the moment where I
-    would allow this kind of thing (and would need to reset accuracy
-    history data). 
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
@@ -177,10 +174,6 @@ Remaining components to build:
     scenario that a problem depends linearly on y, but that the linear 
     dependence changes as a function of time.  In this case, we must
     call lsetup once prior to EVERY time step.
-[ ] Think about scenario where an attempted step has too much error
-    (but still converges within iteration limits).  Add code to
-    ARKRestore() to recompute predictions for implicit solutions at
-    these shorter times. 
 [ ] If I need to use any currently-unused N_Vector operations, add
     them to ARKCheckNvector routine.
 [ ] Determine if I need ark_acor at all.  CVODE uses it to estimate
@@ -245,10 +238,6 @@ Unknown/Questions:
     how gamma/gammap are handled, since changes to gamma may have 
     more/less effect with a non-identity mass matrix.  Think about 
     this.
-[ ] Consider all the places where I use Fe[] and Fi[] for temporary
-    data.  If I'm running a purely implicit or explicit calculation,
-    then the other set of these is never allocated!!  Figure out how
-    to deal with this situation!
 [ ] Consider the possibility of estimating the actual local truncation
     error (used in the nonlinear and linear solver tolerances) based
     on results from the previous time step and an assumption that this
