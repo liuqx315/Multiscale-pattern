@@ -1664,6 +1664,8 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
       N_VPrint_Serial(ark_mem->ark_ewt);
 #endif
 
+  /* LOOK INTO THE FOLLOWING -- IF A PROBLEM IS EXPLICIT, THEN THESE DON'T NEED TO EXIST */
+
   /* Check if lsolve function exists and call linit (if it exists) */
   if (ark_mem->ark_lsolve == NULL) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 

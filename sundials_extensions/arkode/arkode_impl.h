@@ -316,9 +316,9 @@ typedef struct ARKodeMemRec {
   realtype   ark_hadapt_k2;        /* method-specific adaptivity parameters  */
   realtype   ark_hadapt_k3;
 
-  /*-----------------------------------
-    Limits and varioussolver parameters
-    -----------------------------------*/
+  /*------------------------------------
+    Limits and various solver parameters
+    ------------------------------------*/
   long int ark_mxstep;   /* max number of internal steps for one user call */
   int      ark_maxcor;   /* max number of corrector iterations for the
 			    solution of the nonlinear equation             */

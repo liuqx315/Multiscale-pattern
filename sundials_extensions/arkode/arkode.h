@@ -459,9 +459,6 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | convergence test.
                           | [0.1]
                           |
- ARKodeSetPredictMethod   | Method to use for prediction of 
-                          | new-time solutions
-                          | [0]
 -----------------------------------------------------------------
  ARKodeSetRootDirection      | Specifies the direction of zero
                              | crossings to be monitored
@@ -550,8 +547,6 @@ SUNDIALS_EXPORT int ARKodeSetMaxConvFails(void *arkode_mem,
 					  int maxncf);
 SUNDIALS_EXPORT int ARKodeSetNonlinConvCoef(void *arkode_mem, 
 					    realtype nlscoef);
-SUNDIALS_EXPORT int ARKodeSetPredictMethod(void *arkode_mem, 
-					   int imethod);
 
 SUNDIALS_EXPORT int ARKodeSetRootDirection(void *arkode_mem, 
 					   int *rootdir);
