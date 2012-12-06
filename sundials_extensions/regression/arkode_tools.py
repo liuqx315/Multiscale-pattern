@@ -4,6 +4,7 @@
 # imports
 import sys
 import numpy as np
+import time
 
 #### Data Structures ####
 
@@ -65,21 +66,21 @@ def run_test(testname):
     subprocess.call(testname, stdout=out, stderr=null)
     null.close()
     out.close()
-    #  initialize return values
-    nsteps=0
-    asteps=0
-    csteps=0
-    nfe=0
-    nfi=0 
-    lsetups=0
-    nfi_lsetup=0
-    nJe=0
-    nnewt=0
-    ncf=0
-    nef=0
-    maxerr=0.0
-    rmserr=0.0
-    oversolve=0.0
+    #  initialize return values to "bad" values, to overwrite with actual data
+    nsteps=100000
+    asteps=100000
+    csteps=100000
+    nfe=100000
+    nfi=100000 
+    lsetups=100000
+    nfi_lsetup=100000
+    nJe=100000
+    nnewt=100000
+    ncf=100000
+    nef=100000
+    maxerr=1.0e5
+    rmserr=1.0e5
+    oversolve=1.0e-5
     #  parse output
     f = open('output.txt','r')
     for line in f:
