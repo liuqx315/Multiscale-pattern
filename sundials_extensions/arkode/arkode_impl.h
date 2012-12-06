@@ -247,8 +247,8 @@ typedef struct ARKodeMemRec {
   N_Vector ark_fnew;    /* f(t,y) at end of last successful step             */
   N_Vector ark_yold;    /* y at beginning of last successful step            */
   N_Vector ark_ynew;    /* y at end of last successful step                  */
-  N_Vector ark_fa;      /* f at h/3 through step (high order dense output)   */
-  N_Vector ark_fb;      /* f at h*2/3 through step (high order dense output) */
+  /* N_Vector ark_fa;      /\* f at h/3 through step (high order dense output)   *\/ */
+  /* N_Vector ark_fb;      /\* f at h*2/3 through step (high order dense output) *\/ */
 
   /*-----------------
     Tstop information
@@ -550,16 +550,11 @@ typedef struct ARKodeMemRec {
 
   
 /*===============================================================
-   ARKODE INTERNAL FUNCTIONS
+   ARKODE PROTOTYPE FUNCTIONS (MAY BE REPLACED BY USER)
 ===============================================================*/
 
 /* Prototype of internal ewtSet function */
 int ARKEwtSet(N_Vector ycur, N_Vector weight, void *data);
-
-/* High level error handler */
-void ARKProcessError(ARKodeMem ark_mem, int error_code, 
-		     const char *module, const char *fname, 
-		     const char *msgfmt, ...);
 
 /* Prototype of internal errHandler function */
 void ARKErrHandler(int error_code, const char *module, 
@@ -567,6 +562,14 @@ void ARKErrHandler(int error_code, const char *module,
 
 /* Prototype of internal explicit stability estimation function */
 int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
+
+/*===============================================================
+   HIGH LEVEL ERROR HANDLER, USED THROUGHOUT ARKODE
+===============================================================*/
+
+void ARKProcessError(ARKodeMem ark_mem, int error_code, 
+		     const char *module, const char *fname, 
+		     const char *msgfmt, ...);
 
 /*===============================================================
    ARKODE ERROR MESSAGES

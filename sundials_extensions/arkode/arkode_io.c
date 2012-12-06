@@ -281,7 +281,8 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
      changes via ARKodeSetOrder */
 
   /* set user-provided value, or default, depending on argument */
-  if ((dord < 0) || (dord > 5)) {
+  /* if ((dord < 0) || (dord > 5)) { */
+  if ((dord < 0) || (dord > 3)) {
     ark_mem->ark_dense_q = 3;
   } else {
     ark_mem->ark_dense_q = dord;
