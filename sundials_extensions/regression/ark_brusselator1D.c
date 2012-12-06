@@ -211,8 +211,8 @@ int main()
   printf("    diffusion coefficients:  du = %g,  dv = %g,  dw = %g\n", 
 	 udata->du, udata->dv, udata->dw);
   printf("    reltol = %.1e,  abstol = %.1e\n\n", reltol, abstol);
-  realtype reltol2 = reltol*1.0e-3;
-  realtype abstol2 = abstol*1.0e-3;
+  realtype reltol2 = reltol*1.0e-2;
+  realtype abstol2 = abstol*1.0e-2;
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
