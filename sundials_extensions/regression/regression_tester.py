@@ -49,12 +49,17 @@ tests2 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ar
 nsttol = 10;
 ovtol  = 0.05;
 
+itot = 0
+ierr = 0
+
 # run tests with base set of parameters to ensure everything runs
 sys.stdout.write("Base tests:")
 p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
                    0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
 ark.write_parameter_file(p);
 iret = check_tests(tests,nsttol,ovtol);
+ierr += iret
+itot += len(tests)
 
 # check ERK method orders {2,3,4,5,6}
 ords = (2,3,4,5,6);
@@ -64,6 +69,9 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
+    ierr += iret
+    itot += len(tests)
+
 
 # check DIRK method orders {3,4,5}
 ords = (3,4,5);
@@ -73,6 +81,8 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
+    ierr += iret
+    itot += len(tests)
 
 # check ARK method orders {3,4,5}
 ords = (3,4,5);
@@ -82,6 +92,8 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     iret = check_tests(tests2,nsttol,ovtol);
+    ierr += iret
+    itot += len(tests2)
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
 algs = (0,1,2,3,4,5);
@@ -91,6 +103,8 @@ for i in range(len(algs)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
+    ierr += iret
+    itot += len(tests)
 
 # check predictor methods {0,1,2,3} (DIRK only)
 algs = (0,1,2,3);
@@ -100,7 +114,14 @@ for i in range(len(algs)):
                        0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
+    ierr += iret
+    itot += len(tests)
 
+
+if (ierr == 0):
+    sys.stdout.write("\nPassed all %i tests\n" % (itot))
+else:
+    sys.stdout.write("\nFailed %i out of %i tests\n" % (ierr, itot))
     
 
 ##### end of script #####
