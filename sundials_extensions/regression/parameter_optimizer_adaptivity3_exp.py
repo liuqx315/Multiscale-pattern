@@ -18,7 +18,7 @@ CM3 = (0.0, 100.0, 1.0,   1.0, 1.0,  10.0,    0.0,    100000.0);  # imex, costly
 
 # set type of integrator to optimize, and number of trials to take, number of params to store
 imex = 1;           # scalar: 0=>implicit, 1=>explicit, 2=>imex
-ntries = 10000;
+ntries = 2000;
 nsaved = 50;
 
 
