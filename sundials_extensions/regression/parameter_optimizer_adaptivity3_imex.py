@@ -8,7 +8,7 @@ import parameter_optimizer_tools as po
 
 
 # set up a list of executable names to use in tests
-tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
+tests = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
 
 # set up a few cost models: order of entries are the weight factors per:
 #     nstep,  nfe, nfi,  lset, nJe, nnewt, oversolve, undersolve
@@ -18,7 +18,7 @@ CM3 = (0.0, 100.0, 1.0,   1.0, 1.0,  10.0,    0.0,    100000.0);  # imex, costly
 
 # set type of integrator to optimize, and number of trials to take, number of params to store
 imex = 2;           # scalar: 0=>implicit, 1=>explicit, 2=>imex
-ntries = 10000;
+ntries = 2000;
 nsaved = 50;
 
 
