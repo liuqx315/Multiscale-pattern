@@ -1,0 +1,9 @@
+# use glob syntax.
+syntax: glob
+*.mod
+*.o
+*~
+*.pyc
+gmon.out
+*.exe
+diags*.txt
