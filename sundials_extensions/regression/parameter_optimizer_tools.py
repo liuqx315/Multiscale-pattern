@@ -378,6 +378,31 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
             dgmx_l = newbounds[20][0];   dgmx_r = newbounds[20][1];
             nlsc_l = newbounds[21][0];   nlsc_r = newbounds[21][1];
             
+    # output final parameter bounds to screen
+    newbounds = update_param_bounds(optimal, oldbounds);
+    sys.stdout.write("Final parameter bounds:\n")
+    sys.stdout.write("   dense order = [%i, %i]\n" % (newbounds[0][0],newbounds[0][1]))
+    sys.stdout.write("   adaptivity method = [%i, %i]\n" % (newbounds[1][0],newbounds[1][1]))
+    sys.stdout.write("   small_nef = [%i, %i]\n" % (newbounds[2][0],newbounds[2][1]))
+    sys.stdout.write("   predictor = [%i, %i]\n" % (newbounds[3][0],newbounds[3][1]))
+    sys.stdout.write("   msbp = [%i, %i]\n" % (newbounds[4][0],newbounds[4][1]))
+    sys.stdout.write("   maxcor = [%i, %i]\n" % (newbounds[5][0],newbounds[5][1]))
+    sys.stdout.write("   cflfac = [%g, %g]\n" % (newbounds[6][0],newbounds[6][1]))
+    sys.stdout.write("   safety = [%g, %g]\n" % (newbounds[7][0],newbounds[7][1]))
+    sys.stdout.write("   bias = [%g, %g]\n" % (newbounds[8][0],newbounds[8][1]))
+    sys.stdout.write("   growth = [%g, %g]\n" % (newbounds[9][0],newbounds[9][1]))
+    sys.stdout.write("   hfixed_lb = [%g, %g]\n" % (newbounds[10][0],newbounds[10][1]))
+    sys.stdout.write("   hfixed_ub = [%g, %g]\n" % (newbounds[11][0],newbounds[11][1]))
+    sys.stdout.write("   k1 = [%g, %g]\n" % (newbounds[12][0],newbounds[12][1]))
+    sys.stdout.write("   k2 = [%g, %g]\n" % (newbounds[13][0],newbounds[13][1]))
+    sys.stdout.write("   k3 = [%g, %g]\n" % (newbounds[14][0],newbounds[14][1]))
+    sys.stdout.write("   etamx1 = [%g, %g]\n" % (newbounds[15][0],newbounds[15][1]))
+    sys.stdout.write("   etamxf = [%g, %g]\n" % (newbounds[16][0],newbounds[16][1]))
+    sys.stdout.write("   etacf = [%g, %g]\n" % (newbounds[17][0],newbounds[17][1]))
+    sys.stdout.write("   crdown = [%g, %g]\n" % (newbounds[18][0],newbounds[18][1]))
+    sys.stdout.write("   rdiv = [%g, %g]\n" % (newbounds[19][0],newbounds[19][1]))
+    sys.stdout.write("   dgmax = [%g, %g]\n" % (newbounds[20][0],newbounds[20][1]))
+    sys.stdout.write("   nlscoef = [%g, %g]\n" % (newbounds[21][0],newbounds[21][1]))
     sys.stdout.write("\n")
     return optimal;
                            
