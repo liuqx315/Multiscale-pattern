@@ -59,7 +59,7 @@ def sort_params(param_list):
         mincost = param_list[i].cost;
         minloc  = i;
         for j in range(i,n):
-            if (param_list[j].cost < mincost):
+            if (param_list[j].cost <= mincost):
                 mincost = param_list[j].cost;
                 minloc = j;
         # swap lowest with current
@@ -83,7 +83,7 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
             len(etamxf) * len(etacf) * len(small_nef) * len(crdown) * 
             len(rdiv) * len(dgmax) * len(predictor) * len(msbp) * 
             len(maxcor) * len(nlscoef));
-    print 'Total number of tests:\n', ntot
+    print 'Total number of tests:', ntot
     # print '  len(dense_order): ',len(dense_order)
     # print '  len(adapt_method): ',len(adapt_method)
     # print '  len(safety): ', len(safety)
@@ -408,122 +408,122 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
                            
 ##########
 def update_param_bounds(parameters, oldbounds):
-    """ This routine searches through a set of parameters and existing  """                
+    """ This routine searches through a set of parameters and existing  """
     """ bounds to determine a reduced set of bounds on those parameters """
     """ that encompass everything in the parameter set.                 """
 
     # set initial lower/upper bounds on each parameter from first allowable set
-    dord_l = 100;   dord_r = -100;
-    hmeth_l = 100;  hmeth_r = -100;
-    cfl_l = 100;    cfl_r = -100;
-    safe_l = 100;   safe_r = -100;
-    bias_l = 100;   bias_r = -100;
-    grow_l = 100;   grow_r = -100;
-    hflb_l = 100;   hflb_r = -100;
-    hfub_l = 100;   hfub_r = -100;
-    k1_l = 100;     k1_r = -100;
-    k2_l = 100;     k2_r = -100;
-    k3_l = 100;     k3_r = -100;
-    em1_l = 100;    em1_r = -100;
-    emf_l = 100;    emf_r = -100;
-    ecf_l = 100;    ecf_r = -100;
-    snf_l = 100;    snf_r = -100;
-    crd_l = 100;    crd_r = -100;
-    rdv_l = 100;    rdv_r = -100;
-    dgm_l = 100;    dgm_r = -100;
-    prd_l = 100;    prd_r = -100;
-    msb_l = 10000;  msb_r = -100;
-    mxc_l = 1000;   mxc_r = -100;
-    nls_l = 1000;   nls_r = -100;
+    dord_l = 10000;   dord_r = -10000;
+    hmeth_l = 10000;  hmeth_r = -10000;
+    cfl_l = 10000;    cfl_r = -10000;
+    safe_l = 10000;   safe_r = -10000;
+    bias_l = 10000;   bias_r = -10000;
+    grow_l = 10000;   grow_r = -10000;
+    hflb_l = 10000;   hflb_r = -10000;
+    hfub_l = 10000;   hfub_r = -10000;
+    k1_l = 10000;     k1_r = -10000;
+    k2_l = 10000;     k2_r = -10000;
+    k3_l = 10000;     k3_r = -10000;
+    em1_l = 10000;    em1_r = -10000;
+    emf_l = 10000;    emf_r = -10000;
+    ecf_l = 10000;    ecf_r = -10000;
+    snf_l = 10000;    snf_r = -10000;
+    crd_l = 10000;    crd_r = -10000;
+    rdv_l = 10000;    rdv_r = -10000;
+    dgm_l = 10000;    dgm_r = -10000;
+    prd_l = 10000;    prd_r = -10000;
+    msb_l = 10000;    msb_r = -10000;
+    mxc_l = 100000;   mxc_r = -10000;
+    nls_l = 100000;   nls_r = -10000;
 
     # iterate through parameter list, setting interval based on min/max allowed vals
     for i in range(len(parameters)):
-        if ((parameters[i].dense_order > oldbounds[0][0]) and 
-            (parameters[i].dense_order < oldbounds[0][1])):
+        if ((parameters[i].dense_order >= oldbounds[0][0]) and 
+            (parameters[i].dense_order <= oldbounds[0][1])):
             dord_l = min(dord_l, parameters[i].dense_order)
             dord_r = max(dord_r, parameters[i].dense_order)
-        if ((parameters[i].adapt_method > oldbounds[1][0]) and 
-            (parameters[i].adapt_method < oldbounds[1][1])):
+        if ((parameters[i].adapt_method >= oldbounds[1][0]) and 
+            (parameters[i].adapt_method <= oldbounds[1][1])):
             hmeth_l = min(hmeth_l, parameters[i].adapt_method)
             hmeth_r = max(hmeth_r, parameters[i].adapt_method)
-        if ((parameters[i].cflfac > oldbounds[6][0]) and 
-            (parameters[i].cflfac < oldbounds[6][1])):
+        if ((parameters[i].cflfac >= oldbounds[6][0]) and 
+            (parameters[i].cflfac <= oldbounds[6][1])):
             cfl_l = min(cfl_l, parameters[i].cflfac)
             cfl_r = max(cfl_r, parameters[i].cflfac)
-        if ((parameters[i].safety > oldbounds[7][0]) and 
-            (parameters[i].safety < oldbounds[7][1])):
+        if ((parameters[i].safety >= oldbounds[7][0]) and 
+            (parameters[i].safety <= oldbounds[7][1])):
             safe_l = min(safe_l, parameters[i].safety)
             safe_r = max(safe_r, parameters[i].safety)
-        if ((parameters[i].bias > oldbounds[8][0]) and 
-            (parameters[i].bias < oldbounds[8][1])):
+        if ((parameters[i].bias >= oldbounds[8][0]) and 
+            (parameters[i].bias <= oldbounds[8][1])):
             bias_l = min(bias_l, parameters[i].bias)
             bias_r = max(bias_r, parameters[i].bias)
-        if ((parameters[i].growth > oldbounds[9][0]) and 
-            (parameters[i].growth < oldbounds[9][1])):
+        if ((parameters[i].growth >= oldbounds[9][0]) and 
+            (parameters[i].growth <= oldbounds[9][1])):
             grow_l = min(grow_l, parameters[i].growth)
             grow_r = max(grow_r, parameters[i].growth)
-        if ((parameters[i].hfixed_lb > oldbounds[10][0]) and 
-            (parameters[i].hfixed_lb < oldbounds[10][1])):
+        if ((parameters[i].hfixed_lb >= oldbounds[10][0]) and 
+            (parameters[i].hfixed_lb <= oldbounds[10][1])):
             hflb_l = min(hflb_l, parameters[i].hfixed_lb)
             hflb_r = max(hflb_r, parameters[i].hfixed_lb)
-        if ((parameters[i].hfixed_ub > oldbounds[11][0]) and 
-            (parameters[i].hfixed_ub < oldbounds[11][1])):
+        if ((parameters[i].hfixed_ub >= oldbounds[11][0]) and 
+            (parameters[i].hfixed_ub <= oldbounds[11][1])):
             hfub_l = min(hfub_l, parameters[i].hfixed_ub)
             hfub_r = max(hfub_r, parameters[i].hfixed_ub)
-        if ((parameters[i].k1 > oldbounds[12][0]) and 
-            (parameters[i].k1 < oldbounds[12][1])):
+        if ((parameters[i].k1 >= oldbounds[12][0]) and 
+            (parameters[i].k1 <= oldbounds[12][1])):
             k1_l = min(k1_l, parameters[i].k1)
             k1_r = max(k1_r, parameters[i].k1)
-        if ((parameters[i].k2 > oldbounds[13][0]) and 
-            (parameters[i].k2 < oldbounds[13][1])):
+        if ((parameters[i].k2 >= oldbounds[13][0]) and 
+            (parameters[i].k2 <= oldbounds[13][1])):
             k2_l = min(k2_l, parameters[i].k2)
             k2_r = max(k2_r, parameters[i].k2)
-        if ((parameters[i].k3 > oldbounds[14][0]) and 
-            (parameters[i].k3 < oldbounds[14][1])):
+        if ((parameters[i].k3 >= oldbounds[14][0]) and 
+            (parameters[i].k3 <= oldbounds[14][1])):
             k3_l = min(k3_l, parameters[i].k3)
             k3_r = max(k3_r, parameters[i].k3)
-        if ((parameters[i].etamx1 > oldbounds[15][0]) and 
-            (parameters[i].etamx1 < oldbounds[15][1])):
+        if ((parameters[i].etamx1 >= oldbounds[15][0]) and 
+            (parameters[i].etamx1 <= oldbounds[15][1])):
             em1_l = min(em1_l, parameters[i].etamx1)
             em1_r = max(em1_r, parameters[i].etamx1)
-        if ((parameters[i].etamxf > oldbounds[16][0]) and 
-            (parameters[i].etamxf < oldbounds[16][1])):
+        if ((parameters[i].etamxf >= oldbounds[16][0]) and 
+            (parameters[i].etamxf <= oldbounds[16][1])):
             emf_l = min(emf_l, parameters[i].etamxf)
             emf_r = max(emf_r, parameters[i].etamxf)
-        if ((parameters[i].etacf > oldbounds[17][0]) and 
-            (parameters[i].etacf < oldbounds[17][1])):
+        if ((parameters[i].etacf >= oldbounds[17][0]) and 
+            (parameters[i].etacf <= oldbounds[17][1])):
             ecf_l = min(ecf_l, parameters[i].etacf)
             ecf_r = max(ecf_r, parameters[i].etacf)
-        if ((parameters[i].small_nef > oldbounds[2][0]) and 
-            (parameters[i].small_nef < oldbounds[2][1])):
+        if ((parameters[i].small_nef >= oldbounds[2][0]) and 
+            (parameters[i].small_nef <= oldbounds[2][1])):
             snf_l = min(snf_l, parameters[i].small_nef)
             snf_r = max(snf_r, parameters[i].small_nef)
-        if ((parameters[i].crdown > oldbounds[18][0]) and 
-            (parameters[i].crdown < oldbounds[18][1])):
+        if ((parameters[i].crdown >= oldbounds[18][0]) and 
+            (parameters[i].crdown <= oldbounds[18][1])):
             crd_l = min(crd_l, parameters[i].crdown)
             crd_r = max(crd_r, parameters[i].crdown)
-        if ((parameters[i].rdiv > oldbounds[19][0]) and 
-            (parameters[i].rdiv < oldbounds[19][1])):
+        if ((parameters[i].rdiv >= oldbounds[19][0]) and 
+            (parameters[i].rdiv <= oldbounds[19][1])):
             rdv_l = min(rdv_l, parameters[i].rdiv)
             rdv_r = max(rdv_r, parameters[i].rdiv)
-        if ((parameters[i].dgmax > oldbounds[20][0]) and 
-            (parameters[i].dgmax < oldbounds[20][1])):
+        if ((parameters[i].dgmax >= oldbounds[20][0]) and 
+            (parameters[i].dgmax <= oldbounds[20][1])):
             dgm_l = min(dgm_l, parameters[i].dgmax)
             dgm_r = max(dgm_r, parameters[i].dgmax)
-        if ((parameters[i].predictor > oldbounds[3][0]) and 
-            (parameters[i].predictor < oldbounds[3][1])):
+        if ((parameters[i].predictor >= oldbounds[3][0]) and 
+            (parameters[i].predictor <= oldbounds[3][1])):
             prd_l = min(prd_l, parameters[i].predictor)
             prd_r = max(prd_r, parameters[i].predictor)
-        if ((parameters[i].msbp > oldbounds[4][0]) and 
-            (parameters[i].msbp < oldbounds[4][1])):
+        if ((parameters[i].msbp >= oldbounds[4][0]) and 
+            (parameters[i].msbp <= oldbounds[4][1])):
             msb_l = min(msb_l, parameters[i].msbp)
             msb_r = max(msb_r, parameters[i].msbp)
-        if ((parameters[i].maxcor > oldbounds[5][0]) and 
-            (parameters[i].maxcor < oldbounds[5][1])):
+        if ((parameters[i].maxcor >= oldbounds[5][0]) and 
+            (parameters[i].maxcor <= oldbounds[5][1])):
             mxc_l = min(mxc_l, parameters[i].maxcor)
             mxc_r = max(mxc_r, parameters[i].maxcor)
-        if ((parameters[i].nlscoef > oldbounds[21][0]) and 
-            (parameters[i].nlscoef < oldbounds[21][1])):
+        if ((parameters[i].nlscoef >= oldbounds[21][0]) and 
+            (parameters[i].nlscoef <= oldbounds[21][1])):
             nls_l = min(nls_l, parameters[i].nlscoef)
             nls_r = max(nls_r, parameters[i].nlscoef)
         
