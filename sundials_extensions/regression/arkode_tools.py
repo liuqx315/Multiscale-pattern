@@ -51,7 +51,7 @@ class SolParams:
 
 #### Utility functions ####
 
-def run_test(testname):
+def run_test(testname,keep_output):
     """ This routine takes in a string containing an executable name, """
     """ runs that test sending all output to a temporary file, and    """
     """ processes that file to determine the overall run statistics,  """
@@ -59,10 +59,13 @@ def run_test(testname):
     import shlex
     import os
     import subprocess
+    from time import time
     #  run routine
     out = open('output.txt','w')
     null = open(os.devnull, 'w')
+    tstart = time()
     subprocess.call(testname, stdout=out, stderr=null)
+    runtime = (time() - tstart)
     null.close()
     out.close()
     #  initialize return values
@@ -109,8 +112,9 @@ def run_test(testname):
         elif ("Oversolve" in txt):
             oversolve = float(txt[2]);
     f.close()
-    os.remove('output.txt')
-    return [nsteps, asteps, csteps, nfe, nfi, lsetups, nfi_lsetup, nJe, nnewt, ncf, nef, maxerr, rmserr, oversolve]
+    if (keep_output==0):
+        os.remove('output.txt')
+    return [nsteps, asteps, csteps, nfe, nfi, lsetups, nfi_lsetup, nJe, nnewt, ncf, nef, maxerr, rmserr, oversolve, runtime]
     
 ##########
 def write_parameter_file(params):

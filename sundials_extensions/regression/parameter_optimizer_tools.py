@@ -14,7 +14,7 @@ def run_cost(testname,CM):
     """ a temporary file, processes that file to determine the        """
     """ overall run statistics, and assesses a total run 'cost'.      """
     # run test and get statistics
-    [nst,ast,cst,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov] = ark.run_test(testname)
+    [nst,ast,cst,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testname,0)
     # generate total cost
     cost = 1.0 + CM[0]*nst + CM[1]*nfe + CM[2]*(nfi+nfi_lset) + CM[4]*nJe
     cost += CM[3]*lset + CM[5]*nnewt
