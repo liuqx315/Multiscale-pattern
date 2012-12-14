@@ -7,3 +7,4 @@ syntax: glob
 gmon.out
 *.exe
 diags*.txt
+regression_results_*
