@@ -1,0 +1,87 @@
+f(x) = f(x);
+f(x+h) = f(x) + h*f'(x) + h^2/2*f''(x) + h^3/6*f'''(x) +
+         h^4/24*f''''(x) + O(h^5);
+f(x+2h) = f(x) + 2*h*f'(x) + 2*h^2*f''(x) + 4/3*h^3*f'''(x) +
+         2/3*h^4*f''''(x) + O(h^5);
+f(x+3h) = f(x) + 3*h*f'(x) + 9/2*h^2*f''(x) + 9/2*h^3*f'''(x) +
+         27/8*h^4*f''''(x) + O(h^5);
+f(x+4h) = f(x) + 4*h*f'(x) + 8*h^2*f''(x) + 32/3*h^3*f'''(x) +
+         32/3*h^4*f''''(x) + O(h^5);
+
+   a*f(x) + b*f(x+h) + c*f(x+2h) + d*f(x+3h) + 3*f(x+4h)
+=
+   a*f 
+ + b*[f + h*f'   + h^2/2*f''   + h^3/6*f'''    + h^4/24*f''''] 
+ + c*[f + 2*h*f' + 2*h^2*f''   + 4/3*h^3*f'''  + 2/3*h^4*f'''']
+ + d*[f + 3*h*f' + 9/2*h^2*f'' + 9/2*h^3*f'''  + 27/8*h^4*f'''']
+ + e*[f + 4*h*f' + 8*h^2*f''   + 32/3*h^3*f''' + 32/3*h^4*f'''']
+ + O(h^5)
+= 
+   f*(a + b + c + d + e)
+ + h*f'*(b + 2*c + 3*d + 4*e)
+ + h^2*f''*(b/2 + 2*c + 9/2*d + 8*e)
+ + h^3*f'''*(b/6 + 4/3*c + 9/2*d + 32/3*e)
+ + h^4*f''''*(b/24 + 2/3*c + 27/8*d + 32/3*e)
+ + O(h^5)
+
+
+So to specify f'''(x), we need
+   a + b + c + d + e = 0
+   b + 2*c + 3*d + 4*e = 0
+   b/2 + 2*c + 9/2*d + 8*e = 0
+   b/6 + 4/3*c + 9/2*d + 32/3*e = h^{-3}
+   b/24 + 2/3*c + 27/8*d + 32/3*e = 0
+
+giving 
+
+  a = -5/(2*h^3),  b = 9/h^3,  c = -12/h^3,  d = 7/h^3,  e = -3/(2*h^3)
+
+Hence the finite difference formula is 
+
+f'''(x) = [-5/2*f(x) +9*f(x+h) -12*f(x+2h) +7*f(x+3h) -3/2*f(x+4h)]/h^3 + O(h^2)
+
+
+
+Similarly, to specify f'(x), we need
+   a + b + c = 0
+   b + 2*c = 1/h
+   b/2 + 2*c = 0
+
+giving 
+
+  a = -3/(2*h),  b = 2/h,  c = -1/(2*h)
+
+Hence the finite difference formula is 
+
+f'(x) = [-3/2*f(x) + 2*f(x+h) - 1/2*f(x+2h)]/h + O(h^2)
+
+
+Therefore, to obtain f'(x)=f'''(x)=0 to O(h^2), we need to set the two
+outer-most points to satisfy the system
+
+0 = -5/2*f(x) + 9*f(x+h) - 12*f(x+2h) + 7*f(x+3h) - 3/2*f(x+4h)
+0 = -3/2*f(x) + 2*f(x+h) - 1/2*f(x+2h)
+
+or
+
+5/2*f(x) - 9*f(x+h) = - 12*f(x+2h) + 7*f(x+3h) - 3/2*f(x+4h)
+3/2*f(x) - 2*f(x+h) = - 1/2*f(x+2h)
+
+or
+
+5*f(x) - 18*f(x+h) = -24*f(x+2h) + 14*f(x+3h) - 3*f(x+4h)
+3*f(x) - 4*f(x+h) = -f(x+2h)
+
+or 
+
+f(x) = - 2/17*(-24*f(x+2h) + 14*f(x+3h) - 3*f(x+4h)) + 9/17*(-f(x+2h)) 
+f(x+h) = - 3/34*(-24*f(x+2h) + 14*f(x+3h) - 3*f(x+4h)) + 5/34*(-f(x+2h)) 
+
+or 
+
+f(x) = 39/17*f(x+2h) - 28/17*f(x+3h) + 6/17*f(x+4h) 
+f(x+h) = 67/34*f(x+2h) - 21/17*f(x+3h) + 9/34*f(x+4h)
+
+So assuming the values are initialized correctly, we just need to set
+the updated RHS at these boundary nodes to match these linear
+combinations of the RHS values at the nearby interior nodes. 
