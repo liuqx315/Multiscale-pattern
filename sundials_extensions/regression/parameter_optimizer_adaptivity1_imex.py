@@ -18,24 +18,26 @@ CM3 = (0.0, 100.0, 1.0,   1.0, 1.0,  10.0,    0.0,    100000.0);  # imex, costly
 
 # set type of integrator to optimize, and number of trials to take, number of params to store
 imex = 2;           # scalar: 0=>implicit, 1=>explicit, 2=>imex
-ntries = 2000;
-nsaved = 50;
+ntries = 10000;
+nsaved = 20;
 
+
+# order 3
 
 # set intervals of available parameters to search
+safety = (0.970731, 0.977824);
+bias = (1.34833, 1.39262);
+growth = (21.6915, 28.6607);
+k1 = (0.713499, 0.721836);
+k2 = (0.332151, 0.35032);
+etamxf = (0.419517, 0.446678);
 dense_order  = (-1, -1);
 adapt_method = (1, 1);
 cflfac = (0.0, 0.0);
-safety = (0.9, 1.0);
-bias = (1.0, 6.0);
-growth = (2.0, 50.0);
 hfixed_lb = (0.0, 0.0);
 hfixed_ub = (0.0, 0.0);
-k1 = (0.5, 0.9);
-k2 = (0.3, 0.5);
 k3 = (0.0, 0.0);
 etamx1 = (0.0, 0.0);
-etamxf = (0.1, 0.5);
 etacf = (0.0, 0.0);
 small_nef = (0, 0);
 crdown = (0.0, 0.0);
@@ -59,32 +61,6 @@ for i in range(min(nsaved,len(opt_params13))):
     opt_params13[i].Write();
 
 
-# run parameter search for cost model 1, order 4
-opt_params14 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
-                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
-                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
-                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1, ntries);
-# output saved parameters and costs
-print '\nOrder 4, cost model 1, the ',nsaved,' best sets of solver parameters are:'
-opt_params14[0].WriteHeader();
-for i in range(min(nsaved,len(opt_params14))):
-    opt_params14[i].Write();
-
-
-# run parameter search for cost model 1, order 5
-opt_params15 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, safety, bias, 
-                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
-                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
-                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1, ntries);
-# output saved parameters and costs
-print '\nOrder 5, cost model 1, the ',nsaved,' best sets of solver parameters are:'
-opt_params15[0].WriteHeader();
-for i in range(min(nsaved,len(opt_params15))):
-    opt_params15[i].Write();
-
-
-
-
 # run parameter search for cost model 2, order 3
 opt_params23 = po.parameter_rand_search(3, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
@@ -95,32 +71,6 @@ print '\nOrder 3, cost model 2, the ',nsaved,' best sets of solver parameters ar
 opt_params23[0].WriteHeader();
 for i in range(min(nsaved,len(opt_params23))):
     opt_params23[i].Write();
-
-
-# run parameter search for cost model 2, order 4
-opt_params24 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
-                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
-                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
-                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM2, ntries);
-# output saved parameters and costs
-print '\nOrder 4, cost model 2, the ',nsaved,' best sets of solver parameters are:'
-opt_params24[0].WriteHeader();
-for i in range(min(nsaved,len(opt_params24))):
-    opt_params24[i].Write();
-
-
-# run parameter search for cost model 2, order 5
-opt_params25 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, safety, bias, 
-                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
-                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
-                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM2, ntries);
-# output saved parameters and costs
-print '\nOrder 5, cost model 2, the ',nsaved,' best sets of solver parameters are:'
-opt_params25[0].WriteHeader();
-for i in range(min(nsaved,len(opt_params25))):
-    opt_params25[i].Write();
-
-
 
 
 # run parameter search for cost model 3, order 3
@@ -135,6 +85,60 @@ for i in range(min(nsaved,len(opt_params33))):
     opt_params33[i].Write();
 
 
+
+
+
+# order 4
+
+# set intervals of available parameters to search
+safety = (0.984787, 0.98716);
+bias = (1.01625, 1.02796);
+growth = (20.9866, 28.532);
+k1 = (0.741197, 0.863598);
+k2 = (0.326282, 0.334516);
+etamxf = (0.270358, 0.365188);
+dense_order  = (-1, -1);
+adapt_method = (1, 1);
+cflfac = (0.0, 0.0);
+hfixed_lb = (0.0, 0.0);
+hfixed_ub = (0.0, 0.0);
+k3 = (0.0, 0.0);
+etamx1 = (0.0, 0.0);
+etacf = (0.0, 0.0);
+small_nef = (0, 0);
+crdown = (0.0, 0.0);
+rdiv = (0.0, 0.0);
+dgmax = (0.0, 0.0);
+predictor = (3, 3);
+msbp = (0, 0);
+maxcor = (0, 0);
+nlscoef = (0.3, 0.3);
+
+
+# run parameter search for cost model 1, order 4
+opt_params14 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
+                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
+                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
+                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1, ntries);
+# output saved parameters and costs
+print '\nOrder 4, cost model 1, the ',nsaved,' best sets of solver parameters are:'
+opt_params14[0].WriteHeader();
+for i in range(min(nsaved,len(opt_params14))):
+    opt_params14[i].Write();
+
+
+# run parameter search for cost model 2, order 4
+opt_params24 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
+                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
+                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
+                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM2, ntries);
+# output saved parameters and costs
+print '\nOrder 4, cost model 2, the ',nsaved,' best sets of solver parameters are:'
+opt_params24[0].WriteHeader();
+for i in range(min(nsaved,len(opt_params24))):
+    opt_params24[i].Write();
+
+
 # run parameter search for cost model 3, order 4
 opt_params34 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, safety, bias, 
                                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
@@ -145,6 +149,60 @@ print '\nOrder 4, cost model 3, the ',nsaved,' best sets of solver parameters ar
 opt_params34[0].WriteHeader();
 for i in range(min(nsaved,len(opt_params34))):
     opt_params34[i].Write();
+
+
+
+
+
+# order 5
+
+# set intervals of available parameters to search
+safety = (0.990884, 0.993957);
+bias = (1.13525, 1.19382);
+growth = (26.6683, 30.739);
+k1 = (0.787241, 0.836144);
+k2 = (0.327736, 0.358606);
+etamxf = (0.278577, 0.318643);
+dense_order  = (-1, -1);
+adapt_method = (1, 1);
+cflfac = (0.0, 0.0);
+hfixed_lb = (0.0, 0.0);
+hfixed_ub = (0.0, 0.0);
+k3 = (0.0, 0.0);
+etamx1 = (0.0, 0.0);
+etacf = (0.0, 0.0);
+small_nef = (0, 0);
+crdown = (0.0, 0.0);
+rdiv = (0.0, 0.0);
+dgmax = (0.0, 0.0);
+predictor = (3, 3);
+msbp = (0, 0);
+maxcor = (0, 0);
+nlscoef = (0.3, 0.3);
+
+
+# run parameter search for cost model 1, order 5
+opt_params15 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, safety, bias, 
+                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
+                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
+                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM1, ntries);
+# output saved parameters and costs
+print '\nOrder 5, cost model 1, the ',nsaved,' best sets of solver parameters are:'
+opt_params15[0].WriteHeader();
+for i in range(min(nsaved,len(opt_params15))):
+    opt_params15[i].Write();
+
+
+# run parameter search for cost model 2, order 5
+opt_params25 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, safety, bias, 
+                                growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, 
+                                etamxf, etacf, small_nef, crdown, rdiv, dgmax, 
+                                predictor, msbp, maxcor, nlscoef, nsaved, tests, CM2, ntries);
+# output saved parameters and costs
+print '\nOrder 5, cost model 2, the ',nsaved,' best sets of solver parameters are:'
+opt_params25[0].WriteHeader();
+for i in range(min(nsaved,len(opt_params25))):
+    opt_params25[i].Write();
 
 
 # run parameter search for cost model 1, order 5
