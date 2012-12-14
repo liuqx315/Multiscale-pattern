@@ -1,95 +1,80 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2010/12/01 22:27:37 $
- * ----------------------------------------------------------------- 
- * Programmer(s): Radu Serban @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * Fortran/C interface routines for CVODE/CVLAPACK, for the case
- * of a user-supplied dense Jacobian approximation routine.
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  Fortran/C interface routines for ARKODE/ARKLAPACK, for the case
+  of a user-supplied dense Jacobian approximation routine.
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "farkode.h"
+#include "arkode_impl.h"
+#include <arkode/arkode_lapack.h>
 
-#include "fcvode.h"     /* actual fn. names, prototypes and global vars.*/
-#include "cvode_impl.h" /* definition of CVodeMem type                  */
-
-#include <cvode/cvode_lapack.h>
-
-/***************************************************************************/
+/*=============================================================*/
 
 /* Prototype of the Fortran routines */
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-  extern void FCV_DJAC(long int*,                        /* N          */
-                       realtype*, realtype*, realtype*,  /* T, Y, FY   */
-                       realtype*,                        /* LDJAC      */
-                       realtype*,                        /* H          */ 
-                       long int*, realtype*,             /* IPAR, RPAR */
-                       realtype*, realtype*, realtype*,  /* V1, V2, V3 */
-                       int *ier);                        /* IER        */
+
+  extern void FARK_LDJAC(long int *N, realtype *T, realtype *Y, 
+			 realtype *FY, realtype *LDJAC, 
+			 realtype *H, long int *IPAR, 
+			 realtype *RPAR, realtype *V1, 
+			 realtype *V2, realtype *V3, int *ier);
+
 #ifdef __cplusplus
 }
 #endif
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_LAPACKDENSESETJAC(int *flag, int *ier)
+/* Fortran interface to C routine ARKDlsSetDenseJacFn; see 
+   farkode.h for further details */
+void FARK_LAPACKDENSESETJAC(int *flag, int *ier)
 {
-  CVodeMem cv_mem;
-
   if (*flag == 0) {
-    *ier = CVDlsSetDenseJacFn(CV_cvodemem, NULL);
+    *ier = ARKDlsSetDenseJacFn(ARK_arkodemem, NULL);
   } else {
-    cv_mem = (CVodeMem) CV_cvodemem;
-    *ier = CVDlsSetDenseJacFn(CV_cvodemem, FCVLapackDenseJac);
+    *ier = ARKDlsSetDenseJacFn(ARK_arkodemem, FARKLapackDenseJac);
   }
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-/* The C function FCVLapackDenseJac interfaces between CVODE and a 
- * Fortran subroutine FCVDJAC for solution of a linear system using 
- * Lapack with dense Jacobian approximation.
- * Addresses of arguments are passed to FCVDJAC, using the macro 
- * DENSE_COL and the routine N_VGetArrayPointer from NVECTOR.
- * Auxiliary data is assumed to be communicated by Common. 
- */
-
-int FCVLapackDenseJac(long int N, realtype t,
-                      N_Vector y, N_Vector fy, 
-                      DlsMat J, void *user_data,
-                      N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3)
+/* C interface to user-supplied Fortran routine FARKLDJAC; see 
+   farkode.h for further details */
+int FARKLapackDenseJac(long int N, realtype t, N_Vector y, 
+		       N_Vector fy,  DlsMat J, void *user_data,
+		       N_Vector vtemp1, N_Vector vtemp2, 
+		       N_Vector vtemp3)
 {
   int ier;
   realtype *ydata, *fydata, *jacdata, *v1data, *v2data, *v3data;
   realtype h;
-  FCVUserData CV_userdata;
+  FARKUserData ARK_userdata;
 
-  CVodeGetLastStep(CV_cvodemem, &h);
-
+  ARKodeGetLastStep(ARK_arkodemem, &h);
   ydata   = N_VGetArrayPointer(y);
   fydata  = N_VGetArrayPointer(fy);
   v1data  = N_VGetArrayPointer(vtemp1);
   v2data  = N_VGetArrayPointer(vtemp2);
   v3data  = N_VGetArrayPointer(vtemp3);
-
   jacdata = DENSE_COL(J,0);
+  ARK_userdata = (FARKUserData) user_data;
 
-  CV_userdata = (FCVUserData) user_data;
-
-  FCV_DJAC(&N, &t, ydata, fydata, jacdata, &h, 
-           CV_userdata->ipar, CV_userdata->rpar, v1data, v2data, v3data, &ier); 
-
+  FARK_LDJAC(&N, &t, ydata, fydata, jacdata, &h, 
+	    ARK_userdata->ipar, ARK_userdata->rpar, v1data, 
+	    v2data, v3data, &ier); 
   return(ier);
 }
 
+/*===============================================================
+   EOF
+===============================================================*/

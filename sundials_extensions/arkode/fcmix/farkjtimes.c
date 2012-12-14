@@ -1,32 +1,22 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2007/04/30 19:28:59 $
- * ----------------------------------------------------------------- 
- * Programmer(s): Alan C. Hindmarsh, Radu Serban and
- *                Aaron Collier @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * The C function FCVJtimes is to interface between the
- * CVSP* module and the user-supplied Jacobian-vector
- * product routine FCVJTIMES. Note the use of the generic name
- * FCV_JTIMES below.
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  The C function FARKJtimes is to interface between the ARKSP* 
+  modules and the user-supplied Jacobian-vector product routine
+  FARKJTIMES. Note the use of the generic name FARK_JTIMES in
+  the code below.
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "farkode.h"
+#include "arkode_impl.h"
+#include <arkode/arkode_spils.h>
 
-#include "fcvode.h"     /* actual fn. names, prototypes and global vars.*/
-#include "cvode_impl.h" /* definition of CVodeMem type                  */
-
-#include <cvode/cvode_spils.h>
-
-/***************************************************************************/
+/*=============================================================*/
 
 /* Prototype of the Fortran routine */
 
@@ -34,62 +24,57 @@
 extern "C" {
 #endif
 
-  extern void FCV_JTIMES(realtype*, realtype*,            /* V, JV      */
-                         realtype*, realtype*, realtype*, /* T, Y, FY   */
-                         realtype*,                       /* H          */
-                         long int*, realtype*,            /* IPAR, RPAR */
-                         realtype*,                       /* WRK        */
-                         int*);                           /* IER        */
+  extern void FARK_JTIMES(realtype *V, realtype *JV, realtype *T, 
+			  realtype *Y, realtype *FY, realtype *H,
+			  long int *IPAR, realtype *RPAR,
+			  realtype *WRK, int *IER);
 
 #ifdef __cplusplus
 }
 #endif
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPILSSETJAC(int *flag, int *ier)
+/* Fortran interface to C routine ARKSpilsSetJacTimesVecFn; see 
+   farkode.h for further information */
+void FARK_SPILSSETJAC(int *flag, int *ier)
 {
-  CVodeMem cv_mem;
-
   if (*flag == 0) {
-    *ier = CVSpilsSetJacTimesVecFn(CV_cvodemem, NULL);
+    *ier = ARKSpilsSetJacTimesVecFn(ARK_arkodemem, NULL);
   } else {
-    cv_mem = (CVodeMem) CV_cvodemem;
-    *ier = CVSpilsSetJacTimesVecFn(CV_cvodemem, FCVJtimes);
+    *ier = ARKSpilsSetJacTimesVecFn(ARK_arkodemem, FARKJtimes);
   }
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-/* C function  FCVJtimes to interface between CVODE and  user-supplied
-   Fortran routine FCVJTIMES for Jacobian * vector product.
-   Addresses of v, Jv, t, y, fy, h, and work are passed to FCVJTIMES,
-   using the routine N_VGetArrayPointer from NVECTOR.
-   A return flag ier from FCVJTIMES is returned by FCVJtimes.
-   Auxiliary data is assumed to be communicated by common blocks. */
-
-int FCVJtimes(N_Vector v, N_Vector Jv, realtype t, 
-              N_Vector y, N_Vector fy,
-              void *user_data, N_Vector work)
+/* C interface to user-supplied Fortran routine FARKJTIMES; see
+   farkode.h for further information */
+int FARKJtimes(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+	       N_Vector fy, void *user_data, N_Vector work)
 {
   realtype *vdata, *Jvdata, *ydata, *fydata, *wkdata;
   realtype h;
-  FCVUserData CV_userdata;
-
+  FARKUserData ARK_userdata;
   int ier = 0;
   
-  CVodeGetLastStep(CV_cvodemem, &h);
+  ARKodeGetLastStep(ARK_arkodemem, &h);
 
-  vdata   = N_VGetArrayPointer(v);
-  Jvdata  = N_VGetArrayPointer(Jv);
-  ydata   = N_VGetArrayPointer(y);
-  fydata  = N_VGetArrayPointer(fy);
-  wkdata  = N_VGetArrayPointer(work);
+  vdata  = N_VGetArrayPointer(v);
+  Jvdata = N_VGetArrayPointer(Jv);
+  ydata  = N_VGetArrayPointer(y);
+  fydata = N_VGetArrayPointer(fy);
+  wkdata = N_VGetArrayPointer(work);
 
-  CV_userdata = (FCVUserData) user_data;
+  ARK_userdata = (FARKUserData) user_data;
  
-  FCV_JTIMES (vdata, Jvdata, &t, ydata, fydata, &h, 
-              CV_userdata->ipar, CV_userdata->rpar, wkdata, &ier);
-
+  FARK_JTIMES(vdata, Jvdata, &t, ydata, fydata, &h, 
+	      ARK_userdata->ipar, ARK_userdata->rpar, 
+	      wkdata, &ier);
   return(ier);
 }
+
+/*===============================================================
+   EOF
+===============================================================*/
