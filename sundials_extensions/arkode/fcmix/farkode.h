@@ -1,758 +1,1164 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2010/12/01 22:27:37 $
- * ----------------------------------------------------------------- 
- * Programmer(s): Alan C. Hindmarsh, Radu Serban and
- *                Aaron Collier @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * This is the header file for FCVODE, the Fortran interface to
- * the CVODE package.                                            
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  This is the header file for FARKODE, the Fortran interface to
+  the ARKODE package.                                            
+ --------------------------------------------------------------*/
 
-/*
- * =============================================================================
- *
- *                FCVODE Interface Package
- *
- * The FCVODE Interface Package is a package of C functions which support
- * the use of the CVODE solver, for the solution of ODE systems 
- * dy/dt = f(t,y), in a mixed Fortran/C setting.  While CVODE is written
- * in C, it is assumed here that the user's calling program and
- * user-supplied problem-defining routines are written in Fortran. 
- * This package provides the necessary interface to CVODE for both the
- * serial and the parallel NVECTOR implementations.
- * 
- * The user-callable functions, with the corresponding CVODE functions,
- * are as follows:
- * 
- *   FNVINITS and FNVINITP interface to N_VNew_Serial and
- *               N_VNew_Parallel, respectively
- * 
- *   FCVMALLOC  interfaces to CVodeCreate, CVodeSetUserData, and CVodeInit
- * 
- *   FCVREINIT  interfaces to CVReInit
- * 
- *   FCVSETIIN and FCVSETRIN interface to CVodeSet*
- *
- *   FCVEWTSET  interfaces to CVodeWFtolerances
- * 
- *   FCVDIAG    interfaces to CVDiag
- * 
- *   FCVDENSE   interfaces to CVDense
- *   FCVDENSESETJAC   interfaces to CVDenseSetJacFn
- * 
- *   FCVBAND    interfaces to CVBand
- *   FCVBANDSETJAC    interfaces to CVBandSetJacFn
- *
- *   FCVLAPACKDENSE   interfaces to CVLapackDense
- *   FCVLAPACKBAND    interfaces to CVLapackBand
- *   FCVLAPACKDENSESETJAC  interfaces to CVLapackSetJacFn
- *   FCVLAPACKBANDSETJAC   interfaces to CVLapackSetJacFn
- *
- *   FCVSPGMR and FCVSPGMRREINIT interface to CVSpgmr and CVSpilsSet*
- *   FCVSPBCG, FCVSPBCGREINIT interface to CVSpbcg and CVSpilsSet*
- *   FCVSPTFQMR, FCVSPTFQMRREINIT interface to CVSptfqmr and CVSpilsSet*
- *
- *   FCVSPILSSETJAC   interfaces to CVSpilsSetJacTimesVecFn
- *   FCVSPILSSETPREC  interfaces to CVSpilsSetPreconditioner
- * 
- *   FCVODE     interfaces to CVode, CVodeGet*, and CV*Get*
- * 
- *   FCVDKY     interfaces to CVodeGetDky
- * 
- *   FCVGETERRWEIGHTS  interfaces to CVodeGetErrWeights
- *
- *   FCVGETESTLOCALERR  interfaces to CVodeGetEstLocalErrors
- *
- *   FCVFREE    interfaces to CVodeFree
- * 
- * The user-supplied functions, each listed with the corresponding interface
- * function which calls it (and its type within CVODE), are as follows:
- *   FCVFUN    is called by the interface function FCVf of type CVRhsFn
- *   FCVDJAC   is called by the interface fn. FCVDenseJac of type CVDenseJacFn
- *   FCVBJAC   is called by the interface fn. FCVBandJac of type CVBandJacFn
- *   FCVLDJAC  is called by the interface fn. FCVLapackDenseJac of type CVLapackJacFn
- *   FCVLBJAC  is called by the interface fn. FCVLapackBandJac of type CVLapackJacFn
- *   FCVPSOL   is called by the interface fn. FCVPSol of type CVSpilsPrecSolveFn
- *   FCVPSET   is called by the interface fn. FCVPSet of type CVSpilsPrecSetupFn
- *   FCVJTIMES is called by interface fn. FCVJtimes of type CVSpilsJacTimesVecFn
- *   FCVEWT    is called by interface fn. FCVEwtSet of type CVEwtFn
- * In contrast to the case of direct use of CVODE, and of most Fortran ODE
- * solvers, the names of all user-supplied routines here are fixed, in
- * order to maximize portability for the resulting mixed-language program.
- * 
- * Important note on portability.
- * In this package, the names of the interface functions, and the names of
- * the Fortran user routines called by them, appear as dummy names
- * which are mapped to actual values by a series of definitions, in this
- * and other header files.
- * 
- * =============================================================================
- * 
- *                  Usage of the FCVODE Interface Package
- * 
- * The usage of FCVODE requires calls to five or more interface
- * functions, depending on the method options selected, and one or more
- * user-supplied routines which define the problem to be solved.  These
- * function calls and user routines are summarized separately below.
- * 
- * Some details are omitted, and the user is referred to the user documents
- * on CVODE for more complete documentation.  Information on the
- * arguments of any given user-callable interface routine, or of a given
- * user-supplied function called by an interface function, can be found in
- * the documentation on the corresponding function in the CVODE package.
- * 
- * The number labels on the instructions below end with s for instructions
- * that apply to the serial version of CVODE only, and end with p for
- * those that apply to the parallel version only.
- *
- * -----------------------------------------------------------------------------
- *
- * (1) User-supplied right-hand side routine: FCVFUN
- * The user must in all cases supply the following Fortran routine
- *       SUBROUTINE FCVFUN (T, Y, YDOT, IPAR, RPAR, IER)
- *       DIMENSION Y(*), YDOT(*), IPAR(*), RPAR(*)
- * It must set the YDOT array to f(t,y), the right-hand side of the ODE 
- * system, as function of T = t and the array Y = y.  Here Y and YDOT
- * are distributed vectors. IPAR and RPAR are arrays of integer and real user 
- * data, respectively as passed to FCVMALLOC.
- * On return, set IER = 0 if successful, IER > 0 if a recoverable error occurred,
- * and IER < 0 if an unrecoverable error ocurred.
- * 
- * (2s) Optional user-supplied dense Jacobian approximation routine: FCVDJAC
- * As an option when using the DENSE linear solver, the user may supply a
- * routine that computes a dense approximation of the system Jacobian 
- * J = df/dy. If supplied, it must have the following form:
- *       SUBROUTINE FCVDJAC (NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
- *       DIMENSION Y(*), FY(*), DJAC(NEQ,*), IPAR(*), RPAR(*), WK1(*), WK2(*), WK3(*)
- * Typically this routine will use only NEQ, T, Y, and DJAC. It must compute
- * the Jacobian and store it columnwise in DJAC.
- * IPAR and RPAR are user (integer and real) arrays passed to FCVMALLOC.
- * On return, set IER = 0 if successful, IER > 0 if a recoverable error occurred,
- * and IER < 0 if an unrecoverable error ocurred.
- * 
- * (3s) Optional user-supplied band Jacobian approximation routine: FCVBJAC
- * As an option when using the BAND linear solver, the user may supply a
- * routine that computes a band approximation of the system Jacobian 
- * J = df/dy. If supplied, it must have the following form:
- *       SUBROUTINE FCVBJAC (NEQ, MU, ML, MDIM, T, Y, FY, BJAC, H,
- *      1                    IPAR, RPAR, WK1, WK2, WK3, IER)
- *       DIMENSION Y(*), FY(*), BJAC(MDIM,*), IPAR(*), RPAR(*), WK1(*), WK2(*), WK3(*)
- * Typically this routine will use only NEQ, MU, ML, T, Y, and BJAC. 
- * It must load the MDIM by N array BJAC with the Jacobian matrix at the
- * current (t,y) in band form.  Store in BJAC(k,j) the Jacobian element J(i,j)
- * with k = i - j + MU + 1 (k = 1 ... ML+MU+1) and j = 1 ... N.
- * IPAR and RPAR are user (integer and real) arrays passed to FCVMALLOC.
- * On return, set IER = 0 if successful, IER > 0 if a recoverable error occurred,
- * and IER < 0 if an unrecoverable error ocurred.
- * 
- * (4s) Optional user-supplied Lapack dense Jacobian routine: FCVLDJAC
- * See the description for FCVDJAC. NOTE: the dense Jacobian matrix
- * is NOT set to zero before calling the user's FCVLDJAC.
- *
- * (5s) Optional user-supplied Lapack band Jacobian routine: FCVLBJAC
- * See the description for FCVBJAC. NOTE: the band Jacobian matrix
- * is NOT set to zero before calling the user's FCVLBJAC.
- *
- * (6) Optional user-supplied Jacobian-vector product routine: FCVJTIMES
- * As an option when using the SP* linear solver, the user may supply
- * a routine that computes the product of the system Jacobian J = df/dy and 
- * a given vector v.  If supplied, it must have the following form:
- *       SUBROUTINE FCVJTIMES (V, FJV, T, Y, FY, H, IPAR, RPAR, WORK, IER)
- *       DIMENSION V(*), FJV(*), Y(*), FY(*), IPAR(*), RPAR(*), WORK(*)
- * Typically this routine will use only NEQ, T, Y, V, and FJV.  It must
- * compute the product vector Jv where the vector v is stored in V, and store
- * the product in FJV.  On return, set IER = 0 if FCVJTIMES was successful,
- * and nonzero otherwise.
- * IPAR and RPAR are user (integer and real) arrays passed to FCVMALLOC.
- * 
- * (7) Optional user-supplied error weight vector routine: FCVEWT
- * As an option to providing the relative and absolute tolerances, the user
- * may supply a routine that computes the weights used in the WRMS norms.
- * If supplied, it must have the following form:
- *       SUBROUTINE FCVEWT (Y, EWT, IPAR, RPAR, IER)
- *       DIMENSION Y(*), EWT(*), IPAR(*), RPAR(*)
- * It must store the error weights in EWT, given the current solution vector Y.
- * On return, set IER = 0 if successful, and nonzero otherwise.
- * IPAR and RPAR are user (integer and real) arrays passed to FCVMALLOC.
- *
- * -----------------------------------------------------------------------------
- *
- * (8) Initialization:  FNVINITS / FNVINITP , FCVMALLOC, FCVREINIT
- * 
- * (8.1s) To initialize the serial machine environment, the user must make
- * the following call:
- *        CALL FNVINITS (1, NEQ, IER)
- * where the first argument is the CVODE solver ID. The other arguments are:
- * NEQ     = size of vectors
- * IER     = return completion flag. Values are 0 = success, -1 = failure.
- * 
- * (8.1p) To initialize the parallel machine environment, the user must make 
- * the following call:
- *        CALL FNVINITP (1, NLOCAL, NGLOBAL, IER)
- * The arguments are:
- * NLOCAL  = local size of vectors on this processor
- * NGLOBAL = the system size, and the global size of vectors (the sum 
- *           of all values of NLOCAL)
- * IER     = return completion flag. Values are 0 = success, -1 = failure.
- * Note: If MPI was initialized by the user, the communicator must be
- * set to MPI_COMM_WORLD.  If not, this routine initializes MPI and sets
- * the communicator equal to MPI_COMM_WORLD.
- * 
- * (8.2) To set various problem and solution parameters and allocate
- * internal memory, make the following call:
- *       CALL FCVMALLOC(T0, Y0, METH, ITMETH, IATOL, RTOL, ATOL,
- *      1               IOUT, ROUT, IPAR, RPAR, IER)
- * The arguments are:
- * T0     = initial value of t
- * Y0     = array of initial conditions
- * METH   = basic integration method: 1 = Adams (nonstiff), 2 = BDF (stiff)
- * ITMETH = nonlinear iteration method: 1=functional iteration, 2=Newton iter.
- * IATOL  = type for absolute tolerance ATOL: 1 = scalar, 2 = array.
- *          If IATOL = 3, then the user must supply a routine FCVEWT to compute
- *          the error weight vector.
- * RTOL   = relative tolerance (scalar)
- * ATOL   = absolute tolerance (scalar or array)
- * IOUT   = array of length 21 for integer optional outputs
- *          (declare as INTEGER*4 or INTEGER*8 according to C type long int)
- * ROUT   = array of length 6 for real optional outputs
- * IPAR   = array with user integer data
- *          (declare as INTEGER*4 or INTEGER*8 according to C type long int)
- * RPAR   = array with user real data
- * IER    = return completion flag.  Values are 0 = SUCCESS, and -1 = failure.
- *          See printed message for details in case of failure.
- *
- * The user data arrays IPAR and RPAR are passed unmodified to all subsequent
- * calls to user-provided routines. Modifications to either array inside a
- * user-provided routine will be propagated. Using these two arrays, the user
- * can dispense with Common blocks to pass data betwen user-provided routines.
- * 
- * The optional outputs are:
- *           LENRW   = IOUT( 1) from CVodeGetWorkSpace
- *           LENIW   = IOUT( 2) from CVodeGetWorkSpace
- *           NST     = IOUT( 3) from CVodeGetNumSteps
- *           NFE     = IOUT( 4) from CVodeGetNumRhsEvals
- *           NETF    = IOUT( 5) from CVodeGetNumErrTestFails
- *           NCFN    = IOUT( 6) from CVodeGetNumNonlinSolvConvFails
- *           NNI     = IOUT( 7) from CVodeGetNumNonlinSolvIters
- *           NSETUPS = IOUT( 8) from CVodeGetNumLinSolvSetups
- *           QU      = IOUT( 9) from CVodeGetLastOrder
- *           QCUR    = IOUT(10) from CVodeGetCurrentOrder
- *           NOR     = IOUT(11) from CVodeGetNumStabLimOrderReds
- *           NGE     = IOUT(12) from CVodeGetNumGEvals
- *
- *           H0U     = ROUT( 1) from CVodeGetActualInitStep
- *           HU      = ROUT( 2) from CVodeGetLastStep
- *           HCUR    = ROUT( 3) from CVodeGetCurrentStep
- *           TCUR    = ROUT( 4) from CVodeGetCurrentTime
- *           TOLSF   = ROUT( 5) from CVodeGetTolScaleFactor
- *           UROUND  = ROUT( 6) from UNIT_ROUNDOFF
- * See the CVODE manual for details. 
- *
- * If the user program includes the FCVEWT routine for the evaluation of the 
- * error weights, the following call must be made
- *       CALL FCVEWTSET(FLAG, IER)
- * with FLAG = 1 to specify that FCVEWT is provided.
- * The return flag IER is 0 if successful, and nonzero otherwise.
- *
- * (8.3) To re-initialize the CVODE solver for the solution of a new problem
- * of the same size as one already solved, make the following call:
- *       CALL FCVREINIT(T0, Y0, IATOL, RTOL, ATOL, IER)
- * The arguments have the same names and meanings as those of FCVMALLOC,
- * except that METH and ITMETH  have been omitted from the argument list 
- * (being unchanged for the new problem).  
- * FCVREINIT performs the same initializations as FCVMALLOC, but does no memory 
- * allocation, using instead the existing internal memory created by the
- * previous  FCVMALLOC call.  The call to specify the linear system solution
- * method may or may not be needed; see paragraph (7) below.
- * 
- * (8.4) To set various integer optional inputs, make the folowing call:
- *       CALL FCVSETIIN(KEY, VALUE, IER)
- * to set the integer value VAL to the optional input specified by the
- * quoted character string KEY.
- * KEY is one of the following: MAX_ORD, MAX_NSTEPS, MAX_ERRFAIL, MAX_NITERS, 
- * MAX_CONVFAIL, HNIL_WARNS, STAB_LIM.
- *
- * To set various real optional inputs, make the folowing call:
- *       CALL FCVSETRIN(KEY, VALUE, IER)
- * to set the real value VAL to the optional input specified by the
- * quoted character string KEY.
- * KEY is one of the following: INIT_STEP, MAX_STEP, MIN_STEP, STOP_TIME,
- * NLCONV_COEF.
- *
- * FCVSETIIN and FCVSETRIN return IER = 0 if successful and IER < 0 if an 
- * error occured.
- *
- * -----------------------------------------------------------------------------
- *
- * (9) Specification of linear system solution method.
- * In the case of a stiff system, the implicit BDF method involves the solution
- * of linear systems related to the Jacobian J = df/dy of the ODE system.
- * CVODE presently includes four choices for the treatment of these systems,
- * and the user of FCVODE must call a routine with a specific name to make the
- * desired choice.
- * 
- * (9.1) Diagonal approximate Jacobian.
- * This choice is appropriate when the Jacobian can be well approximated by
- * a diagonal matrix.  The user must make the call:
- *       CALL FCVDIAG(IER)
- * IER is an error return flag: 0 = success, negative value = error.
- * There is no additional user-supplied routine.  
- *
- * Optional outputs specific to the DIAG case are:
- *        LENRWLS = IOUT(13) from CVDiagGetWorkSpace
- *        LENIWLS = IOUT(14) from CVDiagGetWorkSpace
- *        LSTF    = IOUT(15) from CVDiagGetLastFlag
- *        NFELS   = IOUT(16) from CVDiagGetNumRhsEvals
- * See the CVODE manual for descriptions.
- * 
- * (9.2s) DENSE treatment of the linear system.
- * The user must make the call
- *       CALL FCVDENSE(NEQ, IER)
- * The argument is:
- * IER = error return flag: 0 = success , negative value = an error occured
- * 
- * If the user program includes the FCVDJAC routine for the evaluation of the 
- * dense approximation to the Jacobian, the following call must be made
- *       CALL FCVDENSESETJAC(FLAG, IER)
- * with FLAG = 1 to specify that FCVDJAC is provided.  (FLAG = 0 specifies
- * using the internal finite differences approximation to the Jacobian.)
- * The return flag IER is 0 if successful, and nonzero otherwise.
- * 
- * Optional outputs specific to the DENSE case are:
- *        LENRWLS = IOUT(13) from CVDenseGetWorkSpace
- *        LENIWLS = IOUT(14) from CVDenseGetWorkSpace
- *        LSTF    = IOUT(15) from CVDenseGetLastFlag
- *        NFELS   = IOUT(16) from CVDenseGetNumRhsEvals
- *        NJED    = IOUT(17) from CVDenseGetNumJacEvals
- * See the CVODE manual for descriptions.
- * 
- * (9.3s) BAND treatment of the linear system
- * The user must make the call
- *       CALL FCVBAND(NEQ, MU, ML, IER)
- * The arguments are:
- * MU  = upper bandwidth
- * ML  = lower bandwidth
- * IER = error return flag: 0 = success , negative value = an error occured
- * 
- * If the user program includes the FCVBJAC routine for the evaluation of the 
- * band approximation to the Jacobian, the following call must be made
- *       CALL FCVBANDSETJAC(FLAG, IER)
- * with FLAG = 1 to specify that FCVBJAC is provided.  (FLAG = 0 specifies
- * using the internal finite differences approximation to the Jacobian.)
- * The return flag IER is 0 if successful, and nonzero otherwise.
- * 
- * Optional outputs specific to the BAND case are:
- *        LENRWLS = IOUT(13) from CVBandGetWorkSpace
- *        LENIWLS = IOUT(14) from CVBandGetWorkSpace
- *        LSTF    = IOUT(15) from CVBandGetLastFlag
- *        NFELS   = IOUT(16) from CVBandGetNumRhsEvals
- *        NJEB    = IOUT(17) from CVBandGetNumJacEvals
- * See the CVODE manual for descriptions.
- *
- * (9.4s) LAPACK dense treatment of the linear system
- * The user must make the call
- *       CALL FCVLAPACKDENSE(NEQ, IER)
- * and, optionally
- *       CALL FCVLAPACKDENSESETJAC(FLAG, IER)
- * with FLAG=1 if the user provides the function FCVLDJAC. 
- * See (9.2s) for more details.
- *
- * (9.5s) LAPACK band treatment of the linear system
- * The user must make the call
- *       CALL FCVLAPACKBAND(NEQ, IER)
- * and, optionally
- *       CALL FCVLAPACKBANDSETJAC(FLAG, IER)
- * with FLAG=1 if the user provides the function FCVLBJAC. 
- * See (9.3s)
- *
- * (9.6) SPGMR treatment of the linear systems.
- * For the Scaled Preconditioned GMRES solution of the linear systems,
- * the user must make the following call:
- *       CALL FCVSPGMR(IPRETYPE, IGSTYPE, MAXL, DELT, IER)              
- * The arguments are:
- * IPRETYPE = preconditioner type: 
- *              0 = none 
- *              1 = left only
- *              2 = right only
- *              3 = both sides
- * IGSTYPE  = Gram-schmidt process type: 
- *              1 = modified G-S
- *              2 = classical G-S.
- * MAXL     = maximum Krylov subspace dimension; 0 indicates default.
- * DELT     = linear convergence tolerance factor; 0.0 indicates default.
- * IER      = error return flag: 0 = success; negative value = an error occured
- * 
- * 
- * Optional outputs specific to the SPGMR case are:
- *        LENRWLS = IOUT(13) from CVSpgmrGetWorkSpace
- *        LENIWLS = IOUT(14) from CVSpgmrGetWorkSpace
- *        LSTF    = IOUT(15) from CVSpgmrGetLastFlag
- *        NFELS   = IOUT(16) from CVSpgmrGetRhsEvals
- *        NJTV    = IOUT(17) from CVSpgmrGetJtimesEvals
- *        NPE     = IOUT(18) from CVSpgmrGetPrecEvals
- *        NPS     = IOUT(19) from CVSpgmrGetPrecSolves
- *        NLI     = IOUT(20) from CVSpgmrGetLinIters
- *        NCFL    = IOUT(21) from CVSpgmrGetConvFails
- * See the CVODE manual for descriptions.
- * 
- * If a sequence of problems of the same size is being solved using the
- * SPGMR linear solver, then following the call to FCVREINIT, a call to the
- * FCVSPGMRREINIT routine is needed if any of IPRETYPE, IGSTYPE, DELT is
- * being changed.  In that case, call FCVSPGMRREINIT as follows:
- *       CALL FCVSPGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)              
- * The arguments have the same meanings as for FCVSPGMR.  If MAXL is being
- * changed, then call FCVSPGMR instead.
- * 
- * (9.7) SPBCG treatment of the linear systems.
- * For the Scaled Preconditioned Bi-CGSTAB solution of the linear systems,
- * the user must make the following call:
- *       CALL FCVSPBCG(IPRETYPE, MAXL, DELT, IER)              
- * The arguments are:
- * IPRETYPE = preconditioner type: 
- *              0 = none 
- *              1 = left only
- *              2 = right only
- *              3 = both sides
- * MAXL     = maximum Krylov subspace dimension; 0 indicates default.
- * DELT     = linear convergence tolerance factor; 0.0 indicates default.
- * IER      = error return flag: 0 = success; negative value = an error occured
- * 
- * Optional outputs specific to the SPBCG case are:
- *        LENRWLS = IOUT(13) from CVSpbcgGetWorkSpace
- *        LENIWLS = IOUT(14) from CVSpbcgGetWorkSpace
- *        LSTF    = IOUT(15) from CVSpbcgGetLastFlag
- *        NFELS   = IOUT(16) from CVSpbcgGetRhsEvals
- *        NJTV    = IOUT(17) from CVSpbcgGetJtimesEvals
- *        NPE     = IOUT(18) from CVSpbcgGetPrecEvals
- *        NPS     = IOUT(19) from CVSpbcgGetPrecSolves
- *        NLI     = IOUT(20) from CVSpbcgGetLinIters
- *        NCFL    = IOUT(21) from CVSpbcgGetConvFails
-  * See the CVODE manual for descriptions.
- * 
- * If a sequence of problems of the same size is being solved using the
- * SPBCG linear solver, then following the call to FCVREINIT, a call to the
- * FCVSPBCGREINIT routine is needed if any of its arguments is
- * being changed.  The call is:
- *       CALL FCVSPBCGREINIT(IPRETYPE, MAXL, DELT, IER)              
- * The arguments have the same meanings as for FCVSPBCG.
- *
- * (9.8) SPTFQMR treatment of the linear systems.
- * For the Scaled Preconditioned TFQMR solution of the linear systems,
- * the user must make the following call:
- *       CALL FCVSPTFQMR(IPRETYPE, MAXL, DELT, IER)              
- * The arguments are:
- * IPRETYPE = preconditioner type: 
- *              0 = none 
- *              1 = left only
- *              2 = right only
- *              3 = both sides
- * MAXL     = maximum Krylov subspace dimension; 0 indicates default.
- * DELT     = linear convergence tolerance factor; 0.0 indicates default.
- * IER      = error return flag: 0 = success; negative value = an error occured
- * 
- * Optional outputs specific to the SPTFQMR case are:
- *        LENRWLS = IOUT(13) from CVSptfqmrGetWorkSpace
- *        LENIWLS = IOUT(14) from CVSptfqmrGetWorkSpace
- *        LSTF    = IOUT(15) from CVSptfqmrGetLastFlag
- *        NFELS   = IOUT(16) from CVSptfqmrGetRhsEvals
- *        NJTV    = IOUT(17) from CVSptfqmrGetJtimesEvals
- *        NPE     = IOUT(18) from CVSptfqmrGetPrecEvals
- *        NPS     = IOUT(19) from CVSptfqmrGetPrecSolves
- *        NLI     = IOUT(20) from CVSptfqmrGetLinIters
- *        NCFL    = IOUT(21) from CVSptfqmrGetConvFails
- * See the CVODE manual for descriptions.
- *
- * If a sequence of problems of the same size is being solved using the
- * SPTFQMR linear solver, then following the call to FCVREINIT, a call to the
- * FCVSPTFQMRREINIT routine is needed if any of its arguments is
- * being changed.  The call is:
- *       CALL FCVSPTFQMRREINIT(IPRETYPE, MAXL, DELT, IER)              
- * The arguments have the same meanings as for FCVSPTFQMR.
- *
- * (9.9) Usage of user-supplied routines for the Krylov solvers
- *
- * If the user program includes the FCVJTIMES routine for the evaluation of the 
- * Jacobian vector product, the following call must be made
- *       CALL FCVSPILSSETJAC(FLAG, IER)
- * with FLAG = 1 to specify that FCVJTIMES is provided.  (FLAG = 0 specifies
- * using and internal finite difference approximation to this product.)
- * The return flag IER is 0 if successful, and nonzero otherwise.
- * 
- * Usage of the user-supplied routines FCVPSOL and FCVPSET for solution of the 
- * preconditioner linear system requires the following call:
- *       CALL FCVSPILSSETPREC(FLAG, IER)
- * with FLAG = 1. The return flag IER is 0 if successful, nonzero otherwise.
- * The user-supplied routine FCVPSOL must have the form:
- *       SUBROUTINE FCVPSOL (T,Y,FY,R,Z,GAMMA,DELTA,LR,IPAR,RPAR,VT,IER)
- *       DIMENSION Y(*), FY(*), VT(*), R(*), Z(*), IPAR(*), RPAR(*)
- * Typically this routine will use only NEQ, T, Y, GAMMA, R, LR, and Z.  It
- * must solve the preconditioner linear system Pz = r, where r = R is input, 
- * and store the solution z in Z.  Here P is the left preconditioner if LR = 1
- * and the right preconditioner if LR = 2.  The preconditioner (or the product
- * of the left and right preconditioners if both are nontrivial) should be an 
- * approximation to the matrix I - GAMMA*J (I = identity, J = Jacobian).
- * IPAR and RPAR are user (integer and real) arrays passed to FCVMALLOC.
- * On return, set IER = 0 if successful, IER > 0 if a recoverable error occurred,
- * and IER < 0 if an unrecoverable error ocurred.
- *
- * -----------------------------------------------------------------------------
- *
- * (10) The integrator: FCVODE
- * Carrying out the integration is accomplished by making calls as follows:
- *       CALL FCVODE (TOUT, T, Y, ITASK, IER)
- * The arguments are:
- * TOUT  = next value of t at which a solution is desired (input)
- * T     = value of t reached by the solver on output
- * Y     = array containing the computed solution on output
- * ITASK = task indicator: 1 = normal mode (overshoot TOUT and interpolate)
- *         2 = one-step mode (return after each internal step taken)
- *         3 = normal tstop mode (like 1, but integration never proceeds past 
- *             TSTOP, which must be specified through a call to FCVSETRIN
- *             using the key 'STOP_TIME')
- *         4 = one step tstop (like 2, but integration never goes past TSTOP)
- * IER   = completion flag: 0 = success, 1 = tstop return, 2 = root return, 
- *         values -1 ... -10 are various failure modes (see CVODE manual).
- * The current values of the optional outputs are available in IOUT and ROUT.
- * 
- * -----------------------------------------------------------------------------
- *
- * (11) Computing solution derivatives: FCVDKY
- * To obtain a derivative of the solution, of order up to the current method
- * order, make the following call:
- *       CALL FCVDKY (T, K, DKY, IER)
- * The arguments are:
- * T   = value of t at which solution derivative is desired, in [TCUR-HU,TCUR].
- * K   = derivative order (0 .le. K .le. QU)
- * DKY = array containing computed K-th derivative of y on return
- * IER = return flag: = 0 for success, < 0 for illegal argument.
- * 
- * -----------------------------------------------------------------------------
- *
- * (12) Memory freeing: FCVFREE 
- * To free the internal memory created by the calls to FCVMALLOC and
- * FNVINITS or FNVINITP, make the call
- *       CALL FCVFREE
- * 
- * =============================================================================
- */
+/*===============================================================
+                FARKODE Interface Package
 
-#ifndef _FCVODE_H
-#define _FCVODE_H
+ The FARKODE Interface Package is a package of C functions which 
+ support the use of the ARKODE solver, for the solution of ODE 
+ systems 
+         dy/dt = fe(t,y) + fi(t,y), 
+ in a mixed Fortran/C setting.  While ARKODE is written in C, it
+ is assumed here that the user's calling program and user-supplied
+ problem-defining routines are written in Fortran.  This package 
+ provides the necessary interface to ARKODE any acceptable NVECTOR
+ implementation.
+ 
+ A summary of the user-callable functions, with the corresponding 
+ ARKODE functions, are as follows:
+ 
+   Fortran                    ARKODE
+   ---------------------      --------------------------------
+   FNVINITS                   N_VNew_Serial
+   FNVINITP                   N_VNew_Parallel
+
+   FARKMALLOC                 ARKodeCreate, ARKodeSetUserData, 
+                                 and ARKodeInit
+   FARKREINIT                 ARKReInit
+   FARKSETIIN                 ARKodeSet* (integer arguments)
+   FARKSETRIN                 ARKodeSet* (real arguments)
+   FARKEWTSET                 ARKodeWFtolerances
+   FARKDIAG                   ARKDiag
+
+   FARKDENSE                  ARKDense
+   FARKDENSESETJAC            ARKDenseSetJacFn
+
+   FARKBAND                   ARKBand
+   FARKBANDSETJAC             ARKBandSetJacFn
+
+   FARKLAPACKDENSE            ARKLapackDense
+   FARKLAPACKDENSESETJAC      ARKLapackSetJacFn
+
+   FARKLAPACKBAND             ARKLapackBand
+   FARKLAPACKBANDSETJAC       ARKLapackSetJacFn
+
+   FARKSPGMR                  ARKSpgmr and ARKSpilsSet*
+   FARKSPGMRREINIT            ARKSpilsSet*
+
+   FARKSPBCG                  ARKSpbcg and ARKSpilsSet*
+   FARKSPBCGREINIT            ARKSpilsSet*
+
+   FARKSPTFQMR                ARKSptfqmr and ARKSpilsSet*
+   FARKSPTFQMRREINIT          ARKSpilsSet*
+
+   FARKSPILSSETJAC            ARKSpilsSetJacTimesVecFn
+   FARKSPILSSETPREC           ARKSpilsSetPreconditioner
+ 
+   FARKODE                    ARKode, ARKodeGet*, and ARK*Get*
+   FARKDKY                    ARKodeGetDky
+
+   FARKGETERRWEIGHTS          ARKodeGetErrWeights
+   FARKGETESTLOCALERR         ARKodeGetEstLocalErrors
+
+   FARKFREE                   ARKodeFree
+   ---------------------      --------------------------------
+
+ 
+ The user-supplied functions, each listed with the corresponding interface
+ function which calls it (and its type within ARKODE), are as follows:
+
+   Fortran:         Interface Fcn:           ARKODE Type:
+   ----------       ------------------       ---------------------
+   FARKIFUN         FARKfi                   ARKRhsFn
+   FARKEFUN         FARKfe                   ARKRhsFn
+   FARKDJAC         FARKDenseJac             ARKDenseJacFn
+   FARKBJAC         FARKBandJac              ARKBandJacFn
+   FARKLDJAC        FARKLapackDenseJac       ARKLapackJacFn
+   FARKLBJAC        FARKLapackBandJac        ARKLapackJacFn
+   FARKPSOL         FARKPSol                 ARKSpilsPrecSolveFn
+   FARKPSET         FARKPSet                 ARKSpilsPrecSetupFn
+   FARKJTIMES       FARKJtimes               ARKSpilsJacTimesVecFn
+   FARKEWT          FARKEwtSet               ARKEwtFn
+   ----------       ------------------       ---------------------
+
+ In contrast to the case of direct use of ARKODE, and of most Fortran ODE
+ solvers, the names of all user-supplied routines here are fixed, in
+ order to maximize portability for the resulting mixed-language program.
+ 
+ Important note on portability:  In this package, the names of the interface 
+ functions, and the names of the Fortran user routines called by them, appear 
+ as dummy names which are mapped to actual values by a series of definitions, 
+ in this and other header files.
+ 
+ =============================================================================
+ 
+                  Usage of the FARKODE Interface Package
+ 
+ The usage of FARKODE requires calls to five or more interface
+ functions, depending on the method options selected, and one or more
+ user-supplied routines which define the problem to be solved.  These
+ function calls and user routines are summarized separately below.
+ 
+ Some details are omitted, and the user is referred to the ARKODE user 
+ documentation for more complete information.  Information on the arguments 
+ of any given user-callable interface routine, or of a given user-supplied 
+ function called by an interface function, can be found in the documentation 
+ on the corresponding function in the ARKODE package.
+ 
+ The number labels on the instructions below end with s for instructions
+ that are specific to use with the N_VSerial package; similarly those that 
+ end with p are specific to use with the N_VParallel package.
+
+ -----------------------------------------------------------------------------
+
+                               Data Types
+
+ Throughout this documentation, we will refer to data types according to their
+ usage in SUNDIALS.  The equivalent types to these may vary, depending on your
+ computer architecture and on how SUNDIALS was compiled.  A Fortran user 
+ should take care that all arguments passed through this Fortran/C interface 
+ are declared of the appropriate type.
+ 
+ Integers: SUNDIALS uses both 'int' and 'long int' types:
+   int      -- equivalent to an INTEGER or INTEGER*4 in Fortran
+   long int -- this will depend on the computer architecture:
+                 32-bit -- equivalent to an INTEGER or INTEGER*4 in Fortran
+                 64-bit -- equivalent to an INTEGER*8 in Fortran
+	      
+ Real numbers:  At compilation, SUNDIALS allows the configuration option 
+ '--with-precision', that accepts values of 'single', 'double' or 'extended' 
+ (the default is 'double').  This choice dictates the size of a SUNDIALS 
+ 'realtype' variable.  The corresponding Fortran types for these 'realtype' 
+ sizes are:
+   single   -- equivalent to a REAL or REAL*4 in Fortran
+   double   -- equivalent to a DOUBLE PRECISION or REAL*8 in Fortran
+   extended -- equivalent to a REAL*16 in Fortran
+
+ -----------------------------------------------------------------------------
+
+ (1) User-supplied right-hand side routines: FARKIFUN and FARKEFUN
+     The user must in all cases supply at least one of the following Fortran 
+     routines:
+
+       SUBROUTINE FARKIFUN(T, Y, YDOT, IPAR, RPAR, IER)
+
+     Sets the YDOT array to fi(T,Y), the implicit portion of the right-hand 
+     side of the ODE system, as function of time T and the state variable 
+     array Y.
+
+       SUBROUTINE FARKEFUN(T, Y, YDOT, IPAR, RPAR, IER)
+
+     Sets the YDOT array to fe(t,y), the explicit portion of the right-hand 
+     side of the ODE system, as function of time T and the state variable 
+     array Y.  
+
+     The arguments are:
+       Y    -- array containing state variables [realtype, input]
+       YDOT -- array containing state derivatives [realtype, output]
+       IPAR -- array containing integer user data that was passed to
+               FARKMALLOC [long int, input]
+       RPAR -- array containing real user data that was passed to
+               FARKMALLOC [realtype, input]
+       IER  -- return flag [int, output]:
+                  0 if successful, 
+                 >0 if a recoverable error occurred,
+                 <0 if an unrecoverable error ocurred.
+ 
+ (2s) Optional user-supplied dense Jacobian approximation routine: FARKDJAC
+
+     As an option when using the DENSE linear solver, the user may supply a
+     routine that computes a dense approximation of the system Jacobian 
+     J = dfi(t,y)/dy.  If supplied, it must have the following form:
+
+       SUBROUTINE FARKDJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, 
+      &                    WK3, IER)
+
+     Typically this routine will use only NEQ, T, Y, and DJAC. It must compute
+     the Jacobian and store it column-wise in DJAC.
+
+     The arguments are:
+       NEQ  -- number of rows in the matrix [long int, input]
+       T    -- current time [realtype, input]
+       Y    -- array containing state variables [realtype, input]
+       FY   -- array containing state derivatives [realtype, input]
+       DJAC -- 2D array containing the jacobian entries [realtype of size
+               (NEQ,NEQ), output]
+       H    -- current step size [realtype, input]
+       IPAR -- array containing integer user data that was passed to
+               FARKMALLOC [long int, input]
+       RPAR -- array containing real user data that was passed to
+               FARKMALLOC [realtype, input]
+       WK*  -- array containing temporary workspace of same size as Y 
+               [realtype, input]
+       IER  -- return flag [int, output]:
+                  0 if successful, 
+                 >0 if a recoverable error occurred,
+                 <0 if an unrecoverable error ocurred.
+ 
+ (3s) Optional user-supplied band Jacobian approximation routine: FARKBJAC
+
+     As an option when using the BAND linear solver, the user may supply a
+     routine that computes a band approximation of the system Jacobian 
+     J = dfi(t,y)/dy. If supplied, it must have the following form:
+
+       SUBROUTINE FARKBJAC(NEQ, MU, ML, MDIM, T, Y, FY, BJAC, H,
+      &                    IPAR, RPAR, WK1, WK2, WK3, IER)
+
+     Typically this routine will use only NEQ, MU, ML, T, Y, and BJAC. It 
+     must load the MDIM by N array BJAC with the Jacobian matrix at the
+     current (t,y) in band form.  Store in BJAC(k,j) the Jacobian element 
+     J(i,j)  with k = i - j + MU + 1 (k = 1 ... ML+MU+1) and j = 1 ... N.
+
+     The arguments are:
+       NEQ  -- number of rows in the matrix [long int, input]
+       MU   -- upper half-bandwidth of the matrix [long int, input]
+       ML   -- lower half-bandwidth of the matrix [long int, input]
+       MDIM -- leading dimension of BJAC array [long int, input]
+       T    -- current time [realtype, input]
+       Y    -- array containing state variables [realtype, input]
+       FY   -- array containing state derivatives [realtype, input]
+       BJAC -- 2D array containing the jacobian entries [realtype of size
+               (MDIM,NEQ), output]
+       H    -- current step size [realtype, input]
+       IPAR -- array containing integer user data that was passed to
+               FARKMALLOC [long int, input]
+       RPAR -- array containing real user data that was passed to
+               FARKMALLOC [realtype, input]
+       WK*  -- array containing temporary workspace of same size as Y 
+               [realtype, input]
+       IER  -- return flag [int, output]:
+                  0 if successful, 
+                 >0 if a recoverable error occurred,
+                 <0 if an unrecoverable error ocurred.
+ 
+
+ (4s) Optional user-supplied Lapack dense Jacobian routine: FARKLDJAC
+
+     See the description for FARKDJAC. NOTE: the dense Jacobian matrix
+     is NOT set to zero before calling the user's FARKLDJAC.
+
+ (5s) Optional user-supplied Lapack band Jacobian routine: FARKLBJAC
+
+     See the description for FARKBJAC. NOTE: the band Jacobian matrix
+     is NOT set to zero before calling the user's FARKLBJAC.
+
+ (6) Optional user-supplied Jacobian-vector product routine: FARKJTIMES
+
+     As an option when using the SP* linear solver, the user may supply a
+     routine that computes the product of the system Jacobian 
+     J = dfi(t,y)/dy and a given vector v.  If supplied, it must have the 
+     following form:
+
+       SUBROUTINE FARKJTIMES(V, FJV, T, Y, FY, H, IPAR, RPAR, WORK, IER)
+
+     Typically this routine will use only NEQ, T, Y, V, and FJV.  It must
+     compute the product vector J*v where the vector V, and store the product
+     in FJV.  
+
+     The arguments are:
+       V    -- array containing vector to multiply [realtype, input]
+       FJV  -- array containing product vector [realtype, output]
+       T    -- current time [realtype, input]
+       Y    -- array containing state variables [realtype, input]
+       FY   -- array containing state derivatives [realtype, input]
+       H    -- current step size [realtype, input]
+       IPAR -- array containing integer user data that was passed to
+               FARKMALLOC [long int, input]
+       RPAR -- array containing real user data that was passed to
+               FARKMALLOC [realtype, input]
+       WORK -- array containing temporary workspace of same size as Y 
+               [realtype, input]
+       IER  -- return flag [int, output]:
+                  0 if successful, 
+                  nonzero if an error.
+ 
+ (7) Optional user-supplied error weight vector routine: FARKEWT
+ 
+     As an option to providing the relative and absolute tolerances, the user
+     may supply a routine that computes the weights used in the WRMS norms.
+     If supplied, it must have the following form:
+
+       SUBROUTINE FARKEWT(Y, EWT, IPAR, RPAR, IER)
+
+     It must store the error weights in EWT, given the current solution Y. 
+
+     The arguments are:
+       Y    -- array containing state variables [realtype, input]
+       EWT  -- array containing the error weight vector [realtype, output]
+       IPAR -- array containing integer user data that was passed to
+               FARKMALLOC [long int, input]
+       RPAR -- array containing real user data that was passed to
+               FARKMALLOC [realtype, input]
+       IER  -- return flag [int, output]:
+                  0 if successful, 
+                  nonzero if an error.
+
+ -----------------------------------------------------------------------------
+
+ (8) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT
+ 
+ (8.1s) To initialize the serial vector specification, the user must make the
+     following call:
+
+        CALL FNVINITS(4, NEQ, IER)
+
+     where the first argument is an int containing the ARKODE solver ID (4). 
+     The other arguments are:
+        NEQ = size of vectors [long int, input]
+	IER = return completion flag [int, output]:
+	          0 = success, 
+		 -1 = failure.
+ 
+ (8.1p) To initialize the parallel machine environment, the user must make 
+     the following call:
+
+        CALL FNVINITP(4, NLOCAL, NGLOBAL, IER)
+
+     The arguments are:
+        NLOCAL = local size of vectors on this processor [long int, input]
+        NGLOBAL = the system size, and the global size of vectors (the sum 
+           of all values of NLOCAL) [long int, input]
+        IER = return completion flag [int, ouptut]. 
+                  0 = success, 
+                 -1 = failure.
+
+     Note: If MPI was initialized by the user, the communicator must be set to
+     MPI_COMM_WORLD.  If not, this routine initializes MPI and sets the
+     communicator equal to MPI_COMM_WORLD.
+ 
+ (8.2) To set various problem and solution parameters and allocate
+     internal memory, make the following call:
+
+       CALL FARKMALLOC(T0, Y0, IMEX, IATOL, RTOL, ATOL, IOUT, ROUT, 
+      &                IPAR, RPAR, IER)
+
+     The arguments are:
+        T0 = initial value of t [realtype, input]
+	Y0 = array of initial conditions [realtype, input]
+	IMEX = flag denoting basic integration method [int, input]: 
+                  0 = implicit, 
+                  1 = explicit, 
+                  2 = imex
+        IATOL = type for absolute tolerance ATOL [int, input]: 
+                  1 = scalar, 
+                  2 = array,
+                  3 = user-supplied function; the user must supply a routine
+		  FARKEWT to compute the error weight vector.
+        RTOL = scalar relative tolerance [realtype, input]
+	ATOL = scalar or array absolute tolerance [realtype, input]
+	IOUT = array of length 22 for integer optional outputs
+	   [long int, output]
+	ROUT = array of length 6 for real optional outputs [realtype, output]
+	IPAR = array of user integer data [long int, input/output]
+	RPAR = array with user real data [realtype, input/output]
+	IER  = return completion flag [int, output]:
+                  0 = SUCCESS,
+                 -1 = failure (see printed message for failure details).
+
+     The user data arrays IPAR and RPAR are passed unmodified to all 
+     subsequent calls to user-provided routines. Modifications to either array
+     inside a user-provided routine will be propagated. Using these two 
+     arrays, the user can dispense with COMMON blocks to pass data betwen 
+     user-provided routines. 
+ 
+     The optional outputs are:
+           LENRW   = IOUT( 1) from ARKodeGetWorkSpace
+           LENIW   = IOUT( 2) from ARKodeGetWorkSpace
+           NST     = IOUT( 3) from ARKodeGetNumSteps
+           NST_STB = IOUT( 4) from ARKodeGetNumExpSteps
+           NST_ACC = IOUT( 5) from ARKodeGetNumAccSteps
+           NST_CNV = IOUT( 6) from ARKodeGetNumConvSteps
+           NFE     = IOUT( 7) from ARKodeGetNumRhsEvals (fe(t,y) calls)
+           NFI     = IOUT( 8) from ARKodeGetNumRhsEvals (fi(t,y) calls)
+           NSETUPS = IOUT( 9) from ARKodeGetNumLinSolvSetups
+           NETF    = IOUT(10) from ARKodeGetNumErrTestFails
+           NNI     = IOUT(11) from ARKodeGetNumNonlinSolvIters
+           NCFN    = IOUT(12) from ARKodeGetNumNonlinSolvConvFails
+           NGE     = IOUT(13) from ARKodeGetNumGEvals
+
+           H0U     = ROUT( 1) from ARKodeGetActualInitStep
+           HU      = ROUT( 2) from ARKodeGetLastStep
+           HCUR    = ROUT( 3) from ARKodeGetCurrentStep
+           TCUR    = ROUT( 4) from ARKodeGetCurrentTime
+           TOLSF   = ROUT( 5) from ARKodeGetTolScaleFactor
+           UROUND  = ROUT( 6) from UNIT_ROUNDOFF
+     See the ARKODE manual for details. 
+
+     If the user program includes the FARKEWT routine for the evaluation of 
+     the error weights, the following call must be made
+
+       CALL FARKEWTSET(FLAG, IER)
+
+     with the int argument FLAG = 1 to specify that FARKEWT is provided.
+     The int return flag IER is 0 if successful, and nonzero otherwise.
+
+ (8.3) To re-initialize the ARKODE solver for the solution of a new problem
+     of the same size as one already solved, make the following call:
+
+       CALL FARKREINIT(T0, Y0, IMEX, IATOL, RTOL, ATOL, IER)
+
+     The arguments have the same names and meanings as those of FARKMALLOC.  
+     FARKREINIT performs the same initializations as FARKMALLOC, but does no 
+     memory allocation, using instead the existing internal memory created by 
+     the previous FARKMALLOC call.  The subsequent call to specify the linear 
+     system solution method may or may not be needed; see paragraph (9) below.
+ 
+ (8.4) To set various integer optional inputs, make the folowing call:
+
+       CALL FARKSETIIN(KEY, VALUE, IER)
+
+     to set the integer value VAL to the optional input specified by the 
+     quoted character string KEY. KEY must be one of the following: 
+     ORDER, DENSE_ORDER, LINEAR, NONLINEAR, EXPLICIT, IMPLICIT, IMEX, 
+     IRK_TABLE_NUM, ERK_TABLE_NUM, MAX_NSTEPS, HNIL_WARNS, PREDICT_METHOD, 
+     ARK_TABLE_NUM (pass in an int array of length 2, implicit method first), 
+     MAX_ERRFAIL, MAX_NITERS, MAX_CONVFAIL or STAB_LIM.
+     The int return flag IER is 0 if successful, and nonzero otherwise.
+
+     To set various real optional inputs, make the following call:
+
+       CALL FARKSETRIN(KEY, VALUE, IER)
+
+     to set the realtype value VAL to the optional input specified by the 
+     quoted character string KEY.  KEY must one of the following: 
+     INIT_STEP, MAX_STEP, MIN_STEP, STOP_TIME or NLCONV_COEF.
+
+     To reset all optional inputs to their default values, make the following 
+     call:
+
+       CALL FARKSETDEFAULTS(IER)
+
+     To set a custom explicit Runge-Kutta table, make the following call:
+
+       CALL FARKSETERKTABLE(S, Q, P, C, A, B, B2, IER)
+
+     The arguments are:
+       S = the number of stages in the table [int, input]
+       Q = the global order of accuracy of the method [int, input]
+       P = the global order of accuracy of the embedding [int, input]
+       C = array of length S containing the stage times [realtype, input]
+       A = array of length S*S containing the ERK coefficients (stored in 
+           row-major, "C", order) [realtype, input]
+       B = array of length S containing the solution coefficients
+           [realtype, input]
+       B2 = array of length S containing the embedding coefficients
+           [realtype, input]
+
+     To set a custom diagonally-implicit Runge-Kutta table, make the following
+     call:
+
+       CALL FARKSETIRKTABLE(S, Q, P, C, A, B, B2, IER)
+
+     The arguments are:
+       S = the number of stages in the table [int, input]
+       Q = the global order of accuracy of the method [int, input]
+       P = the global order of accuracy of the embedding [int, input]
+       C = array of length S containing the stage times [realtype, input]
+       A = array of length S*S containing the DIRK coefficients (stored in 
+           row-major, "C", order) [realtype, input]
+       B = array of length S containing the solution coefficients
+           [realtype, input]
+       B2 = array of length S containing the embedding coefficients
+           [realtype, input]
+
+     To set a custom additive Runge-Kutta table, make the following call:
+
+       CALL FARKSETARKTABLES(S, Q, P, C, AI, AE, B, B2, IER)
+
+     The arguments are:
+       S = the number of stages in the table [int, input]
+       Q = the global order of accuracy of the method [int, input]
+       P = the global order of accuracy of the embedding [int, input]
+       C = array of length S containing the stage times [realtype, input]
+       AI = array of length S*S containing the DIRK coefficients (stored in 
+           row-major, "C", order) [realtype, input]
+       AE = array of length S*S containing the ERK coefficients (stored in 
+           row-major, "C", order) [realtype, input]
+       B = array of length S containing the solution coefficients
+           [realtype, input]
+       B2 = array of length S containing the embedding coefficients
+           [realtype, input]
+
+     To set the time step adaptivity algorithm (and it's associated 
+     parameters -- ARKodeSetAdaptivityMethod), make the following call:
+
+       CALL FARKSETADAPTIVITYMETHOD(METHOD, PARAMS, IER)
+
+     The arguments are:
+       METHOD = integer between 0 and 5 to specify the method [int, input]
+       PARAMS = array of length 9 containing the adaptivity parameters 
+           [realtype, input]
+
+     To set the time step change heuristics (see 
+     ARKodeSetAdaptivityConstants), make the following call:
+
+       CALL FARKSETADAPTIVITYCONSTANTS(ETAMX1, ETAMXF, ETACF, SMALLNEF, IER)
+
+     The arguments are:
+       ETAMX1 = maximum step change for the first step [realtype, input]
+       ETAMXF = step change on an error failure [realtype, input]
+       ETACF = step change on a convergence failure [realtype, input]
+       SMALLNEF = number of error failures before ETAMXF is enforced 
+           [int, input]
+
+     To set the Newton convergence heuristics (see ARKodeSetNewtonConstants), 
+     make the following call:
+
+       CALL FARKSETNEWTONCONSTANTS(CRDOWN, RDIV, IER)
+
+     The arguments are:
+       CRDOWN = convergence rate estimation constant [realtype, input]
+       RDIV = divergence bound [realtype, input]
+
+     To set the heuristics governing when to rebuild the Jacobian or
+     preconditioner (see ARKodeSetLSetupConstants), make the following call: 
+
+       CALL FARKSETLSETUPCONSTANTS(DGMAX, MSBP, IER)
+
+     The arguments are:
+       DGMAX = maximum allowable gamma ratio [realtype, input]
+       MSBP = maximum number of time steps between lsetup calls [int, input]
+
+ -----------------------------------------------------------------------------
+
+ (9) Specification of linear system solution method.
+
+     In the case of a stiff system, the implicit BDF method involves the 
+     solution of linear systems related to the Jacobian J = dfi(t,y)/dy of the
+     ODE system.  ARKODE presently includes four choices for the treatment of
+     these systems, and the user of FARKODE must call a routine with a 
+     specific name to make the desired choice.
+ 
+ (9.1) Diagonal approximate Jacobian.
+
+     This choice is appropriate when the Jacobian can be well-approximated by
+     a diagonal matrix.  The user must make the call:
+
+       CALL FARKDIAG(IER)
+
+     The int return flag IER is 0 if successful, and nonzero otherwise.
+     There is no additional user-supplied routine.  
+
+     Optional outputs specific to the DIAG case are:
+        LENRWLS = IOUT(14) from ARKDiagGetWorkSpace (realtype space)
+        LENIWLS = IOUT(15) from ARKDiagGetWorkSpace (integer space)
+        LSTF    = IOUT(16) from ARKDiagGetLastFlag
+        NFELS   = IOUT(17) from ARKDiagGetNumRhsEvals
+     See the ARKODE manual for descriptions.
+ 
+ (9.2s) DENSE treatment of the linear system.
+
+     The user must make the call
+
+       CALL FARKDENSE(NEQ, IER)
+
+     The arguments are:
+        NEQ = the problem size [long int; input]
+	IER = error return flag [int, output]: 
+	         0 = success, 
+		 negative = error.
+ 
+     If the user program includes the FARKDJAC routine for the evaluation of 
+     the dense approximation to the Jacobian, the following call must be made
+
+       CALL FARKDENSESETJAC(FLAG, IER)
+
+     with the int FLAG=1 to specify that FARKDJAC is provided (FLAG=0 
+     specifies to use the internal finite differences approximation to the
+     Jacobian).  The int return flag IER=0 if successful, and nonzero 
+     otherwise.
+ 
+     Optional outputs specific to the DENSE case are:
+        LENRWLS = IOUT(13) from ARKDenseGetWorkSpace (realtype space)
+        LENIWLS = IOUT(14) from ARKDenseGetWorkSpace (integer space)
+        LSTF    = IOUT(15) from ARKDenseGetLastFlag
+        NFELS   = IOUT(16) from ARKDenseGetNumRhsEvals
+        NJED    = IOUT(17) from ARKDenseGetNumJacEvals
+     See the ARKODE manual for descriptions.
+ 
+ (9.3s) BAND treatment of the linear system
+
+     The user must make the call
+
+       CALL FARKBAND(NEQ, MU, ML, IER)
+
+     The arguments are:
+        NEQ = problem size [long int, input]
+	MU = upper bandwidth [long int, input]
+	ML = lower bandwidth [long int, input]
+        IER = return flag [int, output]; 0 if successful, nonzero otherwise.
+ 
+     If the user program includes the FARKBJAC routine for the evaluation of 
+     the band approximation to the Jacobian, the following call must be made
+
+       CALL FARKBANDSETJAC(FLAG, IER)
+
+     with the int FLAG=1 to specify that FARKBJAC is provided (FLAG=0 
+     specifies to use the internal finite differences approximation to the 
+     Jacobian).  The int return flag IER=0 if successful, nonzero otherwise.
+ 
+     Optional outputs specific to the BAND case are:
+        LENRWLS = IOUT(13) from ARKBandGetWorkSpace
+        LENIWLS = IOUT(14) from ARKBandGetWorkSpace
+        LSTF    = IOUT(15) from ARKBandGetLastFlag
+        NFELS   = IOUT(16) from ARKBandGetNumRhsEvals
+        NJEB    = IOUT(17) from ARKBandGetNumJacEvals
+     See the ARKODE manual for descriptions.
+
+ (9.4s) LAPACK dense treatment of the linear system
+
+     The user must make the call
+
+       CALL FARKLAPACKDENSE(NEQ, IER)
+
+     The arguments match those for FARKDENSE.
+
+     The user may optionally call
+
+       CALL FARKLAPACKDENSESETJAC(FLAG, IER)
+       
+     with the int FLAG=1 if the user provides the function FARKLDJAC. 
+
+     The optional outputs when using FARKLAPACKDENSE match those from 
+     FARKDENSE.
+
+ (9.5s) LAPACK band treatment of the linear system
+
+     The user must make the call
+
+       CALL FARKLAPACKBAND(NEQ, MUPPER, MLOWER, IER)
+
+     The arguments match those for FARKBAND.
+
+     The user may optionally call
+
+       CALL FARKLAPACKBANDSETJAC(FLAG, IER)
+
+     with the int FLAG=1 if the user provides the function FARKLBJAC. 
+
+     The optional outputs when using FARKLAPACKBAND match those from FARKBAND.
+
+ (9.6) SPGMR treatment of the linear systems.
+
+     For the Scaled Preconditioned GMRES solution of the linear systems,
+     the user must make the following call:
+
+       CALL FARKSPGMR(IPRETYPE, IGSTYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+        IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = left only
+              2 = right only
+              3 = both sides
+	IGSTYPE = Gram-schmidt process type [int, input]: 
+              1 = modified G-S
+              2 = classical G-S.
+	MAXL = maximum Krylov subspace dimension [int; input]; 
+	      0 = default
+	DELT = linear convergence tolerance factor [realtype, input]; 
+	      0.0 = default.
+	IER = error return flag [int, output]: 
+	       0 = success; 
+	      <0 = an error occured
+ 
+     Optional outputs specific to the SPGMR case are:
+        LENRWLS = IOUT(14) from ARKSpgmrGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpgmrGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpgmrGetLastFlag
+        NFELS   = IOUT(17) from ARKSpgmrGetRhsEvals
+        NJTV    = IOUT(18) from ARKSpgmrGetJtimesEvals
+        NPE     = IOUT(19) from ARKSpgmrGetPrecEvals
+        NPS     = IOUT(20) from ARKSpgmrGetPrecSolves
+        NLI     = IOUT(21) from ARKSpgmrGetLinIters
+        NCFL    = IOUT(22) from ARKSpgmrGetConvFails
+     See the ARKODE manual for descriptions.
+ 
+     If a sequence of problems of the same size is being solved using the
+     SPGMR linear solver, then following the call to FARKREINIT, a call to 
+     the FARKSPGMRREINIT routine is needed if any of IPRETYPE, IGSTYPE, DELT 
+     is being changed.  In that case, call FARKSPGMRREINIT as follows:
+
+       CALL FARKSPGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)
+
+     The arguments have the same meanings as for FARKSPGMR.  If MAXL is being
+     changed, then the user should call FARKSPGMR instead.
+ 
+ (9.7) SPBCG treatment of the linear systems.
+
+     For the Scaled Preconditioned Bi-CGSTAB solution of the linear systems,
+     the user must make the following call:
+
+       CALL FARKSPBCG(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+       IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = left only
+              2 = right only
+              3 = both sides
+       MAXL = maximum Krylov subspace dimension [int, input]; 0 = default.
+       DELT = linear convergence tolerance factor [realtype, input]; 
+              0.0 = default.
+       IER = error return flag [int, output]: 
+              0 = success; 
+	     <0 = an error occured
+ 
+     Optional outputs specific to the SPBCG case are:
+        LENRWLS = IOUT(14) from ARKSpbcgGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpbcgGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpbcgGetLastFlag
+        NFELS   = IOUT(17) from ARKSpbcgGetRhsEvals
+        NJTV    = IOUT(18) from ARKSpbcgGetJtimesEvals
+        NPE     = IOUT(19) from ARKSpbcgGetPrecEvals
+        NPS     = IOUT(20) from ARKSpbcgGetPrecSolves
+        NLI     = IOUT(21) from ARKSpbcgGetLinIters
+        NCFL    = IOUT(22) from ARKSpbcgGetConvFails
+     See the ARKODE manual for descriptions.
+ 
+     If a sequence of problems of the same size is being solved using the
+     SPBCG linear solver, then following the call to FARKREINIT, a call to the
+     FARKSPBCGREINIT routine is needed if any of its arguments is being 
+     changed.  The call is:
+
+       CALL FARKSPBCGREINIT(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments have the same meanings as for FARKSPBCG.
+
+ (9.8) SPTFQMR treatment of the linear systems.
+
+     For the Scaled Preconditioned TFQMR solution of the linear systems, the
+     user must make the following call:
+
+       CALL FARKSPTFQMR(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+       IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = left only
+              2 = right only
+              3 = both sides
+       MAXL = maximum Krylov subspace dimension [int, input]; 0 = default.
+       DELT = linear convergence tolerance factor [realtype, input]
+	      0.0 = default.
+       IER = error return flag [int, output]: 
+              0 = success; 
+	     <0 = an error occured
+ 
+     Optional outputs specific to the SPTFQMR case are:
+        LENRWLS = IOUT(14) from ARKSptfqmrGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSptfqmrGetWorkSpace
+        LSTF    = IOUT(16) from ARKSptfqmrGetLastFlag
+        NFELS   = IOUT(17) from ARKSptfqmrGetRhsEvals
+        NJTV    = IOUT(18) from ARKSptfqmrGetJtimesEvals
+        NPE     = IOUT(19) from ARKSptfqmrGetPrecEvals
+        NPS     = IOUT(20) from ARKSptfqmrGetPrecSolves
+        NLI     = IOUT(21) from ARKSptfqmrGetLinIters
+        NCFL    = IOUT(22) from ARKSptfqmrGetConvFails
+     See the ARKODE manual for descriptions.
+
+     If a sequence of problems of the same size is being solved using the
+     SPTFQMR linear solver, then following the call to FARKREINIT, a call to 
+     the FARKSPTFQMRREINIT routine is needed if any of its arguments is
+     being changed.  The call is:
+
+       CALL FARKSPTFQMRREINIT(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments have the same meanings as for FARKSPTFQMR.
+
+ (9.9) Usage of user-supplied routines for the Krylov solvers
+
+     If the user program includes the FARKJTIMES routine for the evaluation of
+     the Jacobian vector product, the following call must be made
+
+       CALL FARKSPILSSETJAC(FLAG, IER)
+
+     with the int FLAG=1 to specify that FARKJTIMES is provided (FLAG=0 
+     specifies to use and internal finite difference approximation to this 
+     product).  The int return flag IER=0 if successful, and nonzero otherwise.
+ 
+     Usage of the user-supplied routines FARKPSOL and FARKPSET for solution of
+     the preconditioner linear system requires the following call:
+
+       CALL FARKSPILSSETPREC(FLAG, IER)
+
+     with the int FLAG=1. The return flag IER=0 if successful, nonzero 
+     otherwise.
+
+     The user-supplied routine FARKPSET must have the form:
+
+       SUBROUTINE FARKPSET(T,Y,FY,JOK,JCUR,GAMMA,H,IPAR,RPAR,V1,V2,V3,IER)
+
+     This routine must set up the preconditioner P to be used in the 
+     subsequent call to FARKPSOL.  The preconditioner (or the product of the 
+     left and right preconditioners if using both) should be an approximation 
+     to the matrix  I - GAMMA*J  (I = identity, J = Jacobian),
+
+     The arguments are:
+       T = current time [realtype, input]
+       Y = current state variable array [realtype, input]
+       FY = current state variable derivative array [realtype, input]
+       JOK = flag indicating whether Jacobian-related data needs to be 
+           recomputed [int, input]:
+                  0 = recompute, 
+		  1 = reuse with the current value of GAMMA
+       JCUR = return flag to denote if Jacobian data was recomputed
+           [realtype, output], 1=yes, 0=no
+       GAMMA = Jacobian scaling factor [realtype, input]
+       H = current time step [realtype, input]
+       IPAR = array of user integer data [long int, input/output]
+       RPAR = array with user real data [realtype, input/output]
+       V* -- array containing temporary workspace of same size as Y 
+               [realtype, input]
+       IER  = return completion flag [int, output]:
+                  0 = SUCCESS,
+		 >0 = recoverable failure
+                 <0 = non-recoverable failure
+
+     The user-supplied routine FARKPSOL must have the form:
+
+       SUBROUTINE FARKPSOL(T,Y,FY,R,Z,GAMMA,DELTA,LR,IPAR,RPAR,VT,IER)
+
+       DIMENSION Y(*), FY(*), VT(*), R(*), Z(*), IPAR(*), RPAR(*)
+
+     Typically this routine will use only NEQ, T, Y, GAMMA, R, LR, and Z.  It
+     must solve the preconditioner linear system Pz = r.  The preconditioner
+     (or the product of the left and right preconditioners if both are 
+     nontrivial) should be an approximation to the matrix  I - GAMMA*J  
+     (I = identity, J = Jacobian).
+
+     The arguments are:
+       T = current time [realtype, input]
+       Y = current state variable array [realtype, input]
+       FY = current state variable derivative array [realtype, input]
+       R = right-hand side array [realtype, input]
+       Z = solution array [realtype, output]
+       GAMMA = Jacobian scaling factor [realtype, input]
+       DELTA = desired residual tolerance [realtype, input]
+       LR = flag denoting to solve the right or left preconditioner system
+                  1 = left preconditioner
+		  2 = right preconditioner
+       IPAR = array of user integer data [long int, input/output]
+       RPAR = array with user real data [realtype, input/output]
+       VT -- array containing temporary workspace of same size as Y 
+               [realtype, input]
+       IER  = return completion flag [int, output]:
+                  0 = SUCCESS,
+		 >0 = recoverable failure
+                 <0 = non-recoverable failure
+
+ -----------------------------------------------------------------------------
+
+ (10) The integrator: FARKODE
+
+     Carrying out the integration is accomplished by making calls as follows:
+
+       CALL FARKODE(TOUT, T, Y, ITASK, IER)
+
+     The arguments are:
+       TOUT = next value of t at which a solution is desired [realtype, input]
+       T = value of t reached by the solver [realtype, output]
+       Y = array containing state variables on output (realtype, output]
+       ITASK = task indicator [int, input]:
+                  1 = normal mode (overshoot TOUT and interpolate)
+		  2 = one-step mode (return after each internal step taken)
+		  3 = normal tstop mode (like 1, but integration never 
+		      proceeds past TSTOP, which must be specified through a 
+		      call to FARKSETRIN using the key 'STOP_TIME')
+		  4 = one step tstop (like 2, but integration never goes 
+		      past TSTOP)
+       IER = completion flag [int, output]: 
+                  0 = success, 
+		  1 = tstop return, 
+		  2 = root return, 
+                  values -1 ... -10 are failure modes (see ARKODE manual).
+     The current values of the optional outputs are immediately available in
+     the IOUT and ROUT arrays.
+ 
+ -----------------------------------------------------------------------------
+
+ (11) Computing solution derivatives: FARKDKY
+
+     To obtain a derivative of the solution, of order up to the method order,
+     make the following call:
+
+       CALL FARKDKY(T, K, DKY, IER)
+
+     The arguments are:
+       T = time at which solution derivative is desired, within the interval
+           [TCUR-HU,TCUR], [realtype, input].
+       K = derivative order (0 .le. K .le. QU) [int, input]
+       DKY = array containing computed K-th derivative of y [realtype, output]
+       IER = return flag [int, output]: 0=success, <0 = illegal argument.
+ 
+ -----------------------------------------------------------------------------
+
+ (12) Get the current weight vector: FARKGETERRWEIGHTS
+
+     To obtain the current weight vector, make the following call:
+
+       CALL FARKGETERRWEIGHTS(EWT, IER)
+
+     The arguments are:
+       EWT = array containing the error weight vector [realtype, output]
+       IER = return flag [int, output]: 0=success, nonzero if an error.
+ 
+ -----------------------------------------------------------------------------
+
+ (13) Get an estimate of the local error: FARKGETESTLOCALERR
+
+     To obtain the current error estimate vector, make the following call:
+
+       CALL FARKGETESTLOCALERR(ELE, IER)
+
+     The arguments are:
+       ELE = array with the estimated local error vector [realtype, output]
+       IER = return flag [int, output]: 0=success, nonzero if an error.
+ 
+ -----------------------------------------------------------------------------
+
+ (14) Memory freeing: FARKFREE 
+
+     To free the internal memory created by the calls to FARKMALLOC and
+     FNVINITS or FNVINITP, make the call
+
+       CALL FARKFREE()
+ 
+===============================================================*/
+
+#ifndef _FARKODE_H
+#define _FARKODE_H
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
 /* header files  */
-
-#include <cvode/cvode.h>
+#include <arkode/arkode.h>
 #include <sundials/sundials_direct.h>  /* definition of type DlsMat   */
 #include <sundials/sundials_nvector.h> /* definition of type N_Vector */
 #include <sundials/sundials_types.h>   /* definition of type realtype */
 
 /* Definitions of interface function names */
-
 #if defined(SUNDIALS_F77_FUNC)
 
-#define FCV_MALLOC         SUNDIALS_F77_FUNC(fcvmalloc, FCVMALLOC)
-#define FCV_REINIT         SUNDIALS_F77_FUNC(fcvreinit, FCVREINIT)
-#define FCV_SETIIN         SUNDIALS_F77_FUNC(fcvsetiin, FCVSETIIN)
-#define FCV_SETRIN         SUNDIALS_F77_FUNC(fcvsetrin, FCVSETRIN)
-#define FCV_EWTSET         SUNDIALS_F77_FUNC(fcvewtset, FCVEWTSET)
-#define FCV_DIAG           SUNDIALS_F77_FUNC(fcvdiag, FCVDIAG)
-#define FCV_DENSE          SUNDIALS_F77_FUNC(fcvdense, FCVDENSE)
-#define FCV_DENSESETJAC    SUNDIALS_F77_FUNC(fcvdensesetjac, FCVDENSESETJAC)
-#define FCV_BAND           SUNDIALS_F77_FUNC(fcvband, FCVBAND)
-#define FCV_BANDSETJAC     SUNDIALS_F77_FUNC(fcvbandsetjac, FCVBANDSETJAC)
-#define FCV_LAPACKDENSE    SUNDIALS_F77_FUNC(fcvlapackdense, FCVLAPACKDENSE)
-#define FCV_LAPACKDENSESETJAC   SUNDIALS_F77_FUNC(fcvlapackdensesetjac, FCVLAPACKDENSESETJAC)
-#define FCV_LAPACKBAND     SUNDIALS_F77_FUNC(fcvlapackband, FCVLAPACKBAND)
-#define FCV_LAPACKBANDSETJAC    SUNDIALS_F77_FUNC(fcvlapackbandsetjac, FCVLAPACKBANDSETJAC)
-#define FCV_SPTFQMR        SUNDIALS_F77_FUNC(fcvsptfqmr, FCVSPTFQMR)
-#define FCV_SPTFQMRREINIT  SUNDIALS_F77_FUNC(fcvsptfqmrreinit, FCVSPTFQMRREINIT)
-#define FCV_SPBCG          SUNDIALS_F77_FUNC(fcvspbcg, FCVSPBCG)
-#define FCV_SPBCGREINIT    SUNDIALS_F77_FUNC(fcvspbcgreinit, FCVSPBCGREINIT)
-#define FCV_SPGMR          SUNDIALS_F77_FUNC(fcvspgmr, FCVSPGMR)
-#define FCV_SPGMRREINIT    SUNDIALS_F77_FUNC(fcvspgmrreinit, FCVSPGMRREINIT)
-#define FCV_SPILSSETJAC    SUNDIALS_F77_FUNC(fcvspilssetjac, FCVSPILSSETJAC)
-#define FCV_SPILSSETPREC   SUNDIALS_F77_FUNC(fcvspilssetprec, FCVSPILSSETPREC)
-#define FCV_CVODE          SUNDIALS_F77_FUNC(fcvode, FCVODE)
-#define FCV_DKY            SUNDIALS_F77_FUNC(fcvdky, FCVDKY)
-#define FCV_FREE           SUNDIALS_F77_FUNC(fcvfree, FCVFREE)
-#define FCV_FUN            SUNDIALS_F77_FUNC(fcvfun, FCVFUN)
-#define FCV_DJAC           SUNDIALS_F77_FUNC(fcvdjac, FCVDJAC)
-#define FCV_BJAC           SUNDIALS_F77_FUNC(fcvbjac, FCVBJAC)
-#define FCV_PSOL           SUNDIALS_F77_FUNC(fcvpsol, FCVPSOL)
-#define FCV_PSET           SUNDIALS_F77_FUNC(fcvpset, FCVPSET)
-#define FCV_JTIMES         SUNDIALS_F77_FUNC(fcvjtimes, FCVJTIMES)
-#define FCV_EWT            SUNDIALS_F77_FUNC(fcvewt, FCVEWT)
-#define FCV_GETERRWEIGHTS  SUNDIALS_F77_FUNC(fcvgeterrweights, FCVGETERRWEIGHTS)
-#define FCV_GETESTLOCALERR SUNDIALS_F77_FUNC(fcvgetestlocalerr, FCVGETESTLOCALERR)
+#define FARK_MALLOC              SUNDIALS_F77_FUNC(farkmalloc,            FARKMALLOC)
+#define FARK_REINIT              SUNDIALS_F77_FUNC(farkreinit,            FARKREINIT)
+#define FARK_SETDEFAULTS         SUNDIALS_F77_FUNC(farksetdefaults,       FARKSETDEFAULTS)
+#define FARK_SETIIN              SUNDIALS_F77_FUNC(farksetiin,            FARKSETIIN)
+#define FARK_SETRIN              SUNDIALS_F77_FUNC(farksetrin,            FARKSETRIN)
+#define FARK_EWTSET              SUNDIALS_F77_FUNC(farkewtset,            FARKEWTSET)
+#define FARK_DIAG                SUNDIALS_F77_FUNC(farkdiag,              FARKDIAG)
+#define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,             FARKDENSE)
+#define FARK_DENSESETJAC         SUNDIALS_F77_FUNC(farkdensesetjac,       FARKDENSESETJAC)
+#define FARK_BAND                SUNDIALS_F77_FUNC(farkband,              FARKBAND)
+#define FARK_BANDSETJAC          SUNDIALS_F77_FUNC(farkbandsetjac,        FARKBANDSETJAC)
+#define FARK_LAPACKDENSE         SUNDIALS_F77_FUNC(farklapackdense,       FARKLAPACKDENSE)
+#define FARK_LAPACKDENSESETJAC   SUNDIALS_F77_FUNC(farklapackdensesetjac, FARKLAPACKDENSESETJAC)
+#define FARK_LAPACKBAND          SUNDIALS_F77_FUNC(farklapackband,        FARKLAPACKBAND)
+#define FARK_LAPACKBANDSETJAC    SUNDIALS_F77_FUNC(farklapackbandsetjac,  FARKLAPACKBANDSETJAC)
+#define FARK_SPTFQMR             SUNDIALS_F77_FUNC(farksptfqmr,           FARKSPTFQMR)
+#define FARK_SPTFQMRREINIT       SUNDIALS_F77_FUNC(farksptfqmrreinit,     FARKSPTFQMRREINIT)
+#define FARK_SPBCG               SUNDIALS_F77_FUNC(farkspbcg,             FARKSPBCG)
+#define FARK_SPBCGREINIT         SUNDIALS_F77_FUNC(farkspbcgreinit,       FARKSPBCGREINIT)
+#define FARK_SPGMR               SUNDIALS_F77_FUNC(farkspgmr,             FARKSPGMR)
+#define FARK_SPGMRREINIT         SUNDIALS_F77_FUNC(farkspgmrreinit,       FARKSPGMRREINIT)
+#define FARK_SPILSSETJAC         SUNDIALS_F77_FUNC(farkspilssetjac,       FARKSPILSSETJAC)
+#define FARK_SPILSSETPREC        SUNDIALS_F77_FUNC(farkspilssetprec,      FARKSPILSSETPREC)
+#define FARK_ARKODE              SUNDIALS_F77_FUNC(farkode,               FARKODE)
+#define FARK_DKY                 SUNDIALS_F77_FUNC(farkdky,               FARKDKY)
+#define FARK_FREE                SUNDIALS_F77_FUNC(farkfree,              FARKFREE)
+#define FARK_IMP_FUN             SUNDIALS_F77_FUNC(farkifun,              FARKIFUN)
+#define FARK_EXP_FUN             SUNDIALS_F77_FUNC(farkefun,              FARKEFUN)
+#define FARK_DJAC                SUNDIALS_F77_FUNC(farkdjac,              FARKDJAC)
+#define FARK_LDJAC               SUNDIALS_F77_FUNC(farkldjac,             FARKLDJAC)
+#define FARK_BJAC                SUNDIALS_F77_FUNC(farkbjac,              FARKBJAC)
+#define FARK_PSOL                SUNDIALS_F77_FUNC(farkpsol,              FARKPSOL)
+#define FARK_PSET                SUNDIALS_F77_FUNC(farkpset,              FARKPSET)
+#define FARK_JTIMES              SUNDIALS_F77_FUNC(farkjtimes,            FARKJTIMES)
+#define FARK_EWT                 SUNDIALS_F77_FUNC(farkewt,               FARKEWT)
+#define FARK_GETERRWEIGHTS       SUNDIALS_F77_FUNC(farkgeterrweights,     FARKGETERRWEIGHTS)
+#define FARK_GETESTLOCALERR      SUNDIALS_F77_FUNC(farkgetestlocalerr,    FARKGETESTLOCALERR)
 
 #else
 
-#define FCV_MALLOC         fcvmalloc_
-#define FCV_REINIT         fcvreinit_
-#define FCV_SETIIN         fcvsetiin_
-#define FCV_SETRIN         fcvsetrin_
-#define FCV_EWTSET         fcvewtset_
-#define FCV_DIAG           fcvdiag_
-#define FCV_DENSE          fcvdense_
-#define FCV_DENSESETJAC    fcvdensesetjac_
-#define FCV_BAND           fcvband_
-#define FCV_BANDSETJAC     fcvbandsetjac_
-#define FCV_LAPACKDENSE    fcvlapackdense_
-#define FCV_LAPACKDENSESETJAC   fcvlapackdensesetjac_
-#define FCV_LAPACKBAND     fcvlapackband_
-#define FCV_LAPACKBANDSETJAC    fcvlapackbandsetjac_
-#define FCV_SPTFQMR        fcvsptfqmr_
-#define FCV_SPTFQMRREINIT  fcvsptfqmrreinit_
-#define FCV_SPBCG          fcvspbcg_
-#define FCV_SPBCGREINIT    fcvspbcgreinit_
-#define FCV_SPGMR          fcvspgmr_
-#define FCV_SPGMRREINIT    fcvspgmrreinit_
-#define FCV_SPILSSETJAC    fcvspilssetjac_
-#define FCV_SPILSSETPREC   fcvspilssetprec_
-#define FCV_CVODE          fcvode_
-#define FCV_DKY            fcvdky_
-#define FCV_FREE           fcvfree_
-#define FCV_FUN            fcvfun_
-#define FCV_DJAC           fcvdjac_
-#define FCV_BJAC           fcvbjac_
-#define FCV_PSOL           fcvpsol_
-#define FCV_PSET           fcvpset_
-#define FCV_JTIMES         fcvjtimes_
-#define FCV_EWT            fcvewt_
-#define FCV_GETERRWEIGHTS  fcvgeterrweights_
-#define FCV_GETESTLOCALERR fcvgetestlocalerr_
+#define FARK_MALLOC              farkmalloc_
+#define FARK_REINIT              farkreinit_
+#define FARK_SETDEFAULTS         farksetdefaults_
+#define FARK_SETIIN              farksetiin_
+#define FARK_SETRIN              farksetrin_
+#define FARK_EWTSET              farkewtset_
+#define FARK_DIAG                farkdiag_
+#define FARK_DENSE               farkdense_
+#define FARK_DENSESETJAC         farkdensesetjac_
+#define FARK_BAND                farkband_
+#define FARK_BANDSETJAC          farkbandsetjac_
+#define FARK_LAPACKDENSE         farklapackdense_
+#define FARK_LAPACKDENSESETJAC   farklapackdensesetjac_
+#define FARK_LAPACKBAND          farklapackband_
+#define FARK_LAPACKBANDSETJAC    farklapackbandsetjac_
+#define FARK_SPTFQMR             farksptfqmr_
+#define FARK_SPTFQMRREINIT       farksptfqmrreinit_
+#define FARK_SPBCG               farkspbcg_
+#define FARK_SPBCGREINIT         farkspbcgreinit_
+#define FARK_SPGMR               farkspgmr_
+#define FARK_SPGMRREINIT         farkspgmrreinit_
+#define FARK_SPILSSETJAC         farkspilssetjac_
+#define FARK_SPILSSETPREC        farkspilssetprec_
+#define FARK_ARKODE              farkode_
+#define FARK_DKY                 farkdky_
+#define FARK_FREE                farkfree_
+#define FARK_IMP_FUN             farkifun_
+#define FARK_EXP_FUN             farkefun_
+#define FARK_DJAC                farkdjac_
+#define FARK_LDJAC               farkldjac_
+#define FARK_BJAC                farkbjac_
+#define FARK_PSOL                farkpsol_
+#define FARK_PSET                farkpset_
+#define FARK_JTIMES              farkjtimes_
+#define FARK_EWT                 farkewt_
+#define FARK_GETERRWEIGHTS       farkgeterrweights_
+#define FARK_GETESTLOCALERR      farkgetestlocalerr_
 
 #endif
 
   /* Type for user data */
-
   typedef struct {
     realtype *rpar;
     long int *ipar;
-  } *FCVUserData;
-
+  } *FARKUserData;
+  
   /* Prototypes of exported functions */
+  void FARK_MALLOC(realtype *t0, realtype *y0, int *imex, 
+		   int *iatol, realtype *rtol, realtype *atol, 
+		   long int *iout, realtype *rout, 
+		   long int *ipar, realtype *rpar, int *ier);
 
-  void FCV_MALLOC(realtype *t0, realtype *y0,
-                  int *meth, int *itmeth, int *iatol,
-                  realtype *rtol, realtype *atol,
-                  long int *iout, realtype *rout,
-                  long int *ipar, realtype *rpar,
-                  int *ier);
+  void FARK_REINIT(realtype *t0, realtype *y0, int *imex,
+		   int *iatol, realtype *rtol, realtype *atol,
+		   int *ier);
 
-  void FCV_REINIT(realtype *t0, realtype *y0,
-                  int *iatol, realtype *rtol, realtype *atol,
-                  int *ier);
+  void FARK_SETIIN(char key_name[], long int *ival, int *key_len, int *ier);
+  void FARK_SETRIN(char key_name[], realtype *rval, int *key_len, int *ier);
+  void FARK_SETDEFAULTS(int *ier);
+  void FARK_SETERKTABLE(int *s, int *q, int *p, realtype *c, realtype *A, 
+			realtype *b, realtype *b2, int *ier);
+  void FARK_SETIRKTABLE(int *s, int *q, int *p, realtype *c, 
+			realtype *A, realtype *b, realtype *b2, int *ier);
+  void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c, realtype *Ai, 
+			 realtype *Ae, realtype *b, realtype *b2, int *ier);
+  void FARK_SETADAPTIVITYMETHOD(int *method, realtype *params, int *ier);
+  void FARK_SETADAPTIVITYCONSTANTS(realtype *etamx1, realtype *etamxf, 
+				   realtype *etacf, int *small_nef, int *ier);
+  void FARK_SETNEWTONCONSTANTS(realtype *crdown, realtype *rdiv, int *ier);
+  void FARK_SETLSETUPCONSTANTS(realtype *dgmax, int *msbp, int *ier);
 
-  void FCV_SETIIN(char key_name[], long int *ival, int *ier, int key_len);
+  void FARK_EWTSET(int *flag, int *ier);
+  void FARK_DIAG(int *ier);
 
-  void FCV_SETRIN(char key_name[], realtype *rval, int *ier, int key_len);
+  void FARK_DENSE(long int *neq, int *ier);
+  void FARK_DENSESETJAC(int *flag, int *ier);
 
-  void FCV_EWTSET(int *flag, int *ier);
+  void FARK_BAND(long int *neq, long int *mupper, long int *mlower, int *ier);
+  void FARK_BANDSETJAC(int *flag, int *ier);
 
-  void FCV_DIAG(int *ier);
+  void FARK_LAPACKDENSE(int *neq, int *ier);
+  void FARK_LAPACKDENSESETJAC(int *flag, int *ier);
+  void FARK_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier);
+  void FARK_LAPACKBANDSETJAC(int *flag, int *ier);
 
-  void FCV_DENSE(long int *neq, int *ier);
-  void FCV_DENSESETJAC(int *flag, int *ier);
+  void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier);
+  void FARK_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier);
 
-  void FCV_BAND(long int *neq, long int *mupper, long int *mlower, int *ier);
-  void FCV_BANDSETJAC(int *flag, int *ier);
+  void FARK_SPBCG(int *pretype, int *maxl, realtype *delt, int *ier);
+  void FARK_SPBCGREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
 
-  void FCV_LAPACKDENSE(int *neq, int *ier);
-  void FCV_LAPACKDENSESETJAC(int *flag, int *ier);
-  void FCV_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier);
-  void FCV_LAPACKBANDSETJAC(int *flag, int *ier);
+  void FARK_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier);
+  void FARK_SPTFQMRREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
 
-  void FCV_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier);
-  void FCV_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier);
-
-  void FCV_SPBCG(int *pretype, int *maxl, realtype *delt, int *ier);
-  void FCV_SPBCGREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
-
-  void FCV_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier);
-  void FCV_SPTFQMRREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
-
-  void FCV_SPILSSETJAC(int *flag, int *ier);
-  void FCV_SPILSSETPREC(int *flag, int *ier);
+  void FARK_SPILSSETJAC(int *flag, int *ier);
+  void FARK_SPILSSETPREC(int *flag, int *ier);
   
-  void FCV_CVODE(realtype *tout, realtype *t, realtype *y, int *itask, int *ier);
+  void FARK_ARKODE(realtype *tout, realtype *t, realtype *y, int *itask, int *ier);
 
-  void FCV_DKY(realtype *t, int *k, realtype *dky, int *ier);
+  void FARK_DKY(realtype *t, int *k, realtype *dky, int *ier);
 
-  void FCV_GETERRWEIGHTS(realtype *eweight, int *ier);
-  void FCV_GETESTLOCALERR(realtype *ele, int *ier);
+  void FARK_GETERRWEIGHTS(realtype *eweight, int *ier);
+  void FARK_GETESTLOCALERR(realtype *ele, int *ier);
 
-  void FCV_FREE(void);
+  void FARK_FREE(void);
 
 
-  /* Prototypes: Functions Called by the CVODE Solver */
+  /* Prototypes: Functions Called by the ARKODE Solver */
+  int FARKfi(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+  int FARKfe(realtype t, N_Vector y, N_Vector ydot, void *user_data);
   
-  int FCVf(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+  int FARKDenseJac(long int N, realtype t, 
+		   N_Vector y, N_Vector fy, 
+		   DlsMat J, void *user_data,
+		   N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
   
-  int FCVDenseJac(long int N, realtype t, 
-                  N_Vector y, N_Vector fy, 
-                  DlsMat J, void *user_data,
-                  N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+  int FARKBandJac(long int N, long int mupper, long int mlower,
+		  realtype t, N_Vector y, N_Vector fy,
+		  DlsMat J, void *user_data,
+		  N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
   
-  int FCVBandJac(long int N, long int mupper, long int mlower,
-                 realtype t, N_Vector y, N_Vector fy,
-                 DlsMat J, void *user_data,
-                 N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
-  
-  int FCVLapackDenseJac(long int N, realtype t,
-                        N_Vector y, N_Vector fy, 
-                        DlsMat Jac, void *user_data,
-                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-  int FCVLapackBandJac(long int N, long int mupper, long int mlower,
-                       realtype t, N_Vector y, N_Vector fy, 
-                       DlsMat Jac, void *user_data,
-                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+  int FARKLapackDenseJac(long int N, realtype t,
+			 N_Vector y, N_Vector fy, 
+			 DlsMat Jac, void *user_data,
+			 N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+  int FARKLapackBandJac(long int N, long int mupper, long int mlower,
+			realtype t, N_Vector y, N_Vector fy, 
+			DlsMat Jac, void *user_data,
+			N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
-  int FCVPSet(realtype tn, N_Vector y,N_Vector fy, booleantype jok,
-              booleantype *jcurPtr, realtype gamma, void *user_data,
-              N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+  int FARKPSet(realtype tn, N_Vector y,N_Vector fy, booleantype jok,
+	       booleantype *jcurPtr, realtype gamma, void *user_data,
+	       N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
   
-  int FCVPSol(realtype tn, N_Vector y, N_Vector fy, 
-              N_Vector r, N_Vector z,
-              realtype gamma, realtype delta,
-              int lr, void *user_data, N_Vector vtemp);
+  int FARKPSol(realtype tn, N_Vector y, N_Vector fy, 
+	       N_Vector r, N_Vector z,
+	       realtype gamma, realtype delta,
+	       int lr, void *user_data, N_Vector vtemp);
   
-  int FCVJtimes(N_Vector v, N_Vector Jv, realtype t, 
-                N_Vector y, N_Vector fy,
-                void *user_data, N_Vector work);
+  int FARKJtimes(N_Vector v, N_Vector Jv, realtype t, 
+		 N_Vector y, N_Vector fy,
+		 void *user_data, N_Vector work);
   
-  int FCVEwtSet(N_Vector y, N_Vector ewt, void *user_data);
+  int FARKEwtSet(N_Vector y, N_Vector ewt, void *user_data);
 
   /* Declarations for global variables shared amongst various routines */
+  extern N_Vector F2C_ARKODE_vec;   /* defined in FNVECTOR module */
 
-  extern N_Vector F2C_CVODE_vec;   /* defined in FNVECTOR module */
-
-  extern void *CV_cvodemem;        /* defined in fcvode.c */
-  extern long int *CV_iout;        /* defined in fcvode.c */
-  extern realtype *CV_rout;        /* defined in fcvode.c */
-  extern int CV_nrtfn;             /* defined in fcvode.c */
-  extern int CV_ls;                /* defined in fcvode.c */
+  extern void *ARK_arkodemem;        /* defined in farkode.c */
+  extern long int *ARK_iout;        /* defined in farkode.c */
+  extern realtype *ARK_rout;        /* defined in farkode.c */
+  extern int ARK_nrtfn;             /* defined in farkode.c */
+  extern int ARK_ls;                /* defined in farkode.c */
 
   /* Linear solver IDs */
-
-  enum { CV_LS_DENSE = 1, CV_LS_BAND = 2, CV_LS_DIAG = 3,
-         CV_LS_LAPACKDENSE = 4, CV_LS_LAPACKBAND = 5,
-	 CV_LS_SPGMR = 6, CV_LS_SPBCG = 7, CV_LS_SPTFQMR = 8 };
+  enum { ARK_LS_DENSE       = 1, 
+	 ARK_LS_BAND        = 2, 
+	 ARK_LS_DIAG        = 3,
+         ARK_LS_LAPACKDENSE = 4, 
+	 ARK_LS_LAPACKBAND  = 5,
+	 ARK_LS_SPGMR       = 6, 
+	 ARK_LS_SPBCG       = 7, 
+	 ARK_LS_SPTFQMR     = 8 };
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
+
+/*===============================================================
+   EOF
+===============================================================*/

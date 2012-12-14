@@ -22,7 +22,6 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-
 #include <sundials/sundials_nvector.h>
 
 /*===============================================================

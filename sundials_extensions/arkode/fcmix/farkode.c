@@ -1,135 +1,138 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2010/12/09 19:36:24 $
- * ----------------------------------------------------------------- 
- * Programmer(s): Alan C. Hindmarsh, Radu Serban and
- *                Aaron Collier @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * This is the implementation file for the Fortran interface to
- * the CVODE package.  See fcvode.h for usage.
- * NOTE: some routines are necessarily stored elsewhere to avoid
- * linking problems.  Therefore, see also fcvpreco.c, fcvpsol.c,
- * and fcvjtimes.c for all the options available.
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  This is the implementation file for the Fortran interface to
+  the ARKODE package.  See farkode.h for usage.
+  NOTE: some routines are necessarily stored elsewhere to avoid
+  linking problems.  Therefore, see also farkpreco.c, farkpsol.c,
+  and farkjtimes.c for all the available options.
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "farkode.h"
+#include "arkode_impl.h"
+#include <arkode/arkode_band.h>
+#include <arkode/arkode_dense.h>
+#include <arkode/arkode_diag.h>
+#include <arkode/arkode_spgmr.h>
+#include <arkode/arkode_spbcgs.h>
+#include <arkode/arkode_sptfqmr.h>
 
-#include "fcvode.h"                    /* actual function names, prototypes, global vars.*/ 
-#include "cvode_impl.h"                /* definition of CVodeMem type                    */
+/*=============================================================*/
 
-#include <cvode/cvode_band.h>          /* prototypes for CVBAND interface routines       */
-#include <cvode/cvode_dense.h>         /* prototypes for CVDENSE interface routines      */
-#include <cvode/cvode_diag.h>          /* prototypes for CVDIAG interface routines       */
-#include <cvode/cvode_spgmr.h>         /* prototypes for CVSPGMR interface routines      */
-#include <cvode/cvode_spbcgs.h>        /* prototypes for CVSPBCG interface routines      */
-#include <cvode/cvode_sptfqmr.h>       /* prototypes for CVSPTFQMR interface routines    */
+/* Definitions for global variables shared between Fortran/C 
+   interface routines */
+void     *ARK_arkodemem;
+long int *ARK_iout;
+realtype *ARK_rout;
+int       ARK_nrtfn;
+int       ARK_ls;
 
-/***************************************************************************/
-
-/* Definitions for global variables shared amongst various routines */
-
-void *CV_cvodemem;
-long int *CV_iout;
-realtype *CV_rout;
-int CV_nrtfn;
-int CV_ls;
-
-/***************************************************************************/
-
-/* private constant(s) */
-#define ZERO RCONST(0.0)
-
-/***************************************************************************/
+/*=============================================================*/
 
 /* Prototypes of the Fortran routines */
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-  extern void FCV_FUN(realtype*,     /* T    */
-                      realtype*,     /* Y    */
-                      realtype*,     /* YDOT */
-                      long int*,     /* IPAR */
-                      realtype*,     /* RPAR */
-                      int*);         /* IER  */
+
+  extern void FARK_IMP_FUN(realtype *T, realtype *Y, realtype *YDOT,
+			   long int *IPAR, realtype *RPAR, int *IER);
+  extern void FARK_EXP_FUN(realtype *T, realtype *Y, realtype *YDOT,
+			   long int *IPAR, realtype *RPAR, int *IER);
+
 #ifdef __cplusplus
 }
 #endif
 
-/**************************************************************************/
+/*=============================================================*/
 
-void FCV_MALLOC(realtype *t0, realtype *y0, 
-                int *meth, int *itmeth, int *iatol, 
-                realtype *rtol, realtype *atol,
-                long int *iout, realtype *rout,
-                long int *ipar, realtype *rpar,
-                int *ier)
+/* Fortran interface routine to initialize ARKode memory 
+   structure; functions as an all-in-one interface to the C 
+   routines ARKodeCreate, ARKodeSetUserData, ARKodeInit, and 
+   ARKodeSStolerances (or ARKodeSVtolerances); see farkode.h 
+   for further details */
+void FARK_MALLOC(realtype *t0, realtype *y0, int *imex, 
+		 int *iatol, realtype *rtol, realtype *atol, 
+		 long int *iout, realtype *rout, 
+		 long int *ipar, realtype *rpar, int *ier)
 {
   int lmm, iter;
   N_Vector Vatol;
-  FCVUserData CV_userdata;
+  FARKUserData ARK_userdata;
 
   *ier = 0;
 
   /* Check for required vector operations */
-  if(F2C_CVODE_vec->ops->nvgetarraypointer == NULL ||
-     F2C_CVODE_vec->ops->nvsetarraypointer == NULL) {
+  if(F2C_ARKODE_vec->ops->nvgetarraypointer == NULL) {
     *ier = -1;
-    printf("A required vector operation is not implemented.\n\n");
+    printf("Error: getarraypointer vector operation is not implemented.\n\n");
+    return;
+  }
+  if(F2C_ARKODE_vec->ops->nvsetarraypointer == NULL) {
+    *ier = -1;
+    printf("Error: setarraypointer vector operation is not implemented.\n\n");
     return;
   }
 
   /* Initialize all pointers to NULL */
-  CV_cvodemem = NULL;
+  ARK_arkodemem = NULL;
   Vatol = NULL;
 
-  /* Create CVODE object */
-  lmm = (*meth == 1) ? CV_ADAMS : CV_BDF;
-  iter = (*itmeth == 1) ? CV_FUNCTIONAL : CV_NEWTON;
-  CV_cvodemem = CVodeCreate(lmm, iter);
-  if (CV_cvodemem == NULL) {
+  /* Create ARKODE object */
+  ARK_arkodemem = ARKodeCreate();
+  if (ARK_arkodemem == NULL) {
     *ier = -1;
     return;
   }
 
   /* Set and attach user data */
-  CV_userdata = NULL;
-  CV_userdata = (FCVUserData) malloc(sizeof *CV_userdata);
-  if (CV_userdata == NULL) {
+  ARK_userdata = NULL;
+  ARK_userdata = (FARKUserData) malloc(sizeof *ARK_userdata);
+  if (ARK_userdata == NULL) {
     *ier = -1;
     return;
   }
-  CV_userdata->rpar = rpar;
-  CV_userdata->ipar = ipar;
-
-  *ier = CVodeSetUserData(CV_cvodemem, CV_userdata);
-  if(*ier != CV_SUCCESS) {
-    free(CV_userdata); CV_userdata = NULL;
+  ARK_userdata->rpar = rpar;
+  ARK_userdata->ipar = ipar;
+  *ier = ARKodeSetUserData(ARK_arkodemem, ARK_userdata);
+  if(*ier != ARK_SUCCESS) {
+    free(ARK_userdata); ARK_userdata = NULL;
     *ier = -1;
     return;
   }
 
-  /* Set data in F2C_CVODE_vec to y0 */
-  N_VSetArrayPointer(y0, F2C_CVODE_vec);
+  /* Set data in F2C_ARKODE_vec to y0 */
+  N_VSetArrayPointer(y0, F2C_ARKODE_vec);
 
-  /* Call CVodeInit */
-  *ier = CVodeInit(CV_cvodemem, FCVf, *t0, F2C_CVODE_vec);
-
+  /* Call ARKodeInit based on imex argument */
+  switch (*imex) {
+  case 0:  /* purely implicit */
+    *ier = ARKodeInit(ARK_arkodemem, NULL, FARKfi, 
+		      *t0, F2C_ARKODE_vec);
+    break;
+  case 1:  /* purely explicit */
+    *ier = ARKodeInit(ARK_arkodemem, FARKfe, NULL, 
+		      *t0, F2C_ARKODE_vec);
+    break;
+  case 2:  /* imex */
+    *ier = ARKodeInit(ARK_arkodemem, FARKfe, FARKfi, 
+		      *t0, F2C_ARKODE_vec);
+    break;
+  }
+    
   /* Reset data pointers */
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
 
   /* On failure, exit */
-  if(*ier != CV_SUCCESS) {
-    free(CV_userdata); CV_userdata = NULL;
+  if(*ier != ARK_SUCCESS) {
+    free(ARK_userdata);
+    ARK_userdata = NULL;
     *ier = -1;
     return;
   }
@@ -137,63 +140,80 @@ void FCV_MALLOC(realtype *t0, realtype *y0,
   /* Set tolerances */
   switch (*iatol) {
   case 1:
-    *ier = CVodeSStolerances(CV_cvodemem, *rtol, *atol); 
+    *ier = ARKodeSStolerances(ARK_arkodemem, *rtol, *atol); 
     break;
   case 2:
-    Vatol = NULL;
-    Vatol = N_VCloneEmpty(F2C_CVODE_vec);
+    Vatol = N_VCloneEmpty(F2C_ARKODE_vec);
     if (Vatol == NULL) {
-      free(CV_userdata); CV_userdata = NULL;
+      free(ARK_userdata);
+      ARK_userdata = NULL;
       *ier = -1;
       return;
     }
     N_VSetArrayPointer(atol, Vatol);
-    *ier = CVodeSVtolerances(CV_cvodemem, *rtol, Vatol);
+    *ier = ARKodeSVtolerances(ARK_arkodemem, *rtol, Vatol);
     N_VDestroy(Vatol);
     break;
   }
 
   /* On failure, exit */
-  if(*ier != CV_SUCCESS) {
-    free(CV_userdata); CV_userdata = NULL;
+  if(*ier != ARK_SUCCESS) {
+    free(ARK_userdata); 
+    ARK_userdata = NULL;
     *ier = -1;
     return;
   }
 
-  /* Grab optional output arrays and store them in global variables */
-  CV_iout = iout;
-  CV_rout = rout;
+  /* store pointers to optional output arrays in global vars */
+  ARK_iout = iout;
+  ARK_rout = rout;
 
   /* Store the unit roundoff in rout for user access */
-  CV_rout[5] = UNIT_ROUNDOFF;
+  ARK_rout[5] = UNIT_ROUNDOFF;
 
   return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_REINIT(realtype *t0, realtype *y0, 
+/* Fortran interface routine to re-initialize ARKode memory 
+   structure; functions as an all-in-one interface to the C 
+   routines ARKodeReInit and ARKodeSStolerances (or 
+   ARKodeSVtolerances); see farkode.h for further details */
+void FARK_REINIT(realtype *t0, realtype *y0, int *imex, 
                 int *iatol, realtype *rtol, realtype *atol, 
                 int *ier)
 {
   N_Vector Vatol;
-
   *ier = 0;
 
   /* Initialize all pointers to NULL */
   Vatol = NULL;
 
-  /* Set data in F2C_CVODE_vec to y0 */
-  N_VSetArrayPointer(y0, F2C_CVODE_vec);
+  /* Set data in F2C_ARKODE_vec to y0 */
+  N_VSetArrayPointer(y0, F2C_ARKODE_vec);
 
-  /* Call CVReInit */
-  *ier = CVodeReInit(CV_cvodemem, *t0, F2C_CVODE_vec);
+  /* Call ARKodeReInit based on imex argument */
+  switch (*imex) {
+  case 0:  /* purely implicit */
+    *ier = ARKodeReInit(ARK_arkodemem, NULL, FARKfi, 
+			*t0, F2C_ARKODE_vec);
+    break;
+  case 1:  /* purely explicit */
+    *ier = ARKodeReInit(ARK_arkodemem, FARKfe, NULL, 
+			*t0, F2C_ARKODE_vec);
+    break;
+  case 2:  /* imex */
+    *ier = ARKodeReInit(ARK_arkodemem, FARKfe, FARKfi, 
+			*t0, F2C_ARKODE_vec);
+    break;
+  }
 
   /* Reset data pointers */
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
 
   /* On failure, exit */
-  if (*ier != CV_SUCCESS) {
+  if (*ier != ARK_SUCCESS) {
     *ier = -1;
     return;
   }
@@ -201,23 +221,22 @@ void FCV_REINIT(realtype *t0, realtype *y0,
   /* Set tolerances */
   switch (*iatol) {
   case 1:
-    *ier = CVodeSStolerances(CV_cvodemem, *rtol, *atol); 
+    *ier = ARKodeSStolerances(ARK_arkodemem, *rtol, *atol); 
     break;
   case 2:
-    Vatol = NULL;
-    Vatol = N_VCloneEmpty(F2C_CVODE_vec);
+    Vatol = N_VCloneEmpty(F2C_ARKODE_vec);
     if (Vatol == NULL) {
       *ier = -1;
       return;
     }
     N_VSetArrayPointer(atol, Vatol);
-    *ier = CVodeSVtolerances(CV_cvodemem, *rtol, Vatol);
+    *ier = ARKodeSVtolerances(ARK_arkodemem, *rtol, Vatol);
     N_VDestroy(Vatol);
     break;
   }
 
   /* On failure, exit */
-  if (*ier != CV_SUCCESS) {
+  if (*ier != ARK_SUCCESS) {
     *ier = -1;
     return;
   }
@@ -225,379 +244,490 @@ void FCV_REINIT(realtype *t0, realtype *y0,
   return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SETIIN(char key_name[], long int *ival, int *ier, int key_len)
+/* Fortran interface to C routine ARKodeSetDefaults; see 
+   farkode.h for further details */
+void FARK_SETDEFAULTS(int *ier)
 {
-  if (!strncmp(key_name,"MAX_ORD", (size_t)key_len)) 
-    *ier = CVodeSetMaxOrd(CV_cvodemem, (int) *ival);
-  else if (!strncmp(key_name,"MAX_NSTEPS", (size_t)key_len)) 
-    *ier = CVodeSetMaxNumSteps(CV_cvodemem, (int) *ival);
-  else if (!strncmp(key_name,"MAX_ERRFAIL", (size_t)key_len)) 
-    *ier = CVodeSetMaxErrTestFails(CV_cvodemem, (int) *ival);
-  else if (!strncmp(key_name,"MAX_NITERS", (size_t)key_len)) 
-    *ier = CVodeSetMaxNonlinIters(CV_cvodemem, (int) *ival);
-  else if (!strncmp(key_name,"MAX_CONVFAIL", (size_t)key_len)) 
-    *ier = CVodeSetMaxConvFails(CV_cvodemem, (int) *ival);
-  else if (!strncmp(key_name,"HNIL_WARNS", (size_t)key_len)) 
-    *ier = CVodeSetMaxHnilWarns(CV_cvodemem, (int) *ival);
-  else if (!strncmp(key_name,"STAB_LIM", (size_t)key_len)) 
-    *ier = CVodeSetStabLimDet(CV_cvodemem, (int) *ival);
+  *ier = ARKodeSetDefaults(ARK_arkodemem);
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C "set" routines having integer 
+   arguments; see farkode.h for further details */
+void FARK_SETIIN(char key_name[], long int *ival, int *ier)
+{
+  if (!strcmp(key_name, "ORDER")) 
+    *ier = ARKodeSetOrder(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "DENSE_ORDER")) 
+    *ier = ARKodeSetDenseOrder(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "LINEAR")) 
+    *ier = ARKodeSetLinear(ARK_arkodemem);
+  else if (!strncmp(key_name, "NONLINEAR")) 
+    *ier = ARKodeSetNonlinear(ARK_arkodemem);
+  else if (!strncmp(key_name, "EXPLICIT")) 
+    *ier = ARKodeSetExplicit(ARK_arkodemem);
+  else if (!strncmp(key_name, "IMPLICIT")) 
+    *ier = ARKodeSetImplicit(ARK_arkodemem);
+  else if (!strncmp(key_name, "IMEX")) 
+    *ier = ARKodeSetImEx(ARK_arkodemem);
+  else if (!strncmp(key_name, "IRK_TABLE_NUM")) 
+    *ier = ARKodeSetIRKTableNum(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "ERK_TABLE_NUM")) 
+    *ier = ARKodeSetERKTableNum(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "ARK_TABLE_NUM")) 
+    *ier = ARKodeSetARKTableNum(ARK_arkodemem, (int) ival[0], (int) ival[1]);
+  else if (!strncmp(key_name, "MAX_NSTEPS")) 
+    *ier = ARKodeSetMaxNumSteps(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "HNIL_WARNS")) 
+    *ier = ARKodeSetMaxHnilWarns(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "PREDICT_METHOD")) 
+    *ier = ARKodeSetPredictorMethod(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "MAX_ERRFAIL")) 
+    *ier = ARKodeSetMaxErrTestFails(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "MAX_CONVFAIL")) 
+    *ier = ARKodeSetMaxConvFails(ARK_arkodemem, (int) *ival);
+  else if (!strncmp(key_name, "MAX_NITERS")) 
+    *ier = ARKodeSetMaxNonlinIters(ARK_arkodemem, (int) *ival);
   else {
     *ier = -99;
-    printf("FCVSETIIN: Unrecognized key.\n\n");
+    printf("FARKSETIIN: Unrecognized key.\n\n");
   }
-
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SETRIN(char key_name[], realtype *rval, int *ier, int key_len)
+/* Fortran interface to C "set" routines having real
+   arguments; see farkode.h for further details */
+void FARK_SETRIN(char key_name[], realtype *rval, int *ier)
 {
-  if (!strncmp(key_name,"INIT_STEP", (size_t)key_len)) 
-    *ier = CVodeSetInitStep(CV_cvodemem, *rval);
-  else if (!strncmp(key_name,"MAX_STEP", (size_t)key_len)) 
-    *ier = CVodeSetMaxStep(CV_cvodemem, *rval);
-  else if (!strncmp(key_name,"MIN_STEP", (size_t)key_len)) 
-    *ier = CVodeSetMinStep(CV_cvodemem, *rval);
-  else if (!strncmp(key_name,"STOP_TIME", (size_t)key_len)) 
-    *ier = CVodeSetStopTime(CV_cvodemem, *rval);
-  else if (!strncmp(key_name,"NLCONV_COEF", (size_t)key_len)) 
-    *ier = CVodeSetNonlinConvCoef(CV_cvodemem, *rval);
+  if (!strncmp(key_name, "INIT_STEP")) 
+    *ier = ARKodeSetInitStep(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "MAX_STEP")) 
+    *ier = ARKodeSetMaxStep(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "MIN_STEP")) 
+    *ier = ARKodeSetMinStep(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "STOP_TIME")) 
+    *ier = ARKodeSetStopTime(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "NLCONV_COEF")) 
+    *ier = ARKodeSetNonlinConvCoef(ARK_arkodemem, *rval);
   else {
     *ier = -99;
-    printf("FCVSETRIN: Unrecognized key.\n\n");
+    printf("FARKSETRIN: Unrecognized key.\n\n");
   }
-
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_DENSE(long int *neq, int *ier)
+/* Fortran interface to C routine ARKodeSetERKTable; see 
+   farkode.h for further details */
+void FARK_SETERKTABLE(int *s, int *q, int *p, realtype *c, 
+		      realtype *A, realtype *b, realtype *b2, 
+		      int *ier)
 {
-  /* neq  is the problem size */
-
-  *ier = CVDense(CV_cvodemem, *neq);
-
-  CV_ls = CV_LS_DENSE;
+  *ier = ARKodeSetERKTable(ARK_arkodemem, *s, *q, *p, c, A, b, b2);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_BAND(long int *neq, long int *mupper, long int *mlower, int *ier)
+/* Fortran interface to C routine ARKodeSetIRKTable; see 
+   farkode.h for further details */
+void FARK_SETIRKTABLE(int *s, int *q, int *p, realtype *c, 
+		      realtype *A, realtype *b, realtype *b2, 
+		      int *ier)
 {
-  /* 
-     neq        is the problem size
-     mupper     is the upper bandwidth
-     mlower     is the lower bandwidth 
-  */
-
-  *ier = CVBand(CV_cvodemem, *neq, *mupper, *mlower);
-
-  CV_ls = CV_LS_BAND;
+  *ier = ARKodeSetIRKTable(ARK_arkodemem, *s, *q, *p, c, A, b, b2);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_DIAG(int *ier)
+/* Fortran interface to C routine ARKodeSetARKTables; see 
+   farkode.h for further details */
+void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c, 
+		       realtype *Ai, realtype *Ae, realtype *b, 
+		       realtype *b2, int *ier)
 {
-  *ier = CVDiag(CV_cvodemem);
-
-  CV_ls = CV_LS_DIAG;
+  *ier = ARKodeSetARKTables(ARK_arkodemem, *s, *q, 
+			    *p, c, Ai, Ae, b, b2);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier)
+/* Fortran interface to C routine ARKodeSetAdaptivityMethod; see 
+   farkode.h for further details */
+void FARK_SETADAPTIVITYMETHOD(int *method, realtype *params, int *ier)
 {
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov dimension
-     gstype     the Gram-Schmidt process type
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpgmr(CV_cvodemem, *pretype, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetGSType(CV_cvodemem, *gstype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPGMR;
+  *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, *method, params);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPBCG(int *pretype, int *maxl, realtype *delt, int *ier)
+/* Fortran interface to C routine ARKodeSetAdaptivityConstants; 
+   see farkode.h for further details */
+void FARK_SETADAPTIVITYCONSTANTS(realtype *etamx1, realtype *etamxf, 
+				 realtype *etacf, int *small_nef, 
+				 int *ier)
 {
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpbcg(CV_cvodemem, *pretype, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPBCG;
+  *ier = ARKodeSetAdaptivityConstants(ARK_arkodemem, *etamx1, 
+				      *etamxf, *etacf, *small_nef);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier)
+/* Fortran interface to C routine ARKodeSetNewtonConstants; see
+   farkode.h for further details */
+void FARK_SETNEWTONCONSTANTS(realtype *crdown, realtype *rdiv, 
+			     int *ier)
 {
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSptfqmr(CV_cvodemem, *pretype, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPTFQMR;
+  *ier = ARKodeSetNewtonConstants(ARK_arkodemem, *crdown, *rdiv);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier)
+/* Fortran interface to C routine ARKodeSetLSetupConstants; see
+   farkode.h for further details */
+void FARK_SETLSETUPCONSTANTS(realtype *dgmax, int *msbp, int *ier)
 {
-  /* 
-     pretype    the preconditioner type
-     gstype     the Gram-Schmidt process type
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpilsSetPrecType(CV_cvodemem, *pretype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetGSType(CV_cvodemem, *gstype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPGMR;
+  *ier = ARKodeSetLSetupConstants(ARK_arkodemem, *dgmax, *msbp);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPBCGREINIT(int *pretype, int *maxl, realtype *delt, int *ier)
+/* Fortran interface to C routine ARKDense; see farkode.h for 
+   further details */
+void FARK_DENSE(long int *neq, int *ier)
 {
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov subspace dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpilsSetPrecType(CV_cvodemem, *pretype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetMaxl(CV_cvodemem, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPBCG;
+  *ier = ARKDense(ARK_arkodemem, *neq);
+  ARK_ls = ARK_LS_DENSE;
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_SPTFQMRREINIT(int *pretype, int *maxl, realtype *delt, int *ier)
+/* Fortran interface to C routine ARKBand; see farkode.h for 
+   further details */
+void FARK_BAND(long int *neq, long int *mupper, long int *mlower, int *ier)
 {
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov subspace dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpilsSetPrecType(CV_cvodemem, *pretype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetMaxl(CV_cvodemem, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPTFQMR;
+  *ier = ARKBand(ARK_arkodemem, *neq, *mupper, *mlower);
+  ARK_ls = ARK_LS_BAND;
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_CVODE(realtype *tout, realtype *t, realtype *y, int *itask, int *ier)
+/* Fortran interface to C routine ARKDiag; see farkode.h for 
+   further details */
+void FARK_DIAG(int *ier)
 {
-  /* 
-     tout          is the t value where output is desired
-     F2C_CVODE_vec is the N_Vector containing the solution on return
-     t             is the returned independent variable value
-     itask         is the task indicator (1 = CV_NORMAL, 2 = CV_ONE_STEP, 
-                                          3 = CV_NORMAL_TSTOP, 4 = CV_ONE_STEP_TSTOP) 
-  */
+  *ier = ARKDiag(ARK_arkodemem);
+  ARK_ls = ARK_LS_DIAG;
+  return;
+}
 
-  int qu, qcur;
+/*=============================================================*/
 
-  N_VSetArrayPointer(y, F2C_CVODE_vec);
+/* Fortran interface to C routine ARKSpgmr and it's associated 
+   "set" routines; see farkode.h for further details */
+void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier)
+{
+  *ier = ARKSpgmr(ARK_arkodemem, *pretype, *maxl);
+  if (*ier != ARKSPILS_SUCCESS) return;
 
-  *ier = CVode(CV_cvodemem, *tout, F2C_CVODE_vec, t, *itask);
+  *ier = ARKSpilsSetGSType(ARK_arkodemem, *gstype);
+  if (*ier != ARKSPILS_SUCCESS) return;
 
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPGMR;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKSpbcg and it's associated 
+   "set" routines; see farkode.h for further details */
+void FARK_SPBCG(int *pretype, int *maxl, realtype *delt, int *ier)
+{
+  *ier = ARKSpbcg(ARK_arkodemem, *pretype, *maxl);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPBCG;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKSptfqmr and it's associated 
+   "set" routines; see farkode.h for further details */
+void FARK_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier)
+{
+  *ier = ARKSptfqmr(ARK_arkodemem, *pretype, *maxl);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPTFQMR;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C "set" routines for the ARKSpgmr solver; 
+   see farkode.h for further details */
+void FARK_SPGMRREINIT(int *pretype, int *gstype, 
+		      realtype *delt, int *ier)
+{
+  *ier = ARKSpilsSetPrecType(ARK_arkodemem, *pretype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetGSType(ARK_arkodemem, *gstype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPGMR;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C "set" routines for the ARKSpbcg solver; 
+   see farkode.h for further details */
+void FARK_SPBCGREINIT(int *pretype, int *maxl, 
+		      realtype *delt, int *ier)
+{
+  *ier = ARKSpilsSetPrecType(ARK_arkodemem, *pretype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetMaxl(ARK_arkodemem, *maxl);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPBCG;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C "set" routines for the ARKSptfqmr
+   solver; see farkode.h for further details */
+void FARK_SPTFQMRREINIT(int *pretype, int *maxl, 
+			realtype *delt, int *ier)
+{
+  *ier = ARKSpilsSetPrecType(ARK_arkodemem, *pretype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetMaxl(ARK_arkodemem, *maxl);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPTFQMR;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKode (the main integrator); 
+   see farkode.h for further details */
+void FARK_ARKODE(realtype *tout, realtype *t, realtype *y, 
+		 int *itask, int *ier)
+{
+  /* attach user solution array to solver memory */
+  N_VSetArrayPointer(y, F2C_ARKODE_vec);
+
+  /* call ARKode solver */
+  *ier = ARKode(ARK_arkodemem, *tout, F2C_ARKODE_vec, t, *itask);
+
+  /* detach user solution array from solver memory */
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
 
   /* Load optional outputs in iout & rout */
-  CVodeGetWorkSpace(CV_cvodemem,
-                    &CV_iout[0],                          /* LENRW   */
-                    &CV_iout[1]);                         /* LENIW   */
-  CVodeGetIntegratorStats(CV_cvodemem, 
-                          &CV_iout[2],                    /* NST     */
-                          &CV_iout[3],                    /* NFE     */ 
-                          &CV_iout[7],                    /* NSETUPS */ 
-                          &CV_iout[4],                    /* NETF    */ 
-                          &qu,                            /* QU      */
-                          &qcur,                          /* QCUR    */
-                          &CV_rout[0],                    /* H0U     */
-                          &CV_rout[1],                    /* HU      */ 
-                          &CV_rout[2],                    /* HCUR    */ 
-                          &CV_rout[3]);                   /* TCUR    */ 
-  CV_iout[8] = (long int) qu;
-  CV_iout[9] = (long int) qcur;
-  CVodeGetTolScaleFactor(CV_cvodemem, 
-                         &CV_rout[4]);                    /* TOLSFAC */
-  CVodeGetNonlinSolvStats(CV_cvodemem,
-                          &CV_iout[6],                    /* NNI     */
-                          &CV_iout[5]);                   /* NCFN    */
-  CVodeGetNumStabLimOrderReds(CV_cvodemem, &CV_iout[10]); /* NOR     */
+  ARKodeGetWorkSpace(ARK_arkodemem,
+		     &ARK_iout[0],          /* LENRW   */
+		     &ARK_iout[1]);         /* LENIW   */
+  ARKodeGetIntegratorStats(ARK_arkodemem, 
+			   &ARK_iout[2],    /* NST     */
+			   &ARK_iout[3],    /* NST_STB */
+			   &ARK_iout[4],    /* NST_ACC */ 
+			   &ARK_iout[5],    /* NST_CNV */ 
+			   &ARK_iout[6],    /* NFE     */ 
+			   &ARK_iout[7],    /* NFI     */ 
+			   &ARK_iout[8],    /* NSETUPS */ 
+			   &ARK_iout[9],    /* NETF    */ 
+			   &ARK_rout[0],    /* H0U     */
+			   &ARK_rout[1],    /* HU      */ 
+			   &ARK_rout[2],    /* HCUR    */ 
+			   &ARK_rout[3]);   /* TCUR    */ 
+  ARKodeGetTolScaleFactor(ARK_arkodemem, 
+			  &ARK_rout[4]);    /* TOLSFAC */
+  ARKodeGetNonlinSolvStats(ARK_arkodemem,
+                          &ARK_iout[10],    /* NNI     */
+                          &ARK_iout[11]);   /* NCFN    */
   
-  /* Root finding is on */
-  if (CV_nrtfn != 0)
-    CVodeGetNumGEvals(CV_cvodemem, &CV_iout[11]);         /* NGE     */
-  
-  switch(CV_ls) {
-  case CV_LS_DENSE:
-  case CV_LS_BAND:
-  case CV_LS_LAPACKDENSE:
-  case CV_LS_LAPACKBAND:
-    CVDlsGetWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]);   /* LENRWLS,LENIWLS */
-    CVDlsGetLastFlag(CV_cvodemem, &CV_iout[14]);                  /* LSTF */
-    CVDlsGetNumRhsEvals(CV_cvodemem, &CV_iout[15]);               /* NFELS */
-    CVDlsGetNumJacEvals(CV_cvodemem, &CV_iout[16]);               /* NJE */
+  /* If root finding is on, load those outputs as well */
+  if (ARK_nrtfn != 0)
+    ARKodeGetNumGEvals(ARK_arkodemem, &ARK_iout[12]);  /* NGE */
+
+  /* Attach linear solver outputs */
+  switch(ARK_ls) {
+  case ARK_LS_DENSE:
+  case ARK_LS_BAND:
+  case ARK_LS_LAPACKDENSE:
+  case ARK_LS_LAPACKBAND:
+    ARKDlsGetWorkSpace(ARK_arkodemem, &ARK_iout[13], &ARK_iout[14]);  /* LENRWLS, LENIWLS */
+    ARKDlsGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                  /* LSTF  */
+    ARKDlsGetNumRhsEvals(ARK_arkodemem, &ARK_iout[16]);               /* NFELS */
+    ARKDlsGetNumJacEvals(ARK_arkodemem, &ARK_iout[17]);               /* NJE   */
     break;
-  case CV_LS_DIAG:
-    CVDiagGetWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]);  /* LENRWLS,LENIWLS */
-    CVDiagGetLastFlag(CV_cvodemem, &CV_iout[14]);                 /* LSTF */
-    CVDiagGetNumRhsEvals(CV_cvodemem, &CV_iout[15]);              /* NFELS */
+  case ARK_LS_DIAG:
+    ARKDiagGetWorkSpace(ARK_arkodemem, &ARK_iout[13], &ARK_iout[14]);  /* LENRWLS, LENIWLS */
+    ARKDiagGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                  /* LSTF  */
+    ARKDiagGetNumRhsEvals(ARK_arkodemem, &ARK_iout[16]);               /* NFELS */
     break;
-  case CV_LS_SPGMR:
-  case CV_LS_SPBCG:
-  case CV_LS_SPTFQMR:
-    CVSpilsGetWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]); /* LENRWLS,LENIWLS */
-    CVSpilsGetLastFlag(CV_cvodemem, &CV_iout[14]);                /* LSTF */
-    CVSpilsGetNumRhsEvals(CV_cvodemem, &CV_iout[15]);             /* NFELS */
-    CVSpilsGetNumJtimesEvals(CV_cvodemem, &CV_iout[16]);          /* NJTV */
-    CVSpilsGetNumPrecEvals(CV_cvodemem, &CV_iout[17]);            /* NPE */
-    CVSpilsGetNumPrecSolves(CV_cvodemem, &CV_iout[18]);           /* NPS */
-    CVSpilsGetNumLinIters(CV_cvodemem, &CV_iout[19]);             /* NLI */
-    CVSpilsGetNumConvFails(CV_cvodemem, &CV_iout[20]);            /* NCFL */
+  case ARK_LS_SPGMR:
+  case ARK_LS_SPBCG:
+  case ARK_LS_SPTFQMR:
+    ARKSpilsGetWorkSpace(ARK_arkodemem, &ARK_iout[13], &ARK_iout[14]); /* LENRWLS, LENIWLS */
+    ARKSpilsGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                 /* LSTF  */
+    ARKSpilsGetNumRhsEvals(ARK_arkodemem, &ARK_iout[16]);              /* NFELS */
+    ARKSpilsGetNumJtimesEvals(ARK_arkodemem, &ARK_iout[17]);           /* NJTV  */
+    ARKSpilsGetNumPrecEvals(ARK_arkodemem, &ARK_iout[18]);             /* NPE   */
+    ARKSpilsGetNumPrecSolves(ARK_arkodemem, &ARK_iout[19]);            /* NPS   */
+    ARKSpilsGetNumLinIters(ARK_arkodemem, &ARK_iout[20]);              /* NLI   */
+    ARKSpilsGetNumConvFails(ARK_arkodemem, &ARK_iout[21]);             /* NCFL  */
   }
-}
-
-/***************************************************************************/
-
-void FCV_DKY (realtype *t, int *k, realtype *dky, int *ier)
-{
-  /* 
-     t             is the t value where output is desired
-     k             is the derivative order
-     F2C_CVODE_vec is the N_Vector containing the solution derivative on return 
-  */
-
-  N_VSetArrayPointer(dky, F2C_CVODE_vec);
-
-  *ier = 0;
-  *ier = CVodeGetDky(CV_cvodemem, *t, *k, F2C_CVODE_vec);
-
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
-
-}
-
-/*************************************************/
-
-void FCV_GETERRWEIGHTS(realtype *eweight, int *ier)
-{
-  /* Attach user data to vector */
-  N_VSetArrayPointer(eweight, F2C_CVODE_vec);
-
-  *ier = 0;
-  *ier = CVodeGetErrWeights(CV_cvodemem, F2C_CVODE_vec);
-
-  /* Reset data pointers */
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
-
   return;
 }
 
-/*************************************************/
+/*=============================================================*/
 
-void FCV_GETESTLOCALERR(realtype *ele, int *ier)
+/* Fortran interface to C routine ARKodeGetDky; see farkode.h 
+   for further details */
+void FARK_DKY(realtype *t, int *k, realtype *dky, int *ier)
 {
-  /* Attach user data to vector */
-  N_VSetArrayPointer(ele, F2C_CVODE_vec);
+  /* attach output data array */
+  N_VSetArrayPointer(dky, F2C_ARKODE_vec);
 
+  /* call ARKodeGetDky */
   *ier = 0;
-  *ier = CVodeGetEstLocalErrors(CV_cvodemem, F2C_CVODE_vec);
+  *ier = ARKodeGetDky(ARK_arkodemem, *t, *k, F2C_ARKODE_vec);
 
-  /* Reset data pointers */
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
-
+  /* detach output data array */
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
   return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_FREE ()
+/* Fortran interface to C routine ARKodeGetErrWeights; see 
+   farkode.h for further details */
+void FARK_GETERRWEIGHTS(realtype *eweight, int *ier)
 {
-  CVodeMem cv_mem;
+  /* attach output data array */
+  N_VSetArrayPointer(eweight, F2C_ARKODE_vec);
 
-  cv_mem = (CVodeMem) CV_cvodemem;
+  /* call ARKodeGetErrWeights */
+  *ier = 0;
+  *ier = ARKodeGetErrWeights(ARK_arkodemem, F2C_ARKODE_vec);
 
-  free(cv_mem->cv_user_data); cv_mem->cv_user_data = NULL;
-
-  CVodeFree(&CV_cvodemem);
-
-  N_VSetArrayPointer(NULL, F2C_CVODE_vec);
-  N_VDestroy(F2C_CVODE_vec);
+  /* detach output data array */
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-/* 
- * C function CVf to interface between CVODE and a Fortran subroutine FCVFUN.
- * Addresses of t, y, and ydot are passed to CVFUN, using the
- * routine N_VGetArrayPointer from the NVECTOR module.
- * Auxiliary data is assumed to be communicated by Common. 
- */
+/* Fortran interface to C routine ARKodeGetEstLocalErrors; see 
+   farkode.h for further details */
+void FARK_GETESTLOCALERR(realtype *ele, int *ier)
+{
+  /* attach output data array */
+  N_VSetArrayPointer(ele, F2C_ARKODE_vec);
 
-int FCVf(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+  /* call ARKodeGetEstLocalErrors */
+  *ier = 0;
+  *ier = ARKodeGetEstLocalErrors(ARK_arkodemem, F2C_ARKODE_vec);
+
+  /* detach output data array */
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKodeFree; see farkode.h for 
+   further details */
+void FARK_FREE()
+{
+  ARKodeMem ark_mem;
+  ark_mem = (ARKodeMem) ARK_arkodemem;
+  free(ark_mem->ark_user_data); ark_mem->ark_user_data = NULL;
+
+  ARKodeFree(&ARK_arkodemem);
+
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
+  N_VDestroy(F2C_ARKODE_vec);
+  return;
+}
+
+/*=============================================================*/
+
+/* C interface to user-supplied FORTRAN function FARKEFUN; see 
+   farkode.h for further details */
+int FARKfe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   int ier;
   realtype *ydata, *dydata;
-  FCVUserData CV_userdata;
-
+  FARKUserData ARK_userdata;
   ydata  = N_VGetArrayPointer(y);
   dydata = N_VGetArrayPointer(ydot);
+  ARK_userdata = (FARKUserData) user_data;
 
-  CV_userdata = (FCVUserData) user_data;
-
-  FCV_FUN(&t, ydata, dydata, CV_userdata->ipar, CV_userdata->rpar, &ier);
-
+  FARK_EXP_FUN(&t, ydata, dydata, ARK_userdata->ipar, 
+	       ARK_userdata->rpar, &ier);
   return(ier);
 }
+
+/*=============================================================*/
+
+/* C interface to user-supplied FORTRAN function FARKIFUN; see 
+   farkode.h for further details */
+int FARKfi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  int ier;
+  realtype *ydata, *dydata;
+  FARKUserData ARK_userdata;
+  ydata  = N_VGetArrayPointer(y);
+  dydata = N_VGetArrayPointer(ydot);
+  ARK_userdata = (FARKUserData) user_data;
+
+  FARK_IMP_FUN(&t, ydata, dydata, ARK_userdata->ipar, 
+	       ARK_userdata->rpar, &ier);
+  return(ier);
+}
+
+/*===============================================================
+   EOF
+===============================================================*/

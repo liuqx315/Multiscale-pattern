@@ -1,83 +1,68 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2010/12/01 22:27:37 $
- * ----------------------------------------------------------------- 
- * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * Fortran/C interface routines for CVODE/CVBAND, for the case of 
- * a user-supplied Jacobian approximation routine.                
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  Fortran/C interface routines for ARKODE/ARKBAND, for the case 
+  of a user-supplied Jacobian approximation routine.                
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "farkode.h"
+#include "arkode_impl.h"
+#include <arkode/arkode_band.h>
 
-#include "fcvode.h"     /* actual fn. names, prototypes and global vars.*/
-#include "cvode_impl.h" /* definition of CVodeMem type                  */
 
-#include <cvode/cvode_band.h>
-
-/******************************************************************************/
+/*=============================================================*/
 
 /* Prototype of the Fortran routine */
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-  extern void FCV_BJAC(long int*, long int*, long int*, long int*,  /* N,MU,ML,EBAND */
-                       realtype*, realtype*, realtype*,  /* T, Y, FY         */
-                       realtype*,                        /* BJAC             */
-                       realtype*,                        /* H                */
-                       long int*, realtype*,             /* IPAR, RPAR       */
-                       realtype*, realtype*, realtype*,  /* V1, V2, V3       */
-                       int*);                            /* IER              */
+
+  extern void FARK_BJAC(long int *N, long int *MU, long int *ML,
+			long int *EBAND, realtype *T, realtype *Y,
+			realtype *FY, realtype *BJAC, realtype *H,
+			long int *IPAR, realtype *RPAR, 
+			realtype *V1, realtype *V2, realtype *V3, 
+			int *IER);
+
 #ifdef __cplusplus
 }
 #endif
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_BANDSETJAC(int *flag, int *ier)
+/* Fortran interface routine to ARKBandSetJacFn; see farkode.h 
+   for further details */
+void FARK_BANDSETJAC(int *flag, int *ier)
 {
-  CVodeMem cv_mem;
-
   if (*flag == 0) {
-    *ier = CVDlsSetBandJacFn(CV_cvodemem, NULL);
+    *ier = ARKDlsSetBandJacFn(ARK_arkodemem, NULL);
   } else {
-    cv_mem = (CVodeMem) CV_cvodemem;
-    *ier = CVDlsSetBandJacFn(CV_cvodemem, FCVBandJac);
+    *ier = ARKDlsSetBandJacFn(ARK_arkodemem, FARKBandJac);
   }
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-/* C function CVBandJac interfaces between CVODE and a Fortran subroutine
-   FCVBJAC for solution of a linear system with band Jacobian approximation.
-   Addresses of arguments are passed to FCVBJAC, using the macro 
-   BAND_COL from BAND and the routine N_VGetArrayPointer from NVECTOR.
-   The address passed for J is that of the element in column 0 with row 
-   index -mupper.  An extended bandwith equal to (J->smu) + mlower + 1 is
-   passed as the column dimension of the corresponding array.
-   Auxiliary data is assumed to be communicated by Common. */
-
-int FCVBandJac(long int N, long int mupper, long int mlower,
-               realtype t, N_Vector y, N_Vector fy, 
-               DlsMat J, void *user_data,
-               N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3)
+/* C interface to user-supplied Fortran subroutine FARKBJAC; see 
+   farkode.h for further details */
+int FARKBandJac(long int N, long int mupper, long int mlower,
+		realtype t, N_Vector y, N_Vector fy, DlsMat J, 
+		void *user_data, N_Vector vtemp1, 
+		N_Vector vtemp2, N_Vector vtemp3)
 {
   int ier;
   realtype *ydata, *fydata, *jacdata, *v1data, *v2data, *v3data;
   realtype h;
   long int eband;
-  FCVUserData CV_userdata;
+  FARKUserData ARK_userdata;
 
-  CVodeGetLastStep(CV_cvodemem, &h);
+  ARKodeGetLastStep(ARK_arkodemem, &h);
 
   ydata   = N_VGetArrayPointer(y);
   fydata  = N_VGetArrayPointer(fy);
@@ -88,10 +73,16 @@ int FCVBandJac(long int N, long int mupper, long int mlower,
   eband = (J->s_mu) + mlower + 1;
   jacdata = BAND_COL(J,0) - mupper;
 
-  CV_userdata = (FCVUserData) user_data;
+  ARK_userdata = (FARKUserData) user_data;
 
-  FCV_BJAC(&N, &mupper, &mlower, &eband, &t, ydata, fydata, jacdata, &h,
-           CV_userdata->ipar, CV_userdata->rpar, v1data, v2data, v3data, &ier);
+  FARK_BJAC(&N, &mupper, &mlower, &eband, &t, ydata, fydata, 
+	    jacdata, &h, ARK_userdata->ipar, ARK_userdata->rpar, 
+	    v1data, v2data, v3data, &ier);
 
   return(ier);
 }
+
+
+/*===============================================================
+   EOF
+===============================================================*/

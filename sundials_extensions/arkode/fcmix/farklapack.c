@@ -1,52 +1,41 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2006/11/10 21:04:11 $
- * ----------------------------------------------------------------- 
- * Programmer(s): Radu Serban @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * Fortran/C interface routines for CVODE/CVLAPACK
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  Fortran/C interface routines for ARKODE/ARKLAPACK
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "farkode.h"
+#include "arkode_impl.h"
+#include <arkode/arkode_lapack.h>
 
-#include "fcvode.h"     /* actual fn. names, prototypes and global vars.*/
-#include "cvode_impl.h" /* definition of CVodeMem type                  */
+/*=============================================================*/
 
-#include <cvode/cvode_lapack.h>
-
-/***************************************************************************/
-
-void FCV_LAPACKDENSE(int *neq, int *ier)
+/* Fortran interface to C routine ARKLapackDense; see farkode.h 
+   for further information */
+void FARK_LAPACKDENSE(int *neq, int *ier)
 {
-  /* neq  is the problem size */
-
-  *ier = CVLapackDense(CV_cvodemem, *neq);
-
-  CV_ls = CV_LS_LAPACKDENSE;
+  *ier = ARKLapackDense(ARK_arkodemem, *neq);
+  ARK_ls = ARK_LS_LAPACKDENSE;
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-void FCV_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier)
+/* Fortran interface to C routine ARKLapackBand; see farkode.h 
+   for further information */
+void FARK_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier)
 {
-  /* 
-     neq        is the problem size
-     mupper     is the upper bandwidth
-     mlower     is the lower bandwidth 
-  */
-
-  *ier = CVLapackBand(CV_cvodemem, *neq, *mupper, *mlower);
-
-  CV_ls = CV_LS_LAPACKBAND;
+  *ier = ARKLapackBand(ARK_arkodemem, *neq, *mupper, *mlower);
+  ARK_ls = ARK_LS_LAPACKBAND;
+  return;
 }
 
-/***************************************************************************/
+/*===============================================================
+   EOF
+===============================================================*/
 

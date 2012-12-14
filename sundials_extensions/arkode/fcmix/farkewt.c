@@ -1,74 +1,65 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2007/04/30 19:28:59 $
- * ----------------------------------------------------------------- 
- * Programmer: Radu Serban @ LLNL
- * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
- * Produced at the Lawrence Livermore National Laboratory.
- * All rights reserved.
- * For details, see the LICENSE file.
- * -----------------------------------------------------------------
- * Fortran/C interface routines for CVODE, for the case of a 
- * user-supplied error weight calculation routine.
- * -----------------------------------------------------------------
- */
+/*---------------------------------------------------------------
+  $Revision: 1.0 $
+  $Date: $
+ ---------------------------------------------------------------- 
+  Programmer(s): Daniel R. Reynolds @ SMU
+ ----------------------------------------------------------------
+  Fortran/C interface routines for ARKODE, for the case of a 
+  user-supplied error weight calculation routine.
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "farkode.h"
+#include "arkode_impl.h"
 
-#include "fcvode.h"           /* actual fn. names, prototypes and global vars.  */
-#include "cvode_impl.h"       /* definition of CVodeMem type                    */
-
-/***************************************************************************/
+/*=============================================================*/
 
 /* Prototype of the Fortran routine */
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-  extern void FCV_EWT(realtype*, realtype*,  /* Y, EWT */ 
-                      long int*, realtype*,  /* IPAR, RPAR */
-                      int*);                 /* IER */
+
+  extern void FARK_EWT(realtype *Y, realtype *EWT, 
+		       long int *IPAR, realtype *RPAR, 
+		       int *IER);
+
 #ifdef __cplusplus
 }
 #endif
 
-/***************************************************************************/
+/*=============================================================*/
 
-/* 
- * User-callable function to interface to CVodeSetEwtFn.
- */
-
-void FCV_EWTSET(int *flag, int *ier)
+/* Fortran interface to C routine ARKodeWFtolerances; see 
+   farkode.h for further information */
+void FARK_EWTSET(int *flag, int *ier)
 {
-  CVodeMem cv_mem;
-
   if (*flag != 0) {
-    cv_mem = (CVodeMem) CV_cvodemem;
-    *ier = CVodeWFtolerances(CV_cvodemem, FCVEwtSet);
+    *ier = ARKodeWFtolerances(ARK_arkodemem, FARKEwtSet);
   }
+  return;
 }
 
-/***************************************************************************/
+/*=============================================================*/
 
-/* 
- * C function to interface between CVODE and a Fortran subroutine FCVEWT.
- */
-
-int FCVEwtSet(N_Vector y, N_Vector ewt, void *user_data)
+/* C interface to user-supplied fortran routine FARKEWT; see 
+   farkode.h for further information */
+int FARKEwt(N_Vector y, N_Vector ewt, void *user_data)
 {
   int ier = 0;
   realtype *ydata, *ewtdata;
-  FCVUserData CV_userdata;
+  FARKUserData ARK_userdata;
 
   ydata  = N_VGetArrayPointer(y);
   ewtdata = N_VGetArrayPointer(ewt);
+  ARK_userdata = (FARKUserData) user_data;
 
-  CV_userdata = (FCVUserData) user_data;
-
-  FCV_EWT(ydata, ewtdata, CV_userdata->ipar, CV_userdata->rpar, &ier);
-
+  FARK_EWT(ydata, ewtdata, ARK_userdata->ipar, 
+	   ARK_userdata->rpar, &ier);
   return(ier);
 }
+
+/*===============================================================
+   EOF
+===============================================================*/
