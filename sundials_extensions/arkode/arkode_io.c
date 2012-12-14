@@ -466,6 +466,18 @@ int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p,
     return(ARK_MEM_NULL);
   }
 
+  /* clear any existing parameters */
+  ark_mem->ark_stages = 0;
+  ark_mem->ark_q = 0;
+  ark_mem->ark_p = 0;
+  for (i=0; i<ARK_S_MAX; i++) {
+    ark_mem->ark_c[i]  = 0.0;
+    ark_mem->ark_b[i]  = 0.0;
+    ark_mem->ark_b2[i] = 0.0;
+    for (j=0; j<ARK_S_MAX; j++) 
+      ARK_A(ark_mem->ark_Ae,i,j) = 0.0;
+  }
+
   /* set the relevant parameters */
   ark_mem->ark_stages = s;
   ark_mem->ark_q = q;
@@ -519,6 +531,18 @@ int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p,
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTable", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
+  }
+
+  /* clear any existing parameters */
+  ark_mem->ark_stages = 0;
+  ark_mem->ark_q = 0;
+  ark_mem->ark_p = 0;
+  for (i=0; i<ARK_S_MAX; i++) {
+    ark_mem->ark_c[i]  = 0.0;
+    ark_mem->ark_b[i]  = 0.0;
+    ark_mem->ark_b2[i] = 0.0;
+    for (j=0; j<ARK_S_MAX; j++) 
+      ARK_A(ark_mem->ark_Ai,i,j) = 0.0;
   }
 
   /* set the relevant parameters */
@@ -575,6 +599,20 @@ int ARKodeSetARKTables(void *arkode_mem, int s, int q, int p,
     ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetARKTables", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
+  }
+
+  /* clear any existing parameters */
+  ark_mem->ark_stages = 0;
+  ark_mem->ark_q = 0;
+  ark_mem->ark_p = 0;
+  for (i=0; i<ARK_S_MAX; i++) {
+    ark_mem->ark_c[i]  = 0.0;
+    ark_mem->ark_b[i]  = 0.0;
+    ark_mem->ark_b2[i] = 0.0;
+    for (j=0; j<ARK_S_MAX; j++) {
+      ARK_A(ark_mem->ark_Ai,i,j) = 0.0;
+      ARK_A(ark_mem->ark_Ae,i,j) = 0.0;
+    }
   }
 
   /* set the relevant parameters */
