@@ -261,9 +261,19 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | default values.  Does not change 
                           | problem-defining function pointers 
                           | fe and fi or user_data pointer.  Also
-                          | leaves alone any data structures/options
-                          | related to root-finding (those can be 
-                          | reset using ARKodeRootInit).
+                          | leaves alone any data structures or 
+                          | options related to root-finding 
+                          | (those can be reset using 
+                          ! ARKodeRootInit).
+                          | [internal]
+                          |
+ ARKodeSetOptimalParams   | sets all adaptivity and solver 
+                          | parameters to our 'best guess' values, 
+                          | for a given integration method (ERK, 
+                          | DIRK, ARK) and a given method order.  
+                          | Should only be called after the method
+                          | order and integration method have been 
+                          ! set.
                           | [internal]
                           |
  ARKodeSetErrHandlerFn    | user-provided ErrHandler function.

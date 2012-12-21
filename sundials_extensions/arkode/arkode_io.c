@@ -46,13 +46,13 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_estab_data       = ark_mem;
   ark_mem->ark_hadapt           = NULL;
   ark_mem->ark_hadapt_data      = NULL;
-  ark_mem->ark_hadapt_imethod   = 0;
   ark_mem->ark_hadapt_cfl       = CFLFAC;
   ark_mem->ark_hadapt_safety    = SAFETY;
   ark_mem->ark_hadapt_bias      = BIAS;
   ark_mem->ark_hadapt_growth    = GROWTH;
   ark_mem->ark_hadapt_lbound    = HFIXED_LB;
   ark_mem->ark_hadapt_ubound    = HFIXED_UB;
+  ark_mem->ark_hadapt_imethod   = 0;
   ark_mem->ark_hadapt_k1        = AD0_K1;
   ark_mem->ark_hadapt_k2        = AD0_K2;
   ark_mem->ark_hadapt_k3        = AD0_K3;
@@ -100,6 +100,148 @@ int ARKodeSetDefaults(void *arkode_mem)
     ark_mem->ark_c[i]   = ZERO;
     ark_mem->ark_b[i]   = ZERO;
     ark_mem->ark_b2[i]  = ZERO;
+  }
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetOptimalParams:
+
+ Sets all adaptivity and solver parameters to our 'best guess' 
+ values, for a given integration method (ERK, DIRK, ARK) and a 
+ given method order.  Should only be called after the method
+ order and integration method have been set.
+---------------------------------------------------------------*/
+int ARKodeSetOptimalParams(void *arkode_mem)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetDefaults", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* Choose values based on method, order */
+
+  /*    explicit */
+  if (ark_mem->ark_explicit) {
+    ark_mem->ark_hadapt_imethod = 1;
+    ark_mem->ark_hadapt_safety  = RCONST(0.99);
+    ark_mem->ark_hadapt_bias    = RCONST(1.2);
+    ark_mem->ark_hadapt_growth  = RCONST(25.0);
+    ark_mem->ark_hadapt_k1      = RCONST(0.8);
+    ark_mem->ark_hadapt_k2      = RCONST(0.31);
+    ark_mem->ark_etamxf         = RCONST(0.3);
+
+  /*    implicit */
+  } else if (ark_mem->ark_implicit) {
+    switch (ark_mem->ark_q) {
+    case 3:
+      ark_mem->ark_hadapt_imethod   = 2;
+      ark_mem->ark_hadapt_safety    = RCONST(0.957);
+      ark_mem->ark_hadapt_bias      = RCONST(1.9);
+      ark_mem->ark_hadapt_growth    = RCONST(17.6);
+      ark_mem->ark_etamxf           = RCONST(0.45);
+      ark_mem->ark_nlscoef          = RCONST(0.22);
+      ark_mem->ark_crdown           = RCONST(0.17);
+      ark_mem->ark_rdiv             = RCONST(2.3);
+      ark_mem->ark_dgmax            = RCONST(0.19);
+      ark_mem->ark_msbp             = 60;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
+    case 4:
+      ark_mem->ark_hadapt_imethod   = 0;
+      ark_mem->ark_hadapt_safety    = RCONST(0.988);
+      ark_mem->ark_hadapt_bias      = RCONST(1.2);
+      ark_mem->ark_hadapt_growth    = RCONST(31.5);
+      ark_mem->ark_hadapt_k1        = RCONST(0.535);
+      ark_mem->ark_hadapt_k2        = RCONST(0.209);
+      ark_mem->ark_hadapt_k3        = RCONST(0.148);
+      ark_mem->ark_etamxf           = RCONST(0.33);
+      ark_mem->ark_nlscoef          = RCONST(0.24);
+      ark_mem->ark_crdown           = RCONST(0.26);
+      ark_mem->ark_rdiv             = RCONST(2.3);
+      ark_mem->ark_dgmax            = RCONST(0.16);
+      ark_mem->ark_msbp             = 31;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
+    case 5:
+      ark_mem->ark_hadapt_imethod   = 0;
+      ark_mem->ark_hadapt_safety    = RCONST(0.937);
+      ark_mem->ark_hadapt_bias      = RCONST(3.3);
+      ark_mem->ark_hadapt_growth    = RCONST(22.0);
+      ark_mem->ark_hadapt_k1        = RCONST(0.56);
+      ark_mem->ark_hadapt_k2        = RCONST(0.338);
+      ark_mem->ark_hadapt_k3        = RCONST(0.14);
+      ark_mem->ark_etamxf           = RCONST(0.44);
+      ark_mem->ark_nlscoef          = RCONST(0.25);
+      ark_mem->ark_crdown           = RCONST(0.4);
+      ark_mem->ark_rdiv             = RCONST(2.3);
+      ark_mem->ark_dgmax            = RCONST(0.32);
+      ark_mem->ark_msbp             = 31;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
+    }
+
+  /*    imex */
+  } else {
+    switch (ark_mem->ark_q) {
+    case 3:
+      ark_mem->ark_hadapt_imethod   = 0;
+      ark_mem->ark_hadapt_safety    = RCONST(0.965);
+      ark_mem->ark_hadapt_bias      = RCONST(1.42);
+      ark_mem->ark_hadapt_growth    = RCONST(28.7);
+      ark_mem->ark_hadapt_k1        = RCONST(0.54);
+      ark_mem->ark_hadapt_k2        = RCONST(0.36);
+      ark_mem->ark_hadapt_k3        = RCONST(0.14);
+      ark_mem->ark_etamxf           = RCONST(0.46);
+      ark_mem->ark_nlscoef          = RCONST(0.22);
+      ark_mem->ark_crdown           = RCONST(0.17);
+      ark_mem->ark_rdiv             = RCONST(2.3);
+      ark_mem->ark_dgmax            = RCONST(0.19);
+      ark_mem->ark_msbp             = 60;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
+    case 4:
+      ark_mem->ark_hadapt_imethod   = 0;
+      ark_mem->ark_hadapt_safety    = RCONST(0.97);
+      ark_mem->ark_hadapt_bias      = RCONST(1.35);
+      ark_mem->ark_hadapt_growth    = RCONST(25.0);
+      ark_mem->ark_hadapt_k1        = RCONST(0.543);
+      ark_mem->ark_hadapt_k2        = RCONST(0.297);
+      ark_mem->ark_hadapt_k3        = RCONST(0.14);
+      ark_mem->ark_etamxf           = RCONST(0.47);
+      ark_mem->ark_nlscoef          = RCONST(0.24);
+      ark_mem->ark_crdown           = RCONST(0.26);
+      ark_mem->ark_rdiv             = RCONST(2.3);
+      ark_mem->ark_dgmax            = RCONST(0.16);
+      ark_mem->ark_msbp             = 31;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
+    case 5:
+      ark_mem->ark_hadapt_imethod   = 1;
+      ark_mem->ark_hadapt_safety    = RCONST(0.993);
+      ark_mem->ark_hadapt_bias      = RCONST(1.15);
+      ark_mem->ark_hadapt_growth    = RCONST(28.5);
+      ark_mem->ark_hadapt_k1        = RCONST(0.8);
+      ark_mem->ark_hadapt_k2        = RCONST(0.35);
+      ark_mem->ark_etamxf           = RCONST(0.3);
+      ark_mem->ark_nlscoef          = RCONST(0.25);
+      ark_mem->ark_crdown           = RCONST(0.4);
+      ark_mem->ark_rdiv             = RCONST(2.3);
+      ark_mem->ark_dgmax            = RCONST(0.32);
+      ark_mem->ark_msbp             = 31;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
+    }
   }
   return(ARK_SUCCESS);
 }

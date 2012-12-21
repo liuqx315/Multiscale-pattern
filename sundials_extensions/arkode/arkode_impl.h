@@ -24,7 +24,7 @@ extern "C" {
 ===============================================================*/
 
 /* Basic ARKODE constants */
-#define Q_DEFAULT        5       /* default RK order */
+#define Q_DEFAULT        4       /* default RK order */
 #define QDENSE_DEF       3       /* default dense output order */
 #define MXSTEP_DEFAULT   500     /* mxstep default value */
 #define MAXNEF           7       /* maxnef default value */
@@ -47,32 +47,32 @@ extern "C" {
 #define SIX    RCONST(6.0)      /* real 6.0     */
 #define SEVEN  RCONST(7.0)      /* real 7.0     */
 #define TWELVE RCONST(12.0)     /* real 12.0    */
-#define HUN    RCONST(100.0)    /* real 100.0   */
+#define HUND   RCONST(100.0)    /* real 100.0   */
 
 /* Time step controller default values */
 #define CFLFAC    RCONST(0.5);
-#define SAFETY    RCONST(0.9);  /* CVODE uses 1.0  */
-#define BIAS      RCONST(1.0)   /* CVODE uses 6.0  */
-#define GROWTH    RCONST(10.0); /* CVODE uses 10.0 */
+#define SAFETY    RCONST(0.96); /* CVODE uses 1.0  */
+#define BIAS      RCONST(1.5)   /* CVODE uses 6.0  */
+#define GROWTH    RCONST(20.0); /* CVODE uses 10.0 */
 #define HFIXED_LB RCONST(1.0);  /* CVODE uses 1.0  */
 #define HFIXED_UB RCONST(1.5);  /* CVODE uses 1.5  */
-#define AD0_K1    RCONST(0.49);
-#define AD0_K2    RCONST(0.34);
+#define AD0_K1    RCONST(0.58);
+#define AD0_K2    RCONST(0.21);
 #define AD0_K3    RCONST(0.1);
-#define AD1_K1    RCONST(0.7);
-#define AD1_K2    RCONST(0.4);
+#define AD1_K1    RCONST(0.8);
+#define AD1_K2    RCONST(0.31);
 #define AD2_K1    RCONST(1.0);
-#define AD3_K1    RCONST(0.3);
-#define AD3_K2    RCONST(0.4);
-#define AD4_K1    RCONST(1.0);
-#define AD4_K2    RCONST(1.0);
+#define AD3_K1    RCONST(0.4);
+#define AD3_K2    RCONST(0.33);
+#define AD4_K1    RCONST(0.98);
+#define AD4_K2    RCONST(0.95);
 #define AD5_K1    RCONST(0.4);
-#define AD5_K2    RCONST(0.3);
-#define AD5_K3    RCONST(1.0);
+#define AD5_K2    RCONST(0.25);
+#define AD5_K3    RCONST(0.95);
 
 /* Default solver tolerance factor */
 /* #define NLSCOEF   RCONST(0.003);   /\* Hairer & Wanner constant *\/ */
-#define NLSCOEF   RCONST(0.01);
+#define NLSCOEF   RCONST(0.2);
 
 /* Control constants for tolerances */
 #define ARK_NN  0
@@ -171,7 +171,7 @@ extern "C" {
 #define H0_ITERS    4
 
 #define ETAMX1      RCONST(10000.0)     /* default */
-#define ETAMXF      RCONST(0.2)         /* default */
+#define ETAMXF      RCONST(0.3)         /* default */
 #define ETAMIN      RCONST(0.1)         /* default */
 #define ETACF       RCONST(0.25)        /* default */
 #define ONEPSM      RCONST(1.000001)
@@ -179,8 +179,8 @@ extern "C" {
 #define SMALL_NEF   2                   /* default */
 
 #define CRDOWN      RCONST(0.3)         /* default */
-#define DGMAX       RCONST(0.3)         /* default */
-#define RDIV        TWO                 /* default */
+#define DGMAX       RCONST(0.2)         /* default */
+#define RDIV        RCONST(2.3)         /* default */
 #define MSBP        20                  /* default */
 
 
