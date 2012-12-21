@@ -3988,7 +3988,7 @@ static int ARKRootCheck1(ARKodeMem ark_mem)
     ark_mem->ark_iroots[i] = 0;
   ark_mem->ark_tlo = ark_mem->ark_tn;
   ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + 
-		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUN;
+		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUND;
 
   /* Evaluate g at initial t and check for zero values. */
   retval = ark_mem->ark_gfun(ark_mem->ark_tlo, ark_mem->ark_ycur,
@@ -4076,7 +4076,7 @@ static int ARKRootCheck2(ARKodeMem ark_mem)
 
   /* One or more g_i has a zero at tlo.  Check g at tlo+smallh. */
   ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + 
-		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUN;
+		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUND;
   smallh = (ark_mem->ark_h > ZERO) ? ark_mem->ark_ttol : -ark_mem->ark_ttol;
   tplus = ark_mem->ark_tlo + smallh;
   if ( (tplus - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO) {
@@ -4148,7 +4148,7 @@ static int ARKRootCheck3(ARKodeMem ark_mem)
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
   ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + 
-		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUN;
+		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUND;
   ier = ARKRootfind(ark_mem);
   if (ier == ARK_RTFUNC_FAIL) return(ARK_RTFUNC_FAIL);
   for(i=0; i<ark_mem->ark_nrtfn; i++) {
