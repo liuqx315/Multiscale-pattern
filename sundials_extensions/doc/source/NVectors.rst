@@ -1,4 +1,6 @@
-Description of the NVECTOR Modules
-==================================
+.. _NVectors:
+
+Description of the ``NVECTOR`` Modules
+======================================
 
 (to be added)

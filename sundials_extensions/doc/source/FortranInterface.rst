@@ -1,3 +1,5 @@
+.. _FortranInterface:
+
 FARKode, an Interface Module for FORTRAN Applications
 =====================================================
 

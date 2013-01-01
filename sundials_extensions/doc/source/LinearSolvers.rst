@@ -1,3 +1,5 @@
+.. _LinearSolvers:
+
 Linear Solvers in ARKode
 ========================
 

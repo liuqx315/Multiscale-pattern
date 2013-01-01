@@ -200,12 +200,12 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'ARKode.tex', u'ARKode Documentation',
-   u'Daniel R. Reynolds', 'manual'),
+   u'Daniel R. Reynolds, Alan C. Hindmarsh and Radu Serban', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-#latex_logo = None
+#latex_logo = filename
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -230,7 +230,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'arkode', u'ARKode Documentation',
-     [u'Daniel R. Reynolds'], 1)
+     [u'Daniel R. Reynolds', u'Alan C. Hindmarsh', u'Radu Serban'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -244,7 +244,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'ARKode', u'ARKode Documentation',
-   u'Daniel R. Reynolds', 'ARKode', 'One line description of project.',
+   u'Daniel R. Reynolds @* Alan C. Hindmarsh @* Radu Serban', 'ARKode', 'One line description of project.',
    'Miscellaneous'),
 ]
 

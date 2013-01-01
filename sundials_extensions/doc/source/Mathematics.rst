@@ -1,3 +1,5 @@
+.. _Mathematics:
+
 Mathematical Considerations
 ===========================
 

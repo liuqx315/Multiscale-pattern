@@ -1,3 +1,5 @@
+.. _Installation:
+
 ARKode Installation Procedure
 =============================
 
