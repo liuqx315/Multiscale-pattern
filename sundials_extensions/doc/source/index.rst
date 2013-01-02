@@ -34,7 +34,7 @@ Welcome to the ARKode documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    Introduction
    Mathematics
@@ -53,6 +53,5 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
