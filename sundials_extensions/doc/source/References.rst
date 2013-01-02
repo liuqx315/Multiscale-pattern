@@ -3,6 +3,10 @@
 References
 ==========
 
+.. [HindmarshSerban2012] A.C. Hindmarsh and R. Serban. User
+   Documentation for CVODE v2.7.0. Technical Report UCRL-SM-208108,
+   LLNL, March 2012.
+
 .. [BrownHindmarsh1989] P.N. Brown and A.C. Hindmarsh. Reduced Storage
    Matrix Methods in Stiff ODE Systems. *J. Appl. Math. & Comp.*,
    31:49-91, 1989.
@@ -12,7 +16,7 @@ References
    *Computational Ordinary Differential Equations*, pp. 323-356,
    Oxford University Press, 1992.
 
-.. [Reynolds2013] D.R. Reynolds. Example Programs for ``ARKode``
+.. [Reynolds2013] D.R. Reynolds. Example Programs for ARKode
    v0.1.  Technical report, SMU, 2013.
 
 .. [HindmarshTaylor1998] A.C. Hindmarsh and A.G. Taylor.  PVODE and

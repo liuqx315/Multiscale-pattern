@@ -1,6 +1,6 @@
 .. _NVectors:
 
-Description of the ``NVECTOR`` Modules
+Description of the NVECTOR Modules
 ======================================
 
 (to be added)
