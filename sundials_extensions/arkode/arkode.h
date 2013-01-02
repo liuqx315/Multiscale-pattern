@@ -482,6 +482,7 @@ SUNDIALS_EXPORT void *ARKodeCreate();
    ARK_ILL_INPUT if an argument has an illegal value
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKodeSetDefaults(void *arkode_mem);
+SUNDIALS_EXPORT int ARKodeSetOptimalParams(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetErrHandlerFn(void *arkode_mem, 
 					  ARKErrHandlerFn ehfun, 
 					  void *eh_data);
@@ -819,7 +820,7 @@ SUNDIALS_EXPORT int ARKode(void *arkode_mem, realtype tout,
      The legal range for t is [tn-hu,tn] as described above.
 
  k   is the order of the derivative of y to be computed. The
-     legal range for k is [0,min(q,5)] as described above.
+     legal range for k is [0,min(q,3)] as described above.
 
  dky is the output derivative vector [((d/dy)^k)y](t).
 

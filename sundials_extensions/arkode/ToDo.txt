@@ -160,6 +160,12 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Update step size logic to handle the case of backwards integration
+    (negative h values).
+[ ] Ensure that everything is set up so that a user must only perform
+    communication preceding a call to *either* fI or fE (for an ImEx
+    problem), but not both.  It would be most useful is this preceded
+    fI, since that should be called more often throughout the solve.
 [ ] Begin tuning solver parameters for increased efficiency on all
     test problems.
 [ ] Go through new and existing routines to determine whether we need

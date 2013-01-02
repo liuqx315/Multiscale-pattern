@@ -18,7 +18,6 @@
 #include "arkode_impl.h"
 #include <arkode/arkode_band.h>
 #include <arkode/arkode_dense.h>
-#include <arkode/arkode_diag.h>
 #include <arkode/arkode_spgmr.h>
 #include <arkode/arkode_spbcgs.h>
 #include <arkode/arkode_sptfqmr.h>
@@ -427,17 +426,6 @@ void FARK_BAND(long int *neq, long int *mupper, long int *mlower, int *ier)
 
 /*=============================================================*/
 
-/* Fortran interface to C routine ARKDiag; see farkode.h for 
-   further details */
-void FARK_DIAG(int *ier)
-{
-  *ier = ARKDiag(ARK_arkodemem);
-  ARK_ls = ARK_LS_DIAG;
-  return;
-}
-
-/*=============================================================*/
-
 /* Fortran interface to C routine ARKSpgmr and it's associated 
    "set" routines; see farkode.h for further details */
 void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier)
@@ -600,11 +588,6 @@ void FARK_ARKODE(realtype *tout, realtype *t, realtype *y,
     ARKDlsGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                  /* LSTF  */
     ARKDlsGetNumRhsEvals(ARK_arkodemem, &ARK_iout[16]);               /* NFELS */
     ARKDlsGetNumJacEvals(ARK_arkodemem, &ARK_iout[17]);               /* NJE   */
-    break;
-  case ARK_LS_DIAG:
-    ARKDiagGetWorkSpace(ARK_arkodemem, &ARK_iout[13], &ARK_iout[14]);  /* LENRWLS, LENIWLS */
-    ARKDiagGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                  /* LSTF  */
-    ARKDiagGetNumRhsEvals(ARK_arkodemem, &ARK_iout[16]);               /* NFELS */
     break;
   case ARK_LS_SPGMR:
   case ARK_LS_SPBCG:

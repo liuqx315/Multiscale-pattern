@@ -75,10 +75,9 @@ extern "C" {
 #define NLSCOEF   RCONST(0.2);
 
 /* Control constants for tolerances */
-#define ARK_NN  0
-#define ARK_SS  1
-#define ARK_SV  2
-#define ARK_WF  3
+#define ARK_SS  0
+#define ARK_SV  1
+#define ARK_WF  2
 
 
 /*===============================================================
@@ -206,10 +205,9 @@ typedef struct ARKodeMemRec {
   void        *ark_user_data;  /* user pointer passed to fe, fi         */
   ARKExpStabFn ark_expstab;    /* time step stability function for fe   */
   void        *ark_estab_data; /* user pointer passed to expstab        */
-  int          ark_itol;       /* itol = ARK_SS (scalar), 
+  int          ark_itol;       /* itol = ARK_SS (scalar, default), 
                                          ARK_SV (vector),
-                                         ARK_WF (user weight function), 
-                                         ARK_NN (default, not yet set)  */
+                                         ARK_WF (user weight function)  */
   realtype     ark_reltol;     /* relative tolerance                    */
   realtype     ark_Sabstol;    /* scalar absolute tolerance             */
   N_Vector     ark_Vabstol;    /* vector absolute tolerance             */
@@ -624,7 +622,6 @@ void ARKProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_NO_ROOT       "Rootfinding was not initialized."
 
 /* ARKode Error Messages */
-#define MSGARK_NO_TOLS        "No integration tolerances have been specified."
 #define MSGARK_LSOLVE_NULL    "The linear solver's solve routine is NULL."
 #define MSGARK_YOUT_NULL      "yout = NULL illegal."
 #define MSGARK_TRET_NULL      "tret = NULL illegal."
