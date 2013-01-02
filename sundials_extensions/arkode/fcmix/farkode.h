@@ -35,7 +35,6 @@
    FARKSETIIN                 ARKodeSet* (integer arguments)
    FARKSETRIN                 ARKodeSet* (real arguments)
    FARKEWTSET                 ARKodeWFtolerances
-   FARKDIAG                   ARKDiag
 
    FARKDENSE                  ARKDense
    FARKDENSESETJAC            ARKDenseSetJacFn
@@ -319,9 +318,10 @@
  (8.1p) To initialize the parallel machine environment, the user must make 
      the following call:
 
-        CALL FNVINITP(4, NLOCAL, NGLOBAL, IER)
+        CALL FNVINITP(COMM, 4, NLOCAL, NGLOBAL, IER)
 
      The arguments are:
+        COMM = the MPI communicator [int, input]
         NLOCAL = local size of vectors on this processor [long int, input]
         NGLOBAL = the system size, and the global size of vectors (the sum 
            of all values of NLOCAL) [long int, input]
@@ -419,7 +419,7 @@
      ORDER, DENSE_ORDER, LINEAR, NONLINEAR, EXPLICIT, IMPLICIT, IMEX, 
      IRK_TABLE_NUM, ERK_TABLE_NUM, MAX_NSTEPS, HNIL_WARNS, PREDICT_METHOD, 
      ARK_TABLE_NUM (pass in an int array of length 2, implicit method first), 
-     MAX_ERRFAIL, MAX_NITERS, MAX_CONVFAIL or STAB_LIM.
+     MAX_ERRFAIL, MAX_NITERS or MAX_CONVFAIL.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
      To set various real optional inputs, make the following call:
@@ -530,30 +530,14 @@
 
  (9) Specification of linear system solution method.
 
-     In the case of a stiff system, the implicit BDF method involves the 
-     solution of linear systems related to the Jacobian J = dfi(t,y)/dy of the
-     ODE system.  ARKODE presently includes four choices for the treatment of
-     these systems, and the user of FARKODE must call a routine with a 
-     specific name to make the desired choice.
+     In the case of using either an implicit or ImEx method, the solution of 
+     each Runge-Kutta stage may involve the solution of linear systems related 
+     to the Jacobian J = dfi(t,y)/dy of the implicit portion of the ODE 
+     system. ARKode presently includes seven choices for the treatment of
+     these systems, and the user of FARKODE must call a routine with a
+     specific name to make the desired choice. 
  
- (9.1) Diagonal approximate Jacobian.
-
-     This choice is appropriate when the Jacobian can be well-approximated by
-     a diagonal matrix.  The user must make the call:
-
-       CALL FARKDIAG(IER)
-
-     The int return flag IER is 0 if successful, and nonzero otherwise.
-     There is no additional user-supplied routine.  
-
-     Optional outputs specific to the DIAG case are:
-        LENRWLS = IOUT(14) from ARKDiagGetWorkSpace (realtype space)
-        LENIWLS = IOUT(15) from ARKDiagGetWorkSpace (integer space)
-        LSTF    = IOUT(16) from ARKDiagGetLastFlag
-        NFELS   = IOUT(17) from ARKDiagGetNumRhsEvals
-     See the ARKODE manual for descriptions.
- 
- (9.2s) DENSE treatment of the linear system.
+ (9.1s) DENSE treatment of the linear system.
 
      The user must make the call
 
@@ -576,14 +560,14 @@
      otherwise.
  
      Optional outputs specific to the DENSE case are:
-        LENRWLS = IOUT(13) from ARKDenseGetWorkSpace (realtype space)
-        LENIWLS = IOUT(14) from ARKDenseGetWorkSpace (integer space)
-        LSTF    = IOUT(15) from ARKDenseGetLastFlag
-        NFELS   = IOUT(16) from ARKDenseGetNumRhsEvals
-        NJED    = IOUT(17) from ARKDenseGetNumJacEvals
+        LENRWLS = IOUT(14) from ARKDlsGetWorkSpace (realtype space)
+        LENIWLS = IOUT(15) from ARKDlsGetWorkSpace (integer space)
+        LSTF    = IOUT(16) from ARKDlsGetLastFlag
+        NFELS   = IOUT(17) from ARKDlsGetNumRhsEvals
+        NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
  
- (9.3s) BAND treatment of the linear system
+ (9.2s) BAND treatment of the linear system
 
      The user must make the call
 
@@ -605,20 +589,21 @@
      Jacobian).  The int return flag IER=0 if successful, nonzero otherwise.
  
      Optional outputs specific to the BAND case are:
-        LENRWLS = IOUT(13) from ARKBandGetWorkSpace
-        LENIWLS = IOUT(14) from ARKBandGetWorkSpace
-        LSTF    = IOUT(15) from ARKBandGetLastFlag
-        NFELS   = IOUT(16) from ARKBandGetNumRhsEvals
-        NJEB    = IOUT(17) from ARKBandGetNumJacEvals
+        LENRWLS = IOUT(14) from ARKDlsGetWorkSpace (realtype space)
+        LENIWLS = IOUT(15) from ARKDlsGetWorkSpace (integer space)
+        LSTF    = IOUT(16) from ARKDlsGetLastFlag
+        NFELS   = IOUT(17) from ARKDlsGetNumRhsEvals
+        NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
 
- (9.4s) LAPACK dense treatment of the linear system
+ (9.3s) LAPACK dense treatment of the linear system
 
      The user must make the call
 
        CALL FARKLAPACKDENSE(NEQ, IER)
 
-     The arguments match those for FARKDENSE.
+     The arguments match those for FARKDENSE, except that NEQ is now a 
+     normal int (and not a long int).
 
      The user may optionally call
 
@@ -629,13 +614,14 @@
      The optional outputs when using FARKLAPACKDENSE match those from 
      FARKDENSE.
 
- (9.5s) LAPACK band treatment of the linear system
+ (9.4s) LAPACK band treatment of the linear system
 
      The user must make the call
 
        CALL FARKLAPACKBAND(NEQ, MUPPER, MLOWER, IER)
 
-     The arguments match those for FARKBAND.
+     The arguments match those for FARKBAND, except that now all arguments 
+     have type 'int'.
 
      The user may optionally call
 
@@ -645,7 +631,7 @@
 
      The optional outputs when using FARKLAPACKBAND match those from FARKBAND.
 
- (9.6) SPGMR treatment of the linear systems.
+ (9.5) SPGMR treatment of the linear systems.
 
      For the Scaled Preconditioned GMRES solution of the linear systems,
      the user must make the following call:
@@ -670,15 +656,15 @@
 	      <0 = an error occured
  
      Optional outputs specific to the SPGMR case are:
-        LENRWLS = IOUT(14) from ARKSpgmrGetWorkSpace
-        LENIWLS = IOUT(15) from ARKSpgmrGetWorkSpace
-        LSTF    = IOUT(16) from ARKSpgmrGetLastFlag
-        NFELS   = IOUT(17) from ARKSpgmrGetRhsEvals
-        NJTV    = IOUT(18) from ARKSpgmrGetJtimesEvals
-        NPE     = IOUT(19) from ARKSpgmrGetPrecEvals
-        NPS     = IOUT(20) from ARKSpgmrGetPrecSolves
-        NLI     = IOUT(21) from ARKSpgmrGetLinIters
-        NCFL    = IOUT(22) from ARKSpgmrGetConvFails
+        LENRWLS = IOUT(14) from ARKSpilsGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpilsGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpilsGetLastFlag
+        NFELS   = IOUT(17) from ARKSpilsGetNumRhsEvals
+        NJTV    = IOUT(18) from ARKSpilsGetNumJtimesEvals
+        NPE     = IOUT(19) from ARKSpilsGetNumPrecEvals
+        NPS     = IOUT(20) from ARKSpilsGetNumPrecSolves
+        NLI     = IOUT(21) from ARKSpilsGetNumLinIters
+        NCFL    = IOUT(22) from ARKSpilsGetNumConvFails
      See the ARKODE manual for descriptions.
  
      If a sequence of problems of the same size is being solved using the
@@ -691,7 +677,7 @@
      The arguments have the same meanings as for FARKSPGMR.  If MAXL is being
      changed, then the user should call FARKSPGMR instead.
  
- (9.7) SPBCG treatment of the linear systems.
+ (9.6) SPBCG treatment of the linear systems.
 
      For the Scaled Preconditioned Bi-CGSTAB solution of the linear systems,
      the user must make the following call:
@@ -712,15 +698,15 @@
 	     <0 = an error occured
  
      Optional outputs specific to the SPBCG case are:
-        LENRWLS = IOUT(14) from ARKSpbcgGetWorkSpace
-        LENIWLS = IOUT(15) from ARKSpbcgGetWorkSpace
-        LSTF    = IOUT(16) from ARKSpbcgGetLastFlag
-        NFELS   = IOUT(17) from ARKSpbcgGetRhsEvals
-        NJTV    = IOUT(18) from ARKSpbcgGetJtimesEvals
-        NPE     = IOUT(19) from ARKSpbcgGetPrecEvals
-        NPS     = IOUT(20) from ARKSpbcgGetPrecSolves
-        NLI     = IOUT(21) from ARKSpbcgGetLinIters
-        NCFL    = IOUT(22) from ARKSpbcgGetConvFails
+        LENRWLS = IOUT(14) from ARKSpilsGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpilsGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpilsGetLastFlag
+        NFELS   = IOUT(17) from ARKSpilsGetNumRhsEvals
+        NJTV    = IOUT(18) from ARKSpilsGetNumJtimesEvals
+        NPE     = IOUT(19) from ARKSpilsGetNumPrecEvals
+        NPS     = IOUT(20) from ARKSpilsGetNumPrecSolves
+        NLI     = IOUT(21) from ARKSpilsGetNumLinIters
+        NCFL    = IOUT(22) from ARKSpilsGetNumConvFails
      See the ARKODE manual for descriptions.
  
      If a sequence of problems of the same size is being solved using the
@@ -732,7 +718,7 @@
 
      The arguments have the same meanings as for FARKSPBCG.
 
- (9.8) SPTFQMR treatment of the linear systems.
+ (9.7) SPTFQMR treatment of the linear systems.
 
      For the Scaled Preconditioned TFQMR solution of the linear systems, the
      user must make the following call:
@@ -753,15 +739,15 @@
 	     <0 = an error occured
  
      Optional outputs specific to the SPTFQMR case are:
-        LENRWLS = IOUT(14) from ARKSptfqmrGetWorkSpace
-        LENIWLS = IOUT(15) from ARKSptfqmrGetWorkSpace
-        LSTF    = IOUT(16) from ARKSptfqmrGetLastFlag
-        NFELS   = IOUT(17) from ARKSptfqmrGetRhsEvals
-        NJTV    = IOUT(18) from ARKSptfqmrGetJtimesEvals
-        NPE     = IOUT(19) from ARKSptfqmrGetPrecEvals
-        NPS     = IOUT(20) from ARKSptfqmrGetPrecSolves
-        NLI     = IOUT(21) from ARKSptfqmrGetLinIters
-        NCFL    = IOUT(22) from ARKSptfqmrGetConvFails
+        LENRWLS = IOUT(14) from ARKSpilsGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpilsGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpilsGetLastFlag
+        NFELS   = IOUT(17) from ARKSpilsGetNumRhsEvals
+        NJTV    = IOUT(18) from ARKSpilsGetNumJtimesEvals
+        NPE     = IOUT(19) from ARKSpilsGetNumPrecEvals
+        NPS     = IOUT(20) from ARKSpilsGetNumPrecSolves
+        NLI     = IOUT(21) from ARKSpilsGetNumLinIters
+        NCFL    = IOUT(22) from ARKSpilsGetNumConvFails
      See the ARKODE manual for descriptions.
 
      If a sequence of problems of the same size is being solved using the
@@ -773,7 +759,7 @@
 
      The arguments have the same meanings as for FARKSPTFQMR.
 
- (9.9) Usage of user-supplied routines for the Krylov solvers
+ (9.8) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
      the Jacobian vector product, the following call must be made
@@ -955,7 +941,6 @@ extern "C" {
 #define FARK_SETIIN              SUNDIALS_F77_FUNC(farksetiin,            FARKSETIIN)
 #define FARK_SETRIN              SUNDIALS_F77_FUNC(farksetrin,            FARKSETRIN)
 #define FARK_EWTSET              SUNDIALS_F77_FUNC(farkewtset,            FARKEWTSET)
-#define FARK_DIAG                SUNDIALS_F77_FUNC(farkdiag,              FARKDIAG)
 #define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,             FARKDENSE)
 #define FARK_DENSESETJAC         SUNDIALS_F77_FUNC(farkdensesetjac,       FARKDENSESETJAC)
 #define FARK_BAND                SUNDIALS_F77_FUNC(farkband,              FARKBAND)
@@ -995,7 +980,6 @@ extern "C" {
 #define FARK_SETIIN              farksetiin_
 #define FARK_SETRIN              farksetrin_
 #define FARK_EWTSET              farkewtset_
-#define FARK_DIAG                farkdiag_
 #define FARK_DENSE               farkdense_
 #define FARK_DENSESETJAC         farkdensesetjac_
 #define FARK_BAND                farkband_
@@ -1061,7 +1045,6 @@ extern "C" {
   void FARK_SETLSETUPCONSTANTS(realtype *dgmax, int *msbp, int *ier);
 
   void FARK_EWTSET(int *flag, int *ier);
-  void FARK_DIAG(int *ier);
 
   void FARK_DENSE(long int *neq, int *ier);
   void FARK_DENSESETJAC(int *flag, int *ier);
@@ -1137,7 +1120,7 @@ extern "C" {
   /* Declarations for global variables shared amongst various routines */
   extern N_Vector F2C_ARKODE_vec;   /* defined in FNVECTOR module */
 
-  extern void *ARK_arkodemem;        /* defined in farkode.c */
+  extern void *ARK_arkodemem;       /* defined in farkode.c */
   extern long int *ARK_iout;        /* defined in farkode.c */
   extern realtype *ARK_rout;        /* defined in farkode.c */
   extern int ARK_nrtfn;             /* defined in farkode.c */
@@ -1146,12 +1129,11 @@ extern "C" {
   /* Linear solver IDs */
   enum { ARK_LS_DENSE       = 1, 
 	 ARK_LS_BAND        = 2, 
-	 ARK_LS_DIAG        = 3,
-         ARK_LS_LAPACKDENSE = 4, 
-	 ARK_LS_LAPACKBAND  = 5,
-	 ARK_LS_SPGMR       = 6, 
-	 ARK_LS_SPBCG       = 7, 
-	 ARK_LS_SPTFQMR     = 8 };
+         ARK_LS_LAPACKDENSE = 3, 
+	 ARK_LS_LAPACKBAND  = 4,
+	 ARK_LS_SPGMR       = 5, 
+	 ARK_LS_SPBCG       = 6, 
+	 ARK_LS_SPTFQMR     = 7 };
 
 #ifdef __cplusplus
 }

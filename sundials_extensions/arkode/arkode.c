@@ -1677,13 +1677,6 @@ static int ARKInitialSetup(ARKodeMem ark_mem)
 {
   int ier;
 
-  /* Did the user specify tolerances? */
-  if (ark_mem->ark_itol == ARK_NN) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKInitialSetup", MSGARK_NO_TOLS);
-    return(ARK_ILL_INPUT);
-  }
-  
   /* Set first step growth factor */
   ark_mem->ark_etamax = ark_mem->ark_etamx1;
 
@@ -3682,6 +3675,8 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
 
   /* Call explicit stability function */
+  /* TODO -- implement check for zero-valued h_cfl 
+     (that disables stability restriction) */
   ier = ark_mem->ark_expstab(ark_mem->ark_ycur, ark_mem->ark_tn,
 			     &h_cfl, ark_mem->ark_estab_data);
   if (ier != ARK_SUCCESS) {
