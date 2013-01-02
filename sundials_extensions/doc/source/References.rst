@@ -14,3 +14,8 @@ References
 
 .. [Reynolds2013] D.R. Reynolds. Example Programs for ``ARKode``
    v0.1.  Technical report, SMU, 2013.
+
+.. [HindmarshTaylor1998] A.C. Hindmarsh and A.G. Taylor.  PVODE and
+   KINSOL: Parallel Software for Differential and Nonlinear Systems.
+   Technical Report UCRL-IL-129739, LLNL, February 1998.
+
