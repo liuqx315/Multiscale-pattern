@@ -3,7 +3,7 @@
 Introduction
 ============
 
-This is the documentation for ``ARKode``, an adaptive step time
+This is the documentation for ARKode, an adaptive step time
 integration package for stiff, nonstiff and multi-rate systems of
 ordinary differential equations (ODEs) given in explicit form
 
@@ -27,7 +27,7 @@ Either of these operators may be disabled, allowing for fully
 explicit, fully implicit, or combination implicit-explicit (IMEX) time
 integration. 
 
-The methods used in ``ARKode`` are adaptive-step additive Runge Kutta
+The methods used in ARKode are adaptive-step additive Runge Kutta
 methods. Such methods are defined with two complementary Runge-Kutta
 methods: one explicit (ERK) and the other diagonally implicit
 (DIRK). Through appropriately partitioning the ODE system :eq:`ODE`, such
@@ -40,9 +40,9 @@ adaptive IMEX methods of orders 3-5.
 
 For implicit and IMEX methods, the resulting nonlinear system is
 solved approximately at each integration step, using modified or
-inexact Newton methods. When used with the serial ``NVECTOR`` module
-in ``SUNDIALS``, ARKode provides both direct (dense and band) and
+inexact Newton methods. When used with the serial NVECTOR module
+in SUNDIALS, ARKode provides both direct (dense and band) and
 preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR) linear
-solvers. When used with the parallel ``NVECTOR`` module or a
+solvers. When used with the parallel NVECTOR module or a
 user-provided vector data structure, only the Krylov solvers are
 available.

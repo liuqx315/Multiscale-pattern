@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-This is the documentation for ``ARKode``, an adaptive step time
+This is the documentation for ARKode, an adaptive step time
 integration package for stiff, nonstiff and multi-rate systems of
 ordinary differential equations (ODEs).  
-The ``ARKode`` solver is a component of the `SUNDIALS
+The ARKode solver is a component of the `SUNDIALS
 <https://computation.llnl.gov/casc/sundials/main.html>`_ suite of
 nonlinear and differential/algebraic equation solvers. It is designed
 to have a similar user experience to the `CVODE
@@ -18,10 +18,13 @@ MPI). The default integration and solver options should apply to most
 users, though complete control over all internal parameters and time
 adaptivity algorithms is enabled through optional interface routines.  
 
-``ARKode`` is written in C, with C++ and Fortran interfaces.
+Due to its similarities in both function and design with the ``CVODE``
+package, a significant portion of this documentation has been directly
+adapted from the ``CVODE`` documentation [HindmarshSerban2012]_.
 
+ARKode is written in C, with C++ and Fortran interfaces.
 
-``ARKode`` is developed by `Southern Methodist University
+ARKode is developed by `Southern Methodist University
 <http://www.smu.edu>`_, with support by the `US Department of Energy
 <http://www.doe.gov>`_ through the `FASTMath
 <http://www.fastmath-scidac.org/>`_ SciDAC Institute, under subcontract
