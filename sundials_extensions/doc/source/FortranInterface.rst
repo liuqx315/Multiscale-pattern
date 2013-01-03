@@ -218,50 +218,45 @@ Right-hand side specification
 The user must in all cases supply at least one of the following Fortran 
 routines:
 
+
+
    .. c:function:: SUBROUTINE FARKIFUN(T, Y, YDOT, IPAR, RPAR, IER)
    
-      :Description:  Sets the YDOT array to :math:`f_I(t,y)`, the
-         implicit portion of the right-hand side of the ODE system, as
-         function of the independent variable T :math:`=t` and the array
-         of dependent state variables Y :math:`=y`.
+      Sets the YDOT array to :math:`f_I(t,y)`, the
+      implicit portion of the right-hand side of the ODE system, as
+      function of the independent variable T :math:`=t` and the array
+      of dependent state variables Y :math:`=y`.
       
-      :Arguments: Y -- array containing state variables [``realtype``,
-         input] 
-             
-         YDOT -- array containing state derivatives [``realtype``,
-         output]
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input] 
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input] 
-      
-         IER -- return flag (0 success, >0 recoverable error, <0
-         unrecoverable error) [``int``, output]
+      **Arguments:**
+         * T (``realtype``, input) -- current value of the independent variable
+         * Y (``realtype``, input) -- array containing state variables  
+         * YDOT (``realtype``, output) -- array containing state derivatives 
+	 * IPAR (``long int``, input) -- array containing integer user
+           data that was passed to :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input) -- array containing real user
+           data that was passed to :c:func:`FARKMALLOC()` 
+         * IER (``int``, output) -- return flag (0 success, >0
+           recoverable error, <0 unrecoverable error)  
    
-   
+
+
    .. c:function:: SUBROUTINE FARKEFUN(T, Y, YDOT, IPAR, RPAR, IER)
    
-      :Description:  Sets the YDOT array to :math:`f_E(t,y)`, the
-         explicit portion of the right-hand side of the ODE system, as
-         function of the independent variable T :math:`=t` and the array
-         of dependent state variables Y :math:`=y`.
+      Sets the YDOT array to :math:`f_E(t,y)`, the
+      explicit portion of the right-hand side of the ODE system, as
+      function of the independent variable T :math:`=t` and the array
+      of dependent state variables Y :math:`=y`.
       
-      :Arguments: Y -- array containing state variables [``realtype``,
-         input] 
-             
-         YDOT -- array containing state derivatives [``realtype``,
-         output]
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input] 
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input] 
-      
-         IER -- return flag (0 success, >0 recoverable error, <0
-         unrecoverable error)  [``int``, output]
+      **Arguments:**
+         * T (``realtype``, input) -- current value of the independent variable
+         * Y (``realtype``, input) -- array containing state variables  
+         * YDOT (``realtype``, output) -- array containing state derivatives 
+	 * IPAR (``long int``, input) -- array containing integer user
+           data that was passed to :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input) -- array containing real user
+           data that was passed to :c:func:`FARKMALLOC()` 
+         * IER (``int``, output) -- return flag (0 success, >0
+           recoverable error, <0 unrecoverable error)  
 
 
 .. _FInterface.NVector:
@@ -272,48 +267,49 @@ NVECTOR module initialization
 [**S**] To initialize the serial NVECTOR module, the user must
 call the function FNVINITS with the argument KEY = 4.
 
+
+
    .. c:function:: SUBROUTINE FNVINITS(KEY, NEQ, IER)
    
-      :Description:  Initializes the Fortran interface to the serial
-         NVECTOR module.
+      Initializes the Fortran interface to the serial
+      NVECTOR module.
       
-      :Arguments: KEY -- integer flag denoting which solver is to be
-         used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is
-         ARKode) [``int``, input]
-             
-         NEQ -- size of the ODE system [``long int``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * KEY (``int``, input) -- integer flag denoting which solver is to be
+           used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is
+           ARKode) 
+         * NEQ (``long int``, input) -- size of the ODE system 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
+
 
 
 
 [**P**] To initialize the parallel NVECTOR module, the user must
 call the function FNVINITP with the argument KEY = 4.
 
+
+
    .. c:function:: SUBROUTINE FNVINITP(COMM, KEY, NLOCAL, NGLOBAL, IER)
    
-      :Description:  Initializes the Fortran interface to the parallel
-         NVECTOR module.
+      Initializes the Fortran interface to the parallel
+      NVECTOR module.
       
-      :Arguments: COMM -- the MPI communicator [``int``, input]
+      **Arguments:** 
+         * COMM (``int``, input) -- the MPI communicator 
+         * KEY (``int``, input) -- integer flag denoting which solver is to be
+           used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is
+           ARKode) 
+         * NLOCAL (``long int``, input) -- local size of vectors on this processor 
+         * NGLOBAL (``long int``, input) -- the size of the ODE system, and the global size of
+           vectors (the sum of all values of NLOCAL) 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
       
-         KEY -- integer flag denoting which solver is to be
-         used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is
-         ARKode) [``int``, input]
-             
-         NLOCAL -- local size of vectors on this processor [``long int``, input]
-      
-         NGLOBAL -- the size of the ODE system, and the global size of
-         vectors (the sum of all values of NLOCAL) [``long int``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
-      
-      :Notes: If the header file ``sundials_config.h`` defines
-         ``SUNDIALS_MPI_COMM_F2C`` to be 1 (meaning the MPI implementation
-         used to build SUNDIALS includes the ``MPI_Comm_f2c`` function),
-         then COMM can be any valid MPI communicator.  Otherwise,
-         ``MPI_COMM_WORLD`` will be used, so the user can just pass an
-         integer value as a placeholder.
+      **Notes:** If the header file ``sundials_config.h`` defines
+      ``SUNDIALS_MPI_COMM_F2C`` to be 1 (meaning the MPI implementation 
+      used to build SUNDIALS includes the ``MPI_Comm_f2c`` function),
+      then COMM can be any valid MPI communicator.  Otherwise,
+      ``MPI_COMM_WORLD`` will be used, so the user can just pass an
+      integer value as a placeholder.
 
 
 
@@ -325,62 +321,49 @@ Problem specification
 To set various problem and solution parameters and allocate internal
 memory, the user must call FARKMALLOC.
 
+
+
    .. c:function:: SUBROUTINE FARKMALLOC(T0, Y0, IMEX, IATOL, RTOL, ATOL, IOUT, ROUT, IPAR, RPAR, IER)
    
-      :Description:  Initializes the Fortran interface to the ARKode
-         solver, providing interfaces to the C routines :c:func:`ARKodeCreate()`,
-         :c:func:`ARKodeSetUserData()`, and :c:func:`ARKodeInit()`, as well
-         as one of :c:func:`ARKodeSStolerances()` or
-         :c:func:`ARKodeSVtolerances()`.
+      Initializes the Fortran interface to the ARKode
+      solver, providing interfaces to the C routines :c:func:`ARKodeCreate()`,
+      :c:func:`ARKodeSetUserData()`, and :c:func:`ARKodeInit()`, as well
+      as one of :c:func:`ARKodeSStolerances()` or
+      :c:func:`ARKodeSVtolerances()`.
       
-      :Arguments: T0 -- initial value of :math:`t` [``realtype``, input]
+      **Arguments:** 
+         * T0 (``realtype``, input) -- initial value of :math:`t` 
+         * Y0 (``realtype``, input) -- array of initial conditions 
+         * IMEX (``int``, input) -- flag denoting basic integration method:
+            * 0 = implicit, 
+	    * 1 = explicit, 
+	    * 2 = imex.
+         * IATOL (``int``, input) -- type for absolute tolerance input ATOL:
+            * 1 = scalar, 
+            * 2 = array,
+      	    * 3 = user-supplied function; the user must subsequently call
+              :c:func:`FARKEWTSET()` and supply a routine :c:func:`FARKEWT()` to
+              compute the error weight vector.
+         * RTOL (``realtype``, input) -- scalar relative tolerance 
+         * ATOL (``realtype``,
+           input) -- scalar or array absolute tolerance 
+         * IOUT (``long
+           int``, input/output) -- array of length 22 for integer optional outputs 
+         * ROUT (``realtype``, input/output) -- array of length 6 for real optional outputs
+         * IPAR (``long int``, input/output) -- array of user integer data, which will be passed
+           unmodified to all user-provided routines 
+         * RPAR (``realtype``, input/output) -- array with user real data, which will be passed
+           unmodified to all user-provided routines 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
       
-         Y0 -- array of initial conditions [``realtype``, input]
-      
-         IMEX -- flag denoting basic integration method [``int``, input]:
-      
-            0 = implicit, 
-      
-            1 = explicit, 
-      
-            2 = imex.
-      
-         IATOL -- type for absolute tolerance input ATOL [``int``, input]:
-      
-            1 = scalar, 
-      
-            2 = array,
-      
-            3 = user-supplied function; the user must subsequently call
-            :c:func:`FARKEWTSET()` and supply a routine :c:func:`FARKEWT()` to
-            compute the error weight vector.
-      
-         RTOL -- scalar relative tolerance [``realtype``, input]
-      
-         ATOL -- scalar or array absolute tolerance [``realtype``,
-         input]
-      
-         IOUT -- array of length 22 for integer optional outputs [``long
-         int``, input/output]
-      
-         ROUT -- array of length 6 for real optional outputs
-         [``realtype``, input/output] 
-      
-         IPAR -- array of user integer data, which will be passed
-         unmodified to all user-provided routines [``long int``, input/output]
-      
-         RPAR -- array with user real data, which will be passed
-         unmodified to all user-provided routines [``realtype``, input/output]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
-      
-      :Notes: Modifications to the user data arrays IPAR and RPAR
-         inside a user-provided routine will be propagated to all subsequent
-         calls to such routines. The optional outputs associated with the
-         main ARKode integrator are listed in
-         :ref:`FInterface.IOUTTable` and
-         :ref:`FInterface.ROUTTable`, in the section
-         :ref:`FInterface.OptionalOutputs`.
+      **Notes:** Modifications to the user data arrays IPAR and RPAR
+      inside a user-provided routine will be propagated to all
+      subsequent calls to such routines. The optional outputs
+      associated with the main ARKode integrator are listed in
+      :ref:`FInterface.IOUTTable` and :ref:`FInterface.ROUTTable`, in
+      the section :ref:`FInterface.OptionalOutputs`. 
+
+
 
 
 As an alternative to providing tolerances in the call to
@@ -388,37 +371,38 @@ As an alternative to providing tolerances in the call to
 error weights used in the WRMS norm evaluations.  If supplied, it must
 have the following form:
 
+
+
    .. c:function:: SUBROUTINE FARKEWT(Y, EWT, IPAR, RPAR, IER)
    
-      :Description:  It must set the positive components of the error weight
-         vector EWT for the calculation of the WRMS norm of Y.
+      It must set the positive components of the error weight
+      vector EWT for the calculation of the WRMS norm of Y.
       
-      :Arguments: Y -- array containing state variables [``realtype``,
-         input] 
-             
-         EWT -- array containing the error weight vector [``realtype``,
-         output] 
-      
-         IPAR -- array containing the integer user data that was passed
-         to :c:func:`FARKMALLOC()` [``long int``, input]
-      
-         RPAR -- array containing the real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
-      
+      **Arguments:** 
+         * Y (``realtype``, input) -- array containing state variables  
+         * EWT (``realtype``, output) -- array containing the error weight vector  
+         * IPAR (``long int``, input) -- array containing the integer user data that was passed
+           to :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input) -- array containing the real user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
+
+
+
    
 If the FARKEWT routine is provided, then, following the call to
 :c:func:`FARKMALLOC()`, the user must call the function FARKEWTSET.
 
+
+
    .. c:function:: SUBROUTINE FARKEWTSET(FLAG, IER)
    
-      :Description:  Informs FARKODE to use the user-supplied
-         :c:func:`FARKEWT()` function.
+      Informs FARKODE to use the user-supplied
+      :c:func:`FARKEWT()` function.
       
-      :Arguments: FLAG -- integer flag, use "1" to denoting to use FARKEWT.
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * FLAG (``int``, input) -- flag, use "1" to denoting to use FARKEWT.
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
 
 
 
@@ -430,17 +414,18 @@ Set optional inputs
 To set desired optional inputs, the user can call the routines
 :c:func:`FARKSETIIN()` and :c:func:`FARKSETRIN()`, as described below.
 
+
+
    .. c:function:: SUBROUTINE FARKSETIIN(KEY, IVAL, IER)
    
-      :Description:  Specification routine to pass optional integer inputs
-         to the :c:func:`FARKODE()` solver.
+      Specification routine to pass optional integer inputs
+      to the :c:func:`FARKODE()` solver.
       
-      :Arguments: KEY -- quoted string indicating which optional input
-         is set (see :ref:`FInterface.IINOptionTable`).
-      
-         IVAL -- the integer input value to be used [``long int``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * KEY (quoted string, input) -- which optional input
+           is set (see :ref:`FInterface.IINOptionTable`).
+         * IVAL (``long int``, input) -- the integer input value to be used 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
 
 
 .. _FInterface.IINOptionTable:
@@ -474,17 +459,17 @@ length 2, specifying the IRK table number first, then the ERK table
 number. 
 
 
+
    .. c:function:: SUBROUTINE FARKSETRIN(KEY, RVAL, IER)
    
-      :Description:  Specification routine to pass optional real inputs
-         to the :c:func:`FARKODE()` solver.
+      Specification routine to pass optional real inputs
+      to the :c:func:`FARKODE()` solver.
       
-      :Arguments: KEY -- quoted string indicating which optional input
-         is set (see :ref:`FInterface.RINOptionTable`).
-      
-         RVAL -- the real input value to be used [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * KEY (quoted string, input) -- which optional input
+           is set (see :ref:`FInterface.RINOptionTable`).
+         * RVAL (``realtype``, input) -- the real input value to be used 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
 
 
 .. _FInterface.RINOptionTable:
@@ -507,154 +492,126 @@ NLCONV_COEF  :c:func:`ARKodeSetNonlinConvCoef()`
 Alternatively, if a user wishes to reset all of the options to their
 default values, they may call the routine FARKSETDEFAULTS.
 
+
+
    .. c:function:: SUBROUTINE FARKSETDEFAULTS(IER)
    
-      :Description:  Specification routine to reset all FARKODE optional
-         inputs to their default values.
+      Specification routine to reset all FARKODE optional
+      inputs to their default values.
       
-      :Arguments: IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-   
+
+
 FARKODE supplies additional routines to specify optional advanced
 inputs to the :c:func:`ARKode()` solver.  These are summarized below,
 and the user is referred to their C routine counterparts for more
 complete information. 
 
 
+
    .. c:function:: SUBROUTINE FARKSETERKTABLE(S, Q, P, C, A, B, BEMBED, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetERKTable()`.
+      Interface to the routine :c:func:`ARKodeSetERKTable()`.
       
-      :Arguments: S -- number of stages in the table [``int``, input]
-      
-         Q -- global order of accuracy of the method [``int``, input]
-      
-         P -- global order of accuracy of the embedding [``int``, input]
-      
-         C -- array of length S containing the stage times
-         [``realtype``, input] 
-      
-         A -- array of length S*S containing the ERK coefficients
-         (stored in row-major, "C", order) [``realtype``, input]
-      
-         B -- array of length S containing the solution coefficients 
-         [``realtype``, input]
-      
-         BEMBED -- array of length S containing the embedding
-         coefficients [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * S (``int``, input) -- number of stages in the table 
+         * Q (``int``, input) -- global order of accuracy of the method 
+         * P (``int``, input) -- global order of accuracy of the embedding 
+         * C (``realtype``, input) -- array of length S containing the stage times
+         * A (``realtype``, input) -- array of length S*S containing the ERK coefficients
+           (stored in row-major, "C", order) 
+         * B (``realtype``, input) -- array of length S containing the solution coefficients 
+         * BEMBED (``realtype``, input) -- array of length S containing the embedding
+           coefficients 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
 
 
 
    .. c:function:: SUBROUTINE FARKSETIRKTABLE(S, Q, P, C, A, B, BEMBED, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetIRKTable()`.
+      Interface to the routine :c:func:`ARKodeSetIRKTable()`.
       
-      :Arguments: S -- number of stages in the table [``int``, input]
-      
-         Q -- global order of accuracy of the method [``int``, input]
-      
-         P -- global order of accuracy of the embedding [``int``, input]
-      
-         C -- array of length S containing the stage times
-         [``realtype``, input] 
-      
-         A -- array of length S*S containing the IRK coefficients
-         (stored in row-major, "C", order) [``realtype``, input]
-      
-         B -- array of length S containing the solution coefficients 
-         [``realtype``, input]
-      
-         BEMBED -- array of length S containing the embedding
-         coefficients [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * S (``int``, input) -- number of stages in the table 
+         * Q (``int``, input) -- global order of accuracy of the method 
+         * P (``int``, input) -- global order of accuracy of the embedding 
+         * C (``realtype``, input) -- array of length S containing the stage times
+         * A (``realtype``, input) -- array of length S*S containing the IRK coefficients
+           (stored in row-major, "C", order) 
+         * B (``realtype``, input) -- array of length S containing the solution coefficients 
+         * BEMBED (``realtype``, input) -- array of length S containing the embedding
+           coefficients 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-   
+
    
    .. c:function:: SUBROUTINE FARKSETARKTABLES(S, Q, P, C, AI, AE, B, BEMBED, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetARKTables()`.
+      Interface to the routine :c:func:`ARKodeSetARKTables()`.
       
-      :Arguments: S -- number of stages in the table [``int``, input]
-      
-         Q -- global order of accuracy of the method [``int``, input]
-      
-         P -- global order of accuracy of the embedding [``int``, input]
-      
-         C -- array of length S containing the stage times
-         [``realtype``, input] 
-      
-         AI -- array of length S*S containing the IRK coefficients
-         (stored in row-major, "C", order) [``realtype``, input]
-      
-         AE -- array of length S*S containing the ERK coefficients
-         (stored in row-major, "C", order) [``realtype``, input]
-      
-         B -- array of length S containing the solution coefficients 
-         [``realtype``, input]
-      
-         BEMBED -- array of length S containing the embedding
-         coefficients [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * S (``int``, input) -- number of stages in the table 
+         * Q (``int``, input) -- global order of accuracy of the method 
+         * P (``int``, input) -- global order of accuracy of the embedding 
+         * C (``realtype``, input) -- array of length S containing the stage times
+         * AI (``realtype``, input) -- array of length S*S containing the IRK coefficients
+           (stored in row-major, "C", order) 
+         * AE (``realtype``, input) -- array of length S*S containing the ERK coefficients
+           (stored in row-major, "C", order) 
+         * B (``realtype``, input) -- array of length S containing the solution coefficients 
+         * BEMBED (``realtype``, input) -- array of length S containing the embedding
+           coefficients 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-   
+
    
    .. c:function:: SUBROUTINE FARKSETADAPTIVITYMETHOD(METHOD, PARAMS, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetAdaptivityMethod()`.
+      Interface to the routine :c:func:`ARKodeSetAdaptivityMethod()`.
       
-      :Arguments: METHOD -- flag specifying the method [``int``, input]
-      
-         PARAMS -- array of length 9 containing the adaptivity parameters 
-         [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * METHOD (``int``, input) -- flag specifying the method 
+         * PARAMS (``realtype``, input) -- array of length 9 containing the adaptivity parameters 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-   
+
    
    .. c:function:: SUBROUTINE FARKSETADAPTIVITYCONSTANTS(ETAMX1, ETAMXF, ETACF, SMALLNEF, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetAdaptivityConstants()`.
+      Interface to the routine :c:func:`ARKodeSetAdaptivityConstants()`.
       
-      :Arguments: ETAMX1 -- max change for the first step [``realtype``, input]
-      
-         ETAMXF -- step change on error failure [``realtype``, input]
-      
-         ETACF -- step change on a convergence failure [``realtype``, input]
-      
-         SMALLNEF -- No. of error failures before enforcing ETAMXF [``int``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * ETAMX1 (``realtype``, input) -- max change for the first step 
+         * ETAMXF (``realtype``, input) -- step change on error failure 
+         * ETACF (``realtype``, input) -- step change on a convergence failure 
+         * SMALLNEF (``int``, input) -- No. of error failures before enforcing ETAMXF 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-   
+
    
    .. c:function:: SUBROUTINE FARKSETNEWTONCONSTANTS(CRDOWN, RDIV, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetNewtonConstants()`.
+      Interface to the routine :c:func:`ARKodeSetNewtonConstants()`.
       
-      :Arguments: CRDOWN -- convergence rate estimation constant [``realtype``, input]
-      
-         RDIV -- divergence bound [``realtype``, input]
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * CRDOWN (``realtype``, input) -- convergence rate estimation constant 
+         * RDIV (``realtype``, input) -- divergence bound 
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-   
+
    
    .. c:function:: SUBROUTINE FARKSETLSETUPCONSTANTS(DGMAX, MSBP, IER)
    
-      :Description:  Interface to the routine :c:func:`ARKodeSetLSetupConstants()`.
+      Interface to the routine :c:func:`ARKodeSetLSetupConstants()`.
       
-      :Arguments: DGMAX -- maximum allowable gamma ratio [``realtype``, input]
-      
-         MSBP -- maximum number of time steps between linear solver setup
-         calls [``int``, input] 
-      
-         IER -- return flag (0 success, :math:`\ne 0` failure) [``int``, output]
+      **Arguments:** 
+         * DGMAX (``realtype``, input) -- maximum allowable gamma ratio 
+         * MSBP (``int``, input) -- maximum number of time steps
+           between linear solver setup calls  
+         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
-
 
 .. _FInterface.LinearSolver:
 
@@ -676,29 +633,35 @@ desired choice.
 To use the direct dense linear solver based on the internal ARKode
 implementation, the user must call the FARKDENSE routine.
 
+
+
    .. c:function:: SUBROUTINE FARKDENSE(NEQ, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKDense()` function to
-         specify use of the dense direct linear solver.
+      Interfaces with the :c:func:`ARKDense()` function to
+      specify use of the dense direct linear solver.
       
-      :Arguments: NEQ -- size of the ODE system [``long int``, input]
-      
-         IER -- return flag (0 if success, -1 if a memory allocation
-         error occurred, -2 for an illegal input) [``int``, output]
+      **Arguments:** 
+         * NEQ (``long int``, input) -- size of the ODE system 
+         * IER (``int``, output) -- return flag (0 if success, -1 if a memory allocation
+           error occurred, -2 for an illegal input) 
+
 
 
 Alteratively, to use the LAPACK-based direct dense linear solver, a
 user must call the similar FARKLAPACKDENSE routine.
 
+
+
    .. c:function:: SUBROUTINE FARKLAPACKDENSE(NEQ, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKLapackDense()` function
-         to specify use of the LAPACK the dense direct linear solver.
+      Interfaces with the :c:func:`ARKLapackDense()` function
+      to specify use of the LAPACK the dense direct linear solver.
       
-      :Arguments: NEQ -- size of the ODE system [``int``, input]
-      
-         IER -- return flag (0 if success, -1 if a memory allocation
-         error occurred, -2 for an illegal input) [``int``, output]
+      **Arguments:** 
+         * NEQ (``int``, input) -- size of the ODE system 
+         * IER (``int``, output) -- return flag (0 if success, -1 if a memory allocation
+           error occurred, -2 for an illegal input) 
+
 
 
 As an option when using either of these dense linear solvers, the user
@@ -706,48 +669,44 @@ may supply a routine that computes a dense approximation of the system
 Jacobian :math:`J = \frac{\partial f_I}{\partial y}`. If supplied, it
 must have one of the following forms:
 
+
+
    .. c:function:: SUBROUTINE FARKDJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
    
-      :Description:  Interface to provide a user-supplied dense Jacobian
-         approximation function (of type :c:func:`ARKDenseJacFn()`), to be
-         used by the :c:func:`FARKDENSE()` solver.
+      Interface to provide a user-supplied dense Jacobian
+      approximation function (of type :c:func:`ARKDenseJacFn()`), to be
+      used by the :c:func:`FARKDENSE()` solver.
       
-      :Arguments: NEQ -- size of the ODE system [``long int``, input]
+      **Arguments:** 
+         * NEQ (``long int``, input) -- size of the ODE system 
+         * T (``realtype``, input) -- current value of the independent variable 
+         * Y (``realtype``, input) -- array containing values of the dependent state variables 
+         * FY (``realtype``, input) -- array containing values of the dependent state derivatives 
+         * DJAC (``realtype`` of size (NEQ,NEQ), output) -- 2D array containing the Jacobian entries 
+         * H (``realtype``, input) -- current step size 
+         * IPAR (``long int``, input) -- array containing integer user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input) -- array containing real user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * WK1, WK2, WK3  (``realtype``, input) -- array containing temporary workspace
+           of same size as Y 
+         * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+           occurred, <0 if an unrecoverable error occurred) 
       
-         T -- current value of the independent variable [``realtype``, input]
-      
-         Y -- array containing values of the dependent state variables [``realtype``, input]
-      
-         FY -- array containing values of the dependent state derivatives [``realtype``, input]
-      
-         DJAC -- 2D array containing the Jacobian entries [``realtype`` of size (NEQ,NEQ), output]
-      
-         H -- current step size [``realtype``, input]
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input]
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input]
-      
-         WK1, WK2, WK3  -- array containing temporary workspace
-         of same size as Y [``realtype``, input]
-      
-         IER -- return flag (0 if success, >0 if a recoverable error
-         occurred, <0 if an unrecoverable error occurred) [``int``, output]
-      
-      :Notes: Typically this routine will use only NEQ, T, Y,
-         and DJAC. It must compute the Jacobian and store it column-wise in DJAC.
+      **Notes:** Typically this routine will use only NEQ, T, Y, and
+      DJAC. It must compute the Jacobian and store it column-wise in DJAC. 
    
+
    
    .. c:function:: SUBROUTINE FARKLDJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
    
-      :Description:  Interface to provide a user-supplied dense Jacobian
-         approximation function (of type :c:func:`ARKLapackJacFn()`), to be
-         used by the :c:func:`FARKLAPACKDENSE()` solver.
+      Interface to provide a user-supplied dense Jacobian
+      approximation function (of type :c:func:`ARKLapackJacFn()`), to be
+      used by the :c:func:`FARKLAPACKDENSE()` solver.
       
-      :Arguments: these all match those for :c:func:`FARKDJAC()`.
+      **Arguments:** these all match those for :c:func:`FARKDJAC()`.
    
+
    
 If either of the above routines (:c:func:`FARKDJAC()` or
 :c:func:`FARKLDJAC()`) uses difference quotient approximations, it may
@@ -763,34 +722,38 @@ If the :c:func:`FARKDJAC()` routine is provided, then, following the
 call to :c:func:`FARKDENSE()`, the user must call the routine
 FARKDENSESETJAC. 
 
+
+
    .. c:function:: SUBROUTINE FARKDENSESETJAC(FLAG, IER)
    
-      :Description:  Interface to the :c:func:`ARKDenseSetJacFn()` function,
-         specifying to use the user-supplied routine :c:func:`FARKDJAC()` for
-         the Jacobian approximation.
+      Interface to the :c:func:`ARKDenseSetJacFn()` function,
+      specifying to use the user-supplied routine :c:func:`FARKDJAC()` for
+      the Jacobian approximation.
       
-      :Arguments: FLAG -- any nonzero value specifies to use :c:func:`FARKDJAC()` [``int``, input]
-      
-         IER -- return flag (0 if success, :math:`\ne 0` if an error
-         occurred) [``int``, output]
+      **Arguments:** 
+         * FLAG (``int``, input) -- any nonzero value specifies to use :c:func:`FARKDJAC()` 
+         * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
+           occurred) 
    
+
    
 Similarly, if the :c:func:`FARKLDJAC()` routine is provided, then,
 following the call to :c:func:`FARKLAPACKDENSE()`, the user must call
 the routine FARKLAPACKDENSESETJAC. 
 
+
+
    .. c:function:: SUBROUTINE FARKLAPACKDENSESETJAC(FLAG, IER)
    
-      :Description:  Interface to the :c:func:`ARKLapackSetJacFn()` function,
-         specifying to use the user-supplied routine :c:func:`FARKLDJAC()` for
-         the Jacobian approximation.
+      Interface to the :c:func:`ARKLapackSetJacFn()` function,
+      specifying to use the user-supplied routine :c:func:`FARKLDJAC()` for
+      the Jacobian approximation.
       
-      :Arguments: FLAG -- any nonzero value specifies to use
-         :c:func:`FARKLDJAC()` [``int``, input]
-      
-         IER -- return flag (0 if success, :math:`\ne 0` if an error
-         occurred) [``int``, output]
-
+      **Arguments:** 
+         * FLAG (``int``, input) -- any nonzero value specifies to use
+           :c:func:`FARKLDJAC()` 
+         * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
+           occurred) 
 
 
 
@@ -801,98 +764,92 @@ the routine FARKLAPACKDENSESETJAC.
 To use the direct band linear solver based on the internal ARKode
 implementation, the user must call the FARKBAND routine.
 
+
+
    .. c:function:: SUBROUTINE FARKBAND(NEQ, MU, ML, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKBand()` function to
-         specify use of the dense banded linear solver.
+      Interfaces with the :c:func:`ARKBand()` function to
+      specify use of the dense banded linear solver.
       
-      :Arguments: NEQ -- size of the ODE system [``long int``, input]
-      
-         MU -- upper half-bandwidth [``long int``, input]
-      
-         ML -- lower half-bandwidth [``long int``, input]
-      
-         IER -- return flag (0 if success, -1 if a memory allocation
-         error occurred, -2 for an illegal input) [``int``, output]
+      **Arguments:** 
+         * NEQ (``long int``, input) -- size of the ODE system 
+         * MU (``long int``, input) -- upper half-bandwidth 
+         * ML (``long int``, input) -- lower half-bandwidth 
+         * IER (``int``, output) -- return flag (0 if success, -1 if a memory allocation
+           error occurred, -2 for an illegal input) 
+
 
 
 Alteratively, to use the LAPACK-based direct banded linear solver, a
 user must call the similar FARKLAPACKBAND routine.
 
 
+
    .. c:function:: SUBROUTINE FARKLAPACKBAND(NEQ, MU, ML, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKLapackBand()` function
-         to specify use of the dense banded linear solver.
+      Interfaces with the :c:func:`ARKLapackBand()` function
+      to specify use of the dense banded linear solver.
       
-      :Arguments: NEQ -- size of the ODE system [``int``, input]
-      
-         MU -- upper half-bandwidth [``int``, input]
-      
-         ML -- lower half-bandwidth [``int``, input]
-      
-         IER -- return flag (0 if success, -1 if a memory allocation
-         error occurred, -2 for an illegal input) [``int``, output]
+      **Arguments:** 
+         * NEQ (``int``, input) -- size of the ODE system 
+         * MU (``int``, input) -- upper half-bandwidth 
+         * ML (``int``, input) -- lower half-bandwidth 
+         * IER (``int``, output) -- return flag (0 if success, -1 if a memory allocation
+           error occurred, -2 for an illegal input) 
    
+
    
 As an option when using either of these banded linear solvers, the user
 may supply a routine that computes a banded approximation of the
 linear system Jacobian :math:`J = \frac{\partial f_I}{\partial y}`. If
 supplied, it must have one of the following forms:
 
+
    .. c:function:: SUBROUTINE FARKBJAC(NEQ, MU, ML, MDIM, T, Y, FY, BJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
    
-      :Description:  Interface to provide a user-supplied band Jacobian
-         approximation function (of type :c:func:`ARKBandJacFn()`), to be
-         used by the :c:func:`FARKBAND()` solver.
+      Interface to provide a user-supplied band Jacobian
+      approximation function (of type :c:func:`ARKBandJacFn()`), to be
+      used by the :c:func:`FARKBAND()` solver.
       
-      :Arguments: NEQ -- size of the ODE system [``long int``, input]
+      **Arguments:** 
+         * NEQ (``long int``, input) -- size of the ODE system 
+         * MU   (``long int``, input) -- upper half-bandwidth 
+         * ML   (``long int``, input) -- lower half-bandwidth 
+         * MDIM (``long int``, input) -- leading dimension of BJAC array 
+         * T    (``realtype``, input) -- current value of the independent variable 
+         * Y    (``realtype``, input) -- array containing dependent state variables 
+         * FY   (``realtype``, input) -- array containing dependent state derivatives 
+         * BJAC (``realtype`` of size
+           (MDIM,NEQ), output) -- 2D array containing the Jacobian entries 
+         * H    (``realtype``, input) -- current step size 
+         * IPAR (``long int``, input) -- array containing integer user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input) -- array containing real user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * WK1, WK2, WK3  (``realtype``, input) -- array containing temporary workspace
+           of same size as Y 
+         * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+           occurred, <0 if an unrecoverable error occurred) 
       
-         MU   -- upper half-bandwidth [``long int``, input]
-      
-         ML   -- lower half-bandwidth [``long int``, input]
-      
-         MDIM -- leading dimension of BJAC array [``long int``, input]
-      
-         T    -- current value of the independent variable [``realtype``, input]
-      
-         Y    -- array containing dependent state variables [``realtype``, input]
-      
-         FY   -- array containing dependent state derivatives [``realtype``, input]
-      
-         BJAC -- 2D array containing the Jacobian entries [``realtype`` of size
-         (MDIM,NEQ), output]
-      
-         H    -- current step size [``realtype``, input]
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input]
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input]
-      
-         WK1, WK2, WK3  -- array containing temporary workspace
-         of same size as Y [``realtype``, input]
-      
-         IER -- return flag (0 if success, >0 if a recoverable error
-         occurred, <0 if an unrecoverable error occurred) [``int``, output]
-      
-      :Notes: Typically this routine will use only NEQ, MU, ML,
-         T, Y, and BJAC. It must load the MDIM by N
-         array BJAC with the Jacobian matrix at the current
-         :math:`(t,y)` in band form.  Store in BJAC(k,j) the Jacobian
-         element :math:`J_{i,j}` with :math:`k = i - j + MU + 1` (or
-         :math:`k = 1, \ldots ML+MU+1`) and :math:`j = 1, \ldots, N`.
+      **Notes:**
+      Typically this routine will use only NEQ, MU, ML, T, Y, and
+      BJAC. It must load the MDIM by N array BJAC with the Jacobian
+      matrix at the current :math:`(t,y)` in band form.  Store in
+      BJAC(k,j) the Jacobian element :math:`J_{i,j}` with :math:`k = i
+      - j + MU + 1` (or :math:`k = 1, \ldots ML+MU+1`) and :math:`j =
+      1, \ldots, N`. 
+
 
 
    .. c:function:: SUBROUTINE FARKLBJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
    
-      :Description:  Interface to provide a user-supplied banded Jacobian
-         approximation function (of type :c:func:`ARKLapackJacFn()`), to be
-         used by the :c:func:`FARKLAPACKBAND()` solver.
+      Interface to provide a user-supplied banded Jacobian
+      approximation function (of type :c:func:`ARKLapackJacFn()`), to be
+      used by the :c:func:`FARKLAPACKBAND()` solver.
       
-      :Arguments: these all match those for :c:func:`FARKBJAC()`.
+      **Arguments:** these all match those for :c:func:`FARKBJAC()`.
    
+
 
 If either of the above routines (:c:func:`FARKBJAC()` or
 :c:func:`FARKLBJAC()`) uses difference quotient approximations, it may
@@ -908,34 +865,40 @@ If the :c:func:`FARKBJAC()` routine is provided, then, following the
 call to :c:func:`FARKBAND()`, the user must call the routine
 FARKBANDSETJAC. 
 
+
+
    .. c:function:: SUBROUTINE FARKBANDSETJAC(FLAG, IER)
    
-      :Description:  Interface to the :c:func:`ARKBandSetJacFn()` function,
-         specifying to use the user-supplied routine :c:func:`FARKBJAC()` for
-         the Jacobian approximation.
+      Interface to the :c:func:`ARKBandSetJacFn()` function,
+      specifying to use the user-supplied routine :c:func:`FARKBJAC()` for
+      the Jacobian approximation.
       
-      :Arguments: FLAG -- any nonzero value specifies to use
-         :c:func:`FARKBJAC()` [``int``, input] 
-      
-         IER -- return flag (0 if success, :math:`\ne 0` if an error
-         occurred) [``int``, output]
+      **Arguments:** 
+         * FLAG (``int``, input) -- any nonzero value specifies to use
+           :c:func:`FARKBJAC()`  
+         * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
+           occurred) 
+
 
 
 Similarly, if the :c:func:`FARKLBJAC()` routine is provided, then,
 following the call to :c:func:`FARKLAPACKBAND()`, the user must call
 the routine FARKLAPACKBANDSETJAC. 
 
+
+
    .. c:function:: SUBROUTINE FARKLAPACKBANDSETJAC(FLAG, IER)
    
-      :Description:  Interface to the :c:func:`ARKLapackSetJacFn()` function,
-         specifying to use the user-supplied routine :c:func:`FARKLBJAC()` for
-         the Jacobian approximation.
+      Interface to the :c:func:`ARKLapackSetJacFn()` function,
+      specifying to use the user-supplied routine :c:func:`FARKLBJAC()` for
+      the Jacobian approximation.
       
-      :Arguments: FLAG -- any nonzero value specifies to use
-         :c:func:`FARKLBJAC()` [``int``, input]
-      
-         IER -- return flag (0 if success, :math:`\ne 0` if an error
-         occurred) [``int``, output]
+      **Arguments:** 
+         * FLAG (``int``, input) -- any nonzero value specifies to use
+           :c:func:`FARKLBJAC()` 
+         * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
+           occurred) 
+
 
 
 
@@ -946,35 +909,28 @@ the routine FARKLAPACKBANDSETJAC.
 For the Scaled Preconditioned GMRES solution of the linear systems,
 the user must call the FARKSPGMR routine.
 
+
+
    .. c:function:: SUBROUTINE FARKSPGMR(IPRETYPE, IGSTYPE, MAXL, DELT, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKSpgmr()` and
-         ARKSpilsSet* routines to specify use of the SPGMR iterative
-         linear solver.
+      Interfaces with the :c:func:`ARKSpgmr()` and
+      ARKSpilsSet* routines to specify use of the SPGMR iterative
+      linear solver.
       
-      :Arguments: 
-         IPRETYPE -- preconditioner type [``int``, input]: 
-      
-            0 = none 
-      
-            1 = left only
-      
-            2 = right only
-      
-            3 = both sides
-      
-         IGSTYPE -- Gram-schmidt process type [``int``, input]: 
-      
-            1 = modified G-S
-      
-            2 = classical G-S
-      
-         MAXL -- maximum Krylov subspace dimension (0 for default) [``int``; input].
-      
-         DELT -- linear convergence tolerance factor (0.0 for default) [``realtype``, input].
-      
-         IER -- return flag (0 if success, -1 if a memory allocation
-         error occurred, -2 for an illegal input) [``int``, output]
+      **Arguments:** 
+         * IPRETYPE (``int``, input) -- preconditioner type : 
+            * 0 = none 
+	    * 1 = left only
+	    * 2 = right only
+      	    * 3 = both sides
+         * IGSTYPE (``int``, input) -- Gram-schmidt process type : 
+            * 1 = modified G-S
+     	    * 2 = classical G-S
+         * MAXL (``int``; input) -- maximum Krylov subspace dimension (0 for default) .
+         * DELT (``realtype``, input) -- linear convergence tolerance factor (0.0 for default) .
+         * IER (``int``, output) -- return flag (0 if success, -1 if a memory allocation
+           error occurred, -2 for an illegal input) 
+
 
 
 For descriptions of the optional user-supplied routines for use with
@@ -990,14 +946,18 @@ For descriptions of the optional user-supplied routines for use with
 For the Scaled Preconditioned Bi-CGStab solution of the linear systems,
 the user must call the FARKSPBCG routine.
 
+
+
    .. c:function:: SUBROUTINE FARKSPBCG(IPRETYPE, MAXL, DELT, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKSpbcg()` and
-         ARKSpilsSet* routines to specify use of the SPBCG iterative
-         linear solver.
+      Interfaces with the :c:func:`ARKSpbcg()` and
+      ARKSpilsSet* routines to specify use of the SPBCG iterative
+      linear solver.
       
-      :Arguments: The arguments are the same as those with the same names
-         for :c:func:`FARKSPGMR()`.
+      **Arguments:**  The arguments are the same as those with the
+      same names for :c:func:`FARKSPGMR()`. 
+
+
 
 For descriptions of the optional user-supplied routines for use with
 :c:func:`FARKSPBCG()` see the section :ref:`FInterface.SpilsUserSupplied`.
@@ -1012,15 +972,19 @@ For descriptions of the optional user-supplied routines for use with
 For the Scaled Preconditioned TFQMR solution of the linear systems,
 the user must call the FARKSPTFQMR routine.
 
+
+
    .. c:function:: SUBROUTINE FARKSPTFQMR(IPRETYPE, MAXL, DELT, IER)
    
-      :Description:  Interfaces with the :c:func:`ARKSptfqmr()` and
-         ARKSpilsSet* routines to specify use of the SPTFQMR iterative
-         linear solver.
+      Interfaces with the :c:func:`ARKSptfqmr()` and
+      ARKSpilsSet* routines to specify use of the SPTFQMR iterative
+      linear solver.
       
-      :Arguments: The arguments are the same as those with the same names
-         for :c:func:`FARKSPGMR()`.
+      **Arguments:**  The arguments are the same as those with the same names
+      for :c:func:`FARKSPGMR()`.
    
+
+
 For descriptions of the optional user-supplied routines for use with
 :c:func:`FARKSPTFQMR()` see the next section.
 
@@ -1041,47 +1005,36 @@ solvers, the user may supply a routine that computes the product of
 the system Jacobian :math:`J = \frac{\partial f_I}{\partial y}` and a
 given vector :math:`v`.  If supplied, it must have the following form:
 
+
+
    .. c:function:: SUBROUTINE FARKJTIMES(V, FJV, T, Y, FY, H, IPAR, RPAR, WORK, IER)
    
-      :Description:  Interface to provide a user-supplied
-         Jacobian-times-vector product approximation function (of type
-         :c:func:`ARKSpilsJacTimesVecFn()`), to be used by one of the Krylov
-         iterative linear solvers.
+      Interface to provide a user-supplied
+      Jacobian-times-vector product approximation function (of type
+      :c:func:`ARKSpilsJacTimesVecFn()`), to be used by one of the Krylov
+      iterative linear solvers.
       
-      :Arguments: V -- array containing the vector to multiply
-         [``realtype``, input]
-      
-         FJV  -- array containing resulting product vector
-         [``realtype``, output] 
-      
-         T    -- current value of the independent variable
-         [``realtype``, input] 
-      
-         Y    -- array containing dependent state variables
-         [``realtype``, input] 
-      
-         FY   -- array containing dependent state derivatives
-         [``realtype``, input] 
-      
-         H    -- current step size [``realtype``, input]
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input]
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input]
-      
-         WORK -- array containing temporary workspace of same size as
-         Y [``realtype``, input]
-      
-         IER  -- return flag  (0 if success, :math:`\ne 0` if an error)
-         [``int``, output]
-      
-      :Notes: Typically this routine will use only NEQ, T, Y,
-         V, and FJV.  It must compute the product vector :math:`Jv`,
-         where :math:`v` is given in V, and the product is stored in
-         FJV.
+      **Arguments:** 
+         * V (``realtype``, input) -- array containing the vector to multiply
+         * FJV  (``realtype``, output) -- array containing resulting product vector
+         * T    (``realtype``, input) -- current value of the independent variable
+         * Y    (``realtype``, input) -- array containing dependent state variables
+         * FY   (``realtype``, input) -- array containing dependent state derivatives
+         * H    (``realtype``, input) -- current step size 
+         * IPAR (``long int``, input) -- array containing integer user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input) -- array containing real user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * WORK (``realtype``, input) -- array containing temporary workspace of same size as
+           Y   
+         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+         
+      **Notes:**
+      Typically this routine will use only NEQ, T, Y, V, and FJV.  It
+      must compute the product vector :math:`Jv`, where :math:`v` is
+      given in V, and the product is stored in FJV. 
    
+
 
 If this routine has been supplied by the user, then, following the
 call to :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()` or
@@ -1090,16 +1043,16 @@ FARKSPILSSETJAC with FLAG :math:`\ne 0` to specify use of the
 user-supplied Jacobian-times-vector function.
 
 
+
    .. c:function:: SUBROUTINE FARKSPILSSETJAC(FLAG, IER)
    
-      :Description:  Interface to the function 
-         :c:func:`ARKSpilsSetJacTimesVecFn()` to specify use of the
-         user-supplied Jacobian-times-vector function :c:func:`FARKJTIMES()`.
+      Interface to the function :c:func:`ARKSpilsSetJacTimesVecFn()` to specify use of the
+      user-supplied Jacobian-times-vector function :c:func:`FARKJTIMES()`.
       
-      :Arguments: FLAG -- flag denoting to use FARKJTIMES routine [``int``, input]
-      
-         IER  -- return flag  (0 if success, :math:`\ne 0` if an error)
-         [``int``, output]
+      **Arguments:** 
+         * FLAG (``int``, input) -- flag denoting to use FARKJTIMES routine 
+         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+
 
 
 If preconditioning is to be performed during the Krylov solver
@@ -1107,116 +1060,97 @@ If preconditioning is to be performed during the Krylov solver
 user must also call the routine FARKSPILSSETPREC with FLAG
 :math:`\ne 0`. 
 
+
+
    .. c:function:: SUBROUTINE FARKSPILSSETJAC(FLAG, IER)
    
-      :Description:  Interface to the function 
-         :c:func:`ARKSpilsSetPreconditioner()` to specify use of the
-         user-supplied preconditioner setup and solve functions,
-         :c:func:`FARKPSET()` and :c:func:`FARKPSOL()`, respectively.
+      Interface to the function :c:func:`ARKSpilsSetPreconditioner()` to specify use of the
+      user-supplied preconditioner setup and solve functions,
+      :c:func:`FARKPSET()` and :c:func:`FARKPSOL()`, respectively.
       
-      :Arguments: FLAG -- flag denoting use of user-supplied
-         preconditioning routines [``int``, input] 
-      
-         IER  -- return flag  (0 if success, :math:`\ne 0` if an error)
-         [``int``, output]
+      **Arguments:** 
+         * FLAG (``int``, input) -- flag denoting use of user-supplied
+           preconditioning routines  
+         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+         
 
 
 In addition, the user must provide the following two routines to
 implement the preconditioner setup and solve functions to be used
 within the solve.
 
+
+
    .. c:function:: SUBROUTINE FARKPSET(T,Y,FY,JOK,JCUR,GAMMA,H,IPAR,RPAR,V1,V2,V3,IER)
    
-      :Description:  User-supplied preconditioner setup routine (of type
-         :c:func:`ARKSpilsPrecSetupFn()`). 
+      User-supplied preconditioner setup routine (of type
+      :c:func:`ARKSpilsPrecSetupFn()`). 
       
-      :Arguments: T -- current value of the independent variable
-         [``realtype``, input] 
+      **Arguments:** 
+         * T (``realtype``, input) -- current value of the independent variable
+         * Y (``realtype``, input) -- current dependent state variable array 
+         * FY (``realtype``, input) -- current dependent state variable derivative array 
+         * JOK (``int``, input) -- flag indicating whether Jacobian-related data needs to be 
+           recomputed:
+  	    * 0 = recompute, 
+	    * 1 = reuse with the current value of GAMMA.
+         * JCUR (``realtype``, output) -- return flag to denote if Jacobian data was recomputed
+           (1=yes, 0=no)  
+         * GAMMA (``realtype``, input) -- Jacobian scaling factor 
+         * H (``realtype``, input) -- current step size 
+         * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * V1, V2, V3 (``realtype``, input) -- arrays containing temporary workspace of
+           same size as Y 
+         * IER  (``int``, output) -- return flag  (0 if success, >0 if a recoverable
+           failure, <0 if a non-recoverable failure) 
       
-         Y -- current dependent state variable array [``realtype``, input]
-      
-         FY -- current dependent state variable derivative array [``realtype``, input]
-      
-         JOK -- flag indicating whether Jacobian-related data needs to be 
-         recomputed [``int``, input]:
-        
-            0 = recompute, 
-      
-            1 = reuse with the current value of GAMMA.
-      
-         JCUR -- return flag to denote if Jacobian data was recomputed
-         (1=yes, 0=no)  [``realtype``, output]
-      
-         GAMMA -- Jacobian scaling factor [``realtype``, input]
-      
-         H -- current step size [``realtype``, input]
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input/output]
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input/output]
-      
-         V1, V2, V3 -- arrays containing temporary workspace of
-         same size as Y [``realtype``, input]
-      
-         IER  -- return flag  (0 if success, >0 if a recoverable
-         failure, <0 if a non-recoverable failure) [``int``, output]
-      
-      :Notes: This routine must set up the preconditioner P to be used
-         in the subsequent call to :c:func:`FARKPSOL()`.  The preconditioner
-         (or the product of the left and right preconditioners if using
-         both) should be an approximation to the matrix  :math:`M - \gamma
-         J`, where :math:`M` is the system mass matrix, :math:`\gamma` is
-         the input GAMMA, and :math:`J = \frac{\partial f_I}{\partial y}`.
+      **Notes:**
+      This routine must set up the preconditioner P to be used in the
+      subsequent call to :c:func:`FARKPSOL()`.  The preconditioner (or
+      the product of the left and right preconditioners if using both)
+      should be an approximation to the matrix  :math:`M - \gamma J`,
+      where :math:`M` is the system mass matrix, :math:`\gamma` is the
+      input GAMMA, and :math:`J = \frac{\partial f_I}{\partial y}`. 
    
+
    
    .. c:function:: SUBROUTINE FARKPSOL(T,Y,FY,R,Z,GAMMA,DELTA,LR,IPAR,RPAR,VT,IER)
    
-      :Description:  User-supplied preconditioner solve routine (of type
-         :c:func:`ARKSpilsPrecSolveFn()`). 
+      User-supplied preconditioner solve routine (of type
+      :c:func:`ARKSpilsPrecSolveFn()`). 
       
-      :Arguments: T -- current value of the independent variable
-         [``realtype``, input] 
+      **Arguments:** 
+         * T (``realtype``, input) -- current value of the independent variable
+         * Y (``realtype``, input) -- current dependent state variable array 
+         * FY (``realtype``, input) -- current dependent state variable derivative array 
+         * R (``realtype``, input) -- right-hand side array 
+         * Z (``realtype``, output) -- solution array 
+         * GAMMA (``realtype``, input) -- Jacobian scaling factor 
+         * DELTA (``realtype``, input) -- desired residual tolerance 
+         * LR (``int``, input) -- flag denoting to solve the right or left preconditioner
+           system:
+            * 1 = left preconditioner
+	    * 2 = right preconditioner
+         * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
+           :c:func:`FARKMALLOC()` 
+         * VT (``realtype``, input) -- array containing temporary workspace of same size as Y  
+         * IER  (``int``, output) -- return flag  (0 if success, >0 if a recoverable
+           failure, <0 if a non-recoverable failure) 
       
-         Y -- current dependent state variable array [``realtype``, input]
-      
-         FY -- current dependent state variable derivative array [``realtype``, input]
-      
-         R -- right-hand side array [``realtype``, input]
-      
-         Z -- solution array [``realtype``, output]
-      
-         GAMMA -- Jacobian scaling factor [``realtype``, input]
-      
-         DELTA -- desired residual tolerance [``realtype``, input]
-      
-         LR -- flag denoting to solve the right or left preconditioner
-         system:
-      
-            1 = left preconditioner
-      
-            2 = right preconditioner
-      
-         IPAR -- array containing integer user data that was passed to
-         :c:func:`FARKMALLOC()` [``long int``, input/output]
-      
-         RPAR -- array containing real user data that was passed to
-         :c:func:`FARKMALLOC()` [``realtype``, input/output]
-      
-         VT -- array containing temporary workspace of same size as Y  
-         [``realtype``, input]
-      
-         IER  -- return flag  (0 if success, >0 if a recoverable
-         failure, <0 if a non-recoverable failure) [``int``, output]
-      
-      :Notes: Typically this routine will use only NEQ, T, Y,
-         GAMMA, R, LR, and Z.  It must solve the
-         preconditioner linear system :math:`Pz = r`.  The preconditioner
-         (or the product of the left and right preconditioners if both are
-         nontrivial) should be an approximation to the matrix  :math:`M - \gamma
-         J`, where :math:`M` is the system mass matrix, :math:`\gamma` is
-         the input GAMMA, and :math:`J = \frac{\partial f_I}{\partial y}`.
+      **Notes:**
+      Typically this routine will use only NEQ, T, Y, GAMMA, R, LR,
+      and Z.  It must solve the preconditioner linear system :math:`Pz
+      = r`.  The preconditioner (or the product of the left and right
+      preconditioners if both are nontrivial) should be an
+      approximation to the matrix  :math:`M - \gamma J`, where
+      :math:`M` is the system mass matrix, :math:`\gamma` is the input
+      GAMMA, and :math:`J = \frac{\partial f_I}{\partial y}`. 
+
 
 
 Notes:
@@ -1254,50 +1188,39 @@ Problem solution
 Carrying out the integration is accomplished by making calls to
 :c:func:`FARKODE()`.
 
+
+
    .. c:function:: SUBROUTINE FARKODE(TOUT, T, Y, ITASK, IER)
    
-      :Description:  Fortran interface to the C routine :c:func:`ARKode()`
-         for performing the solve, along with many of the ARK*Get*
-         routines for reporting on solver statistics.
+      Fortran interface to the C routine :c:func:`ARKode()`
+      for performing the solve, along with many of the ARK*Get*
+      routines for reporting on solver statistics.
       
-      :Arguments: TOUT -- next value of :math:`t` at which a solution is
-         desired [``realtype``, input]
+      **Arguments:** 
+         * TOUT (``realtype``, input) -- next value of :math:`t` at which a solution is
+           desired 
+         * T (``realtype``, output) -- current value of independent variable reached by the solver
+         * Y (``realtype``, output) -- array containing dependent state variables on output
+         * ITASK (``int``, input) -- task indicator :
+	    * 1 = normal mode (overshoot TOUT and interpolate)
+	    * 2 = one-step mode (return after each internal step taken)
+      	    * 3 = normal `tstop` mode (like 1, but integration never
+              proceeds past TSTOP, which must be specified through a
+              preceding call to :c:func:`FARKSETRIN()` using the key
+              STOP_TIME)
+      	    * 4 = one step `tstop` (like 2, but integration never goes past
+              TSTOP) 
+         * IER (int, output) -- completion flag : 
+	    * 0 = success, 
+	    * 1 = tstop return, 
+	    * 2 = root return, 
+	    * values -1 ... -10 are failure modes (see :c:func:`ARKode()` and
+              :ref:`Constants`).
       
-         T -- current value of independent variable reached by the solver
-         [``realtype``, output] 
-      
-         Y -- array containing dependent state variables on output
-         [``realtype``, output] 
-      
-         ITASK -- task indicator [``int``, input]:
-      
-            1 = normal mode (overshoot TOUT and interpolate)
-      
-            2 = one-step mode (return after each internal step taken)
-      
-            3 = normal `tstop` mode (like 1, but integration never
-            proceeds past TSTOP, which must be specified through a
-            preceding call to :c:func:`FARKSETRIN()` using the key
-            STOP_TIME)
-      
-            4 = one step `tstop` (like 2, but integration never goes past
-            TSTOP) 
-      
-         IER -- completion flag [int, output]: 
-   
-            0 = success, 
-      
-            1 = tstop return, 
-      
-            2 = root return, 
-      
-            values -1 ... -10 are failure modes (see :c:func:`ARKode()` and
-            :ref:`Constants`).
-      
-      :Notes: The current values of the optional outputs are immediately
-         available in IOUT and ROUT upon return from this function
-         (see :ref:`FInterface.IOUTTable` and
-         :ref:`FInterface.ROUTTable`).
+      **Notes:**
+      The current values of the optional outputs are immediately
+      available in IOUT and ROUT upon return from this function (see
+      :ref:`FInterface.IOUTTable` and :ref:`FInterface.ROUTTable`). 
    
 
 
@@ -1310,23 +1233,21 @@ After a successful return from :c:func:`FARKODE()`, the routine
 :c:func:`FARKDKY()` may be used to obtain a derivative of the solution,
 of order up to 3, at any :math:`t` within the last step taken. 
 
+
+
    .. c:function:: SUBROUTINE FARKDKY(T, K, DKY, IER)
    
-      :Description:  Fortran interface to the C routine :c:func:`ARKDKY()`
-         for interpolating output of the solution or its derivatives at any
-         point within the last step taken.
+      Fortran interface to the C routine :c:func:`ARKDKY()`
+      for interpolating output of the solution or its derivatives at any
+      point within the last step taken.
       
-      :Arguments: T -- time at which solution derivative is desired,
-         within the interval :math:`[t_n-h,t_n]`, [``realtype``, input].
-      
-         K -- derivative order :math:`(0 \le k \le 3)` [``int``, input]
-      
-         DKY -- array containing the computed K-th derivative of
-         :math:`y` [``realtype``, output] 
-      
-         IER -- return flag (0 if success, <0 if an illegal argument)
-         [``int``, output]
-
+      **Arguments:** 
+         * T (``realtype``, input) -- time at which solution derivative is desired,
+           within the interval :math:`[t_n-h,t_n]`, .
+         * K (``int``, input) -- derivative order :math:`(0 \le k \le 3)` 
+         * DKY (``realtype``, output) -- array containing the computed K-th derivative of
+           :math:`y`  
+         * IER (``int``, output) -- return flag (0 if success, <0 if an illegal argument)
 
 
 
@@ -1339,18 +1260,20 @@ To re-initialize the ARKode solver for the solution of a new
 problem of the same size as one already solved, the user must call
 :c:func:`FARKREINIT()`. 
 
+
+
    .. c:function:: SUBROUTINE FARKREINIT(T0, Y0, IMEX, IATOL, RTOL, ATOL, IER)
    
-      :Description:  Re-initializes the Fortran interface to the ARKode
-         solver.
+      Re-initializes the Fortran interface to the ARKode solver.
       
-      :Arguments: The arguments have the same names and meanings as those of
-         :c:func:`FARKMALLOC()`.
+      **Arguments:**  The arguments have the same names and meanings as those of
+      :c:func:`FARKMALLOC()`.
       
-      :Notes: This routine performs no memory allocation, instead using the
-         existing memory created by the previous :c:func:`FARKMALLOC()`
-         call.  The call to specify the linear system solution method may or
-         may not be needed.
+      **Notes:**
+      This routine performs no memory allocation, instead using the
+      existing memory created by the previous :c:func:`FARKMALLOC()`
+      call.  The call to specify the linear system solution method may
+      or may not be needed. 
 
 
 Following a call to :c:func:`FARKREINIT()`, a call to specify the
@@ -1367,14 +1290,18 @@ In the case of SPGMR, for a change of inputs other than MAXL,
 the user may call the routine :c:func:`FARKSPGMRREINIT()` to
 reinitialize SPGMR without reallocating its memory, as follows: 
 
+
+
    .. c:function:: SUBROUTINE FARKSPGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)
    
-      :Description:  Re-initializes the Fortran interface to the SPGMR
-         linear solver.
+      Re-initializes the Fortran interface to the SPGMR
+      linear solver.
       
-      :Arguments: The arguments have the same names and meanings as those of
-         :c:func:`FARKSPGMR()`.
+      **Arguments:**  The arguments have the same names and meanings as those of
+      :c:func:`FARKSPGMR()`.
    
+
+
 However, if MAXL is being changed, then the user should call
 :c:func:`FARKSPGMR()` instead.
 
@@ -1382,25 +1309,32 @@ In the case of SPBCG, for a change in any inputs, the user can
 reinitialize SPBCG without reallocating its memory by calling
 :c:func:`FARKSPBCGREINIT()`, as follows:
 
+
+
    .. c:function:: SUBROUTINE FARKSPBCGREINIT(IPRETYPE, MAXL, DELT, IER)
    
-      :Description:  Re-initializes the Fortran interface to the SPBCG
-         linear solver.
+      Re-initializes the Fortran interface to the SPBCG
+      linear solver.
       
-      :Arguments: The arguments have the same names and meanings as those of
-         :c:func:`FARKSPBCG()`.
+      **Arguments:**  The arguments have the same names and meanings as those of
+      :c:func:`FARKSPBCG()`.
+
+
 
 In the case of SPTFQMR, for a change in any inputs, the user can
 reinitialize SPTFQMR without reallocating its memory by calling
 :c:func:`FARKSPTFQMRREINIT()`, as follows:
 
+
+
    .. c:function:: SUBROUTINE FARKSPTFQMRREINIT(IPRETYPE, MAXL, DELT, IER)
    
-      :Description:  Re-initializes the Fortran interface to the SPBTFQMR
-         linear solver.
+      Re-initializes the Fortran interface to the SPBTFQMR
+      linear solver.
       
-      :Arguments: The arguments have the same names and meanings as those of
-         :c:func:`FARKSPTFQMR()`.
+      **Arguments:**  The arguments have the same names and meanings as those of
+      :c:func:`FARKSPTFQMR()`.
+
 
 
 
@@ -1413,12 +1347,13 @@ Memory deallocation
 To free the internal memory created by :c:func:`FARKMALLOC()`, the user
 may call :c:func:`FARKFREE()`, as follows:
 
+
+
    .. c:function:: SUBROUTINE FARKFREE()
    
-      :Description:  Frees the internal memory created by :c:func:`FARKMALLOC()`.
+      Frees the internal memory created by :c:func:`FARKMALLOC()`.
       
-      :Arguments: None.
-
+      **Arguments:** None.
 
 
 
@@ -1552,40 +1487,42 @@ multiplicative error weights used the WRMS norms, the user may call
 the routine :c:func:`FARKGETERRWEIGHTS()` as follows:
 
 
+
    .. c:function:: SUBROUTINE FARKGETERRWEIGHTS(EWT, IER)
    
-      :Description:  Retrieves the current error weight vector (interfaces
-         with :c:func:`ARKodeGetErrWeights()`).
+      Retrieves the current error weight vector (interfaces
+      with :c:func:`ARKodeGetErrWeights()`).
       
-      :Arguments: EWT -- array containing the error weight vector
-         [``realtype``, output] 
+      **Arguments:** 
+         * EWT (``realtype``, output) -- array containing the error weight vector
+         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
       
-         IER  -- return flag  (0 if success, :math:`\ne 0` if an error)
-         [``int``, output]
-      
-      :Notes: The array EWT, of length NEQ if using
-         NVECTOR_SERIAL or NLOCAL if using NVECTOR_PARALLEL,
-         must already have been declared by the user. 
+      **Notes:**
+      The array EWT, of length NEQ if using NVECTOR_SERIAL or NLOCAL
+      if using NVECTOR_PARALLEL, must already have been declared by
+      the user.
+
+
 
 Similarly, to obtain the estimated local errors, following a
 successful call to :c:func:`FARKODE()`, the user may call the routine
 :c:func:`FARKGETESTLOCALERR()` as follows:
 
 
+
    .. c:function:: SUBROUTINE FARKGETESTLOCALERR(ELE, IER)
    
-      :Description:  Retrieves the current local truncation error estimate
-         vector (interfaces with :c:func:`ARKodeGetEstLocalErrors()`).
+      Retrieves the current local truncation error estimate
+      vector (interfaces with :c:func:`ARKodeGetEstLocalErrors()`).
       
-      :Arguments: ELE -- array with the estimated local error vector
-         [``realtype``, output] 
+      **Arguments:** 
+         * ELE (``realtype``, output) -- array with the estimated local error vector
+         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
       
-         IER  -- return flag  (0 if success, :math:`\ne 0` if an error)
-         [``int``, output]
-      
-      :Notes: The array ELE, of length NEQ if using
-         NVECTOR_SERIAL or NLOCAL if using NVECTOR_PARALLEL,
-         must already have been declared by the user. 
+      **Notes:**
+      The array ELE, of length NEQ if using NVECTOR_SERIAL or NLOCAL
+      if using NVECTOR_PARALLEL, must already have been declared by
+      the user.  
 
 
 
@@ -1660,22 +1597,23 @@ unchanged from the main program described in the section
    Then, to initialize the ARKBANDPRE preconditioner, call the
    routine :c:func:`FARKBPINIT()`, as follows:
 
+
+
       .. c:function:: SUBROUTINE FARKBPINIT(NEQ, MU, ML, IER)
    
-         :Description:  Interfaces with the :c:func:`ARKBandPrecInit()`
-            function to allocates memory and initialize data associated
-            with the ARKBANDPRE preconditioner.
+         Interfaces with the :c:func:`ARKBandPrecInit()`
+         function to allocates memory and initialize data associated
+         with the ARKBANDPRE preconditioner.
    
-         :Arguments: NEQ -- problem size [``long int``, input]
-   
-            MU -- upper half-bandwidth of the band matrix that is 
-            retained as an approximation of the Jacobian [``long int``, input]
-   
-            ML  -- lower half-bandwidth of the band matrix approximant 
-            to the Jacobian [``long int``, input]	  
-   
-            IER  -- return flag  (0 if success, -1 if a memory failure)
-            [``int``, output]
+         **Arguments:** 
+	    * NEQ (``long int``, input) -- problem size 
+            * MU (``long int``, input) -- upper half-bandwidth of the band matrix that is 
+              retained as an approximation of the Jacobian 
+            * ML  (``long int``, input) -- lower half-bandwidth of the band matrix approximant 
+              to the Jacobian 	  
+            * IER  (``int``, output) -- return flag  (0 if success, -1 if a memory failure)
+            
+
 
 6. `Problem solution`
 
@@ -1687,21 +1625,21 @@ unchanged from the main program described in the section
    module, the user should call the :c:func:`FARKBPOPT()`, as specified
    below: 
 
+
+
       .. c:function:: SUBROUTINE FARKBPOPT(LENRWBP, LENIWBP, NFEBP)
       
-         :Description:  Interfaces with the ARKBANDPRE optional output
-            functions.
+         Interfaces with the ARKBANDPRE optional output
+         functions.
          
-         :Arguments: LENRWBP -- length of real preconditioner work
-            space (from :c:func:`ARKBandPrecGetWorkSpace()`) [``long int``,
-            output] 
-         
-            LENIWBP -- length of integer preconditioner work space, in 
-            integer words (from :c:func:`ARKBandPrecGetWorkSpace()`) [``long
-            int``, output] 
-         
-            NFEBP -- number of :math:`f_I(t,y)` evaluations (from
-            :c:func:`ARKBandPrecGetNumRhsEvals()`) [``long int``, output] 
+         **Arguments:** 
+	    * LENRWBP (``long int``, output) -- length of real preconditioner work
+              space (from :c:func:`ARKBandPrecGetWorkSpace()`)  
+            * LENIWBP (``long int``, output) -- length of integer preconditioner work space, in 
+              integer words (from :c:func:`ARKBandPrecGetWorkSpace()`)  
+            * NFEBP (``long int``, output) -- number of :math:`f_I(t,y)` evaluations (from
+              :c:func:`ARKBandPrecGetNumRhsEvals()`)  
+
 
 
 8. `Memory deallocation` 
@@ -1789,39 +1727,32 @@ unchanged from the main program described in the section
    Then, to initialize the ARKBBDPRE preconditioner, call the function
    :c:func:`FARKBBDINIT()`, as described below:
 
+
+
       .. c:function:: SUBROUTINE FARKBBDINIT(NLOCAL, MUDQ, MLDQ, MU, ML, DQRELY, IER)
       
-         :Description:  Interfaces with the :c:func:`ARKBBDPrecInit()`
-            routine to initialize the ARKBBDPRE preconditioning module.
+         Interfaces with the :c:func:`ARKBBDPrecInit()`
+         routine to initialize the ARKBBDPRE preconditioning module.
          
-         :Arguments: NLOCAL -- local vector size on this process
-            [``long int``, input]
+         **Arguments:** 
+	    * NLOCAL (``long int``, input) -- local vector size on this process
+   	    * MUDQ (``long int``, input) -- upper half-bandwidth to be
+   	      used in the computation of the local Jacobian blocks by
+   	      difference quotients.  These may be smaller than the
+   	      true half-bandwidths of the Jacobian of the local block
+   	      of :math:`g`, when smaller values may provide greater efficiency  
+	    * MLDQ (``long int``, input) -- lower half-bandwidth to be used in the computation
+              of the local Jacobian blocks by difference quotients
+	    * MU (``long int``, input) -- upper half-bandwidth of the band matrix that is
+              retained as an approximation of the local Jacobian block (may be smaller than MUDQ)  
+	    * ML (``long int``, input) -- lower half-bandwidth of the band matrix that is
+              retained as an approximation of the local Jacobian block (may be smaller than MLDQ)  
+	    * DQRELY (``realtype``, input) -- relative increment factor in :math:`y` for
+              difference quotients (0.0 indicates to use the default)
+            * IER  (``int``, output) -- return flag  (0 if success, -1 if a memory
+              failure) 
 
-   	    MUDQ -- upper half-bandwidth to be used in the computation
-	    of the local Jacobian blocks by difference quotients.
-	    These may be smaller than the true half-bandwidths of the
-	    Jacobian of the local block of :math:`g`, when smaller
-	    values may provide greater efficiency [``long int``,
-	    input] 
 
-	    MLDQ -- lower half-bandwidth to be used in the computation
-	    of the local Jacobian blocks by difference quotients
-	    [``long int``, input] 
-	    
-	    MU -- upper half-bandwidth of the band matrix that is
-	    retained as an approximation of the local Jacobian block
-	    (may be smaller than MUDQ) [``long int``, input] 
-
-	    ML -- lower half-bandwidth of the band matrix that is
-	    retained as an approximation of the local Jacobian block
-	    (may be smaller than MLDQ) [``long int``, input] 
-
-	    DQRELY -- relative increment factor in :math:`y` for
-	    difference quotients (0.0 indicates to use the default)
-	    [``realtype``, input] 
-
-            IER  -- return flag  (0 if success, -1 if a memory
-	    failure) [``int``, output]
 
 6. `Problem solution`
 
@@ -1832,22 +1763,22 @@ unchanged from the main program described in the section
    optional outputs associated with the ARKBBDPRE module, the user
    should call the :c:func:`FARKBBDOPT()`, as specified below:
 
+
+
       .. c:function:: SUBROUTINE FARKBBDOPT(LENRWBBD, LENIWBBD, NGEBBD)
       
-         :Description:  Interfaces with the ARKBBDPRE optional output
-            functions.
+         Interfaces with the ARKBBDPRE optional output
+         functions.
          
-         :Arguments: LENRWBP -- length of real preconditioner work
-	    space on this process (from
-	    :c:func:`ARKBBDPrecGetWorkSpace()`) [``long int``, output] 
+         **Arguments:** 
+	    * LENRWBP (``long int``, output) -- length of real preconditioner work
+              space on this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)  
+            * LENIWBP (``long int``, output) -- length of integer preconditioner work space on
+              this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)
+            * NGEBBD (``long int``, output) -- number of :math:`g(t,y)` evaluations (from
+              :c:func:`ARKBBDPrecGetNumGfnEvals()`) so far  
 
-            LENIWBP -- length of integer preconditioner work space on
-            this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)
-            [``long int``, output]
 
-            NGEBBD -- number of :math:`g(t,y)` evaluations (from
-            :c:func:`ARKBBDPrecGetNumGfnEvals()`) so far [``long
-            int``, output] 
 
 8. Problem reinitialization
 
@@ -1864,14 +1795,18 @@ unchanged from the main program described in the section
    ML, then the user program should call :c:func:`FARKBBDREINIT()` as
    specified beloe: 
 
+
+
       .. c:function:: SUBROUTINE FARKBBDREINIT(NLOCAL, MUDQ, MLDQ, DQRELY, IER)
       
-         :Description:  Interfaces with the
-            :c:func:`ARKBBDPrecReInit()` function to reinitialize the
-            ARKBBDPRE module.
+         Interfaces with the
+         :c:func:`ARKBBDPrecReInit()` function to reinitialize the
+         ARKBBDPRE module.
          
-         :Arguments: The arguments of the same names have the same
-	    meanings as in :c:func:`FARKBBDINIT()`.
+         **Arguments:**  The arguments of the same names have the same
+	 meanings as in :c:func:`FARKBBDINIT()`.
+
+
 
    However, if the value of MU or ML is being changed, then a call to
    :c:func:`FARKBBDINIT()` must be made instead. 
@@ -1890,32 +1825,27 @@ unchanged from the main program described in the section
     The following two routines must be supplied for use with the
     ARKBBDPRE module:
 
+
+
       .. c:function:: SUBROUTINE FARKGLOCFN(NLOC, T, YLOC, GLOC, IPAR, RPAR, IER)
       
-         :Description:  User-supplied routine (of type
-	 :c:func:`ARKLocalFn()`) that computes a processor-local
-	 approximation :math:`g(t,y)` to the right-hand side function :math:`f_I(t,y)`.
+         User-supplied routine (of type :c:func:`ARKLocalFn()`) that
+	 computes a processor-local approximation :math:`g(t,y)` to
+	 the right-hand side function :math:`f_I(t,y)`.
          
-         :Arguments: NLOC -- local problem size [``long int``, input]
+         **Arguments:** 
+	    * NLOC (``long int``, input) -- local problem size 
+            * T (``realtype``, input) -- current value of the independent variable
+	    * YLOC (``realtype``, input) -- array containing local dependent state variables
+	    * GLOC (``realtype``, output) -- array containing local dependent state derivatives
+            * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
+              :c:func:`FARKMALLOC()` 
+            * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
+              :c:func:`FARKMALLOC()` 
+            * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+              occurred, <0 if an unrecoverable error occurred) 
 
-            T -- current value of the independent variable
-            [``realtype``, input]
 
-	    YLOC -- array containing local dependent state variables
-	    [``realtype``, input]
-
-	    GLOC -- array containing local dependent state derivatives
-	    [``realtype``, output]
-
-            IPAR -- array containing integer user data that was passed to
-            :c:func:`FARKMALLOC()` [``long int``, input/output]
-      
-            RPAR -- array containing real user data that was passed to
-            :c:func:`FARKMALLOC()` [``realtype``, input/output]
-      
-            IER -- return flag (0 if success, >0 if a recoverable error
-            occurred, <0 if an unrecoverable error occurred) [``int``,
-            output]
 
       .. c:function:: SUBROUTINE FARKCOMMFN(NLOC, T, YLOC, IPAR, RPAR, IER)
       
@@ -1925,26 +1855,20 @@ unchanged from the main program described in the section
 	 :c:func:`FARKGLOCFN()` function above, using the input vector
 	 YLOC.
          
-         :arg NLOC: local problem size [``long int``, input]
+         **Arguments:** 
+            * NLOC (``long int``, input) -- local problem size 
+	    * T (``realtype``, input) -- current value of the independent variable
+	    * YLOC (``realtype``, input) -- array containing local dependent state variables
+            * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
+              :c:func:`FARKMALLOC()` 
+            * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
+              :c:func:`FARKMALLOC()` 
+            * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+              occurred, <0 if an unrecoverable error occurred) 
 
-	 :arg T: current value of the independent variable
-            [``realtype``, input]
-
-	 :arg YLOC: array containing local dependent state variables
-	    [``realtype``, input]
-
-         :arg IPAR: array containing integer user data that was passed to
-            :c:func:`FARKMALLOC()` [``long int``, input/output]
-      
-         :arg RPAR: array containing real user data that was passed to
-            :c:func:`FARKMALLOC()` [``realtype``, input/output]
-      
-         :arg IER: return flag (0 if success, >0 if a recoverable error
-            occurred, <0 if an unrecoverable error occurred) [``int``,
-            output]
-
-         :Notes: The subroutine FARKCOMMFN must be supplied even if it
-	    is not needed and must return IER=0. 
+         **Notes:**
+	 The subroutine FARKCOMMFN must be supplied even if it is not
+	 needed and must return IER=0.  
 
 
 
