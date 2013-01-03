@@ -363,57 +363,52 @@ error output or can provide his own error handler function
 ARKode initialization and deallocation functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
 .. c:function:: void *ARKodeCreate()
 
-   :Description: The function ARKodeCreate creates an internal
-      memory block for a problem to be solved by ARKode.
+   The function ARKodeCreate creates an internal
+   memory block for a problem to be solved by ARKode.
 
-   :Arguments: None
+   **Arguments:**  None
 
-   :Return value: If successful, a pointer to initialized problem memory
-     of type ``void *``, to be passed to :c:func:`ARKodeInit()`.
-     If unsuccessful, a ``NULL`` pointer, and an error
-     message will be printed to ``stderr``.
+   **Return value:**  If successful, a pointer to initialized problem memory
+   of type ``void *``, to be passed to :c:func:`ARKodeInit()`.
+   If unsuccessful, a ``NULL`` pointer, and an error
+   message will be printed to ``stderr``.
 
 
 .. c:function:: int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi, realtype t0, realtype y0)
 
-   :Description: The function ARKodeInit allocates and initializes
-      memory for a problem to to be solved by ARKode.
+   The function ARKodeInit allocates and initializes
+   memory for a problem to to be solved by ARKode.
 
-   :Arguments: `arkode_mem` -- pointer to the ARKode memory block
-      (that was returned by :c:func:`ARKodeCreate()`)
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block
+        (that was returned by :c:func:`ARKodeCreate()`)
+      * `fe` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
+        defining the explicit portion of the right-hand side function in 
+        :math:`\dot{y} = f_E(t,y) + f_I(t,y)` 
+      * `fi` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
+        defining the implicit portion of the right-hand side function in 
+        :math:`\dot{y} = f_E(t,y) + f_I(t,y)`
+      * `t0` -- the initial value of :math:`t`
+      * `y0` -- the initial condition vector :math:`y(t_0)`
 
-      `fe` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
-      defining the explicit portion of the right-hand side function in 
-      :math:`\dot{y} = f_E(t,y) + f_I(t,y)` 
-
-      `fi` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
-      defining the implicit portion of the right-hand side function in 
-      :math:`\dot{y} = f_E(t,y) + f_I(t,y)`
-
-      `t0` -- the initial value of :math:`t`
-
-      `y0` -- the initial condition vector :math:`y(t_0)`
-
-   :Return value: ARK_SUCCESS if successful
-
-      ARK_MEM_NULL  if the ARKode memory was ``NULL``
-
-      ARK_MEM_FAIL  if a memory allocation failed
-
-      ARK_ILL_INPUT if an argument has an illegal value.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARK_MEM_FAIL  if a memory allocation failed
+      * ARK_ILL_INPUT if an argument has an illegal value.
 
 
 .. c:function:: void ARKodeFree(void *arkode_mem)
 
-   :Description: The function ARKodeFree frees the problem memory
-      `arkode_mem` allocated by :c:func:`ARKodeCreate()` and :c:func:`ARKodeInit()`.
+   The function ARKodeFree frees the problem memory
+   `arkode_mem` allocated by :c:func:`ARKodeCreate()` and :c:func:`ARKodeInit()`.
    
-   :Arguments: `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: None
+   **Return value:**  None
 
 
 
@@ -454,64 +449,60 @@ Alternatively, the user may supply a custom function to supply the
 ``ewt`` vector, through a call to :c:func:`ARKodeWFtolerances()`.
 
 
+
 .. c:function:: int ARKodeSStolerances(void *arkode_mem, realtype reltol, realtype abstol)
 
-   :Description: Specifies scalar relative and absolute tolerances.
+   Specifies scalar relative and absolute tolerances.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `reltol` -- scalar relative tolerance
+      * `abstol` -- scalar absolute tolerance
    
-      `reltol` -- scalar relative tolerance
-   
-      `abstol` -- scalar absolute tolerance
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
-   
-      ARK_ILL_INPUT if an argument has an illegal value (e.g. a
-      negative tolerance).
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
+      * ARK_ILL_INPUT if an argument has an illegal value (e.g. a
+        negative tolerance).
+
 
 
 .. c:function:: int ARKodeSVtolerances(void *arkode_mem, realtype reltol, N_Vector abstol)
 
-   :Description: Specifies a scalar relative tolerance and a 
-       vector absolute tolerance (a potentially different absolute 
-       tolerance for each vector component).
+   Specifies a scalar relative tolerance and a 
+   vector absolute tolerance (a potentially different absolute 
+   tolerance for each vector component).
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `reltol` -- scalar relative tolerance
+      * `abstol` -- vector containing the absolute tolerances for each
+        solution component
    
-      `reltol` -- scalar relative tolerance
-   
-      `abstol` -- vector containing the absolute tolerances for each
-      solution component
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL  if the ARKode memory was ````NULL````
-   
-      ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
-   
-      ARK_ILL_INPUT if an argument has an illegal value (e.g. a
-      negative tolerance).
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ````NULL````
+      * ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
+      * ARK_ILL_INPUT if an argument has an illegal value (e.g. a
+        negative tolerance).
+
 
 
 .. c:function:: int ARKodeWFtolerances(void *arkode_mem, ARKEwtFn efun)
 
-   :Description: Specifies a user-supplied function `efun` to compute
-       the error weight vector `ewt`.
+   Specifies a user-supplied function `efun` to compute
+   the error weight vector `ewt`.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `efun` -- the name of the C function (of type :c:func:`ARKEwtFn()`)
+        that implements the error weight vector computation.
    
-      `efun` -- the name of the C function (of type :c:func:`ARKEwtFn()`)
-      that implements the error weight vector computation.
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
 
 
 General advice on the choice of tolerances
@@ -668,191 +659,177 @@ denoted DENSE, BAND, SPGMR, SPBCG, and SPTFQMR,
 are described separately in the section :ref:`LinearSolvers`.
 
 
+
 .. c:function:: int ARKDense(void *arkode_mem, long int N)
 
-   :Description:  A call to the ARKDense function links the main
-      integrator with the ARKDENSE linear solver.
+   A call to the ARKDense function links the main
+   integrator with the ARKDENSE linear solver.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `N` -- the number of components in the ODE system.
    
-      `N` -- the number of components in the ODE system.
+   **Return value:** 
+       * ARKDLS_SUCCESS   if successful
+       * ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+       * ARKDLS_MEM_FAIL  if there was a memory allocation failure
+       * ARKDLS_ILL_INPUT if a required vector operation is missing
    
-   :Return value: ARKDLS_SUCCESS   if successful
-   
-       ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-       ARKDLS_MEM_FAIL  if there was a memory allocation failure
-   
-       ARKDLS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: The ARKDENSE linear solver may not be compatible with the
-      particular implementation of the NVECTOR module. Of the two
-      nvector modules provided with SUNDIALS, only NVECTOR_SERIAL is
-      compatible. 
+   **Notes:**  The ARKDENSE linear solver may not be compatible with the
+   particular implementation of the NVECTOR module. Of the two
+   nvector modules provided with SUNDIALS, only NVECTOR_SERIAL is
+   compatible. 
+
 
 
 .. c:function:: int ARKLapackDense(void *arkode_mem, int N)
 
-   :Description:  A call to the ARKLapackDense function links the main
-      integrator with the ARKLAPACK linear solver dense Jacobians.
+   A call to the ARKLapackDense function links the main
+   integrator with the ARKLAPACK linear solver dense Jacobians.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `N` -- the number of components in the ODE system.
    
-      `N` -- the number of components in the ODE system.
+   **Return value:** 
+      * ARKDLS_SUCCESS   if successful
+      * ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKDLS_MEM_FAIL  if there was a memory allocation failure
+      * ARKDLS_ILL_INPUT if a required vector operation is missing
    
-   :Return value: ARKDLS_SUCCESS   if successful
-   
-      ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKDLS_MEM_FAIL  if there was a memory allocation failure
-   
-      ARKDLS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: Here `N` is restricted to be of type ``int``, because of the
-      corresponding type restriction in the LAPACK solvers.
+   **Notes:** Here `N` is restricted to be of type ``int``, because of the
+   corresponding type restriction in the LAPACK solvers.
+
 
 
 .. c:function:: int ARKBand(void *arkode_mem, long int N, long int mupper, long int mlower)
 
-   :Description:  A call to the ARKBand function links the main
-      integrator with the ARKBAND linear solver.
+   A call to the ARKBand function links the main
+   integrator with the ARKBAND linear solver.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `N` -- the number of components in the ODE system
+      * `mupper` -- the upper bandwidth of the band Jacobian approximation
+      * `mlower` -- is the lower bandwidth of the band Jacobian approximation.
    
-      `N` -- the number of components in the ODE system
+   **Return value:** 
+      * ARKDLS_SUCCESS   if successful
+      * ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKDLS_MEM_FAIL  if there was a memory allocation failure
+      * ARKDLS_ILL_INPUT if a required vector operation is missing
    
-      `mupper` -- the upper bandwidth of the band Jacobian approximation
-   
-      `mlower` -- is the lower bandwidth of the band Jacobian approximation.
-   
-   :Return value: ARKDLS_SUCCESS   if successful
-   
-      ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKDLS_MEM_FAIL  if there was a memory allocation failure
-   
-      ARKDLS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: The ARKBAND linear solver may not be compatible with the
-      particular implementation of the NVECTOR module. Of the two
-      NVECTOR modules provided with SUNDIALS, only
-      NVECTOR_SERIAL is compatible. The half-bandwidths are to be set
-      such that the nonzero locations `(i, j)` in the banded
-      (approximate) Jacobian satisfy `-mlower` :math:`\le` `j-i`
-      :math:`\le` `mupper`. 
+   **Notes:** The ARKBAND linear solver may not be compatible with the
+   particular implementation of the NVECTOR module. Of the two
+   NVECTOR modules provided with SUNDIALS, only
+   NVECTOR_SERIAL is compatible. The half-bandwidths are to be set
+   such that the nonzero locations `(i, j)` in the banded
+   (approximate) Jacobian satisfy `-mlower` :math:`\le` `j-i`
+   :math:`\le` `mupper`. 
+
 
 
 .. c:function:: int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
 
-   :Description:  A call to the ARKLapackBand function links the main
-      integrator with the ARKLAPACK linear solver using banded Jacobians.
+   A call to the ARKLapackBand function links the main
+   integrator with the ARKLAPACK linear solver using banded Jacobians.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `N` -- the number of components in the ODE system
+      * `mupper` -- the upper bandwidth of the band Jacobian approximation
+      * `mlower` -- is the lower bandwidth of the band Jacobian approximation.
    
-      `N` -- the number of components in the ODE system
+   **Return value:** 
+      * ARKDLS_SUCCESS   if successful
+      * ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKDLS_MEM_FAIL  if there was a memory allocation failure
+      * ARKDLS_ILL_INPUT if a required vector operation is missing
    
-      `mupper` -- the upper bandwidth of the band Jacobian approximation
-   
-      `mlower` -- is the lower bandwidth of the band Jacobian approximation.
-   
-   :Return value: ARKDLS_SUCCESS   if successful
-   
-      ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKDLS_MEM_FAIL  if there was a memory allocation failure
-   
-      ARKDLS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: Here, each of `N`, `mupper` and `mlower` are restricted
-      to be of type ``int``, because of the corresponding type restriction
-      in the LAPACK solvers.
+   **Notes:** Here, each of `N`, `mupper` and `mlower` are restricted
+   to be of type ``int``, because of the corresponding type restriction
+   in the LAPACK solvers.
+
 
 
 .. c:function:: int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
 
-   :Description:  A call to the ARKSpgmr function links the main
-      ARKode integrator with the ARKSPGMR linear solver.
+   A call to the ARKSpgmr function links the main
+   ARKode integrator with the ARKSPGMR linear solver.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `pretype` -- the type of user preconditioning to be done.  This
+        must be one of the four enumeration constants PREC_NONE,
+        PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined in
+        ``sundials_iterative.h``. These correspond to no preconditioning,
+        left preconditioning only, right preconditioning only, and both
+        left and right preconditioning, respectively.
+      * `maxl` -- the maximum Krylov dimension. This is an optional input
+        to the ARKSPGMR solver. Pass 0 to use the default value of 5.
    
-      `pretype` -- the type of user preconditioning to be done.  This
-      must be one of the four enumeration constants PREC_NONE,
-      PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined in
-      ``sundials_iterative.h``. These correspond to no preconditioning,
-      left preconditioning only, right preconditioning only, and both
-      left and right preconditioning, respectively.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKSPILS_MEM_FAIL  if there was a memory allocation failure
+      * ARKSPILS_ILL_INPUT if a required vector operation is missing
    
-      `maxl` -- the maximum Krylov dimension. This is an optional input
-      to the ARKSPGMR solver. Pass 0 to use the default value of 5.
-   
-   :Return value: ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKSPILS_MEM_FAIL  if there was a memory allocation failure
-   
-      ARKSPILS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: The ARKSPGMR solver uses a scaled preconditioned GMRES
-      iterative method to solve the linear systems.
+   **Notes:** The ARKSPGMR solver uses a scaled preconditioned GMRES
+   iterative method to solve the linear systems.
+
 
 
 .. c:function:: int ARKSpbcg(void *arkode_mem, int pretype, int maxl)
 
-   :Description:  A call to the ARKSpbcg function links the main
-      ARKode integrator with the ARKSPBCG linear solver.
+   A call to the ARKSpbcg function links the main
+   ARKode integrator with the ARKSPBCG linear solver.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `pretype` -- the type of user preconditioning to be done.  This
+        must be one of the four enumeration constants PREC_NONE,
+        PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined in
+        ``sundials_iterative.h``. These correspond to no preconditioning,
+        left preconditioning only, right preconditioning only, and both
+        left and right preconditioning, respectively.
+      * `maxl` -- the maximum Krylov dimension. This is an optional input
+        to the ARKSPBCG solver. Pass 0 to use the default value of 5.
    
-      `pretype` -- the type of user preconditioning to be done.  This
-      must be one of the four enumeration constants PREC_NONE,
-      PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined in
-      ``sundials_iterative.h``. These correspond to no preconditioning,
-      left preconditioning only, right preconditioning only, and both
-      left and right preconditioning, respectively.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKSPILS_MEM_FAIL  if there was a memory allocation failure
+      * ARKSPILS_ILL_INPUT if a required vector operation is missing
    
-      `maxl` -- the maximum Krylov dimension. This is an optional input
-      to the ARKSPBCG solver. Pass 0 to use the default value of 5.
+   **Notes:** The ARKSPBCG solver uses a scaled preconditioned Bi-CGStab 
+   iterative method to solve the linear systems.
    
-   :Return value: ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKSPILS_MEM_FAIL  if there was a memory allocation failure
-   
-      ARKSPILS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: The ARKSPBCG solver uses a scaled preconditioned Bi-CGStab 
-      iterative method to solve the linear systems.
-   
+
 
 .. c:function:: int ARKSptfqmr(void *arkode_mem, int pretype, int maxl)
 
-   :Description:  A call to the ARKSptfqmr function links the main
-      ARKode integrator with the ARKSPTFQMR linear solver.
+   A call to the ARKSptfqmr function links the main
+   ARKode integrator with the ARKSPTFQMR linear solver.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `pretype` -- the type of user preconditioning to be done.  This
+        must be one of the four enumeration constants PREC_NONE,
+        PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined in
+        ``sundials_iterative.h``. These correspond to no preconditioning,
+        left preconditioning only, right preconditioning only, and both
+        left and right preconditioning, respectively.
+      * `maxl` -- the maximum Krylov dimension. This is an optional input
+        to the ARKSPTFMR solver. Pass 0 to use the default value of 5.
    
-      `pretype` -- the type of user preconditioning to be done.  This
-      must be one of the four enumeration constants PREC_NONE,
-      PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined in
-      ``sundials_iterative.h``. These correspond to no preconditioning,
-      left preconditioning only, right preconditioning only, and both
-      left and right preconditioning, respectively.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKSPILS_MEM_FAIL  if there was a memory allocation failure
+      * ARKSPILS_ILL_INPUT if a required vector operation is missing
    
-      `maxl` -- the maximum Krylov dimension. This is an optional input
-      to the ARKSPTFMR solver. Pass 0 to use the default value of 5.
-   
-   :Return value: ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKSPILS_MEM_FAIL  if there was a memory allocation failure
-   
-      ARKSPILS_ILL_INPUT if a required vector operation is missing
-   
-   :Notes: The ARKSPTFQMR solver uses a scaled preconditioned TFQMR
-      iterative method to solve the linear systems.
+   **Notes:** The ARKSPTFQMR solver uses a scaled preconditioned TFQMR
+   iterative method to solve the linear systems.
 
 
 
@@ -865,30 +842,29 @@ While solving the IVP, ARKode has the capability to find the roots
 of a set of user-defined functions.  To activate the root-finding
 algorithm, call the following function:
 
+
+
 .. c:function:: int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
 
-   :Description:  Initializes a rootfinding problem to be solved
-      during the integration of the ODE system.  It must be called
-      after :c:func:`ARKodeCreate()`, and before :c:func:`ARKode()`. 
+   Initializes a rootfinding problem to be solved
+   during the integration of the ODE system.  It must be called
+   after :c:func:`ARKodeCreate()`, and before :c:func:`ARKode()`. 
    
-   :Arguments: `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nrtfn` -- number of functions :math:`g_i`, an integer :math:`\ge` 0.
+      * `g` -- name of user-supplied function, of type :c:func:`ARKRootFn()`,
+        defining the functions :math:`g_i` whose roots are sought. 
    
-      `nrtfn` -- number of functions :math:`g_i`, an integer :math:`\ge` 0.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARK_MEM_FAIL  if there was a memory allocation failure
+      * ARK_ILL_INPUT if `nrtfn` is greater than zero but `g` = ``NULL``.
    
-      `g` -- name of user-supplied function, of type :c:func:`ARKRootFn()`,
-      defining the functions :math:`g_i` whose roots are sought. 
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARK_MEM_FAIL  if there was a memory allocation failure
-
-      ARK_ILL_INPUT if `nrtfn` is greater than zero but `g` = ``NULL``.
-   
-   :Notes: If a new IVP is to be solved with a call to :c:func:`ARKodeReInit()`,
-      where the new IVP has no rootfinding problem but the prior one did,
-      then call ARKodeRootInit with `nrtfn=0`.
+   **Notes:** If a new IVP is to be solved with a call to :c:func:`ARKodeReInit()`,
+   where the new IVP has no rootfinding problem but the prior one did,
+   then call ARKodeRootInit with `nrtfn=0`.
 
 
 
@@ -905,97 +881,84 @@ solution.  These modes are modified if the user has set a stop time
 has requested rootfinding. 
 
 
+
 .. c:function:: int ARKode(void *arkode_mem, realtype tout, N_Vector yout, realtype *tret, int itask)
 
-   :Description:  Integrates the ODE over an interval in :math:`t`.
+   Integrates the ODE over an interval in :math:`t`.
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `tout` -- the next time at which a computed solution is desired
+      * `yout` -- the computed solution vector
+      * `tret` -- the time reached by the solver (output)
+      * `itask` -- a flag indicating the job of the solver for the next
+        user step. The ARK_NORMAL option causes the solver to take internal
+        steps until it has reached or just passed the user-specified `tout`
+        parameter. The solver then interpolates in order to return an
+        approximate value of :math:`y`(`tout`). This interpolation is
+        typically less accurate than the full time step solutions produced
+        by the solver, since the interpolation uses a cubic Hermite
+        polynomial even when the RK method is of higher order.  If the user 
+        wishes that this returned value have full method accuracy, they 
+        may issue a call to :c:func:`ARKodeSetStopTime()` before the call to ARKode
+        to specify a fixed stop time to end the time step and return to 
+        the user.  Once the integrator returns at a `tstop` time, any 
+        future testing for `tstop` is disabled (and can be reenabled only 
+        though a new call to :c:func:`ARKodeSetStopTime()`).  The ARK_ONE_STEP
+        option tells the solver to take just one internal step and then
+        return the solution at the point reached by that step. 
    
-      `tout` -- the next time at which a computed solution is desired
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_ROOT_RETURN if ARKode succeeded, and found one or more roots.
+        If `nrtfn` is greater than 1, call :c:func:`ARKodeGetRootInfo()` to see
+        which :math:`g_i` were found to have a root at `(*tret)`. 
+      * ARK_TSTOP_RETURN if ARKode succeeded and returned at `tstop`.
+      * ARK_MEM_NULL if the `arkode_mem` argument was ``NULL``.
+      * ARK_NO_MALLOC if `arkode_mem` was not allocated.
+      * ARK_ILL_INPUT if one of the inputs to ARKode is illegal, or
+        some other input to the solver was either illegal or missing.  The
+        latter category includes the following situations:  (a) The
+        tolerances have not been set. (b) A component of the error weight
+        vector became zero during internal time-stepping. (c) The linear
+        solver initialization function (called by the user after calling
+        :c:func:`ARKodeCreate()`) failed to set the linear solver-specific
+        `lsolve` field in `arkode_mem`. (d) A root of one of the root
+        functions was found both at a point :math:`t` and also very near
+        :math:`t`. In any case, the user should see the error message for
+        details.
+      * ARK_TOO_MUCH_WORK if the solver took `mxstep` internal steps
+        but could not reach `tout`.  The default value for `mxstep` is
+        `MXSTEP_DEFAULT = 500`.
+      * ARK_TOO_MUCH_ACC if the solver could not satisfy the accuracy
+        demanded by the user for some internal step.
+      * ARK_ERR_FAILURE if error test failures occurred either too many
+        times (`ark_maxnef`) during one internal time step or occurred
+        with :math:`|h| = h_{min}`. 
+      * ARK_CONV_FAILURE if either convergence test failures occurred
+        too many times (`ark_maxncf`) during one internal time step or
+        occurred with :math:`|h| = h_{min}`. 
+      * ARK_LINIT_FAIL if the linear solver's initialization function failed.
+      * ARK_LSETUP_FAIL if the linear solver's setup routine failed in
+        an unrecoverable manner.
+      * ARK_LSOLVE_FAIL if the linear solver's solve routine failed in
+        an unrecoverable manner.
    
-      `yout` -- the computed solution vector
+   **Notes:** The vector `yout` can occupy the same space as the vector
+   `y0` of initial conditions that was passed to :c:func:`ARKodeInit()`. 
    
-      `tret` -- the time reached by the solver (output)
+   In the ARK_ONE_STEP mode, `tout` is used only on the first
+   call, and only to get the direction and a rough scale of the
+   independent variable. 
+ 
+   All failure return values are negative and so testing the return
+   argument for negative values will trap all ARKode failures.
    
-      `itask` -- a flag indicating the job of the solver for the next
-      user step. The ARK_NORMAL option causes the solver to take internal
-      steps until it has reached or just passed the user-specified `tout`
-      parameter. The solver then interpolates in order to return an
-      approximate value of :math:`y`(`tout`). This interpolation is
-      typically less accurate than the full time step solutions produced
-      by the solver, since the interpolation uses a cubic Hermite
-      polynomial even when the RK method is of higher order.  If the user 
-      wishes that this returned value have full method accuracy, they 
-      may issue a call to :c:func:`ARKodeSetStopTime()` before the call to ARKode
-      to specify a fixed stop time to end the time step and return to 
-      the user.  Once the integrator returns at a `tstop` time, any 
-      future testing for `tstop` is disabled (and can be reenabled only 
-      though a new call to :c:func:`ARKodeSetStopTime()`).  The ARK_ONE_STEP
-      option tells the solver to take just one internal step and then
-      return the solution at the point reached by that step. 
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_ROOT_RETURN if ARKode succeeded, and found one or more roots.
-      If `nrtfn` is greater than 1, call :c:func:`ARKodeGetRootInfo()` to see
-      which :math:`g_i` were found to have a root at `(*tret)`. 
-   
-      ARK_TSTOP_RETURN if ARKode succeeded and returned at `tstop`.
-   
-      ARK_MEM_NULL if the `arkode_mem` argument was ``NULL``.
-   
-      ARK_NO_MALLOC if `arkode_mem` was not allocated.
-   
-      ARK_ILL_INPUT if one of the inputs to ARKode is illegal, or
-      some other input to the solver was either illegal or missing.  The
-      latter category includes the following situations:  (a) The
-      tolerances have not been set. (b) A component of the error weight
-      vector became zero during internal time-stepping. (c) The linear
-      solver initialization function (called by the user after calling
-      :c:func:`ARKodeCreate()`) failed to set the linear solver-specific
-      `lsolve` field in `arkode_mem`. (d) A root of one of the root
-      functions was found both at a point :math:`t` and also very near
-      :math:`t`. In any case, the user should see the error message for
-      details.
-   
-      ARK_TOO_MUCH_WORK if the solver took `mxstep` internal steps
-      but could not reach `tout`.  The default value for `mxstep` is
-      `MXSTEP_DEFAULT = 500`.
-   
-      ARK_TOO_MUCH_ACC if the solver could not satisfy the accuracy
-      demanded by the user for some internal step.
-   
-      ARK_ERR_FAILURE if error test failures occurred either too many
-      times (`ark_maxnef`) during one internal time step or occurred
-      with :math:`|h| = h_{min}`. 
-   
-      ARK_CONV_FAILURE if either convergence test failures occurred
-      too many times (`ark_maxncf`) during one internal time step or
-      occurred with :math:`|h| = h_{min}`. 
-   
-      ARK_LINIT_FAIL if the linear solver's initialization function failed.
-   
-      ARK_LSETUP_FAIL if the linear solver's setup routine failed in
-      an unrecoverable manner.
-   
-      ARK_LSOLVE_FAIL if the linear solver's solve routine failed in
-      an unrecoverable manner.
-   
-   :Notes: The vector `yout` can occupy the same space as the vector
-      `y0` of initial conditions that was passed to :c:func:`ARKodeInit()`. 
-   
-      In the ARK_ONE_STEP mode, `tout` is used only on the first
-      call, and only to get the direction and a rough scale of the
-      independent variable. 
-   
-      All failure return values are negative and so testing the return
-      argument for negative values will trap all ARKode failures.
-   
-      On any error return in which one or more internal steps were taken
-      by ARKode, the returned values of `tret` and `yout`
-      correspond to the farthest point reached in the integration. On all
-      other error returns, `tret` and `yout` are left unchanged from
-      the previous ARKode return. 
+   On any error return in which one or more internal steps were taken
+   by ARKode, the returned values of `tret` and `yout`
+   correspond to the farthest point reached in the integration. On all
+   other error returns, `tret` and `yout` are left unchanged from
+   the previous ARKode return. 
 
 
 
@@ -1070,840 +1033,807 @@ Table: Optional inputs for ARKode
 
 
 
+
 .. c:function:: int ARKodeSetDefaults(void *arkode_mem)
 
-   :Description:  Resets all optional inputs to ARKode default
-      values.  
+   Resets all optional inputs to ARKode default
+   values.  
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
+   **Notes:** Does not change problem-defining function pointers `fe`
+   and `fi` or the `user_data` pointer.  
    
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Does not change problem-defining function pointers `fe`
-      and `fi` or the `user_data` pointer.  
-   
-      Also leaves alone any data structures or  options related to
-      root-finding (those can be reset using :c:func:`ARKodeRootInit()`).
+   Also leaves alone any data structures or  options related to
+   root-finding (those can be reset using :c:func:`ARKodeRootInit()`).
 
 
 
 .. c:function:: int ARKodeSetOptimalParams(void *arkode_mem)
 
-   :Description:  Sets all adaptivity and solver parameters to our 'best
-      guess' values, for a given integration method (ERK, DIRK, ARK) and
-      a given method order.  
+   Sets all adaptivity and solver parameters to our 'best
+   guess' values, for a given integration method (ERK, DIRK, ARK) and
+   a given method order.  
    
-   :Arguments:    `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Should only be called after the method order and integration
-      method have been set.
+   **Notes:** Should only be called after the method order and integration
+   method have been set.
 
 
 
 .. c:function:: int ARKodeSetErrHandlerFn(void *arkode_mem, ARKErrHandlerFn ehfun, void *eh_data)
 
-   :Description:  Specifies the optional user-defined function to be used
-      in handling error messages.
+   Specifies the optional user-defined function to be used
+   in handling error messages.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `ehfun` -- name of user-supplied error handler function. 
+      * `eh_data` -- pointer to user data passed to `ehfun` every time
+        it is called
    
-      `ehfun` -- name of user-supplied error handler function. 
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ` eh_data` -- pointer to user data passed to `ehfun` every time
-      it is called
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Error messages indicating that the ARKode solver memory is
-      ``NULL`` will always be directed to ``stderr``.
+   **Notes:** Error messages indicating that the ARKode solver memory is
+   ``NULL`` will always be directed to ``stderr``.
 
 
 
 .. c:function:: int ARKodeSetErrFile(void *arkode_mem, FILE *errfp)
 
-   :Description:  Specifies a pointer to the file where all ARKode
-      warning and error messages will be written if the default internal
-      error handling function is used. 
+   Specifies a pointer to the file where all ARKode
+   warning and error messages will be written if the default internal
+   error handling function is used. 
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `errfp` -- pointer to the output file. 
    
-      `errfp` -- pointer to the output file. 
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value for `errfp` is ``stderr``.
+   **Notes:** The default value for `errfp` is ``stderr``.
     
-      Passing a ``NULL`` value disables all future error message output
-      (except for the case wherein the ARKode memory pointer is
-      ``NULL``.  This use of the function is strongly discouraged.
+   Passing a ``NULL`` value disables all future error message output
+   (except for the case wherein the ARKode memory pointer is
+   ``NULL``.  This use of the function is strongly discouraged.
    
-      If used, this routine should be called before any other
-      optional input functions, in order to take effect for subsequent
-      error messages.
+   If used, this routine should be called before any other
+   optional input functions, in order to take effect for subsequent
+   error messages.
+
 
 
 .. c:function:: int ARKodeSetUserData(void *arkode_mem, void *user_data)
 
-   :Description:  Specifies the user data block `user_data` and
-      attaches it to the main ARKode memory block.
+   Specifies the user data block `user_data` and
+   attaches it to the main ARKode memory block.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `user_data` -- pointer to the user data
    
-      `user_data` -- pointer to the user data
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** If specified, the pointer to `user_data` is passed to all
+   user-supplied functions for which it is an argument; otherwise
+   ``NULL`` is passed.
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: If specified, the pointer to `user_data` is passed to all
-      user-supplied functions for which it is an argument; otherwise
-      ``NULL`` is passed.
-   
-      If `user_data` is needed in user preconditioner functions, the
-      call to this function must be made *before* the call to
-      specify the linear solver.
+   If `user_data` is needed in user preconditioner functions, the
+   call to this function must be made *before* the call to
+   specify the linear solver.
+
 
 
 .. c:function:: int ARKodeSetDiagnostics(void *arkode_mem, FILE *diagfp)
 
-   :Description:  Specifies the file pointer for a diagnostics file where
-      all ARKode step adaptivity and solver information is written.  
+   Specifies the file pointer for a diagnostics file where
+   all ARKode step adaptivity and solver information is written.  
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `diagfp` -- pointer to the diagnostics output file
    
-      `diagfp` -- pointer to the diagnostics output file
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** This parameter can be ``stdout`` or ``stderr``, although the
+   suggested approach is to specify a pointer to a unique file opened
+   by the user and returned by ``fopen``.  If not called, or if called
+   with a ``NULL`` file pointer, all diagnostics output is disabled.
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
+   When run in parallel, only one process should set a non-NULL value
+   for this pointer, since statistics from all processes would be
+   identical.
    
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This parameter can be ``stdout`` or ``stderr``, although the
-      suggested approach is to specify a pointer to a unique file opened
-      by the user and returned by ``fopen``.  If not called, or if called
-      with a ``NULL`` file pointer, all diagnostics output is disabled.
-   
-      When run in parallel, only one process should set a non-NULL value
-      for this pointer, since statistics from all processes would be
-      identical.
-   
+
 
 .. c:function:: int ARKodeSetOrder(void *arkode_mem, int ord)
 
-   :Description:  Specifies the order of accuracy for the linear
-      multistep method.
+   Specifies the order of accuracy for the linear
+   multistep method.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `ord` -- requested order of accuracy
    
-      `ord` -- requested order of accuracy
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** For explicit methods, the allowed values are 2 :math:`\le`
+   `ord` :math:`\le` 6.  For implicit and IMEX methods,  the allowed values are 3 :math:`\le`
+   `ord` :math:`\le` 5.  An illegal input will result in the default value of 4.
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: For explicit methods, the allowed values are 2 :math:`\le`
-      `ord` :math:`\le` 6.  For implicit and IMEX methods,  the allowed values are 3 :math:`\le`
-      `ord` :math:`\le` 5.  An illegal input will result in the default value of 4.
-   
-      Since `ord` affects the memory requirements for the internal
-      ARKode memory block, it cannot be increased between calls to
-      :c:func:`ARKode()` unless :c:func:`ARKodeReInit()` is called.
+   Since `ord` affects the memory requirements for the internal
+   ARKode memory block, it cannot be increased between calls to
+   :c:func:`ARKode()` unless :c:func:`ARKodeReInit()` is called.
+
 
 
 .. c:function:: int ARKodeSetDenseOrder(void *arkode_mem, int dord)
 
-   :Description:  Specifies the order of accuracy for the polynomial
-      interpolant used for dense output.
+   Specifies the order of accuracy for the polynomial
+   interpolant used for dense output.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `dord` -- requested polynomial order of accuracy
    
-      `dord` -- requested polynomial order of accuracy
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Allowed values are between 0 and ``min(q,3)``, where ``q`` is
-      the order of the overall integration method.
+   **Notes:** Allowed values are between 0 and ``min(q,3)``, where ``q`` is
+   the order of the overall integration method.
+
 
 
 .. c:function:: int ARKodeSetLinear(void *arkode_mem)
 
-   :Description:  Specifies that the implicit portion of the problem is linear.
+   Specifies that the implicit portion of the problem is linear.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Tightens the linear solver tolerances and takes only a single
-      Newton iteration.
+   **Notes:** Tightens the linear solver tolerances and takes only a single
+   Newton iteration.
+
 
 
 .. c:function:: int ARKodeSetNonlinear(void *arkode_mem)
 
-   :Description:  Specifies that the implicit portion of the problem is nonlinear.
+   Specifies that the implicit portion of the problem is nonlinear.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This is the default behavior of ARKode, so the function
-     ARKodeSetNonlinear is primarily useful to undo a previous call
-     to :c:func:`ARKodeSetLinear()`. 
+   **Notes:** This is the default behavior of ARKode, so the function
+   ARKodeSetNonlinear is primarily useful to undo a previous call
+   to :c:func:`ARKodeSetLinear()`. 
+
 
 
 .. c:function:: int ARKodeSetExplicit(void *arkode_mem)
 
-   :Description:  Specifies that the implicit portion of problem is disabled,
-      and to use an explicit RK method.
+   Specifies that the implicit portion of problem is disabled,
+   and to use an explicit RK method.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This is automatically deduced when the function pointer `fi`
-     passed to :c:func:`ARKodeInit()` is ``NULL``, but may be set directly by the
-     user if desired.
+   **Notes:** This is automatically deduced when the function pointer `fi`
+   passed to :c:func:`ARKodeInit()` is ``NULL``, but may be set
+   directly by the user if desired.
+
 
 
 .. c:function:: int ARKodeSetImplicit(void *arkode_mem)
 
-   :Description:  Specifies that the explicit portion of problem is disabled,
-      and to use a diagonally implicit RK method.
+   Specifies that the explicit portion of problem is disabled,
+   and to use a diagonally implicit RK method.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This is automatically deduced when the function pointer `fe`
-     passed to :c:func:`ARKodeInit()` is ``NULL``, but may be set directly by the
-     user if desired.
+   **Notes:** This is automatically deduced when the function pointer `fe`
+   passed to :c:func:`ARKodeInit()` is ``NULL``, but may be set directly by the
+   user if desired.
+
 
 
 .. c:function:: int ARKodeSetImEx(void *arkode_mem)
 
-   :Description:  Specifies that both the implicit and explicit portions
-      of problem are enabled, and to use an additive Runge Kutta method.
+   Specifies that both the implicit and explicit portions
+   of problem are enabled, and to use an additive Runge Kutta method.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Return value: ARK_SUCCESS if successful
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This is automatically deduced when neither of the function
-     pointers `fe` or `fi` passed to :c:func:`ARKodeInit()` are ``NULL``, but
-     may be set directly by the user if desired.
+   **Notes:** This is automatically deduced when neither of the function
+   pointers `fe` or `fi` passed to :c:func:`ARKodeInit()` are ``NULL``, but
+   may be set directly by the user if desired.
+
 
 
 .. c:function:: int ARKodeSetERKTable(void *arkode_mem, int s, int q, int p, realtype *c, realtype *A, realtype *b, realtype *bembed)
 
-   :Description:  Specifies a customized Butcher table for the explicit portion of the system.
+   Specifies a customized Butcher table for the explicit portion of the system.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `s` -- number of stages in the RK method
+      * `q` -- global order of accuracy for the RK method
+      * `p` -- global order of accuracy for the embedded RK method
+      * `c` -- array (of length `s`) of stage times for the RK method.
+      * `A` -- array of coefficients defining the RK stages.  This should
+        be stored as a 1D array of size `s*s`, in row-major order.
+      * `b` -- array of coefficients (of length `s`) defining the time step solution.
+      * `bembed` -- array of coefficients (of length `s`) defining the embedded solution.
    
-      `s` -- number of stages in the RK method
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `q` -- global order of accuracy for the RK method
+   **Notes:** This automatically calls :c:func:`ARKodeSetExplicit()`.
    
-      `p` -- global order of accuracy for the embedded RK method
+   No error checking is performed to ensure that either `p` or `q`
+   correctly describe the coefficients that were input.
    
-      `c` -- array (of length `s`) of stage times for the RK method.
+   Error checking is performed to ensure that `A` is strictly
+   lower-triangular (i.e. that it specifies an ERK method).
    
-      `A` -- array of coefficients defining the RK stages.  This should
-      be stored as a 1D array of size `s*s`, in row-major order.
-   
-      `b` -- array of coefficients (of length `s`) defining the time step solution.
-   
-      `bembed` -- array of coefficients (of length `s`) defining the embedded solution.
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This automatically calls :c:func:`ARKodeSetExplicit()`.
-   
-      No error checking is performed to ensure that either `p` or `q`
-      correctly describe the coefficients that were input.
-   
-      Error checking is performed to ensure that `A` is strictly
-      lower-triangular (i.e. that it specifies an ERK method).
-   
-      The embedding `bembed` is required.
+   The embedding `bembed` is required.
+
 
 
 .. c:function:: int ARKodeSetIRKTable(void *arkode_mem, int s, int q, int p, realtype *c, realtype *A, realtype *b, realtype *bembed)
 
-   :Description:  Specifies a customized Butcher table for the implicit portion of the system.
+   Specifies a customized Butcher table for the implicit portion of the system.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `s` -- number of stages in the RK method
+      * `q` -- global order of accuracy for the RK method
+      * `p` -- global order of accuracy for the embedded RK method
+      * `c` -- array (of length `s`) of stage times for the RK method.
+      * `A` -- array of coefficients defining the RK stages.  This should
+        be stored as a 1D array of size `s*s`, in row-major order.
+      * `b` -- array of coefficients (of length `s`) defining the time step solution.
+      * `bembed` -- array of coefficients (of length `s`) defining the embedded solution.
    
-      `s` -- number of stages in the RK method
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `q` -- global order of accuracy for the RK method
+   **Notes:** This automatically calls :c:func:`ARKodeSetImplicit()`.
    
-      `p` -- global order of accuracy for the embedded RK method
+   No error checking is performed to ensure that either `p` or `q`
+   correctly describe the coefficients that were input.
    
-      `c` -- array (of length `s`) of stage times for the RK method.
+   Error checking is performed to ensure that `A` is 
+   lower-triangular with nonzeros on at least some of the diagonal
+   entries (i.e. that it specifies a DIRK method).
    
-      `A` -- array of coefficients defining the RK stages.  This should
-      be stored as a 1D array of size `s*s`, in row-major order.
-   
-      `b` -- array of coefficients (of length `s`) defining the time step solution.
-   
-      `bembed` -- array of coefficients (of length `s`) defining the embedded solution.
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This automatically calls :c:func:`ARKodeSetImplicit()`.
-   
-      No error checking is performed to ensure that either `p` or `q`
-      correctly describe the coefficients that were input.
-   
-      Error checking is performed to ensure that `A` is 
-      lower-triangular with nonzeros on at least some of the diagonal
-      entries (i.e. that it specifies a DIRK method).
-   
-      The embedding `bembed` is required.
+   The embedding `bembed` is required.
+
 
 
 .. c:function:: int ARKodeSetARKTables(void *arkode_mem, int s, int q, int p, realtype *c, realtype *Ai, realtype *Ae, realtype *b, realtype *bembed)
 
-   :Description:  Specifies a customized Butcher table pair for the
-      additive RK method.
+   Specifies a customized Butcher table pair for the
+   additive RK method.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `s` -- number of stages in the RK method
+      * `q` -- global order of accuracy for the RK method
+      * `p` -- global order of accuracy for the embedded RK method
+      * `c` -- array (of length `s`) of stage times for the RK method.
+      * `Ai` -- array of coefficients defining the implicit RK stages.  This should
+        be stored as a 1D array of size `s*s`, in row-major order.
+      * `Ae` -- array of coefficients defining the explicit RK stages.  This should
+        be stored as a 1D array of size `s*s`, in row-major order.
+      * `b` -- array of coefficients (of length `s`) defining the time step solution.
+      * `bembed` -- array of coefficients (of length `s`) defining the embedded solution.
    
-      `s` -- number of stages in the RK method
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``   
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `q` -- global order of accuracy for the RK method
+   **Notes:** This automatically calls :c:func:`ARKodeSetImEx()`.
    
-      `p` -- global order of accuracy for the embedded RK method
+   No error checking is performed to ensure that either `p` or `q`
+   correctly describe the coefficients that were input.
    
-      `c` -- array (of length `s`) of stage times for the RK method.
+   Error checking is performed on both `Ai` and `Ae` to ensure
+   that they specify DIRK and ERK methods, respectively.  
    
-      `Ai` -- array of coefficients defining the implicit RK stages.  This should
-      be stored as a 1D array of size `s*s`, in row-major order.
-   
-      `Ae` -- array of coefficients defining the explicit RK stages.  This should
-      be stored as a 1D array of size `s*s`, in row-major order.
-   
-      `b` -- array of coefficients (of length `s`) defining the time step solution.
-   
-      `bembed` -- array of coefficients (of length `s`) defining the embedded solution.
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This automatically calls :c:func:`ARKodeSetImEx()`.
-   
-      No error checking is performed to ensure that either `p` or `q`
-      correctly describe the coefficients that were input.
-   
-      Error checking is performed on both `Ai` and `Ae` to ensure
-      that they specify DIRK and ERK methods, respectively.  
-   
-      Both RK methods must share the same `c`, `b` and `bembed` coefficients.
-   
-      The embedding `bembed` is required.
+   Both RK methods must share the same `c`, `b` and `bembed` coefficients.
+  
+   The embedding `bembed` is required.
+
 
 
 .. c:function:: int ARKodeSetERKTableNum(void *arkode_mem, int etable)
 
-   :Description: Specifies to use a built-in Butcher table for the
-      explicit portion of the system.
+   Specifies to use a built-in Butcher table for the
+   explicit portion of the system.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `etable` -- index of the Butcher table.
    
-      `etable` -- index of the Butcher table.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** `etable` should match an existing method in the function
+   ARKodeLoadButcherTable within the file ``arkode_butcher.c``.
+   Error-checking is performed to ensure that the table exists, and is
+   not implicit.  
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: `etable` should match an existing method in the function
-      ARKodeLoadButcherTable within the file ``arkode_butcher.c``.
-      Error-checking is performed to ensure that the table exists, and is
-      not implicit.  
-   
-      This automatically calls :c:func:`ARKodeSetExplicit()`. 
+   This automatically calls :c:func:`ARKodeSetExplicit()`. 
+
 
 
 .. c:function:: int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 
-   :Description: Specifies to use a built-in Butcher table for the
-      implicit portion of the system.
+   Specifies to use a built-in Butcher table for the
+   implicit portion of the system.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `itable` -- index of the Butcher table.
    
-      `itable` -- index of the Butcher table.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** `itable` should match an existing method in the function
+   ARKodeLoadButcherTable within the file ``arkode_butcher.c``.
+   Error-checking is performed to ensure that the table exists, and is
+   not explicit.  
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: `itable` should match an existing method in the function
-      ARKodeLoadButcherTable within the file ``arkode_butcher.c``.
-      Error-checking is performed to ensure that the table exists, and is
-      not explicit.  
-   
-      This automatically calls :c:func:`ARKodeSetImplicit()`. 
+   This automatically calls :c:func:`ARKodeSetImplicit()`. 
+
 
 
 .. c:function:: int ARKodeSetARKTableNum(void *arkode_mem, int itable, int etable)
 
-   :Description: Specifies to use built-in Butcher tables for the ImEx system.
+   Specifies to use built-in Butcher tables for the ImEx system.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `itable` -- index of the DIRK Butcher table.
+      * `etable` -- index of the ERK Butcher table.
    
-      `itable` -- index of the DIRK Butcher table.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `etable` -- index of the ERK Butcher table.
+   **Notes:** Both `itable` and `etable` should match existing methods
+   in the function ARKodeLoadButcherTable within the file
+   ``arkode_butcher.c``. 
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Both `itable` and `etable` should match existing methods
-      in the function ARKodeLoadButcherTable within the file
-      ``arkode_butcher.c``. 
-   
-      Error-checking is performed to ensure that the tables exist.
-      Subsequent error-checking is automatically performed to ensure that
-      the tables' stage times and solution coefficients match.  This
-      automatically calls :c:func:`ARKodeSetImEx()`. 
+   Error-checking is performed to ensure that the tables exist.
+   Subsequent error-checking is automatically performed to ensure that
+   the tables' stage times and solution coefficients match.  This
+   automatically calls :c:func:`ARKodeSetImEx()`. 
+
 
 
 .. c:function:: int ARKodeSetMaxNumSteps(void *arkode_mem, long int mxsteps)
 
-   :Description: Specifies the maximum number of steps to be taken by the
-      solver in its attempt to reach the next output time.
+   Specifies the maximum number of steps to be taken by the
+   solver in its attempt to reach the next output time.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `mxsteps` -- maximum allowed number of internal steps.
    
-      `mxsteps` -- maximum allowed number of internal steps.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** Passing `mxsteps = 0` results in ARKode using the
+   default value (500).
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Passing `mxsteps = 0` results in ARKode using the
-      default value (500).
-   
-      Passing `mxsteps < 0` disables the test `(not recommended)`.
+   Passing `mxsteps < 0` disables the test `(not recommended)`.
+
 
 
 .. c:function:: int ARKodeSetMaxHnilWarns(void *arkode_mem, int mxhnil)
 
-   :Description: Specifies the maximum number of messages issued by the
-      solver warning that :math:`t+h=t` on the next internal step.
+   Specifies the maximum number of messages issued by the
+   solver warning that :math:`t+h=t` on the next internal step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `mxhnil` -- maximum allowed number of warning messages (>0).
    
-      `mxhnil` -- maximum allowed number of warning messages (>0).
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value is 10.
+   **Notes:** The default value is 10.
 
-      A negative value indicates that no warning messages should be issued.
+   A negative value indicates that no warning messages should be issued.
+
 
 
 .. c:function:: int ARKodeSetInitStep(void *arkode_mem, realtype hin)
 
-   :Description: Specifies the initial time step size.
+   Specifies the initial time step size.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hin` -- value of the initial step to be attempted :math:`(\ge 0)`
    
-      `hin` -- value of the initial step to be attempted :math:`(\ge 0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
+   **Notes:** Pass 0.0 to use the default value.  
    
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Pass 0.0 to use the default value.  
-   
-      By default, ARKode estimates the initial step size to be the
-      solution :math:`h` of the equation :math:`\left\| \frac{h^2
-      \ddot{y}}{2}\right\| = 1`, where :math:`\ddot{y}` is an estimated
-      value of the second derivative of the solution at `t0`.
+   By default, ARKode estimates the initial step size to be the
+   solution :math:`h` of the equation :math:`\left\| \frac{h^2
+   \ddot{y}}{2}\right\| = 1`, where :math:`\ddot{y}` is an estimated
+   value of the second derivative of the solution at `t0`.
+
 
 
 .. c:function:: int ARKodeSetMinStep(void *arkode_mem, realtype hmin)
 
-   :Description: Specifies the lower bound on the magnitude of the time step size.
+   Specifies the lower bound on the magnitude of the time step size.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hmin` -- minimum absolute value of the time step size :math:`(\ge 0)`
    
-      `hmin` -- minimum absolute value of the time step size :math:`(\ge 0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value is 0.0.  
+   **Notes:** The default value is 0.0.  
+
 
 
 .. c:function:: int ARKodeSetMaxStep(void *arkode_mem, realtype hmax)
 
-   :Description: Specifies the upper bound on the magnitude of the time step size.
+   Specifies the upper bound on the magnitude of the time step size.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hmax` -- maximum absolute value of the time step size :math:`(\ge 0)`
    
-      `hmax` -- maximum absolute value of the time step size :math:`(\ge 0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Pass `hmax = 0.0` to set the default value of :math:`\infty`.  
+   **Notes:** Pass `hmax = 0.0` to set the default value of :math:`\infty`.  
+
 
 
 .. c:function:: int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
 
-   :Description: Specifies the value of the independent variable
-      :math:`t` past which the solution is not to proceed.
+   Specifies the value of the independent variable
+   :math:`t` past which the solution is not to proceed.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `tstop` -- stopping time for the integrator.
    
-      `tstop` -- stopping time for the integrator.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default is that no stop time is imposed.
+   **Notes:** The default is that no stop time is imposed.
+
 
 
 .. c:function:: int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod, realtype *adapt_params)
 
-   :Description: Specifies the method (and associated parameters) used
-      for time step adaptivity.
+   Specifies the method (and associated parameters) used
+   for time step adaptivity.
    
-   :Arguments: `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `imethod` -- accuracy-based adaptivity method choice 
+        (0 :math:`\le` `imethod` :math:`\le` 5): 
+        0 is PID, 1 is PI, 2 is I, 3 is explicit Gustafsson, 4 is
+        implicit Gustafsson, and 5 is the ImEx Gustafsson.
+      * `adapt_params[0]` -- fraction of the estimated explicitly stable
+        step to use (default is 0.5)
+      * `adapt_params[1]` -- safety factor applied to accuracy-based time
+        step (default is 0.96)
+      * `adapt_params[2]` -- bias applied to error in accuracy-based time
+        step estimation (default is 1.5)
+      * `adapt_params[3]` -- maximum allowed growth factor between
+        consecutive time steps (default is 20.0)
+      * `adapt_params[4]` -- lower bound on window to leave step size fixed (default is 1.0)
+      * `adapt_params[5]` -- upper bound on window to leave step size fixed (default is 1.5)
+      * `adapt_params[6]` -- :math:`k_1` parameter within accuracy-based adaptivity algorithms.
+      * `adapt_params[7]` -- :math:`k_2` parameter within accuracy-based adaptivity algorithms.
+      * `adapt_params[8]` -- :math:`k_3` parameter within accuracy-based adaptivity algorithms.
    
-      `imethod` -- accuracy-based adaptivity method choice 
-      (0 :math:`\le` `imethod` :math:`\le` 5): 
-      0 is PID, 1 is PI, 2 is I, 3 is explicit Gustafsson, 4 is
-      implicit Gustafsson, and 5 is the ImEx Gustafsson.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `adapt_params[0]` -- fraction of the estimated explicitly stable
-      step to use (default is 0.5)
+   **Notes:** Any zero-valued parameter will imply a reset to the default
+   value.  
    
-      `adapt_params[1]` -- safety factor applied to accuracy-based time
-      step (default is 0.96)
-   
-      `adapt_params[2]` -- bias applied to error in accuracy-based time
-      step estimation (default is 1.5)
-   
-      `adapt_params[3]` -- maximum allowed growth factor between
-      consecutive time steps (default is 20.0)
-   
-      `adapt_params[4]` -- lower bound on window to leave step size fixed (default is 1.0)
-   
-      `adapt_params[5]` -- upper bound on window to leave step size fixed (default is 1.5)
-   
-      `adapt_params[6]` -- :math:`k_1` parameter within accuracy-based adaptivity algorithms.
-   
-      `adapt_params[7]` -- :math:`k_2` parameter within accuracy-based adaptivity algorithms.
-   
-      `adapt_params[8]` -- :math:`k_3` parameter within accuracy-based adaptivity algorithms.
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: Any zero-valued parameter will imply a reset to the default
-      value.  
-   
-      Any negative parameter will be left unchanged from the previous value.
+   Any negative parameter will be left unchanged from the previous value.
+
 
       
 .. c:function:: int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun, void *h_data)
 
-   :Description: Sets a user-supplied time-step adaptivity function.
+   Sets a user-supplied time-step adaptivity function.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hfun` -- name of user-supplied adaptivity function.
+      * `h_data` -- pointer to user data passed to `hfun` every time
+        it is called
    
-      `hfun` -- name of user-supplied adaptivity function.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `h_data` -- pointer to user data passed to `hfun` every time
-      it is called
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This function should focus on accuracy-based time step
-      estimation; for stability based time steps the function
-      :c:func:`ARKodeSetStabilityFn()` should be used instead.
+   **Notes:** This function should focus on accuracy-based time step
+   estimation; for stability based time steps the function
+   :c:func:`ARKodeSetStabilityFn()` should be used instead.
+
 
       
 .. c:function:: int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1, realtype etamxf, realtype etacf, int small_nef)
 
-   :Description: Specifies additional parameters used in time step adaptivity.
+   Specifies additional parameters used in time step adaptivity.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `etamx1` -- maximum allowed growth factor after the first time
+        step (default is 10000.0)
+      * `etamxf` -- time step reduction factor on multiple error fails (default is 0.3)
+      * `etacf` -- time step reduction factor on a nonlinear solver
+        convergence failure (default is 0.25)
+      * `small_nef` -- bound to determine `multiple` for `etamxf` (default is 2)
    
-      `etamx1` -- maximum allowed growth factor after the first time
-      step (default is 10000.0)
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `etamxf` -- time step reduction factor on multiple error fails (default is 0.3)
-   
-      `etacf` -- time step reduction factor on a nonlinear solver
-      convergence failure (default is 0.25)
-   
-      `small_nef` -- bound to determine `multiple` for `etamxf` (default is 2)
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This function is designed only for advanced ARKode usage.
+   **Notes:** This function is designed only for advanced ARKode usage.
+
 
 
 .. c:function:: int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown, realtype rdiv)
 
-   :Description: Specifies nonlinear convergence constants.
+   Specifies nonlinear convergence constants.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `crdown` -- nonlinear convergence rate estimation constant (default is 0.3)
+      * `rdiv` -- Tolerance on Newton correction size ratio to declare divergence (default is 2.3)
    
-      `crdown` -- nonlinear convergence rate estimation constant (default is 0.3)
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `rdiv` -- Tolerance on Newton correction size ratio to declare divergence (default is 2.3)
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This function is designed only for advanced ARKode usage.
+   **Notes:** This function is designed only for advanced ARKode usage.
+
 
 
 .. c:function:: int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax, int msbp)
 
-   :Description: Specifies linear setup decision constants.
+   Specifies linear setup decision constants.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `dgmax` -- tolerance on step size ratio change before calling
+        linear solver setup routine (default is 0.2)
+      * `msbp` -- maximum no. of time steps between linear solver setup calls (default is 20)
    
-      `dgmax` -- tolerance on step size ratio change before calling
-      linear solver setup routine (default is 0.2)
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `msbp` -- maximum no. of time steps between linear solver setup calls (default is 20)
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This function is designed only for advanced ARKode usage.
+   **Notes:** This function is designed only for advanced ARKode usage.
+
 
 
 .. c:function:: int ARKodeSetPredictorMethod(void *arkode_mem, int method)
 
-   :Description: Specifies the method to use for predicting implicit solutions.  
-      Non-default choices are {1,2,3}, all others will use default 
-      (trivial) predictor.
+   Specifies the method to use for predicting implicit solutions.  
+   Non-default choices are {1,2,3}, all others will use default 
+   (trivial) predictor.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `method` -- method choice (0 :math:`\le` `method` :math:`\le`
+        3): 0 is the trivial predictor, 1 is the dense output predictor, 2
+        is the dense output predictor that decreases the polynomial degree
+        for more distant RK stages, 3 is the dense output predictor to max
+        order for early RK stages, and a first-order predictor for distant
+        RK stages.
    
-      `method` -- method choice (0 :math:`\le` `method` :math:`\le`
-      3): 0 is the trivial predictor, 1 is the dense output predictor, 2
-      is the dense output predictor that decreases the polynomial degree
-      for more distant RK stages, 3 is the dense output predictor to max
-      order for early RK stages, and a first-order predictor for distant
-      RK stages.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This function is designed only for advanced ARKode usage.
+   **Notes:** This function is designed only for advanced ARKode usage.
+
 
 
 .. c:function:: int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab, void *estab_data)
 
-   :Description: Sets the problem-dependent function to estimate a stable
-       time step size for the explicit portion of the ODE system.
+   Sets the problem-dependent function to estimate a stable
+   time step size for the explicit portion of the ODE system.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `EStab` -- name of user-supplied stability function.
+      * `estab_data` -- pointer to user data passed to `EStab` every time
+        it is called.
    
-      `EStab` -- name of user-supplied stability function.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-      `estab_data` -- pointer to user data passed to `EStab` every time
-      it is called.
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: This function should return an estimate of the maximum stable
-      time step for the explicit portion of the IMEX system.  It is not
-      required, since accuracy-based adaptivity may be sufficient at
-      retaining stability, but this can be quite useful for problems
-      where the IMEX splitting may retain stiff components in
-      :math:`f_E(t,y)`. 
+   **Notes:** This function should return an estimate of the maximum stable
+   time step for the explicit portion of the IMEX system.  It is not
+   required, since accuracy-based adaptivity may be sufficient at
+   retaining stability, but this can be quite useful for problems
+   where the IMEX splitting may retain stiff components in
+   :math:`f_E(t,y)`. 
+
 
 
 .. c:function:: int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef)
 
-   :Description: Specifies the maximum number of error test failures
-      permitted in attempting one step.
+   Specifies the maximum number of error test failures
+   permitted in attempting one step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `maxnef` -- maximum allowed number of error test failures :math:`(>0)`
    
-      `maxnef` -- maximum allowed number of error test failures :math:`(>0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value is 7.
+   **Notes:** The default value is 7.
+
 
 
 .. c:function:: int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
 
-   :Description: Specifies the maximum number of nonlinear solver
-      iterations permitted per RK stage within each time step.
+   Specifies the maximum number of nonlinear solver
+   iterations permitted per RK stage within each time step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `maxcor` -- maximum allowed solver iterations per stage :math:`(>0)`
    
-      `maxcor` -- maximum allowed solver iterations per stage :math:`(>0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value is 3.
+   **Notes:** The default value is 3.
+
 
 
 .. c:function:: int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf)
 
-   :Description: Specifies the maximum number of nonlinear solver
-      convergence failures permitted during one step.
+   Specifies the maximum number of nonlinear solver
+   convergence failures permitted during one step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `maxncf` -- maximum allowed nonlinear solver convergence failures
+        per step :math:`(>0)`
    
-      `maxncf` -- maximum allowed nonlinear solver convergence failures
-      per step :math:`(>0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value is 10.  Upon each convergence failure,
-      ARKode will first call the Jacobian setup routine and try again;
-      if a convergence failure still occurs, the time step size is reduced
-      by the factor `etacf` (set within
-      :c:func:`ARKodeSetAdaptivityConstants()`). 
+   **Notes:** The default value is 10.  Upon each convergence failure,
+   ARKode will first call the Jacobian setup routine and try again;
+   if a convergence failure still occurs, the time step size is reduced
+   by the factor `etacf` (set within
+   :c:func:`ARKodeSetAdaptivityConstants()`). 
+
 
 
 .. c:function:: int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef)
 
-   :Description: Specifies the safety factor used within the nonlinear
-      solver convergence test.
+   Specifies the safety factor used within the nonlinear
+   solver convergence test.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nlscoef` -- coefficient in nonlinear solver convergence test :math:`(>0.0)`
    
-      `nlscoef` -- coefficient in nonlinear solver convergence test :math:`(>0.0)`
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default value is 0.2.
+   **Notes:** The default value is 0.2.
 
 
 
@@ -1934,28 +1864,30 @@ data and access it during the execution of the user-supplied Jacobian
 function, without using global data in the program. The pointer user
 data may be specified through :c:func:`ARKodeSetUserData()`.
 
+
+
 .. c:function:: int ARKDlsSetDenseJacFn(void *arkode_mem, ARKDlsDenseJacFn djac)
 
-   :Description:  Specifies the dense Jacobian approximation routine to
-      be used for a direct dense linear solver. 
+   Specifies the dense Jacobian approximation routine to
+   be used for a direct dense linear solver. 
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `djac` -- name of user-supplied dense Jacobian approximation function.
    
-      `djac` -- name of user-supplied dense Jacobian approximation function.
+   **Return value:** 
+      * ARKDLS_SUCCESS  if successful
+      * ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
    
-   :Return value: ARKDLS_SUCCESS  if successful
+   **Notes:** By default, ARKDENSE uses an internal difference quotient
+   function.  
    
-      ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: By default, ARKDENSE uses an internal difference quotient
-      function.  
-   
-      If ``NULL`` is passed in for `djac`, this default is used.
-   
-      The function type :c:func:`ARKDlsDenseJacFn()` is described in the section
-      :ref:`CInterface.UserSupplied`.
+   If ``NULL`` is passed in for `djac`, this default is used.
+  
+   The function type :c:func:`ARKDlsDenseJacFn()` is described in the section
+   :ref:`CInterface.UserSupplied`.
+
 
 
 Similarly, the ARKBAND solver needs a function to compute a banded
@@ -1973,28 +1905,28 @@ data in the program. The pointer user data may be specified through
 :c:func:`ARKodeSetUserData()`. 
 
 
+
 .. c:function:: int ARKDlsSetBandJacFn(void *arkode_mem, ARKDlsBandJacFn bjac)
 
-   :Description: Specifies the band Jacobian approximation routine to be
-      used for a direct band linear solver. 
+   Specifies the band Jacobian approximation routine to be
+   used for a direct band linear solver. 
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `bjac` -- name of user-supplied banded Jacobian approximation function.
    
-      `bjac` -- name of user-supplied banded Jacobian approximation function.
+   **Return value:** 
+      * ARKDLS_SUCCESS  if successful
+      * ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
    
-   :Return value: ARKDLS_SUCCESS  if successful
+   **Notes:** By default, ARKBAND uses an internal difference quotient
+   function.
    
-      ARKDLS_MEM_NULL  if the ARKode memory was ``NULL``
+   If ``NULL`` is passed in for `bjac`, this default is used.
    
-      ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: By default, ARKBAND uses an internal difference quotient
-      function.
-   
-      If ``NULL`` is passed in for `bjac`, this default is used.
-   
-      The function type :c:func:`ARKDlsBandJacFn()` is described in the section
-      :ref:`CInterface.UserSupplied`.
+   The function type :c:func:`ARKDlsBandJacFn()` is described in the section
+   :ref:`CInterface.UserSupplied`.
 
 
 
@@ -2054,155 +1986,145 @@ Table: Optional inputs for ARKSPILS
 `(b)` Only for ARKSPBCG and ARMSPTFQMR
 
 
+
 .. c:function:: int ARKSpilsSetPreconditioner(void *arkode_mem, ARKSpilsPrecSetupFn psetup, ARKSpilsPrecSolveFn psolve)
 
-   :Description: Specifies the preconditioner setup and solve functions.  
+   Specifies the preconditioner setup and solve functions.  
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `psetup` -- user defined preconditioner setup function.  Pass
+        ``NULL`` if no setup is to be done
+      * `psolve` -- user-defined preconditioner solve function.
    
-      `psetup` -- user defined preconditioner setup function.  Pass
-      ``NULL`` if no setup is to be done
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful.
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
+      * ARKSPILS_ILL_INPUT if an input has an illegal value.
    
-      `psolve` -- user-defined preconditioner solve function.
-   
-   :Return value: ARKSPILS_SUCCESS if successful.
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value.
-   
-   :Notes: The default is ``NULL`` for both arguments (i.e. no
-      preconditioning).
+   **Notes:** The default is ``NULL`` for both arguments (i.e. no
+   preconditioning).
     
-      Both of the function types :c:func`ARKSpilsPrecSetupFn()` and
-      c:func:`ARKSpilsPrecSolveFn()` are described in the section
-      :ref:`CInterface.UserSupplied`. 
+   Both of the function types :c:func`ARKSpilsPrecSetupFn()` and
+   c:func:`ARKSpilsPrecSolveFn()` are described in the section
+   :ref:`CInterface.UserSupplied`. 
+
 
 
 .. c:function:: int ARKSpilsSetJacTimesVecFn(void *arkode_mem, ARKSpilsJacTimesVecFn jtimes)
 
-   :Description: Specifies the Jacobian-times-vector function. 
+   Specifies the Jacobian-times-vector function. 
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `jtimes` -- user-defined Jacobian-vector product function.
    
-      `jtimes` -- user-defined Jacobian-vector product function.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful.
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
+      * ARKSPILS_ILL_INPUT if an input has an illegal value.
+
+   **Notes:** The default is to use an internal finite difference
+   approximation routine.  If ``NULL`` is passed to `jtimes`, this
+   default function is used.
    
-   :Return value: ARKSPILS_SUCCESS if successful.
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value.
-   
-   :Notes: The default is to use an internal finite difference
-      approximation routine.  If ``NULL`` is passed to `jtimes`, this
-      default function is used.
-   
-      The function type :c:func:`ARKSpilsJacTimesVecFn()` is described in the
-      section :ref:`CInterface.UserSupplied`.
+   The function type :c:func:`ARKSpilsJacTimesVecFn()` is described in the
+   section :ref:`CInterface.UserSupplied`.
+
 
 
 .. c:function:: int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
 
-   :Description: Resets the type of preconditioner, `pretype`, from the value previously set.
+   Resets the type of preconditioner, `pretype`, from the value previously set.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `pretype` -- the type of preconditioning to use, must be one of
+        PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH. 
    
-      `pretype` -- the type of preconditioning to use, must be one of
-      PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH. 
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful.
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
+      * ARKSPILS_ILL_INPUT if an input has an illegal value.
    
-   :Return value: ARKSPILS_SUCCESS if successful.
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value.
-   
-   :Notes: The preconditioning type is initially set in the call to the
-      linear solver's specification function (see the section
-      :ref:`CInterface.LinearSolvers`).  This function call is needed
-      only if `pretype` is being changed from its original value.
+   **Notes:** The preconditioning type is initially set in the call to the
+   linear solver's specification function (see the section
+   :ref:`CInterface.LinearSolvers`).  This function call is needed
+   only if `pretype` is being changed from its original value.
 
 
 
 .. c:function:: int ARKSpilsSetEpsLin(void *arkode_mem, realtype eplifac)
 
-   :Description: Specifies the factor by which the tolerance on the
-      nonlinear iteration is multiplied to get a tolerance on the linear iteration.
+   Specifies the factor by which the tolerance on the
+   nonlinear iteration is multiplied to get a tolerance on the linear iteration.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `eplifac` -- linear convergence safety factor :math:`(\ge 0.0)`.
    
-      `eplifac` -- linear convergence safety factor :math:`(\ge 0.0)`.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful.
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
+      * ARKSPILS_ILL_INPUT if an input has an illegal value.
    
-   :Return value: ARKSPILS_SUCCESS if successful.
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value.
-   
-   :Notes: Passing a value `eplifac` of 0.0 indicates to use the default value of 0.05.
+   **Notes:** Passing a value `eplifac` of 0.0 indicates to use the default value of 0.05.
 
 
 
 .. c:function:: int ARKSpilsSetGSType(void *arkode_mem, int gstype)
 
-   :Description: Specifies the type of Gram-Schmidt orthogonalization to
-      be used with the ARKSPGMR linear solver. This must be one of
-      the two enumeration constants MODIFIED_GS or CLASSICAL_GS
-      defined in ``iterative.h``. These correspond to using modified
-      Gram-Schmidt and classical Gram-Schmidt, respectively.
+   Specifies the type of Gram-Schmidt orthogonalization to
+   be used with the ARKSPGMR linear solver. This must be one of
+   the two enumeration constants MODIFIED_GS or CLASSICAL_GS
+   defined in ``iterative.h``. These correspond to using modified
+   Gram-Schmidt and classical Gram-Schmidt, respectively.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `gstype` -- type of Gram-Schmidt orthogonalization.
    
-      `gstype` -- type of Gram-Schmidt orthogonalization.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful.
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
+      * ARKSPILS_ILL_INPUT if an input has an illegal value.
    
-   :Return value: ARKSPILS_SUCCESS if successful.
+   **Notes:** The default value is MODIFIED_GS.
    
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value.
-   
-   :Notes: The default value is MODIFIED_GS.
-   
-      This option is available only for the ARKSPGMR linear solver.
+   This option is available only for the ARKSPGMR linear solver.
 
 
 
 .. c:function:: int ARKSpilsSetMaxl(void *arkode_mem, int maxl)
 
-   :Description: Resets the maximum Krylov subspace size, `maxl`, from
-      the value previously set, when using the Bi-CGStab or TFQMR linear
-      solver methods.
+   Resets the maximum Krylov subspace size, `maxl`, from
+   the value previously set, when using the Bi-CGStab or TFQMR linear
+   solver methods.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `maxl` -- maximum dimension of the Krylov subspace.
    
-      `maxl` -- maximum dimension of the Krylov subspace.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful.
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
+      * ARKSPILS_ILL_INPUT if an input has an illegal value.
    
-   :Return value: ARKSPILS_SUCCESS if successful.
+   **Notes:** The maximum subspace dimension is initially specified in the
+   call to the linear solver specification function (see the section
+   :ref:`CInterface.LinearSolvers`).  This function call is needed
+   only if `maxl` is being changed from its previous value.
+  
+   An input value `maxl` :math:`\le 0`, gives the default value, 5.
    
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``.
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``.
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value.
-   
-   :Notes: The maximum subspace dimension is initially specified in the
-      call to the linear solver specification function (see the section
-      :ref:`CInterface.LinearSolvers`).  This function call is needed
-      only if `maxl` is being changed from its previous value.
-   
-      An input value `maxl` :math:`\le 0`, gives the default value, 5.
-   
-      This option is available only for the ARKSPBCG and
-      ARKSPTFQMR linear solvers.
+   This option is available only for the ARKSPBCG and
+   ARKSPTFQMR linear solvers.
 
 
 
@@ -2224,48 +2146,48 @@ control the rootfinding algorithm.
 
 .. c:function:: int ARKodeSetRootDirection(void *arkode_mem, int *rootdir)
 
-   :Description: Specifies the direction of zero-crossings to be located
-      and returned.
+   Specifies the direction of zero-crossings to be located
+   and returned.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `rootdir` -- state array of length `nrtfn`, the number of root
+        functions :math:`g_i`, as specified in the call to the function
+        :c:func:`ARKodeRootInit()`. A value of 0 for ``rootdir[i]``
+        indicates that crossing in either direction for :math:`g_i` should
+        be reported.  A value of +1 or -1 indicates that the solver should
+        report only zero-crossings where :math:`g_i` is increasing or
+        decreasing, respectively.
    
-      `rootdir` -- state array of length `nrtfn`, the number of root
-      functions :math:`g_i`, as specified in the call to the function
-      :c:func:`ARKodeRootInit()`. A value of 0 for ``rootdir[i]``
-      indicates that crossing in either direction for :math:`g_i` should
-      be reported.  A value of +1 or -1 indicates that the solver should
-      report only zero-crossings where :math:`g_i` is increasing or
-      decreasing, respectively.
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
    
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-      ARK_ILL_INPUT if an argument has an illegal value
-   
-   :Notes: The default behavior is to monitor for both zero-crossing
+   **Notes:** The default behavior is to monitor for both zero-crossing
       directions.
 
 
 
 .. c:function:: int ARKodeSetNoInactiveRootWarn(void *arkode_mem)
 
-   :Description: Disables issuing a warning if some root function appears
-      to be identically zero at the beginning of the integration.
+   Disables issuing a warning if some root function appears
+   to be identically zero at the beginning of the integration.
+  
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
    
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-   :Notes: ARKode will not report the initial conditions as a
-      possible zero-crossing (assuming that one or more components
-      :math:`g_i` are zero at the initial time).  However, if it appears
-      that some :math:`g_i` is identically zero at the initial time
-      (i.e., :math:`g_i` is zero at the initial time and after the first
-      step), ARKode will issue a warning which can be disabled with
-      this optional input function. 
+   **Notes:** ARKode will not report the initial conditions as a
+   possible zero-crossing (assuming that one or more components
+   :math:`g_i` are zero at the initial time).  However, if it appears
+   that some :math:`g_i` is identically zero at the initial time
+   (i.e., :math:`g_i` is zero at the initial time and after the first
+   step), ARKode will issue a warning which can be disabled with
+   this optional input function. 
 
 
 
@@ -2284,43 +2206,39 @@ derivative) interpolated to any value of :math:`t` in the last
 internal step taken by :c:func:`ARKode()`. 
 
 
+
 .. c:function:: int ARKodeGetDky(void *arkode_mem, realtype t, int k, N_Vector dky)
 
-   :Description: Computes the `k`-th derivative of the function
-      :math:`y` at the time `t`, i.e. :math:`\frac{d^(k)y}{dt^(k)}`,
-      where :math:`t_n-h_n \le t \le t_n`, :math:`t_n` denotes the
-      current internal time reached, and :math:`h_n` is the last internal
-      step size successfully used by the solver.  The user may request
-      `k` in the range 0,1,2,3.  This routine uses an interpolating
-      polynomial of degree `max(dord, k)`, where `dord` is the
-      argument provided to :c:func:`ARKodeSetDenseOrder()`, i.e. it will
-      form a polynomial of the degree requested by the user through
-      `dord`, unless higher-order derivatives are requested.
+   Computes the `k`-th derivative of the function
+   :math:`y` at the time `t`, i.e. :math:`\frac{d^(k)y}{dt^(k)}`,
+   where :math:`t_n-h_n \le t \le t_n`, :math:`t_n` denotes the
+   current internal time reached, and :math:`h_n` is the last internal
+   step size successfully used by the solver.  The user may request
+   `k` in the range 0,1,2,3.  This routine uses an interpolating
+   polynomial of degree `max(dord, k)`, where `dord` is the
+   argument provided to :c:func:`ARKodeSetDenseOrder()`, i.e. it will
+   form a polynomial of the degree requested by the user through
+   `dord`, unless higher-order derivatives are requested.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `t` -- the value of the independent variable at which the
+        derivative is to be evaluated
+      * `k` -- the derivative order requested
+      * `dky` -- vector containing the derivative.  This vector must be
+        allocated by the user.
    
-      `t` -- the value of the independent variable at which the
-      derivative is to be evaluated
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_BAD_K if `k` is not in the range 0,1,2,3.
+      * ARK_BAD_T if `t` is not in the interval :math:`[t_n-h_n, t_n]`
+      * ARK_BAD_DKY if the `dky` argument was ``NULL``
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
    
-      `k` -- the derivative order requested
-   
-      `dky` -- vector containing the derivative.  This vector must be
-      allocated by the user.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_BAD_K if `k` is not in the range 0,1,2,3.
-   
-      ARK_BAD_T if `t` is not in the interval :math:`[t_n-h_n, t_n]`
-   
-      ARK_BAD_DKY if the `dky` argument was ``NULL``
-
-      ARK_MEM_NULL if the ARKode memory is ``NULL``
-   
-   :Notes: It is only legal to call this function after a successful
-      return from :c:func:`ARKode()`.  See :c:func:`ARKodeGetCurrentTime()`
-      and :c:func:`ARKodeGetLastStep()` in the next section for access to
-      :math:`t_n` and :math:`h_n`, respectively.
+   **Notes:** It is only legal to call this function after a successful
+   return from :c:func:`ARKode()`.  See :c:func:`ARKodeGetCurrentTime()`
+   and :c:func:`ARKodeGetLastStep()` in the next section for access to
+   :math:`t_n` and :math:`h_n`, respectively.
 
 
 
@@ -2404,377 +2322,359 @@ Table: Optional outputs for ARKode
 
 .. c:function:: int ARKodeGetWorkSpace(void *arkode_mem, long int *lenrw, long int *leniw)
 
-   :Description: Returns the ARKode real and integer workspace sizes.
+   Returns the ARKode real and integer workspace sizes.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lenrw` -- the number of `realtype` values in the ARKode workspace.
+      * `leniw` -- the number of integer values in the ARKode workspace.
    
-      `lenrw` -- the number of `realtype` values in the ARKode workspace.
-   
-      `leniw` -- the number of integer values in the ARKode workspace.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumSteps(void *arkode_mem, long int *nsteps)
 
-   :Description: Returns the cumulative number of internal steps taken by
-      the solver (so far).
+   Returns the cumulative number of internal steps taken by
+   the solver (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nsteps` -- number of steps taken in the solver.
    
-      `nsteps` -- number of steps taken in the solver.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumExpSteps(void *arkode_mem, long int *expsteps)
 
-   :Description: Returns the cumulative number of stability-limited steps
-      taken by the solver (so far).
+   Returns the cumulative number of stability-limited steps
+   taken by the solver (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `expsteps` -- number of stability-limited steps taken in the solver.
    
-      `expsteps` -- number of stability-limited steps taken in the solver.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumAccSteps(void *arkode_mem, long int *accsteps)
 
-   :Description: Returns the cumulative number of accuracy-limited steps
-      taken by the solver (so far).
+   Returns the cumulative number of accuracy-limited steps
+   taken by the solver (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `accsteps` -- number of accuracy-limited steps taken in the solver.
    
-      `accsteps` -- number of accuracy-limited steps taken in the solver.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumConvSteps(void *arkode_mem, long int *convsteps)
 
-   :Description: Returns the cumulative number of convergence-limited
-      steps taken by the solver (so far).
+   Returns the cumulative number of convergence-limited
+   steps taken by the solver (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `convsteps` -- number of convergence-limited steps taken in the solver.
    
-      `convsteps` -- number of convergence-limited steps taken in the solver.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumRhsEvals(void *arkode_mem, long int *nfe_evals, long int *nfi_evals)
 
-   :Description: Returns the number of calls to the user's right-hand
-      side functions, :math:`f_E` and :math:`f_I` (so far).
+   Returns the number of calls to the user's right-hand
+   side functions, :math:`f_E` and :math:`f_I` (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nfe_evals` -- number of calls to the user's :math:`f_E(t,y)` function.
+      * `nfi_evals` -- number of calls to the user's :math:`f_I(t,y)` function.
    
-      `nfe_evals` -- number of calls to the user's :math:`f_E(t,y)` function.
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
    
-      `nfi_evals` -- number of calls to the user's :math:`f_I(t,y)` function.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
-   
-   :Notes: The `nfi_evals` value does not account for calls made to
-      :math:`f_I` by a linear solver or preconditioner module.
+   **Notes:** The `nfi_evals` value does not account for calls made to
+   :math:`f_I` by a linear solver or preconditioner module.
 
 
 
 .. c:function:: int ARKodeGetNumLinSolvSetups(void *arkode_mem, long int *nlinsetups)
 
-   :Description: Returns the number of calls made to the linear solver's
-      setup routine (so far).
+   Returns the number of calls made to the linear solver's
+   setup routine (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nlinsetups` -- number of linear solver setup calls made
    
-      `nlinsetups` -- number of linear solver setup calls made
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumErrTestFails(void *arkode_mem, long int *netfails)
 
-   :Description: Returns the number of local error test failures that
-      have occured (so far).
+   Returns the number of local error test failures that
+   have occured (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `netfails` -- number of error test failures
    
-      `netfails` -- number of error test failures
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
-   
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
+
 
 
 .. c:function:: int ARKodeGetActualInitStep(void *arkode_mem, realtype *hinused)
 
-   :Description: Returns the value of the integration step size used on the first step.
+   Returns the value of the integration step size used on the first step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hinused` -- actual value of initial step size
    
-      `hinused` -- actual value of initial step size
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
    
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
-   
-   :Notes: Even if the value of the initial integration step was
-      specified by the user through a call to
-      :c:func:`ARKodeSetInitStep()`, this value may have been changed by
-      ARKode to ensure that the step size fell within the prescribed
-      bounds :math:`(h_{min} \le h_0 \le h_{max})`, or to satisfy the
-      local error test condition, or to ensure convergence of the
-      nonlinear solver.
+   **Notes:** Even if the value of the initial integration step was
+   specified by the user through a call to
+   :c:func:`ARKodeSetInitStep()`, this value may have been changed by
+   ARKode to ensure that the step size fell within the prescribed
+   bounds :math:`(h_{min} \le h_0 \le h_{max})`, or to satisfy the
+   local error test condition, or to ensure convergence of the
+   nonlinear solver.
 
 
 
 .. c:function:: int ARKodeGetLastStep(void *arkode_mem, realtype *hlast)
 
-   :Description: Returns the integration step size taken on the last successful internal step.
+   Returns the integration step size taken on the last successful internal step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hlast` -- step size taken on the last internal step
    
-      `hlast` -- step size taken on the last internal step
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetCurrentStep(void *arkode_mem, realtype *hcur)
 
-   :Description: Returns the integration step size to be attempted on the next internal step.
+   Returns the integration step size to be attempted on the next internal step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `hcur` -- step size to be attempted on the next internal step
    
-      `hcur` -- step size to be attempted on the next internal step
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetCurrentTime(void *arkode_mem, realtype *tcur)
 
-   :Description: Returns the current internal time reached by the solver.
+   Returns the current internal time reached by the solver.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `tcur` -- current internal time reached
    
-      `tcur` -- current internal time reached
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetCurrentButcherTables(void *arkode_mem, int *s, int *q, int *p, realtype *Ai, realtype *Ae, realtype *c, realtype *b, realtype *bembed)
 
-   :Description: Returns the explicit and implicit Butcher tables
-      currently in use by the solver.
+   Returns the explicit and implicit Butcher tables
+   currently in use by the solver.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `s` -- number of stages in the method.
+      * `q` -- global order of accuracy of the method.
+      * `p` -- global order of accuracy of the embedding.
+      * `Ai` -- coefficients of DIRK method.
+      * `Ae` -- coefficients of ERK method.
+      * `c` -- array of internal stage times.
+      * `b` -- array of solution coefficients.
+      * `bembed` -- array of embedding coefficients.
    
-      `s` -- number of stages in the method.
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
    
-      `q` -- global order of accuracy of the method.
-   
-      `p` -- global order of accuracy of the embedding.
-   
-      `Ai` -- coefficients of DIRK method.
-   
-      `Ae` -- coefficients of ERK method.
-   
-      `c` -- array of internal stage times.
-   
-      `b` -- array of solution coefficients.
-   
-      `bembed` -- array of embedding coefficients.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
-   
-   :Notes:  The user must allocate space for `Ae` and `Ai` of size
-      ``ARK_S_MAX*ARK_S_MAX``, and for `c`, `b` and `bembed` of size
-      ``ARK_S_MAX``. 
+   **Notes:**  The user must allocate space for `Ae` and `Ai` of size
+   ``ARK_S_MAX*ARK_S_MAX``, and for `c`, `b` and `bembed` of size
+   ``ARK_S_MAX``. 
+
 
 
 .. c:function:: int ARKodeGetTolScaleFactor(void *arkode_mem, realtype *tolsfac)
 
-   :Description: Returns a suggested factor by which the user's
-      tolerances should be scaled when too much accuracy has been
-      requested for some internal step.
+   Returns a suggested factor by which the user's
+   tolerances should be scaled when too much accuracy has been
+   requested for some internal step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `tolsfac` -- suggested scaling factor for user-supplied tolerances.
    
-      `tolsfac` -- suggested scaling factor for user-supplied tolerances.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetErrWeights(void *arkode_mem, N_Vector eweight)
 
-   :Description: Returns the current error weight vector.  
+   Returns the current error weight vector.  
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `eweight` -- solution error weights at the current time.
    
-      `eweight` -- solution error weights at the current time.
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
    
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
-   
-   :Notes: The user must allocate space for `eweight`.
+   **Notes:** The user must allocate space for `eweight`.
 
 
 
 .. c:function:: int ARKodeGetEstLocalErrors(void *arkode_mem, N_Vector ele)
 
-   :Description: Returns the vector of estimated local truncation errors
-      for the current step.
+   Returns the vector of estimated local truncation errors
+   for the current step.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `ele` -- vector of estimated local truncation errors.
    
-      `ele` -- vector of estimated local truncation errors.
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
    
-   :Return value:  ARK_SUCCESS if successful
+   **Notes:**  The user must allocate space for `ele`.
    
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   The values returned in `ele` are valid only if :c:func:`ARKode()`
+   returned a non-negative value.
    
-   :Notes:  The user must allocate space for `ele`.
-   
-     The values returned in `ele` are valid only if :c:func:`ARKode()`
-     returned a non-negative value.
-   
-     The `ele` vector, together with the `eweight` vector from
-     :c:func:`ARKodeGetErrWeights()`, can be used to determine how the
-     various components of the system contributed to the estimated local
-     error test.  Specifically, that error test uses the RMS norm of a
-     vector whose components are the products of the components of these
-     two vectors.  Thus, for example, if there were recent error test
-     failures, the components causing the failures are those with largest
-     values for the products, denoted loosely as ``eweight[i]*ele[i]``.
+   The `ele` vector, together with the `eweight` vector from
+   :c:func:`ARKodeGetErrWeights()`, can be used to determine how the
+   various components of the system contributed to the estimated local
+   error test.  Specifically, that error test uses the RMS norm of a
+   vector whose components are the products of the components of these
+   two vectors.  Thus, for example, if there were recent error test
+   failures, the components causing the failures are those with largest
+   values for the products, denoted loosely as ``eweight[i]*ele[i]``.
 
 
 
 .. c:function:: int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, long int *expsteps, long int *accsteps, long int *convsteps, long int *nfe_evals, long int *nfi_evals, long int *nlinsetups, long int *netfails, realtype *hinused, realtype *hlast, realtype *hcur, realtype *tcur)
 
-   :Description: Returns many of the most useful integrator statistics in a single call.
+   Returns many of the most useful integrator statistics in a single call.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nsteps` -- number of steps taken in the solver.
+      * `expsteps` -- number of stability-limited steps taken in the solver.
+      * `accsteps` -- number of accuracy-limited steps taken in the solver.
+      * `convsteps` -- number of convergence-limited steps taken in the solver.
+      * `nfe_evals` -- number of calls to the user's :math:`f_E(t,y)` function.
+      * `nfi_evals` -- number of calls to the user's :math:`f_I(t,y)` function.
+      * `nlinsetups` -- number of linear solver setup calls made.
+      * `netfails` -- number of error test failures.
+      * `hinused` -- actual value of initial step size.
+      * `hlast` -- step size taken on the last internal step.
+      * `hcur` -- step size to be attempted on the next internal step.
+      * `tcur` -- current internal time reached.
    
-      `nsteps` -- number of steps taken in the solver.
-   
-      `expsteps` -- number of stability-limited steps taken in the solver.
-   
-      `accsteps` -- number of accuracy-limited steps taken in the solver.
-   
-      `convsteps` -- number of convergence-limited steps taken in the solver.
-   
-      `nfe_evals` -- number of calls to the user's :math:`f_E(t,y)` function.
-   
-      `nfi_evals` -- number of calls to the user's :math:`f_I(t,y)` function.
-   
-      `nlinsetups` -- number of linear solver setup calls made.
-   
-      `netfails` -- number of error test failures.
-   
-      `hinused` -- actual value of initial step size.
-   
-      `hlast` -- step size taken on the last internal step.
-   
-      `hcur` -- step size to be attempted on the next internal step.
-   
-      `tcur` -- current internal time reached.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumNonlinSolvIters(void *arkode_mem, long int *nniters)
 
-   :Description: Returns the number of nonlinear solver iterations
-      performed (so far).
+   Returns the number of nonlinear solver iterations
+   performed (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nniters` -- number of nonlinear iterations performed.
    
-      `nniters` -- number of nonlinear iterations performed.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNumNonlinSolvConvFails(void *arkode_mem, long int *nncfails)
 
-   :Description: Returns the number of nonlinear solver convergence
-      failures that have occurred (so far).
+   Returns the number of nonlinear solver convergence
+   failures that have occurred (so far).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nncfails` -- number of nonlinear convergence failures
    
-      `nncfails` -- number of nonlinear convergence failures
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: int ARKodeGetNonlinSolvStats(void *arkode_mem, long int *nniters, long int *nncfails)
 
-   :Description: Returns all of the nonlinear solver statistics in a single call.
+   Returns all of the nonlinear solver statistics in a single call.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nniters` -- number of nonlinear iterations performed.
+      * `nncfails` -- number of nonlinear convergence failures
    
-      `nniters` -- number of nonlinear iterations performed.
-   
-      `nncfails` -- number of nonlinear convergence failures
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
 .. c:function:: char *ARKodeGetReturnFlagName(long int flag)
 
-   :Description: Returns the name of the ARKode constant corresponding to `flag`.
+   Returns the name of the ARKode constant corresponding to `flag`.
    
-   :Arguments:  `flag` -- a return flag from an ARKode function.
+   **Arguments:**
+      * `flag` -- a return flag from an ARKode function.
    
-   :Return value:  The return value is a string containing the name of
-      the corresponding constant. 
+   **Return value:**  
+   The return value is a string containing the name of
+   the corresponding constant. 
 
 
 
@@ -2794,42 +2694,43 @@ Table: Optional rootfinding outputs
    ===================================================  ========================================== 
 
 
+
 .. c:function:: int ARKodeGetRootInfo(void *arkode_mem, int *rootsfound)
 
-   :Description: Returns an array showing which functions were found to
-      have a root.
+   Returns an array showing which functions were found to
+   have a root.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `rootsfound` -- array of length `nrtfn` with the indices of the
+        user functions :math:`g_i` found to have a root.  For :math:`i = 0 \ldots` `nrtfn`-1, 
+        ``rootsfound[i]`` is nonzero if :math:`g_i` has a root, and 0 if not.
    
-      `rootsfound` -- array of length `nrtfn` with the indices of the
-      user functions :math:`g_i` found to have a root.  For :math:`i = 0 \ldots` `nrtfn`-1, 
-      ``rootsfound[i]`` is nonzero if :math:`g_i` has a root, and 0 if not.
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
    
-   :Return value:  ARK_SUCCESS if successful
+   **Notes:** The user must allocate space for `rootsfound`. 
    
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
-   
-   :Notes: The user must allocate space for `rootsfound`. 
-   
-      For the components of :math:`g_i` for which a root was found, the
-      sign of ``rootsfound[i]`` indicates the direction of
-      zero-crossing.  A value of +1 indicates that :math:`g_i` is
-      increasing, while a value of -1 indicates a decreasing :math:`g_i`.
+   For the components of :math:`g_i` for which a root was found, the
+   sign of ``rootsfound[i]`` indicates the direction of
+   zero-crossing.  A value of +1 indicates that :math:`g_i` is
+   increasing, while a value of -1 indicates a decreasing :math:`g_i`.
 
 
 
 .. c:function:: int ARKodeGetNumGEvals(void *arkode_mem, long int *ngevals)
 
-   :Description: Returns the cumulative number of calls made to the
-      user's root function :math:`g`.
+   Returns the cumulative number of calls made to the
+   user's root function :math:`g`.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `ngevals` -- number of calls made to :math:`g` so far.
    
-      `ngevals` -- number of calls made to :math:`g` so far.
-   
-   :Return value:  ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL if the ARKode memory was ``NULL``
+   **Return value:**  
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory was ``NULL``
 
 
 
@@ -2863,108 +2764,105 @@ Table: Optional outputs for ARKDLS
    ===================================================  =================================== 
 
 
+
     
 .. c:function:: int ARKDlsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 
-   :Description: Returns the real and integer workspace used by the
-      ARKDLS linear solver (ARKDENSE or ARKBAND).
+   Returns the real and integer workspace used by the
+   ARKDLS linear solver (ARKDENSE or ARKBAND).
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lenrwLS` -- the number of ``realtype`` values in the ARKDLS workspace.
+      * `leniwLS` -- the number of integer values in the ARKDLS workspace.
    
-      `lenrwLS` -- the number of ``realtype`` values in the ARKDLS workspace.
+   **Return value:**  
+      * ARKDLS_SUCCESS if successful
+      * ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
    
-      `leniwLS` -- the number of integer values in the ARKDLS workspace.
-   
-   :Return value:  ARKDLS_SUCCESS if successful
-   
-      ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: For the ARKDENSE linear solver, in terms of the problem
-      size :math:`n`, the actual size of the real workspace is
-      :math:`2n^2` ``realtype`` words, and the actual size of the integer
-      workspace is :math:`n` integer words. For the ARKBAND linear
-      solver, in terms of :math:`n` and the Jacobian lower and upper
-      half-bandwidths :math:`m_L` and :math:`m_U`, the actual size of the
-      real workspace is :math:`(2m_U + 3m_L + 2)n` ``realtype`` words,
-      and the actual size of the integer workspace is :math:`n` integer
-      words.
+   **Notes:** For the ARKDENSE linear solver, in terms of the problem
+   size :math:`n`, the actual size of the real workspace is
+   :math:`2n^2` ``realtype`` words, and the actual size of the integer
+   workspace is :math:`n` integer words. For the ARKBAND linear
+   solver, in terms of :math:`n` and the Jacobian lower and upper
+   half-bandwidths :math:`m_L` and :math:`m_U`, the actual size of the
+   real workspace is :math:`(2m_U + 3m_L + 2)n` ``realtype`` words,
+   and the actual size of the integer workspace is :math:`n` integer
+   words.
 
 
 
 .. c:function:: int ARKDlsGetNumJacEvals(void *arkode_mem, long int *njevals)
 
-   :Description: Returns the number of calls made to the ARKDLS
-      (dense or band) Jacobian approximation routine.
+   Returns the number of calls made to the ARKDLS
+   (dense or band) Jacobian approximation routine.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `njevals` -- number of calls to the Jacobian function.
    
-      `njevals` -- number of calls to the Jacobian function.
-   
-   :Return value:  ARKDLS_SUCCESS if successful
-   
-      ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
+   **Return value:**  
+      * ARKDLS_SUCCESS if successful
+      * ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
 
 
 
 .. c:function:: int ARKDlsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 
-   :Description: Returns the number of calls made to the user-supplied
-      :math:`f_I` routine due to the finite difference (dense or band)
-      Jacobian approximation.
+   Returns the number of calls made to the user-supplied
+   :math:`f_I` routine due to the finite difference (dense or band)
+   Jacobian approximation.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nfevalsLS` -- the number of calls made to the user-supplied
+        :math:`f_I` function.
    
-      `nfevalsLS` -- the number of calls made to the user-supplied
-      :math:`f_I` function.
+   **Return value:**  
+      * ARKDLS_SUCCESS if successful
+      * ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
    
-   :Return value:  ARKDLS_SUCCESS if successful
-   
-      ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: The value of `nfevalsLS` is incremented only if hte default
-      internal difference quotient function is used.
+   **Notes:** The value of `nfevalsLS` is incremented only if hte default
+   internal difference quotient function is used.
 
 
 
 .. c:function:: int ARKDlsGetLastFlag(void *arkode_mem, long int *lsflag)
 
-   :Description: Returns the last return value from an ARKDLS routine.
+   Returns the last return value from an ARKDLS routine.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lsflag` -- the value of the last return flag from an ARKDLS function.
    
-      `lsflag` -- the value of the last return flag from an ARKDLS function.
+   **Return value:**  
+      * ARKDLS_SUCCESS if successful
+      * ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
    
-   :Return value:  ARKDLS_SUCCESS if successful
-   
-      ARKDLS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKDLS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: If the ARKDENSE setup function failed
-      (i.e. :c:func:`ARKode()` returned ARK_LSETUP_FAIL), then the
-      value of `lsflag` is equal to the column index (numbered from
-      one) at which a zero diagonal element was encountered during the LU
-      factorization of the (dense or banded) Jacobian matrix.  For all
-      other failures, `lsflag` is negative.
+   **Notes:** If the ARKDENSE setup function failed
+   (i.e. :c:func:`ARKode()` returned ARK_LSETUP_FAIL), then the
+   value of `lsflag` is equal to the column index (numbered from
+   one) at which a zero diagonal element was encountered during the LU
+   factorization of the (dense or banded) Jacobian matrix.  For all
+   other failures, `lsflag` is negative.
 
 
 
 .. c:function:: char *ARKDlsGetReturnFlagName(long int lsflag)
 
-   :Description: Returns the name of the ARKDLS constant
-      corresponding to `lsflag`.
+   Returns the name of the ARKDLS constant
+   corresponding to `lsflag`.
    
-   :Arguments:  `lsflag` -- a return flag from an ARKDLS function.
+   **Arguments:**
+      * `lsflag` -- a return flag from an ARKDLS function.
    
-   :Return value:  The return value is a string containing the name of
-      the corresponding constant. If 1 :math:`\le` `lsflag` :math:`\le
-      n` (LU factorization failed), this routine returns "NONE". 
+   **Return value:**  The return value is a string containing the name of
+   the corresponding constant. If 1 :math:`\le` `lsflag` :math:`\le
+   n` (LU factorization failed), this routine returns "NONE". 
 
 
 
@@ -3005,199 +2903,193 @@ Table: Optional outputs for ARKSPILS
 
 
 
+
 .. c:function:: int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 
-   :Description: Returns the global sizes of the ARKSPILS real and integer workspaces.
+   Returns the global sizes of the ARKSPILS real and integer workspaces.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lenrwLS` -- the number of ``realtype`` values in the ARKSPILS workspace.
+      * `leniwLS` -- the number of integer values in the ARKSPILS workspace.
    
-      `lenrwLS` -- the number of ``realtype`` values in the ARKSPILS workspace.
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
    
-      `leniwLS` -- the number of integer values in the ARKSPILS workspace.
+   **Notes:** In terms of the problem size :math:`n` and maximum Krylov subspace
+   size :math:`m`, the actual size of the real workspace is roughly:
+   :math:`(m+5)n+m(m+4)+1` ``realtype`` words for ARKSPGMR,
+   :math:`9n` ``realtype`` words for ARKSPBCG, and :math:`11n`
+   ``realtype`` words for ARKSPTFQMR.  
    
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: In terms of the problem size :math:`n` and maximum Krylov subspace
-      size :math:`m`, the actual size of the real workspace is roughly:
-      :math:`(m+5)n+m(m+4)+1` ``realtype`` words for ARKSPGMR,
-      :math:`9n` ``realtype`` words for ARKSPBCG, and :math:`11n`
-      ``realtype`` words for ARKSPTFQMR.  
-   
-      In a parallel setting, the above values are global, summed over all
-      processors.
+   In a parallel setting, the above values are global, summed over all
+   processors.
 
 
 
 .. c:function:: int ARKSpilsGetNumPrecEvals(void *arkode_mem, long int *npevals)
 
-   :Description: Returns the total number of preconditioner evaluations,
-      i.e. the number of calls made to `psetup` with `jok` = ``FALSE``.
+   Returns the total number of preconditioner evaluations,
+   i.e. the number of calls made to `psetup` with `jok` = ``FALSE``.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `npevals` -- the current number of calls to `psetup`.
    
-      `npevals` -- the current number of calls to `psetup`.
-   
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
 
 
 
 .. c:function:: int ARKSpilsGetNumPrecSolves(void *arkode_mem, long int *npsolves)
 
-   :Description: Returns the number of calls made to the preconditioner
-      solve function, `psolve`.
+   Returns the number of calls made to the preconditioner
+   solve function, `psolve`.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `npsolves` -- the number of calls to `psolve`.
    
-      `npsolves` -- the number of calls to `psolve`.
-   
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
 
 
 
 .. c:function:: int ARKSpilsGetNumLinIters(void *arkode_mem, long int *nliters)
 
-   :Description: Returns the cumulative number of linear iterations.
+   Returns the cumulative number of linear iterations.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nliters` -- the current number of linear iterations.
    
-      `nliters` -- the current number of linear iterations.
-   
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
 
 
 
 .. c:function:: int ARKSpilsGetNumConvFails(void *arkode_mem, long int *nlcfails)
 
-   :Description: Returns the cumulative number of linear convergence failures.
+   Returns the cumulative number of linear convergence failures.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nlcfails` -- the current number of linear convergence failures.
    
-      `nlcfails` -- the current number of linear convergence failures.
-   
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
 
 
 
 .. c:function:: int ARKSpilsGetNumJtimesEvals(void *arkode_mem, long int *njvevals)
 
-   :Description: Returns the cumulative number of calls made to the
-      Jacobian-vector function, `jtimes`.
+   Returns the cumulative number of calls made to the
+   Jacobian-vector function, `jtimes`.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `njvevals` -- the current number of calls to `jtimes`.
    
-      `njvevals` -- the current number of calls to `jtimes`.
-   
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
 
 
 
 .. c:function:: int ARKSpilsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 
-   :Description: Returns the number of calls to the user-supplied
-      implicit right-hand side function :math:`f_I` for finite difference
-      Jacobian-vector product approximation.
+   Returns the number of calls to the user-supplied
+   implicit right-hand side function :math:`f_I` for finite difference
+   Jacobian-vector product approximation.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nfevalsLS` -- the number of calls to the user implicit
+        right-hand side function.
    
-      `nfevalsLS` -- the number of calls to the user implicit
-      right-hand side function.
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
    
-   :Return value:  ARKSPILS_SUCCESS if successful
-   
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: The value `nfevalsLS` is incremented only if the default
-      ARKSpilsDQJtimes difference quotient function is used.
+   **Notes:** The value `nfevalsLS` is incremented only if the default
+   ARKSpilsDQJtimes difference quotient function is used.
 
 
 
 .. c:function:: int ARKSpilsGetLastFlag(void *arkode_mem, long int *lsflag)
 
-   :Description: Returns the last return value from an ARKSPILS routine.
+   Returns the last return value from an ARKSPILS routine.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lsflag` -- the value of the last return flag from an
+        ARKSPILS function.
    
-      `lsflag` -- the value of the last return flag from an
-      ARKSPILS function.
+   **Return value:**  
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
    
-   :Return value:  ARKSPILS_SUCCESS if successful
+   **Notes:** If the ARKSPILS setup function failed (:c:func:`ARKode()`
+   returned ARK_LSETUP_FAIL), then `lsflag` will be
+   SPGMR_PSET_FAIL_UNREC, SPBCG_PSET_FAIL_UNREC, or
+   SPTFQMR_PSET_FAIL_UNREC. 
    
-      ARKSPILS_MEM_NULL if the ARKode memory was ``NULL``
+   If the ARKSPGMR solve function failed (:c:func:`ARKode()`
+   returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
+   return flag from SpgmrSolve and will be one of:
+   SPGMR_MEM_NULL, indicating that the SPGMR memory is
+   ``NULL``; SPGMR_ATIMES_FAIL_UNREC, indicating an unrecoverable
+   failure in the :math:`J*v` function; SPGMR_PSOLVE_FAIL_UNREC,
+   indicating that the preconditioner solve function `psolve` failed
+   unrecoverably; SPGMR_GS_FAIL, indicating a failure in the
+   Gram-Schmidt procedure; or SPGMR_QRSOL_FAIL, indicating that
+   the matrix :math:`R` was found to be singular during the QR solve
+   phase. 
+  
+   If the ARKSPBCG solve function failed (:c:func:`ARKode()`
+   returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
+   return flag from SpbcgSolve and will be one of:
+   SPBCG_MEM_NULL, indicating that the SPBCG memory is
+   ``NULL``; SPBCG_ATIMES_FAIL_UNREC, indicating an unrecoverable
+   failure in the :math:`J*v` function; or
+   SPBCG_PSOLVE_FAIL_UNREC, indicating that the preconditioner
+   solve function `psolve` failed unrecoverably. 
    
-      ARKSPILS_LMEM_NULL if the linear solver memory was ``NULL``
-   
-   :Notes: If the ARKSPILS setup function failed (:c:func:`ARKode()`
-      returned ARK_LSETUP_FAIL), then `lsflag` will be
-      SPGMR_PSET_FAIL_UNREC, SPBCG_PSET_FAIL_UNREC, or
-      SPTFQMR_PSET_FAIL_UNREC. 
-   
-      If the ARKSPGMR solve function failed (:c:func:`ARKode()`
-      returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
-      return flag from SpgmrSolve and will be one of:
-      SPGMR_MEM_NULL, indicating that the SPGMR memory is
-      ``NULL``; SPGMR_ATIMES_FAIL_UNREC, indicating an unrecoverable
-      failure in the :math:`J*v` function; SPGMR_PSOLVE_FAIL_UNREC,
-      indicating that the preconditioner solve function `psolve` failed
-      unrecoverably; SPGMR_GS_FAIL, indicating a failure in the
-      Gram-Schmidt procedure; or SPGMR_QRSOL_FAIL, indicating that
-      the matrix :math:`R` was found to be singular during the QR solve
-      phase. 
-   
-      If the ARKSPBCG solve function failed (:c:func:`ARKode()`
-      returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
-      return flag from SpbcgSolve and will be one of:
-      SPBCG_MEM_NULL, indicating that the SPBCG memory is
-      ``NULL``; SPBCG_ATIMES_FAIL_UNREC, indicating an unrecoverable
-      failure in the :math:`J*v` function; or
-      SPBCG_PSOLVE_FAIL_UNREC, indicating that the preconditioner
-      solve function `psolve` failed unrecoverably. 
-   
-      If the ARKSPTFQMR solve function failed (:c:func:`ARKode()`
-      returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
-      return flag from SptfqmrSolve and will be one of:
-      SPTFQMR_MEM_NULL, indicating that the SPTFQMR memory is
-      ``NULL``; SPTFQMR_ATIMES_FAIL_UNREC, indicating an
-      unrecoverable failure in the :math:`J*v` function; or
-      SPTFQMR_PSOLVE_FAIL_UNREC, indicating that the preconditioner
-      solve function `psolve` failed unrecoverably.
+   If the ARKSPTFQMR solve function failed (:c:func:`ARKode()`
+   returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
+   return flag from SptfqmrSolve and will be one of:
+   SPTFQMR_MEM_NULL, indicating that the SPTFQMR memory is
+   ``NULL``; SPTFQMR_ATIMES_FAIL_UNREC, indicating an
+   unrecoverable failure in the :math:`J*v` function; or
+   SPTFQMR_PSOLVE_FAIL_UNREC, indicating that the preconditioner
+   solve function `psolve` failed unrecoverably.
 
 
 
 .. c:function:: char *ARKSpilsGetReturnFlagName(long int lsflag)
 
-   :Description: Returns the name of the ARKSPILS constant
-      corresponding to `lsflag`.
+   Returns the name of the ARKSPILS constant
+   corresponding to `lsflag`.
    
-   :Arguments:  `lsflag` -- a return flag from an ARKSPILS function.
+   **Arguments:**
+      * `lsflag` -- a return flag from an ARKSPILS function.
    
-   :Return value:  The return value is a string containing the name of
-      the corresponding constant.
+   **Return value:**  
+   The return value is a string containing the name of
+   the corresponding constant.
 
 
 
@@ -3224,35 +3116,32 @@ are left unchanged.  If there are changes to the linear solver
 specifications, make the appropriate ARK*Set* calls, as described
 in the section :ref:`CInterface.LinearSolvers`.
 
+
+
 .. c:function:: int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi, realtype t0, N_Vector y0)
 
-   :Description: Provides required problem specifications and
-      reinitializes ARKode.
+   Provides required problem specifications and
+   reinitializes ARKode.
    
-   :Arguments:  `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `fe` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
+        defining the explicit portion of the right-hand side function in 
+        :math:`\dot{y} = f_E(t,y) + f_I(t,y)` 
+      * `fi` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
+        defining the implicit portion of the right-hand side function in 
+        :math:`\dot{y} = f_E(t,y) + f_I(t,y)`
+      * `t0` -- the initial value of :math:`t`
+      * `y0` -- the initial condition vector :math:`y(t_0)`
    
-      `fe` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
-      defining the explicit portion of the right-hand side function in 
-      :math:`\dot{y} = f_E(t,y) + f_I(t,y)` 
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARK_MEM_FAIL  if a memory allocation failed
+      * ARK_ILL_INPUT if an argument has an illegal value.
    
-      `fi` -- the name of the C function (of type :c:func:`ARKRhsFn()`)
-      defining the implicit portion of the right-hand side function in 
-      :math:`\dot{y} = f_E(t,y) + f_I(t,y)`
-   
-      `t0` -- the initial value of :math:`t`
-   
-      `y0` -- the initial condition vector :math:`y(t_0)`
-   
-   :Return value: ARK_SUCCESS if successful
-   
-      ARK_MEM_NULL  if the ARKode memory was ``NULL``
-   
-      ARK_MEM_FAIL  if a memory allocation failed
-   
-      ARK_ILL_INPUT if an argument has an illegal value.
-   
-   :Notes: If an error occurred, ARKodeReInit also sends an error
-      message to the error handler function.
+   **Notes:** If an error occurred, ARKodeReInit also sends an error
+   message to the error handler function.
 
 
 
@@ -3283,40 +3172,41 @@ ODE right-hand side
 The user must supply at least one function of type :c:func:`ARKRhsFn()` to
 specify the explicit and/or implicit portions of the ODE system:
 
+
+
 .. c:function:: typedef int (*ARKRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data)`
 
-   :Purpose: These functions compute the ODE right-hand side for a given
-      value of the independent variable :math:`t` and state vector :math:`y`.
+   These functions compute the ODE right-hand side for a given
+   value of the independent variable :math:`t` and state vector :math:`y`.
    
-   :Arguments:  `t` -- the current value of the independent variable.
+   **Arguments:**
+      * `t` -- the current value of the independent variable.
+      * `y` -- the current value of teh dependent variable vector, :math:`y(t)`.
+      * `ydot` -- the output vector that forms a portion of the ODE RHS :math:`f_E(t,y) + f_I(t,y)`
+      * `user_data` -- the `user_data` pointer that was passed to :c:func:`ARKodeSetUserData()`.
    
-      `y` -- the current value of teh dependent variable vector, :math:`y(t)`.
+   **Return value:** 
+   An ARKRhsFn should return 0 if successful, a
+   positive value if a recoverable error occurred (in which case
+   ARKode will attempt to correct), or a negative value if it
+   failed unrecoverably (in which case the integration is halted and
+   ARK_RHSFUNC_FAIL is returned).
    
-      `ydot` -- the output vector that forms a portion of the ODE RHS :math:`f_E(t,y) + f_I(t,y)`
-   
-      `user_data` -- the `user_data` pointer that was passed to :c:func:`ARKodeSetUserData()`.
-   
-   :Return value: An ARKRhsFn should return 0 if successful, a
-      positive value if a recoverable error occurred (in which case
-      ARKode will attempt to correct), or a negative value if it
-      failed unrecoverably (in which case the integration is halted and
-      ARK_RHSFUNC_FAIL is returned).
-   
-   :Notes: Allocation of memory for `ydot` is handled within
-      ARKode. A recoverable failure error return from the
-      ARKRhsFn is typically used to flag a value of the dependent
-      variable :math:`y` that is "illegal" in some way (e.g., negative
-      where only a nonnegative value is physically meaningful).  If such
-      a return is made, ARKode will attempt to recover (possibly
-      repeating the Newton iteration, or reducing the step size) in order
-      to avoid this recoverable error return.  There are some situations
-      in which recovery is not possible even if the right-hand side
-      function returns a recoverable error flag.  One is when this occurs
-      at the very first call to the ARKRhsFn (in which case
-      ARKode returns ARK_FIRST_RHSFUNC_ERR).  Another is when a
-      recoverable error is reported by ARKRhsFn after the integrator
-      completes a successful stage, in which case ARKode returns
-      ARK_UNREC_RHSFUNC_ERR).
+   **Notes:** Allocation of memory for `ydot` is handled within
+   ARKode. A recoverable failure error return from the
+   ARKRhsFn is typically used to flag a value of the dependent
+   variable :math:`y` that is "illegal" in some way (e.g., negative
+   where only a nonnegative value is physically meaningful).  If such
+   a return is made, ARKode will attempt to recover (possibly
+   repeating the Newton iteration, or reducing the step size) in order
+   to avoid this recoverable error return.  There are some situations
+   in which recovery is not possible even if the right-hand side
+   function returns a recoverable error flag.  One is when this occurs
+   at the very first call to the ARKRhsFn (in which case
+   ARKode returns ARK_FIRST_RHSFUNC_ERR).  Another is when a
+   recoverable error is reported by ARKRhsFn after the integrator
+   completes a successful stage, in which case ARKode returns
+   ARK_UNREC_RHSFUNC_ERR).
 
 
 
@@ -3331,28 +3221,27 @@ warning messages to the file pointed to by `errfp` (see
 :c:func:`ARKErrHandlerFn()` to process any such messages. 
 
 
+
 .. c:function:: typedef void (*ARKErrHandlerFn)(int error_code, const char *module, const char *function, char *msg, void *user_data)
 
-   :Purpose: This function processes error and warning messages from
-      ARKode and is sub-modules.
+   This function processes error and warning messages from
+   ARKode and is sub-modules.
    
-   :Arguments:  `error_code` -- the error code.
+   **Arguments:**
+      * `error_code` -- the error code.
+      * `module` -- the name of the ARKode module reporting the error.
+      * `function` -- the name of the function in which the error occurred.
+      * `msg` -- the error message.
+      * `user_data` -- a pointer to user data, the same as the
+        `eh_data` parameter that was passed to :c:func:`ARKodeSetErrHandlerFn()`.
    
-      `module` -- the name of the ARKode module reporting the error.
+   **Return value:** 
+   An ARKErrHandlerFn function has no return value.
    
-      `function` -- the name of the function in which the error occurred.
-   
-      `msg` -- the error message.
-   
-      `user_data` -- a pointer to user data, the same as the
-      `eh_data` parameter that was passed to :c:func:`ARKodeSetErrHandlerFn()`.
-   
-   :Return value: An ARKErrHandlerFn function has no return value.
-   
-   :Notes: `error_code` is negative for errors and positive
-      (ARK_WARNING) for warnings.  If a function that returns a
-      pointer to memory encounters an error, it sets `error_code` to
-      0.
+   **Notes:** `error_code` is negative for errors and positive
+   (ARK_WARNING) for warnings.  If a function that returns a
+   pointer to memory encounters an error, it sets `error_code` to
+   0.
 
 
 
@@ -3369,29 +3258,29 @@ vector `ewt` containing the weights in the WRMS norm
 \right)^{1/2}`.  These weights will be used in place of those defined
 in the section :ref:`Mathematics`.
 
+
+
 .. c:function:: typedef int (*ARKEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
 
-   :Purpose: This function computes the WRMS error weights for the vector
-      :math:`y`.
+   This function computes the WRMS error weights for the vector
+   :math:`y`.
    
-   :Arguments:  `y` -- the dependent variable vector at which the
-      weight vector is to be computed.
+   **Arguments:**
+      * `y` -- the dependent variable vector at which the
+        weight vector is to be computed.
+      * `ewt` -- the output vector containing the error weights.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
    
-      `ewt` -- the output vector containing the error weights.
+   **Return value:** 
+   An ARKEwtFn function must return 0 if it
+   successfully set the error weights, and -1 otherwise.
    
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+   **Notes:** Allocation of memory for `ewt` is handled within ARKode.
    
-   :Return value: An ARKEwtFn function must return 0 if it
-      successfully set the error weights, and -1 otherwise.
-   
-   :Notes: Allocation of memory for `ewt` is handled within ARKode.
-   
-      The error weight vector must have all components positive.  It is
-      the user's responsibility to perform this test and return -1 if it
-      is not satisfied.
-
-
+   The error weight vector must have all components positive.  It is
+   the user's responsibility to perform this test and return -1 if it
+   is not satisfied.
 
 
 
@@ -3407,35 +3296,28 @@ function of type :c:func:`ARKAdaptFn()` to compute a target step size
 as the maximum value such that the error estimates remain below 1.
 
 
+
 .. c:function:: typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h, realtype e1, realtype e2,  realtype e3, int q, int p, realtype *hnew, void *user_data)
 
-   :Purpose: This function implements a time step adaptivity algorithm
-      that chooses :math:`h` satisfying the error tolerances..
+   This function implements a time step adaptivity algorithm
+   that chooses :math:`h` satisfying the error tolerances..
    
-   :Arguments:  `y` -- the current value of the dependent variable vector, :math:`y(t)`.
+   **Arguments:**
+      * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
+      * `t` -- the current value of the independent variable.
+      * `h` -- the current value of the step size.
+      * `e1` -- the error estimate from the current step, :math:`m`.
+      * `e2` -- the error estimate from the previous step, :math:`m-1`.
+      * `e3` -- the error estimate from the step :math:`m-2`.
+      * `q` -- the global order of accuracy for the integration method.
+      * `p` -- the global order of accuracy for the embedding.
+      * `hnew` -- the output value of the next step size.
+      * `user_data` -- a pointer to user data, the same as the
+        `h_data` parameter that was passed to :c:func:`ARKodeSetAdaptivityFn()`.
    
-      `t` -- the current value of the independent variable.
-   
-      `h` -- the current value of the step size.
-   
-      `e1` -- the error estimate from the current step, :math:`m`.
-   
-      `e2` -- the error estimate from the previous step, :math:`m-1`.
-   
-      `e3` -- the error estimate from the step :math:`m-2`.
-   
-      `q` -- the global order of accuracy for the integration method.
-   
-      `p` -- the global order of accuracy for the embedding.
-   
-      `hnew` -- the output value of the next step size.
-   
-      `user_data` -- a pointer to user data, the same as the
-      `h_data` parameter that was passed to :c:func:`ARKodeSetAdaptivityFn()`.
-   
-   :Return value: An ARKAdaptFn function should return 0 if it
-      successfuly set the next step size, and a non-zero value otherwise.
-
+   **Return value:** 
+   An ARKAdaptFn function should return 0 if it
+   successfuly set the next step size, and a non-zero value otherwise.
 
 
 
@@ -3457,28 +3339,28 @@ the upcoming time step.  This value will subsequently be bounded by
 the user-supplied values for the minimum and maximum allowed time
 step, and the accuracy-based time step.  
 
+
+
 .. c:function:: typedef int (*ARKExpStabFn)(N_Vector y, realtype t, realtype *hstab, void *user_data)
 
-   :Purpose: This function predicts the maximum stable step size for the
-      explicit portions of the ImEx ODE system.
+   This function predicts the maximum stable step size for the
+   explicit portions of the ImEx ODE system.
    
-   :Arguments:  `y` -- the current value of the dependent variable vector, :math:`y(t)`.
+   **Arguments:**
+      * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
+      * `t` -- the current value of the independent variable
+      * `hstab` -- the output value with the maximum stable step size.
+      * `user_data` -- a pointer to user data, the same as the
+        `estab_data` parameter that was passed to :c:func:`ARKodeSetStabilityFn()`.
    
-      `t` -- the current value of the independent variable
+   **Return value:** 
+   An ARKExpStabFn function should return 0 if it
+   successfully set the upcoming stable step size, and a non-zero
+   value otherwise.
    
-      `hstab` -- the output value with the maximum stable step size.
-   
-      `user_data` -- a pointer to user data, the same as the
-      `estab_data` parameter that was passed to :c:func:`ARKodeSetStabilityFn()`.
-   
-   :Return value: An ARKExpStabFn function should return 0 if it
-      successfully set the upcoming stable step size, and a non-zero
-      value otherwise.
-   
-   :Notes:  If this function is not supplied, or if it returns `hstab =
-      0.0`, then ARKode will assume that there is no explicit
-      stability restriction on the time step size.
-
+   **Notes:**  If this function is not supplied, or if it returns `hstab =
+   0.0`, then ARKode will assume that there is no explicit
+   stability restriction on the time step size.
 
 
 
@@ -3490,27 +3372,27 @@ Rootfinding function
 If a rootfinding problem is to be solved during the integration of the
 ODE system, the user must supply a function of type :c:func:`ARKRootFn()`.
 
+
+
 .. c:function:: typedef int (*ARKRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data)
 
-   :Purpose: This function implements a vector-valued function
-      :math:`g(t,y)` such that the roots of the `nrtfn` components
-      :math:`g_i(t,y)` are sought.
+   This function implements a vector-valued function
+   :math:`g(t,y)` such that the roots of the `nrtfn` components
+   :math:`g_i(t,y)` are sought.
    
-   :Arguments:  `t` -- the current value of the independent variable
+   **Arguments:**
+      * `t` -- the current value of the independent variable
+      * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
+      * `gout` -- the output array, of length `nrtfn`, with components :math:`g_i(t,y)`.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
    
-      `y` -- the current value of the dependent variable vector, :math:`y(t)`.
+   **Return value:** 
+   An ARKRootFn function should return 0 if successful
+   or a non-zero value if an error occurred (in which case the
+   integration is halted and ARKode returns ARK_RTFUNC_FAIL).
    
-      `gout` -- the output array, of length `nrtfn`, with components :math:`g_i(t,y)`.
-   
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-   :Return value: An ARKRootFn function should return 0 if successful
-      or a non-zero value if an error occurred (in which case the
-      integration is halted and ARKode returns ARK_RTFUNC_FAIL).
-   
-   :Notes: Allocation of memory for `gout` is handled within ARKode.
-
+   **Notes:** Allocation of memory for `gout` is handled within ARKode.
 
 
 
@@ -3526,77 +3408,73 @@ function of type :c:func:`ARKDlsDenseJacFn()` to provide the Jacobian
 approximation. 
 
 
+
 .. c:function:: typedef int (*ARKDlsDenseJacFn)(long int N, realtype t, N_Vector y, N_Vector fy, DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
-   :Purpose: This function computes the dense Jacobian :math:`J =
-      \frac{\partial f_I}{\partial y}` (or an approximation to it).
+   This function computes the dense Jacobian :math:`J =
+   \frac{\partial f_I}{\partial y}` (or an approximation to it).
    
-   :Arguments:  `N` -- the size of the ODE system.
+   **Arguments:**
+      * `N` -- the size of the ODE system.
+      * `t` -- the current value of the independent variable
+      * `y` -- the current value of the dependent variable vector, namely
+        the predicted value of :math:`y(t)`.
+      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
+      * `Jac` -- the output dense Jacobian matrix (of type ``DlsMat``).
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used by an
+        ARKDlsDenseJacFn as temporary storage or work space.
    
-      `t` -- the current value of the independent variable
+   **Return value:** 
+   An ARKDlsDenseJacFn function should return 0 if
+   successful, a positive value if a recoverable error occurred (in
+   which case ARKode will attempt to correct, while ARKDENSE
+   sets `last_flag` to ARKDLS_JACFUNC_RECVR), or a negative
+   value if it failed unrecoverably (in which case the integration is
+   halted, :c:func:`ARKode()` returns ARK_LSETUP_FAIL and
+   ARKDENSE sets `last_flag` to ARKDLS_JACFUNC_UNRECVR). 
    
-      `y` -- the current value of the dependent variable vector, namely
-      the predicted value of :math:`y(t)`.
+   **Notes:** A user-supplied dense Jacobian function must load the `N` by
+   `N` dense matrix `Jac` with an approximation to the Jacobian
+   matrix :math:`J(t,y)` at the point :math:`(t,y)`. Only nonzero
+   elements need to be loaded into `Jac` because `Jac` is set to
+   the zero matrix before the call to the Jacobian function. The type
+   of `Jac` is ``DlsMat``. 
    
-      `fy` -- the current value of the vector :math:`f_I(t,y)`.
+   The accessor macros ``DENSE_ELEM`` and ``DENSE_COL`` allow the user
+   to read and write dense matrix elements without making explicit
+   references to the underlying representation of the ``DlsMat``
+   type. ``DENSE_ELEM(J,i,j)`` references the ``(i,j)``-th element of
+   the dense matrix ``J`` (for ``i``, ``j`` between 0 and
+   N-1). This macro is meant for small problems for which
+   efficiency of access is not a major concern. Thus, in terms of the
+   indices :math:`m` and :math:`n` ranging from 1 to `N`, the
+   Jacobian element :math:`J_{m,n}` can be set using the statement
+   ``DENSE_ELEM(J, m-1, n-1)`` :math:`= J_{m,n}`. Alternatively,
+   ``DENSE_COL(J,j)`` returns a pointer to the first element of the
+   ``j``-th column of ``J`` (for ``j`` ranging from 0 to `N`-1),
+   and the elements of the ``j``-th column can then be accessed using
+   ordinary array indexing. Consequently, :math:`J_{m,n}` can be
+   loaded using the statements ``col_n = DENSE_COL(J, n-1);
+   col_n[m-1]`` :math:`= J_{m,n}`. For large problems, it is more
+   efficient to use ``DENSE_COL`` than to use ``DENSE_ELEM``. Note
+   that both of these macros number rows and columns starting from 0. 
    
-      `Jac` -- the output dense Jacobian matrix (of type ``DlsMat``).
+   The ``DlsMat`` type and accessor macros ``DENSE_ELEM`` and
+   ``DENSE_COL`` are documented in the section :ref:`LinearSolvers`.
    
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+   If the user's ARKDenseJacFn function uses difference quotient
+   approximations, then it may need to access quantities not in the
+   argument list. These include the current step size, the error
+   weights, etc..  To obtain these, use the ARKodeGet* functions
+   listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
+   can be accessed as ``UNIT_ROUNDOFF``, which is defined in the
+   header file ``sundials_types.h``.
    
-      `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
-      variables of type ``N_Vector`` which can be used by an
-      ARKDlsDenseJacFn as temporary storage or work space.
-   
-   :Return value: An ARKDlsDenseJacFn function should return 0 if
-      successful, a positive value if a recoverable error occurred (in
-      which case ARKode will attempt to correct, while ARKDENSE
-      sets `last_flag` to ARKDLS_JACFUNC_RECVR), or a negative
-      value if it failed unrecoverably (in which case the integration is
-      halted, :c:func:`ARKode()` returns ARK_LSETUP_FAIL and
-      ARKDENSE sets `last_flag` to ARKDLS_JACFUNC_UNRECVR). 
-   
-   :Notes: A user-supplied dense Jacobian function must load the `N` by
-      `N` dense matrix `Jac` with an approximation to the Jacobian
-      matrix :math:`J(t,y)` at the point :math:`(t,y)`. Only nonzero
-      elements need to be loaded into `Jac` because `Jac` is set to
-      the zero matrix before the call to the Jacobian function. The type
-      of `Jac` is ``DlsMat``. 
-   
-      The accessor macros ``DENSE_ELEM`` and ``DENSE_COL`` allow the user
-      to read and write dense matrix elements without making explicit
-      references to the underlying representation of the ``DlsMat``
-      type. ``DENSE_ELEM(J,i,j)`` references the ``(i,j)``-th element of
-      the dense matrix ``J`` (for ``i``, ``j`` between 0 and
-      N-1). This macro is meant for small problems for which
-      efficiency of access is not a major concern. Thus, in terms of the
-      indices :math:`m` and :math:`n` ranging from 1 to `N`, the
-      Jacobian element :math:`J_{m,n}` can be set using the statement
-      ``DENSE_ELEM(J, m-1, n-1)`` :math:`= J_{m,n}`. Alternatively,
-      ``DENSE_COL(J,j)`` returns a pointer to the first element of the
-      ``j``-th column of ``J`` (for ``j`` ranging from 0 to `N`-1),
-      and the elements of the ``j``-th column can then be accessed using
-      ordinary array indexing. Consequently, :math:`J_{m,n}` can be
-      loaded using the statements ``col_n = DENSE_COL(J, n-1);
-      col_n[m-1]`` :math:`= J_{m,n}`. For large problems, it is more
-      efficient to use ``DENSE_COL`` than to use ``DENSE_ELEM``. Note
-      that both of these macros number rows and columns starting from 0. 
-   
-      The ``DlsMat`` type and accessor macros ``DENSE_ELEM`` and
-      ``DENSE_COL`` are documented in the section :ref:`LinearSolvers`.
-   
-      If the user's ARKDenseJacFn function uses difference quotient
-      approximations, then it may need to access quantities not in the
-      argument list. These include the current step size, the error
-      weights, etc..  To obtain these, use the ARKodeGet* functions
-      listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
-      can be accessed as ``UNIT_ROUNDOFF``, which is defined in the
-      header file ``sundials_types.h``.
-   
-      For the sake of uniformity, the argument `N` is of type ``long int``,
-      even in the case that the LAPACK dense solver is to be used. 
-
+   For the sake of uniformity, the argument `N` is of type ``long int``,
+   even in the case that the LAPACK dense solver is to be used. 
 
 
 
@@ -3611,90 +3489,85 @@ section :ref:`CInterface.Skeleton`), the user may provide a function
 of type :c:func:`ARKDlsBandJacFn()` to provide the Jacobian approximation.
 
 
+
 .. c:function:: typedef int (*ARKDlsBandJacFn)(long int N, long int mupper, long int mlower, realtype t, N_Vector y, N_Vector fy, DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
-   :Purpose: This function computes the banded Jacobian :math:`J =
-      \frac{\partial f_I}{\partial y}` (or an approximation to it).
+   This function computes the banded Jacobian :math:`J =
+   \frac{\partial f_I}{\partial y}` (or an approximation to it).
    
-   :Arguments:  `N` -- the size of the ODE system.
+   **Arguments:**
+      * `N` -- the size of the ODE system.
+      * `mlower`, `mupper` -- the lower and upper half-bandwidths of
+        the Jacobian.
+      * `t` -- the current value of the independent variable
+      * `y` -- the current value of the dependent variable vector, namely
+        the predicted value of :math:`y(t)`.
+      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
+      * `Jac` -- the output dense Jacobian matrix (of type ``DlsMat``).
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used by an
+        ARKDlsBandJacFn as temporary storage or work space.
    
-      `mlower`, `mupper` -- the lower and upper half-bandwidths of
-      the Jacobian.
+   **Return value:** 
+   An ARKDlsBandJacFn function should return 0 if
+   successful, a positive value if a recoverable error occurred (in
+   which case ARKode will attempt to correct, while ARKBAND
+   sets `last_flag` to ARKDLS_JACFUNC_RECVR), or a negative
+   value if it failed unrecoverably (in which case the integration is
+   halted, :c:func:`ARKode()` returns ARK_LSETUP_FAIL and
+   ARKBAND sets `last_flag` to ARKDLS_JACFUNC_UNRECVR). 
    
-      `t` -- the current value of the independent variable
+   **Notes:** A user-supplied banded Jacobian function must load the band
+   matrix `Jac` of type ``DlsMat`` with the elements of the Jacobian
+   :math:`J(t,y)` at the point :math:`(t,y)`. Only nonzero elements
+   need to be loaded into `Jac` because `Jac` is initialized to
+   the zero matrix before the call to the Jacobian function. 
+  
+   The accessor macros ``BAND_ELEM``, ``BAND_COL``, and
+   ``BAND_COL_ELEM`` allow the user to read and write band matrix
+   elements without making specific references to the underlying
+   representation of the ``DlsMat`` type.  ``BAND_ELEM(J, i, j)``
+   references the ``(i,j)``-th element of the band matrix ``J``,
+   counting from 0. This macro is meant for use in small problems for
+   which efficiency of access is not a major concern. Thus, in terms
+   of the indices :math:`m` and :math:`n` ranging from 1 to `N` with
+   :math:`(m, n)` within the band defined by `mupper` and
+   `mlower`, the Jacobian element :math:`J_{m,n}` can be loaded
+   using the statement ``BAND_ELEM(J, m-1, n-1)`` :math:`=
+   J_{m,n}`. The elements within the band are those with `-mupper`
+   :math:`\le m-n \le` `mlower`.  Alternatively, ``BAND_COL(J, j)``
+   returns a pointer to the diagonal element of the ``j``-th column of
+   ``J``, and if we assign this address to ``realtype *col_j``, then
+   the ``i``-th element of the ``j``-th column is given by
+   ``BAND_COL_ELEM(col_j, i, j)``, counting from 0. Thus, for
+   :math:`(m,n)` within the band, :math:`J_{m,n}` can be loaded by
+   setting ``col_n = BAND_COL(J, n-1); BAND_COL_ELEM(col_n, m-1,
+   n-1)`` :math:`= J_{m,n}` . The elements of the ``j``-th column can
+   also be accessed via ordinary array indexing, but this approach
+   requires knowledge of the underlying storage for a band matrix of
+   type ``DlsMat``. The array ``col_n`` can be indexed from
+   `-mupper` to `mlower`. For large problems, it is more efficient
+   to use ``BAND_COL`` and ``BAND_COL_ELEM`` than to use the
+   ``BAND_ELEM`` macro. As in the dense case, these macros all number
+   rows and columns starting from 0. 
    
-      `y` -- the current value of the dependent variable vector, namely
-      the predicted value of :math:`y(t)`.
-   
-      `fy` -- the current value of the vector :math:`f_I(t,y)`.
-   
-      `Jac` -- the output dense Jacobian matrix (of type ``DlsMat``).
-   
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-      `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
-      variables of type ``N_Vector`` which can be used by an
-      ARKDlsBandJacFn as temporary storage or work space.
-   
-   :Return value: An ARKDlsBandJacFn function should return 0 if
-      successful, a positive value if a recoverable error occurred (in
-      which case ARKode will attempt to correct, while ARKBAND
-      sets `last_flag` to ARKDLS_JACFUNC_RECVR), or a negative
-      value if it failed unrecoverably (in which case the integration is
-      halted, :c:func:`ARKode()` returns ARK_LSETUP_FAIL and
-      ARKBAND sets `last_flag` to ARKDLS_JACFUNC_UNRECVR). 
-   
-   :Notes: A user-supplied banded Jacobian function must load the band
-      matrix `Jac` of type ``DlsMat`` with the elements of the Jacobian
-      :math:`J(t,y)` at the point :math:`(t,y)`. Only nonzero elements
-      need to be loaded into `Jac` because `Jac` is initialized to
-      the zero matrix before the call to the Jacobian function. 
-   
-      The accessor macros ``BAND_ELEM``, ``BAND_COL``, and
-      ``BAND_COL_ELEM`` allow the user to read and write band matrix
-      elements without making specific references to the underlying
-      representation of the ``DlsMat`` type.  ``BAND_ELEM(J, i, j)``
-      references the ``(i,j)``-th element of the band matrix ``J``,
-      counting from 0. This macro is meant for use in small problems for
-      which efficiency of access is not a major concern. Thus, in terms
-      of the indices :math:`m` and :math:`n` ranging from 1 to `N` with
-      :math:`(m, n)` within the band defined by `mupper` and
-      `mlower`, the Jacobian element :math:`J_{m,n}` can be loaded
-      using the statement ``BAND_ELEM(J, m-1, n-1)`` :math:`=
-      J_{m,n}`. The elements within the band are those with `-mupper`
-      :math:`\le m-n \le` `mlower`.  Alternatively, ``BAND_COL(J, j)``
-      returns a pointer to the diagonal element of the ``j``-th column of
-      ``J``, and if we assign this address to ``realtype *col_j``, then
-      the ``i``-th element of the ``j``-th column is given by
-      ``BAND_COL_ELEM(col_j, i, j)``, counting from 0. Thus, for
-      :math:`(m,n)` within the band, :math:`J_{m,n}` can be loaded by
-      setting ``col_n = BAND_COL(J, n-1); BAND_COL_ELEM(col_n, m-1,
-      n-1)`` :math:`= J_{m,n}` . The elements of the ``j``-th column can
-      also be accessed via ordinary array indexing, but this approach
-      requires knowledge of the underlying storage for a band matrix of
-      type ``DlsMat``. The array ``col_n`` can be indexed from
-      `-mupper` to `mlower`. For large problems, it is more efficient
-      to use ``BAND_COL`` and ``BAND_COL_ELEM`` than to use the
-      ``BAND_ELEM`` macro. As in the dense case, these macros all number
-      rows and columns starting from 0. 
-   
-      The ``DlsMat`` type and the accessor macros ``BAND_ELEM``,
-      ``BAND_COL`` and ``BAND_COL_ELEM`` are documented in the section 
-      :ref:`LinearSolvers`.
+   The ``DlsMat`` type and the accessor macros ``BAND_ELEM``,
+   ``BAND_COL`` and ``BAND_COL_ELEM`` are documented in the section 
+   :ref:`LinearSolvers`.
 
-      If the user's ARKBandJacFn function uses difference quotient
-      approximations, then it may need to access quantities not in the
-      argument list.  These include the current step size, the error
-      weights, etc.. To obtain these, use the ARKodeGet* functions
-      listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
-      can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
-      ``sundials_types.h``.
+   If the user's ARKBandJacFn function uses difference quotient
+   approximations, then it may need to access quantities not in the
+   argument list.  These include the current step size, the error
+   weights, etc.. To obtain these, use the ARKodeGet* functions
+   listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
+   can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
+   ``sundials_types.h``.
    
-      For the sake of uniformity, the arguments `N`, `mlower`, and
-      `mupper` are of type ``long int``, even in the case that the
-      LAPACK band solver is to be used.  
-
+   For the sake of uniformity, the arguments `N`, `mlower`, and
+   `mupper` are of type ``long int``, even in the case that the
+   LAPACK band solver is to be used.  
 
 
 
@@ -3711,40 +3584,38 @@ matrix-vector products :math:`J*v`. If such a function is not
 supplied, the default is a difference quotient approximation to these
 products. 
 
+
+
 .. c:function:: typedef int (*ARKSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vector fy, void *user_data, N_Vector tmp)
 
-   :Purpose: This function computes the product :math:`Jv =
-      \left(\frac{\partial f_I}{\partial y}\right)v` (or an approximation to it).
+   This function computes the product :math:`Jv =
+   \left(\frac{\partial f_I}{\partial y}\right)v` (or an approximation to it).
    
-   :Arguments:  `v` -- the vector to multiply.
+   **Arguments:**
+      * `v` -- the vector to multiply.
+      * `Jv` -- the output vector computed.
+      * `t` -- the current value of the independent variable
+      * `y` -- the current value of the dependent variable vector.
+      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp` -- pointer to memory allocated to a variable of type
+        ``N_Vector`` which can be used as temporary storage or work space.
    
-      `Jv` -- the output vector computed.
+   **Return value:** 
+   The value to be returned by the Jacobian-vector product
+   function should be 0 if successful. Any other return value will
+   result in an unrecoverable error of the SPILS generic solver,
+   in which case the integration is halted. 
    
-      `t` -- the current value of the independent variable
-   
-      `y` -- the current value of the dependent variable vector.
-   
-      `fy` -- the current value of the vector :math:`f_I(t,y)`.
-   
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-      `tmp` -- pointer to memory allocated to a variable of type
-      ``N_Vector`` which can be used as temporary storage or work space.
-   
-   :Return value: The value to be returned by the Jacobian-vector product
-      function should be 0 if successful. Any other return value will
-      result in an unrecoverable error of the SPILS generic solver,
-      in which case the integration is halted. 
-   
-   :Notes: If the user's ARKSpilsJacTimesVecFn function uses
-      difference quotient approximations, it may need to access
-      quantities not in the argument list.  These include the current
-      step size, the error weights, etc..  To obtain these, use the
-      ARKodeGet* functions listed in
-      :ref:`CInterface.ARKodeOutputTable`. The unit roundoff can be
-      accessed as ``UNIT_ROUNDOFF`` defined in the header file
-      ``sundials_types.h``. 
+   **Notes:** If the user's ARKSpilsJacTimesVecFn function uses
+   difference quotient approximations, it may need to access
+   quantities not in the argument list.  These include the current
+   step size, the error weights, etc..  To obtain these, use the
+   ARKodeGet* functions listed in
+   :ref:`CInterface.ARKodeOutputTable`. The unit roundoff can be
+   accessed as ``UNIT_ROUNDOFF`` defined in the header file
+   ``sundials_types.h``. 
 
 
 
@@ -3765,46 +3636,41 @@ finite-element setting) and :math:`J = \frac{\partial f_I}{\partial
 y}`  If preconditioning is done on both sides, the product of the two
 preconditioner matrices should approximate :math:`A`. 
 
+
+
 .. c:function:: typedef int (*ARKSpilsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy, N_Vector r, N_Vector z, realtype gamma, realtype delta, int lr, void *user_data, N_Vector tmp)
 
-   :Purpose: This function solves the preconditioner system :math:`Pz=r`.
+   This function solves the preconditioner system :math:`Pz=r`.
    
-   :Arguments:  `t` -- the current value of the independent variable.
+   **Arguments:**
+      * `t` -- the current value of the independent variable.
+      * `y` -- the current value of the dependent variable vector.
+      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
+      * `r` -- the right-hand side vector of the linear system.
+      * `z` -- the computed output solution vector 
+      * `gamma` -- the scalar :math:`\gamma` appearing in the Newton
+        matrix given by :math:`A=M-\gamma J`.
+      * `delta` -- an input tolerance to be used if an iterative method
+        is employed in the solution.  In that case, the resdual vector
+        :math:`Res = r-Pz` of the system should be made to be less than `delta`
+        in the weighted :math:`l_2` norm, i.e. :math:`\left(\sum_{i=1}^n
+        \left(Res_i * ewt_i\right)^2 \right)^{1/2} < \delta`, where :math:`\delta =`
+        `delta`.  To obtain the ``N_Vector`` `ewt`, call
+        :c:func:`ARKodeGetErrWeights()`. 
+      * `lr` -- an input flag indicating whether the preconditioner
+        solve is to use the left preconditioner (`lr = 1`) or the right
+        preconditioner (`lr = 2`).
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp` -- pointer to memory allocated to a variable of type
+        ``N_Vector`` which can be used as temporary storage or work space.
    
-      `y` -- the current value of the dependent variable vector.
-   
-      `fy` -- the current value of the vector :math:`f_I(t,y)`.
-   
-      `r` -- the right-hand side vector of the linear system.
-   
-      `z` -- the computed output solution vector 
-   
-      `gamma` -- the scalar :math:`\gamma` appearing in the Newton
-      matrix given by :math:`A=M-\gamma J`.
-   
-      `delta` -- an input tolerance to be used if an iterative method
-      is employed in the solution.  In that case, the resdual vector
-      :math:`Res = r-Pz` of the system should be made to be less than `delta`
-      in the weighted :math:`l_2` norm, i.e. :math:`\left(\sum_{i=1}^n
-      \left(Res_i * ewt_i\right)^2 \right)^{1/2} < \delta`, where :math:`\delta =`
-      `delta`.  To obtain the ``N_Vector`` `ewt`, call
-      :c:func:`ARKodeGetErrWeights()`. 
-   
-      `lr` -- an input flag indicating whether the preconditioner
-      solve is to use the left preconditioner (`lr = 1`) or the right
-      preconditioner (`lr = 2`).
-   
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-      `tmp` -- pointer to memory allocated to a variable of type
-      ``N_Vector`` which can be used as temporary storage or work space.
-   
-   :Return value: The value to be returned by the preconditioner solve
-      function is a flag indicating whether it was successful. This value
-      should be 0 if successful, positive for a recoverable error (in
-      which case the step will be retried), or negative for an
-      unrecoverable error (in which case the integration is halted).  
+   **Return value:** 
+   The value to be returned by the preconditioner solve
+   function is a flag indicating whether it was successful. This value
+   should be 0 if successful, positive for a recoverable error (in
+   which case the step will be retried), or negative for an
+   unrecoverable error (in which case the integration is halted).  
 
 
 
@@ -3818,69 +3684,65 @@ If the user's preconditioner requires that any Jacobian-related data
 be preprocessed or evaluated, then these actions need to occur within
 a user-supplied function of type :c:func:`ARKSpilsPrecSetupFn()`. 
 
+
+
 .. c:function:: typedef int (*ARKSpilsPrecSetupFn)(realtype t, N_Vector y, N_Vector fy, booleantype jok, booleantype *jcurPtr, realtype gamma, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
-   :Purpose: This function preprocesses and/or evaluates Jacobian-related
-      data needed by the preconditioner.
+   This function preprocesses and/or evaluates Jacobian-related
+   data needed by the preconditioner.
    
-   :Arguments:  `t` -- the current value of the independent variable.
+   **Arguments:**
+      * `t` -- the current value of the independent variable.
+      * `y` -- the current value of the dependent variable vector.
+      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
+      * `jok` -- is an input flag indicating whether the Jacobian-related
+        data needs to be updated. The `jok` argument provides for the
+        reuse of Jacobian data in the preconditioner solve function. When
+        `jok` = ``FALSE``, the Jacobian-related data should be recomputed
+        from scratch. When `jok` = ``TRUE`` the Jacobian data, if saved from the
+        previous call to this function, can be reused (with the current
+        value of `gamma`). A call with `jok` = ``TRUE`` can only occur
+        after a call with `jok` = ``FALSE``. 
+      * `jcurPtr` -- is a pointer to a flag which should be set to
+        ``TRUE`` if Jacobian data was recomputed, or set to ``FALSE`` if
+        Jacobian data was not recomputed, but saved data was still reused. 
+      * `gamma` -- the scalar :math:`\gamma` appearing in the Newton
+        matrix given by :math:`A=M-\gamma J`.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used as temporary
+        storage or work space.
    
-      `y` -- the current value of the dependent variable vector.
+   **Return value:** 
+   The value to be returned by the preconditioner setup
+   function is a flag indicating whether it was successful. This value
+   should be 0 if successful, positive for a recoverable error (in
+   which case the step will be retried), or negative for an
+   unrecoverable error (in which case the integration is halted). 
    
-      `fy` -- the current value of the vector :math:`f_I(t,y)`.
+   **Notes:**  The operations performed by this function might include
+   forming a crude approximate Jacobian, and performing an LU
+   factorization of the resulting approximation to :math:`A = M -
+   \gamma J`. 
    
-      `jok` -- is an input flag indicating whether the Jacobian-related
-      data needs to be updated. The `jok` argument provides for the
-      reuse of Jacobian data in the preconditioner solve function. When
-      `jok` = ``FALSE``, the Jacobian-related data should be recomputed
-      from scratch. When `jok` = ``TRUE`` the Jacobian data, if saved from the
-      previous call to this function, can be reused (with the current
-      value of `gamma`). A call with `jok` = ``TRUE`` can only occur
-      after a call with `jok` = ``FALSE``. 
+   Each call to the preconditioner setup function is preceded by a
+   call to the implicit :c:func:`ARKRhsFn()` user function with the same
+   :math:`(t,y)` arguments.  Thus, the preconditioner setup function can
+   use any auxiliary data that is computed and saved during the
+   evaluation of the ODE right-hand side. 
    
-      `jcurPtr` -- is a pointer to a flag which should be set to
-      ``TRUE`` if Jacobian data was recomputed, or set to ``FALSE`` if
-      Jacobian data was not recomputed, but saved data was still reused. 
+   This function is not called in advance of every call to the
+   preconditioner solve function, but rather is called only as often
+   as needed to achieve convergence in the Newton iteration. 
    
-      `gamma` -- the scalar :math:`\gamma` appearing in the Newton
-      matrix given by :math:`A=M-\gamma J`.
-   
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-      `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
-      variables of type ``N_Vector`` which can be used as temporary
-      storage or work space.
-   
-   :Return value: The value to be returned by the preconditioner setup
-      function is a flag indicating whether it was successful. This value
-      should be 0 if successful, positive for a recoverable error (in
-      which case the step will be retried), or negative for an
-      unrecoverable error (in which case the integration is halted). 
-   
-   :Notes:  The operations performed by this function might include
-      forming a crude approximate Jacobian, and performing an LU
-      factorization of the resulting approximation to :math:`A = M -
-      \gamma J`. 
-   
-      Each call to the preconditioner setup function is preceded by a
-      call to the implicit :c:func:`ARKRhsFn()` user function with the same
-      :math:`(t,y)` arguments.  Thus, the preconditioner setup function can
-      use any auxiliary data that is computed and saved during the
-      evaluation of the ODE right-hand side. 
-   
-      This function is not called in advance of every call to the
-      preconditioner solve function, but rather is called only as often
-      as needed to achieve convergence in the Newton iteration. 
-   
-      If the user's ARKSpilsPrecSetupFn function uses difference
-      quotient approximations, it may need to access quantities not in
-      the call list. These include the current step size, the error
-      weights, etc. To obtain these, use the ARKodeGet* functions
-      listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
-      can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
-      ``sundials_types.h``. 
-
+   If the user's ARKSpilsPrecSetupFn function uses difference
+   quotient approximations, it may need to access quantities not in
+   the call list. These include the current step size, the error
+   weights, etc. To obtain these, use the ARKodeGet* functions
+   listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
+   can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
+   ``sundials_types.h``. 
 
 
 
@@ -3978,94 +3840,87 @@ skeleton program presented in :ref:`CInterface.Skeleton` are
 The ARKBANDPRE preconditioner module is initialized and attached
 by calling the following function:
 
+
+
 .. c:function:: int ARKBandPrecInit(void *arkode_mem, long int N, long int mu, long int ml)
 
-   :Description: Initializes the ARKBANDPRE preconditioner and
-      allocates required (internal) memory for it.
+   Initializes the ARKBANDPRE preconditioner and
+   allocates required (internal) memory for it.
    
-   :Arguments:   `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `N` -- problem dimension (size of ODE system).
+      * `mu` -- upper half-bandwidth of the Jacobian approximation.
+      * `ml` -- lower half-bandwidth of the Jacobian approximation.
    
-      `N` -- problem dimension (size of ODE system).
-   
-      `mu` -- upper half-bandwidth of the Jacobian approximation.
-   
-      `ml` -- lower half-bandwidth of the Jacobian approximation.
-   
-   :Return value: ARKSPILS_SUCCESS if no errors occurred
-   
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value
-   
-      ARKSPILS_MEM_FAIL if a memory allocation request failed
-   
-   :Notes: The banded approximate Jacobian will have nonzero elements
-      only in locations :math:`(i,j)` with `ml` :math:`\le j-i \le` `mu`.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_ILL_INPUT if an input has an illegal value
+      * ARKSPILS_MEM_FAIL if a memory allocation request failed
+
+   **Notes:** The banded approximate Jacobian will have nonzero elements
+   only in locations :math:`(i,j)` with `ml` :math:`\le j-i \le` `mu`.
 
 
 The following two optional output functions are available for use with
 the ARKBANDPRE module:
 
 
+
 .. c:function:: int ARKBandPrecGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 
-   :Description: Returns the sizes of the ARKBANDPRE real and integer
-      workspaces.
+   Returns the sizes of the ARKBANDPRE real and integer
+   workspaces.
    
-   :Arguments:     `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lenrwLS` -- the number of ``realtype`` values in the
+        ARKBANDPRE workspace.
+      * `leniwLS` -- the number of integer values in the  ARKBANDPRE workspace.
    
-      `lenrwLS` -- the number of ``realtype`` values in the
-      ARKBANDPRE workspace.
+   **Return value:** 
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
    
-      `leniwLS` -- the number of integer values in the  ARKBANDPRE workspace.
+   **Notes:** In terms of the problem size :math:`N` and `smu` :math:`=
+   \min(N-1,` `mu+ml` :math:`)`, the actual size of the real
+   workspace is :math:`(2` `ml + mu + smu` :math:`+2)N` ``realtype``
+   words, and the actual size of the integer workspace is :math:`N`
+   integer words.
    
-   :Return value: ARKSPILS_SUCCESS if no errors occurred
-   
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   :Notes: In terms of the problem size :math:`N` and `smu` :math:`=
-      \min(N-1,` `mu+ml` :math:`)`, the actual size of the real
-      workspace is :math:`(2` `ml + mu + smu` :math:`+2)N` ``realtype``
-      words, and the actual size of the integer workspace is :math:`N`
-      integer words.
-   
-      The workspaces referred to here exist in addition to those given by
-      the corresponding function ARKSpils*GetWorkspace.
+   The workspaces referred to here exist in addition to those given by
+   the corresponding function ARKSpils*GetWorkspace.
 
 
 
 .. c:function:: int ARKBandPrecGetNumRhsEvals(void *arkode_mem, long int *nfevalsBP)
 
-   :Description: Returns the number of calls made to the user-supplied
-      right-hand side function :math:`f_I` for constructing the
-      finite-difference banded Jacobian approximation used within the
-      preconditioner setup function.
+   Returns the number of calls made to the user-supplied
+   right-hand side function :math:`f_I` for constructing the
+   finite-difference banded Jacobian approximation used within the
+   preconditioner setup function.
    
-   :Arguments:     `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `nfevalsBP` -- number of calls to :math:`f_I`
    
-      `nfevalsBP` -- number of calls to :math:`f_I`
+   **Return value:**  
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
    
-   :Return value:  ARKSPILS_SUCCESS if no errors occurred
-   
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   :Notes:  The counter `nfevalsBP` is distinct from the counter
-      `nfevalsLS` returned by the corresponding function
-      ARKSpils*GetNumRhsEvals and also from `nfi_evals` returned by
-      :c:func:`ARKodeGetNumRhsEvals()`.  The total number of right-hand
-      side function evaluations is the sum of all three of these
-      counters, plus the `nfe_evals` counter for :math:`f_E` calls
-      returned by :c:func:`ARKodeGetNumRhsEvals()`.
+   **Notes:**  The counter `nfevalsBP` is distinct from the counter
+   `nfevalsLS` returned by the corresponding function
+   ARKSpils*GetNumRhsEvals and also from `nfi_evals` returned by
+   :c:func:`ARKodeGetNumRhsEvals()`.  The total number of right-hand
+   side function evaluations is the sum of all three of these
+   counters, plus the `nfe_evals` counter for :math:`f_E` calls
+   returned by :c:func:`ARKodeGetNumRhsEvals()`.
 
 
 
@@ -4182,66 +4037,64 @@ communicated between processes by `cfn`, and that are then used by
 
 .. c:function:: typedef int (*ARKLocalFn)(long int Nlocal, realtype t, N_Vector y, N_Vector glocal, void *user_data)
 
-   :Purpose: This `gloc` function computes :math:`g(t,y)`.  It
-      loads the vector `glocal` as a function of `t` and `y`.
+   This `gloc` function computes :math:`g(t,y)`.  It
+   loads the vector `glocal` as a function of `t` and `y`.
    
-   :Arguments:  `Nlocal` -- the local vector length
+   **Arguments:**
+      * `Nlocal` -- the local vector length
+      * `t` -- the value of the independent variable
+      * `y` -- the value of the dependent variable vector on this process
+      * `glocal` -- the output vector of :math:`g(t,y)` on this process
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter passed to :c:func:`ARKodeSetUserData()`.
    
-      `t` -- the value of the independent variable
+   **Return value:**  
+   An ARKLocalFn should return 0 if successful, a
+   positive value if a recoverable error occurred (in which case
+   ARKode will attempt to correct), or a negative value if it
+   failed unrecoverably (in which case the integration is halted and
+   :c:func:`ARKode()` will return ARK_LSETUP_FAIL).
    
-      `y` -- the value of the dependent variable vector on this process
+   **Notes:**  This function must assume that all interprocess communication
+   of data needed to calculate `glocal` has already been done, and that
+   this data is accessible within user data. 
    
-      `glocal` -- the output vector of :math:`g(t,y)` on this process
-   
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter passed to :c:func:`ARKodeSetUserData()`.
-   
-   :Return value:  An ARKLocalFn should return 0 if successful, a
-      positive value if a recoverable error occurred (in which case
-      ARKode will attempt to correct), or a negative value if it
-      failed unrecoverably (in which case the integration is halted and
-      :c:func:`ARKode()` will return ARK_LSETUP_FAIL).
-   
-   :Notes:  This function must assume that all interprocess communication
-      of data needed to calculate `glocal` has already been done, and that
-      this data is accessible within user data. 
-   
-      The case where :math:`g` is mathematically identical to :math:`f_I`
-      is allowed. 
+   The case where :math:`g` is mathematically identical to :math:`f_I`
+   is allowed. 
 
 
 
 .. c:function:: typedef int (*ARKCommFn)(long int Nlocal, realtype t, N_Vector y, void *user_data)
 
-   :Purpose: This `cfn` function performs all interprocess
-      communication necessary for the executation of the `gloc` function
-      above, using the input vector `y`.
+   This `cfn` function performs all interprocess
+   communication necessary for the executation of the `gloc` function
+   above, using the input vector `y`.
    
-   :Arguments:  `Nlocal` -- the local vector length
+   **Arguments:**
+      *  `Nlocal` -- the local vector length
+      * `t` -- the value of the independent variable
+      * `y` -- the value of the dependent variable vector on this process
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter passed to :c:func:`ARKodeSetUserData()`.
    
-      `t` -- the value of the independent variable
+   **Return value:**  
+   An ARKCommFn should return 0 if successful, a
+   positive value if a recoverable error occurred (in which case
+   ARKode will attempt to correct), or a negative value if it
+   failed unrecoverably (in which case the integration is halted and
+   :c:func:`ARKode()` will return ARK_LSETUP_FAIL).
    
-      `y` -- the value of the dependent variable vector on this process
+   **Notes:**  The `cfn` function is expected to save communicated data in
+   space defined within the data structure `user_data`.
    
-      `user_data` -- a pointer to user data, the same as the
-      `user_data` parameter passed to :c:func:`ARKodeSetUserData()`.
-   
-   :Return value:  An ARKCommFn should return 0 if successful, a
-      positive value if a recoverable error occurred (in which case
-      ARKode will attempt to correct), or a negative value if it
-      failed unrecoverably (in which case the integration is halted and
-      :c:func:`ARKode()` will return ARK_LSETUP_FAIL).
-   
-   :Notes:  The `cfn` function is expected to save communicated data in
-      space defined within the data structure `user_data`.
-   
-      Each call to the `cfn` function is preceded by a call to the
-      right-hand side function :math:`f_I` with the same :math:`(t,y)`
-      arguments. Thus, `cfn` can omit any communication done by
-      :math:`f_I` if relevant to the evaluation of `glocal`. If all
-      necessary communication was done in :math:`f_I`, then `cfn` =
-      ``NULL`` can be passed in the call to :c:func:`ARKBBDPrecInit()` (see
-      below).
+   Each call to the `cfn` function is preceded by a call to the
+   right-hand side function :math:`f_I` with the same :math:`(t,y)`
+   arguments. Thus, `cfn` can omit any communication done by
+   :math:`f_I` if relevant to the evaluation of `glocal`. If all
+   necessary communication was done in :math:`f_I`, then `cfn` =
+   ``NULL`` can be passed in the call to :c:func:`ARKBBDPrecInit()` (see
+   below).
+
 
 
 Besides the header files required for the integration of the ODE problem (see the section
@@ -4315,63 +4168,54 @@ next.
 
 .. c:function:: int ARKBBDPrecInit(void *arkode_mem, long int Nlocal, long int mudq, long int mldq, long int mukeep, long int mlkeep, realtype dqrely, ARKLocalFn gloc, ARKCommFn cfn)
 
-   :Description: Initializes and allocates (internal) memory for the
-      ARKBBDPRE preconditioner.
+   Initializes and allocates (internal) memory for the
+   ARKBBDPRE preconditioner.
    
-   :Arguments: `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `Nlocal` -- local vector length.
+      * `mudq` -- upper half-bandwidth to be used in the difference
+        quotient Jacobian approximation.
+      * `mldq` -- lower half-bandwidth to be used in the difference
+        quotient Jacobian approximation.
+      * `mukeep` -- upper half-bandwidth of the retained banded
+        approximate Jacobian block.
+      * `mlkeep` -- lower half-bandwidth of the retained banded
+        approximate Jacobian block.
+      * `dqrely` -- the relative increment in components of `y` used in
+        the difference quotient approximations.  The default is `dqrely`
+        = :math:`\sqrt{\text{unit roundoff}}`, which can be specified by
+        passing `dqrely` = 0.0.
+      * `gloc` -- the name of the C function (of type :c:func:`ARKLocalFn()`)
+        which computes the approximation :math:`g(t,y) \approx f_I(t,y)`.
+      * `cfn` -- the name of the C function (of type :c:func:`ARKCommFn()`) which
+        performs all interprocess communication required for the
+        computation of :math:`g(t,y)`.
    
-      `Nlocal` -- local vector length.
+   **Return value:**  
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_ILL_INPUT if an input has an illegal value
+      * ARKSPILS_MEM_FAIL if a memory allocation request failed
    
-      `mudq` -- upper half-bandwidth to be used in the difference
-      quotient Jacobian approximation.
+   **Notes:**  If one of the half-bandwidths `mudq` or `mldq` to be used
+   in the difference quotient calculation of the approximate Jacobian is
+   negative or exceeds the value `Nlocal-1`, it is replaced by 0 or
+   `Nlocal-1` accordingly. 
    
-      `mldq` -- lower half-bandwidth to be used in the difference
-      quotient Jacobian approximation.
+   The half-bandwidths `mudq` and `mldq` need not be the true
+   half-bandwidths of the Jacobian of the local block of :math:`g`
+   when smaller values may provide a greater efficiency. 
    
-      `mukeep` -- upper half-bandwidth of the retained banded
-      approximate Jacobian block.
+   Also, the half-bandwidths `mukeep` and `mlkeep` of the retained
+   banded approximate Jacobian block may be even smaller than
+   `mudq` and `mldq`, to reduce storage and computational costs
+   further. 
    
-      `mlkeep` -- lower half-bandwidth of the retained banded
-      approximate Jacobian block.
-   
-      `dqrely` -- the relative increment in components of `y` used in
-      the difference quotient approximations.  The default is `dqrely`
-      = :math:`\sqrt{\text{unit roundoff}}`, which can be specified by
-      passing `dqrely` = 0.0.
-   
-      `gloc` -- the name of the C function (of type :c:func:`ARKLocalFn()`)
-      which computes the approximation :math:`g(t,y) \approx f_I(t,y)`.
-   
-      `cfn` -- the name of the C function (of type :c:func:`ARKCommFn()`) which
-      performs all interprocess communication required for the
-      computation of :math:`g(t,y)`.
-   
-   :Return value:  ARKSPILS_SUCCESS if no errors occurred
-   
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_ILL_INPUT if an input has an illegal value
-   
-      ARKSPILS_MEM_FAIL if a memory allocation request failed
-   
-   :Notes:  If one of the half-bandwidths `mudq` or `mldq` to be used
-      in the difference quotient calculation of the approximate Jacobian is
-      negative or exceeds the value `Nlocal-1`, it is replaced by 0 or
-      `Nlocal-1` accordingly. 
-   
-      The half-bandwidths `mudq` and `mldq` need not be the true
-      half-bandwidths of the Jacobian of the local block of :math:`g`
-      when smaller values may provide a greater efficiency. 
-   
-      Also, the half-bandwidths `mukeep` and `mlkeep` of the retained
-      banded approximate Jacobian block may be even smaller than
-      `mudq` and `mldq`, to reduce storage and computational costs
-      further. 
-   
-      For all four half-bandwidths, the values need not be the same on
-      every processor.
+   For all four half-bandwidths, the values need not be the same on
+   every processor.
+
 
 
 The ARKBBDPRE module also provides a reinitialization function to
@@ -4393,88 +4237,80 @@ the proper order).
 
 .. c:function:: int ARKBBDPrecReInit(void *arkode_mem, long int mudq, long int mldq, realtype dqrely)
 
-   :Description: Re-initializes the ARKBBDPRE preconditioner module.
+   Re-initializes the ARKBBDPRE preconditioner module.
    
-   :Arguments:     `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `mudq` -- upper half-bandwidth to be used in the difference
+        quotient Jacobian approximation.
+      * `mldq` -- lower half-bandwidth to be used in the difference
+        quotient Jacobian approximation.
+      * `dqrely` -- the relative increment in components of `y` used in
+        the difference quotient approximations.  The default is `dqrely`
+        = :math:`\sqrt{\text{unit roundoff}}`, which can be specified by
+        passing `dqrely` = 0.0.
    
-      `mudq` -- upper half-bandwidth to be used in the difference
-      quotient Jacobian approximation.
+   **Return value:**  
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
    
-      `mldq` -- lower half-bandwidth to be used in the difference
-      quotient Jacobian approximation.
-   
-      `dqrely` -- the relative increment in components of `y` used in
-      the difference quotient approximations.  The default is `dqrely`
-      = :math:`\sqrt{\text{unit roundoff}}`, which can be specified by
-      passing `dqrely` = 0.0.
-   
-   :Return value:  ARKSPILS_SUCCESS if no errors occurred
-   
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   :Notes:  If one of the half-bandwidths `mudq` or `mldq` is
-      negative or exceeds the value `Nlocal-1`, it is replaced by 0 or
-      `Nlocal-1` accordingly. 
+   **Notes:**  If one of the half-bandwidths `mudq` or `mldq` is
+   negative or exceeds the value `Nlocal-1`, it is replaced by 0 or
+   `Nlocal-1` accordingly. 
 
 
 The following two optional output functions are available for use with
 the ARKBBDPRE module:
 
 
+
 .. c:function:: int ARKBBDPrecGetWorkSpace(void *arkode_mem, long int *lenrwBBDP, long int *leniwBBDP)
 
-   :Description: Returns the processor-local ARKBBDPRE real and
-      integer workspace sizes.
+   Returns the processor-local ARKBBDPRE real and
+   integer workspace sizes.
    
-   :Arguments:     `arkode_mem` -- pointer to the ARKode memory block.
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lenrwBBDP` -- the number of ``realtype`` values in the
+        ARKBBDPRE workspace.
+      * `leniwBBDP` -- the number of integer values in the  ARKBBDPRE workspace.
    
-      `lenrwBBDP` -- the number of ``realtype`` values in the
-      ARKBBDPRE workspace.
+   **Return value:**  
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
    
-      `leniwBBDP` -- the number of integer values in the  ARKBBDPRE workspace.
+   **Notes:**  In terms of `Nlocal` and `smu = min(Nlocal-1,
+   mukeep+mlkeep)`, the actual size of the real workspace is `(2
+   mlkeep + mukeep + smu + 2)*Nlocal`  ``realtype`` words, and the
+   actual size of the integer workspace is `Nlocal` integer
+   words. These values are local to each process. 
    
-   :Return value:  ARKSPILS_SUCCESS if no errors occurred
-   
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   :Notes:  In terms of `Nlocal` and `smu = min(Nlocal-1,
-      mukeep+mlkeep)`, the actual size of the real workspace is `(2
-      mlkeep + mukeep + smu + 2)*Nlocal`  ``realtype`` words, and the
-      actual size of the integer workspace is `Nlocal` integer
-      words. These values are local to each process. 
-   
-      The workspaces referred to here exist in addition to those given by
-      the corresponding function ARKSpils*GetWorkSpace. 
+   The workspaces referred to here exist in addition to those given by
+   the corresponding function ARKSpils*GetWorkSpace. 
 
 
 
 .. c:function:: int ARKBBDPrecGetNumGfnEvals(void *arkode_mem, long int *ngevalsBBDP)
 
-   :Description:  Returns the number of calls made to the user-supplied
-      `gloc` function (of type :c:func:`ARKLocalFn()`) due to the finite
-      difference approximation of the Jacobian blocks used within the
-      preconditioner setup function. 
+   Returns the number of calls made to the user-supplied
+   `gloc` function (of type :c:func:`ARKLocalFn()`) due to the finite
+   difference approximation of the Jacobian blocks used within the
+   preconditioner setup function. 
    
-   :Arguments: `arkode_mem` -- pointer to the ARKode memory block.
-              
-       `ngevalsBBDP` -- the number of calls made to the user-supplied
-       `gloc` function. 
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `ngevalsBBDP` -- the number of calls made to the user-supplied
+        `gloc` function. 
    
-   :Return value:  ARKSPILS_SUCCESS if no errors occurred
-      
-      ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-   
-      ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-   
-      ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
+   **Return value:**  
+      * ARKSPILS_SUCCESS if no errors occurred
+      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
+      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
+      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
    
    
 In addition to the `ngevalsBBDP` `gloc` evaluations, the costs
