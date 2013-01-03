@@ -3174,7 +3174,7 @@ specify the explicit and/or implicit portions of the ODE system:
 
 
 
-.. c:function:: typedef int (*ARKRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data)`
+.. c:function:: typedef int (*ARKRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
    These functions compute the ODE right-hand side for a given
    value of the independent variable :math:`t` and state vector :math:`y`.
