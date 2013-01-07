@@ -1092,8 +1092,10 @@ within the solve.
          * FY (``realtype``, input) -- current dependent state variable derivative array 
          * JOK (``int``, input) -- flag indicating whether Jacobian-related data needs to be 
            recomputed:
+
   	    * 0 = recompute, 
 	    * 1 = reuse with the current value of GAMMA.
+
          * JCUR (``realtype``, output) -- return flag to denote if Jacobian data was recomputed
            (1=yes, 0=no)  
          * GAMMA (``realtype``, input) -- Jacobian scaling factor 
@@ -1132,8 +1134,10 @@ within the solve.
          * DELTA (``realtype``, input) -- desired residual tolerance 
          * LR (``int``, input) -- flag denoting to solve the right or left preconditioner
            system:
+
             * 1 = left preconditioner
 	    * 2 = right preconditioner
+
          * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
            :c:func:`FARKMALLOC()` 
          * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
