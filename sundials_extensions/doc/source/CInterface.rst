@@ -72,25 +72,26 @@ Data Types
 
 The ``sundials_types.h`` file contains the definition of the type
 ``realtype``, which is used by the SUNDIALS solvers for all
-floating-point data.  The type ``realtype`` can be ``float``, ``double``, or
-``long double``, depending on how SUNDIALS was installed (with the
-default being ``double``). The user can change the precision of the
-SUNDIALS solvers floating-point arithmetic at the configuration
-stage (see the section :ref:`Installation`). 
+floating-point data.  The type ":index:`realtype`" can be ``float``,
+``double``, or ``long double``, depending on how SUNDIALS was
+installed (with the default being ``double``). The user can change the
+precision of the SUNDIALS solvers floating-point arithmetic at the
+configuration stage (see the section :ref:`Installation`). 
 
 Additionally, based on the current precision, ``sundials_types.h``
-defines the values ``BIG_REAL`` to be the largest value representable as
-a ``realtype``, ``SMALL_REAL`` to be the smallest positive value
-representable as a ``realtype``, and ``UNIT_ROUNDOFF`` to be the
-difference between 1.0 and the minimum ``realtype`` greater than 1.0. 
+defines the values :index:`BIG_REAL` to be the largest value
+representable as a ``realtype``, :index:`SMALL_REAL` to be the
+smallest positive value representable as a ``realtype``, and
+:index:`UNIT_ROUNDOFF` to be the difference between 1.0 and the
+minimum ``realtype`` greater than 1.0.  
 
 Within SUNDIALS, real constants may be set to have the appropriate
-precision by way of a macro called ``RCONST``.  It is this macro that
-needs the ability to branch on the definition ``realtype``.  In ANSI C,
-a floating-point constant with no suffix is stored as a ``double``.
-Placing the suffix "F" at the end of a floating point constant makes
-it a ``float``, whereas using the suffix "L" makes it a ``long
-double``. For example,
+precision by way of a macro called :index:`RCONST`.  It is this macro
+that needs the ability to branch on the definition ``realtype``.  In
+ANSI C, a floating-point constant with no suffix is stored as a
+``double``. Placing the suffix "F" at the end of a floating point
+constant makes it a ``float``, whereas using the suffix "L" makes it a
+``long double``. For example,
 
 .. code-block:: c
 
@@ -129,9 +130,9 @@ required is:
   prototypes. 
 
 Note that ``arkode.h`` includes ``sundials_types.h`` directly, which
-defines the types ``realtype`` and ``booleantype`` and the constants
-``FALSE`` and ``TRUE``, so a user program does not need to include
-``sundials_types.h`` directly. 
+defines the types ``realtype`` and ":index:`booleantype`" and the
+constants ``FALSE`` and ``TRUE``, so a user program does not need to
+include ``sundials_types.h`` directly. 
 
 The calling program must also include an NVECTOR implementation
 header file (see the chapter :ref:`NVectors` for details).  For the two
@@ -144,7 +145,8 @@ corresponding header files are:
   implementation, NVECTOR_PARALLEL.
 
 Note that both these files in turn include the header file
-``sundials_nvector.h`` which defines the abstract ``N_Vector`` data type. 
+``sundials_nvector.h`` which defines the abstract ``N_Vector`` data
+type.
 
 Finally, if the user includes a non-trivial implicit component to their
 ODE system (and hence requires a Newton solver for the resulting
