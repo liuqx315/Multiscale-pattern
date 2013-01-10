@@ -117,6 +117,11 @@ SUNDIALS without modifying the code to use ``realtype``, so long as
 the SUNDIALS libraries have been compiled using the same precision
 (for details see the section :ref:`Installation`). 
 
+SUNDIALS also defines a type ":index:`booleantype`", that can have
+values ``TRUE`` and ``FALSE``, which is used for logic arguments
+within the library.
+
+
 
 Header Files
 ------------
@@ -130,7 +135,7 @@ required is:
   prototypes. 
 
 Note that ``arkode.h`` includes ``sundials_types.h`` directly, which
-defines the types ``realtype`` and ":index:`booleantype`" and the
+defines the types ``realtype`` and ``booleantype`` and the
 constants ``FALSE`` and ``TRUE``, so a user program does not need to
 include ``sundials_types.h`` directly. 
 
