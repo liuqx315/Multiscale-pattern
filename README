@@ -1,13 +1,18 @@
 The ARKODE solver employs adaptive-step additive Runge Kutta methods
 to enable accurate and efficient time integration of multi-rate
 systems of ordinary differential equations of the form   
-     M y' = fe(t,y) + fi(t,y),   
-where t is the independent variable, y is the set of dependent
-variables (in R^n), M is a user-specified, non-singular operator from
-R^n to R^n (time independent), and the right-hand side function is
-partitioned into two components:  fe(t,y) contains the "slow" time
-scale components to be integrated explicitly, and  fi(t,y) contains
-the "fast" time scale components to be integrated implicitly.
+
+.. math::
+
+     M y' = f_E(t,y) + f_I(t,y),
+
+where :math:`t` is the independent variable, :math:`y` is the set of
+dependent variables (in :math:`\Re^n`), :math:`M` is a user-specified,
+non-singular operator from :math:`\Re^n \to \Re^n` (time independent),
+and the right-hand side function is partitioned into two components:
+:math:`f_E(t,y)` contains the "slow" time scale components to be
+integrated explicitly, and :math:`f_I(t,y)` contains the "fast" time
+scale components to be integrated implicitly. 
 
 Either of these operators may be disabled, allowing for fully
 explicit, fully implicit, or IMEX integration using adaptive RK
