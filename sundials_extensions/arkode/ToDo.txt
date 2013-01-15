@@ -160,6 +160,9 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Fix Fortran interface to properly handle user-supplied dense
+    Jacobian functions.  C side uses the same user-supplied functions
+    for both internal and Lapack solvers, but Fortran does not.
 [ ] Update step size logic to handle the case of backwards integration
     (negative h values).
 [ ] Ensure that everything is set up so that a user must only perform
