@@ -3,13 +3,18 @@
 References
 ==========
 
-.. [HindmarshSerban2012] A.C. Hindmarsh and R. Serban. User
-   Documentation for CVODE v2.7.0. Technical Report UCRL-SM-208108,
-   LLNL, March 2012.
+.. [KennedyCarpenter2003] C.A. Kennedy and M.H. Carpenter. Additive
+   Runge-Kutta schemes for convection-diffusion-reaction
+   equations. *Appl. Numer. Math.*, 44:139-181, 2003.
 
 .. [BrownHindmarsh1989] P.N. Brown and A.C. Hindmarsh. Reduced Storage
    Matrix Methods in Stiff ODE Systems. *J. Appl. Math. & Comp.*,
    31:49-91, 1989.
+
+
+.. [HindmarshSerban2012] A.C. Hindmarsh and R. Serban. User
+   Documentation for CVODE v2.7.0. Technical Report UCRL-SM-208108,
+   LLNL, March 2012.
 
 .. [Byrne1992] G.D. Byrne. Pragmatic Experiments with Krylov Methods
    in the Stiff ODE Setting.  In J.R. Cash and I. Gladwell, editors,

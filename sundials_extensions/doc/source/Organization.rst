@@ -16,12 +16,12 @@ For this reason, it is organized as a family, with a directory
 structure that exploits that sharing.  The following is a list of the
 solver packages presently available:
 
+- ARKode, a Runge-Kutta solver for stiff, nonstiff and multi-rate ODEs 
+  :math:`M \dot{y} = f_E(t,y) + f_I(t,y)`;
 - CVODE, a linear multistep solver for stiff and nonstiff ODEs
   :math:`\dot{y} = f(t,y)`;
 - CVODES, a linear multistep solver for stiff and nonstiff ODEs with
   sensitivity analysis capabilities;
-- ARKode, a Runge-Kutta solver for stiff, nonstiff and multi-rate ODEs 
-  :math:`M \dot{y} = f_E(t,y) + f_I(t,y)`;
 - IDA, a solver for differential-algebraic systems
   :math:`F(t,y,\dot{y}) = 0`; 
 - IDAS, a solver for differential-algebraic systems with sensitivity
