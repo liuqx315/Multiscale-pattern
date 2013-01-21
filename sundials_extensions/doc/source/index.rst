@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+Welcome to the ARKode documentation!
+====================================
+
 This is the documentation for ARKode, an adaptive step time
 integration package for stiff, nonstiff and multi-rate systems of
 ordinary differential equations (ODEs).  
@@ -18,9 +21,9 @@ MPI). The default integration and solver options should apply to most
 users, though complete control over all internal parameters and time
 adaptivity algorithms is enabled through optional interface routines.  
 
-Due to its similarities in both function and design with the ``CVODE``
+Due to its similarities in both function and design with the CVODE
 package, a significant portion of this documentation has been directly
-adapted from the ``CVODE`` documentation [HindmarshSerban2012]_.
+adapted from the CVODE documentation [HindmarshSerban2012]_.
 
 ARKode is written in C, with C++ and Fortran interfaces.
 
@@ -32,12 +35,11 @@ B598130 from `Lawrence Livermore National Laboratory
 <http://www.llnl.gov>`_. 
 
 
-
-Welcome to the ARKode documentation!
-====================================
+Table of Contents
+-------------------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    Introduction
    Mathematics

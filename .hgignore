@@ -6,5 +6,8 @@ syntax: glob
 *.pyc
 gmon.out
 *.exe
+*.a
 diags*.txt
 regression_results_*
+sundials_extensions/doc/build
+
