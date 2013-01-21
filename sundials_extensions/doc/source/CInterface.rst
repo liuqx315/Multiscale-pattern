@@ -995,48 +995,52 @@ arguments for negative values will catch all errors.
 
 .. _CInterface.ARKodeInputTable:
 
+
 Table: Optional inputs for ARKode
 """""""""""""""""""""""""""""""""""""
-   ===============================================  ========================================  ==============
-   Optional input                                   Function name                             Default
-   ===============================================  ========================================  ==============
-   Set default solver parameters                    :c:func:`ARKodeSetDefaults()`             internal
-   Set 'optimal' adaptivity params                  :c:func:`ARKodeSetOptimalParams()`        internal
-   Error handler function                           :c:func:`ARKodeSetErrHandlerFn()`         internal fn
-   Pointer to an error file                         :c:func:`ARKodeSetErrFile()`              ``stderr``
-   User data                                        :c:func:`ARKodeSetUserData()`             ``NULL``
-   Pointer to a diagnostics file                    :c:func:`ARKodeSetDiagnostics()`          ``NULL``
-   Set method order                                 :c:func:`ARKodeSetOrder()`                4
-   Set dense output order                           :c:func:`ARKodeSetDenseOrder()`           3
-   Specify linearly implicit :math:`f_I`            :c:func:`ARKodeSetLinear()`               ``FALSE``
-   Specify nonlinearly implicit :math:`f_I`         :c:func:`ARKodeSetNonlinear()`            ``TRUE``
-   Specify explicit problem                         :c:func:`ARKodeSetExplicit()`             ``FALSE``
-   Specify implicit problem                         :c:func:`ARKodeSetImplicit()`             ``FALSE``
-   Specify implicit/explicit problem                :c:func:`ARKodeSetImEx()`                 ``TRUE``
-   Set explicit RK table                            :c:func:`ARKodeSetERKTable()`             internal
-   Set implicit RK table                            :c:func:`ARKodeSetIRKTable()`             internal
-   Set additive RK tables                           :c:func:`ARKodeSetARKTables()`            internal
-   Specify explicit RK table number                 :c:func:`ARKodeSetERKTableNum()`          internal
-   Specify implicit RK table number                 :c:func:`ARKodeSetIRKTableNum()`          internal
-   Specify additive RK tables number                :c:func:`ARKodeSetARKTableNum()`          internal
-   Maximum no. of internal steps before `tout`      :c:func:`ARKodeSetMaxNumSteps()`          500
-   Maximum no. of warnings for :math:`t_n+h = t_n`  :c:func:`ARKodeSetMaxNumSteps()`          10
-   Initial step size                                :c:func:`ARKodeSetInitStep()`             estimated
-   Minimum absolute step size                       :c:func:`ARKodeSetMinStep()`              0.0
-   Maximum absolute step size                       :c:func:`ARKodeSetMaxStep()`              :math:`\infty`
-   Value of :math:`t_{stop}`                        :c:func:`ARKodeSetStopTime()`             :math:`\infty`
-   Time step adaptivity method                      :c:func:`ARKodeSetAdaptivityMethod()`     0
-   Time step adaptivity function                    :c:func:`ARKodeSetAdaptivityFn()`         internal
-   Time step adaptivity constants                   :c:func:`ARKodeSetAdaptivityConstants()`  internal
-   Newton convergence constants                     :c:func:`ARKodeSetNewtonConstants()`      internal
-   Linear solver setup decision constants           :c:func:`ARKodeSetLSetupConstants()`      internal
-   Implicit predictor method                        :c:func:`ARKodeSetPredictorMethod()`      3
-   Explicit stability function                      :c:func:`ARKodeSetStabilityFn()`          internal
-   Maximum no. of error test failures               :c:func:`ARKodeSetMaxErrTestFails()`      7
-   Maximum no. of nonlinear iterations              :c:func:`ARKodeSetMaxNonlinIters()`       3
-   Maximum no. of convergence failures              :c:func:`ARKodeSetMaxConvFails()`         10
-   Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoef()`       0.2
-   ===============================================  ========================================  ==============
+
+.. cssclass:: table-bordered
+
+===============================================  ========================================  ==============
+Optional input                                   Function name                             Default
+===============================================  ========================================  ==============
+Set default solver parameters                    :c:func:`ARKodeSetDefaults()`             internal
+Set 'optimal' adaptivity params                  :c:func:`ARKodeSetOptimalParams()`        internal
+Error handler function                           :c:func:`ARKodeSetErrHandlerFn()`         internal fn
+Pointer to an error file                         :c:func:`ARKodeSetErrFile()`              ``stderr``
+User data                                        :c:func:`ARKodeSetUserData()`             ``NULL``
+Pointer to a diagnostics file                    :c:func:`ARKodeSetDiagnostics()`          ``NULL``
+Set method order                                 :c:func:`ARKodeSetOrder()`                4
+Set dense output order                           :c:func:`ARKodeSetDenseOrder()`           3
+Specify linearly implicit :math:`f_I`            :c:func:`ARKodeSetLinear()`               ``FALSE``
+Specify nonlinearly implicit :math:`f_I`         :c:func:`ARKodeSetNonlinear()`            ``TRUE``
+Specify explicit problem                         :c:func:`ARKodeSetExplicit()`             ``FALSE``
+Specify implicit problem                         :c:func:`ARKodeSetImplicit()`             ``FALSE``
+Specify implicit/explicit problem                :c:func:`ARKodeSetImEx()`                 ``TRUE``
+Set explicit RK table                            :c:func:`ARKodeSetERKTable()`             internal
+Set implicit RK table                            :c:func:`ARKodeSetIRKTable()`             internal
+Set additive RK tables                           :c:func:`ARKodeSetARKTables()`            internal
+Specify explicit RK table number                 :c:func:`ARKodeSetERKTableNum()`          internal
+Specify implicit RK table number                 :c:func:`ARKodeSetIRKTableNum()`          internal
+Specify additive RK tables number                :c:func:`ARKodeSetARKTableNum()`          internal
+Maximum no. of internal steps before `tout`      :c:func:`ARKodeSetMaxNumSteps()`          500
+Maximum no. of warnings for :math:`t_n+h = t_n`  :c:func:`ARKodeSetMaxNumSteps()`          10
+Initial step size                                :c:func:`ARKodeSetInitStep()`             estimated
+Minimum absolute step size                       :c:func:`ARKodeSetMinStep()`              0.0
+Maximum absolute step size                       :c:func:`ARKodeSetMaxStep()`              :math:`\infty`
+Value of :math:`t_{stop}`                        :c:func:`ARKodeSetStopTime()`             :math:`\infty`
+Time step adaptivity method                      :c:func:`ARKodeSetAdaptivityMethod()`     0
+Time step adaptivity function                    :c:func:`ARKodeSetAdaptivityFn()`         internal
+Time step adaptivity constants                   :c:func:`ARKodeSetAdaptivityConstants()`  internal
+Newton convergence constants                     :c:func:`ARKodeSetNewtonConstants()`      internal
+Linear solver setup decision constants           :c:func:`ARKodeSetLSetupConstants()`      internal
+Implicit predictor method                        :c:func:`ARKodeSetPredictorMethod()`      3
+Explicit stability function                      :c:func:`ARKodeSetStabilityFn()`          internal
+Maximum no. of error test failures               :c:func:`ARKodeSetMaxErrTestFails()`      7
+Maximum no. of nonlinear iterations              :c:func:`ARKodeSetMaxNonlinIters()`       3
+Maximum no. of convergence failures              :c:func:`ARKodeSetMaxConvFails()`         10
+Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoef()`       0.2
+===============================================  ========================================  ==============
 
 
 
@@ -1851,12 +1855,15 @@ Direct linear solvers optional input functions
 
 Table: Optional inputs for ARKDLS
 """""""""""""""""""""""""""""""""""""
-   ==========================  ===============================  =============
-   Optional input              Function name                    Default
-   ==========================  ===============================  =============
-   Dense Jacobian function     :c:func:`ARKDlsSetDenseJacFn()`     ``DQ``
-   Band Jacobian function      :c:func:`ARKDlsSetBandJacFn()`      ``DQ``
-   ==========================  ===============================  =============
+
+.. cssclass:: table-bordered
+
+==========================  ===============================  =============
+Optional input              Function name                    Default
+==========================  ===============================  =============
+Dense Jacobian function     :c:func:`ARKDlsSetDenseJacFn()`     ``DQ``
+Band Jacobian function      :c:func:`ARKDlsSetBandJacFn()`      ``DQ``
+==========================  ===============================  =============
 
 The ARKDENSE solver needs a function to compute a dense approximation
 to the Jacobian matrix :math:`J(t,y)`. This function must be of type
@@ -1976,16 +1983,19 @@ is called.
 
 Table: Optional inputs for ARKSPILS
 """""""""""""""""""""""""""""""""""""""
-   =============================================  =====================================  ==================
-   Optional input                                 Function name                          Default
-   =============================================  =====================================  ==================
-   Preconditioner functions                       :c:func:`ARKSpilsSetPreconditioner()`  ``NULL``, ``NULL``
-   Jacobian-times-vector function                 :c:func:`ARKSpilsSetJacTimesVecFn()`   ``DQ``
-   Preconditioning type                           :c:func:`ARKSpilsSetPrecType()`        none
-   Ratio between linear and nonlinear tolerances  :c:func:`ARKSpilsSetEpsLin()`          0.05
-   Type of Gram-Schmidt orthogonalization `(a)`   :c:func:`ARKSpilsSetGSType()`          classical GS
-   Maximum Krylov subspace size `(b)`             :c:func:`ARKSpilsSetMaxl()`            5
-   =============================================  =====================================  ==================
+
+.. cssclass:: table-bordered
+
+=============================================  =====================================  ==================
+Optional input                                 Function name                          Default
+=============================================  =====================================  ==================
+Preconditioner functions                       :c:func:`ARKSpilsSetPreconditioner()`  ``NULL``, ``NULL``
+Jacobian-times-vector function                 :c:func:`ARKSpilsSetJacTimesVecFn()`   ``DQ``
+Preconditioning type                           :c:func:`ARKSpilsSetPrecType()`        none
+Ratio between linear and nonlinear tolerances  :c:func:`ARKSpilsSetEpsLin()`          0.05
+Type of Gram-Schmidt orthogonalization `(a)`   :c:func:`ARKSpilsSetGSType()`          classical GS
+Maximum Krylov subspace size `(b)`             :c:func:`ARKSpilsSetMaxl()`            5
+=============================================  =====================================  ==================
 
 
 `(a)` Only for ARKSPGMR
@@ -2141,13 +2151,14 @@ Rootfinding optional input functions
 The following functions can be called to set optional inputs to
 control the rootfinding algorithm.
 
+.. cssclass:: table-bordered
 
-   =============================================  =======================================  ==================
-   Optional input                                 Function name                            Default
-   =============================================  =======================================  ==================
-   Direction of zero-crossings to monitor         :c:func:`ARKodeSetRootDirection()`       both
-   Disabling inactive root warnings               :c:func:`ARKodeSetNoInactiveRootWarn()`  warning
-   =============================================  =======================================  ==================
+=============================================  =======================================  ==================
+Optional input                                 Function name                            Default
+=============================================  =======================================  ==================
+Direction of zero-crossings to monitor         :c:func:`ARKodeSetRootDirection()`       both
+Disabling inactive root warnings               :c:func:`ARKodeSetNoInactiveRootWarn()`  warning
+=============================================  =======================================  ==================
 
 
 
@@ -2298,31 +2309,33 @@ Main solver optional output functions
 Table: Optional outputs for ARKode
 """""""""""""""""""""""""""""""""""""""
 
-   ===================================================  ============================================
-   Optional output                                      Function name
-   ===================================================  ============================================
-   Size of ARKode real and integer workspaces           :c:func:`ARKodeGetWorkSpace()`
-   Cumulative number of internal steps                  :c:func:`ARKodeGetNumSteps()`
-   No. of explicit stability-limited steps              :c:func:`ARKodeGetNumExpSteps()`
-   No. of accuracy-limited steps                        :c:func:`ARKodeGetNumAccSteps()`
-   No. of solver convergence-limited steps              :c:func:`ARKodeGetNumConvSteps()`
-   No. of calls to `fe` and `fi` functions              :c:func:`ARKodeGetNumRhsEvals()`
-   No. of calls to linear solver setup function         :c:func:`ARKodeGetNumLinSolvSetups()`
-   No. of local error test failures that have occurred  :c:func:`ARKodeGetNumErrTestFails()`
-   Actual initial time step size used                   :c:func:`ARKodeGetActualInitStep()`
-   Step size used for the last successful step          :c:func:`ARKodeGetLastStep()`
-   Step size to be attempted on the next step           :c:func:`ARKodeGetCurrentStep()`
-   Current internal time reached by the solver          :c:func:`ARKodeGetCurrentTime()`
-   Current ERK and DIRK Butcher tables                  :c:func:`ARKodeGetCurrentButcherTables()`
-   Suggested factor for tolerance scaling               :c:func:`ARKodeGetTolScaleFactor()`
-   Error weight vector for state variables              :c:func:`ARKodeGetErrWeights()`
-   Estimated local truncation error vector              :c:func:`ARKodeGetEstLocalErrors()`
-   Single accessor to many statistics at once           :c:func:`ARKodeGetIntegratorStats()`
-   No. of nonlinear solver iterations                   :c:func:`ARKodeGetNumNonlinSolvIters()`
-   No. of nonlinear solver convergence failures         :c:func:`ARKodeGetNumNonlinSolvConvFails()`
-   Single accessor to all nonlinear solver statistics   :c:func:`ARKodeGetNonlinSolvStats()`
-   Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFlagName()`
-   ===================================================  ============================================ 
+.. cssclass:: table-bordered
+
+===================================================  ============================================
+Optional output                                      Function name
+===================================================  ============================================
+Size of ARKode real and integer workspaces           :c:func:`ARKodeGetWorkSpace()`
+Cumulative number of internal steps                  :c:func:`ARKodeGetNumSteps()`
+No. of explicit stability-limited steps              :c:func:`ARKodeGetNumExpSteps()`
+No. of accuracy-limited steps                        :c:func:`ARKodeGetNumAccSteps()`
+No. of solver convergence-limited steps              :c:func:`ARKodeGetNumConvSteps()`
+No. of calls to `fe` and `fi` functions              :c:func:`ARKodeGetNumRhsEvals()`
+No. of calls to linear solver setup function         :c:func:`ARKodeGetNumLinSolvSetups()`
+No. of local error test failures that have occurred  :c:func:`ARKodeGetNumErrTestFails()`
+Actual initial time step size used                   :c:func:`ARKodeGetActualInitStep()`
+Step size used for the last successful step          :c:func:`ARKodeGetLastStep()`
+Step size to be attempted on the next step           :c:func:`ARKodeGetCurrentStep()`
+Current internal time reached by the solver          :c:func:`ARKodeGetCurrentTime()`
+Current ERK and DIRK Butcher tables                  :c:func:`ARKodeGetCurrentButcherTables()`
+Suggested factor for tolerance scaling               :c:func:`ARKodeGetTolScaleFactor()`
+Error weight vector for state variables              :c:func:`ARKodeGetErrWeights()`
+Estimated local truncation error vector              :c:func:`ARKodeGetEstLocalErrors()`
+Single accessor to many statistics at once           :c:func:`ARKodeGetIntegratorStats()`
+No. of nonlinear solver iterations                   :c:func:`ARKodeGetNumNonlinSolvIters()`
+No. of nonlinear solver convergence failures         :c:func:`ARKodeGetNumNonlinSolvConvFails()`
+Single accessor to all nonlinear solver statistics   :c:func:`ARKodeGetNonlinSolvStats()`
+Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFlagName()`
+===================================================  ============================================ 
 
 
 
@@ -2693,12 +2706,14 @@ Rootfinding optional output functions
 Table: Optional rootfinding outputs
 """""""""""""""""""""""""""""""""""""
 
-   ===================================================  ==========================================
-   Optional output                                      Function name
-   ===================================================  ==========================================
-   Array showing roots found                            :c:func:`ARKodeGetRootInfo()`
-   No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals()`
-   ===================================================  ========================================== 
+.. cssclass:: table-bordered
+
+===================================================  ==========================================
+Optional output                                      Function name
+===================================================  ==========================================
+Array showing roots found                            :c:func:`ARKodeGetRootInfo()`
+No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals()`
+===================================================  ========================================== 
 
 
 
@@ -2760,15 +2775,17 @@ solver, a suffix LS (for Linear Solver) has been added here
 Table: Optional outputs for ARKDLS
 """"""""""""""""""""""""""""""""""""""
 
-   ===================================================  ===================================
-   Optional output                                      Function name
-   ===================================================  ===================================
-   Size of real and integer workspaces                  :c:func:`ARKDlsGetWorkSpace()`
-   No. of Jacobian evaluations                          :c:func:`ARKDlsGetNumJacEvals()`
-   No. of `fi` calls for finite diff. Jacobian evals    :c:func:`ARKDlsGetNumRhsEvals()`
-   Last return flag from a linear solver function       :c:func:`ARKDlsGetLastFlag()`
-   Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFlagName()`
-   ===================================================  =================================== 
+.. cssclass:: table-bordered
+
+===================================================  ===================================
+Optional output                                      Function name
+===================================================  ===================================
+Size of real and integer workspaces                  :c:func:`ARKDlsGetWorkSpace()`
+No. of Jacobian evaluations                          :c:func:`ARKDlsGetNumJacEvals()`
+No. of `fi` calls for finite diff. Jacobian evals    :c:func:`ARKDlsGetNumRhsEvals()`
+Last return flag from a linear solver function       :c:func:`ARKDlsGetLastFlag()`
+Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFlagName()`
+===================================================  =================================== 
 
 
 
@@ -2894,19 +2911,21 @@ has been added here (e.g. `lenrwLS`).
 Table: Optional outputs for ARKSPILS
 """"""""""""""""""""""""""""""""""""""""""""
 
-   ===========================================================  ====================================== 
-   Optional output                                              Function name
-   ===========================================================  ====================================== 
-   Size of real and integer workspaces                          :c:func:`ARKSpilsGetWorkSpace()`
-   No. of preconditioner evaluations                            :c:func:`ARKSpilsGetNumPrecEvals()`
-   No. of preconditioner solves                                 :c:func:`ARKSpilsGetNumPrecSolves()`
-   No. of linear iterations                                     :c:func:`ARKSpilsGetNumLinIters()`
-   No. of linear convergence failures                           :c:func:`ARKSpilsGetNumConvFails()`
-   No. of Jacobian-vector product evaluations                   :c:func:`ARKSpilsGetNumJtimesEvals()`
-   No. of `fi` calls for finite diff. Jacobian-vector evals.    :c:func:`ARKSpilsGetNumRhsEvals()`
-   Last return from a linear solver function                    :c:func:`ARKSpilsGetLastFlag()`
-   Name of constant associated with a return flag               :c:func:`ARKSpilsGetReturnFlagName()`
-   ===========================================================  ====================================== 
+.. cssclass:: table-bordered
+
+===========================================================  ====================================== 
+Optional output                                              Function name
+===========================================================  ====================================== 
+Size of real and integer workspaces                          :c:func:`ARKSpilsGetWorkSpace()`
+No. of preconditioner evaluations                            :c:func:`ARKSpilsGetNumPrecEvals()`
+No. of preconditioner solves                                 :c:func:`ARKSpilsGetNumPrecSolves()`
+No. of linear iterations                                     :c:func:`ARKSpilsGetNumLinIters()`
+No. of linear convergence failures                           :c:func:`ARKSpilsGetNumConvFails()`
+No. of Jacobian-vector product evaluations                   :c:func:`ARKSpilsGetNumJtimesEvals()`
+No. of `fi` calls for finite diff. Jacobian-vector evals.    :c:func:`ARKSpilsGetNumRhsEvals()`
+Last return from a linear solver function                    :c:func:`ARKSpilsGetLastFlag()`
+Name of constant associated with a return flag               :c:func:`ARKSpilsGetReturnFlagName()`
+===========================================================  ====================================== 
 
 
 

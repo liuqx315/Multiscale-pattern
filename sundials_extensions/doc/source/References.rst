@@ -1,7 +1,9 @@
 .. _References:
 
-References
-==========
+.. only:: html
+
+   References
+   ==========
 
 .. [KennedyCarpenter2003] C.A. Kennedy and M.H. Carpenter. Additive
    Runge-Kutta schemes for convection-diffusion-reaction
