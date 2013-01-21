@@ -107,6 +107,8 @@ The user-supplied functions, each listed with the corresponding
 internal interface function which calls it (and its type within
 ARKode), are as follows:
 
+.. cssclass:: table-bordered
+
 +--------------------------+------------------------+-----------------------------------+
 | FARKODE routine          | ARKode routine         | ARKode interface                  |
 | (FORTRAN, user-supplied) | (C, interface)         | function type                     |
@@ -433,6 +435,8 @@ To set desired optional inputs, the user can call the routines
 Table: Keys for setting FARKODE integer optional inputs
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+.. cssclass:: table-bordered
+
 =================  =====================================
 Key                ARKode routine
 =================  =====================================
@@ -476,6 +480,8 @@ number.
 
 Table: Keys for setting FARKODE real optional inputs
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. cssclass:: table-bordered
 
 ===========  ===================================
 Key          ARKode routine
@@ -1402,23 +1408,25 @@ the sections :ref:`CInterface.OptionalInputs` and
 Table: Optional FARKODE integer outputs
 """"""""""""""""""""""""""""""""""""""""
 
-   ==============  ===============  =====================================================
-   IOUT Index      Optional output  ARKode function
-   ==============  ===============  =====================================================
-   1               LENRW            :c:func:`ARKodeGetWorkSpace()`
-   2               LENIW            :c:func:`ARKodeGetWorkSpace()`
-   3               NST              :c:func:`ARKodeGetNumSteps()`
-   4               NST_STB          :c:func:`ARKodeGetNumExpSteps()`
-   5               NST_ACC          :c:func:`ARKodeGetNumAccSteps()`
-   6               NST_CNV          :c:func:`ARKodeGetNumConvSteps()`
-   7               NFE              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_E` calls)
-   8               NFI              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_I` calls)
-   9               NSETUPS          :c:func:`ARKodeGetNumLinSolvSetups()`
-   10              NETF             :c:func:`ARKodeGetNumErrTestFails()`
-   11              NNI              :c:func:`ARKodeGetNumNonlinSolvIters()`
-   12              NCFN             :c:func:`ARKodeGetNumNonlinSolvConvFails()`
-   13              NGE              :c:func:`ARKodeGetNumGEvals()`
-   ==============  ===============  =====================================================
+.. cssclass:: table-bordered
+
+==============  ===============  =====================================================
+IOUT Index      Optional output  ARKode function
+==============  ===============  =====================================================
+1               LENRW            :c:func:`ARKodeGetWorkSpace()`
+2               LENIW            :c:func:`ARKodeGetWorkSpace()`
+3               NST              :c:func:`ARKodeGetNumSteps()`
+4               NST_STB          :c:func:`ARKodeGetNumExpSteps()`
+5               NST_ACC          :c:func:`ARKodeGetNumAccSteps()`
+6               NST_CNV          :c:func:`ARKodeGetNumConvSteps()`
+7               NFE              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_E` calls)
+8               NFI              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_I` calls)
+9               NSETUPS          :c:func:`ARKodeGetNumLinSolvSetups()`
+10              NETF             :c:func:`ARKodeGetNumErrTestFails()`
+11              NNI              :c:func:`ARKodeGetNumNonlinSolvIters()`
+12              NCFN             :c:func:`ARKodeGetNumNonlinSolvConvFails()`
+13              NGE              :c:func:`ARKodeGetNumGEvals()`
+==============  ===============  =====================================================
 
 
 
@@ -1427,16 +1435,18 @@ Table: Optional FARKODE integer outputs
 Table: Optional FARKODE real outputs 
 """"""""""""""""""""""""""""""""""""""""
 
-   ==============  ===============  ===================================================
-   ROUT Index      Optional output  ARKode function
-   ==============  ===============  ===================================================
-   1               H0U              :c:func:`ARKodeGetActualInitStep()`
-   2               HU               :c:func:`ARKodeGetLastStep()`
-   3               HCUR             :c:func:`ARKodeGetCurrentStep()`
-   4               TCUR             :c:func:`ARKodeGetCurrentTime()`
-   5               TOLSF            :c:func:`ARKodeGetTolScaleFactor()`
-   6               UROUND           ``UNIT_ROUNDOFF`` (see :ref:`CInterface.DataTypes`)
-   ==============  ===============  ===================================================
+.. cssclass:: table-bordered
+
+==============  ===============  ===================================================
+ROUT Index      Optional output  ARKode function
+==============  ===============  ===================================================
+1               H0U              :c:func:`ARKodeGetActualInitStep()`
+2               HU               :c:func:`ARKodeGetLastStep()`
+3               HCUR             :c:func:`ARKodeGetCurrentStep()`
+4               TCUR             :c:func:`ARKodeGetCurrentTime()`
+5               TOLSF            :c:func:`ARKodeGetTolScaleFactor()`
+6               UROUND           ``UNIT_ROUNDOFF`` (see :ref:`CInterface.DataTypes`)
+==============  ===============  ===================================================
 
 
 
@@ -1445,15 +1455,17 @@ Table: Optional FARKODE real outputs
 Table: Optional ARKDENSE and ARKBAND outputs
 """"""""""""""""""""""""""""""""""""""""""""""
 
-   ==============  ===============  ===================================================
-   IOUT Index      Optional output  ARKode function
-   ==============  ===============  ===================================================
-   14              LENRWLS          :c:func:`ARKDlsGetWorkSpace()`
-   15              LENIWLS          :c:func:`ARKDlsGetWorkSpace()`
-   16              LSTF             :c:func:`ARKDlsGetLastFlag()`
-   17              NFELS            :c:func:`ARKDlsGetNumRhsEvals()`
-   18              NJE              :c:func:`ARKDlsGetNumJacEvals()`
-   ==============  ===============  ===================================================
+.. cssclass:: table-bordered
+
+==============  ===============  ===================================================
+IOUT Index      Optional output  ARKode function
+==============  ===============  ===================================================
+14              LENRWLS          :c:func:`ARKDlsGetWorkSpace()`
+15              LENIWLS          :c:func:`ARKDlsGetWorkSpace()`
+16              LSTF             :c:func:`ARKDlsGetLastFlag()`
+17              NFELS            :c:func:`ARKDlsGetNumRhsEvals()`
+18              NJE              :c:func:`ARKDlsGetNumJacEvals()`
+==============  ===============  ===================================================
 
 
 
@@ -1462,19 +1474,21 @@ Table: Optional ARKDENSE and ARKBAND outputs
 Table: Optional ARKSPGMR, ARKSPBCG and ARKSPTFQMR outputs 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-   ==============  ===============  ===================================================
-   IOUT Index      Optional output  ARKode function
-   ==============  ===============  ===================================================
-   14              LENRWLS          :c:func:`ARKSpilsGetWorkSpace()`
-   15              LENIWLS          :c:func:`ARKSpilsGetWorkSpace()`
-   16              LSTF             :c:func:`ARKSpilsGetLastFlag()`
-   17              NFELS            :c:func:`ARKSpilsGetNumRhsEvals()`
-   18              NJTV             :c:func:`ARKSpilsGetNumJtimesEvals()`
-   19              NPE              :c:func:`ARKSpilsGetNumPrecEvals()`
-   20              NPS              :c:func:`ARKSpilsGetNumPrecSolves()`
-   21              NLI              :c:func:`ARKSpilsGetNumLinIters()`
-   22              NCFL             :c:func:`ARKSpilsGetNumConvFails()`
-   ==============  ===============  ===================================================
+.. cssclass:: table-bordered
+
+==============  ===============  ===================================================
+IOUT Index      Optional output  ARKode function
+==============  ===============  ===================================================
+14              LENRWLS          :c:func:`ARKSpilsGetWorkSpace()`
+15              LENIWLS          :c:func:`ARKSpilsGetWorkSpace()`
+16              LSTF             :c:func:`ARKSpilsGetLastFlag()`
+17              NFELS            :c:func:`ARKSpilsGetNumRhsEvals()`
+18              NJTV             :c:func:`ARKSpilsGetNumJtimesEvals()`
+19              NPE              :c:func:`ARKSpilsGetNumPrecEvals()`
+20              NPS              :c:func:`ARKSpilsGetNumPrecSolves()`
+21              NLI              :c:func:`ARKSpilsGetNumLinIters()`
+22              NCFL             :c:func:`ARKSpilsGetNumConvFails()`
+==============  ===============  ===================================================
 
 
 
@@ -1686,6 +1700,8 @@ ARKBBDPRE or ARKode).
 
 
 *Table: FARKBBD function mapping*
+
+.. cssclass:: table-bordered
 
 +--------------------------+------------------------+-----------------------------------+
 | FARKBBD routine          | ARKode routine         | ARKode interface                  |

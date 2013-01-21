@@ -35,9 +35,6 @@ B598130 from `Lawrence Livermore National Laboratory
 <http://www.llnl.gov>`_. 
 
 
-Table of Contents
--------------------
-
 .. toctree::
    :maxdepth: 2
 
@@ -53,10 +50,9 @@ Table of Contents
    Examples
    References
 
+.. only:: html
 
-Indices and tables
-==================
+   * :ref:`genindex`
+   * :ref:`search`
 
-* :ref:`genindex`
-* :ref:`search`
 

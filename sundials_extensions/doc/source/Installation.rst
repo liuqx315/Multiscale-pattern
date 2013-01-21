@@ -1114,7 +1114,9 @@ building a preconditioner).
 
 .. _Installation.Table:
 
-Table: SUNDIALS libraries and header files
+**Table: SUNDIALS libraries and header files**
+
+.. cssclass:: table-bordered
 
 +--------------------------------+---------------------------------+
 | Shared            Libraries    | n/a                             |
