@@ -160,6 +160,9 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Find/fix bug (seg. fault)  in using an ESDIRK method with a
+    fully-implicit problem (this occurs with dengo, but does it occur
+    with other problems). 
 [ ] Fix Fortran interface to properly handle user-supplied dense
     Jacobian functions.  C side uses the same user-supplied functions
     for both internal and Lapack solvers, but Fortran does not.
