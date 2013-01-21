@@ -15,11 +15,11 @@ nonsingular operator from :math:`\Re^N \to \Re^N`. Here we use
 :math:`\dot{y}` to denote :math:`dy/dt`, and the two right-hand side
 components may be described as:
 
-  * :math:`f_E(t,y)` contains the "slow" time scale components of the
-    system, that should be integrated using explicit methods.
+* :math:`f_E(t,y)` contains the "slow" time scale components of the
+  system, that should be integrated using explicit methods.
 
-  * :math:`f_I(t,y)` contains the "fast" time scale components of the
-    system, that should be integrated using implicit methods.
+* :math:`f_I(t,y)` contains the "fast" time scale components of the
+  system, that should be integrated using implicit methods.
 
 While we use :math:`t` to denote the independent variable, and usually
 this is time, it certainly need not be.  ARKode may be used to solve
@@ -116,15 +116,15 @@ for the DIRK methods.  For these nonlinear systems, ARKode uses a
 type of :index:`Newton iteration`, 
 
 .. math::
-   z_i^{(m+1)} = z_i^{(m)} + s^{(m)},
+   z_i^{(m+1)} = z_i^{(m)} + \delta^{(m+1)},
    :label: Newton_iteration
 
 where :math:`m` is the Newton iteration index.  Here, the 
-update :math:`s^{(m)}` in turn requires the solution of linear 
+update :math:`\delta^{(m+1)}` in turn requires the solution of linear 
 :index:`Newton systems`
 
 .. math::
-   A\left(z_i^{(m)}\right) s^{(m)} = -G\left(z_i^{(m)}\right), 
+   A\left(z_i^{(m)}\right) \delta^{(m+1)} = -G\left(z_i^{(m)}\right), 
    :label: Newton_system
 
 where
@@ -207,32 +207,141 @@ operations against other costs.  Specifically, this matrix update
 occurs when:
 
 * starting the problem,
-* more than MSBP steps have been taken since the last update,
+* more than 20 steps have been taken since the last update (this may
+  be changed via the ``msbp`` argument to
+  :c:func:`ARKodeSetLSetupConstants()`), 
 * the value :math:`\bar{\gamma}` of :math:`\gamma` at the last update
-  satisfies :math:`|\gamma/\bar{\gamma} - 1| >` DGMAX,
+  satisfies :math:`\left|\gamma/\bar{\gamma} - 1\right| > 0.2` (this
+  tolerance may be changed via the ``dgmax`` argument to 
+  :c:func:`ARKodeSetLSetupConstants()`), 
 * a non-fatal convergence failure just occurred, or
-* an error test failure just occurred,
+* an error test failure just occurred.
 
-where the parameters :index:`MSBP` and :index:`DGMAX` are described
-further in the section :ref:`CInterface.OptionalInputs`.  When an
-update is forced due to a convergence failure, an update of :math:`A`
-or :math:`P` may or may not involve a reevaluation of :math:`J` (in
-:math:`A`) or of Jacobian data (in :math:`P`), depending on whether
-errors in the Jacobian were the likely cause of the failure.  More
-generally, the decision is made to reevaluate :math:`J` (or instruct
-the user to reevaluate Jacobian data in :math:`P`) when:
+When an update is forced due to a convergence failure, an update of
+:math:`A` or :math:`P` may or may not involve a reevaluation of
+:math:`J` (in :math:`A`) or of Jacobian data (in :math:`P`), depending
+on whether errors in the Jacobian were the likely cause of the
+failure.  More generally, the decision is made to reevaluate :math:`J`
+(or instruct the user to reevaluate Jacobian data in :math:`P`) when:
 
 * starting the problem,
 * more than 50 steps have been taken since the last evaluation,
 * a convergence failure occurred with an outdated matrix, and the
   value :math:`\bar{\gamma}` of :math:`\gamma` at the last update
-  satisfies :math:`|\gamma/\bar{\gamma} - 1| > 0.2`,
+  satisfies :math:`\left|\gamma/\bar{\gamma} - 1\right| > 0.2`,
 * a convergence failure occurred that forced a step size reduction.
 
 
 
-[continue with discussion of the Newton stopping criteria, akin to
-page 7 of the CVODE manual]
+The stopping test for the Newton iteration is related to the
+subsequent local error test, with the goal of keeping the nonlinear
+iteration errors from interfering with local error control.  As
+described below, the final computed value of each stage solution
+:math:`z_i^{(m)}` will have to satisfy a local error test
+:math:`\|z_i^{(m)} - z_i^{(0)}\| \le \epsilon`.  Letting
+:math:`z_i` denote the true solution to the nonlinear problem
+:eq:`Residual`, we want to ensure that the iteration error
+:math:`z_i - z_i^{(m)}` is small relative to :math:`\epsilon`,
+specifically that it is less than :math:`0.2\epsilon` (the safety
+factor 0.2 may be changed by the user via the
+:c:func:`ARKodeSetNonlinConvCoef()` function).  For this, we also
+estimate the linear convergence rate :math:`R_i` of the modified Newton
+iteration as follows.  We first initialize :math:`R_i` to 1, and reset
+:math:`R_i=1` when either :math:`A` or :math:`P` are updated.  After
+computing a Newton correction :math:`\delta^{(m)} = z_i^{(m)} -
+z_i^{(m-1)}`, we update :math:`R_i` if :math:`m>1` as
+
+.. math:: 
+   R_i \leftarrow \max\{ 0.3 R_i, \left\|\delta^{(m)}\right\| / \left\|\delta^{(m-1)}\right\| \}.
+
+where the factor 0.3 is user-modifiable as the ``crdown`` input to the
+the function :c:func:`ARKodeSetNewtonConstants()`.  Denoting the
+combined time step solution from the true stage solutions :math:`z_i`
+as :math:`y_n`, and the combined time step solution from the computed
+stage solutions :math:`z_i^{(m)}` as :math:`\tilde{y}_n` we use the
+estimate 
+
+.. math::
+   \left\| y_n - \tilde{y}_n \right\| \approx 
+   \max_i \left\| z_i^{(m+1)} - z_i^{(m)} \right\| \approx
+   \max_i R_i \left\| z_i^{(m)} - z_i^{(m-1)} \right\| =
+   \max_i R_i \left\| \delta^{(m)} \right\|.
+
+Therefore the convergence (stopping) test for the modified Newton
+iteration for each stage is
+
+.. math::
+   R_i \left\|\delta^{(m)} \right\| < 0.2\epsilon.
+
+We allow at most 3 Newton iterations (this may be modified through the
+function :c:func:`ARKodeSetMaxNonlinIters()`).  We also declare the
+Newton iteration to be divergent if any of the ratios
+:math:`\|\delta^{(m)}\| / \|\delta^{(m-1)}\| > 2.3` with :math:`m>1`
+(the value 2.3 may be modified as the ``rdiv`` input to the function 
+:c:func:`ARKodeSetNewtonConstants()`).  If convergence fails with
+:math:`J` or :math:`A` current, we must then reduce the step size by a
+factor of 0.25 (modifiable via the ``etacf`` input to the
+:c:func:`ARKodeSetAdaptivityConstants()` function).  The integration
+is halted after 10 convergence failures (modifiable via the
+:c:func:`ARKodeSetMaxConvFails()` function).
+
+When a Krylov method is used to solve the linear systems
+:eq:`Newton_system`, its errors must also be controlled; this error
+control also uses the local error test constant.  To this end, we
+approximate the linear iteration error in the solution vector
+:math:`\delta^{(m)}` using the preconditioned residual vector.  In an
+attempt to ensure that the linear iteration errors do not interfere
+with the nonlinear solution error and local time integration error
+controls, we require that the norm of the preconditioned residual be
+less than :math:`0.05\cdot(0.2\epsilon)`.  Here 0.2 is the same value
+as that used above for the nonlinear error control; the value 0.05 is
+not currently modifiable by the user.
+
+With the direct and band solvers for the linear systems
+:eq:`Newton_system`, the Jacobian may be supplied by a user routine,
+or approximated by finite-differences.  In the case of differencing,
+we use the standard approximation
+
+.. math::
+   J_{i,j}(t,y) = \frac{f_{I,i}(t,y+\sigma_j e_j) - f_{I,i}(t,y)}{\sigma_j}.
+
+Here :math:`e_j` is the jth unit vector, and the increments
+:math:`\sigma_j` are given by 
+
+.. math::
+   \sigma_j = \max\left\{ \sqrt{U}\, |y_j|, \sigma_0/w_j \right\},
+
+where :math:`U` is the unit roundoff, :math:`\sigma_0` is a
+dimensionless value, and :math:`w_j` is the error weight defined in
+:eq:`EWT`.  In the dense case, this approach requires :math:`N`
+evaluations of :math:`f_I`, one for each column of :math:`J`.  In the
+band case, the columns of :math:`J` are computed in groups, using the
+Curtis-Powell-Reid algorithm, with the number of :math:`f_I`
+evaluations equal to the bandwidth.
+
+As will be further discussed in the section
+:ref:`Mathematics.Preconditioning`, in the case of a Krylov method,
+preconditioning may be applied on the left, right, or on both sides of
+:math:`A`, with user-supplied routines for the preconditioner setup
+and solve operations.  Optionally, a user may supply a routine to
+compute the required matrix-vector products :math:`Jv`.
+If a routine for :math:`Jv` is not supplied, these products will be
+computed with directional differencing using the formula
+
+.. math::
+   Jv = \frac{f_I(t,y+\sigma_j v) - f_I(t,y)}{\sigma_j},
+
+where the increment :math:`\sigma = 1/\|v\|` to ensure that 
+:math:`\|\sigma v\| = 1`.
+
+In the following four sections (:ref:`Mathematics.Preconditioning`,
+:ref:`Mathematics.Predictors`, :ref:`Mathematics.Adaptivity` and
+:ref:`Mathematics.Stability`), we provide details on optional
+user-supplied information that can be used to better control the
+behavior of ARKode.  In these sections, we also discuss the algorithms
+currently provided by ARKode.  Finally, in the final section of this
+chapter, :ref:`Mathematics.Rootfinding`, we discuss the algorithms
+providing root-finding capabilities within ARKode.
 
 
 
@@ -242,22 +351,62 @@ page 7 of the CVODE manual]
 Preconditioning
 ------------------
 
+When using a Newton method to solve the nonlinear system
+:eq:`Residual`, ARKode makes repeated use of a linear solver to solve
+linear systems of the form :math:`Ax = b`, where :math:`x` is a
+correction vector and :math:`b` is a residual vector.  If this linear
+system solve is done with one of the scaled preconditioned iterative
+linear solvers, these solvers are rarely efficient if used without
+preconditioning. A system :math:`Ax=b` can be preconditioned as one of:
 
+.. math::
+   (P^{-1}A)x = P^{-1}b & \qquad\text{[left preconditioning]}, \\
+   (AP^{-1})Px = b  & \qquad\text{[right preconditioning]}, \\
+   (P_L^{-1} A P_R^{-1}) P_R x = P_L^{-1} & \qquad\text{[left and right
+   preconditioning]}.
 
+The Krylov method is then applied to a system with the
+matrix :math:`P^{-1}A`, :math:`AP^{-1}`, or :math:`P_L^{-1} A P_R^{-1}`,
+instead of :math:`A`.  In order to improve the convergence of the
+Krylov iteration, the preconditioner matrix :math:`P`, or the product
+:math:`P_L P_R` in the third case, should in some sense approximate
+the system matrix :math:`A`.  Yet at the same time, in order to be
+cost-effective the matrix :math:`P` (or matrices :math:`P_L` and
+:math:`P_R`) should be reasonably efficient to evaluate and
+solve.  Finding an optimal point in this tradeoff between rapid
+convergence and low cost can be quite challenging.  Good choices are
+often problem-dependent (for example, see [BrownHindmarsh1989]_ for an
+extensive study of preconditioners for reaction-transport systems). 
 
-.. _Mathematics.Stability:
+The ARKode solver allow for preconditioning either side, or on both
+sides, although for non-symmetric matrices :math:`A` we know of few
+situations where preconditioning on both sides is superior to
+preconditioning on one side only (with the product :math:`P = P_L P_R`).
+Moreover, for a given preconditioner matrix, the merits of left
+vs. right preconditioning are unclear in general, and the user should
+experiment with both choices.  Performance will differ between these
+choices because the inverse of the left preconditioner is included in
+the linear system residual whose norm is being tested in the Krylov
+algorithm.  As a rule, however, if the preconditioner is the product
+of two matrices, we recommend that preconditioning be done either on
+the left only or the right only, rather than using one factor on each
+side. 
 
-Explicit stability
-----------------------
-
-
-
-
-.. _Mathematics.Adaptivity:
-
-Time step adaptivity
-----------------------
-
+Typical preconditioners used with ARKode are based on approximations
+to the system Jacobian, :math:`J = \partial f_I / \partial y`.  Since
+the Newton iteration matrix involved is :math:`A = M - \gamma J`, any
+approximation :math:`\bar{J}` to :math:`J` yields a matrix that is of
+potential use as a preconditioner, namely :math:`P = M - \gamma
+\bar{J}`. Because the Krylov iteration occurs within a Newton
+iteration and further also within a time integration, and since each
+of these iterations has its own test for convergence, the
+preconditioner may use a very crude approximation, as long as it
+captures the dominant numerical feature(s) of the system.  We have
+found that the combination of a preconditioner with the Newton-Krylov
+iteration, using even a relatively poor approximation to the Jacobian,
+can be surprisingly superior to using the same matrix without Krylov
+acceleration (i.e., a modified Newton iteration), as well as to using
+the Newton-Krylov method with no preconditioning.
 
 
 
@@ -269,7 +418,29 @@ Implicit predictors
 
 
 
-.. _Rootfinding:
+.. _Mathematics.Adaptivity:
+
+Time step adaptivity
+----------------------
+
+A critical part of ARKode, making it an IVP "solver" rather than just
+an integrator, is its adaptive control of local error.  
+
+
+
+
+.. _Mathematics.Stability:
+
+Explicit stability
+----------------------
+
+Due to the IMEX splittings available in ARKode, a user may supply
+additional information to the integrator regarding the stability of 
+the explicit portion of the IVP contained in :math:`f_E`.  
+
+
+
+.. _Mathematics.Rootfinding:
 
 Rootfinding
 --------------
