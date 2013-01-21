@@ -2076,7 +2076,7 @@ static int ARKSetButcherTables(ARKodeMem ark_mem)
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		      "ARKSetButcherTables", 
 		      "No implicit method at requested order, using q=5.");
-      ARKodeLoadButcherTable(24, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(25, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
