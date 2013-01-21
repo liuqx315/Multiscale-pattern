@@ -92,13 +92,16 @@ highlight_language = "c"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#html_theme = 'default'
-html_theme = 'agogo'
+#html_theme = 'agogo'
+import sphinx_bootstrap_theme
+html_theme = 'bootstrap'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {
+# << options for agogo theme >>
+# html_theme_options = {
+#     "stickysidebar" : "true",
 #  "bodyfont": "Arial",
 #  "headerfont": "Arial",
 #  "pagewidth": "70em",
@@ -113,9 +116,28 @@ html_theme = 'agogo'
 #  "headerlinkcolor": "",
 #  "textalign": "justify"
 #}
+#  << options for bootstrap theme >>
+html_theme_options = {
+    # Global TOC depth for "site" navbar tab. (Default: 1)
+    # Switching to -1 shows all levels.
+    'globaltoc_depth': 1,
+
+    # HTML navbar class (Default: "navbar") to attach to <div>.
+    # For black navbar, do "navbar navbar-inverse"
+    'navbar_class': "navbar navbar-inverse",
+
+    # Fix navigation bar to top of page?
+    # Values: "true" (default) or "false"
+    'navbar_fixed_top': "true",
+
+    # Location of link to source.
+    # Options are "nav" (default), "footer".
+    'source_link_position': "nav",
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = ["."]
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

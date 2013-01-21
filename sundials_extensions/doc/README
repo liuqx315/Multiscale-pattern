@@ -14,7 +14,10 @@ Here are some benefits of using ReST + Sphinx:
 - Sphinx can parse the documents into many convenient formats, most
   notably HTML and a PDF.
 
-To build the docs, you must first have Sphinx [2] installed.  
+To build the docs, you must first have Sphinx [2] installed (version
+1.1 or newer), as well as Python [3] (version 2.5 or newer).  To build
+the HTML version of the documentation, you'll also need to install the
+Bootstrap Sphinx Theme [4].
 
 To build the documents in HTML, use the two commands:
   $ make clean
@@ -22,7 +25,7 @@ To build the documents in HTML, use the two commands:
 If that is successful, open the file build/html/index.html in your web
 browser (relative to this directory).
 
-To build the documents in PDF (requires pdflatex [3] to be installed),
+To build the documents in PDF (requires pdflatex [5] to be installed),
 use the two commands: 
   $ make clean
   $ make latexpdf
@@ -37,4 +40,6 @@ you may then compile into a PS or DVI file as desired.
 
 [1] http://docutils.sourceforge.net/rst.html
 [2] http://sphinx.pocoo.org/
-[3] http://www.tug.org/applications/pdftex/
+[3] http://www.python.org/
+[4] https://github.com/ryan-roemer/sphinx-bootstrap-theme
+[5] http://www.tug.org/applications/pdftex/
