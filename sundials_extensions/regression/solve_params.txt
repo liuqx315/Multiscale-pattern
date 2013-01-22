@@ -1,6 +1,6 @@
 order = 5
 dense_order = -1
-imex = 2
+imex = 0
 btable = -1
 adapt_method = -1
 cflfac = 0.000000
