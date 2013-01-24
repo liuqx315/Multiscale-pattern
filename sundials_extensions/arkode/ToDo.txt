@@ -160,6 +160,10 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Add ark_hadapt_hhist array (of the same length as
+    ark_hadapt_ehist) to store the step sizes used for the last 3
+    successful steps, to allow for more involved adaptivity
+    algorithms.
 [ ] Fix Fortran interface to properly handle user-supplied dense
     Jacobian functions.  C side uses the same user-supplied functions
     for both internal and Lapack solvers, but Fortran does not.
