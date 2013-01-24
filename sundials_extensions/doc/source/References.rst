@@ -30,3 +30,6 @@
    KINSOL: Parallel Software for Differential and Nonlinear Systems.
    Technical Report UCRL-IL-129739, LLNL, February 1998.
 
+.. [HiebertShampine1980] K.L. Hiebert and L.F. Shampine.  Implicitly
+   Defined Output Points for Solutions of ODEs.  Technical Report
+   SAND80-0180, Sandia National Laboratories, February 1980.
