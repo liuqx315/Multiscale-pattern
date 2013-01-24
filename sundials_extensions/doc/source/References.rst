@@ -33,3 +33,22 @@
 .. [HiebertShampine1980] K.L. Hiebert and L.F. Shampine.  Implicitly
    Defined Output Points for Solutions of ODEs.  Technical Report
    SAND80-0180, Sandia National Laboratories, February 1980.
+
+.. [Soderlind1998] G. Soderlind. The automatic control of numerical
+   integration.  *CWI Quarterly*, 11:55-74, 1998.
+
+.. [Soderlind2003] G. Soderlind. Digital filters in adaptive
+   time-stepping.  *ACM Trans. Math. Soft.*, 29:1-26, 2003.
+
+.. [Soderlind2006] G. Soderlind. Time-step selection algorithms:
+   Adaptivity, control and signal processing. *Appl. Numer. Math.*,
+   56:488-502, 2006. 
+
+.. [Gustafsson1991] K. Gustafsson.  Control theoretic techniques for
+   stepsize selection in explicit Runge-Kutta methods. *ACM
+   Trans. Math. Soft.*, 17:533-554, 1991.
+
+.. [Gustafsson1994] K. Gustafsson.  Control-theoretic techniques for
+   stepsize selection in implicit Runge-Kutta methods. *ACM
+   Trans. Math. Soft.* 20:496-512, 1994.
+
