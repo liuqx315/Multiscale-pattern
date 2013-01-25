@@ -63,7 +63,6 @@ from `Lawrence Livermore National Laboratory <http://www.llnl.gov>`_.
    Download
    Documentation
    Regression
-   SUNDIALS
 
 
 .. raw:: html
@@ -74,19 +73,19 @@ from `Lawrence Livermore National Laboratory <http://www.llnl.gov>`_.
        <tr valign="top">
          <td style="vertical-align: top; text-align: left;">
            <a href="http://science.energy.gov/ascr">
-	     <img src="http://faculty.smu.edu/reynolds/arkode/doe_logo.jpg" alt="DOE ASCR logo" border="0" height="75"></a>
+	     <img src="http://faculty.smu.edu/reynolds/arkode/Pics/doe_logo.jpg" alt="DOE ASCR logo" border="0" height="75"></a>
          </td>
          <td style="vertical-align: top; text-align: center;">
            <a href="http://fastmath-scidac.org/">
-	     <img src="http://faculty.smu.edu/reynolds/arkode/fastmath_logo.png" alt="FASTMath logo" border="0" height="75"></a>
+	     <img src="http://faculty.smu.edu/reynolds/arkode/Pics/fastmath_logo.png" alt="FASTMath logo" border="0" height="75"></a>
          </td>
          <td style="vertical-align: top; text-align: right;">
            <a href="https://www.llnl.gov/">
-	     <img src="http://faculty.smu.edu/reynolds/arkode/llnl_logo.jpg" alt="LLNL logo" border="0" height="75"></a>
+	     <img src="http://faculty.smu.edu/reynolds/arkode/Pics/llnl_logo.jpg" alt="LLNL logo" border="0" height="75"></a>
          </td>
          <td style="vertical-align: top; text-align: right;">
            <a href="https://www.smu.edu/">
-	     <img src="http://faculty.smu.edu/reynolds/arkode/smu_logo.png" alt="SMU logo" border="0" height="75"></a>
+	     <img src="http://faculty.smu.edu/reynolds/arkode/Pics/smu_logo.png" alt="SMU logo" border="0" height="75"></a>
          </td>
        </tr>
      </tbody>
