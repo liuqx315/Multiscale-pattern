@@ -99,7 +99,7 @@ html_theme = 'agogo'
 # documentation.
 # << options for agogo theme >>
 html_theme_options = {
-     "bodyfont": "helvetiac",
+     "bodyfont": "helvetica",
      "headerfont": "helvetica",
      "pagewidth": "70em",
      "documentwidth": "55em",

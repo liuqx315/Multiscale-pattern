@@ -12,5 +12,5 @@ library source code is also linked below:
 * `Private development repository 
   <https://bitbucket.org/drreynolds/arkode>`_
 
-* `SUNDIALS download page
-  <https://computation.llnl.gov/casc/sundials/download/download.html>`_
+* `SUNDIALS main site
+  <https://computation.llnl.gov/casc/sundials>`_
