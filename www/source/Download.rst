@@ -2,7 +2,7 @@ Downloads
 =============
 
 The ARKode source code uses the `Mercurial
-<http://mercurial.selenic.org>`_ distributed revision control system,
+<http://mercurial.selenic.com>`_ distributed revision control system,
 and is housed on `Bitbucket <https://bitbucket.org>`_; the SUNDIALS
 library source code is also linked below:
 
