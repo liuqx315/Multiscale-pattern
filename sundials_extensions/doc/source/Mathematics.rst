@@ -7,13 +7,20 @@ ARKode solves ODE initial value problems (IVPs) in real :math:`N`
 -space, which we write in the abstract form
 
 .. math::
-   M\dot{y} = f_E(t,y) + f_I(t,y), \qquad y(t_0) = y_0,
+   M\dot{y} = f_E(t,y) + f_I(t,y), \qquad y(t_0) = y_0.
    :label: IVP
 
-where :math:`y \in \Re^N`, and :math:`M` is a user-specified
-nonsingular operator from :math:`\Re^N \to \Re^N`. Here we use
-:math:`\dot{y}` to denote :math:`dy/dt`, and the two right-hand side
-components may be described as:
+Here, :math:`t` is the independent variable (e.g. time), and the
+dependent variables are given by :math:`y \in \Re^N`.  We use the
+notation :math:`\dot{y}` to denote :math:`dy/dt`.  :math:`M` is a
+user-specified nonsingular linear operator from :math:`\Re^N \to
+\Re^N`.  For standard systems of ordinary differential equations and
+for problems arising from the spatial semi-discretization of partial
+differential equations using finite difference or finite volume
+methods, :math:`M` is typically the identity matrix :math:`I`;  for
+PDEs using a finite-element spatial semi-discretization :math:`M` is
+typically a well-conditioned mass matrix. The two right-hand side
+functions may be described as: 
 
 * :math:`f_E(t,y)` contains the "slow" time scale components of the
   system, that should be integrated using explicit methods.
@@ -21,12 +28,12 @@ components may be described as:
 * :math:`f_I(t,y)` contains the "fast" time scale components of the
   system, that should be integrated using implicit methods.
 
-While we use :math:`t` to denote the independent variable, and usually
-this is time, it certainly need not be.  ARKode may be used to solve
-stiff, nonstiff and multi-rate problems.  Roughly speaking, stiffness
-is characterized by the presence of at least one rapidly damped mode,
-whose time constant is small compared to the time scale of the
-solution itself.
+ARKode may be used to solve stiff, nonstiff and multi-rate problems.
+Roughly speaking, stiffness is characterized by the presence of at
+least one rapidly damped mode, whose time constant is small compared
+to the time scale of the solution itself.  In the implicit/explicit
+(IMEX) splitting above, these stiff components should be included in
+the right-hand side function :math:`f_I(t,y)`.
 
 
 
@@ -40,13 +47,13 @@ The methods used in ARKode are variable-step
 form 
 
 .. math::
-   z_i &= y_{n-1} + h_n \sum_{j=0}^{i-1} A^E_{i,j} f_E(t_n + c_j h_n, z_j) 
-                 + h_n \sum_{j=0}^{i}   A^I_{i,j} f_I(t_n + c_j h_n, z_j),
+   M z_i &= M y_{n-1} + h_n \sum_{j=0}^{i-1} A^E_{i,j} f_E(t_{n-1} + c_j h_n, z_j) 
+                 + h_n \sum_{j=0}^{i}   A^I_{i,j} f_I(t_{n-1} + c_j h_n, z_j),
    \quad i=1,\ldots,s, \\
-   y_n &= y_{n-1} + h_n \sum_{i=0}^{s} b_i \left(f_E(t_n + c_i h_n, z_i) 
-                 + f_I(t_n + c_i h_n, z_i)\right), \\
-   \tilde{y}_n &= y_{n-1} + h_n \sum_{i=0}^{s} \tilde{b}_i 
-       \left(f_E(t_n + c_i h_n, z_i) + f_I(t_n + c_i h_n, z_i)\right).
+   M y_n &= M y_{n-1} + h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
+                 + f_I(t_{n-1} + c_i h_n, z_i)\right), \\
+   M \tilde{y}_n &= M y_{n-1} + h_n \sum_{i=0}^{s} \tilde{b}_i 
+       \left(f_E(t_{n-1} + c_i h_n, z_i) + f_I(t_{n-1} + c_i h_n, z_i)\right).
    :label: ARK
 
 Here the :math:`y_n` are computed approximations to :math:`y(t_n)`,
@@ -61,7 +68,7 @@ must choose appropriately between one of three classes of methods:
 
 For multi-rate problems, a user must provide both of the functions
 :math:`f_E` and :math:`f_I`.  On such problems, ARKode implements the
-ARK methods proposed in [KennedyCarpenter2003]_, allowing for methods
+ARK methods proposed in [KC2003]_, allowing for methods
 having order :math:`q = \{3,4,5\}`.
 
 For nonstiff problems, a user may specify that :math:`f_I = 0`, or in
@@ -96,21 +103,21 @@ For both the DIRK and ARK methods corresponding to :eq:`IVP` and
 :eq:`IVP_implicit`, a nonlinear system
 
 .. math::
-   G(z_i) \equiv z_i - h_n A^I_{i,i} f_I(t_n + c_i h_n, z_i) - a_i = 0
+   G(z_i) \equiv M z_i - h_n A^I_{i,i} f_I(t_{n-1} + c_i h_n, z_i) - a_i = 0
    :label: Residual
 
 must be solved for each stage :math:`z_i, i=1,\ldots,s`, where 
 
 .. math::
-   a_i \equiv y_{n-1} + h_n \sum_{j=0}^{i-1} \left[
-      A^E_{i,j} f_E(t_n + c_j h_n, z_j) +
-      A^I_{i,j} f_I(t_n + c_j h_n, z_j) \right]
+   a_i \equiv M y_{n-1} + h_n \sum_{j=0}^{i-1} \left[
+      A^E_{i,j} f_E(t_{n-1} + c_j h_n, z_j) +
+      A^I_{i,j} f_I(t_{n-1} + c_j h_n, z_j) \right]
    
 for the ARK methods, or 
 
 .. math::
-   a_i \equiv y_{n-1} + h_n \sum_{j=0}^{i-1} 
-      A^I_{i,j} f_I(t_n + c_j h_n, z_j)
+   a_i \equiv M y_{n-1} + h_n \sum_{j=0}^{i-1} 
+      A^I_{i,j} f_I(t_{n-1} + c_j h_n, z_j)
    
 for the DIRK methods.  For these nonlinear systems, ARKode uses a
 type of :index:`Newton iteration`, 
@@ -168,7 +175,7 @@ because it combines established methods for stiff integration,
 nonlinear solver iteration, and Krylov (linear) iteration with a
 problem-specific treatment of the dominant sources of stiffness, in
 the form of a user-supplied preconditioner matrix
-[BrownHindmarsh1989]_.  We note that the direct linear solvers
+[BH1989]_.  We note that the direct linear solvers
 provided by SUNDIALS (dense and band) can only be used with the serial
 vector representations.
 
@@ -304,7 +311,8 @@ or approximated by finite-differences.  In the case of differencing,
 we use the standard approximation
 
 .. math::
-   J_{i,j}(t,y) = \frac{f_{I,i}(t,y+\sigma_j e_j) - f_{I,i}(t,y)}{\sigma_j}.
+   A_{i,j}(t,y) = (M\,e_j)_i - \gamma 
+   \frac{f_{I,i}(t,y+\sigma_j e_j) - f_{I,i}(t,y)}{\sigma_j}.
 
 Here :math:`e_j` is the jth unit vector, and the increments
 :math:`\sigma_j` are given by 
@@ -376,7 +384,7 @@ cost-effective the matrix :math:`P` (or matrices :math:`P_L` and
 :math:`P_R`) should be reasonably efficient to evaluate and
 solve.  Finding an optimal point in this tradeoff between rapid
 convergence and low cost can be quite challenging.  Good choices are
-often problem-dependent (for example, see [BrownHindmarsh1989]_ for an
+often problem-dependent (for example, see [BH1989]_ for an
 extensive study of preconditioners for reaction-transport systems). 
 
 The ARKode solver allow for preconditioning either side, or on both
@@ -489,9 +497,10 @@ function :c:func:`ARKodeSetDenseOrder()`.
 
 The interpolants generated are either of Lagrange or Hermite form, and
 use the data :math:`\left\{ y_{n-2}, f_{n-2}, y_{n-1}, f_{n-1}
-\right\}`, where by :math:`f_{k}` we mean :math:`f(t_k,y_k)`.  Defining
-a scaled and shifted "time" variables for the interval
-:math:`[t_{n-2}, t_{n-1}]` as
+\right\}`, where by :math:`f_{k}` we mean 
+:math:`M^{-1} \left(f_E(t_k,y_k) + f_I(t_k,y_k)\right)`.  Defining a
+scaled and shifted "time" variables for the interval :math:`[t_{n-2},
+t_{n-1}]` as
 
 .. math::
    \tau(t) = (t-t_n)/h_{n-1},
@@ -577,53 +586,54 @@ Time step adaptivity
 ----------------------
 
 A critical part of ARKode, making it an IVP "solver" rather than just
-an integrator, is its adaptive control of local truncation error
-(LTE).  At every step, the local error is estimated and required to
-satisfy tolerance conditions.  If this local error test fails, then
-the step is redone with a reduced step size.  All of the Runge-Kutta
-methods implemented within ARKode admit an embedded solution
-:math:`\tilde{y}_n`, as shown in equation :eq:`ARK`.  Generally, these
+an integrator, is its adaptive control of local truncation error.  At
+every step, the local error is estimated and required to satisfy
+tolerance conditions.  If this local error test fails, then the step
+is redone with a reduced step size.  All of the Runge-Kutta methods
+implemented within ARKode admit an embedded solution
+:math:`\tilde{y}_n`, as shown in equation :eq:`ARK`. Generally, these
 embedded solutions attain a slightly lower order of accuracy than the
 computed solution :math:`y_n`.  Denoting these orders of accuracy as
 :math:`p` and :math:`q`, where :math:`p` corresponds to the embedding
 and :math:`q` corresponds to the method, for the majority of embedded
 methods :math:`p = q-1`, but in all methods :math:`p<q`.  These values
 of :math:`p` and :math:`q` correspond to the global order of accuracy
-for the method, hence each admit local errors satisfying 
+for the method, hence each admit local errors satisfying  
 
 .. math::
-   \| y_1 - y(t_1) \| = C h_1^{q+1} + \mathcal O(h_1^{q+2}), \\
-   \| \tilde{y}_1 - y(t_1) \| = D h_1^{p+1} + \mathcal O(h_1^{p+2}),
+   \| y_n - y(t_n) \| = C h_n^{q+1} + \mathcal O(h_n^{q+2}), \\
+   \| \tilde{y}_n - y(t_n) \| = D h_n^{p+1} + \mathcal O(h_n^{p+2}),
    :label: AsymptoticErrors
 
 where :math:`C` and :math:`D` are constants independent of :math:`h`,
-and where we have assumed that :math:`y_0 = y(t_0)`.  Combining these
-estimates, we have
+and where we have assumed exact initial conditions for the step,
+:math:`y_{n-1} = y(t_{n-1})`. Combining these estimates, we have
 
 .. math::
-   \| y_1 - \tilde{y}_1 \| = \| y_1 - y(t_1) - \tilde{y}_1 + y(t_1) \| 
-   \le \| y_1 - y(t_1) \| + \| \tilde{y}_1 - y(t_1) \| 
-   \le D h_1^{p+1} + \mathcal O(h_1^{p+2}).
+   \| y_n - \tilde{y}_n \| = \| y_n - y(t_n) - \tilde{y}_n + y(t_n) \| 
+   \le \| y_n - y(t_n) \| + \| \tilde{y}_n - y(t_n) \| 
+   \le D h_n^{p+1} + \mathcal O(h_n^{p+2}).
 
 We therefore use this difference norm as an estimate for the local
-error,
+truncation error at the step :math:`n`,
 
 .. math::
-   \text{LTE} = \beta \left(y_1 - \tilde{y}_1\right) = 
-   \beta h_1 \sum_{i=0}^{s} \left(b_i - \tilde{b}_i\right) 
-   \left(f_E(t_n + c_i h_n, z_i) + f_I(t_n + c_i h_n, z_i)\right).
+   T_n = \beta \left(y_n - \tilde{y}_n\right) = 
+   \beta h_n M^{-1} \sum_{i=0}^{s} \left(b_i - \tilde{b}_i\right) 
+   \left(f_E(t_{n-1} + c_i h_n, z_i) + f_I(t_{n-1} + c_i h_n, z_i)\right).
+   :label: LTE
 
 Here, :math:`\beta>0` is an error *bias* to help account for the error
 constant :math:`D`; the default value of this is :math:`\beta = 1.5`,
 and may be modified by the user through the function
 :c:func:`ARKodeSetAdaptivityMethod()`.  
 
-With this LTE estimate, the local error test is simply :math:`\|LTE\|
+With this LTE estimate, the local error test is simply :math:`\|T_n\|
 < 1`, where we remind the user that this is actually the WRMS norm
 defined in equation :eq:`WRMS_NORM` that includes the user-specified
 relative and absolute tolerances.  If this error test passes, the step
-is considered successful, and the LTE is subsequently used to estimate
-the next step size, as will be described below in the section
+is considered successful, and the estimate is subsequently used to
+estimate the next step size, as will be described below in the section
 :ref:`Mathematics.Adaptivity.ErrorControl`.  If the error test fails,
 the step is rejected and a new step size :math:`h'` is then computed
 using the error control algorithms described in
@@ -701,7 +711,7 @@ We define the values :math:`\varepsilon_n`, :math:`\varepsilon_{n-1}`
 and :math:`\varepsilon_{n-2}` as
 
 .. math::
-   \varepsilon_k &\ \equiv \ \|\text{LTE}_k\| 
+   \varepsilon_k &\ \equiv \ \|T_k\| 
       \ = \ \beta \|y_n - \tilde{y}_n\|,
 
 corresponding to the local error estimates for three consecutive
@@ -716,11 +726,10 @@ PID controller
 """"""""""""""""""
 
 This is the default time adaptivity controller used by ARKode.  It
-derives from those found in [KennedyCarpenter2003]_, [Soderlind1998]_,
-[Soderlind2003]_ and  [Soderlind2006]_.  It uses all three of the
-local error estimates :math:`\varepsilon_n`, :math:`\varepsilon_{n-1}`
-and :math:`\varepsilon_{n-2}` in determination of a prospective step
-size,
+derives from those found in [KC2003]_, [S1998]_, [S2003]_ and
+[S2006]_.  It uses all three of the local error estimates
+:math:`\varepsilon_n`, :math:`\varepsilon_{n-1}` and
+:math:`\varepsilon_{n-2}` in determination of a prospective step size,
 
 .. math::
    h' = h_n \varepsilon_n^{-k_1/p} \varepsilon_{n-1}^{k_2/p} 
@@ -743,9 +752,9 @@ PI controller
 """"""""""""""""""
 
 Like with the previous method, the PI controller derives from those
-found in [KennedyCarpenter2003]_, [Soderlind1998]_,  [Soderlind2003]_
-and  [Soderlind2006]_, but it differs in that it only uses the two
-most recent step sizes in its adaptivity algorithm,
+found in [KC2003]_, [S1998]_, [S2003]_ and [S2006]_, but it differs in
+that it only uses the two most recent step sizes in its adaptivity
+algorithm, 
 
 .. math::
    h' = h_n \varepsilon_n^{-k_1/p} \varepsilon_{n-1}^{k_2/p}.
@@ -782,7 +791,7 @@ the function :c:func:`ARKodeSetAdaptivityMethod()`.
 Explicit Gustafsson controller
 """"""""""""""""""""""""""""""""""
 
-This step adaptivity algorithm was proposed in [Gustafsson1991]_, and
+This step adaptivity algorithm was proposed in [G1991]_, and
 is primarily useful in combination with explicit Runge-Kutta methods.
 Using the notation of our earlier controllers, it has the form
 
@@ -806,7 +815,7 @@ Implicit Gustafsson controller
 """"""""""""""""""""""""""""""""""
 
 A version of the above controller suitable for implicit Runge-Kutta
-methods was introduced in [Gustafsson1994]_, and has the form
+methods was introduced in [G1994]_, and has the form
 
 .. math::
    h' = \begin{cases}
@@ -903,6 +912,58 @@ default value of :math:`1/2`.
 
 
 
+.. _Mathematics.MassSolve:
+
+Mass matrix solver
+--------------------
+
+Within the approach described above, there are three locations where a
+linear solve of the form
+
+.. math::
+   M x = b
+
+is required: in constructing the time-evolved solution :math:`y_n`
+from equation :eq:`ARK`, in estimating the local truncation error
+in equation :eq:`LTE`, and in constructing predictors for the implicit
+solver iteration (see section :ref:`Mathematics.Predictors.Max`).
+Specifically, to construct the time-evolved solution :math:`y_n` we
+must solve
+
+.. math::
+   &M y_n \ = \ M y_{n-1} + h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
+                 + f_I(t_{n-1} + c_i h_n, z_i)\right), \\
+   \Leftrightarrow \qquad & \\
+   &M (y_n -y_{n-1}) \ = \ h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
+                 + f_I(t_{n-1} + c_i h_n, z_i)\right), \\
+   \Leftrightarrow \qquad & \\
+   &M \nu \ = \ h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
+                 + f_I(t_{n-1} + c_i h_n, z_i)\right),
+
+for :math:`\nu = y_n - y_{n-1}`.  Similarly, in computing the local
+error estimate :math:`T` we must solve systems of the form
+
+.. math::
+   M\, T_n = h \sum_{i=0}^{s} \left(b_i - \tilde{b}_i\right) 
+   \left(f_E(t_{n-1} + c_i h_n, z_i) + f_I(t_{n-1} + c_i h_n, z_i)\right).
+
+Lastly, in constructing implicit predictors of order 2 or higher, we
+must compute the derivative information
+
+.. math::
+   M f_k = f_E(t_k, y_k) + f_I(t_k, y_k).
+
+Of course, for problems in which :math:`M=I` these solves are not
+required; however for problems with non-identity :math:`M`, ARKode may
+use either an iterative linear solver or a dense linear solver, in the
+same manner as described above for solving the linear Newton systems.
+
+
+**[Continue with documentation here]**
+
+
+
+
 .. _Mathematics.Rootfinding:
 
 Rootfinding
@@ -929,7 +990,7 @@ root.
 The basic scheme used is to check for sign changes of any
 :math:`g_i(t)` over each time step taken, and then (when a sign change
 is found) to home in on the root (or roots) with a modified secant
-method [HiebertShampine1980]_.  In addition, each time :math:`g` is
+method [HS1980]_.  In addition, each time :math:`g` is
 computed, ARKode checks to see if :math:`g_i(t) = 0` exactly, and if
 so it reports this as a root. However, if an exact zero of any
 :math:`g_i` is found at a point :math:`t`, ARKode computes
@@ -997,10 +1058,4 @@ If the above value of :math:`t_{mid}` is within :math:`\tau /2` of
 fractional distance from the endpoint (relative to the interval size)
 is between 0.1 and 0.5 (with 0.5 being the midpoint), and the actual
 distance from the endpoint is at least :math:`\tau/2`. 
-
-
-
-
-
-
 

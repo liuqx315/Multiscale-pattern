@@ -84,7 +84,7 @@ Krylov methods, preconditioning must be supplied by the user, in two
 phases: *setup* (preprocessing of Jacobian data) and *solve*.  While
 there is no default choice of preconditioner analagous to the
 difference-quotient approximation in the direct case, the references
-[BrownHindmarsh1989]_ and [Byrne1992]_, together with the example and
+[BH1989]_ and [B1992]_, together with the example and
 demonstration programs included with ARKode and CVODE, offer
 considerable assistance in building preconditioners.
 

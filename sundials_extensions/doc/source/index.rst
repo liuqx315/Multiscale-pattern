@@ -23,7 +23,7 @@ adaptivity algorithms is enabled through optional interface routines.
 
 Due to its similarities in both function and design with the CVODE
 package, a significant portion of this documentation has been directly
-adapted from the CVODE documentation [HindmarshSerban2012]_.
+adapted from the CVODE documentation [HS2012]_.
 
 ARKode is written in C, with C++ and Fortran interfaces.
 
