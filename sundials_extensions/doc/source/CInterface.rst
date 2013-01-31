@@ -10,7 +10,7 @@ main program, and provide descriptions of the ARKode user-callable
 functions and user-supplied functions. 
 
 The sample programs described in the companion document
-[Reynolds2013]_ may also be helpful. Those codes may be used as
+[R2013]_ may also be helpful. Those codes may be used as
 templates (with the removal of some lines used in testing) and are
 included in the ARKode package. 
 
@@ -185,7 +185,7 @@ the SPGMR solver).
 
 Other headers may be needed, according to the choice of
 preconditioner, etc.  For example, in the ``arkDiurnal_kry_p.c`` example
-(see [Reynolds2013]_), preconditioning is done with a block-diagonal
+(see [R2013]_), preconditioning is done with a block-diagonal
 matrix.  For this, even though the :c:func:`ARKSpgmr()` linear solver
 is used, the header ``sundials_dense.h`` is included for access to the
 underlying generic dense linear solver that is used for preconditioning.
@@ -537,7 +537,7 @@ relevant.
     noise level. If the different components have different noise
     levels, then ``abstol`` should be a vector. See the example
     ``arkRoberts_dns.c`` in the ARKode package, and the discussion
-    of it in the ARKode Examples document [Reynolds2013]_. In that
+    of it in the ARKode Examples document [R2013]_. In that
     problem, the three components vary betwen 0 and 1, and have
     different noise levels; hence the ``abstol`` vector. It is
     impossible to give any general advice on ``abstol`` values,
@@ -3968,7 +3968,7 @@ usually unacceptably slow.  Unfortunately, an effective preconditioner
 tends to be problem-specific.  However, we have developed one type of
 preconditioner that treats a rather broad class of PDE-based
 problems. It has been successfully used with CVODE for several
-realistic, large-scale problems [HindmarshTaylor1998]_ and is included
+realistic, large-scale problems [HT1998]_ and is included
 in a software module within the ARKode package. This module works
 with the parallel vector module NVECTOR_PARALLEL and is usable
 with any of the Krylov iterative linear solvers. It generates a
