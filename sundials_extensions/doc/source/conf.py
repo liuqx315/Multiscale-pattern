@@ -25,11 +25,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-#extensions = ['sphinx.ext.todo', 'sphinx.ext.mathjax']
-extensions = ['sphinx.ext.mathjax']
-
-# MathJax file, which is free to use.  See https://bitbucket.org/kevindunn/sphinx-extension-mathjax/wiki/Home
-mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+extensions = ['sphinx.ext.todo', 'sphinx.ext.mathjax']
 
 
 # Add any paths that contain templates here, relative to this directory.
