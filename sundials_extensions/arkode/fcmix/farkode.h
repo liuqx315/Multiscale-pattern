@@ -935,42 +935,46 @@ extern "C" {
 /* Definitions of interface function names */
 #if defined(SUNDIALS_F77_FUNC)
 
-#define FARK_MALLOC              SUNDIALS_F77_FUNC(farkmalloc,            FARKMALLOC)
-#define FARK_REINIT              SUNDIALS_F77_FUNC(farkreinit,            FARKREINIT)
-#define FARK_SETDEFAULTS         SUNDIALS_F77_FUNC(farksetdefaults,       FARKSETDEFAULTS)
-#define FARK_SETIIN              SUNDIALS_F77_FUNC(farksetiin,            FARKSETIIN)
-#define FARK_SETRIN              SUNDIALS_F77_FUNC(farksetrin,            FARKSETRIN)
-#define FARK_EWTSET              SUNDIALS_F77_FUNC(farkewtset,            FARKEWTSET)
-#define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,             FARKDENSE)
-#define FARK_DENSESETJAC         SUNDIALS_F77_FUNC(farkdensesetjac,       FARKDENSESETJAC)
-#define FARK_BAND                SUNDIALS_F77_FUNC(farkband,              FARKBAND)
-#define FARK_BANDSETJAC          SUNDIALS_F77_FUNC(farkbandsetjac,        FARKBANDSETJAC)
-#define FARK_LAPACKDENSE         SUNDIALS_F77_FUNC(farklapackdense,       FARKLAPACKDENSE)
-#define FARK_LAPACKDENSESETJAC   SUNDIALS_F77_FUNC(farklapackdensesetjac, FARKLAPACKDENSESETJAC)
-#define FARK_LAPACKBAND          SUNDIALS_F77_FUNC(farklapackband,        FARKLAPACKBAND)
-#define FARK_LAPACKBANDSETJAC    SUNDIALS_F77_FUNC(farklapackbandsetjac,  FARKLAPACKBANDSETJAC)
-#define FARK_SPTFQMR             SUNDIALS_F77_FUNC(farksptfqmr,           FARKSPTFQMR)
-#define FARK_SPTFQMRREINIT       SUNDIALS_F77_FUNC(farksptfqmrreinit,     FARKSPTFQMRREINIT)
-#define FARK_SPBCG               SUNDIALS_F77_FUNC(farkspbcg,             FARKSPBCG)
-#define FARK_SPBCGREINIT         SUNDIALS_F77_FUNC(farkspbcgreinit,       FARKSPBCGREINIT)
-#define FARK_SPGMR               SUNDIALS_F77_FUNC(farkspgmr,             FARKSPGMR)
-#define FARK_SPGMRREINIT         SUNDIALS_F77_FUNC(farkspgmrreinit,       FARKSPGMRREINIT)
-#define FARK_SPILSSETJAC         SUNDIALS_F77_FUNC(farkspilssetjac,       FARKSPILSSETJAC)
-#define FARK_SPILSSETPREC        SUNDIALS_F77_FUNC(farkspilssetprec,      FARKSPILSSETPREC)
-#define FARK_ARKODE              SUNDIALS_F77_FUNC(farkode,               FARKODE)
-#define FARK_DKY                 SUNDIALS_F77_FUNC(farkdky,               FARKDKY)
-#define FARK_FREE                SUNDIALS_F77_FUNC(farkfree,              FARKFREE)
-#define FARK_IMP_FUN             SUNDIALS_F77_FUNC(farkifun,              FARKIFUN)
-#define FARK_EXP_FUN             SUNDIALS_F77_FUNC(farkefun,              FARKEFUN)
-#define FARK_DJAC                SUNDIALS_F77_FUNC(farkdjac,              FARKDJAC)
-#define FARK_LDJAC               SUNDIALS_F77_FUNC(farkldjac,             FARKLDJAC)
-#define FARK_BJAC                SUNDIALS_F77_FUNC(farkbjac,              FARKBJAC)
-#define FARK_PSOL                SUNDIALS_F77_FUNC(farkpsol,              FARKPSOL)
-#define FARK_PSET                SUNDIALS_F77_FUNC(farkpset,              FARKPSET)
-#define FARK_JTIMES              SUNDIALS_F77_FUNC(farkjtimes,            FARKJTIMES)
-#define FARK_EWT                 SUNDIALS_F77_FUNC(farkewt,               FARKEWT)
-#define FARK_GETERRWEIGHTS       SUNDIALS_F77_FUNC(farkgeterrweights,     FARKGETERRWEIGHTS)
-#define FARK_GETESTLOCALERR      SUNDIALS_F77_FUNC(farkgetestlocalerr,    FARKGETESTLOCALERR)
+#define FARK_MALLOC              SUNDIALS_F77_FUNC(farkmalloc,              FARKMALLOC)
+#define FARK_REINIT              SUNDIALS_F77_FUNC(farkreinit,              FARKREINIT)
+#define FARK_SETDEFAULTS         SUNDIALS_F77_FUNC(farksetdefaults,         FARKSETDEFAULTS)
+#define FARK_SETIIN              SUNDIALS_F77_FUNC(farksetiin,              FARKSETIIN)
+#define FARK_SETRIN              SUNDIALS_F77_FUNC(farksetrin,              FARKSETRIN)
+#define FARK_SETERKTABLE         SUNDIALS_F77_FUNC(farkseterktable,         FARKSETERKTABLE)
+#define FARK_SETIRKTABLE         SUNDIALS_F77_FUNC(farksetirktable,         FARKSETIRKTABLE)
+#define FARK_SETARKTABLES        SUNDIALS_F77_FUNC(farksetarktables,        FARKSETARKTABLES)
+#define FARK_EWTSET              SUNDIALS_F77_FUNC(farkewtset,              FARKEWTSET)
+#define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,               FARKDENSE)
+#define FARK_DENSESETJAC         SUNDIALS_F77_FUNC(farkdensesetjac,         FARKDENSESETJAC)
+#define FARK_BAND                SUNDIALS_F77_FUNC(farkband,                FARKBAND)
+#define FARK_BANDSETJAC          SUNDIALS_F77_FUNC(farkbandsetjac,          FARKBANDSETJAC)
+#define FARK_LAPACKDENSE         SUNDIALS_F77_FUNC(farklapackdense,         FARKLAPACKDENSE)
+#define FARK_LAPACKDENSESETJAC   SUNDIALS_F77_FUNC(farklapackdensesetjac,   FARKLAPACKDENSESETJAC)
+#define FARK_LAPACKBAND          SUNDIALS_F77_FUNC(farklapackband,          FARKLAPACKBAND)
+#define FARK_LAPACKBANDSETJAC    SUNDIALS_F77_FUNC(farklapackbandsetjac,    FARKLAPACKBANDSETJAC)
+#define FARK_SPTFQMR             SUNDIALS_F77_FUNC(farksptfqmr,             FARKSPTFQMR)
+#define FARK_SPTFQMRREINIT       SUNDIALS_F77_FUNC(farksptfqmrreinit,       FARKSPTFQMRREINIT)
+#define FARK_SPBCG               SUNDIALS_F77_FUNC(farkspbcg,               FARKSPBCG)
+#define FARK_SPBCGREINIT         SUNDIALS_F77_FUNC(farkspbcgreinit,         FARKSPBCGREINIT)
+#define FARK_SPGMR               SUNDIALS_F77_FUNC(farkspgmr,               FARKSPGMR)
+#define FARK_SPGMRREINIT         SUNDIALS_F77_FUNC(farkspgmrreinit,         FARKSPGMRREINIT)
+#define FARK_SPILSSETJAC         SUNDIALS_F77_FUNC(farkspilssetjac,         FARKSPILSSETJAC)
+#define FARK_SPILSSETPREC        SUNDIALS_F77_FUNC(farkspilssetprec,        FARKSPILSSETPREC)
+#define FARK_ARKODE              SUNDIALS_F77_FUNC(farkode,                 FARKODE)
+#define FARK_DKY                 SUNDIALS_F77_FUNC(farkdky,                 FARKDKY)
+#define FARK_FREE                SUNDIALS_F77_FUNC(farkfree,                FARKFREE)
+#define FARK_IMP_FUN             SUNDIALS_F77_FUNC(farkifun,                FARKIFUN)
+#define FARK_EXP_FUN             SUNDIALS_F77_FUNC(farkefun,                FARKEFUN)
+#define FARK_DJAC                SUNDIALS_F77_FUNC(farkdjac,                FARKDJAC)
+#define FARK_LDJAC               SUNDIALS_F77_FUNC(farkldjac,               FARKLDJAC)
+#define FARK_BJAC                SUNDIALS_F77_FUNC(farkbjac,                FARKBJAC)
+#define FARK_PSOL                SUNDIALS_F77_FUNC(farkpsol,                FARKPSOL)
+#define FARK_PSET                SUNDIALS_F77_FUNC(farkpset,                FARKPSET)
+#define FARK_JTIMES              SUNDIALS_F77_FUNC(farkjtimes,              FARKJTIMES)
+#define FARK_EWT                 SUNDIALS_F77_FUNC(farkewt,                 FARKEWT)
+#define FARK_GETERRWEIGHTS       SUNDIALS_F77_FUNC(farkgeterrweights,       FARKGETERRWEIGHTS)
+#define FARK_GETESTLOCALERR      SUNDIALS_F77_FUNC(farkgetestlocalerr,      FARKGETESTLOCALERR)
+#define FARK_WRITEPARAMETERS     SUNDIALS_F77_FUNC(farkwriteparameters,     FARKWRITEPARAMETERS)
 
 #else
 
@@ -979,6 +983,9 @@ extern "C" {
 #define FARK_SETDEFAULTS         farksetdefaults_
 #define FARK_SETIIN              farksetiin_
 #define FARK_SETRIN              farksetrin_
+#define FARK_SETERKTABLE         farkseterktable_
+#define FARK_SETIRKTABLE         farksetirktable_
+#define FARK_SETARKTABLES        farksetarktables_
 #define FARK_EWTSET              farkewtset_
 #define FARK_DENSE               farkdense_
 #define FARK_DENSESETJAC         farkdensesetjac_
@@ -1010,6 +1017,7 @@ extern "C" {
 #define FARK_EWT                 farkewt_
 #define FARK_GETERRWEIGHTS       farkgeterrweights_
 #define FARK_GETESTLOCALERR      farkgetestlocalerr_
+#define FARK_WRITEPARAMETERS     farkwriteparameters_
 
 #endif
 
@@ -1029,8 +1037,8 @@ extern "C" {
 		   int *iatol, realtype *rtol, realtype *atol,
 		   int *ier);
 
-  void FARK_SETIIN(char key_name[], long int *ival, int *key_len, int *ier);
-  void FARK_SETRIN(char key_name[], realtype *rval, int *key_len, int *ier);
+  void FARK_SETIIN(char key_name[], long int *ival, int *ier);
+  void FARK_SETRIN(char key_name[], realtype *rval, int *ier);
   void FARK_SETDEFAULTS(int *ier);
   void FARK_SETERKTABLE(int *s, int *q, int *p, realtype *c, realtype *A, 
 			realtype *b, realtype *b2, int *ier);
@@ -1038,11 +1046,6 @@ extern "C" {
 			realtype *A, realtype *b, realtype *b2, int *ier);
   void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c, realtype *Ai, 
 			 realtype *Ae, realtype *b, realtype *b2, int *ier);
-  void FARK_SETADAPTIVITYMETHOD(int *method, realtype *params, int *ier);
-  void FARK_SETADAPTIVITYCONSTANTS(realtype *etamx1, realtype *etamxf, 
-				   realtype *etacf, int *small_nef, int *ier);
-  void FARK_SETNEWTONCONSTANTS(realtype *crdown, realtype *rdiv, int *ier);
-  void FARK_SETLSETUPCONSTANTS(realtype *dgmax, int *msbp, int *ier);
 
   void FARK_EWTSET(int *flag, int *ier);
 
@@ -1078,6 +1081,7 @@ extern "C" {
 
   void FARK_FREE(void);
 
+  void FARK_WRITEPARAMETERS(int *ier);
 
   /* Prototypes: Functions Called by the ARKODE Solver */
   int FARKfi(realtype t, N_Vector y, N_Vector ydot, void *user_data);

@@ -13,7 +13,7 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 
 # extension directories
-EXTEN = nvector arkode
+EXTEN = nvector arkode arkode/fcmix
 
 # executable directories
 EXEC = examples regression
@@ -24,7 +24,7 @@ all :
 	for dir in ${EXTEN}; do \
 	  $(MAKE) -C $$dir; \
 	done
-	ar -cr sundials_extensions.a */*.o
+	ar -cr sundials_extensions.a nvector/*.o arkode/*.o arkode/fcmix/*.o
 	for dir in ${EXEC}; do \
 	  $(MAKE) -C $$dir; \
 	done
