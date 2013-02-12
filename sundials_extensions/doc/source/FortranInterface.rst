@@ -437,9 +437,9 @@ Table: Keys for setting FARKODE integer optional inputs
 
 .. cssclass:: table-bordered
 
-=================  =====================================
+=================  =========================================
 Key                ARKode routine
-=================  =====================================
+=================  =========================================
 ORDER              :c:func:`ARKodeSetOrder()`
 DENSE_ORDER        :c:func:`ARKodeSetDenseOrder()`
 LINEAR             :c:func:`ARKodeSetLinear()`
@@ -456,14 +456,17 @@ PREDICT_METHOD     :c:func:`ARKodeSetPredictorMethod()`
 MAX_ERRFAIL        :c:func:`ARKodeSetMaxErrTestFails()`
 MAX_NITERS         :c:func:`ARKodeSetMaxNonlinIters()`
 MAX_CONVFAIL       :c:func:`ARKodeSetMaxConvFails()`
-=================  =====================================
+ADAPT_METHOD       :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_SMALL_NEF    :c:func:`ARKodeSetAdaptivityConstants()`
+LSETUP_MSBP        :c:func:`ARKodeSetLSetupConstants()`
+=================  =========================================
 
 `*` When setting ARK_TABLE_NUM, pass in IVAL as an array of
 length 2, specifying the IRK table number first, then the ERK table
 number. 
 
 
-
+      
    .. c:function:: SUBROUTINE FARKSETRIN(KEY, RVAL, IER)
    
       Specification routine to pass optional real inputs
@@ -483,16 +486,30 @@ Table: Keys for setting FARKODE real optional inputs
 
 .. cssclass:: table-bordered
 
-===========  ===================================
-Key          ARKode routine
-===========  ===================================
-INIT_STEP    :c:func:`ARKodeSetInitStep()`
-MAX_STEP     :c:func:`ARKodeSetMaxStep()`
-MIN_STEP     :c:func:`ARKodeSetMinStep()`
-STOP_TIME    :c:func:`ARKodeSetStopTime()`
-NLCONV_COEF  :c:func:`ARKodeSetNonlinConvCoef()`
-===========  ===================================
-
+============  =========================================
+Key           ARKode routine
+============  =========================================
+INIT_STEP     :c:func:`ARKodeSetInitStep()`
+MAX_STEP      :c:func:`ARKodeSetMaxStep()`
+MIN_STEP      :c:func:`ARKodeSetMinStep()`
+STOP_TIME     :c:func:`ARKodeSetStopTime()`
+NLCONV_COEF   :c:func:`ARKodeSetNonlinConvCoef()`
+ADAPT_CFL     :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_SAFETY  :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_BIAS    :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_GROWTH  :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_LB      :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_UB      :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_K1      :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_K2      :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_K3      :c:func:`ARKodeSetAdaptivityMethod()`
+ADAPT_ETAMX1  :c:func:`ARKodeSetAdaptivityConstants()`
+ADAPT_ETAMXF  :c:func:`ARKodeSetAdaptivityConstants()`
+ADAPT_ETACF   :c:func:`ARKodeSetAdaptivityConstants()`
+NEWT_CRDOWN   :c:func:`ARKodeSetNewtonConstants()`
+NEWT_RDIV     :c:func:`ARKodeSetNewtonConstants()`
+LSETUP_DGMAX  :c:func:`ARKodeSetLSetupConstants()`
+============  =========================================
 
 
 Alternatively, if a user wishes to reset all of the options to their
@@ -573,52 +590,6 @@ complete information.
    
 
    
-   .. c:function:: SUBROUTINE FARKSETADAPTIVITYMETHOD(METHOD, PARAMS, IER)
-   
-      Interface to the routine :c:func:`ARKodeSetAdaptivityMethod()`.
-      
-      **Arguments:** 
-         * METHOD (``int``, input) -- flag specifying the method 
-         * PARAMS (``realtype``, input) -- array of length 9 containing the adaptivity parameters 
-         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
-   
-
-   
-   .. c:function:: SUBROUTINE FARKSETADAPTIVITYCONSTANTS(ETAMX1, ETAMXF, ETACF, SMALLNEF, IER)
-   
-      Interface to the routine :c:func:`ARKodeSetAdaptivityConstants()`.
-      
-      **Arguments:** 
-         * ETAMX1 (``realtype``, input) -- max change for the first step 
-         * ETAMXF (``realtype``, input) -- step change on error failure 
-         * ETACF (``realtype``, input) -- step change on a convergence failure 
-         * SMALLNEF (``int``, input) -- No. of error failures before enforcing ETAMXF 
-         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
-   
-
-   
-   .. c:function:: SUBROUTINE FARKSETNEWTONCONSTANTS(CRDOWN, RDIV, IER)
-   
-      Interface to the routine :c:func:`ARKodeSetNewtonConstants()`.
-      
-      **Arguments:** 
-         * CRDOWN (``realtype``, input) -- convergence rate estimation constant 
-         * RDIV (``realtype``, input) -- divergence bound 
-         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
-   
-
-   
-   .. c:function:: SUBROUTINE FARKSETLSETUPCONSTANTS(DGMAX, MSBP, IER)
-   
-      Interface to the routine :c:func:`ARKodeSetLSetupConstants()`.
-      
-      **Arguments:** 
-         * DGMAX (``realtype``, input) -- maximum allowable gamma ratio 
-         * MSBP (``int``, input) -- maximum number of time steps
-           between linear solver setup calls  
-         * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
-   
-
 .. _FInterface.LinearSolver:
 
 Linear solver specification

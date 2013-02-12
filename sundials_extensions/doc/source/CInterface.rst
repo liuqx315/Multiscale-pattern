@@ -1616,16 +1616,16 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
         (0 :math:`\le` `imethod` :math:`\le` 5): 
         0 is PID, 1 is PI, 2 is I, 3 is explicit Gustafsson, 4 is
         implicit Gustafsson, and 5 is the ImEx Gustafsson.
-      * `adapt_params[0]` -- fraction of the estimated explicitly stable
+      * `adapt_params[0]` -- (*cfl*) fraction of the estimated explicitly stable
         step to use (default is 0.5)
-      * `adapt_params[1]` -- safety factor applied to accuracy-based time
+      * `adapt_params[1]` -- (*safety*) safety factor applied to accuracy-based time
         step (default is 0.96)
-      * `adapt_params[2]` -- bias applied to error in accuracy-based time
+      * `adapt_params[2]` -- (*bias*) bias applied to error in accuracy-based time
         step estimation (default is 1.5)
-      * `adapt_params[3]` -- maximum allowed growth factor between
+      * `adapt_params[3]` -- (*growth*) maximum allowed growth factor between
         consecutive time steps (default is 20.0)
-      * `adapt_params[4]` -- lower bound on window to leave step size fixed (default is 1.0)
-      * `adapt_params[5]` -- upper bound on window to leave step size fixed (default is 1.5)
+      * `adapt_params[4]` -- (*lb*) lower bound on window to leave step size fixed (default is 1.0)
+      * `adapt_params[5]` -- (*ub*) upper bound on window to leave step size fixed (default is 1.5)
       * `adapt_params[6]` -- :math:`k_1` parameter within accuracy-based adaptivity algorithms.
       * `adapt_params[7]` -- :math:`k_2` parameter within accuracy-based adaptivity algorithms.
       * `adapt_params[8]` -- :math:`k_3` parameter within accuracy-based adaptivity algorithms.
@@ -1681,7 +1681,12 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** This function is designed only for advanced ARKode usage.
+   **Notes:** This function is designed only for advanced ARKode
+   usage.
+
+   Any zero-valued parameter will imply a reset to the default value.
+
+   Any negative parameter will be left unchanged from the previous state.
 
 
 
@@ -1701,6 +1706,10 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
    
    **Notes:** This function is designed only for advanced ARKode usage.
 
+   Any zero-valued parameter will imply a reset to the default value.
+
+   Any negative parameter will be left unchanged from the previous state.
+
 
 
 .. c:function:: int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax, int msbp)
@@ -1719,6 +1728,10 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_ILL_INPUT if an argument has an illegal value
    
    **Notes:** This function is designed only for advanced ARKode usage.
+
+   Any zero-valued parameter will imply a reset to the default value.
+
+   Any negative parameter will be left unchanged from the previous state.
 
 
 

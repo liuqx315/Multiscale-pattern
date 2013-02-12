@@ -1125,7 +1125,8 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
   if (ark_mem->ark_nst > 0) {
     if ( (tstop - ark_mem->ark_tn) * ark_mem->ark_h < ZERO ) {
       ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		      "ARKodeSetStopTime", MSGARK_BAD_TSTOP, ark_mem->ark_tn);
+		      "ARKodeSetStopTime", MSGARK_BAD_TSTOP, 
+		      tstop, ark_mem->ark_tn, ark_mem->ark_h);
       return(ARK_ILL_INPUT);
     }
   }
@@ -1176,32 +1177,43 @@ int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod,
 
   /* set positive-valued paramters into ark_mem, 
      otherwise set defaults for the chosen method */
-  ark_mem->ark_hadapt_cfl = adapt_params[0];
-  if (adapt_params[0] == ZERO) 
+  if (adapt_params[0] == ZERO) {
     ark_mem->ark_hadapt_cfl = CFLFAC;
+  } else if (adapt_params[0] > ZERO) {
+    ark_mem->ark_hadapt_cfl = adapt_params[0];
+  }
     
-  ark_mem->ark_hadapt_safety = adapt_params[1];
-  if (adapt_params[1] == ZERO) 
+  if (adapt_params[1] == ZERO) {
     ark_mem->ark_hadapt_safety = SAFETY;
+  } else if (adapt_params[1] > ZERO) {
+    ark_mem->ark_hadapt_safety = adapt_params[1];
+  }
 
-  ark_mem->ark_hadapt_bias = adapt_params[2];
-  if (adapt_params[2] == ZERO) 
+  if (adapt_params[2] == ZERO) {
     ark_mem->ark_hadapt_bias = BIAS;
+  } else if (adapt_params[2] > ZERO) {
+    ark_mem->ark_hadapt_bias = adapt_params[2];
+  }
 
-  ark_mem->ark_hadapt_growth = adapt_params[3];
-  if (adapt_params[3] == ZERO) 
+  if (adapt_params[3] == ZERO) {
     ark_mem->ark_hadapt_growth = GROWTH;
+  } else if (adapt_params[3] > ZERO) {
+    ark_mem->ark_hadapt_growth = adapt_params[3];
+  }
 
-  ark_mem->ark_hadapt_lbound = adapt_params[4];
-  if (adapt_params[4] == ZERO) 
+  if (adapt_params[4] == ZERO) {
     ark_mem->ark_hadapt_lbound = HFIXED_LB;
+  } else if (adapt_params[4] > ZERO) {
+    ark_mem->ark_hadapt_lbound = adapt_params[4];
+  }
 
-  ark_mem->ark_hadapt_ubound = adapt_params[5];
-  if (adapt_params[5] == ZERO) 
+  if (adapt_params[5] == ZERO) {
     ark_mem->ark_hadapt_ubound = HFIXED_UB;
+  } else if (adapt_params[5] > ZERO) {
+    ark_mem->ark_hadapt_ubound = adapt_params[5];
+  }
 
-  ark_mem->ark_hadapt_k1 = adapt_params[6];
-  if (adapt_params[6] == ZERO) 
+  if (adapt_params[6] == ZERO) {
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
       ark_mem->ark_hadapt_k1 = AD0_K1; break;
@@ -1216,9 +1228,11 @@ int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod,
     case (5):
       ark_mem->ark_hadapt_k1 = AD5_K1; break;
     }
+  } else if (adapt_params[6] > ZERO) {
+    ark_mem->ark_hadapt_k1 = adapt_params[6];
+  }
 
-  ark_mem->ark_hadapt_k2 = adapt_params[7];
-  if (adapt_params[7] == ZERO) 
+  if (adapt_params[7] == ZERO) {
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
       ark_mem->ark_hadapt_k2 = AD0_K2; break;
@@ -1231,15 +1245,20 @@ int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod,
     case (5):
       ark_mem->ark_hadapt_k2 = AD5_K2; break;
     }
+  } else if (adapt_params[7] > ZERO) {
+    ark_mem->ark_hadapt_k2 = adapt_params[7];
+  }
 
-  ark_mem->ark_hadapt_k3 = adapt_params[8];
-  if (adapt_params[8] == ZERO) 
+  if (adapt_params[8] == ZERO) {
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
       ark_mem->ark_hadapt_k3 = AD0_K3; break;
     case (5):
       ark_mem->ark_hadapt_k3 = AD5_K3; break;
     }
+  } else if (adapt_params[8] > ZERO) {
+    ark_mem->ark_hadapt_k3 = adapt_params[8];
+  }
 
   return(ARK_SUCCESS);
 }
@@ -1281,8 +1300,9 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
  ARKodeSetAdaptivityConstants:
 
  Specifies the user-provided time step adaptivity constants
- etamx1, etamxf, etacf and small_nef.  Illegal inputs imply 
- a reset to the default value.
+ etamx1, etamxf, etacf and small_nef.  Zero valued inputs imply 
+ a reset to the default value.  Negative values leave the 
+ existing value unchanged. 
 ---------------------------------------------------------------*/
 int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
 				 realtype etamxf, realtype etacf,
@@ -1298,24 +1318,24 @@ int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* 0 or 0.0 argument sets default, otherwise set inputs */
-  if (etamx1 <= 0.0) {
+  if (etamx1 == ZERO) {
     ark_mem->ark_etamx1 = ETAMX1;
-  } else {
+  } else if (etamx1 > ZERO) {
     ark_mem->ark_etamx1 = etamx1;
   }
-  if (etamxf <= 0.0) {
+  if (etamxf == ZERO) {
     ark_mem->ark_etamxf = ETAMXF;
-  } else {
+  } else if (etamxf > ZERO) {
     ark_mem->ark_etamxf = etamxf;
   }
-  if (etacf <= 0.0) {
+  if (etacf == ZERO) {
     ark_mem->ark_etacf = ETACF;
-  } else {
+  } else if (etacf > ZERO) {
     ark_mem->ark_etacf = etacf;
   }
-  if (small_nef <= 0) {
+  if (small_nef == 0) {
     ark_mem->ark_small_nef = SMALL_NEF;
-  } else {
+  } else if (small_nef > 0) {
     ark_mem->ark_small_nef = small_nef;
   }
 
@@ -1328,7 +1348,8 @@ int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
 
  Specifies the user-provided nonlinear convergence constants
  crdown and rdiv.  Zero-valued inputs imply a reset to the 
- default value.
+ default value.  Negative values leave the existing value 
+ unchanged. 
 ---------------------------------------------------------------*/
 int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown,
 			     realtype rdiv)
@@ -1343,14 +1364,14 @@ int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown,
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* 0.0 argument sets default, otherwise set inputs */
-  if (crdown == 0.0) {
+  if (crdown == ZERO) {
     ark_mem->ark_crdown = CRDOWN;
-  } else {
+  } else if (crdown > ZERO) {
     ark_mem->ark_crdown = crdown;
   }
-  if (rdiv == 0.0) {
+  if (rdiv == ZERO) {
     ark_mem->ark_rdiv = RDIV;
-  } else {
+  } else if (rdiv > ZERO) {
     ark_mem->ark_rdiv = rdiv;
   }
 
@@ -1363,7 +1384,8 @@ int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown,
 
  Specifies the user-provided linear setup decision constants
  dgmax and msbp.  Zero-valued inputs imply a reset to the 
- default value.
+ default value. Negative values leave the existing value 
+ unchanged. 
 ---------------------------------------------------------------*/
 int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax,
 			     int msbp)
@@ -1378,14 +1400,14 @@ int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax,
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* 0 or 0.0 argument sets default, otherwise set inputs */
-  if (dgmax == 0.0) {
+  if (dgmax == ZERO) {
     ark_mem->ark_dgmax = DGMAX;
-  } else {
+  } else if (dgmax > ZERO) {
     ark_mem->ark_dgmax = dgmax;
   }
   if (msbp == 0) {
     ark_mem->ark_msbp = MSBP;
-  } else {
+  } else if (msbp > 0) {
     ark_mem->ark_msbp = msbp;
   }
 

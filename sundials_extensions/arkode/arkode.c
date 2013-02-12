@@ -653,8 +653,9 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
 			MSGARK_BAD_TSTOP, ark_mem->ark_tstop, ark_mem->ark_tn);
         return(ARK_ILL_INPUT);
       }
-      if ( (ark_mem->ark_tn + ark_mem->ark_h - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO ) 
+      if ( (ark_mem->ark_tn + ark_mem->ark_h - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO ) {
         ark_mem->ark_h = (ark_mem->ark_tstop - ark_mem->ark_tn)*(ONE-FOUR*ark_mem->ark_uround);
+      }
     }
 
     /* Scale fcur by h.*/
@@ -2835,7 +2836,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
   /* Decide whether or not to call setup routine (if one exists) */
   if (ark_mem->ark_setupNonNull) {      
     callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
-      (ark_mem->ark_nst+ark_mem->ark_istage == 0) || 
+      (ark_mem->ark_nni == 0) || 
       (ark_mem->ark_nst >= ark_mem->ark_nstlp + ark_mem->ark_msbp) || 
       (ABS(ark_mem->ark_gamrat-ONE) > ark_mem->ark_dgmax);
   } else {  
