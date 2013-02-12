@@ -31,7 +31,8 @@ TESTS = nvector_serial_test.exe \
         ark_brusselator.exe \
         ark_brusselator_custom.exe \
         ark_brusselator1D.exe \
-        ark_set_check.exe
+        ark_set_check.exe \
+	ark_vdpolm.exe
 
 # target to build all test executables
 all : ${TESTS}
@@ -86,6 +87,10 @@ ark_brusselator1D.exe : ark_brusselator1D.c
 
 ark_set_check.exe : ark_set_check.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_vdpolm.exe : vdpolm_driver.f90 vdpolm.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
 
 clean :
 	\rm -f *.o *.exe
