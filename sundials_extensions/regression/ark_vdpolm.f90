@@ -63,7 +63,7 @@ program driver
   ipar(2) = imex
   if (dense_order == -1)  denseout = .false.
 
-  ! call problem setup routine
+  ! call problem setup routine, store relevant details
   call prob(fullnm, problm, type, neqn, ndisc, t, &
             numjac, nummas, mlmas, mumas, ind)
   print *,'full problem name: ',fullnm
@@ -77,23 +77,22 @@ program driver
   ipar(1) = NEQ
   allocate(y(neqn), ytrue(neqn), rtols(neqn), atols(neqn))
 
-  ! set initial conditions
+  ! set initial conditions according to problem specifications
   call init(neqn, T0, y, ytrue, consis)
 
-  ! set tolerances
+  ! set tolerances according to problem specifications
   rtols = 0.d0
   atols = 0.d0
   call settolerances(neqn, rtols, atols, tolvec)
-  if (.not. tolvec) then
-     atols = atols(1)
-  end if
+  if (.not. tolvec)  atols = atols(1)
   rtol = rtols(1)
   
   ! initialize vector module
   call FNVInitS(4, NEQ, ier)
 
   ! initialize ARKode solver
-  call FARKMalloc(T0, y, imex, 2, rtol, atols, iout, rout, ipar, rpar, ier)
+  call FARKMalloc(T0, y, imex, 2, rtol, atols, &
+                  iout, rout, ipar, rpar, ier)
 
   ! set optional inputs
   if (order /= 0) then
@@ -118,33 +117,33 @@ program driver
   else
      call FARKSetIin('IMEX', 1, ier)
   end if
-  call FARKSetIin('ADAPT_METHOD', adapt_method, ier)
-  call FARKSetRin('ADAPT_CFL', cflfac, ier)
-  call FARKSetRin('ADAPT_SAFETY', safety, ier)
-  call FARKSetRin('ADAPT_BIAS', bias, ier)
-  call FARKSetRin('ADAPT_GROWTH', growth, ier)
-  call FARKSetRin('ADAPT_LB', hfixed_lb, ier)
-  call FARKSetRin('ADAPT_UB', hfixed_ub, ier)
-  call FARKSetRin('ADAPT_K1', k1, ier)
-  call FARKSetRin('ADAPT_K2', k2, ier)
-  call FARKSetRin('ADAPT_K3', k3, ier)
-  call FARKSetRin('ADAPT_ETAMX1', etamx1, ier)
-  call FARKSetRin('ADAPT_ETAMXF', etamxf, ier)
-  call FARKSetRin('ADAPT_ETACF', etacf, ier)
+  call FARKSetIin('ADAPT_METHOD',    adapt_method, ier)
+  call FARKSetRin('ADAPT_CFL',       cflfac, ier)
+  call FARKSetRin('ADAPT_SAFETY',    safety, ier)
+  call FARKSetRin('ADAPT_BIAS',      bias, ier)
+  call FARKSetRin('ADAPT_GROWTH',    growth, ier)
+  call FARKSetRin('ADAPT_LB',        hfixed_lb, ier)
+  call FARKSetRin('ADAPT_UB',        hfixed_ub, ier)
+  call FARKSetRin('ADAPT_K1',        k1, ier)
+  call FARKSetRin('ADAPT_K2',        k2, ier)
+  call FARKSetRin('ADAPT_K3',        k3, ier)
+  call FARKSetRin('ADAPT_ETAMX1',    etamx1, ier)
+  call FARKSetRin('ADAPT_ETAMXF',    etamxf, ier)
+  call FARKSetRin('ADAPT_ETACF',     etacf, ier)
   call FARKSetIin('ADAPT_SMALL_NEF', small_nef, ier)
-  call FARKSetRin('NEWTON_CRDOWN', crdown, ier)
-  call FARKSetRin('NEWTON_RDIV', rdiv, ier)
-  call FARKSetRin('LSETUP_DGMAX', dgmax, ier)
-  call FARKSetIin('LSETUP_MSBP', msbp, ier)
-  call FARKSetIin('PREDICT_METHOD', predictor, ier)
-  call FARKSetIin('MAX_NITERS', maxcor, ier)
-  call FARKSetRin('NLCONV_COEF',nlscoef, ier)
-  call FARKSetIin('MAX_NSTEPS', 10000, ier)
+  call FARKSetRin('NEWTON_CRDOWN',   crdown, ier)
+  call FARKSetRin('NEWTON_RDIV',     rdiv, ier)
+  call FARKSetRin('LSETUP_DGMAX',    dgmax, ier)
+  call FARKSetIin('LSETUP_MSBP',     msbp, ier)
+  call FARKSetIin('PREDICT_METHOD',  predictor, ier)
+  call FARKSetIin('MAX_NITERS',      maxcor, ier)
+  call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
+  call FARKSetIin('MAX_NSTEPS',      10000, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
 
-  ! set dense linear solver
+  ! specify use of dense linear solver
   call FARKDense(NEQ, ier)
   call FARKDenseSetJac(1, ier)
 
@@ -178,16 +177,19 @@ program driver
   ! output solver statistics
   print *, '  '
   print *, 'Final Solver Statistics:'
-  print '(3(A,i7),A)', '   Total internal solver steps =',iout(3),&
-       ' (acc =',iout(5),',  conv =',iout(6),')'
-  print '(2(A,i7))', '   Total RHS evals:  Fe =',iout(7),',  Fi =',iout(8)
+  print '(3(A,i7),A)', '   Total internal solver steps =', iout(3), &
+       ' (acc =', iout(5), ',  conv =', iout(6), ')'
+  print '(2(A,i7))', '   Total RHS evals:  Fe =', iout(7), &
+       ',  Fi =', iout(8)
   print '(A,i7)', '   Total linear solver setups =', iout(9)
-  print '(A,i7)', '   Total number of Jacobian evaluations =',iout(18)
-  print '(A,i7)', '   Total number of Newton iterations =',iout(11)
-  print '(A,i7)', '   Total number of linear solver convergence failures =',iout(12)
-  print '(A,i7)', '   Total number of error test failures =',iout(10)
+  print '(A,i7)', '   Total Jacobian evaluations =', iout(18)
+  print '(A,i7)', '   Total Newton iterations =', iout(11)
+  print '(A,i7)', '   Total linear solver convergence failures =', &
+       iout(12)
+  print '(A,i7)', '   Total error test failures =', iout(10)
+  print *, '  '
 
-  ! check final solution
+  ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
   print *, '     y(Tf) =', y
   print *, '  yref(Tf) =', ytrue
@@ -267,7 +269,7 @@ end subroutine farkefun
 !-----------------------------------------------------------------
 
 
-subroutine farkdjac(neq, t, y, fy, DJac, h, ipar, rpar, wk1, wk2, wk3, ier)
+subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
 !-----------------------------------------------------------------
 ! Jacobian computation routine
 !-----------------------------------------------------------------
