@@ -1,20 +1,18 @@
 c-----------------------------------------------------------------------
-c-----------------------------------------------------------------------
-c
 c     This file is part of the Test Set for IVP solvers
 c     http://www.dm.uniba.it/~testset/
 c
-c        Problem VAN DER POL modified
+c        Problem VAN DER POL
 c        ODE of dimension 2
 c
 c     DISCLAIMER: see
 c     http://www.dm.uniba.it/~testset/disclaimer.php
 c
 c     The most recent version of this source file can be found at
-c     http://www.dm.uniba.it/~testset/src/problems/vdpolm.f
+c     http://www.dm.uniba.it/~testset/src/problems/vdpol.f
 c
 c     This is revision
-c     $Id: vdpolm.F,v 1.2 2006/10/02 10:29:14 testset Exp $
+c     $Id: vdpol.F,v 1.2 2006/10/02 10:29:14 testset Exp $
 c
 c
 c     NOTE: Daniel R. Reynolds, January 2013
@@ -22,7 +20,7 @@ c     This file has been modified from the original to create
 c     operator-split versions of the feval and jeval routines, named 
 c     feval_e, feval_i and jeval_i corresponding to the explicit and 
 c     implicit components of the right-hand side function and the 
-c     Jacobian of the implicit RHS function.
+c     Jacobian of the implicit RHS function.  
 c     
 c     In addition, the prob() routine has been modified to explicitly
 c     specify the length of the input arrays to remove all possibility
@@ -33,7 +31,7 @@ c
 c-----------------------------------------------------------------------
       integer function pidate()
       pidate = 20060828
-      return
+      return 
       end
 c-----------------------------------------------------------------------
       subroutine prob(fullnm,problm,type,
@@ -41,18 +39,18 @@ c-----------------------------------------------------------------------
      +                numjac,mljac,mujac,
      +                nummas,mlmas,mumas,
      +                ind)
-      character fullnm*26, problm*6, type*3
+      character fullnm*17, problm*5, type*3
       integer neqn,ndisc,mljac,mujac,mlmas,mumas,ind(1)
       double precision t(0:1)
       logical numjac, nummas
 
-      fullnm = 'Problem VANDERPOL modified'
-      problm = 'vdpolm'
+      fullnm = 'Problem VANDERPOL'
+      problm = 'vdpol'
       type   = 'ODE'
       neqn   = 2
       ndisc  = 0   
       t(0)   = 0d0
-      t(1)   = 2.0d3
+      t(1)   = 2.0d0
       numjac = .false.
       mljac  = neqn
       mujac  = neqn
@@ -112,9 +110,8 @@ c-----------------------------------------------------------------------
       integer neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
 
-    
       f(1) = y(2)
-      f(2) = 1.d3*(1.d0-y(1)*y(1))*y(2)-y(1)
+      f(2) = ((1-y(1)**2)*y(2)-y(1))/1.0d-6
       
       return
       end
@@ -123,9 +120,8 @@ c-----------------------------------------------------------------------
       integer neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
 
-    
       f(1) = y(2)
-      f(2) = -y(1)
+      f(2) = 0.d0
       
       return
       end
@@ -134,9 +130,8 @@ c-----------------------------------------------------------------------
       integer neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
 
-    
       f(1) = 0.d0
-      f(2) = 1.d3*(1.d0-y(1)*y(1))*y(2) 
+      f(2) = ((1.d0-y(1)**2)*y(2)-y(1))/1.d-6
       
       return
       end
@@ -145,11 +140,13 @@ c-----------------------------------------------------------------------
       integer ldim,neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),dfdy(ldim,neqn),rpar(*)
 
-     
+      integer i,j
+
       dfdy(1,1) = 0d0
       dfdy(1,2) = 1d0
-      dfdy(2,1) = -2d3*y(1)*y(2)-1d0
-      dfdy(2,2) = 1d3*(1d0-y(1)*y(1))
+      dfdy(2,1) = (-2.0d0*y(1)*y(2)-1d0)/1.0d-6
+      dfdy(2,2) = (1d0-y(1)**2)/1.0d-6
+
       return
       end
 c-----------------------------------------------------------------------
@@ -157,10 +154,13 @@ c-----------------------------------------------------------------------
       integer ldim,neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),dfdy(ldim,neqn),rpar(*)
 
+      integer i,j
+
       dfdy(1,1) = 0.d0
       dfdy(1,2) = 0.d0
-      dfdy(2,1) = -2.d3*y(1)*y(2)
-      dfdy(2,2) = 1.d3*(1.d0-y(1)*y(1))
+      dfdy(2,1) = (-2.0d0*y(1)*y(2)-1.d0)/1.0d-6
+      dfdy(2,2) = (1.d0-y(1)**2)/1.0d-6
+
       return
       end
 c-----------------------------------------------------------------------
@@ -176,7 +176,6 @@ c-----------------------------------------------------------------------
       subroutine solut(neqn,t,y)
       integer neqn
       double precision t,y(neqn)
-
 c
 c computed using double precision RADAU on an 
 c     Alphaserver DS20E, with a 667 MHz EV67 processor.
@@ -185,9 +184,7 @@ c          uround = 1.01d-19
 c          rtol = atol = h0 = 1.1d-18
 c
 c
-        y(  1) =  0.1706167732170469D+001             
-        y(  2) = -0.8928097010248125D-003            
-
-        
+      y(1) =  0.1706167732170483D+01             
+      y(2) = -0.8928097010247975D+00  
       return
       end

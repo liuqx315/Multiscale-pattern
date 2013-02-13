@@ -32,6 +32,15 @@ TESTS = nvector_serial_test.exe \
         ark_brusselator_custom.exe \
         ark_brusselator1D.exe \
         ark_set_check.exe \
+	ark_e5.exe \
+	ark_emep.exe \
+        ark_hires.exe \
+        ark_medakzo.exe \
+        ark_orego.exe \
+        ark_pollu.exe \
+        ark_ringmod.exe \
+        ark_rober.exe \
+	ark_vdpol.exe \
 	ark_vdpolm.exe
 
 # target to build all test executables
@@ -87,6 +96,33 @@ ark_brusselator1D.exe : ark_brusselator1D.c
 
 ark_set_check.exe : ark_set_check.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_e5.exe : ark_e5.f90 e5.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_emep.exe : ark_emep.f90 emep.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_hires.exe : ark_hires.f90 hires.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_medakzo.exe : ark_medakzo.f90 medakzo.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_orego.exe : ark_orego.f90 orego.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_pollu.exe : ark_pollu.f90 pollu.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_ringmod.exe : ark_ringmod.f90 ringmod.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_rober.exe : ark_rober.f90 rober.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_vdpol.exe : ark_vdpol.f90 vdpol.f
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
 	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@

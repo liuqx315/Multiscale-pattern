@@ -7,7 +7,7 @@
 ! Example problem:
 ! 
 ! This program solves the Fortran ODE test problem defined in the 
-! file vdpolm.f, using the FARKODE interface for the ARKode ODE 
+! file e5.f, using the FARKODE interface for the ARKode ODE 
 ! solver module.
 ! 
 ! Based on the inputs in the file fsolve_params.txt, this program
@@ -35,7 +35,7 @@ program driver
   integer*8 :: NEQ, iout(22)
   real*8, allocatable :: y(:), ytrue(:), rtols(:), atols(:)
   logical   :: numjac, nummas, consis, tolvec, denseout
-  character :: fullnm*26, problm*6, type*3
+  character :: fullnm*23, problm*2, type*3
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
@@ -138,7 +138,7 @@ program driver
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
-  call FARKSetIin('MAX_NSTEPS',      10000, ier)
+  call FARKSetIin('MAX_NSTEPS',      100000, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
@@ -279,11 +279,11 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(1)
-  integer, intent(in)  :: neq, ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,    intent(in)  :: t, h, rpar(1)
+  integer*8, intent(in)  :: neq, ipar(2)
+  integer,   intent(out) :: ier
+  real*8,    intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
+  real*8,    intent(out) :: DJac(neq,neq)
 
   ! if fully implicit call jeval, otherwise call jeval_i
   if (ipar(2) == 0) then
