@@ -7,7 +7,7 @@
 ! Example problem:
 ! 
 ! This program solves the Fortran ODE test problem defined in the 
-! file vdpolm.f, using the FARKODE interface for the ARKode ODE 
+! file emep.f, using the FARKODE interface for the ARKode ODE 
 ! solver module.
 ! 
 ! Based on the inputs in the file fsolve_params.txt, this program
@@ -30,12 +30,13 @@ program driver
   implicit none
 
   ! general problem variables
-  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2)
-  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, ind(1), btable2(2)
+  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(10)
+  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas
+  integer   :: ind(1), btable2(2), indsol(6)
   integer*8 :: NEQ, iout(22)
   real*8, allocatable :: y(:), ytrue(:), rtols(:), atols(:)
   logical   :: numjac, nummas, consis, tolvec, denseout
-  character :: fullnm*26, problm*6, type*3
+  character :: fullnm*12, problm*4, type*3
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
@@ -70,7 +71,7 @@ program driver
   print *,'short problem name: ',problm
   print *,'problem type: ',type
   T0 = t(1)
-  Tf = t(2)
+  Tf = t(10)
   dTout = (Tf-T0)/10.d0
   Nt = Tf/dTout + 0.5
   NEQ = neqn
@@ -138,7 +139,7 @@ program driver
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
-  call FARKSetIin('MAX_NSTEPS',      10000, ier)
+  call FARKSetIin('MAX_NSTEPS',      100000, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
@@ -150,9 +151,10 @@ program driver
   ! loop over time outputs
   Tout = T0
   Tcur = T0
-  print *, '        t           y1          y2'
-  print *, '  ---------------------------------------'
-  print '(3x,3(es12.5,1x))', Tcur, y
+  print *, '     t         y1        y2        y3        y5        y14       y40'
+  print *, '  ----------------------------------------------------------------------'
+  indsol = (/ 1, 2, 3, 5, 14, 40 /)
+  print '(3x,7(es9.2,1x))', Tcur, y(indsol)
   do it = 1,Nt
 
      ! set next output time
@@ -169,10 +171,10 @@ program driver
      end if
 
      ! output current solution information
-     print '(3x,3(es12.5,1x))', Tcur, y
+     print '(3x,7(es9.2,1x))', Tcur, y(indsol)
 
   end do
-  print *, '  ---------------------------------------'
+  print *, '  ----------------------------------------------------------------------'
 
   ! output solver statistics
   print *, '  '
@@ -191,9 +193,7 @@ program driver
 
   ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
-  print *, '     y(Tf) =', y
-  print *, '  yref(Tf) =', ytrue
-  print *, '     error =', ytrue-y
+  print *, ' ||error|| =', sqrt(sum((ytrue-y)**2)/NEQ)
   print *, '  '
 
   ! clean up
@@ -279,11 +279,11 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(1)
-  integer, intent(in)  :: neq, ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,    intent(in)  :: t, h, rpar(1)
+  integer*8, intent(in)  :: neq, ipar(2)
+  integer,   intent(out) :: ier
+  real*8,    intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
+  real*8,    intent(out) :: DJac(neq,neq)
 
   ! if fully implicit call jeval, otherwise call jeval_i
   if (ipar(2) == 0) then

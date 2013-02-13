@@ -7,7 +7,7 @@
 ! Example problem:
 ! 
 ! This program solves the Fortran ODE test problem defined in the 
-! file vdpolm.f, using the FARKODE interface for the ARKode ODE 
+! file pollu.f, using the FARKODE interface for the ARKode ODE 
 ! solver module.
 ! 
 ! Based on the inputs in the file fsolve_params.txt, this program
@@ -31,11 +31,12 @@ program driver
 
   ! general problem variables
   real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2)
-  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, ind(1), btable2(2)
-  integer*8 :: NEQ, iout(22)
+  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, mljac, mujac
+  integer   :: ind(1), btable2(2)
+  integer*8 :: NEQ, MU, ML, iout(22)
   real*8, allocatable :: y(:), ytrue(:), rtols(:), atols(:)
   logical   :: numjac, nummas, consis, tolvec, denseout
-  character :: fullnm*26, problm*6, type*3
+  character :: fullnm*17, problm*5, type*3
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
@@ -64,8 +65,8 @@ program driver
   if (dense_order == -1)  denseout = .false.
 
   ! call problem setup routine, store relevant details
-  call prob(fullnm, problm, type, neqn, ndisc, t, &
-            numjac, nummas, mlmas, mumas, ind)
+  call prob(fullnm, problm, type, neqn, ndisc, t, numjac, &
+            mljac, mujac, nummas, mlmas, mumas, ind)
   print *,'full problem name: ',fullnm
   print *,'short problem name: ',problm
   print *,'problem type: ',type
@@ -74,6 +75,8 @@ program driver
   dTout = (Tf-T0)/10.d0
   Nt = Tf/dTout + 0.5
   NEQ = neqn
+  MU = mujac
+  ML = mljac
   ipar(1) = NEQ
   allocate(y(neqn), ytrue(neqn), rtols(neqn), atols(neqn))
 
@@ -150,9 +153,14 @@ program driver
   ! loop over time outputs
   Tout = T0
   Tcur = T0
-  print *, '        t           y1          y2'
-  print *, '  ---------------------------------------'
-  print '(3x,3(es12.5,1x))', Tcur, y
+  print *, '     t        y1       y2       y3       y4       y5       ', &
+       'y6       y7       y8       y9       y10      y11      y12      ', &
+       'y13      y14      y15      y16      y17      y18      y19      y20'
+  print *, '  ---------------------------------------------------------',&
+       '---------------------------------------------------------------',&
+       '---------------------------------------------------------------',&
+       '------'
+  print '(3x,21(es8.1,1x))', Tcur, y
   do it = 1,Nt
 
      ! set next output time
@@ -169,10 +177,13 @@ program driver
      end if
 
      ! output current solution information
-     print '(3x,3(es12.5,1x))', Tcur, y
+     print '(3x,21(es8.1,1x))', Tcur, y
 
   end do
-  print *, '  ---------------------------------------'
+  print *, '  ---------------------------------------------------------',&
+       '---------------------------------------------------------------',&
+       '---------------------------------------------------------------',&
+       '------'
 
   ! output solver statistics
   print *, '  '
@@ -191,9 +202,7 @@ program driver
 
   ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
-  print *, '     y(Tf) =', y
-  print *, '  yref(Tf) =', ytrue
-  print *, '     error =', ytrue-y
+  print *, ' ||error|| =', sqrt(sum((ytrue-y)**2)/NEQ)
   print *, '  '
 
   ! clean up

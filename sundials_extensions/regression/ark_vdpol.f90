@@ -7,7 +7,7 @@
 ! Example problem:
 ! 
 ! This program solves the Fortran ODE test problem defined in the 
-! file vdpolm.f, using the FARKODE interface for the ARKode ODE 
+! file vdpol.f, using the FARKODE interface for the ARKode ODE 
 ! solver module.
 ! 
 ! Based on the inputs in the file fsolve_params.txt, this program
@@ -35,7 +35,7 @@ program driver
   integer*8 :: NEQ, iout(22)
   real*8, allocatable :: y(:), ytrue(:), rtols(:), atols(:)
   logical   :: numjac, nummas, consis, tolvec, denseout
-  character :: fullnm*26, problm*6, type*3
+  character :: fullnm*17, problm*5, type*3
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size

@@ -7,13 +7,13 @@
 ! Example problem:
 ! 
 ! This program solves the Fortran ODE test problem defined in the 
-! file vdpolm.f, using the FARKODE interface for the ARKode ODE 
+! file medakzo.f, using the FARKODE interface for the ARKode ODE 
 ! solver module.
 ! 
 ! Based on the inputs in the file fsolve_params.txt, this program
 ! will switch between ERK, DIRK and ARK solvers.  For DIRK and ARK
 ! methods, the implicit systems are solved with a modified Newton
-! iteration with the ARKDENSE dense linear solver.  The Jacobian 
+! iteration with the ARKBAND banded linear solver.  The Jacobian 
 ! routine and right-hand side routines come from the file 
 ! user-supplied Jacobian routine.
 !
@@ -30,12 +30,13 @@ program driver
   implicit none
 
   ! general problem variables
-  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2)
-  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, ind(1), btable2(2)
-  integer*8 :: NEQ, iout(22)
+  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(3)
+  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, mljac, mujac
+  integer   :: ind(1), btable2(2), indsol(8)
+  integer*8 :: NEQ, MU, ML, iout(22)
   real*8, allocatable :: y(:), ytrue(:), rtols(:), atols(:)
   logical   :: numjac, nummas, consis, tolvec, denseout
-  character :: fullnm*26, problm*6, type*3
+  character :: fullnm*26, problm*7, type*3
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
@@ -64,16 +65,18 @@ program driver
   if (dense_order == -1)  denseout = .false.
 
   ! call problem setup routine, store relevant details
-  call prob(fullnm, problm, type, neqn, ndisc, t, &
-            numjac, nummas, mlmas, mumas, ind)
+  call prob(fullnm, problm, type, neqn, ndisc, t, numjac, &
+            mljac, mujac, nummas, mlmas, mumas, ind)
   print *,'full problem name: ',fullnm
   print *,'short problem name: ',problm
   print *,'problem type: ',type
   T0 = t(1)
-  Tf = t(2)
+  Tf = t(3)
   dTout = (Tf-T0)/10.d0
   Nt = Tf/dTout + 0.5
   NEQ = neqn
+  MU = mujac
+  ML = mljac
   ipar(1) = NEQ
   allocate(y(neqn), ytrue(neqn), rtols(neqn), atols(neqn))
 
@@ -138,21 +141,22 @@ program driver
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
-  call FARKSetIin('MAX_NSTEPS',      10000, ier)
+  call FARKSetIin('MAX_NSTEPS',      1000, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
 
-  ! specify use of dense linear solver
-  call FARKDense(NEQ, ier)
-  call FARKDenseSetJac(1, ier)
+  ! specify use of band linear solver
+  call FARKBand(NEQ, MU, ML, ier)
+  call FARKBandSetJac(1, ier)
 
   ! loop over time outputs
   Tout = T0
   Tcur = T0
-  print *, '        t           y1          y2'
-  print *, '  ---------------------------------------'
-  print '(3x,3(es12.5,1x))', Tcur, y
+  print *, '     t        y79      y80      y133     y134     y171     y172     y199     y200'
+  print *, '  ---------------------------------------------------------------------------------'
+  indsol = (/ 79, 80, 133, 134, 171, 172, 199, 200 /)
+  print '(3x,9(es8.1,1x))', Tcur, y(indsol)
   do it = 1,Nt
 
      ! set next output time
@@ -169,10 +173,10 @@ program driver
      end if
 
      ! output current solution information
-     print '(3x,3(es12.5,1x))', Tcur, y
+     print '(3x,9(es8.1,1x))', Tcur, y(indsol)
 
   end do
-  print *, '  ---------------------------------------'
+  print *, '  ---------------------------------------------------------------------------------'
 
   ! output solver statistics
   print *, '  '
@@ -191,9 +195,7 @@ program driver
 
   ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
-  print *, '     y(Tf) =', y
-  print *, '  yref(Tf) =', ytrue
-  print *, '     error =', ytrue-y
+  print '(A,8(es10.2))', '  ||error||_RMS =', sqrt(sum((ytrue-y)**2)/neqn)
   print *, '  '
 
   ! clean up
@@ -270,7 +272,8 @@ end subroutine farkefun
 !-----------------------------------------------------------------
 
 
-subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
+subroutine farkbjac(neq, mu, ml, mdim, t, y, fy, BJac, &
+                    h, ipar, rpar, wk1, wk2, wk3, ier)
 !-----------------------------------------------------------------
 ! Jacobian computation routine
 !-----------------------------------------------------------------
@@ -279,20 +282,20 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(1)
-  integer, intent(in)  :: neq, ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,    intent(in)  :: t, h, rpar(1)
+  integer*8, intent(in)  :: neq, mu, ml, mdim, ipar(2)
+  integer,   intent(out) :: ier
+  real*8,    intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
+  real*8,    intent(out) :: BJac(mdim,ipar(1))
 
   ! if fully implicit call jeval, otherwise call jeval_i
   if (ipar(2) == 0) then
-     call jeval(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
+     call jeval(mdim, ipar(1), t, y, fy, BJac, ier, rpar, ipar)
   else 
-     call jeval_i(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
+     call jeval_i(mdim, ipar(1), t, y, fy, BJac, ier, rpar, ipar)
   end if
   ier = 0
   
   
-end subroutine farkdjac
+end subroutine farkbjac
 !-----------------------------------------------------------------
