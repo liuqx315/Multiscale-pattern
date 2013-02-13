@@ -88,7 +88,7 @@ ark_brusselator1D.exe : ark_brusselator1D.c
 ark_set_check.exe : ark_set_check.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_vdpolm.exe : vdpolm_driver.f90 vdpolm.f
+ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
 	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 
