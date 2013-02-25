@@ -32,7 +32,7 @@ TESTS = nvector_serial_test.exe \
         ark_brusselator_custom.exe \
         ark_brusselator1D.exe \
         ark_set_check.exe \
-	ark_e5.exe \
+        ark_bruss.exe \
 	ark_emep.exe \
         ark_hires.exe \
         ark_medakzo.exe \
@@ -97,7 +97,7 @@ ark_brusselator1D.exe : ark_brusselator1D.c
 ark_set_check.exe : ark_set_check.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_e5.exe : ark_e5.f90 e5.f
+ark_bruss.exe : ark_bruss.f90
 	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_emep.exe : ark_emep.f90 emep.f
