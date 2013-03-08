@@ -156,10 +156,13 @@ Completed components:
     don't even need to free the N_Vectors if I don't want to; need to
     malloc the new vectors for an increase, though), and to do the
     relevant checking/cleaning of the Butcher table, etc.
-
+[X] Added preconditioned conjugate gradient solver for solution of
+    symmetric linear systems.
 
 
 Remaining components to build:
+[ ] Add stubs for PCG solver as one of the available ARKode linear
+    solvers, and convert an existing test problem to use it.
 [ ] Add ark_hadapt_hhist array (of the same length as
     ark_hadapt_ehist) to store the step sizes used for the last 3
     successful steps, to allow for more involved adaptivity
@@ -251,6 +254,10 @@ Unknown/Questions:
     how gamma/gammap are handled, since changes to gamma may have 
     more/less effect with a non-identity mass matrix.  Think about 
     this.
+[ ] Set up non-identity mass matrix infrastructure.  This should
+    include an option to state whether the mass matrix is symmetric or
+    not (or maybe just let the user choose the solver module for it
+    directly).
 [ ] Consider the possibility of estimating the actual local truncation
     error (used in the nonlinear and linear solver tolerances) based
     on results from the previous time step and an assumption that this
