@@ -18,6 +18,7 @@ LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
         nvector_parallel_grid_test.exe \
+        pcg_tester.exe \
         cv_analytic.exe \
         cv_analytic_sys.exe \
         cv_analytic_nonlin.exe \
@@ -53,6 +54,9 @@ nvector_parallel_test.exe : nvector_parallel_test.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+pcg_tester.exe : pcg_tester.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 cv_analytic.exe : cv_analytic.c
