@@ -84,7 +84,7 @@ int main()
   long int NEQ = 3;
 
   /* general problem variables */
-  int flag, flag2;
+  int flag;
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   void *cvode_mem = NULL;

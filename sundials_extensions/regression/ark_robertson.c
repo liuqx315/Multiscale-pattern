@@ -452,8 +452,6 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   realtype u = NV_Ith_S(y,0);
-  realtype v = NV_Ith_S(y,1);
-  realtype w = NV_Ith_S(y,2);
 
   /* du/dt = -0.04*u */
   NV_Ith_S(ydot,0) = -0.04*u;
@@ -470,7 +468,6 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 /* fi routine to compute the implicit portion of f(t,y). */
 static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
@@ -491,7 +488,6 @@ static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
   SetToZero(J);
@@ -517,7 +513,6 @@ static int JacI(long int N, realtype t,
 		N_Vector y, N_Vector fy, DlsMat J, void *user_data,
 		N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
   SetToZero(J);

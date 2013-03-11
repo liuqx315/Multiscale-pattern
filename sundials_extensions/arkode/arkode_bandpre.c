@@ -15,11 +15,6 @@
 #include "arkode_impl.h"
 #include "arkode_bandpre_impl.h"
 #include "arkode_spils_impl.h"
-
-#include <arkode/arkode_sptfqmr.h>
-#include <arkode/arkode_spbcgs.h>
-#include <arkode/arkode_spgmr.h>
-
 #include <sundials/sundials_math.h>
 
 #define MIN_INC_MULT RCONST(1000.0)
