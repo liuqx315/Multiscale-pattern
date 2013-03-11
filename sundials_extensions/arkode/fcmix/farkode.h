@@ -57,6 +57,9 @@
    FARKSPTFQMR                ARKSptfqmr and ARKSpilsSet*
    FARKSPTFQMRREINIT          ARKSpilsSet*
 
+   FARKPCG                    ARKPcg and ARKSpilsSet*
+   FARKPCGREINIT              ARKSpilsSet*
+
    FARKSPILSSETJAC            ARKSpilsSetJacTimesVecFn
    FARKSPILSSETPREC           ARKSpilsSetPreconditioner
  
@@ -759,7 +762,48 @@
 
      The arguments have the same meanings as for FARKSPTFQMR.
 
- (9.8) Usage of user-supplied routines for the Krylov solvers
+ (9.8) PCG treatment of the linear systems.
+
+     For the Preconditioned Conjugate Gradient solution of the linear systems,
+     the user must make the following call:
+
+       CALL FARKPCG(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+       IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = left only
+              2 = right only
+              3 = both sides
+       MAXL = maximum Krylov subspace dimension [int, input]; 0 = default.
+       DELT = linear convergence tolerance factor [realtype, input]; 
+              0.0 = default.
+       IER = error return flag [int, output]: 
+              0 = success; 
+	     <0 = an error occured
+ 
+     Optional outputs specific to the PCG case are:
+        LENRWLS = IOUT(14) from ARKSpilsGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpilsGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpilsGetLastFlag
+        NFELS   = IOUT(17) from ARKSpilsGetNumRhsEvals
+        NJTV    = IOUT(18) from ARKSpilsGetNumJtimesEvals
+        NPE     = IOUT(19) from ARKSpilsGetNumPrecEvals
+        NPS     = IOUT(20) from ARKSpilsGetNumPrecSolves
+        NLI     = IOUT(21) from ARKSpilsGetNumLinIters
+        NCFL    = IOUT(22) from ARKSpilsGetNumConvFails
+     See the ARKODE manual for descriptions.
+ 
+     If a sequence of problems of the same size is being solved using the
+     PCG linear solver, then following the call to FARKREINIT, a call to the
+     FARKPCGREINIT routine is needed if any of its arguments is being 
+     changed.  The call is:
+
+       CALL FARKPCGREINIT(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments have the same meanings as for FARKPCG.
+
+ (9.9) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
      the Jacobian vector product, the following call must be made
@@ -958,6 +1002,8 @@ extern "C" {
 #define FARK_SPBCGREINIT         SUNDIALS_F77_FUNC(farkspbcgreinit,         FARKSPBCGREINIT)
 #define FARK_SPGMR               SUNDIALS_F77_FUNC(farkspgmr,               FARKSPGMR)
 #define FARK_SPGMRREINIT         SUNDIALS_F77_FUNC(farkspgmrreinit,         FARKSPGMRREINIT)
+#define FARK_PCG                 SUNDIALS_F77_FUNC(farkpcg,                 FARKPCG)
+#define FARK_PCGREINIT           SUNDIALS_F77_FUNC(farkpcgreinit,           FARKPCGREINIT)
 #define FARK_SPILSSETJAC         SUNDIALS_F77_FUNC(farkspilssetjac,         FARKSPILSSETJAC)
 #define FARK_SPILSSETPREC        SUNDIALS_F77_FUNC(farkspilssetprec,        FARKSPILSSETPREC)
 #define FARK_ARKODE              SUNDIALS_F77_FUNC(farkode,                 FARKODE)
@@ -1001,6 +1047,8 @@ extern "C" {
 #define FARK_SPBCGREINIT         farkspbcgreinit_
 #define FARK_SPGMR               farkspgmr_
 #define FARK_SPGMRREINIT         farkspgmrreinit_
+#define FARK_PCG                 farkpcg_
+#define FARK_PCGREINIT           farkpcgreinit_
 #define FARK_SPILSSETJAC         farkspilssetjac_
 #define FARK_SPILSSETPREC        farkspilssetprec_
 #define FARK_ARKODE              farkode_
@@ -1068,6 +1116,9 @@ extern "C" {
 
   void FARK_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier);
   void FARK_SPTFQMRREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
+
+  void FARK_PCG(int *pretype, int *maxl, realtype *delt, int *ier);
+  void FARK_PCGREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
 
   void FARK_SPILSSETJAC(int *flag, int *ier);
   void FARK_SPILSSETPREC(int *flag, int *ier);
@@ -1137,7 +1188,8 @@ extern "C" {
 	 ARK_LS_LAPACKBAND  = 4,
 	 ARK_LS_SPGMR       = 5, 
 	 ARK_LS_SPBCG       = 6, 
-	 ARK_LS_SPTFQMR     = 7 };
+	 ARK_LS_SPTFQMR     = 7, 
+	 ARK_LS_PCG         = 8 };
 
 #ifdef __cplusplus
 }

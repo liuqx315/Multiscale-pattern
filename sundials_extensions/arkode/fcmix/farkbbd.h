@@ -19,11 +19,11 @@
  ARKBBDPRE solves the linear systems arising from the solution 
  of the implicit portions of the ODE system
        dy/dt = fe(t,y) + fi(t,y)  
- using a Krylov iterative linear solver (SPGMR, SPTFQMR, SPBCG), 
- and with a preconditioner that is block-diagonal with banded 
- blocks.  While ARKODE and ARKBBDPRE are written in C, it is 
- assumed here that the user's calling program and user-supplied
- problem-defining routines are written in Fortran.
+ using a Krylov iterative linear solver (SPGMR, SPTFQMR, SPBCG, 
+ PCG), and with a preconditioner that is block-diagonal with 
+ banded blocks.  While ARKODE and ARKBBDPRE are written in C, it 
+ is assumed here that the user's calling program and user-
+ supplied problem-defining routines are written in Fortran.
  
  The user-callable functions in this package, with the 
  corresponding ARKODE and ARKBBDPRE functions, are as follows: 
@@ -31,9 +31,6 @@
    Fortran               ARKODE
    --------------        ---------------------------
    FARKBBDININT          ARKBBDPrecInit
-   FARKBBDSPTFQMR        ARKBBDSptfqmr
-   FARKBBDSPBCG          ARKBBDSpbcg
-   FARKBBDPSGMR          ARKBBDSpgmr
    FARKBBDREINIT         ARKBBDPrecReInit
    FARKBBDOPT            (accesses optional outputs)
    --------------        ---------------------------
@@ -44,11 +41,11 @@
  which calls it (and its type within ARKBBDPRE or ARKODE):
 
    Fortran          ARKODE           Type
-   ----------       ----------       ----------------
+   -------------    ----------       ----------------
    FARKGLOCFN       FARKgloc         ARKLocalFn
    FARKCOMMFN       FARKcfn          ARKCommFn
    FARKJTIMES(*)    FARKJtimes       ARKSpilsJtimesFn
-   ----------       ----------       ----------------
+   -------------    ----------       ----------------
    (*) = optional
 
  Important notes on portability:
@@ -119,8 +116,8 @@
 
      The user must supply a subroutine of the form
 
-       SUBROUTINE FARKGLOCFN (NLOC, T, YLOC, GLOC, IPAR, 
-      &                       RPAR, IER)
+       SUBROUTINE FARKGLOCFN(NLOC, T, YLOC, GLOC, IPAR, 
+      &                      RPAR, IER)
        DIMENSION YLOC(*), GLOC(*), IPAR(*), RPAR(*)
 
      Sets the GLOC array to the function g(T,YLOC) which 
@@ -149,7 +146,7 @@
 
      The user must also supply a subroutine of the form:
 
-       SUBROUTINE FARKCOMMFN (NLOC, T, YLOC, IPAR, RPAR, IER)
+       SUBROUTINE FARKCOMMFN(NLOC, T, YLOC, IPAR, RPAR, IER)
        DIMENSION YLOC(*), IPAR(*), RPAR(*)
 
      This performs all inter-processor communication necessary to
@@ -266,7 +263,7 @@
      with COMMON blocks to pass data betwen user-provided 
      routines. 
 
- (4.3) Attach one of the 3 SPILS linear solvers.
+ (4.3) Attach one of the SPILS linear solvers.
     
  (4.3A) To specify the SPGMR (Scaled Preconditioned GMRES) 
      linear solver make the following call:
@@ -359,6 +356,32 @@
 
      The arguments have the same meanings as for FARKSPTFQMR.
 
+ (4.3D) To specify the PCG (Preconditioned Conjugate Gradient) 
+     linear solver make the following call:
+
+       CALL FARKPCG(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+       IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = use preconditioning
+       MAXL = maximum Krylov subspace dimension [int, input]; 
+              0 = default.
+       DELT = convergence tolerance factor [realtype, input]; 
+              0.0 = default.
+       IER = error return flag [int, output]: 
+              0 = success; 
+	     <0 = an error occured
+ 
+     If a sequence of problems of the same size is being solved 
+     using the PCG linear solver, then following the call to 
+     FARKREINIT, a call to the FARKPCGREINIT routine is needed
+     if any of its arguments is being changed.  The call is:
+
+       CALL FARKPCGREINIT(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments have the same meanings as for FARKPCG.
+
  (4.4) To allocate memory and initialize data associated with the
      ARKBBDPRE preconditioner, make the following call:
 
@@ -419,8 +442,8 @@
      system solution method may or may not be needed.
 
      If there is a change in any of the linear solver arguments,
-     then a call to FARKSPGMR, FARKSPBCG, or FARKSPTFQMR must 
-     also be made;in this case the linear solver memory is 
+     then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR or FARKPCG
+     must also be made; in this case the linear solver memory is 
      reallocated. 
 
      Following the call to FARKREINIT, a call to FARKBBDINIT may

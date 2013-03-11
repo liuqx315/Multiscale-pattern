@@ -280,6 +280,10 @@ int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS,
     *lenrwLS = ark_mem->ark_lrw1*11;
     *leniwLS = ark_mem->ark_liw1*11;
     break;
+  case SPILS_PCG:
+    *lenrwLS = ark_mem->ark_lrw1 * 4;
+    *leniwLS = ark_mem->ark_liw1 * 4 + 1;
+    break;
   }
 
   return(ARKSPILS_SUCCESS);
@@ -563,7 +567,7 @@ int ARKSpilsAtimes(void *arkode_mem, N_Vector v, N_Vector z)
  ARKSpilsPSolve:
 
  This routine interfaces between the generic Sp***Solve routine
- (within the SPGMR, SPBCG, or SPTFQMR solver) and the user's 
+ (within the SPGMR, SPBCG, SPTFQMR, or PCG solver) and the user's 
  psolve routine.  It passes to psolve all required state 
  information from arkode_mem.  Its return value is the same as 
  that returned by psolve. Note that the generic SP*** solver 

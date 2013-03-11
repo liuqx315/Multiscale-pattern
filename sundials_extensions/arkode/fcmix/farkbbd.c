@@ -16,9 +16,6 @@
 #include "farkode.h"
 #include "farkbbd.h"
 #include <arkode/arkode_bbdpre.h>
-#include <arkode/arkode_sptfqmr.h>
-#include <arkode/arkode_spbcgs.h>
-#include <arkode/arkode_spgmr.h>
 
 /*=============================================================*/
 
