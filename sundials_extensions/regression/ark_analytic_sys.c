@@ -453,7 +453,6 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 /* fe routine to compute the explicit portion of f(t,y). */
 static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype *rdata = (realtype *) user_data;
   realtype y0 = NV_Ith_S(y,0);
   realtype y1 = NV_Ith_S(y,1);
   realtype y2 = NV_Ith_S(y,2);

@@ -3316,8 +3316,8 @@ static int ARKDenseEval(ARKodeMem ark_mem, realtype tau,
 			int d, int order, N_Vector yout)
 {
   /* local variables */
-  int q, retval;
-  realtype h, tval, a0, a1, a2, a3, tau2, tau3;
+  int q;
+  realtype h, a0, a1, a2, a3, tau2, tau3;
   h = ark_mem->ark_hold;
   tau2 = tau*tau;
   tau3 = tau*tau2;
