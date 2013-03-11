@@ -30,8 +30,8 @@ TESTS = nvector_serial_test.exe \
         ark_analytic_sys.exe \
         ark_analytic_nonlin.exe \
         ark_brusselator.exe \
-        ark_brusselator_custom.exe \
         ark_brusselator1D.exe \
+        ark_robertson.exe \
         ark_set_check.exe \
         ark_bruss.exe \
 	ark_emep.exe \
@@ -92,10 +92,10 @@ ark_analytic_nonlin.exe : ark_analytic_nonlin.c
 ark_brusselator.exe : ark_brusselator.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_brusselator_custom.exe : ark_brusselator_custom.c 
+ark_brusselator1D.exe : ark_brusselator1D.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_brusselator1D.exe : ark_brusselator1D.c 
+ark_robertson.exe : ark_robertson.c 
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_set_check.exe : ark_set_check.c 

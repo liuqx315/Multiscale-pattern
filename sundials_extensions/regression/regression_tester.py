@@ -21,7 +21,7 @@ def check_tests(testlist,nsttol,ovtol):
     iret = 0;
     for i in range(len(testlist)):
         tret = 0
-        [nst,ast,cst,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],0);
+        [nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],0);
         # check for nst >= nsttol (in case something fails at initialization)
         if (nst < nsttol):
             tret = 1;

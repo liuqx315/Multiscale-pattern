@@ -53,7 +53,7 @@ def run_tests(outdir,fptr,testlist,nsttol,ovtol):
         fptr.write("<tr>\n")
         fptr.write("  <td style=\"vertical-align: top;\">\n")
         fptr.write("    %s \n" % (testlist[i]) )
-        [nst,ast,cst,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],1);
+        [nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],1);
         ofile = outdir + "/output-" + random_hash() + ".txt"
         shutil.copy("output.txt", ofile)
         f.write("&nbsp; (<a href=\"" + ofile + "\">output</a>)\n")

@@ -856,8 +856,8 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
  ARKodeGetNumAccSteps returns the cumulative number of accuracy 
                       limited steps taken by the solver
 
- ARKodeGetNumConvSteps returns the cumulative number of convergence 
-                       limited steps taken by the solver
+ ARKodeGetNumStepAttempts returns the total number of steps
+                          attempted by the solver
 
  ARKodeGetNumRhsEvals returns the number of calls to the user's
                       fe and fi functions
@@ -917,8 +917,8 @@ SUNDIALS_EXPORT int ARKodeGetNumExpSteps(void *arkode_mem,
 					 long int *expsteps);
 SUNDIALS_EXPORT int ARKodeGetNumAccSteps(void *arkode_mem, 
 					 long int *accsteps);
-SUNDIALS_EXPORT int ARKodeGetNumConvSteps(void *arkode_mem, 
-					  long int *convsteps);
+SUNDIALS_EXPORT int ARKodeGetNumStepAttempts(void *arkode_mem, 
+					     long int *step_attempts);
 SUNDIALS_EXPORT int ARKodeGetNumRhsEvals(void *arkode_mem, 
 					 long int *nfe_evals, 
 					 long int *nfi_evals);
@@ -958,7 +958,7 @@ SUNDIALS_EXPORT int ARKodeGetIntegratorStats(void *arkode_mem,
 					     long int *nsteps,
 					     long int *expsteps, 
 					     long int *accsteps, 
-					     long int *convsteps, 
+					     long int *step_attempts, 
 					     long int *nfe_evals, 
 					     long int *nfi_evals, 
 					     long int *nlinsetups, 

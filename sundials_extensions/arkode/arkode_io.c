@@ -1015,8 +1015,8 @@ int ARKodeSetInitStep(void *arkode_mem, realtype hin)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* Passing hin<=0 sets the default, otherwise use input. */
-  if (hin <= ZERO) {
+  /* Passing hin=0 sets the default, otherwise use input. */
+  if (hin == ZERO) {
     ark_mem->ark_hin = ZERO;
   } else {
     ark_mem->ark_hin = hin;
@@ -1704,11 +1704,11 @@ int ARKodeGetNumAccSteps(void *arkode_mem, long int *nsteps)
 
 
 /*---------------------------------------------------------------
- ARKodeGetNumConvSteps:
+ ARKodeGetNumStepAttempts:
 
- Returns the current number of convergence-limited steps
+ Returns the current number of steps attempted by the solver
 ---------------------------------------------------------------*/
-int ARKodeGetNumConvSteps(void *arkode_mem, long int *nsteps)
+int ARKodeGetNumStepAttempts(void *arkode_mem, long int *nsteps)
 {
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
@@ -1718,7 +1718,7 @@ int ARKodeGetNumConvSteps(void *arkode_mem, long int *nsteps)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  *nsteps = ark_mem->ark_nst_con;
+  *nsteps = ark_mem->ark_nst_attempts;
 
   return(ARK_SUCCESS);
 }
@@ -2007,7 +2007,7 @@ int ARKodeGetWorkSpace(void *arkode_mem, long int *lenrw, long int *leniw)
 ---------------------------------------------------------------*/
 int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, 
 			     long int *expsteps, long int *accsteps, 
-			     long int *convsteps, long int *fe_evals, 
+			     long int *step_attempts, long int *fe_evals, 
 			     long int *fi_evals, long int *nlinsetups, 
 			     long int *netfails, realtype *hinused, 
 			     realtype *hlast, realtype *hcur, 
@@ -2021,18 +2021,18 @@ int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps,
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  *nsteps     = ark_mem->ark_nst;
-  *expsteps   = ark_mem->ark_nst_exp;
-  *accsteps   = ark_mem->ark_nst_acc;
-  *convsteps  = ark_mem->ark_nst_con;
-  *fe_evals   = ark_mem->ark_nfe;
-  *fi_evals   = ark_mem->ark_nfi;
-  *nlinsetups = ark_mem->ark_nsetups;
-  *netfails   = ark_mem->ark_netf;
-  *hinused    = ark_mem->ark_h0u;
-  *hlast      = ark_mem->ark_hold;
-  *hcur       = ark_mem->ark_next_h;
-  *tcur       = ark_mem->ark_tn;
+  *nsteps        = ark_mem->ark_nst;
+  *expsteps      = ark_mem->ark_nst_exp;
+  *accsteps      = ark_mem->ark_nst_acc;
+  *step_attempts = ark_mem->ark_nst_attempts;
+  *fe_evals      = ark_mem->ark_nfe;
+  *fi_evals      = ark_mem->ark_nfi;
+  *nlinsetups    = ark_mem->ark_nsetups;
+  *netfails      = ark_mem->ark_netf;
+  *hinused       = ark_mem->ark_h0u;
+  *hlast         = ark_mem->ark_hold;
+  *hcur          = ark_mem->ark_next_h;
+  *tcur          = ark_mem->ark_tn;
 
   return(ARK_SUCCESS);
 }

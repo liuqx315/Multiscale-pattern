@@ -72,7 +72,6 @@ def run_test(testname,keep_output):
     #  initialize return values to "bad" values, to overwrite with actual data
     nsteps=100000
     asteps=100000
-    csteps=100000
     nfe=100000
     nfi=100000 
     lsetups=100000
@@ -88,10 +87,9 @@ def run_test(testname,keep_output):
     f = open('output.txt','r')
     for line in f:
         txt = shlex.split(line)
-        if ("internal" in txt):
-            nsteps = int(txt[5]);
-            asteps = int(txt[8].replace(',',''));
-            csteps = int(txt[11].replace(')',''));
+        if ("Internal" in txt):
+            nsteps = int(txt[4]);
+            asteps = int(txt[7].replace(')',''));
         elif ("system" in txt):
             nfi_lsetup = int(txt[10]);
         elif ("evals:" in txt):
@@ -115,7 +113,7 @@ def run_test(testname,keep_output):
     f.close()
     if (keep_output==0):
         os.remove('output.txt')
-    return [nsteps, asteps, csteps, nfe, nfi, lsetups, nfi_lsetup, nJe, nnewt, ncf, nef, maxerr, rmserr, oversolve, runtime]
+    return [nsteps, asteps, nfe, nfi, lsetups, nfi_lsetup, nJe, nnewt, ncf, nef, maxerr, rmserr, oversolve, runtime]
     
 ##########
 def write_parameter_file(params):
