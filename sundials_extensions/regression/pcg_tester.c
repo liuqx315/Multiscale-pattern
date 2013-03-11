@@ -43,7 +43,7 @@ int main() {
   /* test problem parameters */
   long int N = 1000;
   int ndeltas = 6;
-  realtype deltas[] = {RCONST(1e-2), RCONST(1e-4), RCONST(1e-6), 
+  realtype deltas[] = {RCONST(1e-2), RCONST(1e-4),  RCONST(1e-6), 
 		       RCONST(1e-8), RCONST(1e-10), RCONST(1e-12)};
 
   /* allocate system and vectors */
@@ -52,6 +52,7 @@ int main() {
   N_Vector x = NULL;
   N_Vector xtrue = NULL;
   N_Vector error = NULL;
+  N_Vector s = NULL;
   PcgMem pcg_mem = NULL;
   udata = (UserData) malloc(sizeof(*udata));
   udata->N = N;
@@ -60,6 +61,7 @@ int main() {
   for (i=0; i<N; i++)  udata->A[i] = malloc(N * sizeof(realtype));
   b = N_VNew_Serial(N);
   x = N_VNew_Serial(N);
+  s = N_VNew_Serial(N);
   xtrue = N_VNew_Serial(N);
   error = N_VNew_Serial(N);
 
@@ -69,6 +71,7 @@ int main() {
     for (j=0; j<N; j++) 
       udata->A[i][j] = 2.0/(j+i+1);
     udata->A[i][i] += 10.0 + i;
+    NV_Ith_S(s,i) = 1.0;
   }
   ATimes((void *) udata, xtrue, b);
 
@@ -82,7 +85,7 @@ int main() {
     for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
     printf("\nCalling solver with P disabled, tol = %g\n", deltas[j]);
     iret = PcgSolve(pcg_mem, (void *) udata, x, b, PREC_NONE, deltas[j], 
-		    (void *) udata, ATimes, PSolve, &res_norm, &nli, &nps);
+		    (void *) udata, s, ATimes, PSolve, &res_norm, &nli, &nps);
     if (iret < 0)  printf("  PcgSolve Error = %i\n", iret);
     else           printf("  PcgSolve Success = %i\n", iret);
     printf("  res_norm = %g\n", res_norm);
@@ -96,7 +99,7 @@ int main() {
     udata->pchoice = 0;
     printf("\nCalling solver with no P, tol = %g\n", deltas[j]);
     iret = PcgSolve(pcg_mem, (void *) udata, x, b, PREC_LEFT, deltas[j], 
-		    (void *) udata, ATimes, PSolve, &res_norm, &nli, &nps);
+		    (void *) udata, s, ATimes, PSolve, &res_norm, &nli, &nps);
     if (iret < 0)  printf("  PcgSolve Error = %i\n", iret);
     else           printf("  PcgSolve Success = %i\n", iret);
     printf("  res_norm = %g\n", res_norm);
@@ -110,7 +113,7 @@ int main() {
     udata->pchoice = 1;
     printf("\nCalling solver with scaled P, tol = %g\n", deltas[j]);
     iret = PcgSolve(pcg_mem, (void *) udata, x, b, PREC_LEFT, deltas[j], 
-		    (void *) udata, ATimes, PSolve, &res_norm, &nli, &nps);
+		    (void *) udata, s, ATimes, PSolve, &res_norm, &nli, &nps);
     if (iret < 0)  printf("  PcgSolve Error = %i\n", iret);
     else           printf("  PcgSolve Success = %i\n", iret);
     printf("  res_norm = %g\n", res_norm);
@@ -124,7 +127,7 @@ int main() {
     udata->pchoice = 2;
     printf("\nCalling solver with Jacobi P, tol = %g\n", deltas[j]);
     iret = PcgSolve(pcg_mem, (void *) udata, x, b, PREC_LEFT, deltas[j], 
-		    (void *) udata, ATimes, PSolve, &res_norm, &nli, &nps);
+		    (void *) udata, s, ATimes, PSolve, &res_norm, &nli, &nps);
     if (iret < 0)  printf("  PcgSolve Error = %i\n", iret);
     else           printf("  PcgSolve Success = %i\n", iret);
     printf("  res_norm = %g\n", res_norm);

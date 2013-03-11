@@ -70,11 +70,11 @@ PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl)
   }
 
   /* Set the structure fields */
-  mem->l_max  = l_max;
-  mem->r      = r;
-  mem->p      = p;
-  mem->z      = z;
-  mem->Ap     = Ap;
+  mem->l_max = l_max;
+  mem->r     = r;
+  mem->p     = p;
+  mem->z     = z;
+  mem->Ap    = Ap;
 
   /* Return the pointer to PCG memory */
   return(mem);
@@ -86,7 +86,7 @@ PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl)
  --------------------------------------------------------------*/
 int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
 	     int pretype, realtype delta, void *P_data,
-	     ATimesFn atimes, PSolveFn psolve,
+	     N_Vector w, ATimesFn atimes, PSolveFn psolve,
 	     realtype *res_norm, int *nli, int *nps)
 {
   realtype alpha, beta, r0_norm, rho, rz, rz_old;
@@ -120,7 +120,7 @@ int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
   }
 
   /* Set rho to L2 norm of r, and return if small */
-  *res_norm = r0_norm = rho = RSqrt(N_VDotProd(r,r));
+  *res_norm = r0_norm = rho = N_VWrmsNorm(r,w);
   if (rho <= delta) return(PCG_SUCCESS);
 
   /* Apply preconditioner and b-scaling to r = r_0 */
@@ -131,7 +131,7 @@ int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
   }
   else N_VScale(ONE, r, z);
 
-  /* Initialize rz to the dot product of r with z */
+  /* Initialize rz to <r,z> */
   rz = N_VDotProd(r, z);
 
   /* Copy z to p */
@@ -148,7 +148,7 @@ int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
     if (ier != 0)
       return((ier < 0) ? PCG_ATIMES_FAIL_UNREC : PCG_ATIMES_FAIL_REC);
 
-    /* Calculate alpha = <r,z>/<Ap,p> */
+    /* Calculate alpha = <r,z> / <Ap,p> */
     alpha = rz / N_VDotProd(Ap, p);
 
     /* Update x = x + alpha*p */
@@ -158,7 +158,7 @@ int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
     N_VLinearSum(ONE, r, -alpha, Ap, r);
 
     /* Set rho and check convergence */
-    *res_norm = rho = RSqrt(N_VDotProd(r, r));
+    *res_norm = rho = N_VWrmsNorm(r, w);
     if (rho <= delta) {
       converged = TRUE;
       break;
@@ -176,7 +176,7 @@ int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
     rz_old = rz;
     rz = N_VDotProd(r, z);
     
-    // Calculate beta = <r,z> / <r_old, z_old>
+    // Calculate beta = <r,z> / <r_old,z_old>
     beta = rz / rz_old;
 
     /* Update p = z + beta*p */
