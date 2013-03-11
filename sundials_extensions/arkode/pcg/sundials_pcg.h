@@ -94,6 +94,12 @@ SUNDIALS_EXPORT PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl);
        information (passed to user-supplied function referenced
        by psolve (function pointer))
 
+  w  vector (type N_Vector) used in computing the residual norm 
+       for stopping solver (unchanged by function).  This is 
+       needed since PCG cannot utilize the same scaling vectors 
+       as used in the other SUNDIALS solvers, due to 
+       symmetry-breaking nature of scaling operators.
+
   atimes  user-supplied routine responsible for computing the
        matrix-vector product Ax (see sundials_iterative.h)
 
@@ -116,7 +122,7 @@ SUNDIALS_EXPORT PcgMem PcgMalloc(int l_max, N_Vector vec_tmpl);
 
 SUNDIALS_EXPORT int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
 			     int pretype, realtype delta, void *P_data, 
-			     ATimesFn atimes, PSolveFn psolve,
+			     N_Vector w, ATimesFn atimes, PSolveFn psolve,
 			     realtype *res_norm, int *nli, int *nps);
 
 /* Return values for PcgSolve */
