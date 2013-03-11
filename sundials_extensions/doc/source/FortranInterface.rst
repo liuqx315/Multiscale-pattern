@@ -1389,7 +1389,7 @@ IOUT Index      Optional output  ARKode function
 3               NST              :c:func:`ARKodeGetNumSteps()`
 4               NST_STB          :c:func:`ARKodeGetNumExpSteps()`
 5               NST_ACC          :c:func:`ARKodeGetNumAccSteps()`
-6               NST_CNV          :c:func:`ARKodeGetNumConvSteps()`
+6               NST_ATT          :c:func:`ARKodeGetNumStepAttempts()`
 7               NFE              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_E` calls)
 8               NFI              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_I` calls)
 9               NSETUPS          :c:func:`ARKodeGetNumLinSolvSetups()`

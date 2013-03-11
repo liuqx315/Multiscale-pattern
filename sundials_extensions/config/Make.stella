@@ -6,10 +6,11 @@
 
 # Fortran compilers
 F90 = mpif90  # gnu
+#F90 = mpif90_intel
 
 # Fortran compile flags
-#FFLAGS = -p -g -O0 -fbackslash -ffpe-trap=invalid # gfortran 
-FFLAGS = -O2 -fbackslash -ffpe-trap=invalid # gfortran 
+#FFLAGS = -p -g -O0 -ffpe-trap=invalid # gfortran 
+FFLAGS = -O2
 
 # SUNDIALS-specific preprocessor directives (F-to-C conversion)
 SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
@@ -17,10 +18,11 @@ SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
 
 # C compiler
 CC = mpicc  # gnu
+#CC = mpicc_intel
 
 # C compile flags
-#CFLAGS = -p -g -O0 -Wall # gcc 
-CFLAGS = -O2 # gcc 
+#CFLAGS = -p -g -O0 -Wall
+CFLAGS = -O2
 
 # Location of C standard header files (stdlib.h, etc.)
 C_INCD = 

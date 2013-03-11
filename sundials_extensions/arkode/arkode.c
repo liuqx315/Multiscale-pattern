@@ -20,6 +20,11 @@
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_types.h>
 
+#define NO_DEBUG_OUTPUT
+#ifdef DEBUG_OUTPUT
+#include <nvector/nvector_serial.h>
+#endif
+
 /*===============================================================
              Private Functions Prototypes
 ===============================================================*/
@@ -267,20 +272,20 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_hadapt_ehist[2] = ONE;
 
   /* Initialize all the counters */
-  ark_mem->ark_nst     = 0;
-  ark_mem->ark_nst_acc = 0;
-  ark_mem->ark_nst_exp = 0;
-  ark_mem->ark_nst_con = 0;
-  ark_mem->ark_nfe     = 0;
-  ark_mem->ark_nfi     = 0;
-  ark_mem->ark_ncfn    = 0;
-  ark_mem->ark_netf    = 0;
-  ark_mem->ark_nni     = 0;
-  ark_mem->ark_nsetups = 0;
-  ark_mem->ark_nhnil   = 0;
-  ark_mem->ark_nstlp   = 0;
-  ark_mem->ark_nge     = 0;
-  ark_mem->ark_irfnd   = 0;
+  ark_mem->ark_nst          = 0;
+  ark_mem->ark_nst_acc      = 0;
+  ark_mem->ark_nst_exp      = 0;
+  ark_mem->ark_nst_attempts = 0;
+  ark_mem->ark_nfe          = 0;
+  ark_mem->ark_nfi          = 0;
+  ark_mem->ark_ncfn         = 0;
+  ark_mem->ark_netf         = 0;
+  ark_mem->ark_nni          = 0;
+  ark_mem->ark_nsetups      = 0;
+  ark_mem->ark_nhnil        = 0;
+  ark_mem->ark_nstlp        = 0;
+  ark_mem->ark_nge          = 0;
+  ark_mem->ark_irfnd        = 0;
 
   /* Initialize other integrator optional outputs */
   ark_mem->ark_h0u    = ZERO;
@@ -369,20 +374,20 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_hadapt_ehist[2] = ONE;
 
   /* Initialize all the counters */
-  ark_mem->ark_nst     = 0;
-  ark_mem->ark_nst_acc = 0;
-  ark_mem->ark_nst_exp = 0;
-  ark_mem->ark_nst_con = 0;
-  ark_mem->ark_nfe     = 0;
-  ark_mem->ark_nfi     = 0;
-  ark_mem->ark_ncfn    = 0;
-  ark_mem->ark_netf    = 0;
-  ark_mem->ark_nni     = 0;
-  ark_mem->ark_nsetups = 0;
-  ark_mem->ark_nhnil   = 0;
-  ark_mem->ark_nstlp   = 0;
-  ark_mem->ark_nge     = 0;
-  ark_mem->ark_irfnd   = 0;
+  ark_mem->ark_nst          = 0;
+  ark_mem->ark_nst_acc      = 0;
+  ark_mem->ark_nst_exp      = 0;
+  ark_mem->ark_nst_attempts = 0;
+  ark_mem->ark_nfe          = 0;
+  ark_mem->ark_nfi          = 0;
+  ark_mem->ark_ncfn         = 0;
+  ark_mem->ark_netf         = 0;
+  ark_mem->ark_nni          = 0;
+  ark_mem->ark_nsetups      = 0;
+  ark_mem->ark_nhnil        = 0;
+  ark_mem->ark_nstlp        = 0;
+  ark_mem->ark_nge          = 0;
+  ark_mem->ark_irfnd        = 0;
 
   /* Initialize other integrator optional outputs */
   ark_mem->ark_h0u    = ZERO;
@@ -2305,6 +2310,9 @@ static int ARKStep(ARKodeMem ark_mem)
   /* Looping point for attempts to take a step */
   for(;;) {  
 
+    /* increment attempt counter */
+    ark_mem->ark_nst_attempts++;
+
     /* Loop over internal stages to the step */
     for (is=0; is<ark_mem->ark_stages; is++) {
 
@@ -2319,12 +2327,27 @@ static int ARKStep(ARKodeMem ark_mem)
       if (ark_mem->ark_tstopset)
 	if ((ark_mem->ark_tn - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO) 
 	  ark_mem->ark_tn = ark_mem->ark_tstop;
+
+#ifdef DEBUG_OUTPUT
+ printf("step %li,  stage %i,  h = %19.16g,  t_n = %19.16g\n", 
+	 ark_mem->ark_nst, is, ark_mem->ark_h, ark_mem->ark_tn);
+#endif
       
       /* Call predictor for current stage solution (result placed in ycur) */
       ARKPredict(ark_mem, is);  
+
+#ifdef DEBUG_OUTPUT
+ printf("predictor:\n");
+ N_VPrint_Serial(ark_mem->ark_ycur);
+#endif
       
       /* Set up data for evaluation of ARK stage residual (data stored in ark_sdata) */
       ARKSet(ark_mem);
+
+#ifdef DEBUG_OUTPUT
+ printf("rhs data:\n");
+ N_VPrint_Serial(ark_mem->ark_sdata);
+#endif
 
       /* Solver diagnostics reporting */
       if (ark_mem->ark_report) 	
@@ -2336,6 +2359,11 @@ static int ARKStep(ARKodeMem ark_mem)
 
 	/* perform implicit solve */
 	nflag = ARKNls(ark_mem, nflag);
+
+#ifdef DEBUG_OUTPUT
+ printf("nonlinear solution:\n");
+ N_VPrint_Serial(ark_mem->ark_y);
+#endif
 
 	/* check for convergence (on failure, h will have been modified) */
 	kflag = ARKHandleNFlag(ark_mem, &nflag, saved_t, &ncf);
@@ -2352,6 +2380,11 @@ static int ARKStep(ARKodeMem ark_mem)
       	/* set y to be ycur + RHS data computed in ARKSet */
 	N_VLinearSum(ONE, ark_mem->ark_sdata, ONE, 
 		     ark_mem->ark_ycur, ark_mem->ark_y);
+
+#ifdef DEBUG_OUTPUT
+ printf("explicit solution:\n");
+ N_VPrint_Serial(ark_mem->ark_y);
+#endif
 
       }
 
@@ -2380,6 +2413,10 @@ static int ARKStep(ARKodeMem ark_mem)
     /* compute time-evolved solution (in ark_y), error estimate (in dsm) */
     dsm = ARKComputeSolutions(ark_mem);
 
+#ifdef DEBUG_OUTPUT
+ printf("error estimate = %19.16g\n", dsm);
+#endif
+
     /* Solver diagnostics reporting */
     if (ark_mem->ark_report) 
       fprintf(ark_mem->ark_diagfp, "  etest  %li  %19.16g  %19.16g\n", 
@@ -2388,6 +2425,10 @@ static int ARKStep(ARKodeMem ark_mem)
     /* Perform time accuracy error test (if failure, updates h for next try) */
     eflag = ARKDoErrorTest(ark_mem, &nflag, saved_t, &nef, dsm);
 	
+#ifdef DEBUG_OUTPUT
+ printf("error test flag = %i\n", eflag);
+#endif
+
     /* Restart step attempt (recompute all stages) if error test fails recoverably */
     if (eflag == TRY_AGAIN)  continue;
 	
@@ -2945,6 +2986,13 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
       	ark_mem->ark_eLTE = ark_mem->ark_nlscoef * RCONST(0.1);
       dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_eLTE;
 
+#ifdef DEBUG_OUTPUT
+ printf("Newton iter %i,  del = %19.16g,  crate = %19.16g\n", m, del, ark_mem->ark_crate);
+ printf("   eLTE = %19.16g,  dcon = %19.16g\n", ark_mem->ark_eLTE, dcon);
+ printf("Newton correction:\n");
+ N_VPrint_Serial(ark_mem->ark_acor);
+#endif
+
       /* Solver diagnostics reporting */
       if (ark_mem->ark_report) 
 	fprintf(ark_mem->ark_diagfp, "    newt  %i  %19.16g  %19.16g\n", m, del, dcon);
@@ -3179,7 +3227,6 @@ static int ARKHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_h *= ark_mem->ark_eta;
   ark_mem->ark_next_h = ark_mem->ark_h;
   *nflagPtr = PREV_CONV_FAIL;
-  ark_mem->ark_nst_con++;
 
 
   return(PREDICT_AGAIN);

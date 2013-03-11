@@ -584,7 +584,7 @@ void FARK_ARKODE(realtype *tout, realtype *t, realtype *y,
 			   &ARK_iout[2],    /* NST     */
 			   &ARK_iout[3],    /* NST_STB */
 			   &ARK_iout[4],    /* NST_ACC */ 
-			   &ARK_iout[5],    /* NST_CNV */ 
+			   &ARK_iout[5],    /* NST_ATT */ 
 			   &ARK_iout[6],    /* NFE     */ 
 			   &ARK_iout[7],    /* NFI     */ 
 			   &ARK_iout[8],    /* NSETUPS */ 

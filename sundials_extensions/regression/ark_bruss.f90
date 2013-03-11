@@ -150,7 +150,7 @@ program driver
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
-  call FARKSetIin('MAX_NSTEPS',      10000, ier)
+  call FARKSetIin('MAX_NSTEPS',      1000, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
@@ -189,22 +189,24 @@ program driver
   ! output solver statistics
   print *, '  '
   print *, 'Final Solver Statistics:'
-  print '(3(A,i7),A)', '   Total internal solver steps =', iout(3), &
-       ' (acc =', iout(5), ',  conv =', iout(6), ')'
+  print '(2(A,i7),A)', '   Internal solver steps =', iout(3), &
+       ' (attempted =', iout(6), ')'
   print '(2(A,i7))', '   Total RHS evals:  Fe =', iout(7), &
        ',  Fi =', iout(8)
   print '(A,i7)', '   Total linear solver setups =', iout(9)
-  print '(A,i7)', '   Total Jacobian evaluations =', iout(18)
-  print '(A,i7)', '   Total Newton iterations =', iout(11)
-  print '(A,i7)', '   Total linear solver convergence failures =', &
+  print '(A,i7)', '   Total RHS evals for setting up the linear system =', iout(17)
+  print '(A,i7)', '   Total number of Jacobian evaluations =', iout(18)
+  print '(A,i7)', '   Total number of Newton iterations =', iout(11)
+  print '(A,i7)', '   Total number of nonlinear solver convergence failures =', &
        iout(12)
-  print '(A,i7)', '   Total error test failures =', iout(10)
+  print '(A,i7)', '   Total number of error test failures =', iout(10)
   print *, '  '
 
   ! check final solution against reference values for problem
   print *, '     y(Tf) =', y
   print *, '  yref(Tf) =', ytrue
   print *, '     error =', ytrue-y
+  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ)
   print *, '  '
 
   ! clean up

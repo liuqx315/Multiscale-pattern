@@ -343,18 +343,18 @@ typedef struct ARKodeMemRec {
   /*--------
     Counters 
     --------*/
-  long int ark_nst;         /* number of internal steps taken              */
-  long int ark_nst_acc;     /* number of accuracy-limited internal steps   */
-  long int ark_nst_exp;     /* number of stability-limited internal steps  */
-  long int ark_nst_con;     /* number of convergence-limited int. steps    */
-  long int ark_nfe;         /* number of fe calls                          */
-  long int ark_nfi;         /* number of fi calls                          */
-  long int ark_ncfn;        /* number of corrector convergence failures    */
-  long int ark_netf;        /* number of error test failures               */
-  long int ark_nni;         /* number of Newton iterations performed       */
-  long int ark_nsetups;     /* number of setup calls                       */
-  int      ark_nhnil;       /* number of messages issued to the user that 
-			       t+h == t for the next iternal step          */
+  long int ark_nst;          /* number of internal steps taken             */
+  long int ark_nst_acc;      /* number of accuracy-limited internal steps  */
+  long int ark_nst_exp;      /* number of stability-limited internal steps */
+  long int ark_nst_attempts; /* number of attempted steps                  */
+  long int ark_nfe;          /* number of fe calls                         */
+  long int ark_nfi;          /* number of fi calls                         */
+  long int ark_ncfn;         /* number of corrector convergence failures   */
+  long int ark_netf;         /* number of error test failures              */
+  long int ark_nni;          /* number of Newton iterations performed      */
+  long int ark_nsetups;      /* number of setup calls                      */
+  int      ark_nhnil;        /* number of messages issued to the user that 
+			        t+h == t for the next iternal step         */
 
   /*-----------------
     Diagnostic output

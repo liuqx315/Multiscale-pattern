@@ -2331,7 +2331,7 @@ Size of ARKode real and integer workspaces           :c:func:`ARKodeGetWorkSpace
 Cumulative number of internal steps                  :c:func:`ARKodeGetNumSteps()`
 No. of explicit stability-limited steps              :c:func:`ARKodeGetNumExpSteps()`
 No. of accuracy-limited steps                        :c:func:`ARKodeGetNumAccSteps()`
-No. of solver convergence-limited steps              :c:func:`ARKodeGetNumConvSteps()`
+No. of attempted steps                               :c:func:`ARKodeGetNumStepAttempts()`
 No. of calls to `fe` and `fi` functions              :c:func:`ARKodeGetNumRhsEvals()`
 No. of calls to linear solver setup function         :c:func:`ARKodeGetNumLinSolvSetups()`
 No. of local error test failures that have occurred  :c:func:`ARKodeGetNumErrTestFails()`
@@ -2413,14 +2413,13 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumConvSteps(void *arkode_mem, long int *convsteps)
+.. c:function:: int ARKodeGetNumStepAttempts(void *arkode_mem, long int *step_attempts)
 
-   Returns the cumulative number of convergence-limited
-   steps taken by the solver (so far).
+   Returns the cumulative number of steps attempted by the solver (so far).
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
-      * `convsteps` -- number of convergence-limited steps taken in the solver.
+      * `step_attempts` -- number of steps attempted by solver.
    
    **Return value:**  
       * ARK_SUCCESS if successful
@@ -2628,7 +2627,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, long int *expsteps, long int *accsteps, long int *convsteps, long int *nfe_evals, long int *nfi_evals, long int *nlinsetups, long int *netfails, realtype *hinused, realtype *hlast, realtype *hcur, realtype *tcur)
+.. c:function:: int ARKodeGetIntegratorStats(void *arkode_mem, long int *nsteps, long int *expsteps, long int *accsteps, long int *step_attempts, long int *nfe_evals, long int *nfi_evals, long int *nlinsetups, long int *netfails, realtype *hinused, realtype *hlast, realtype *hcur, realtype *tcur)
 
    Returns many of the most useful integrator statistics in a single call.
    
@@ -2637,7 +2636,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
       * `nsteps` -- number of steps taken in the solver.
       * `expsteps` -- number of stability-limited steps taken in the solver.
       * `accsteps` -- number of accuracy-limited steps taken in the solver.
-      * `convsteps` -- number of convergence-limited steps taken in the solver.
+      * `step_attempts` -- number of steps attempted by the solver.
       * `nfe_evals` -- number of calls to the user's :math:`f_E(t,y)` function.
       * `nfi_evals` -- number of calls to the user's :math:`f_I(t,y)` function.
       * `nlinsetups` -- number of linear solver setup calls made.

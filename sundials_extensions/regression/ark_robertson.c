@@ -6,44 +6,22 @@
  * -----------------------------------------------------------------
  * Example problem:
  * 
- * The following test simulates a brusselator problem from chemical 
- * kinetics.  This is an ODE system with 3 components, Y = [u,v,w], 
- * satisfying the equations,
- *    du/dt = a - (w+1)*u + v*u^2
- *    dv/dt = w*u - v*u^2
- *    dw/dt = (b-w)/ep - w*u
- * for t in the interval [0.0, 10.0], with initial conditions 
- * Y0 = [u0,v0,w0]. 
+ * The following test simulates the Robertson problem, corresponding
+ * to the kinetics of an autocatalytic reaction.  This is an ODE
+ * system with 3 components, Y = [u,v,w], satisfying the equations,
+ *    du/dt = -0.04*u + 1e4*v*w
+ *    dv/dt = 0.04*u - 1e4*v*w - 3e7*v^2
+ *    dw/dt = 3e7*v^2
+ * for t in the interval [0.0, 1e11], with initial conditions 
+ * Y0 = [1,0,0]. 
  * 
- * We have 3 different testing scenarios:
- *
- * Test 1:  u0=3.9,  v0=1.1,  w0=2.8,  a=1.2,  b=2.5,  ep=1.0e-5
- *    Here, all three components exhibit a rapid transient change 
- *    during the first 0.2 time units, followed by a slow and 
- *    smooth evolution.
- *
- * Test 2:  u0=1.2,  v0=3.1,  w0=3,  a=1,  b=3.5,  ep=5.0e-6
- *    Here, w experiences a fast initial transient, jumping 0.5 
- *    within a few steps.  All values proceed smoothly until 
- *    around t=6.5, when both u and v undergo a sharp transition, 
- *    with u increaseing from around 0.5 to 5 and v decreasing 
- *    from around 6 to 1 in less than 0.5 time units.  After this
- *    transition, both u and v continue to evolve somewhat 
- *    rapidly for another 1.4 time units, and finish off smoothly.
- *
- * Test 3:  u0=3,  v0=3,  w0=3.5,  a=0.5,  b=3,  ep=5.0e-4
- *    Here, all components undergo very rapid initial transients 
- *    during the first 0.3 time units, and all then proceed very 
- *    smoothly for the remainder of the simulation.
- *
- * These tests are selected within the input file (test = {1,2,3}), 
- * with the default set to test 2 in case the input is invalid.
- * Also in the input file, we allow specification of the desired 
- * relative and absolute tolerances.
+ * In the input file, input_robertson.txt, we allow specification 
+ * of the desired relative and absolute tolerances.
  * 
- * This program solves the problem with the DIRK method, using a
- * Newton iteration with the ARKDENSE dense linear solver, and a
- * user-supplied Jacobian routine.
+ * This program solves the problem with one of the solvers, ERK, 
+ * DIRK or ARK.  For DIRK and ARK, implicit subsystems are solved 
+ * using a Newton iteration with the ARKDENSE dense linear solver, 
+ * and a user-supplied Jacobian routine.
  *
  * 100 outputs are printed at equal intervals, and run statistics 
  * are printed at the end.
@@ -82,10 +60,10 @@ int main()
 {
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
-  realtype Tf = RCONST(10.0);
-  realtype dTout = RCONST(1.0);
+  realtype Tf = RCONST(1.e11);
+  realtype dTout = (Tf-T0)/100;
   int Nt = ceil(Tf/dTout);
-  realtype a, b, ep, u0, v0, w0;
+  realtype u0, v0, w0, h0;
   long int NEQ = 3;
 
   /* declare solver parameters */
@@ -106,14 +84,11 @@ int main()
   void *arktrue_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
-     test   - test problem choice
      reltol - desired relative tolerance
      abstol - desired absolute tolerance */
-  int test;
   double reltol_, abstol_;
   FILE *FID;
-  FID=fopen("input_brusselator.txt","r");
-  fscanf(FID,"  test = %i\n", &test);
+  FID=fopen("input_robertson.txt","r");
   fscanf(FID,"  reltol = %lf\n", &reltol_);
   fscanf(FID,"  abstol = %lf\n", &abstol_);
   fclose(FID);
@@ -123,6 +98,7 @@ int main()
   realtype abstol = abstol_;
   realtype reltol2 = reltol_*1.0e-3;
   realtype abstol2 = abstol_*1.0e-3;
+  h0 = 1.e-4 * reltol;
 
   /* read solver parameters from file */
   FID=fopen("solve_params.txt","r");
@@ -158,41 +134,17 @@ int main()
 
   /* open solver diagnostics output file for writing */
   FILE *DFID;
-  DFID=fopen("diags_ark_brusselator.txt","w");
+  DFID=fopen("diags_ark_robertson.txt","w");
   
-  /* set up the test problem according to the desired input */
-  if (test == 1) {
-    u0 = RCONST(3.9);
-    v0 = RCONST(1.1);
-    w0 = RCONST(2.8);
-    a  = RCONST(1.2);
-    b  = RCONST(2.5);
-    ep = RCONST(1.0e-5);
-  } else if (test == 3) {
-    u0 = RCONST(3.0);
-    v0 = RCONST(3.0);
-    w0 = RCONST(3.5);
-    a  = RCONST(0.5);
-    b  = RCONST(3.0);
-    ep = RCONST(5.0e-4);
-  } else {
-    u0 = RCONST(1.2);
-    v0 = RCONST(3.1);
-    w0 = RCONST(3.0);
-    a  = RCONST(1.0);
-    b  = RCONST(3.5);
-    ep = RCONST(5.0e-6);
-  }
-
-  /* set user data to contain problem-defining parameters */
-  realtype rdata[3] = {a, b, ep};
+  /* set up the initial conditions */
+  u0 = RCONST(1.0);
+  v0 = RCONST(0.0);
+  w0 = RCONST(0.0);
 
   /* Initial problem output */
-  printf("\nBrusselator ODE test problem:\n");
+  printf("\nRobertson ODE test problem:\n");
   printf("    initial conditions:  u0 = %g,  v0 = %g,  w0 = %g\n",u0,v0,w0);
-  printf("    problem parameters:  a = %g,  b = %g,  ep = %g\n",a,b,ep);
   printf("    reltol = %.1e,  abstol = %.1e\n\n",reltol,abstol);
-
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
@@ -233,12 +185,6 @@ int main()
   /* Compute reference solution with default implicit method */
   flag = ARKodeInit(arktrue_mem, NULL, f, T0, ytrue);
   if (check_flag(&flag, "ARKodeInit", 1)) return(1);
-
-  /* Call ARKodeSetUserData to pass rdata to user functions */
-  flag = ARKodeSetUserData(arkode_mem, (void *) rdata);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
-  flag = ARKodeSetUserData(arktrue_mem, (void *) rdata);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
@@ -333,6 +279,17 @@ int main()
     fprintf(stderr,"Error in ARKodeSetMaxNonlinIters = %i\n",flag);
     return(1);
   }
+  flag = ARKodeSetInitStep(arkode_mem, h0);
+  if (flag != 0) {
+    fprintf(stderr,"Error in ARKodeSetInitStep = %i\n",flag);
+    return(1);
+  }
+
+  /* Call ARKodeSetMaxErrTestFails to increase default (for testing) */
+  flag = ARKodeSetMaxErrTestFails(arkode_mem, 20);
+  if (check_flag(&flag, "ARKodeSetMaxErrTestFails", 1)) return(1);
+  flag = ARKodeSetMaxErrTestFails(arktrue_mem, 30);
+  if (check_flag(&flag, "ARKodeSetMaxErrTestFails", 1)) return(1);
 
   /* If (dense_order == -1), tell integrator to use tstop */
   if (dense_order == -1) {
@@ -386,7 +343,9 @@ int main()
   realtype tout = dTout;
   realtype u, v, w, uerr, verr, werr, errI=0.0, err2=0.0;
   printf("        t           u           v           w        uerr          verr          werr\n");
-  printf("   ---------------------------------------------------------------------------------------\n");
+  printf("   ----------------------------------------------------------------------------------------------\n");
+  printf("  %10.3e  %12.5e  %12.5e  %12.5e  %12.5e  %12.5e  %12.5e\n", 
+	 t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2), 0.0, 0.0, 0.0);
   int iout;
   for (iout=0; iout<Nt; iout++) {
     if (!idense)
@@ -411,11 +370,11 @@ int main()
     errI = (errI > uerr) ? errI : uerr;
     errI = (errI > werr) ? errI : werr;
     err2 += uerr*uerr + verr*verr + werr*werr;
-    printf("  %10.6f  %10.6f  %10.6f  %10.6f  %12.5e  %12.5e  %12.5e\n", 
+    printf("  %10.3e  %12.5e  %12.5e  %12.5e  %12.5e  %12.5e  %12.5e\n", 
 	   t, u, v, w, uerr, verr, werr);
   }
   err2 = sqrt(err2 / 3.0 / Nt);
-  printf("   ---------------------------------------------------------------------------------------\n");
+  printf("   ----------------------------------------------------------------------------------------------\n");
 
   /* Print some final statistics */
   long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -473,22 +432,18 @@ int main()
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype a  = rdata[0];
-  realtype b  = rdata[1];
-  realtype ep = rdata[2];
   realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
-  /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(ydot,0) = a - (w+1.0)*u + v*u*u;
+  /* du/dt = -0.04*u + 1.e4*v*w */
+  NV_Ith_S(ydot,0) = -0.04*u + 1.e4*v*w;
 
-  /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(ydot,1) = w*u - v*u*u;
+  /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
+  NV_Ith_S(ydot,1) = 0.04*u - 1.e4*v*w - 3.e7*v*v;
 
-  /* dw/dt = (b-w)/ep - w*u */
-  NV_Ith_S(ydot,2) = (b-w)/ep - w*u;
+  /* dw/dt = 3.e7*v*v */
+  NV_Ith_S(ydot,2) = 3.e7*v*v;
 
   return(0);
 }
@@ -496,20 +451,18 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 /* fe routine to compute the explicit portion of f(t,y). */
 static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype a  = rdata[0];
   realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
-  /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(ydot,0) = a - (w+1.0)*u + v*u*u;
+  /* du/dt = -0.04*u */
+  NV_Ith_S(ydot,0) = -0.04*u;
 
-  /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(ydot,1) = w*u - v*u*u;
+  /* dv/dt = 0.04*u */
+  NV_Ith_S(ydot,1) = 0.04*u;
 
-  /* dw/dt = -w*u */
-  NV_Ith_S(ydot,2) = -w*u;
+  /* dw/dt = 0.0 */
+  NV_Ith_S(ydot,2) = 0.0;
 
   return(0);
 }
@@ -517,19 +470,18 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 /* fi routine to compute the implicit portion of f(t,y). */
 static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype b  = rdata[1];
-  realtype ep = rdata[2];
+  realtype u = NV_Ith_S(y,0);
+  realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
-  /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(ydot,0) = 0.0;
+  /* du/dt = 1.e4*v*w */
+  NV_Ith_S(ydot,0) = 1.e4*v*w;
 
-  /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(ydot,1) = 0.0;
+  /* dv/dt = - 1.e4*v*w - 3.e7*v*v */
+  NV_Ith_S(ydot,1) = 1.e4*v*w - 3.e7*v*v;
 
-  /* dw/dt = (b-w)/ep - w*u */
-  NV_Ith_S(ydot,2) = (b-w)/ep;
+  /* dw/dt = 3.e7*v*v */
+  NV_Ith_S(ydot,2) = 3.e7*v*v;
 
   return(0);
 }
@@ -539,26 +491,23 @@ static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype ep = rdata[2];
   realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
+  SetToZero(J);
 
-  /* du/dt = a - (w+1)*u + v*u^2 */
-  DENSE_ELEM(J,0,0) = -(w+1.0) + 2.0*u*v;
-  DENSE_ELEM(J,0,1) = u*u;
-  DENSE_ELEM(J,0,2) = -u;
+  /* du/dt = -0.04*u + 1.e4*v*w */
+  DENSE_ELEM(J,0,0) = -0.04;
+  DENSE_ELEM(J,0,1) = 1.e4*w;
+  DENSE_ELEM(J,0,2) = 1.e4*v;
 
-  /* dv/dt = w*u - v*u^2 */
-  DENSE_ELEM(J,1,0) = w - 2.0*u*v;
-  DENSE_ELEM(J,1,1) = -u*u;
-  DENSE_ELEM(J,1,2) = u;
+  /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
+  DENSE_ELEM(J,1,0) = 0.04;
+  DENSE_ELEM(J,1,1) = -1.e4*w - 6.e7*v;
+  DENSE_ELEM(J,1,2) = -1.e4*v;
 
-  /* dw/dt = (b-w)/ep - w*u */
-  DENSE_ELEM(J,2,0) = -w;
-  DENSE_ELEM(J,2,1) = 0.0;
-  DENSE_ELEM(J,2,2) = -1.0/ep - u;
+  /* dw/dt = 3.e7*v*v */
+  DENSE_ELEM(J,2,1) = 6.e7*v;
 
   return(0);
 }
@@ -568,10 +517,22 @@ static int JacI(long int N, realtype t,
 		N_Vector y, N_Vector fy, DlsMat J, void *user_data,
 		N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype ep = rdata[2];
+  realtype u = NV_Ith_S(y,0);
+  realtype v = NV_Ith_S(y,1);
+  realtype w = NV_Ith_S(y,2);
   SetToZero(J);
-  DENSE_ELEM(J,2,2) = -1.0/ep;
+
+  /* du/dt = 1.e4*v*w */
+  DENSE_ELEM(J,0,1) = 1.e4*w;
+  DENSE_ELEM(J,0,2) = 1.e4*v;
+
+  /* dv/dt = -1.e4*v*w - 3.e7*v*v */
+  DENSE_ELEM(J,1,1) = -1.e4*w - 6.e7*v;
+  DENSE_ELEM(J,1,2) = -1.e4*v;
+
+  /* dw/dt = 3.e7*v*v */
+  DENSE_ELEM(J,2,1) = 6.e7*v;
+
   return(0);
 }
 

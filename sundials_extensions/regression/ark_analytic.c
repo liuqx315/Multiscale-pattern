@@ -330,13 +330,11 @@ int main()
 
 
   /* Print some final statistics */
-  long int nst, nst_a, nst_c, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
+  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
-  flag = ARKodeGetNumAccSteps(arkode_mem, &nst_a);
-  check_flag(&flag, "ARKodeGetNumAccSteps", 1);
-  flag = ARKodeGetNumConvSteps(arkode_mem, &nst_c);
-  check_flag(&flag, "ARKodeGetNumConvSteps", 1);
+  flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  check_flag(&flag, "ARKodeGetNumStepAttempts", 1);
   flag = ARKodeGetNumRhsEvals(arkode_mem, &nfe, &nfi);
   check_flag(&flag, "ARKodeGetNumRhsEvals", 1);
   flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
@@ -353,14 +351,14 @@ int main()
   check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
 
   printf("\nFinal Solver Statistics:\n");
-  printf("   Total internal solver steps = %li (acc = %li,  conv = %li)\n", 
-	 nst, nst_a, nst_c);
+  printf("   Internal solver steps = %li (attempted = %li)\n", 
+	 nst, nst_a);
   printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
-  printf("   Total number of linear solver convergence failures = %li\n", ncfn);
+  printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
   printf("   Error: max = %g, rms = %g\n", errI, err2);
   printf("   Oversolve = %g\n\n", reltol/err2);

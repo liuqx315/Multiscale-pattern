@@ -30,7 +30,7 @@ program driver
   implicit none
 
   ! general problem variables
-  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2)
+  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2), h0
   integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, mljac, mujac
   integer   :: ind(1), btable2(2)
   integer*8 :: NEQ, MU, ML, iout(22)
@@ -72,7 +72,7 @@ program driver
   print *,'problem type: ',type
   T0 = t(1)
   Tf = t(2)
-  dTout = (Tf-T0)/10.d0
+  dTout = (Tf-T0)/100.d0
   Nt = Tf/dTout + 0.5
   NEQ = neqn
   MU = mujac
@@ -87,8 +87,11 @@ program driver
   rtols = 0.d0
   atols = 0.d0
   call settolerances(neqn, rtols, atols, tolvec)
-  if (.not. tolvec)  atols = atols(1)
-  rtol = rtols(1)
+!!$  if (.not. tolvec)  atols = atols(1)
+!!$  rtol = rtols(1)
+  rtol  = 1.d-4
+  atols = 1.d-4*rtol
+  h0    = 1.d-4*rtol
   
   ! initialize vector module
   call FNVInitS(4, NEQ, ier)
@@ -142,6 +145,8 @@ program driver
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
   call FARKSetIin('MAX_NSTEPS',      100000, ier)
+  call FARKSetRin('INIT_STEP',       h0, ier)
+  call FARKSetIin('MAX_ERRFAIL',     20, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
@@ -153,9 +158,9 @@ program driver
   ! loop over time outputs
   Tout = T0
   Tcur = T0
-  print *, '     t        y1       y2       y3'
-  print *, '  -----------------------------------'
-  print '(3x,4(es8.1,1x))', Tcur, y
+  print *, '     t            y1           y2           y3'
+  print *, '  ----------------------------------------------------'
+  print '(3x,4(es12.5,1x))', Tcur, y
   do it = 1,Nt
 
      ! set next output time
@@ -172,24 +177,28 @@ program driver
      end if
 
      ! output current solution information
-     print '(3x,4(es8.1,1x))', Tcur, y
+     print '(3x,4(es12.5,1x))', Tcur, y
 
   end do
-  print *, '  -----------------------------------'
+  print *, '  ----------------------------------------------------'
 
   ! output solver statistics
   print *, '  '
   print *, 'Final Solver Statistics:'
-  print '(3(A,i7),A)', '   Total internal solver steps =', iout(3), &
-       ' (acc =', iout(5), ',  conv =', iout(6), ')'
+  print '(2(A,i7),A)', '   Internal solver steps =', iout(3), &
+       ' (attempted =', iout(6), ')'
   print '(2(A,i7))', '   Total RHS evals:  Fe =', iout(7), &
        ',  Fi =', iout(8)
   print '(A,i7)', '   Total linear solver setups =', iout(9)
-  print '(A,i7)', '   Total Jacobian evaluations =', iout(18)
-  print '(A,i7)', '   Total Newton iterations =', iout(11)
-  print '(A,i7)', '   Total linear solver convergence failures =', &
+  print '(A,i7)', '   Total RHS evals for setting up the linear system =', iout(17)
+  print '(A,i7)', '   Total number of Jacobian evaluations =', iout(18)
+  print '(A,i7)', '   Total number of Newton iterations =', iout(11)
+  print '(A,i7)', '   Total number of nonlinear solver convergence failures =', &
        iout(12)
-  print '(A,i7)', '   Total error test failures =', iout(10)
+  print '(A,i7)', '   Total number of error test failures =', iout(10)
+  print '(A,es12.5)', '   First step =', rout(1)
+  print '(A,es12.5)', '   Last step =', rout(2)
+  print '(A,es12.5)', '   Current step =', rout(3)
   print *, '  '
 
   ! check final solution against reference values for problem
@@ -197,6 +206,7 @@ program driver
   print *, '     y(Tf) =', y
   print *, '  yref(Tf) =', ytrue
   print *, '     error =', ytrue-y
+  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ)
   print *, '  '
 
   ! clean up

@@ -374,7 +374,7 @@
            NST     = IOUT( 3) from ARKodeGetNumSteps
            NST_STB = IOUT( 4) from ARKodeGetNumExpSteps
            NST_ACC = IOUT( 5) from ARKodeGetNumAccSteps
-           NST_CNV = IOUT( 6) from ARKodeGetNumConvSteps
+           NST_ATT = IOUT( 6) from ARKodeGetNumStepAttempts
            NFE     = IOUT( 7) from ARKodeGetNumRhsEvals (fe(t,y) calls)
            NFI     = IOUT( 8) from ARKodeGetNumRhsEvals (fi(t,y) calls)
            NSETUPS = IOUT( 9) from ARKodeGetNumLinSolvSetups
