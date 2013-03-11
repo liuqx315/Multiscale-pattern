@@ -24,6 +24,7 @@ OBJ = arkode.o \
       arkode_direct.o \
       arkode_io.o \
       arkode_lapack.o \
+      arkode_pcg.o \
       arkode_spbcgs.o \
       arkode_sptfqmr.o \
       arkode_spgmr.o \
@@ -39,10 +40,10 @@ arkode.o : arkode.c arkode_impl.h
 arkode_band.o : arkode_band.c arkode_band.h arkode_impl.h arkode_direct_impl.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_band.c -o $@
 
-arkode_bandpre.o : arkode_bandpre.c arkode_impl.h arkode_bandpre_impl.h arkode_spils_impl.h arkode_sptfqmr.h arkode_spbcgs.h arkode_spgmr.h
+arkode_bandpre.o : arkode_bandpre.c arkode_impl.h arkode_bandpre_impl.h arkode_pcg.h arkode_spils_impl.h arkode_sptfqmr.h arkode_spbcgs.h arkode_spgmr.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_bandpre.c -o $@
 
-arkode_bbdpre.o : arkode_bbdpre.c arkode_impl.h arkode_bbdpre_impl.h arkode_spils_impl.h arkode_sptfqmr.h arkode_spbcgs.h arkode_spgmr.h
+arkode_bbdpre.o : arkode_bbdpre.c arkode_impl.h arkode_bbdpre_impl.h arkode_pcg.h arkode_spils_impl.h arkode_sptfqmr.h arkode_spbcgs.h arkode_spgmr.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_bbdpre.c -o $@
 
 arkode_butcher.o : arkode_butcher.c arkode_impl.h
@@ -59,6 +60,9 @@ arkode_io.o : arkode_io.c arkode_impl.h
 
 arkode_lapack.o : arkode_lapack.c arkode_impl.h arkode_direct_impl.h arkode_lapack.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_lapack.c -o $@
+
+arkode_pcg.o : arkode_pcg.c arkode_pcg.h arkode_spils_impl.h arkode_impl.h
+	${CC} -c ${CFLAGS_} ${INCS} arkode_pcg.c -o $@
 
 arkode_spbcgs.o : arkode_spbcgs.c arkode_spbcgs.h arkode_spils_impl.h arkode_impl.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_spbcgs.c -o $@

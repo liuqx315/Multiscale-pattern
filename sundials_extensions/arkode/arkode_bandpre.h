@@ -7,7 +7,7 @@
  This is the header file for the ARKBANDPRE module, which
  provides a banded difference quotient Jacobian-based
  preconditioner and solver routines for use with ARKSPGMR,
- ARKSPBCG, or ARKSPTFQMR.
+ ARKSPBCG, ARKSPTFQMR, ARKPCG.
 
  Summary:
  These routines provide a band matrix preconditioner based on
@@ -43,6 +43,8 @@
    flag = ARKSpgmr(arkode_mem, pretype, maxl);
      -or-
    flag = ARKSpbcg(arkode_mem, pretype, maxl);
+     -or-
+   flag = ARKPcg(arkode_mem, pretype, maxl);
    ...
    flag = ARKBandPrecInit(arkode_mem, N, mu, ml);
    ...

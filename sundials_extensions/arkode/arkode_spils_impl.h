@@ -23,6 +23,7 @@ extern "C" {
 #define SPILS_SPGMR   1
 #define SPILS_SPBCG   2
 #define SPILS_SPTFQMR 3
+#define SPILS_PCG     4
 
 
 /*---------------------------------------------------------------
@@ -38,7 +39,7 @@ typedef struct ARKSpilsMemRec {
   int  s_gstype;        /* type of Gram-Schmidt orthogonalization       */
   realtype s_sqrtN;     /* sqrt(N)                                      */
   realtype s_eplifac;   /* eplifac = user specified or EPLIN_DEFAULT    */
-  realtype s_deltar;    /* deltar = delt * tq4                          */
+  realtype s_deltar;    /* deltar = delt * LTE                          */
   realtype s_delta;     /* delta = deltar * sqrtN                       */
   int  s_maxl;          /* maxl = maximum dimension of the Krylov space */
 

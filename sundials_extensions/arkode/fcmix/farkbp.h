@@ -19,9 +19,9 @@
  solves the linear systems arising from the solution of the 
  implicit portions of the ODE system
        dy/dt = fe(t,y) + fi(t,y)  
- using a Krylov iterative linear solver (SPGMR, SPTFQMR, SPBCG), 
- and with a banded preconditioner.  This preconditioner can be 
- constructed using either a user-supplied routine, or 
+ using a Krylov iterative linear solver (SPGMR, SPTFQMR, SPBCG, 
+ PCG), and with a banded preconditioner.  This preconditioner 
+ can be constructed using either a user-supplied routine, or 
  automatically via finite differencing.
  
  The user-callable functions in this package, with the 
@@ -263,6 +263,32 @@
        CALL FARKSPTFQMRREINIT(IPRETYPE, MAXL, DELT, IER)
 
      The arguments have the same meanings as for FARKSPTFQMR.
+
+ (3.3D) To specify the PCG (Preconditioned Conjugate Gradient) 
+     linear solver make the following call:
+
+       CALL FARKPCG(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+       IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = use preconditioning
+       MAXL = maximum Krylov subspace dimension [int, input]; 
+              0 = default.
+       DELT = convergence tolerance factor [realtype, input]; 
+              0.0 = default.
+       IER = error return flag [int, output]: 
+              0 = success; 
+	     <0 = an error occured
+ 
+     If a sequence of problems of the same size is being solved 
+     using the PCG linear solver, then following the call to 
+     FARKREINIT, a call to the FARKPCGREINIT routine is needed
+     if any of its arguments is being changed.  The call is:
+
+       CALL FARKPCGREINIT(IPRETYPE, MAXL, DELT, IER)              
+
+     The arguments have the same meanings as for FARKPCG.
 
  (3.4) To allocate memory and initialize data associated with the
       ARKBANDPRE preconditioner, make the following call:
