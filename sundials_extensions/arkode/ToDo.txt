@@ -161,6 +161,9 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Clean up documentation system for how a user should tell ARKode
+    about his J*v function (and other optional user-supplied
+    functions).
 [ ] Add stubs for PCG solver as one of the available ARKode linear
     solvers, and convert an existing test problem to use it.
 [ ] Add ark_hadapt_hhist array (of the same length as
