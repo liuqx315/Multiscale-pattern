@@ -270,6 +270,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_hadapt_ehist[0] = ONE;
   ark_mem->ark_hadapt_ehist[1] = ONE;
   ark_mem->ark_hadapt_ehist[2] = ONE;
+  ark_mem->ark_eLTE = 1.0;
 
   /* Initialize all the counters */
   ark_mem->ark_nst          = 0;
@@ -372,6 +373,7 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_hadapt_ehist[0] = ONE;
   ark_mem->ark_hadapt_ehist[1] = ONE;
   ark_mem->ark_hadapt_ehist[2] = ONE;
+  ark_mem->ark_eLTE = 1.0;
 
   /* Initialize all the counters */
   ark_mem->ark_nst          = 0;
