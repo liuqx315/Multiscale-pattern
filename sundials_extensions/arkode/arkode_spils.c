@@ -557,6 +557,7 @@ int ARKSpilsAtimes(void *arkode_mem, N_Vector v, N_Vector z)
   arkspils_mem->s_njtimes++;
   if (jtflag != 0) return(jtflag);
 
+  /* Update this line for non-identity mass matrices */
   N_VLinearSum(ONE, v, -ark_mem->ark_gamma, z, z);
 
   return(0);
@@ -632,9 +633,12 @@ int ARKSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
     if (retval == 0) break;
     if (retval < 0)  return(-1);
 
+    /* If fi failed recoverably, shrink sig and retry */
     sig *= PT25;
+
   }
 
+  /* If retval still isn't 0, return with a recoverable failure */
   if (retval > 0) return(+1);
 
   /* Replace Jv by (Jv - fy)/sig */
