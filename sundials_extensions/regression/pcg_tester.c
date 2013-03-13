@@ -67,12 +67,12 @@ int main() {
 
   /* Set up matrix and vectors */
   for (i=0; i<N; i++) {
-    NV_Ith_S(xtrue,i) = 1.0*i*(N-i);
+    NV_Ith_S(xtrue,i) = 4.0*i*(N-i)/N/N;
     for (j=0; j<N; j++) 
       udata->A[i][j] = 2.0/(j+i+1);
-    udata->A[i][i] += 10.0 + i;
-    NV_Ith_S(s,i) = 1.0;
+    udata->A[i][i] += 10.0 + 1.0*i/N;
   }
+  N_VConst(1.0, s);
   ATimes((void *) udata, xtrue, b);
 
   /* Call PcgMalloc to create the solver memory */
