@@ -40,6 +40,7 @@
 #include <arkode/arkode.h>
 #include <nvector/nvector_serial.h>
 #include <arkode/arkode_pcg.h>
+#include <arkode/arkode_spbcgs.h>
 #include <sundials/sundials_types.h>
 
 /* user data structure */
@@ -65,8 +66,8 @@ int main()
 {
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
-  realtype Tf = RCONST(10.0);
-  int Nt = 100;
+  realtype Tf = RCONST(0.1);
+  int Nt = 10;
   UserData udata = NULL;
   realtype *data;
   long int N, i;
@@ -108,8 +109,8 @@ int main()
   fclose(FID);
 
   /* store the inputs in the UserData structure */
-  udata->N  = N;
-  udata->k  = k;
+  udata->N = N;
+  udata->k = k;
 
   /* read solver parameters from file */
   FID=fopen("solve_params.txt","r");
@@ -306,6 +307,8 @@ int main()
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
+  flag = ARKodeSetMaxNumSteps(arktrue_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -316,9 +319,13 @@ int main()
 
   /* Call ARKPcg to specify the ARKPCG iterative linear solver (no preconditioning) */
   flag = ARKPcg(arkode_mem, 0, N);
-  if (check_flag(&flag, "ARKBand", 1)) return 1;
+  if (check_flag(&flag, "ARKPcg", 1)) return 1;
   flag = ARKPcg(arktrue_mem, 0, N);
-  if (check_flag(&flag, "ARKBand", 1)) return 1;
+  if (check_flag(&flag, "ARKPcg", 1)) return 1;
+  /* flag = ARKSpbcg(arkode_mem, 0, 2*N); */
+  /* if (check_flag(&flag, "ARKPcg", 1)) return 1; */
+  /* flag = ARKSpbcg(arktrue_mem, 0, 2*N); */
+  /* if (check_flag(&flag, "ARKPcg", 1)) return 1; */
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   if (imex == 0) { /* purely implicit */
@@ -349,8 +356,8 @@ int main()
   realtype dTout = Tf/Nt;
   realtype tout = dTout;
   realtype u, uerr, errI=0.0, err2=0.0;
-  printf("        t      ||u||_rms     ||uerr||\n");
-  printf("   ------------------------------------------------------\n");
+  printf("        t      ||u||_rms    ||uerr||\n");
+  printf("   ------------------------------------\n");
   int iout;
   for (iout=0; iout<Nt; iout++) {
 
@@ -379,7 +386,7 @@ int main()
     fprintf(UFID,"\n");
   }
   err2 = sqrt(err2 / N / Nt);
-  printf("   ------------------------------------------------------\n");
+  printf("   ------------------------------------\n");
   fclose(UFID);
     
 
@@ -460,20 +467,23 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype dx = udata->dx;
 
   /* access data arrays */
-  realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return 1;
-  realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return 1;
+  realtype *Y = N_VGetArrayPointer(y);
+  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
+  realtype *Ydot = N_VGetArrayPointer(ydot);
+  if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
-  realtype uconst = k/dx/dx;
+  realtype c1 = k/dx/dx;
+  realtype c2 = -RCONST(2.0)*k/dx/dx;
   long int i;
-  for (i=1; i<N-1; i++)  /* u_t = k*u_xx + f */
-    dYdata[i] = (Ydata[i-1] - RCONST(2.0)*Ydata[i] + Ydata[i+1])*uconst;
-  dYdata[N/2] = 1.0;
-
-  /* enforce stationary boundary conditions */
-  dYdata[0] = dYdata[N-1] = 0.0;
+  long int isource = N/2;
+  Ydot[0] = 0.0;                 /* left boundary condition */
+  Ydot[1] = c2*Y[1] + c1*Y[2];   /* k*u_xx */
+  for (i=2; i<N-2; i++)
+    Ydot[i] = c1*Y[i-1] + c2*Y[i] + c1*Y[i+1];
+  Ydot[N-2] = c1*Y[N-3] + c2*Y[N-2];
+  Ydot[N-1] = 0.0;               /* right boundary condition */
+  Ydot[isource] = 1.0;           /* f */
 
   return 0;
 }
@@ -494,19 +504,21 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
   realtype dx = udata->dx;
 
   /* access data arrays */
-  realtype *vdata = N_VGetArrayPointer(v);
-  if (check_flag((void *)vdata, "N_VGetArrayPointer", 0)) return 1;
-  realtype *Jvdata = N_VGetArrayPointer(Jv);
-  if (check_flag((void *)Jvdata, "N_VGetArrayPointer", 0)) return 1;
+  realtype *V = N_VGetArrayPointer(v);
+  if (check_flag((void *) V, "N_VGetArrayPointer", 0)) return 1;
+  realtype *JV = N_VGetArrayPointer(Jv);
+  if (check_flag((void *) JV, "N_VGetArrayPointer", 0)) return 1;
 
-  /* iterate over domain, computing all equations */
-  realtype uconst = k/dx/dx;
+  /* iterate over domain, computing all Jacobian-vector products */
+  realtype c1 = k/dx/dx;
+  realtype c2 = -RCONST(2.0)*k/dx/dx;
   long int i;
-  for (i=1; i<N-1; i++)  /* u_t = k*u_xx + f */
-    Jvdata[i] = (vdata[i-1] - RCONST(2.0)*vdata[i] + vdata[i+1])*uconst;
-
-  /* enforce stationary boundary conditions */
-  Jvdata[0] = Jvdata[N-1] = 0.0;
+  JV[0] = 0.0;
+  JV[1] = c2*V[1] + c1*V[2];
+  for (i=2; i<N-2; i++)
+    JV[i] = c1*V[i-1] + c2*V[i] + c1*V[i+1];
+  JV[N-2] = c1*V[N-3] + c2*V[N-2];
+  JV[N-1] = 0.0;
 
   return 0;
 }
