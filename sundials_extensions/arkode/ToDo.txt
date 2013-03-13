@@ -161,6 +161,9 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Track down problem with using iterative solvers with ARKode.  See
+    what the problem is when using a user-supplied J*v routine as
+    opposed to the difference-quotient routine.
 [ ] Clean up documentation system for how a user should tell ARKode
     about his J*v function (and other optional user-supplied
     functions).
