@@ -10,12 +10,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <arkode/arkode_spbcgs.h>
 #include "arkode_spils_impl.h"
 #include "arkode_impl.h"
-
 #include <arkode/pcg/sundials_pcg.h>
 #include <sundials/sundials_math.h>
+
+#define NO_DEBUG_OUTPUT
+#ifdef DEBUG_OUTPUT
+#include <nvector/nvector_serial.h>
+#endif
 
 
 /* Constants */
@@ -319,13 +322,23 @@ static int ARKPcgSolve(ARKodeMem ark_mem, N_Vector b,
     return(0);
   }
 
+#ifdef DEBUG_OUTPUT
+  printf("ARKPcgSolve: bnorm = %19.16g, s_deltar = %19.16g,  s_sqrtN = %19.16g\n", 
+	 bnorm, arkspils_mem->s_deltar, arkspils_mem->s_sqrtN);
+#endif
+      
   /* Set vectors ycur and fcur for use by the Atimes and Psolve routines */
   arkspils_mem->s_ycur = ynow;
   arkspils_mem->s_fcur = fnow;
 
-  /* Set inputs delta and initial guess x = 0 to PcgSolve */  
+  /* Set inputs delta and initial guess x = 0 to PcgSolve */
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;
   N_VConst(ZERO, arkspils_mem->s_x);
+
+#ifdef DEBUG_OUTPUT
+ printf("ARKPcgSolve: delta = %19.16g\n", arkspils_mem->s_delta);
+ printf("  ||guess|| = %19.16g\n", N_VWrmsNorm(arkspils_mem->s_x, weight));
+#endif
   
   /* Call PcgSolve and copy x to b */
   retval = PcgSolve(pcg_mem, ark_mem, arkspils_mem->s_x, b, 
@@ -333,6 +346,12 @@ static int ARKPcgSolve(ARKodeMem ark_mem, N_Vector b,
 		    ark_mem, weight, ARKSpilsAtimes, 
 		    ARKSpilsPSolve, &res_norm, &nli_inc, &nps_inc);
   N_VScale(ONE, arkspils_mem->s_x, b);
+  
+#ifdef DEBUG_OUTPUT
+ printf("ARKPcgSolve: retval = %i,  res_norm = %19.16g,  nli_inc = %i,  nps_inc = %i\n", 
+	retval, res_norm, nli_inc, nps_inc);
+ printf("  ||x|| = %19.16g\n", N_VWrmsNorm(arkspils_mem->s_x, weight));
+#endif
   
   /* Increment counters nli, nps, and ncfl */
   arkspils_mem->s_nli += nli_inc;
