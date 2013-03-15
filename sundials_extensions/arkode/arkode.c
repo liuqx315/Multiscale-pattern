@@ -272,6 +272,11 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_hadapt_ehist[2] = ONE;
   ark_mem->ark_eLTE = 1.0;
 
+  /* Initialize step history */
+  ark_mem->ark_hadapt_hhist[0] = ZERO;
+  ark_mem->ark_hadapt_hhist[1] = ZERO;
+  ark_mem->ark_hadapt_hhist[2] = ZERO;
+
   /* Initialize all the counters */
   ark_mem->ark_nst          = 0;
   ark_mem->ark_nst_acc      = 0;
@@ -374,6 +379,11 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_hadapt_ehist[1] = ONE;
   ark_mem->ark_hadapt_ehist[2] = ONE;
   ark_mem->ark_eLTE = 1.0;
+
+  /* Initialize step history */
+  ark_mem->ark_hadapt_hhist[0] = ZERO;
+  ark_mem->ark_hadapt_hhist[1] = ZERO;
+  ark_mem->ark_hadapt_hhist[2] = ZERO;
 
   /* Initialize all the counters */
   ark_mem->ark_nst          = 0;
@@ -2636,7 +2646,7 @@ static realtype ARKComputeSolutions(ARKodeMem ark_mem)
 static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 			   realtype saved_t, int *nefPtr, realtype dsm)
 {
-  realtype ehist2;
+  realtype ehist2, hhist2;
   int retval;
 
   /* If est. local error norm dsm passes test, return ARK_SUCCESS */  
@@ -2661,6 +2671,12 @@ static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_hadapt_ehist[1] = ark_mem->ark_hadapt_ehist[0];
   ark_mem->ark_hadapt_ehist[0] = dsm*ark_mem->ark_hadapt_bias;
 
+  /* Temporarily update step history array for recomputation of h */
+  hhist2 = ark_mem->ark_hadapt_hhist[2];
+  ark_mem->ark_hadapt_hhist[2] = ark_mem->ark_hadapt_hhist[1];
+  ark_mem->ark_hadapt_hhist[1] = ark_mem->ark_hadapt_hhist[0];
+  ark_mem->ark_hadapt_hhist[0] = ark_mem->ark_h;
+
   /* Compute accuracy-based time step estimate (updated ark_eta) */
   retval = ARKAdapt(ark_mem);
   if (retval != ARK_SUCCESS)  return(ARK_ERR_FAILURE);
@@ -2669,6 +2685,11 @@ static int ARKDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
   ark_mem->ark_hadapt_ehist[2] = ehist2;
   ark_mem->ark_hadapt_ehist[1] = ark_mem->ark_hadapt_ehist[2];
   ark_mem->ark_hadapt_ehist[0] = ark_mem->ark_hadapt_ehist[1];
+
+  /* Revert step history array */
+  ark_mem->ark_hadapt_hhist[2] = hhist2;
+  ark_mem->ark_hadapt_hhist[1] = ark_mem->ark_hadapt_hhist[2];
+  ark_mem->ark_hadapt_hhist[0] = ark_mem->ark_hadapt_hhist[1];
 
   /* Enforce failure bounds on eta, update h, and return for retry of step */
   if (*nefPtr >= ark_mem->ark_small_nef) 
@@ -2717,6 +2738,11 @@ static int ARKCompleteStep(ARKodeMem ark_mem, realtype dsm)
   ark_mem->ark_hadapt_ehist[2] = ark_mem->ark_hadapt_ehist[1];
   ark_mem->ark_hadapt_ehist[1] = ark_mem->ark_hadapt_ehist[0];
   ark_mem->ark_hadapt_ehist[0] = dsm*ark_mem->ark_hadapt_bias;
+
+  /* update step history array */
+  ark_mem->ark_hadapt_hhist[2] = ark_mem->ark_hadapt_hhist[1];
+  ark_mem->ark_hadapt_hhist[1] = ark_mem->ark_hadapt_hhist[0];
+  ark_mem->ark_hadapt_hhist[0] = ark_mem->ark_h;
 
   /* update ycur to current solution */
   N_VScale(ONE, ark_mem->ark_y, ark_mem->ark_ycur);
@@ -3546,7 +3572,10 @@ static int ARKAdapt(ARKodeMem ark_mem)
     break;
   case(-1):   /* user-supplied controller */
     ier = ark_mem->ark_hadapt(ark_mem->ark_ycur,
-			      ark_mem->ark_tn, ark_mem->ark_h, 
+			      ark_mem->ark_tn, 
+			      ark_mem->ark_hadapt_hhist[0], 
+			      ark_mem->ark_hadapt_hhist[1], 
+			      ark_mem->ark_hadapt_hhist[2], 
 			      ark_mem->ark_hadapt_ehist[0],
 			      ark_mem->ark_hadapt_ehist[1],
 			      ark_mem->ark_hadapt_ehist[2],
@@ -3578,9 +3607,10 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
   /* Solver diagnostics reporting */
   if (ark_mem->ark_report) 
-    fprintf(ark_mem->ark_diagfp, "  adapt  %19.16g  %19.16g  %19.16g  %19.16g  %19.16g  ",
+    fprintf(ark_mem->ark_diagfp, "  adapt  %19.16g  %19.16g  %19.16g  %19.16g  %19.16g  %19.16g  %19.16g  %19.16g  ",
 	    ark_mem->ark_hadapt_ehist[0], ark_mem->ark_hadapt_ehist[1], 
-	    ark_mem->ark_hadapt_ehist[2], h_acc, h_cfl);
+	    ark_mem->ark_hadapt_ehist[2], ark_mem->ark_hadapt_hhist[0], 
+	    ark_mem->ark_hadapt_hhist[1], ark_mem->ark_hadapt_hhist[2], h_acc, h_cfl);
 
   /* enforce safety factors */
   h_acc *= safety;

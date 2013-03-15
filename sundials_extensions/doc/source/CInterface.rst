@@ -3335,7 +3335,7 @@ as the maximum value such that the error estimates remain below 1.
 
 
 
-.. c:function:: typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h, realtype e1, realtype e2,  realtype e3, int q, int p, realtype *hnew, void *user_data)
+.. c:function:: typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h1, realtype h2, realtype h3, realtype e1, realtype e2,  realtype e3, int q, int p, realtype *hnew, void *user_data)
 
    This function implements a time step adaptivity algorithm
    that chooses :math:`h` satisfying the error tolerances..
@@ -3343,7 +3343,9 @@ as the maximum value such that the error estimates remain below 1.
    **Arguments:**
       * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
       * `t` -- the current value of the independent variable.
-      * `h` -- the current value of the step size.
+      * `h1` -- the current step size, :math:`t_m - t_{m-1}`.
+      * `h2` -- the previous step size, :math:`t_{m-1} - t_{m-2}`.
+      * `h3` -- the step size :math:`t_{m-2}-t_{m-3}`.
       * `e1` -- the error estimate from the current step, :math:`m`.
       * `e2` -- the error estimate from the previous step, :math:`m-1`.
       * `e3` -- the error estimate from the step :math:`m-2`.
