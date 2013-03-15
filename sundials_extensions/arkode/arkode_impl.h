@@ -296,6 +296,7 @@ typedef struct ARKodeMemRec {
   ARKAdaptFn ark_hadapt;           /* function to set the new time step size */
   void      *ark_hadapt_data;      /* user pointer passed to hadapt          */
   realtype   ark_hadapt_ehist[3];  /* error history for time adaptivity      */
+  realtype   ark_hadapt_hhist[3];  /* step history for time adaptivity       */
   int        ark_hadapt_imethod;   /* time step adaptivity method to use:
 				      -1 -> User-specified function above
 				       0 -> PID controller

@@ -186,7 +186,7 @@ typedef void (*ARKErrHandlerFn)(int error_code, const char *module,
 -----------------------------------------------------------------
  A function which sets the new time step h, must have type 
  ARKAdaptFn.  The function takes as input the current dependent 
- variable y, the current time t, the current time step size h, 
+ variable y, the current time t, the last 3 step sizes h, 
  the last 3 error estimates, the method order q, the embedding 
  order p, and a pointer to user data. The function must set the 
  scalar step size for the upcoming time step.  This value will 
@@ -200,7 +200,8 @@ typedef void (*ARKErrHandlerFn)(int error_code, const char *module,
  A ARKAdaptFn must return 0 if the new time step has been
  successfuly set and a non-zero value otherwise.
 ---------------------------------------------------------------*/
-typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h, 
+typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h1, 
+			  realtype h2, realtype h3, 
 			  realtype e1, realtype e2, 
 			  realtype e3, int q, int p, 
 			  realtype *hnew, void *user_data);

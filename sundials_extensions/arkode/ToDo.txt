@@ -158,6 +158,11 @@ Completed components:
     relevant checking/cleaning of the Butcher table, etc.
 [X] Added preconditioned conjugate gradient solver for solution of
     symmetric linear systems.
+[X] Added ark_hadapt_hhist array (of the same length as
+    ark_hadapt_ehist) to store the step sizes used for the last 3
+    successful steps, to allow for more involved adaptivity
+    algorithms.
+
 
 
 Remaining components to build:
@@ -169,10 +174,6 @@ Remaining components to build:
     functions).
 [ ] Add stubs for PCG solver as one of the available ARKode linear
     solvers, and convert an existing test problem to use it.
-[ ] Add ark_hadapt_hhist array (of the same length as
-    ark_hadapt_ehist) to store the step sizes used for the last 3
-    successful steps, to allow for more involved adaptivity
-    algorithms.
 [ ] Fix Fortran interface to properly handle user-supplied dense
     Jacobian functions.  C side uses the same user-supplied functions
     for both internal and Lapack solvers, but Fortran does not.
