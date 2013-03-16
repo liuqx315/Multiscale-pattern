@@ -29,10 +29,13 @@ class AdaptH:
     """ (h_accuracy1 and h_stability1), a flag denoting whether the     """
     """ step was limited by the stability estimate (stab_restrict),     """
     """ and the resulting time step growth factor (eta).                """
-    def __init__(self, eh0, eh1, eh2, ha0, hs0, ha1, hs1, eta):
+    def __init__(self, eh0, eh1, eh2, hh0, hh1, hh2, ha0, hs0, ha1, hs1, eta):
         self.eh0 = eh0;
         self.eh1 = eh1;
         self.eh2 = eh2;
+        self.hh0 = hh0;
+        self.hh1 = hh1;
+        self.hh2 = hh2;
         self.h_accuracy0 = ha0;
         self.h_accuracy1 = ha1;
         self.h_stability0 = hs0;
@@ -43,7 +46,7 @@ class AdaptH:
         else:
             self.stab_restrict = 0;
     def Write(self):
-        print '  AdaptH: errhist =',self.eh0,self.eh1,self.eh2,', ha0 =',self.h_accuracy0,', hs0 =',self.h_stability0,', ha1 =',self.h_accuracy1,', hs1 =',self.h_stability1,', stabrestrict =',self.stabrestrict,', eta =',self.eta
+        print '  AdaptH: errhist =',self.eh0,self.eh1,self.eh2,', stephist =',self.hh0,self.hh1,self.hh2,', ha0 =',self.h_accuracy0,', hs0 =',self.h_stability0,', ha1 =',self.h_accuracy1,', hs1 =',self.h_stability1,', stabrestrict =',self.stabrestrict,', eta =',self.eta
 
 ##########
 class NewtonStep:
@@ -208,12 +211,15 @@ def load_line(line):
         eh0 = float(txt[1]);
         eh1 = float(txt[2]);
         eh2 = float(txt[3]);
-        ha0 = float(txt[4]);
-        hs0 = float(txt[5]);
-        ha1 = float(txt[6]);
-        hs1 = float(txt[7]);
-        eta = float(txt[8]);
-        entry = AdaptH(eh0, eh1, eh2, ha0, hs0, ha1, hs1, eta);
+        hh0 = float(txt[4]);
+        hh1 = float(txt[5]);
+        hh2 = float(txt[6]);
+        ha0 = float(txt[7]);
+        hs0 = float(txt[8]);
+        ha1 = float(txt[9]);
+        hs1 = float(txt[10]);
+        eta = float(txt[11]);
+        entry = AdaptH(eh0, eh1, eh2, hh0, hh1, hh2, ha0, hs0, ha1, hs1, eta);
     else:
         linetype = -1;
         entry = 0;

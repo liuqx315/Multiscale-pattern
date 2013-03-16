@@ -66,19 +66,15 @@ functions, are as follows:
 
   - :c:func:`FARKDENSE()` interfaces to :c:func:`ARKDense()`.
 
-  - :c:func:`FARKDENSESETJAC()` interfaces to :c:func:`ARKDlsSetDenseJacFn()`.
-
   - :c:func:`FARKLAPACKDENSE()` interfaces to :c:func:`ARKLapackDense()`.
 
-  - :c:func:`FARKLAPACKDENSESETJAC()` interfaces to :c:func:`ARKDlsSetDenseJacFn()`.
+  - :c:func:`FARKDENSESETJAC()` interfaces to :c:func:`ARKDlsSetDenseJacFn()`.
 
   - :c:func:`FARKBAND()` interfaces to :c:func:`ARKBand()`.
 
-  - :c:func:`FARKBANDSETJAC()` interfaces to :c:func:`ARKDlsSetBandJacFn()`.
-
   - :c:func:`FARKLAPACKBAND()` interfaces to :c:func:`ARKLapackBand()`.
 
-  - :c:func:`FARKLAPACKBANDSETJAC()` interfaces to :c:func:`ARKDlsSetBandJacFn()`.
+  - :c:func:`FARKBANDSETJAC()` interfaces to :c:func:`ARKDlsSetBandJacFn()`.
 
   - :c:func:`FARKSPGMR()` interfaces to :c:func:`ARKSpgmr()` and the SPGMR optional input
     functions (see :ref:`CInterface.ARKSpilsInputTable`).
@@ -96,6 +92,12 @@ functions, are as follows:
     input functions.
 
   - :c:func:`FARKSPTFQMRREINIT()` interfaces to the SPTFQMR optional input
+    functions.
+
+  - :c:func:`FARKPCG()` interfaces to :c:func:`ARKPcg()` and the PCG optional input
+    functions (see :ref:`CInterface.ARKSpilsInputTable`).
+
+  - :c:func:`FARKPCGREINIT()` interfaces to the PCG optional input
     functions.
 
   - :c:func:`FARKSPILSSETJAC()` interfaces to :c:func:`ARKSpilsSetJacTimesVecFn()`.
@@ -119,11 +121,7 @@ ARKode), are as follows:
 +--------------------------+------------------------+-----------------------------------+
 | :c:func:`FARKDJAC()`     | FARKDenseJac           | :c:func:`ARKDlsDenseJacFn()`      |
 +--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKLDJAC()`    | FARKLapackDenseJac     | :c:func:`ARKDlsDenseJacFn()`      |
-+--------------------------+------------------------+-----------------------------------+
 | :c:func:`FARKBJAC()`     | FARKBandJac            | :c:func:`ARKDlsBandJacFn()`       |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKLBJAC()`    | FARKLapackBandJac      | :c:func:`ARKDlsBandJacFn()`       |
 +--------------------------+------------------------+-----------------------------------+
 | :c:func:`FARKPSET()`     | FARKPSet               | :c:func:`ARKSpilsPrecSetupFn()`   |
 +--------------------------+------------------------+-----------------------------------+
@@ -644,7 +642,7 @@ user must call the similar FARKLAPACKDENSE routine.
 As an option when using either of these dense linear solvers, the user
 may supply a routine that computes a dense approximation of the system
 Jacobian :math:`J = \frac{\partial f_I}{\partial y}`. If supplied, it
-must have one of the following forms:
+must have the following form:
 
 
 
@@ -675,18 +673,7 @@ must have one of the following forms:
    
 
    
-   .. c:function:: SUBROUTINE FARKLDJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
-   
-      Interface to provide a user-supplied dense Jacobian
-      approximation function (of type :c:func:`ARKLapackJacFn()`), to be
-      used by the :c:func:`FARKLAPACKDENSE()` solver.
-      
-      **Arguments:** these all match those for :c:func:`FARKDJAC()`.
-   
-
-   
-If either of the above routines (:c:func:`FARKDJAC()` or
-:c:func:`FARKLDJAC()`) uses difference quotient approximations, it may
+If the above routine uses difference quotient approximations, it may
 need to use the error weight array EWT and current stepsize H
 in the calculation of suitable increments. The array EWT can be
 obtained by calling :c:func:`FARKGETERRWEIGHTS()` using one of the work
@@ -696,8 +683,8 @@ passed from the calling program to this routine using either RPAR
 or a common block. 
 
 If the :c:func:`FARKDJAC()` routine is provided, then, following the
-call to :c:func:`FARKDENSE()`, the user must call the routine
-FARKDENSESETJAC. 
+call to :c:func:`FARKDENSE()` or :c:func:`FARKLAPACKDENSE()`, the user
+must call the routine FARKDENSESETJAC. 
 
 
 
@@ -714,25 +701,6 @@ FARKDENSESETJAC.
    
 
    
-Similarly, if the :c:func:`FARKLDJAC()` routine is provided, then,
-following the call to :c:func:`FARKLAPACKDENSE()`, the user must call
-the routine FARKLAPACKDENSESETJAC. 
-
-
-
-   .. c:function:: SUBROUTINE FARKLAPACKDENSESETJAC(FLAG, IER)
-   
-      Interface to the :c:func:`ARKLapackSetJacFn()` function,
-      specifying to use the user-supplied routine :c:func:`FARKLDJAC()` for
-      the Jacobian approximation.
-      
-      **Arguments:** 
-         * FLAG (``int``, input) -- any nonzero value specifies to use
-           :c:func:`FARKLDJAC()` 
-         * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
-           occurred) 
-
-
 
 
 [**S**] Band treatment of the linear system
@@ -779,7 +747,7 @@ user must call the similar FARKLAPACKBAND routine.
 As an option when using either of these banded linear solvers, the user
 may supply a routine that computes a banded approximation of the
 linear system Jacobian :math:`J = \frac{\partial f_I}{\partial y}`. If
-supplied, it must have one of the following forms:
+supplied, it must have the following form:
 
 
    .. c:function:: SUBROUTINE FARKBJAC(NEQ, MU, ML, MDIM, T, Y, FY, BJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
@@ -818,18 +786,7 @@ supplied, it must have one of the following forms:
 
 
 
-   .. c:function:: SUBROUTINE FARKLBJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
-   
-      Interface to provide a user-supplied banded Jacobian
-      approximation function (of type :c:func:`ARKLapackJacFn()`), to be
-      used by the :c:func:`FARKLAPACKBAND()` solver.
-      
-      **Arguments:** these all match those for :c:func:`FARKBJAC()`.
-   
-
-
-If either of the above routines (:c:func:`FARKBJAC()` or
-:c:func:`FARKLBJAC()`) uses difference quotient approximations, it may
+If the above routine uses difference quotient approximations, it may
 need to use the error weight array EWT and current stepsize H
 in the calculation of suitable increments. The array EWT can be
 obtained by calling :c:func:`FARKGETERRWEIGHTS()` using one of the work
@@ -839,8 +796,8 @@ passed from the calling program to this routine using either RPAR
 or a common block. 
 
 If the :c:func:`FARKBJAC()` routine is provided, then, following the
-call to :c:func:`FARKBAND()`, the user must call the routine
-FARKBANDSETJAC. 
+call to either :c:func:`FARKBAND()` or :c:func:`FARKLAPACKBAND()`, the
+user must call the routine FARKBANDSETJAC. 
 
 
 
@@ -856,25 +813,6 @@ FARKBANDSETJAC.
          * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
            occurred) 
 
-
-
-Similarly, if the :c:func:`FARKLBJAC()` routine is provided, then,
-following the call to :c:func:`FARKLAPACKBAND()`, the user must call
-the routine FARKLAPACKBANDSETJAC. 
-
-
-
-   .. c:function:: SUBROUTINE FARKLAPACKBANDSETJAC(FLAG, IER)
-   
-      Interface to the :c:func:`ARKLapackSetJacFn()` function,
-      specifying to use the user-supplied routine :c:func:`FARKLBJAC()` for
-      the Jacobian approximation.
-      
-      **Arguments:** 
-         * FLAG (``int``, input) -- any nonzero value specifies to use
-           :c:func:`FARKLBJAC()` 
-         * IER (``int``, output) -- return flag (0 if success, :math:`\ne 0` if an error
-           occurred) 
 
 
 
@@ -967,17 +905,46 @@ For descriptions of the optional user-supplied routines for use with
 
 
 
+
+[**S**][**P**] PCG treatment of the linear systems
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+For the Preconditioned Conjugate Gradient solution of symmetric linear
+systems, the user must call the FARKPCG routine.
+
+
+
+   .. c:function:: SUBROUTINE FARKPCG(IPRETYPE, MAXL, DELT, IER)
+   
+      Interfaces with the :c:func:`ARKPcg()` and
+      ARKSpilsSet* routines to specify use of the PCG iterative
+      linear solver.
+      
+      **Arguments:**  The arguments are the same as those with the
+      same names for :c:func:`FARKSPGMR()`. 
+
+
+
+For descriptions of the optional user-supplied routines for use with
+:c:func:`FARKPCG()` see the section :ref:`FInterface.SpilsUserSupplied`.
+
+
+
+
+
+
+
 .. _FInterface.SpilsUserSupplied:
 
-[**S**][**P**] User-supplied routines for SPGMR/SPBCG/SPTFQMR
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+[**S**][**P**] User-supplied routines for SPGMR/SPBCG/SPTFQMR/PCG
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 With treatment of the linear systems by any of the Krylov iterative
 solvers, there are three optional user-supplied routines --
 :c:func:`FARKJTIMES()`, :c:func:`FARKPSET()` and :c:func:`FARKPSOL()`.
 The specifications of these functions are given below.
 
-As an option when using the SPGMR, SPBCG or SPTFQMR linear
+As an option when using the SPGMR, SPBCG, SPTFQMR or PCG linear
 solvers, the user may supply a routine that computes the product of
 the system Jacobian :math:`J = \frac{\partial f_I}{\partial y}` and a
 given vector :math:`v`.  If supplied, it must have the following form:
@@ -1014,9 +981,9 @@ given vector :math:`v`.  If supplied, it must have the following form:
 
 
 If this routine has been supplied by the user, then, following the
-call to :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()` or
-:c:func:`FARKSPTFQMR()`, the user must call the routine
-FARKSPILSSETJAC with FLAG :math:`\ne 0` to specify use of the
+call to :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`,
+:c:func:`FARKSPTFQMR()` or :c:func:`FARKPCG()`, the user must call the
+routine FARKSPILSSETJAC with FLAG :math:`\ne 0` to specify use of the
 user-supplied Jacobian-times-vector function.
 
 
@@ -1317,6 +1284,24 @@ reinitialize SPTFQMR without reallocating its memory by calling
       :c:func:`FARKSPTFQMR()`.
 
 
+In the case of PCG, for a change in any inputs, the user can
+reinitialize PCG without reallocating its memory by calling
+:c:func:`FARKPCGREINIT()`, as follows:
+
+
+
+   .. c:function:: SUBROUTINE FARKPCGREINIT(IPRETYPE, MAXL, DELT, IER)
+   
+      Re-initializes the Fortran interface to the PCG
+      linear solver.
+      
+      **Arguments:**  The arguments have the same names and meanings as those of
+      :c:func:`FARKPCG()`.
+
+
+
+
+
 
 
 
@@ -1366,7 +1351,7 @@ optional output.  Similarly,
 entries associated with the main ARKDENSE and ARKBAND direct
 linear solvers, and :ref:`FInterface.SpilsIOUTTable`
 lists the IOUT entries associated with the main ARKSPGMR,
-ARKSPBCG and ARKSPTFQMR iterative linear solvers.
+ARKSPBCG, ARKSPTFQMR and ARKPCG iterative linear solvers.
 
 For more details on the optional inputs and outputs to ARKode, see
 the sections :ref:`CInterface.OptionalInputs` and
@@ -1442,8 +1427,8 @@ IOUT Index      Optional output  ARKode function
 
 .. _FInterface.SpilsIOUTTable:
 
-Table: Optional ARKSPGMR, ARKSPBCG and ARKSPTFQMR outputs 
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Table: Optional ARKSPGMR, ARKSPBCG, ARKSPTFQMR and ARKPCG outputs 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 .. cssclass:: table-bordered
 
@@ -1575,10 +1560,10 @@ unchanged from the main program described in the section
 5. Linear solver specification 
 
    First, specify one of the ARKSPILS iterative linear solvers, by
-   calling one of :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`, or
-   :c:func:`FARKSPTFQMR()`. 
+   calling one of :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`, 
+   :c:func:`FARKSPTFQMR()`, or :c:func:`FARKPCG()`. 
 
-   Optionally, to specify that SPGMR, SPBCG, or SPTFQMR
+   Optionally, to specify that SPGMR, SPBCG, SPTFQMR, or PCG
    should use the supplied :c:func:`FARKJTIMES()` routine, the user
    should call :c:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
    as described in the section :ref:`FInterface.SpilsUserSupplied`.
@@ -1608,11 +1593,10 @@ unchanged from the main program described in the section
 
 7. ARKBANDPRE optional outputs 
 
-   Optional outputs specific to the SPGMR, SPBCG, or
-   SPTFQMR solver are listed in :ref:`FInterface.SpilsIOUTTable`. 
-   To obtain the optional outputs associated with the ARKBANDPRE
-   module, the user should call the :c:func:`FARKBPOPT()`, as specified
-   below: 
+   Optional outputs specific to the SPGMR, SPBCG, SPTFQMR or PCG
+   solver are listed in :ref:`FInterface.SpilsIOUTTable`.  To obtain
+   the optional outputs associated with the ARKBANDPRE module, the
+   user should call the :c:func:`FARKBPOPT()`, as specified below: 
 
 
 
@@ -1707,10 +1691,10 @@ unchanged from the main program described in the section
 5. Linear solver specification 
 
    First, specify one of the ARKSPILS iterative linear solvers, by
-   calling one of :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`, or
-   :c:func:`FARKSPTFQMR()`.  
+   calling one of :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`, 
+   :c:func:`FARKSPTFQMR()`, or :c:func:`FARKPCG()`.  
 
-   Optionally, to specify that SPGMR, SPBCG, or SPTFQMR
+   Optionally, to specify that SPGMR, SPBCG, SPTFQMR, or PCG
    should use the supplied :c:func:`FARKJTIMES()` routine, the user
    should call :c:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
    as described in the section :ref:`FInterface.SpilsUserSupplied`.
@@ -1749,7 +1733,7 @@ unchanged from the main program described in the section
 
 7. ARKBBDPRE optional outputs
 
-   Optional outputs specific to the SPGMR, SPBCG, or SPTFQMR solver
+   Optional outputs specific to the SPGMR, SPBCG, SPTFQMR or PCG solver
    are listed in :ref:`FInterface.SpilsIOUTTable`.  To obtain the
    optional outputs associated with the ARKBBDPRE module, the user
    should call the :c:func:`FARKBBDOPT()`, as specified below:
@@ -1774,7 +1758,7 @@ unchanged from the main program described in the section
 8. Problem reinitialization
 
    If a sequence of problems of the same size is being solved using
-   the same linear solver (SPGMR, SPBCG, or SPTFQMR) in combination
+   the same linear solver (SPGMR, SPBCG, SPTFQMR or PCG) in combination
    with the ARKBBDPRE preconditioner, then the ARKode package can be
    re-initialized for the second and subsequent problems by calling
    :c:func:`FARKREINIT()`, following which a call to
@@ -1803,8 +1787,8 @@ unchanged from the main program described in the section
    :c:func:`FARKBBDINIT()` must be made instead. 
 
    Finally, if there is a change in any of the linear solver inputs,
-   then a call to FARKSPGMR, FARKSPBCG, or FARKSPTFQMR must also be
-   made; in this case the linear solver memory is reallocated. 
+   then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR or FARKPCG must
+   also be made; in this case the linear solver memory is reallocated. 
 
 9. `Memory deallocation` 
 

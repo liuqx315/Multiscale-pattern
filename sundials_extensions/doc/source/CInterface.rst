@@ -169,6 +169,8 @@ linear solvers availble for use with ARKode are:
   Bi-CGStab Krylov linear solver SPBCG;
 - ``arkode_sptfqmr.h``, which is used with the scaled, preconditioned
   TFQMR Krylov solver SPTFQMR.
+- ``arkode_pcg.h``, which is used with the preconditioned
+  conjugate gradient linear solver PCG;
 
 The header files for the dense and banded linear solvers (both
 internal and LAPACK) include the file ``arkode_direct.h``, which defines
@@ -294,6 +296,8 @@ NVECTOR_SERIAL.
    ``ier = ARKSpbcg(...);``
 
    ``ier = ARKSptfqmr(...);``
+
+   ``ier = ARKPcg(...);``
 
 9. Set linear solver optional inputs 
 
@@ -616,8 +620,8 @@ where
 .. math::
     A \approx M - \gamma J, \qquad J = \frac{\partial f_I}{\partial y}.
 
-There are five ARKode linear solvers currently available for this
-task: ARKDENSE, ARKBAND, ARKSPGMR, ARKSPBCG, and ARKSPTFQMR.
+There are six ARKode linear solvers currently available for this
+task: ARKDENSE, ARKBAND, ARKSPGMR, ARKSPBCG, ARKSPTFQMR, and ARKPCG.
 
 The first two linear solvers are direct and derive their names from
 the type of approximation used for the Jacobian :math:`J`;
@@ -627,11 +631,12 @@ internal implementations of these two linear solvers and interfaces to
 LAPACK implementations. Together, these linear solvers are referred to
 as ARKDLS (from Direct Linear Solvers). 
 
-The last three ARKode linear solvers, ARKSPGMR, ARKSPBCG,
-and ARKSPTFQMR, are Krylov iterative solvers, which use scaled
-preconditioned GMRES, scaled preconditioned Bi-CGStab, and scaled
-preconditioned TFQMR, respectively. Together, they are referred to as
-ARKSPILS (from Scaled Preconditioned Iterative Linear Solvers). 
+The last four ARKode linear solvers, ARKSPGMR, ARKSPBCG,
+ARKSPTFQMR, and ARKPCG, are Krylov iterative solvers, which use scaled
+preconditioned GMRES, scaled preconditioned Bi-CGStab, scaled
+preconditioned TFQMR, and preconditioned conjugate gradient,
+respectively. Together, they are referred to as ARKSPILS (from Scaled
+Preconditioned Iterative Linear Solvers).
 
 With any of the Krylov methods, preconditioning can be done on the
 left only, on the right only, on both the left and the right, or not
@@ -648,21 +653,22 @@ To specify a ARKode linear solver, after the call to
 :c:func:`ARKodeCreate()` but before any calls to :c:func:`ARKode()`, the user's
 program must call one of the functions
 :c:func:`ARKDense()`/:c:func:`ARKLapackDense()`, :c:func:`ARKBand()`/:c:func:`ARKLapackBand()`,
-:c:func:`ARKSpgmr()`, :c:func:`ARKSpbcg()`, or :c:func:`ARKSptfqmr()`, as
-documented below. The first argument passed to these functions is the
-ARKode memory pointer returned by :c:func:`ARKodeCreate()`. A call to one
-of these functions links the main ARKode integrator to a linear
-solver and allows the user to specify parameters which are specific to
-a particular solver, such as the half-bandwidths in the :c:func:`ARKBand()`
-case. The use of each of the linear solvers involves certain constants
-and possibly some macros, that are likely to be needed in the user
-code. These are available in the corresponding header file associated
-with the linear solver, as specified below. 
+:c:func:`ARKSpgmr()`, :c:func:`ARKSpbcg()`, :c:func:`ARKSptfqmr()`, or
+:c:func:`ARKPcg()` as documented below. The first argument passed to
+these functions is the ARKode memory pointer returned by
+:c:func:`ARKodeCreate()`. A call to one of these functions links the
+main ARKode integrator to a linear solver and allows the user to
+specify parameters which are specific to a particular solver, such as
+the half-bandwidths in the :c:func:`ARKBand()` case. The use of each
+of the linear solvers involves certain constants and possibly some
+macros, that are likely to be needed in the user code. These are
+available in the corresponding header file associated with the linear
+solver, as specified below.  
 
 In each case except LAPACK direct solvers, the linear solver module
 used by ARKode is actually built on top of a generic linear system
 solver, which may be of interest in itself.  These generic solvers,
-denoted DENSE, BAND, SPGMR, SPBCG, and SPTFQMR,
+denoted DENSE, BAND, SPGMR, SPBCG, SPTFQMR, and PCG,
 are described separately in the section :ref:`LinearSolvers`.
 
 
@@ -837,6 +843,35 @@ are described separately in the section :ref:`LinearSolvers`.
    
    **Notes:** The ARKSPTFQMR solver uses a scaled preconditioned TFQMR
    iterative method to solve the linear systems.
+
+
+
+.. c:function:: int ARKPcg(void *arkode_mem, int pretype, int maxl)
+
+   A call to the ARKPcg function links the main
+   ARKode integrator with the ARKPCG linear solver.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `pretype` -- flag denoting whether to use preconditioning.  If
+        set to any of the enumeration constants PREC_LEFT, PREC_RIGHT,
+	or PREC_BOTH, defined in ``sundials_iterative.h``,
+	preconditioning will be enabled. Due to the symmetric form of
+	PCG, there is no choice between	left and right
+	preconditioning.
+      * `maxl` -- the maximum Krylov dimension. This is an optional input
+        to the ARKPCG solver. Pass 0 to use the default value of 5.
+   
+   **Return value:** 
+      * ARKSPILS_SUCCESS if successful
+      * ARKSPILS_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARKSPILS_MEM_FAIL  if there was a memory allocation failure
+      * ARKSPILS_ILL_INPUT if a required vector operation is missing
+   
+   **Notes:** The ARKPCG solver uses a preconditioned conjugate
+   gradient iterative method to solve the linear systems.
+   
+
 
 
 
@@ -2013,7 +2048,7 @@ Maximum Krylov subspace size `(b)`             :c:func:`ARKSpilsSetMaxl()`      
 
 `(a)` Only for ARKSPGMR
 
-`(b)` Only for ARKSPBCG and ARMSPTFQMR
+`(b)` Only for ARKSPBCG, ARMSPTFQMR and ARKPCG
 
 
 
@@ -2153,8 +2188,8 @@ Maximum Krylov subspace size `(b)`             :c:func:`ARKSpilsSetMaxl()`      
   
    An input value `maxl` :math:`\le 0`, gives the default value, 5.
    
-   This option is available only for the ARKSPBCG and
-   ARKSPTFQMR linear solvers.
+   This option is available only for the ARKSPBCG, ARKSPTFQMR and
+   ARKPCGlinear solvers. 
 
 
 
@@ -2959,8 +2994,9 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
    **Notes:** In terms of the problem size :math:`n` and maximum Krylov subspace
    size :math:`m`, the actual size of the real workspace is roughly:
    :math:`(m+5)n+m(m+4)+1` ``realtype`` words for ARKSPGMR,
-   :math:`9n` ``realtype`` words for ARKSPBCG, and :math:`11n`
-   ``realtype`` words for ARKSPTFQMR.  
+   :math:`9n` ``realtype`` words for ARKSPBCG, :math:`11n`
+   ``realtype`` words for ARKSPTFQMR, and ?? :math:`4n+1`
+   ``realtype`` words for ARKPCG.
    
    In a parallel setting, the above values are global, summed over all
    processors.
@@ -3082,8 +3118,8 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
    
    **Notes:** If the ARKSPILS setup function failed (:c:func:`ARKode()`
    returned ARK_LSETUP_FAIL), then `lsflag` will be
-   SPGMR_PSET_FAIL_UNREC, SPBCG_PSET_FAIL_UNREC, or
-   SPTFQMR_PSET_FAIL_UNREC. 
+   SPGMR_PSET_FAIL_UNREC, SPBCG_PSET_FAIL_UNREC,
+   SPTFQMR_PSET_FAIL_UNREC, or PCG_PSET_FAIL_UNREC. 
    
    If the ARKSPGMR solve function failed (:c:func:`ARKode()`
    returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
@@ -3114,6 +3150,16 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
    unrecoverable failure in the :math:`J*v` function; or
    SPTFQMR_PSOLVE_FAIL_UNREC, indicating that the preconditioner
    solve function `psolve` failed unrecoverably.
+
+   If the ARKPCG solve function failed (:c:func:`ARKode()`
+   returned ARK_LSOLVE_FAIL), then `lsflag` contains the error
+   return flag from PcgSolve and will be one of:
+   PCG_MEM_NULL, indicating that the PCG memory is
+   ``NULL``; PCG_ATIMES_FAIL_UNREC, indicating an unrecoverable
+   failure in the :math:`J*v` function; or
+   PCG_PSOLVE_FAIL_UNREC, indicating that the preconditioner
+   solve function `psolve` failed unrecoverably. 
+   
 
 
 
@@ -3616,8 +3662,8 @@ of type :c:func:`ARKDlsBandJacFn()` to provide the Jacobian approximation.
 Jacobian information (matrix-vector product)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If one of the Krylov iterative linear solvers SPGMR, SPBCG, or
-SPTFQMR is selected (i.e. ARKSp* is called in step 8 of the
+If one of the Krylov iterative linear solvers SPGMR, SPBCG, 
+SPTFQMR, or PCG is selected (i.e. ARKSp* is called in step 8 of the
 section :ref:`CInterface.Skeleton`), the user may provide a function
 of type :c:func:`ARKSpilsJacTimesVecFn()` in the following form, to compute
 matrix-vector products :math:`J*v`. If such a function is not
@@ -3665,8 +3711,8 @@ products.
 Preconditioning (linear system solution)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If one of the Krylov iterative linear solvers SPGMR, SPBCG, or
-SPTFQMR is selected, and preconditioning is used, then the user
+If one of the Krylov iterative linear solvers SPGMR, SPBCG,
+SPTFQMR, or PCG is selected, and preconditioning is used, then the user
 must provide a function of type :c:func:`ARKSpilsPrecSolveFn()` to solve the
 linear system :math:`Pz=r`, where :math:`P` may be either a left or
 right preconditioning matrix.  Here :math:`P` should approximate (at
@@ -3847,6 +3893,8 @@ skeleton program presented in :ref:`CInterface.Skeleton` are
    (b) ``flag = ARKSpbcg(arkode_mem, pretype, maxl);``
 
    (c) ``flag = ARKSptfqmr(arkode_mem, pretype, maxl);``
+
+   (d) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
 
 7. Initialize the ARKBANDPRE preconditioner module 
 
@@ -4166,6 +4214,8 @@ that are unchanged from the skeleton program presented in
 
    (c) ``flag = ARKSptfqmr(arkode_mem, pretype, maxl);``
 
+   (d) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
+
 8. Initialize the ARKBBDPRE preconditioner module 
 
    Specify the upper and lower half-bandwidths for computation
@@ -4269,9 +4319,9 @@ to change any of the following: the half-bandwidths `mudq` and
 relative increment `dqrely`, or one of the user-supplied functions
 `gloc` and `cfn`. If there is a change in any of the linear solver
 inputs, an additional call to :c:func:`ARKSpgmr()`,
-:c:func:`ARKSpbcg()`, or :c:func:`ARKSptfqmr()`, and/or one or more of
-the corresponding ARKSpils*Set* functions, must also be made (in
-the proper order).
+:c:func:`ARKSpbcg()`, :c:func:`ARKSptfqmr()`, or :c:func:`ARKPcg()`,
+and/or one or more of the corresponding ARKSpils*Set* functions, must
+also be made (in the proper order).
 
 
 

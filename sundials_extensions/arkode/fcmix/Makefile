@@ -18,8 +18,6 @@ OBJ = farkband.o \
       farkewt.o \
       farkjtimes.o \
       farklapack.o \
-      farklapband.o \
-      farklapdense.o \
       farkode.o \
       farkpreco.o \
       farkroot.o
@@ -48,12 +46,6 @@ farkjtimes.o : farkjtimes.c farkode.h ../arkode_impl.h ../arkode_spils.h
 
 farklapack.o : farklapack.c farkode.h ../arkode_impl.h ../arkode_lapack.h
 	${CC} -c ${CFLAGS_} ${INCS} farklapack.c -o $@
-
-farklapband.o : farklapband.c farkode.h ../arkode_impl.h ../arkode_lapack.h
-	${CC} -c ${CFLAGS_} ${INCS} farklapband.c -o $@
-
-farklapdense.o : farklapdense.c farkode.h ../arkode_impl.h ../arkode_lapack.h
-	${CC} -c ${CFLAGS_} ${INCS} farklapdense.c -o $@
 
 farkode.o : farkode.c farkode.h ../arkode_impl.h ../arkode_band.h ../arkode_dense.h ../arkode_spgmr.h ../arkode_spbcgs.h ../arkode_sptfqmr.h
 	${CC} -c ${CFLAGS_} ${INCS} farkode.c -o $@

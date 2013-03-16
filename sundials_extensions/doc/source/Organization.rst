@@ -65,6 +65,7 @@ linear solvers and includes:
 - ARKSPGMR: scaled preconditioned GMRES method;
 - ARKSPBCG: scaled preconditioned Bi-CGStab method;
 - ARKSPTFQMR: scaled preconditioned TFQMR method;
+- ARKPCG: preconditioned conjugate gradient method;
 
 The set of linear solver modules distributed with ARKode is
 intended to be expanded in the future as new algorithms are developed,
@@ -75,18 +76,17 @@ In the case of the direct methods ARKDENSE and ARKBAND the
 package includes an algorithm for approximation of the Jacobian by
 difference quotients, but the user also has the option of supplying
 the Jacobian (or an approximation to it) directly.  In the case of the
-Krylov iterative methods ARKSPGMR, ARKSPBCG and
-ARKSPTFQMR, the package includes an algorithm for the
-approximation by difference quotients of the product between the
-Jacobian matrix and a vector of appropriate length.  Again, the user
-has the option of supplying a routine for this operation.  For the
-Krylov methods, preconditioning must be supplied by the user, in two
-phases: *setup* (preprocessing of Jacobian data) and *solve*.  While
-there is no default choice of preconditioner analagous to the
-difference-quotient approximation in the direct case, the references
-[BH1989]_ and [B1992]_, together with the example and
-demonstration programs included with ARKode and CVODE, offer
-considerable assistance in building preconditioners.
+Krylov iterative methods ARKSPGMR, ARKSPBCG, ARKSPTFQMR, and ARKPCG,
+the package includes an algorithm for the approximation by difference
+quotients of the product between the Jacobian matrix and a vector of
+appropriate length.  Again, the user has the option of supplying a
+routine for this operation.  For the Krylov methods, preconditioning
+must be supplied by the user, in two phases: *setup* (preprocessing of
+Jacobian data) and *solve*.  While there is no default choice of
+preconditioner analagous to the difference-quotient approximation in
+the direct case, the references [BH1989]_ and [B1992]_, together with
+the example and demonstration programs included with ARKode and CVODE,
+offer considerable assistance in building preconditioners.
 
 Each ARKode linear solver module consists of four routines,
 devoted to 
@@ -106,9 +106,9 @@ completely independent of the linear system method.
 These modules are also decomposed in another way.  With the exception
 of the modules interfacing to LAPACK linear solvers,
 each of the modules ARKDENSE, ARKBAND, ARKSPGMR,
-ARKSPBCG and ARKSPTFQMR is a set of interface routines built
+ARKSPBCG, ARKSPTFQMR and ARKPCG is a set of interface routines built
 on top of a generic solver module, named DENSE, BAND,
-SPGMR, SPBCG and SPTFQMR, respectively.  The interfaces
+SPGMR, SPBCG, SPTFQMR, PCG, respectively.  The interfaces
 deal with the use of these methods in the ARKode context, whereas
 the generic solvers are independent of the context where they are
 used.  This separation allows for any generic solver to be replaced by

@@ -219,13 +219,15 @@ Note that this family also includes the BLAS/LAPACK linear solvers
 discussed here. 
 
 The :ref:`SPILS <LinearSolvers.SPILS>` family contains the following
-three generic linear solvers: 
+generic linear solvers: 
 
 * The SPGMR package, a solver for the scaled preconditioned GMRES
   method. 
 * The SPBCG package, a solver for the scaled preconditioned Bi-CGStab
   method. 
 * The SPTFQMR package, a solver for the scaled preconditioned TFQMR
+  method. 
+* The PCG package, a solver for the preconditioned conjugate gradient
   method. 
 
 For reasons related to installation, the names of the files involved
@@ -235,7 +237,7 @@ completely independently of SUNDIALS.
 
 For the sake of space, the functions for the DENSE and BAND modules
 that work with a matrix type and the functions in the SPGMR, SPBCG,
-and SPTFQMR modules are only summarized briefly, since they are less
+SPTFQMR and PCG modules are only summarized briefly, since they are less
 likely to be of direct use in connection with a SUNDIALS
 solver. However, the functions for dense matrices treated as simple
 arrays are fully described, because we expect that they will be 
@@ -746,8 +748,8 @@ BAND package:
 
 .. _LinearSolvers.SPILS:
 
-The SPILS modules: SPGMR, SPBCG and SPTFQMR
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The SPILS modules: SPGMR, SPBCG, SPTFQMR and PCG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A linear solver module from the SPILS family can only be used in
 conjunction with an actual NVECTOR implementation library, such as the
@@ -762,7 +764,7 @@ The SPGMR package, in the files ``sundials_spgmr.h`` and
 preconditioned GMRES method. A separate code module, implemented in 
 ``sundials_iterative.h`` and ``sundials_iterative.c``, contains
 auxiliary functions that support SPGMR, as well as the other Krylov
-solvers in SUNDIALS (SPBCG and SPTFQMR). For full details, including
+solvers in SUNDIALS (SPBCG, SPTFQMR and PCG). For full details, including
 usage instructions, see the header files ``sundials_spgmr.h`` and
 ``sundials_iterative.h``. 
 
@@ -878,4 +880,24 @@ The following functions are available in the SPTFQMR package:
 * ``SptfqmrFree``: free memory allocated by ``SptfqmrMalloc``.
 
 
+
+The PCG module
+"""""""""""""""""""
+
+The PCG package, in the files ``sundials_pcg.h`` and
+``sundials_pcg.c``, includes an implementation of the 
+preconditioned conjugate gradient method (symmetric
+linear systems only). For full details, including usage
+instructions, see the file ``sundials_pcg.h``.
+
+The files needed to use the PCG module by itself are the same as for
+the SPGMR module, but with ``sundials_pcg.h`` and
+``sundials_pcs.c`` in place of ``sundials_spgmr.h`` and
+``sundials_spgmr.c``. 
+
+The following functions are available in the PCG package:
+
+* ``PcgMalloc``: allocation of memory for ``PcgSolve``;
+* ``PcgSolve``: solution of :math:`Ax = b` by the PCG method;
+* ``PcgFree``: free memory allocated by ``PcgMalloc``.
 
