@@ -60,13 +60,11 @@ int FARKDenseJac(long int N, realtype t, N_Vector y, N_Vector fy,
   FARKUserData ARK_userdata;
 
   ARKodeGetLastStep(ARK_arkodemem, &h);
-
   ydata   = N_VGetArrayPointer(y);
   fydata  = N_VGetArrayPointer(fy);
   v1data  = N_VGetArrayPointer(vtemp1);
   v2data  = N_VGetArrayPointer(vtemp2);
   v3data  = N_VGetArrayPointer(vtemp3);
-
   jacdata = DENSE_COL(J,0);
   ARK_userdata = (FARKUserData) user_data;
 

@@ -1134,6 +1134,7 @@ building a preconditioner).
 |                                | sundials/sundials_spgmr.h,      |
 |                                | sundials/sundials_spbcgs.h,     |
 |                                | sundials/sundials_sptfqmr.h     |
+|                                | sundials/sundials_pcg.h,        |
 +--------------------------------+---------------------------------+
 | Serial NVECTOR    Libraries    | libsundials_nvecserial.LIB,     |
 |                                | libsundials_fnvecserial.a       |
@@ -1158,6 +1159,7 @@ building a preconditioner).
 |                                | arkode/arkode_spgmr.h,          |
 |                                | arkode/arkode_spbcgs.h,         |
 |                                | arkode/arkode_sptfqmr.h,        |
+|                                | arkode/arkode_pcg.h,            |
 |                                | arkode/arkode_bandpre.h,        |
 |                                | arkode/arkode_bbdpre.h          |
 +--------------------------------+---------------------------------+

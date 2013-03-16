@@ -321,8 +321,43 @@ ARKode output constants
      failed unrecoverably.
 
 
+**ARKPCG generic linear solver module**
 
+  :index:`PCG_SUCCESS`  (0): 
+     Converged.
 
+  :index:`PCG_RES_REDUCED`  (1): 
+     No convergence, but the residual norm 
+     was reduced.
 
+  :index:`PCG_CONV_FAIL`  (2): 
+     Failure to converge.
+
+  :index:`PCG_PSOLVE_FAIL_REC`  (3): 
+     The preconditioner solve function 
+     failed recoverably.
+
+  :index:`PCG_ATIMES_FAIL_REC`  (4): 
+     The Jacobian-times-vector function 
+     failed recoverably.
+
+  :index:`PCG_PSET_FAIL_REC`  (5): 
+     The preconditioner setup function 
+     failed recoverably.
+
+  :index:`PCG_MEM_NULL`  (-1): 
+     The PCG memory is ``NULL``
+
+  :index:`PCG_ATIMES_FAIL_UNREC`  (-2): 
+     The Jacobian-times-vector function 
+     failed unrecoverably.
+
+  :index:`PCG_PSOLVE_FAIL_UNREC`  (-3): 
+     The preconditioner solve function 
+     failed unrecoverably.
+
+  :index:`PCG_PSET_FAIL_UNREC`  (-4): 
+     The preconditioner setup function 
+     failed unrecoverably.
 
 

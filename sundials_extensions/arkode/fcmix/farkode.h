@@ -37,16 +37,14 @@
    FARKEWTSET                 ARKodeWFtolerances
 
    FARKDENSE                  ARKDense
-   FARKDENSESETJAC            ARKDenseSetJacFn
+   FARKDENSESETJAC            ARKDlsSetDenseJacFn
 
    FARKBAND                   ARKBand
-   FARKBANDSETJAC             ARKBandSetJacFn
+   FARKBANDSETJAC             ARKDlsSetBandJacFn
 
    FARKLAPACKDENSE            ARKLapackDense
-   FARKLAPACKDENSESETJAC      ARKLapackSetJacFn
 
    FARKLAPACKBAND             ARKLapackBand
-   FARKLAPACKBANDSETJAC       ARKLapackSetJacFn
 
    FARKSPGMR                  ARKSpgmr and ARKSpilsSet*
    FARKSPGMRREINIT            ARKSpilsSet*
@@ -80,10 +78,8 @@
    ----------       ------------------       ---------------------
    FARKIFUN         FARKfi                   ARKRhsFn
    FARKEFUN         FARKfe                   ARKRhsFn
-   FARKDJAC         FARKDenseJac             ARKDenseJacFn
-   FARKBJAC         FARKBandJac              ARKBandJacFn
-   FARKLDJAC        FARKLapackDenseJac       ARKLapackJacFn
-   FARKLBJAC        FARKLapackBandJac        ARKLapackJacFn
+   FARKDJAC         FARKDenseJac             ARKDlsDenseJacFn
+   FARKBJAC         FARKBandJac              ARKDlsBandJacFn
    FARKPSOL         FARKPSol                 ARKSpilsPrecSolveFn
    FARKPSET         FARKPSet                 ARKSpilsPrecSetupFn
    FARKJTIMES       FARKJtimes               ARKSpilsJacTimesVecFn
@@ -241,17 +237,7 @@
                  <0 if an unrecoverable error ocurred.
  
 
- (4s) Optional user-supplied Lapack dense Jacobian routine: FARKLDJAC
-
-     See the description for FARKDJAC. NOTE: the dense Jacobian matrix
-     is NOT set to zero before calling the user's FARKLDJAC.
-
- (5s) Optional user-supplied Lapack band Jacobian routine: FARKLBJAC
-
-     See the description for FARKBJAC. NOTE: the band Jacobian matrix
-     is NOT set to zero before calling the user's FARKLBJAC.
-
- (6) Optional user-supplied Jacobian-vector product routine: FARKJTIMES
+ (4) Optional user-supplied Jacobian-vector product routine: FARKJTIMES
 
      As an option when using the SP* linear solver, the user may supply a
      routine that computes the product of the system Jacobian 
@@ -281,7 +267,7 @@
                   0 if successful, 
                   nonzero if an error.
  
- (7) Optional user-supplied error weight vector routine: FARKEWT
+ (5) Optional user-supplied error weight vector routine: FARKEWT
  
      As an option to providing the relative and absolute tolerances, the user
      may supply a routine that computes the weights used in the WRMS norms.
@@ -304,9 +290,9 @@
 
  -----------------------------------------------------------------------------
 
- (8) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT
+ (6) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT
  
- (8.1s) To initialize the serial vector specification, the user must make the
+ (6.1s) To initialize the serial vector specification, the user must make the
      following call:
 
         CALL FNVINITS(4, NEQ, IER)
@@ -318,7 +304,7 @@
 	          0 = success, 
 		 -1 = failure.
  
- (8.1p) To initialize the parallel machine environment, the user must make 
+ (6.1p) To initialize the parallel machine environment, the user must make 
      the following call:
 
         CALL FNVINITP(COMM, 4, NLOCAL, NGLOBAL, IER)
@@ -336,7 +322,7 @@
      MPI_COMM_WORLD.  If not, this routine initializes MPI and sets the
      communicator equal to MPI_COMM_WORLD.
  
- (8.2) To set various problem and solution parameters and allocate
+ (6.2) To set various problem and solution parameters and allocate
      internal memory, make the following call:
 
        CALL FARKMALLOC(T0, Y0, IMEX, IATOL, RTOL, ATOL, IOUT, ROUT, 
@@ -402,7 +388,7 @@
      with the int argument FLAG = 1 to specify that FARKEWT is provided.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
- (8.3) To re-initialize the ARKODE solver for the solution of a new problem
+ (6.3) To re-initialize the ARKODE solver for the solution of a new problem
      of the same size as one already solved, make the following call:
 
        CALL FARKREINIT(T0, Y0, IMEX, IATOL, RTOL, ATOL, IER)
@@ -413,7 +399,7 @@
      the previous FARKMALLOC call.  The subsequent call to specify the linear 
      system solution method may or may not be needed; see paragraph (9) below.
  
- (8.4) To set various integer optional inputs, make the folowing call:
+ (6.4) To set various integer optional inputs, make the folowing call:
 
        CALL FARKSETIIN(KEY, VALUE, IER)
 
@@ -531,7 +517,7 @@
 
  -----------------------------------------------------------------------------
 
- (9) Specification of linear system solution method.
+ (7) Specification of linear system solution method.
 
      In the case of using either an implicit or ImEx method, the solution of 
      each Runge-Kutta stage may involve the solution of linear systems related 
@@ -540,7 +526,7 @@
      these systems, and the user of FARKODE must call a routine with a
      specific name to make the desired choice. 
  
- (9.1s) DENSE treatment of the linear system.
+ (7.1s) DENSE treatment of the linear system.
 
      The user must make the call
 
@@ -570,7 +556,7 @@
         NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
  
- (9.2s) BAND treatment of the linear system
+ (7.2s) BAND treatment of the linear system
 
      The user must make the call
 
@@ -599,7 +585,7 @@
         NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
 
- (9.3s) LAPACK dense treatment of the linear system
+ (7.3s) LAPACK dense treatment of the linear system
 
      The user must make the call
 
@@ -610,14 +596,14 @@
 
      The user may optionally call
 
-       CALL FARKLAPACKDENSESETJAC(FLAG, IER)
+       CALL FARKDENSESETJAC(FLAG, IER)
        
-     with the int FLAG=1 if the user provides the function FARKLDJAC. 
+     with the int FLAG=1 if the user provides the function FARKDJAC. 
 
      The optional outputs when using FARKLAPACKDENSE match those from 
      FARKDENSE.
 
- (9.4s) LAPACK band treatment of the linear system
+ (7.4s) LAPACK band treatment of the linear system
 
      The user must make the call
 
@@ -628,13 +614,13 @@
 
      The user may optionally call
 
-       CALL FARKLAPACKBANDSETJAC(FLAG, IER)
+       CALL FARKBANDSETJAC(FLAG, IER)
 
-     with the int FLAG=1 if the user provides the function FARKLBJAC. 
+     with the int FLAG=1 if the user provides the function FARKBJAC. 
 
      The optional outputs when using FARKLAPACKBAND match those from FARKBAND.
 
- (9.5) SPGMR treatment of the linear systems.
+ (7.5) SPGMR treatment of the linear systems.
 
      For the Scaled Preconditioned GMRES solution of the linear systems,
      the user must make the following call:
@@ -680,7 +666,7 @@
      The arguments have the same meanings as for FARKSPGMR.  If MAXL is being
      changed, then the user should call FARKSPGMR instead.
  
- (9.6) SPBCG treatment of the linear systems.
+ (7.6) SPBCG treatment of the linear systems.
 
      For the Scaled Preconditioned Bi-CGSTAB solution of the linear systems,
      the user must make the following call:
@@ -721,7 +707,7 @@
 
      The arguments have the same meanings as for FARKSPBCG.
 
- (9.7) SPTFQMR treatment of the linear systems.
+ (7.7) SPTFQMR treatment of the linear systems.
 
      For the Scaled Preconditioned TFQMR solution of the linear systems, the
      user must make the following call:
@@ -762,7 +748,7 @@
 
      The arguments have the same meanings as for FARKSPTFQMR.
 
- (9.8) PCG treatment of the linear systems.
+ (7.8) PCG treatment of the linear systems.
 
      For the Preconditioned Conjugate Gradient solution of the linear systems,
      the user must make the following call:
@@ -803,7 +789,7 @@
 
      The arguments have the same meanings as for FARKPCG.
 
- (9.9) Usage of user-supplied routines for the Krylov solvers
+ (7.9) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
      the Jacobian vector product, the following call must be made
@@ -886,7 +872,7 @@
 
  -----------------------------------------------------------------------------
 
- (10) The integrator: FARKODE
+ (8) The integrator: FARKODE
 
      Carrying out the integration is accomplished by making calls as follows:
 
@@ -914,7 +900,7 @@
  
  -----------------------------------------------------------------------------
 
- (11) Computing solution derivatives: FARKDKY
+ (9) Computing solution derivatives: FARKDKY
 
      To obtain a derivative of the solution, of order up to the method order,
      make the following call:
@@ -930,7 +916,7 @@
  
  -----------------------------------------------------------------------------
 
- (12) Get the current weight vector: FARKGETERRWEIGHTS
+ (10) Get the current weight vector: FARKGETERRWEIGHTS
 
      To obtain the current weight vector, make the following call:
 
@@ -942,7 +928,7 @@
  
  -----------------------------------------------------------------------------
 
- (13) Get an estimate of the local error: FARKGETESTLOCALERR
+ (11) Get an estimate of the local error: FARKGETESTLOCALERR
 
      To obtain the current error estimate vector, make the following call:
 
@@ -954,7 +940,7 @@
  
  -----------------------------------------------------------------------------
 
- (14) Memory freeing: FARKFREE 
+ (12) Memory freeing: FARKFREE 
 
      To free the internal memory created by the calls to FARKMALLOC and
      FNVINITS or FNVINITP, make the call
@@ -993,9 +979,7 @@ extern "C" {
 #define FARK_BAND                SUNDIALS_F77_FUNC(farkband,                FARKBAND)
 #define FARK_BANDSETJAC          SUNDIALS_F77_FUNC(farkbandsetjac,          FARKBANDSETJAC)
 #define FARK_LAPACKDENSE         SUNDIALS_F77_FUNC(farklapackdense,         FARKLAPACKDENSE)
-#define FARK_LAPACKDENSESETJAC   SUNDIALS_F77_FUNC(farklapackdensesetjac,   FARKLAPACKDENSESETJAC)
 #define FARK_LAPACKBAND          SUNDIALS_F77_FUNC(farklapackband,          FARKLAPACKBAND)
-#define FARK_LAPACKBANDSETJAC    SUNDIALS_F77_FUNC(farklapackbandsetjac,    FARKLAPACKBANDSETJAC)
 #define FARK_SPTFQMR             SUNDIALS_F77_FUNC(farksptfqmr,             FARKSPTFQMR)
 #define FARK_SPTFQMRREINIT       SUNDIALS_F77_FUNC(farksptfqmrreinit,       FARKSPTFQMRREINIT)
 #define FARK_SPBCG               SUNDIALS_F77_FUNC(farkspbcg,               FARKSPBCG)
@@ -1012,7 +996,6 @@ extern "C" {
 #define FARK_IMP_FUN             SUNDIALS_F77_FUNC(farkifun,                FARKIFUN)
 #define FARK_EXP_FUN             SUNDIALS_F77_FUNC(farkefun,                FARKEFUN)
 #define FARK_DJAC                SUNDIALS_F77_FUNC(farkdjac,                FARKDJAC)
-#define FARK_LDJAC               SUNDIALS_F77_FUNC(farkldjac,               FARKLDJAC)
 #define FARK_BJAC                SUNDIALS_F77_FUNC(farkbjac,                FARKBJAC)
 #define FARK_PSOL                SUNDIALS_F77_FUNC(farkpsol,                FARKPSOL)
 #define FARK_PSET                SUNDIALS_F77_FUNC(farkpset,                FARKPSET)
@@ -1038,9 +1021,7 @@ extern "C" {
 #define FARK_BAND                farkband_
 #define FARK_BANDSETJAC          farkbandsetjac_
 #define FARK_LAPACKDENSE         farklapackdense_
-#define FARK_LAPACKDENSESETJAC   farklapackdensesetjac_
 #define FARK_LAPACKBAND          farklapackband_
-#define FARK_LAPACKBANDSETJAC    farklapackbandsetjac_
 #define FARK_SPTFQMR             farksptfqmr_
 #define FARK_SPTFQMRREINIT       farksptfqmrreinit_
 #define FARK_SPBCG               farkspbcg_
@@ -1057,7 +1038,6 @@ extern "C" {
 #define FARK_IMP_FUN             farkifun_
 #define FARK_EXP_FUN             farkefun_
 #define FARK_DJAC                farkdjac_
-#define FARK_LDJAC               farkldjac_
 #define FARK_BJAC                farkbjac_
 #define FARK_PSOL                farkpsol_
 #define FARK_PSET                farkpset_
@@ -1104,9 +1084,7 @@ extern "C" {
   void FARK_BANDSETJAC(int *flag, int *ier);
 
   void FARK_LAPACKDENSE(int *neq, int *ier);
-  void FARK_LAPACKDENSESETJAC(int *flag, int *ier);
   void FARK_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier);
-  void FARK_LAPACKBANDSETJAC(int *flag, int *ier);
 
   void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier);
   void FARK_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier);
@@ -1148,15 +1126,6 @@ extern "C" {
 		  DlsMat J, void *user_data,
 		  N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
   
-  int FARKLapackDenseJac(long int N, realtype t,
-			 N_Vector y, N_Vector fy, 
-			 DlsMat Jac, void *user_data,
-			 N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-  int FARKLapackBandJac(long int N, long int mupper, long int mlower,
-			realtype t, N_Vector y, N_Vector fy, 
-			DlsMat Jac, void *user_data,
-			N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
   int FARKPSet(realtype tn, N_Vector y,N_Vector fy, booleantype jok,
 	       booleantype *jcurPtr, realtype gamma, void *user_data,
 	       N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
