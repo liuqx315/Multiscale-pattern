@@ -40,8 +40,12 @@
 #include <arkode/arkode.h>
 #include <nvector/nvector_serial.h>
 #include <arkode/arkode_pcg.h>
+#include <arkode/arkode_spgmr.h>
 #include <arkode/arkode_spbcgs.h>
+#include <arkode/arkode_sptfqmr.h>
 #include <sundials/sundials_types.h>
+
+
 
 /* user data structure */
 typedef struct {  
@@ -66,7 +70,7 @@ int main()
 {
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
-  realtype Tf = RCONST(0.1);
+  realtype Tf = RCONST(1.0);
   int Nt = 10;
   UserData udata = NULL;
   realtype *data;
@@ -92,7 +96,7 @@ int main()
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
-  if (check_flag((void *)udata, "malloc", 2)) return 1;
+  if (check_flag((void *) udata, "malloc", 2)) return 1;
 
   /* read problem parameter and tolerances from input file:
      N - number of spatial discretization points
@@ -149,7 +153,7 @@ int main()
   DFID=fopen("diags_ark_heat1D.txt","w");
   
   /* Initial problem output */
-  printf("\n1D Brusselator PDE test problem:\n");
+  printf("\n1D Heat PDE test problem:\n");
   printf("    N = %li\n", udata->N);
   printf("    diffusion coefficient:  k = %g\n", udata->k);
   printf("    reltol = %.1e,  abstol = %.1e\n\n", reltol, abstol);
@@ -158,24 +162,20 @@ int main()
 
   /* Create serial vector of length N for initial condition */
   y = N_VNew_Serial(N);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
+  if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(N);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return 1;
+  if (check_flag((void *) ytrue, "N_VNew_Serial", 0)) return 1;
   yerr = N_VNew_Serial(N);
-  if (check_flag((void *)yerr, "N_VNew_Serial", 0)) return 1;
+  if (check_flag((void *) yerr, "N_VNew_Serial", 0)) return 1;
 
   /* set spatial mesh spacing */
-  udata->dx = RCONST(1.0)/(N-1);
+  udata->dx = RCONST(1.0)/(1.0*N-1.0);
 
   /* output mesh to disk */
-  FID=fopen("bruss_mesh.txt","w");
+  FID=fopen("heat_mesh.txt","w");
   for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
   fclose(FID);
   
-  /* Access data array for new NVector y */
-  data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
-
   /* Set initial conditions into y, ytrue */
   N_VConst(0.0, y);
   N_VConst(0.0, ytrue);
@@ -317,15 +317,11 @@ int main()
   flag = ARKodeSStolerances(arktrue_mem, reltol2, abstol2);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* Call ARKPcg to specify the ARKPCG iterative linear solver (no preconditioning) */
+  /* Specify the linear solver */
   flag = ARKPcg(arkode_mem, 0, N);
   if (check_flag(&flag, "ARKPcg", 1)) return 1;
   flag = ARKPcg(arktrue_mem, 0, N);
   if (check_flag(&flag, "ARKPcg", 1)) return 1;
-  /* flag = ARKSpbcg(arkode_mem, 0, 2*N); */
-  /* if (check_flag(&flag, "ARKPcg", 1)) return 1; */
-  /* flag = ARKSpbcg(arktrue_mem, 0, 2*N); */
-  /* if (check_flag(&flag, "ARKPcg", 1)) return 1; */
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   if (imex == 0) { /* purely implicit */
@@ -446,11 +442,9 @@ int main()
 }
 
 
-/*
- *-------------------------------
+/*--------------------------------
  * Functions called by the solver
- *-------------------------------
- */
+ *--------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
@@ -478,12 +472,10 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   long int i;
   long int isource = N/2;
   Ydot[0] = 0.0;                 /* left boundary condition */
-  Ydot[1] = c2*Y[1] + c1*Y[2];   /* k*u_xx */
-  for (i=2; i<N-2; i++)
+  for (i=1; i<N-1; i++)
     Ydot[i] = c1*Y[i-1] + c2*Y[i] + c1*Y[i+1];
-  Ydot[N-2] = c1*Y[N-3] + c2*Y[N-2];
   Ydot[N-1] = 0.0;               /* right boundary condition */
-  Ydot[isource] = 1.0;           /* f */
+  Ydot[isource] += 1.0;          /* f */
 
   return 0;
 }
@@ -514,10 +506,8 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
   realtype c2 = -RCONST(2.0)*k/dx/dx;
   long int i;
   JV[0] = 0.0;
-  JV[1] = c2*V[1] + c1*V[2];
-  for (i=2; i<N-2; i++)
+  for (i=1; i<N-1; i++)
     JV[i] = c1*V[i-1] + c2*V[i] + c1*V[i+1];
-  JV[N-2] = c1*V[N-3] + c2*V[N-2];
   JV[N-1] = 0.0;
 
   return 0;
