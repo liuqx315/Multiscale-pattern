@@ -1,16 +1,16 @@
-/*************************************************************************
- * File        : nvector_parallel_test.c                                 *
- * Programmers : Daniel R. Reynolds @ SMU                                *
- * Version of  : 3 April 2012                                            *
- *-----------------------------------------------------------------------*
- * This testing routine is designed to exercise the parallel NVector     *
- * routines.                                                             *
- *************************************************************************/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ This testing routine is designed to exercise the parallel 
+ NVector routines.
+---------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_parallel.h>
 #include <sundials/sundials_math.h>
@@ -24,8 +24,8 @@
 
 /* Outer testing routine -- note that all tests should have 
    data arrays with 100 total entries */
-int main(int argc, char *argv[]) 
-{
+int main(int argc, char *argv[]) {
+
   /* initialize MPI */
   MPI_Init(&argc, &argv);
   int nprocs, my_id;
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
   /* finalize MPI and return */
   MPI_Finalize();
 
-  return(0);
+  return 0;
 } 
 
 /* end of testing routine ************************************************/

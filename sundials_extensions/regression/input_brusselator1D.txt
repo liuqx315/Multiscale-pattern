@@ -5,6 +5,4 @@ du = 0.025
 dv = 0.025
 dw = 0.025
 ep = 1.0e-5
-reltol = 1.0e-6
-abstol = 1.0e-10
 

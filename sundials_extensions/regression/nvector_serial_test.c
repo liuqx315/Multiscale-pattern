@@ -1,16 +1,16 @@
-/*************************************************************************
- * File        : nvector_serial_test.c                                   *
- * Programmers : Daniel R. Reynolds @ SMU                                *
- * Version of  : 28 March 2012                                           *
- *-----------------------------------------------------------------------*
- * This testing routine is designed to exercise the serial NVector       *
- * routines.                                                             *
- *************************************************************************/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ This testing routine is designed to exercise the serial NVector 
+ routines.
+---------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_math.h>
@@ -21,9 +21,10 @@
 /* floating point "equality" comparison, failure update macro */
 #define FNEQ(a,b) ( fabs(a-b)/fabs(b) > 1.0e-15 )
 
+
 /* C-testing routine */
-int main(int argc, char *argv[]) 
-{
+int main(int argc, char *argv[]) {
+
   /* initialize success/failure flag */
   int failure = 0;
 
@@ -278,7 +279,7 @@ int main(int argc, char *argv[])
   free(Udata);
   free(Xdata);
   
-  return(0);
+  return 0;
 } 
 
 /* end of testing routine ************************************************/

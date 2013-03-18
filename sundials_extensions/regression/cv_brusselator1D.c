@@ -1,54 +1,52 @@
-/* -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
- * -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Example problem:
- * 
- * The following test simulates a brusselator problem from chemical 
- * kinetics.  This is n PDE system with 3 components, Y = [u,v,w], 
- * satisfying the equations,
- *    u_t = du*u_xx + a - (w+1)*u + v*u^2
- *    v_t = dv*v_xx + w*u - v*u^2
- *    w_t = dw*w_xx + (b-w)/ep - w*u
- * for t in [0, 80], x in [0, 1], with initial conditions
- *    u(0,x) =  a  + 0.1*sin(pi*x)
- *    v(0,x) = b/a + 0.1*sin(pi*x)
- *    w(0,x) =  b  + 0.1*sin(pi*x),
- * and with stationary boundary conditions, i.e. 
- *    u_t(t,0) = u_t(t,1) = v_t(t,0) = v_t(t,1) = w_t(t,0) = w_t(t,1) = 0.
- * Note: these can also be implemented as Dirichlet boundary conditions 
- * with values identical to the initial conditions.
- * 
- * The spatial derivatives are computed using second-order centered 
- * differences, with the data distributed over N points on a uniform 
- * spatial grid.
- *
- * The number of spatial points N, the parameters a, b, du, dv, dw 
- * and ep, as well as the desired relative and absolute solver 
- * tolerances, are provided in the input file input_brusselator1D.txt.
- * 
- * This program solves the problem with the BDF method, using a
- * Newton iteration with the CVBAND band linear solver, and a
- * user-supplied Jacobian routine.
- *
- * 100 outputs are printed at equal intervals, and run statistics 
- * are printed at the end.
- * -----------------------------------------------------------------*/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Example problem:
+ 
+ The following test simulates a brusselator problem from chemical 
+ kinetics.  This is n PDE system with 3 components, Y = [u,v,w], 
+ satisfying the equations,
+    u_t = du*u_xx + a - (w+1)*u + v*u^2
+    v_t = dv*v_xx + w*u - v*u^2
+    w_t = dw*w_xx + (b-w)/ep - w*u
+ for t in [0, 80], x in [0, 1], with initial conditions
+    u(0,x) =  a  + 0.1*sin(pi*x)
+    v(0,x) = b/a + 0.1*sin(pi*x)
+    w(0,x) =  b  + 0.1*sin(pi*x),
+ and with stationary boundary conditions, i.e. 
+    u_t(t,0) = u_t(t,1) = 0
+    v_t(t,0) = v_t(t,1) = 0
+    w_t(t,0) = w_t(t,1) = 0.
+ Note: these can also be implemented as Dirichlet boundary 
+ conditions with values identical to the initial conditions.
+ 
+ The spatial derivatives are computed using second-order centered 
+ differences, with the data distributed over N points on a 
+ uniform spatial grid.
 
+ The number of spatial points N, the parameters a, b, du, dv, dw 
+ and ep are provided in the input file input_brusselator1D.txt.
+ 
+ This program solves the problem with the BDF method, using a
+ Newton iteration with the CVBAND band linear solver, and a
+ user-supplied Jacobian routine.
+
+ 100 outputs are printed at equal intervals, and run statistics 
+ are printed at the end.
+---------------------------------------------------------------*/
+
+/* Header files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-
-#include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <cvode/cvode_band.h>        /* prototype for CVBand */
-#include <sundials/sundials_band.h>  /* definitions of type DlsMat and macros */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
+#include <cvode/cvode.h>
+#include <nvector/nvector_serial.h>
+#include <cvode/cvode_band.h>
+#include <sundials/sundials_band.h>
+#include <sundials/sundials_types.h>
 
 /* accessor macros between (x,v) location and 1D NVector array */
 #define IDX(x,v) (3*(x)+v)
@@ -56,7 +54,6 @@
 /* constants */
 #define ONE (RCONST(1.0))
 #define TWO (RCONST(2.0))
-
 
 /* user data structure */
 typedef struct {  
@@ -69,7 +66,6 @@ typedef struct {
   realtype dw;   /* diffusion coeff for w   */
   realtype ep;   /* stiffness parameter     */
 } *UserData;
-
 
 
 /* User-supplied Functions Called by the Solver */
@@ -85,10 +81,9 @@ static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata);
 static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata);
 
 
-
 /* Main Program */
-int main()
-{
+int main() {
+
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
   realtype Tf = RCONST(10.0);
@@ -113,28 +108,24 @@ int main()
   udata = (UserData) malloc(sizeof(*udata));
   if (check_flag((void *)udata, "malloc", 2)) return(1);
 
-  /* read problem parameter and tolerances from input file:
+  /* read problem parameters from input file:
      N - number of spatial discretization points
      a - constant forcing on u
      b - steady-state value of w
      du - diffusion coefficient for u
      dv - diffusion coefficient for v
      dw - diffusion coefficient for w
-     ep - stiffness parameter
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  double a, b, du, dv, dw, ep, reltol, abstol;
+     ep - stiffness parameter */
+  double a, b, du, dv, dw, ep;
   FILE *FID;
   FID=fopen("input_brusselator1D.txt","r");
-  fscanf(FID,"  N = %li\n", &N);
-  fscanf(FID,"  a = %lf\n", &a);
-  fscanf(FID,"  b = %lf\n", &b);
-  fscanf(FID,"  du = %lf\n", &du);
-  fscanf(FID,"  dv = %lf\n", &dv);
-  fscanf(FID,"  dw = %lf\n", &dw);
-  fscanf(FID,"  ep = %lf\n", &ep);
-  fscanf(FID,"  reltol = %lf\n", &reltol);
-  fscanf(FID,"  abstol = %lf\n", &abstol);
+  flag = fscanf(FID,"  N = %li\n", &N);
+  flag = fscanf(FID,"  a = %lf\n", &a);
+  flag = fscanf(FID,"  b = %lf\n", &b);
+  flag = fscanf(FID,"  du = %lf\n", &du);
+  flag = fscanf(FID,"  dv = %lf\n", &dv);
+  flag = fscanf(FID,"  dw = %lf\n", &dw);
+  flag = fscanf(FID,"  ep = %lf\n", &ep);
   fclose(FID);
 
   /* store the inputs in the UserData structure */
@@ -149,6 +140,12 @@ int main()
   /* set total allocated vector length */
   NEQ = Nvar*udata->N;
 
+  /* set tolerances */
+  realtype reltol  = 1.0e-6;
+  realtype abstol  = 1.0e-10;
+  realtype reltol2 = reltol*1.0e-3;
+  realtype abstol2 = abstol*1.0e-3;
+
   /* Initial problem output */
   printf("\n1D Brusselator PDE test problem:\n");
   printf("    N = %li,  NEQ = %li\n", udata->N, NEQ);
@@ -157,16 +154,14 @@ int main()
   printf("    diffusion coefficients:  du = %g,  dv = %g,  dw = %g\n", 
 	 udata->du, udata->dv, udata->dw);
   printf("    reltol = %.1e,  abstol = %.1e\n\n", reltol, abstol);
-  realtype reltol2 = reltol*1.0e-3;
-  realtype abstol2 = abstol*1.0e-3;
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return 1;
   yerr = N_VNew_Serial(NEQ);
-  if (check_flag((void *)yerr, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)yerr, "N_VNew_Serial", 0)) return 1;
 
   /* set spatial mesh spacing */
   udata->dx = ONE/(N-1);
@@ -179,7 +174,7 @@ int main()
 
   /* Access data array for new NVector y */
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* Set initial conditions into y, ytrue */
   realtype pi = RCONST(4.0)*atan(ONE);
@@ -192,75 +187,75 @@ int main()
 
   /* Create serial vector masks for each solution component */
   umask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return 1;
   vmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return 1;
   wmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return 1;
 
   /* Set mask array values for each solution component */
   N_VConst(0.0, umask);
   data = N_VGetArrayPointer(umask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,0)] = ONE;
 
   N_VConst(0.0, vmask);
   data = N_VGetArrayPointer(vmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,1)] = ONE;
 
   N_VConst(0.0, wmask);
   data = N_VGetArrayPointer(wmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,2)] = ONE;
 
 
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return 1;
   cvtrue_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvtrue_mem, "CVodeCreate", 0)) return(1);
+  if (check_flag((void *)cvtrue_mem, "CVodeCreate", 0)) return 1;
   
   /* Call CVodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  if (check_flag(&flag, "CVodeInit", 1)) return 1;
   flag = CVodeInit(cvtrue_mem, f, T0, ytrue);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  if (check_flag(&flag, "CVodeInit", 1)) return 1;
   
   /* Call CVodeSetUserData to pass rdata to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) udata);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return 1;
   flag = CVodeSetUserData(cvtrue_mem, (void *) udata);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return 1;
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return 1;
   flag = CVodeSStolerances(cvtrue_mem, reltol2, abstol2);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return 1;
 
   /* Call CVBand to specify the CVBAND band linear solver */
   flag = CVBand(cvode_mem, NEQ, 4, 4);
-  if (check_flag(&flag, "CVBand", 1)) return(1);
+  if (check_flag(&flag, "CVBand", 1)) return 1;
   flag = CVBand(cvtrue_mem, NEQ, 4, 4);
-  if (check_flag(&flag, "CVBand", 1)) return(1);
+  if (check_flag(&flag, "CVBand", 1)) return 1;
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetBandJacFn(cvode_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return(1);
+  if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return 1;
   flag = CVDlsSetBandJacFn(cvtrue_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return(1);
+  if (check_flag(&flag, "CVDlsSetBandJacFn", 1)) return 1;
 
   /* Open output stream for results, access data arrays */
   FILE *UFID=fopen("bruss_u.txt","w");
   FILE *VFID=fopen("bruss_v.txt","w");
   FILE *WFID=fopen("bruss_w.txt","w");
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
@@ -370,19 +365,17 @@ int main()
   CVodeFree(&cvode_mem);
   CVodeFree(&cvtrue_mem);
 
-  return(0);
+  return 0;
 }
 
 
-/*
- *-------------------------------
- * Functions called by the solver
- *-------------------------------
- */
+/*------------------------------
+  Functions called by the solver
+ *------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
-static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
-{
+static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
+
   /* clear out ydot (to be careful) */
   N_VConst(0.0, ydot);
 
@@ -401,9 +394,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return 1;
   realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
   realtype uconst = du/dx/dx;
@@ -433,7 +426,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
   dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
 
-  return(0);
+  return 0;
 }
 
 
@@ -441,8 +434,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 static int Jac(long int M, long int mu, long int ml,
                realtype t, N_Vector y, N_Vector fy, 
                DlsMat J, void *user_data,
-               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-{
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+
   /* clear out Jacobian (to be careful) */
   SetToZero(J);
 
@@ -452,16 +445,16 @@ static int Jac(long int M, long int mu, long int ml,
   /* Fill in the Laplace matrix */
   if (LaplaceMatrix(ONE, J, udata)) {
     printf("Jacobian calculation error in calling LaplaceMatrix!\n");
-    return(1);
+    return 1;
   }
 
   /* Add in the Jacobian of the reaction terms matrix */
   if (ReactionJac(ONE, y, J, udata)) {
     printf("Jacobian calculation error in calling ReactionJac!\n");
-    return(1);
+    return 1;
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -472,8 +465,8 @@ static int Jac(long int M, long int mu, long int ml,
 
 /* Routine to compute the stiffness matrix from (L*y), scaled by the factor c.
    We add the result into Jac and do not erase what was already there */
-static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata)
-{
+static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata) {
+
   /* shortcut to number of intervals */
   long int N = udata->N;
 
@@ -496,22 +489,21 @@ static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata)
     BAND_ELEM(Jac,IDX(i,2),IDX(i+1,2)) += c*udata->dw/dx/dx;
   }
 
-  return(0);
+  return 0;
 }
 
 
 
 /* Routine to compute the Jacobian matrix from R(y), scaled by the factor c.
    We add the result into Jac and do not erase what was already there */
-static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
-{
+static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata) {
 
   /* shortcuts to number of intervals, background values */
   long int N  = udata->N;
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return 1;
 
   /* set shortcuts */
   long int i;
@@ -542,7 +534,7 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
 
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -553,17 +545,16 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
     opt == 1 means SUNDIALS function returns a flag so check if
              flag >= 0
     opt == 2 means function allocates memory so check if returned
-             NULL pointer  
-*/
-static int check_flag(void *flagvalue, char *funcname, int opt)
-{
+             NULL pointer  */
+static int check_flag(void *flagvalue, char *funcname, int opt) {
+
   int *errflag;
 
   /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -571,15 +562,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 

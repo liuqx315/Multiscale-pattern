@@ -81,28 +81,28 @@ cv_brusselator1D.exe : cv_brusselator1D.c
 ida_brusselator1D_FEM.exe : ida_brusselator1D_FEM.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_analytic.exe : ark_analytic.c 
+ark_analytic.exe : ark_analytic.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_analytic_sys.exe : ark_analytic_sys.c 
+ark_analytic_sys.exe : ark_analytic_sys.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_analytic_nonlin.exe : ark_analytic_nonlin.c 
+ark_analytic_nonlin.exe : ark_analytic_nonlin.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_brusselator.exe : ark_brusselator.c 
+ark_brusselator.exe : ark_brusselator.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_brusselator1D.exe : ark_brusselator1D.c 
+ark_brusselator1D.exe : ark_brusselator1D.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_heat1D.exe : ark_heat1D.c 
+ark_heat1D.exe : ark_heat1D.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_robertson.exe : ark_robertson.c 
+ark_robertson.exe : ark_robertson.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-ark_set_check.exe : ark_set_check.c 
+ark_set_check.exe : ark_set_check.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_bruss.exe : ark_bruss.f90

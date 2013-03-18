@@ -1,4 +1,1 @@
 lamda = -100.0
-reltol = 1.0e-6
-abstol = 1.0e-10
-
