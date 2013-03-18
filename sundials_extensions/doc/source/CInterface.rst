@@ -1560,7 +1560,8 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 10.
+   **Notes:** The default value is 10; set *mxhnil* to zero to specify
+   this default.
 
    A negative value indicates that no warning messages should be issued.
 
@@ -1833,7 +1834,8 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 7.
+   **Notes:** The default value is 7; set *maxnef* :math:`\le 0`
+   to specify this default.
 
 
 
@@ -1851,7 +1853,8 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 3.
+   **Notes:** The default value is 3; set *maxcor* :math:`\le 0`
+   to specify this default.
 
 
 
@@ -1870,11 +1873,12 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 10.  Upon each convergence failure,
+   **Notes:** The default value is 10; set *maxncf* :math:`\le 0`
+   to specify this default.  Upon each convergence failure,
    ARKode will first call the Jacobian setup routine and try again;
    if a convergence failure still occurs, the time step size is reduced
    by the factor `etacf` (set within
-   :c:func:`ARKodeSetAdaptivityConstants()`). 
+   :c:func:`ARKodeSetAdaptivityConstants()`).
 
 
 
@@ -1892,7 +1896,8 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 0.2.
+   **Notes:** The default value is 0.2; set *nlscoef* :math:`\le 0`
+   to specify this default.
 
 
 
