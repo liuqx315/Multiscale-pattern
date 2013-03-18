@@ -146,7 +146,7 @@ int main() {
   N_VDestroy_Serial(error);
   PcgFree(pcg_mem);
 
-  return(0);
+  return 0;
 }
 
 

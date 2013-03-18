@@ -1,51 +1,47 @@
-/* -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
- * -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Example problem:
- * 
- * The following is a simple example problem with analytical 
- * solution,
- *    dy/dt = A*y
- * where A = V*D*Vinv, 
- *      V = [1 -1 1; -1 2 1; 0 -1 2];
- *      Vinv = 0.25*[5 1 -3; 2 2 -2; 1 1 1];
- *      D = [-0.5 0 0; 0 -0.1 0; 0 0 lam];
- * where lam is a large negative number. The analytical solution to
- * this problem is 
- *   Y(t) = V*exp(D*t)*Vinv*Y0
- * for t in the interval [0.0, 0.05], with initial condition: 
- * y(0) = [1,1,1]'.
- * 
- * The stiffness of the problem is directly proportional to the 
- * value of "lamda", which is specified through an input file, along 
- * with the desired relative and absolute tolerances.  The value of
- * lamda should be negative to result in a well-posed ODE; for values
- * with magnitude larger than 100 the problem becomes quite stiff.
- *
- * In the example input file, we choose lamda = -100.
- * 
- * This program solves the problem with the BDF method,
- * Newton iteration with the CVDENSE dense linear solver, and a
- * user-supplied Jacobian routine.
- * Output is printed every 1.0 units of time (10 total).
- * Run statistics (optional outputs) are printed at the end.
- * -----------------------------------------------------------------*/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Example problem:
+ 
+ The following is a simple example problem with analytical 
+ solution,
+    dy/dt = A*y
+ where A = V*D*Vinv, 
+      V = [1 -1 1; -1 2 1; 0 -1 2];
+      Vinv = 0.25*[5 1 -3; 2 2 -2; 1 1 1];
+      D = [-0.5 0 0; 0 -0.1 0; 0 0 lam];
+ where lam is a large negative number. The analytical solution to
+ this problem is 
+   Y(t) = V*exp(D*t)*Vinv*Y0
+ for t in the interval [0.0, 0.05], with initial condition: 
+ y(0) = [1,1,1]'.
+ 
+ The stiffness of the problem is directly proportional to the 
+ value of "lamda", which is specified through an input file.  The 
+ value of lamda should be negative to result in a well-posed ODE; 
+ for values with magnitude larger than 100 the problem becomes 
+ quite stiff.
 
+ In the example input file, we choose lamda = -100.
+ 
+ This program solves the problem with the BDF method,
+ Newton iteration with the CVDENSE dense linear solver, and a
+ user-supplied Jacobian routine.
+ Output is printed every 1.0 units of time (10 total).
+ Run statistics (optional outputs) are printed at the end.
+---------------------------------------------------------------*/
+
+/* Header files */
 #include <stdio.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-
-#include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <cvode/cvode_dense.h>       /* prototype for CVDense */
-#include <sundials/sundials_dense.h> /* definitions DlsMat DENSE_ELEM */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
-
+#include <cvode/cvode.h>
+#include <nvector/nvector_serial.h>
+#include <cvode/cvode_dense.h>
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_types.h>
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -59,10 +55,9 @@ static int sol(realtype t, realtype lam, N_Vector y);
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C);
 
 
-
 /* Main Program */
-int main()
-{
+int main() {
+
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
   realtype Tf = RCONST(0.05);
@@ -76,20 +71,16 @@ int main()
   void *cvode_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
-     lamda  - problem stiffness parameter
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  double reltol_, abstol_, lamda_;
+     lamda  - problem stiffness parameter */
+  double lamda_;
   FILE *FID;
   FID=fopen("input_analytic_sys.txt","r");
-  fscanf(FID,"  lamda = %lf\n", &lamda_);
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
+  flag = fscanf(FID,"  lamda = %lf\n", &lamda_);
   fclose(FID);
 
-  /* convert the inputs to 'realtype' format */
-  realtype reltol = reltol_;
-  realtype abstol = abstol_;
+  /* set the tolerances, and convert the input to 'realtype' format */
+  realtype reltol = 1.0e-6;
+  realtype abstol = 1.0e-10;
   realtype lamda  = lamda_;
 
   /* Initial problem output */
@@ -101,9 +92,9 @@ int main()
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return 1;
 
   /* Initialize y to 0 */
   NV_Ith_S(y,0) = 1.0;
@@ -113,30 +104,30 @@ int main()
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return 1;
   
   /* Call CVodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  if (check_flag(&flag, "CVodeInit", 1)) return 1;
 
   /* Call CVodeSetUserData to pass lamda to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) &lamda);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return 1;
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return 1;
 
   /* Call CVDense to specify the CVDENSE dense linear solver */
   flag = CVDense(cvode_mem, NEQ);
-  if (check_flag(&flag, "CVDense", 1)) return(1);
+  if (check_flag(&flag, "CVDense", 1)) return 1;
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetDenseJacFn(cvode_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
+  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return 1;
 
   /* In loop, call CVode, print results, and test for error.
      Break out of loop when the final output time has been reached */
@@ -219,7 +210,7 @@ int main()
   /* Free integrator memory */
   CVodeFree(&cvode_mem);
 
-  return(0);
+  return 0;
 }
 
 
@@ -228,8 +219,8 @@ int main()
  *-------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
-static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
-{
+static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
+
   realtype *rdata = (realtype *) user_data;
   realtype lam = rdata[0];
   realtype y0 = NV_Ith_S(y,0);
@@ -261,14 +252,14 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   NV_Ith_S(ydot,1) = yd1;
   NV_Ith_S(ydot,2) = yd2;
 
-  return(0);
+  return 0;
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
-               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-{
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+
   realtype *rdata = (realtype *) user_data;
   realtype lam = rdata[0];
   DlsMat V  = NewDenseMat(3,3);
@@ -311,19 +302,19 @@ static int Jac(long int N, realtype t,
   /* J = D*Vi */
   if (dense_MM(D,Vi,J) != 0) {
     fprintf(stderr, "matmul error\n");
-    return(1);
+    return 1;
   }
 
   /* D = V*J [= V*D*Vi] */
   if (dense_MM(V,J,D) != 0) {
     fprintf(stderr, "matmul error\n");
-    return(1);
+    return 1;
   }
 
   /* J = D [= V*D*Vi] */
   DenseCopy(D, J);
 
-  return(0);
+  return 0;
 }
 
 
@@ -338,17 +329,16 @@ static int Jac(long int N, realtype t,
     opt == 1 means SUNDIALS function returns a flag so check if
              flag >= 0
     opt == 2 means function allocates memory so check if returned
-             NULL pointer  
-*/
-static int check_flag(void *flagvalue, char *funcname, int opt)
-{
+             NULL pointer  */
+static int check_flag(void *flagvalue, char *funcname, int opt) {
+
   int *errflag;
 
   /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -356,20 +346,21 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
+
 /* sol routine to compute the ODE solution y(t). */
-static int sol(realtype t, realtype lam, N_Vector y)
-{
+static int sol(realtype t, realtype lam, N_Vector y) {
+
   realtype y0, y1, y2;
   realtype x0 = 1.0, x1 = 1.0, x2 = 1.0;
 
@@ -398,16 +389,17 @@ static int sol(realtype t, realtype lam, N_Vector y)
   NV_Ith_S(y,1) = y1;
   NV_Ith_S(y,2) = y2;
 
-  return(0);
+  return 0;
 }
 
+
 /* DlsMat matrix-multiply utility routine: C = A*B. */
-static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
-{
+static int dense_MM(DlsMat A, DlsMat B, DlsMat C) {
+
   /* check for legal dimensions */
   if ((A->N != B->M) || (C->M != A->M) || (C->N != B->N)) {
     fprintf(stderr, "\n matmul error: dimension mismatch\n\n");
-    return(1);
+    return 1;
   }
     
   /* access data and extents */
@@ -428,8 +420,7 @@ static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
       for (k=0; k<l; k++) 
 	cdata[i][j] += adata[i][k] * bdata[k][j];
 
-  return(0);
-
+  return 0;
 }
 
 /*---- end of file ----*/

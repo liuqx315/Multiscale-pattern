@@ -23,3 +23,5 @@ predictor = 0
 msbp = 0
 maxcor = 8
 nlscoef = 0.0000001
+rtol = 1.e-6
+atol = 1.e-10

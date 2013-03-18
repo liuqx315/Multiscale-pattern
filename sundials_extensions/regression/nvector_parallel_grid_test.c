@@ -1,23 +1,22 @@
-/*************************************************************************
- * File        : nvector_parallel_grid_test.c                            *
- * Programmers : Daniel R. Reynolds @ SMU                                *
- * Version of  : 3 April 2012                                            *
- *-----------------------------------------------------------------------*
- * This testing routine is designed to exercise the parallel grid        *
- * NVector routines.                                                     *
- *************************************************************************/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ This testing routine is designed to exercise the parallel grid
+ NVector routines
+---------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_parallel_grid.h>
 #include <sundials/sundials_math.h>
 
 /* floating point "equality" comparison, failure update macro */
 #define FNEQ(a,b) ( fabs(a-b)/fabs(b) > 1.0e-15 )
-
 
 /* prototypes */
 int tester(MPI_Comm comm, long int ndim, long int *dim_len,
@@ -26,8 +25,8 @@ int tester(MPI_Comm comm, long int ndim, long int *dim_len,
 
 /* Outer testing routine -- note that all tests should have 
    data arrays with 100 total entries */
-int main(int argc, char *argv[]) 
-{
+int main(int argc, char *argv[]) {
+
   /* initialize MPI */
   MPI_Init(&argc, &argv);
   int nprocs, my_id;
@@ -226,15 +225,15 @@ int main(int argc, char *argv[])
   /* finalize MPI and return */
   MPI_Finalize();
 
-  return(0);
+  return 0;
 } 
 
 
 
 /* tester */
 int tester(MPI_Comm comm, long int ndim, long int *dim_len,
-	   long int *dim_alen, long int *dim_off, long int Forder) 
-{
+	   long int *dim_alen, long int *dim_off, long int Forder) {
+
   /* initialize success/failure flag */
   int failure = 0;
 

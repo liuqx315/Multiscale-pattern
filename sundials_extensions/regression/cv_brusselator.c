@@ -1,65 +1,60 @@
-/* -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
- * -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Example problem:
- * 
- * The following test simulates a brusselator problem from chemical 
- * kinetics.  This is an ODE system with 3 components, Y = [u,v,w], 
- * satisfying the equations,
- *    du/dt = a - (w+1)*u + v*u^2
- *    dv/dt = w*u - v*u^2
- *    dw/dt = (b-w)/ep - w*u
- * for t in the interval [0.0, 10.0], with initial conditions 
- * Y0 = [u0,v0,w0]. 
- * 
- * We have 3 different testing scenarios:
- *
- * Test 1:  u0=3.9,  v0=1.1,  w0=2.8,  a=1.2,  b=2.5,  ep=1.0e-5
- *    Here, all three components exhibit a rapid transient change 
- *    during the first 0.2 time units, followed by a slow and 
- *    smooth evolution.
- *
- * Test 2:  u0=1.2,  v0=3.1,  w0=3,  a=1,  b=3.5,  ep=5.0e-6
- *    Here, w experiences a fast initial transient, jumping 0.5 
- *    within a few steps.  All values proceed smoothly until 
- *    around t=6.5, when both u and v undergo a sharp transition, 
- *    with u increaseing from around 0.5 to 5 and v decreasing 
- *    from around 6 to 1 in less than 0.5 time units.  After this
- *    transition, both u and v continue to evolve somewhat 
- *    rapidly for another 1.4 time units, and finish off smoothly.
- *
- * Test 3:  u0=3,  v0=3,  w0=3.5,  a=0.5,  b=3,  ep=5.0e-4
- *    Here, all components undergo very rapid initial transients 
- *    during the first 0.3 time units, and all then proceed very 
- *    smoothly for the remainder of the simulation.
- *
- * These tests are selected within the input file (test = {1,2,3}), 
- * with the default set to test 2 in case the input is invalid.
- * Also in the input file, we allow specification of the desired 
- * relative and absolute tolerances.
- * 
- * This program solves the problem with the BDF method, using a
- * Newton iteration with the CVDENSE dense linear solver, and a
- * user-supplied Jacobian routine.
- *
- * 100 outputs are printed at equal intervals, and run statistics 
- * are printed at the end.
- * -----------------------------------------------------------------*/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Example problem:
+ 
+ The following test simulates a brusselator problem from chemical 
+ kinetics.  This is an ODE system with 3 components, Y = [u,v,w], 
+ satisfying the equations,
+    du/dt = a - (w+1)*u + v*u^2
+    dv/dt = w*u - v*u^2
+    dw/dt = (b-w)/ep - w*u
+ for t in the interval [0.0, 10.0], with initial conditions 
+ Y0 = [u0,v0,w0]. 
+ 
+ We have 3 different testing scenarios:
 
+ Test 1:  u0=3.9,  v0=1.1,  w0=2.8,  a=1.2,  b=2.5,  ep=1.0e-5
+    Here, all three components exhibit a rapid transient change 
+    during the first 0.2 time units, followed by a slow and 
+    smooth evolution.
+
+ Test 2:  u0=1.2,  v0=3.1,  w0=3,  a=1,  b=3.5,  ep=5.0e-6
+    Here, w experiences a fast initial transient, jumping 0.5 
+    within a few steps.  All values proceed smoothly until 
+    around t=6.5, when both u and v undergo a sharp transition, 
+    with u increaseing from around 0.5 to 5 and v decreasing 
+    from around 6 to 1 in less than 0.5 time units.  After this
+    transition, both u and v continue to evolve somewhat 
+    rapidly for another 1.4 time units, and finish off smoothly.
+
+ Test 3:  u0=3,  v0=3,  w0=3.5,  a=0.5,  b=3,  ep=5.0e-4
+    Here, all components undergo very rapid initial transients 
+    during the first 0.3 time units, and all then proceed very 
+    smoothly for the remainder of the simulation.
+
+ These tests are selected within the input file (test = {1,2,3}), 
+ with the default set to test 2 in case the input is invalid.
+ 
+ This program solves the problem with the BDF method, using a
+ Newton iteration with the CVDENSE dense linear solver, and a
+ user-supplied Jacobian routine.
+
+ 100 outputs are printed at equal intervals, and run statistics 
+ are printed at the end.
+---------------------------------------------------------------*/
+
+/* Header files */
 #include <stdio.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-#include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <cvode/cvode_dense.h>       /* prototype for CVDense */
-#include <sundials/sundials_dense.h> /* definitions DlsMat DENSE_ELEM */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
-
+#include <cvode/cvode.h>
+#include <nvector/nvector_serial.h>
+#include <cvode/cvode_dense.h>
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_types.h>
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -71,10 +66,9 @@ static int Jac(long int N, realtype t,
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
 
-
 /* Main Program */
-int main()
-{
+int main() {
+
   /* general problem parameters */
   realtype T0 = 0.0;
   realtype Tf = 10.0;
@@ -91,23 +85,18 @@ int main()
   void *cvtrue_mem = NULL;
 
   /* read problem parameter and tolerances from input file:
-     test   - test problem choice
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
+     test   - test problem choice */
   int test;
-  double reltol_, abstol_;
   FILE *FID;
   FID=fopen("input_brusselator.txt","r");
-  fscanf(FID,"  test = %i\n", &test);
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
+  flag = fscanf(FID,"  test = %i\n", &test);
   fclose(FID);
 
-  /* convert the inputs to 'realtype' format */
-  realtype reltol = reltol_;
-  realtype abstol = abstol_;
-  realtype reltol2 = reltol_*1.0e-3;
-  realtype abstol2 = abstol_*1.0e-3;
+  /* set the tolerances */
+  realtype reltol = 1.0e-6;
+  realtype abstol = 1.0e-10;
+  realtype reltol2 = reltol*1.0e-3;
+  realtype abstol2 = abstol*1.0e-3;
 
   /* set up the test problem according to the desired input */
   if (test == 1) {
@@ -145,9 +134,9 @@ int main()
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return 1;
 
   /* Set initial conditions into y, ytrue */
   NV_Ith_S(y,0) = u0;
@@ -160,42 +149,42 @@ int main()
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return 1;
   cvtrue_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvtrue_mem, "CVodeCreate", 0)) return(1);
+  if (check_flag((void *)cvtrue_mem, "CVodeCreate", 0)) return 1;
   
   /* Call CVodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  if (check_flag(&flag, "CVodeInit", 1)) return 1;
   flag = CVodeInit(cvtrue_mem, f, T0, ytrue);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  if (check_flag(&flag, "CVodeInit", 1)) return 1;
 
   /* Call CVodeSetUserData to pass rdata to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) rdata);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return 1;
   flag = CVodeSetUserData(cvtrue_mem, (void *) rdata);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return 1;
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return 1;
   flag = CVodeSStolerances(cvtrue_mem, reltol2, abstol2);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return 1;
 
   /* Call CVDense to specify the CVDENSE dense linear solver */
   flag = CVDense(cvode_mem, NEQ);
-  if (check_flag(&flag, "CVDense", 1)) return(1);
+  if (check_flag(&flag, "CVDense", 1)) return 1;
   flag = CVDense(cvtrue_mem, NEQ);
-  if (check_flag(&flag, "CVDense", 1)) return(1);
+  if (check_flag(&flag, "CVDense", 1)) return 1;
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetDenseJacFn(cvode_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
+  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return 1;
   flag = CVDlsSetDenseJacFn(cvtrue_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
+  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return 1;
 
   /* In loop, call CVode, print results, and test for error.
      Break out of loop when the final output time has been reached */
@@ -270,7 +259,7 @@ int main()
   CVodeFree(&cvode_mem);
   CVodeFree(&cvtrue_mem);
 
-  return(0);
+  return 0;
 }
 
 
@@ -279,9 +268,8 @@ int main()
  *-------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
+static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
-static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
-{
   realtype *rdata = (realtype *) user_data;
   realtype a  = rdata[0];
   realtype b  = rdata[1];
@@ -299,15 +287,15 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   /* dw/dt = (b-w)/ep - w*u */
   NV_Ith_S(ydot,2) = (b-w)/ep - w*u;
 
-  return(0);
+  return 0;
 }
 
-/* Jacobian routine to compute J(t,y) = df/dy. */
 
+/* Jacobian routine to compute J(t,y) = df/dy. */
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
-               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-{
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+
   realtype *rdata = (realtype *) user_data;
   realtype ep = rdata[2];
   realtype u = NV_Ith_S(y,0);
@@ -329,7 +317,7 @@ static int Jac(long int N, realtype t,
   DENSE_ELEM(J,2,1) = 0.0;
   DENSE_ELEM(J,2,2) = -1.0/ep - u;
 
-  return(0);
+  return 0;
 }
 
 
@@ -344,17 +332,16 @@ static int Jac(long int N, realtype t,
     opt == 1 means SUNDIALS function returns a flag so check if
              flag >= 0
     opt == 2 means function allocates memory so check if returned
-             NULL pointer  
-*/
-static int check_flag(void *flagvalue, char *funcname, int opt)
-{
+             NULL pointer  */
+static int check_flag(void *flagvalue, char *funcname, int opt) {
+
   int *errflag;
 
   /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -362,15 +349,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 
