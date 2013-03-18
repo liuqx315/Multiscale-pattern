@@ -48,9 +48,16 @@
 
 #include <arkode/arkode.h>           /* prototypes for ARKODE fcts., consts. */
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <arkode/arkode_band.h>        /* prototype for ARKBand */
-#include <sundials/sundials_band.h>  /* definitions of type DlsMat and macros */
+#include <arkode/arkode_band.h>      /* prototype for ARKBand */
+#include <arkode/arkode_spgmr.h>     /* prototype for ARKSpgmr */
+#include <arkode/arkode_spbcgs.h>    /* prototype for ARKSpbcg */
+#include <arkode/arkode_sptfqmr.h>   /* prototype for ARKSptfqmr */
 #include <sundials/sundials_types.h> /* definition of type realtype */
+
+#define NO_USE_ITERATIVE
+#define USE_SPGMR
+/* #define USE_SPBCG */
+/* #define USE_SPTFQMR */
 
 
 /* accessor macros between (x,v) location and 1D NVector array */
@@ -87,6 +94,10 @@ static int JacI(long int N, long int mu, long int ml,
                realtype t, N_Vector y, N_Vector fy, 
                DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int JacV(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		N_Vector fy, void *user_data, N_Vector tmp1);
+static int JacVI(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		 N_Vector fy, void *user_data, N_Vector tmp1);
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
@@ -100,7 +111,7 @@ int main()
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
   realtype Tf = RCONST(10.0);
-  int Nt = 100;
+  int Nt = 10;
   int Nvar = 3;
   UserData udata = NULL;
   realtype *data;
@@ -129,7 +140,7 @@ int main()
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
-  if (check_flag((void *)udata, "malloc", 2)) return(1);
+  if (check_flag((void *) udata, "malloc", 2)) return 1;
 
   /* read problem parameter and tolerances from input file:
      N - number of spatial discretization points
@@ -216,11 +227,11 @@ int main()
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *) ytrue, "N_VNew_Serial", 0)) return 1;
   yerr = N_VNew_Serial(NEQ);
-  if (check_flag((void *)yerr, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *) yerr, "N_VNew_Serial", 0)) return 1;
 
   /* set spatial mesh spacing */
   udata->dx = ONE/(N-1);
@@ -233,7 +244,7 @@ int main()
 
   /* Access data array for new NVector y */
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
 
   /* Set initial conditions into y, ytrue */
   realtype pi = RCONST(4.0)*atan(ONE);
@@ -246,35 +257,35 @@ int main()
 
   /* Create serial vector masks for each solution component */
   umask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *) umask, "N_VNew_Serial", 0)) return 1;
   vmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *) vmask, "N_VNew_Serial", 0)) return 1;
   wmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *) wmask, "N_VNew_Serial", 0)) return 1;
 
   /* Set mask array values for each solution component */
   N_VConst(0.0, umask);
   data = N_VGetArrayPointer(umask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,0)] = ONE;
 
   N_VConst(0.0, vmask);
   data = N_VGetArrayPointer(vmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,1)] = ONE;
 
   N_VConst(0.0, wmask);
   data = N_VGetArrayPointer(wmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,2)] = ONE;
 
 
   /* Call ARKodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   arkode_mem = ARKodeCreate();
-  if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return(1);
+  if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
   arktrue_mem = ARKodeCreate();
-  if (check_flag((void *)arktrue_mem, "ARKodeCreate", 0)) return(1);
+  if (check_flag((void *) arktrue_mem, "ARKodeCreate", 0)) return 1;
   
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
@@ -290,21 +301,21 @@ int main()
     printf("  Running in ImEx mode\n");
     flag = ARKodeInit(arkode_mem, fe, fi, T0, y);     break;
   }
-  if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
   /* Compute reference solution with default implicit method */
   flag = ARKodeInit(arktrue_mem, NULL, f, T0, ytrue);
-  if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
   
   /* Call ARKodeSetUserData to pass rdata to user functions */
   flag = ARKodeSetUserData(arkode_mem, (void *) udata);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
   flag = ARKodeSetUserData(arktrue_mem, (void *) udata);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
 
   /* Call ARKodeSet routines to insert solver parameters */
   if (order != 0) {     /* order overrides btable */
@@ -312,7 +323,7 @@ int main()
     flag = ARKodeSetOrder(arkode_mem, order);
     if (flag != 0) {
       fprintf(stderr,"Error in ARKodeSetOrder = %i\n",flag);
-      return(1);
+      return 1;
     }
   } else if (btable != -1) {
     if (imex == 1) {  
@@ -320,14 +331,14 @@ int main()
       flag = ARKodeSetERKTableNum(arkode_mem, btable);
       if (flag != 0) {
 	fprintf(stderr,"Error in ARKodeSetERKTableNum = %i\n",flag);
-	return(1);
+	return 1;
       }
     } else if (imex == 0) {  
       printf("  Setting IRK Table number = %i\n",btable);
       flag = ARKodeSetIRKTableNum(arkode_mem, btable);
       if (flag != 0) {
 	fprintf(stderr,"Error in ARKodeSetIRKTableNum = %i\n",flag);
-	return(1);
+	return 1;
       }
     } else if (imex == 2) {  
       int btable2;
@@ -338,7 +349,7 @@ int main()
       flag = ARKodeSetARKTableNum(arkode_mem, btable2, btable);
       if (flag != 0) {
 	fprintf(stderr,"Error in ARKodeSetARKTableNum = %i\n",flag);
-	return(1);
+	return 1;
       }
     }
   }
@@ -346,7 +357,7 @@ int main()
   flag = ARKodeSetDenseOrder(arkode_mem, dense_order);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetDenseOrder = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting adaptivity method = %i\n",adapt_method);
   printf("  Setting adaptivity params = %g %g %g %g %g %g %g %g %g\n",
@@ -356,44 +367,44 @@ int main()
   flag = ARKodeSetAdaptivityMethod(arkode_mem, adapt_method, adapt_params);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetAdaptMethod = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting adaptivity constants = %g %g %g %i\n",
 	 etamx1, etamxf, etacf, small_nef);
   flag = ARKodeSetAdaptivityConstants(arkode_mem, etamx1, etamxf, etacf, small_nef);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetAdaptConstants = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting Newton constants = %g %g\n", crdown, rdiv);
   flag = ARKodeSetNewtonConstants(arkode_mem, crdown, rdiv);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetNewtonConstants = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting LSetup constants = %g %i\n", dgmax, msbp);
   flag = ARKodeSetLSetupConstants(arkode_mem, dgmax, msbp);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetLSetupConstants = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting predictor method = %i\n", predictor);
   flag = ARKodeSetPredictorMethod(arkode_mem, predictor);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetPredictorMethod = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting max Newton iters = %i\n", maxcor);
   flag = ARKodeSetMaxNonlinIters(arkode_mem, maxcor);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetMaxNonlinIters = %i\n",flag);
-    return(1);
+    return 1;
   }
   printf("  Setting nonlinear solver coefficient = %g\n", nlscoef);
   flag = ARKodeSetNonlinConvCoef(arkode_mem, nlscoef);
   if (flag != 0) {
     fprintf(stderr,"Error in ARKodeSetMaxNonlinIters = %i\n",flag);
-    return(1);
+    return 1;
   }
 
   /* If (dense_order == -1), tell integrator to use tstop */
@@ -406,22 +417,56 @@ int main()
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
-  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
-  if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
   flag = ARKodeSStolerances(arktrue_mem, reltol2, abstol2);
-  if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* Call ARKBand to specify the ARKBAND band linear solver */
+  /* Specify the linear solver */
+#ifdef USE_ITERATIVE
+#ifdef USE_SPGMR
+  flag = ARKSpgmr(arkode_mem, 0, 500);
+  if (check_flag(&flag, "ARKSpgmr", 1)) return 1;
+  flag = ARKSpgmr(arktrue_mem, 0, 500);
+  if (check_flag(&flag, "ARKSpgmr", 1)) return 1;
+#endif
+#ifdef USE_SPBCG
+  flag = ARKSpbcg(arkode_mem, 0, 500);
+  if (check_flag(&flag, "ARKSpbcg", 1)) return 1;
+  flag = ARKSpbcg(arktrue_mem, 0, 500);
+  if (check_flag(&flag, "ARKSpbcg", 1)) return 1;
+#endif
+#ifdef USE_SPTFQMR
+  flag = ARKSptfqmr(arkode_mem, 0, 500);
+  if (check_flag(&flag, "ARKSptfqmr", 1)) return 1;
+  flag = ARKSptfqmr(arktrue_mem, 0, 500);
+  if (check_flag(&flag, "ARKSptfqmr", 1)) return 1;
+#endif
+#else
   flag = ARKBand(arkode_mem, NEQ, 4, 4);
-  if (check_flag(&flag, "ARKBand", 1)) return(1);
+  if (check_flag(&flag, "ARKBand", 1)) return 1;
   flag = ARKBand(arktrue_mem, NEQ, 4, 4);
-  if (check_flag(&flag, "ARKBand", 1)) return(1);
+  if (check_flag(&flag, "ARKBand", 1)) return 1;
+#endif
 
   /* Set the Jacobian routine to Jac (user-supplied) */
+#ifdef USE_ITERATIVE
+  switch (imex) {
+  case 0:         /* purely implicit */
+    flag = ARKSpilsSetJacTimesVecFn(arkode_mem, JacV);   break;
+  case 1:         /* purely explicit */
+    break;
+  default:        /* imex */
+    flag = ARKSpilsSetJacTimesVecFn(arkode_mem, JacVI);  break;
+  }
+  if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
+  flag = ARKSpilsSetJacTimesVecFn(arktrue_mem, JacV);
+  if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
+#else
   switch (imex) {
   case 0:         /* purely implicit */
     flag = ARKDlsSetBandJacFn(arkode_mem, Jac);   break;
@@ -430,16 +475,17 @@ int main()
   default:        /* imex */
     flag = ARKDlsSetBandJacFn(arkode_mem, JacI);  break;
   }
-  if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return(1);
+  if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return 1;
   flag = ARKDlsSetBandJacFn(arktrue_mem, Jac);
-  if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return(1);
+  if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return 1;
+#endif
 
   /* Open output stream for results, access data arrays */
   FILE *UFID=fopen("bruss_u.txt","w");
   FILE *VFID=fopen("bruss_v.txt","w");
   FILE *WFID=fopen("bruss_w.txt","w");
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
@@ -452,7 +498,7 @@ int main()
   /* Write all solver parameters to stdout */
   printf("\n");
   flag = ARKodeWriteParameters(arkode_mem, stdout);
-  if (check_flag(&flag, "ARKodeWriteParameters", 1)) return(1);
+  if (check_flag(&flag, "ARKodeWriteParameters", 1)) return 1;
 
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
@@ -512,7 +558,7 @@ int main()
     
 
   /* Print some final statistics */
-  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
+  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf, nli, nlcf, nJv;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
@@ -527,18 +573,33 @@ int main()
   check_flag(&flag, "ARKodeGetNumNonlinSolvIters", 1);
   flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
   check_flag(&flag, "ARKodeGetNumNonlinSolvConvFails", 1);
+#ifdef USE_ITERATIVE
+  flag = ARKSpilsGetNumLinIters(arkode_mem, &nli);
+  check_flag(&flag, "ARKSpilsGetNumLinIters", 1);
+  flag = ARKSpilsGetNumConvFails(arkode_mem, &nlcf);
+  check_flag(&flag, "ARKSpilsGetNumConvFails", 1);
+  flag = ARKSpilsGetNumJtimesEvals(arkode_mem, &nJv);
+  check_flag(&flag, "ARKSpilsGetNumJtimesEvals", 1);
+#else
   flag = ARKDlsGetNumJacEvals(arkode_mem, &nje);
   check_flag(&flag, "ARKDlsGetNumJacEvals", 1);
   flag = ARKDlsGetNumRhsEvals(arkode_mem, &nfeLS);
   check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
+#endif
 
   printf("\nFinal Solver Statistics:\n");
   printf("   Internal solver steps = %li (attempted = %li)\n", 
 	 nst, nst_a);
   printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
+#ifdef USE_ITERATIVE
+  printf("   Total linear iterations = %li\n", nli);
+  printf("   Total linear convergence failures = %li\n", nlcf);
+  printf("   Total J*v evaluations = %li\n", nJv);
+#else
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
+#endif
   printf("   Total number of Newton iterations = %li\n", nni);
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
@@ -563,7 +624,7 @@ int main()
   /* close solver diagnostics output file */
   fclose(DFID);
 
-  return(0);
+  return 0;
 }
 
 
@@ -594,9 +655,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) Ydata, "N_VGetArrayPointer", 0)) return 1;
   realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) dYdata, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
   realtype uconst = du/dx/dx;
@@ -626,7 +687,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
   dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
 
-  return(0);
+  return 0;
 }
 
 
@@ -648,9 +709,9 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) Ydata, "N_VGetArrayPointer", 0)) return 1;
   realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) dYdata, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
   realtype uconst = du/dx/dx;
@@ -680,7 +741,7 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
   dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
 
-  return(0);
+  return 0;
 }
 
 
@@ -701,9 +762,9 @@ static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) Ydata, "N_VGetArrayPointer", 0)) return 1;
   realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) dYdata, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
   realtype u, v, w;
@@ -730,7 +791,7 @@ static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
   dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
 
-  return(0);
+  return 0;
 }
 
 
@@ -749,16 +810,16 @@ static int Jac(long int M, long int mu, long int ml,
   /* Fill in the Laplace matrix */
   if (LaplaceMatrix(ONE, J, udata)) {
     printf("Jacobian calculation error in calling LaplaceMatrix!\n");
-    return(1);
+    return 1;
   }
 
   /* Add in the Jacobian of the reaction terms matrix */
   if (ReactionJac(ONE, y, J, udata)) {
     printf("Jacobian calculation error in calling ReactionJac!\n");
-    return(1);
+    return 1;
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -777,11 +838,156 @@ static int JacI(long int M, long int mu, long int ml,
   /* Add in the Jacobian of the reaction terms matrix */
   if (ReactionJac(ONE, y, J, udata)) {
     printf("Jacobian calculation error in calling ReactionJac!\n");
-    return(1);
+    return 1;
   }
 
-  return(0);
+  return 0;
 }
+
+
+/* Jacobian-vector product routine */
+static int JacV(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		N_Vector fy, void *user_data, N_Vector tmp1)
+{
+  /* problem data */
+  UserData udata = (UserData) user_data;
+  long int i, j, k, l;
+  long int N = udata->N;
+  realtype *V = N_VGetArrayPointer(v);
+  if (check_flag((void *) V, "N_VGetArrayPointer", 0)) return 1;
+  realtype *JV = N_VGetArrayPointer(Jv);
+  if (check_flag((void *) JV, "N_VGetArrayPointer", 0)) return 1;
+
+  /* Create Jacobian matrix using existing routines */
+  DlsMat J = NewBandMat(3*N, 4, 4, 4);
+  if (Jac(N, 4, 4, t, y, fy, J, user_data, tmp1, NULL, NULL)) {
+    printf("JacV error in calling Jac!\n");
+    return 1;
+  }
+
+  /* Perform matrix-vector product */
+  /*    initialize outputs to zero */
+  N_VConst(0.0, Jv);
+
+  /*    left-most output node */
+  i = 0; { 
+    j = i;                  /* input node (center) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      for (l=0; l<3; l++)   /* loop over input variables at that node */
+	JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,l)) * V[IDX(j,l)];
+
+    j = i+1;                /* input node (right) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+  }
+
+  /*    loop over interior output nodes */
+  for (i=1; i<N-1; i++) {
+    j = i-1;                /* input node (left) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+
+    j = i;                  /* input node (center) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      for (l=0; l<3; l++)   /* loop over input variables at that node */
+	JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,l)) * V[IDX(j,l)];
+
+    j = i+1;                /* input node (right) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+  }
+
+  /*    right-most output node */
+  i = N-1; {
+    j = i-1;                /* input node (left) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+
+    j = i;                  /* input node (center) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      for (l=0; l<3; l++)   /* loop over input variables at that node */
+	JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,l)) * V[IDX(j,l)];
+  }
+
+  /* clean up */
+  DestroyMat(J);
+
+  return 0;
+}
+
+
+
+/* Jacobian-vector product routine (implicit portion only) */
+static int JacVI(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		 N_Vector fy, void *user_data, N_Vector tmp1)
+{
+  /* problem data */
+  UserData udata = (UserData) user_data;
+  long int i, j, k, l;
+  long int N = udata->N;
+  realtype *V = N_VGetArrayPointer(v);
+  if (check_flag((void *) V, "N_VGetArrayPointer", 0)) return 1;
+  realtype *JV = N_VGetArrayPointer(Jv);
+  if (check_flag((void *) JV, "N_VGetArrayPointer", 0)) return 1;
+
+  /* Create Jacobian matrix using existing routines */
+  DlsMat J = NewBandMat(3*N, 4, 4, 4);
+  if (JacI(N, 4, 4, t, y, fy, J, user_data, tmp1, NULL, NULL)) {
+    printf("JacV error in calling Jac!\n");
+    return 1;
+  }
+
+  /* Perform matrix-vector product */
+  /*    initialize outputs to zero */
+  N_VConst(0.0, Jv);
+
+  /*    left-most output node */
+  i = 0; { 
+    j = i;                  /* input node (center) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      for (l=0; l<3; l++)   /* loop over input variables at that node */
+	JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,l)) * V[IDX(j,l)];
+
+    j = i+1;                /* input node (right) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+  }
+
+  /*    loop over interior output nodes */
+  for (i=1; i<N-1; i++) {
+    j = i-1;                /* input node (left) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+
+    j = i;                  /* input node (center) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      for (l=0; l<3; l++)   /* loop over input variables at that node */
+	JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,l)) * V[IDX(j,l)];
+
+    j = i+1;                /* input node (right) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+  }
+
+  /*    right-most output node */
+  i = N-1; {
+    j = i-1;                /* input node (left) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,k)) * V[IDX(j,k)];
+
+    j = i;                  /* input node (center) */
+    for (k=0; k<3; k++)     /* loop over output variables at this node */
+      for (l=0; l<3; l++)   /* loop over input variables at that node */
+	JV[IDX(i,k)] += BAND_ELEM(J,IDX(i,k),IDX(j,l)) * V[IDX(j,l)];
+  }
+
+  /* clean up */
+  DestroyMat(J);
+
+  return 0;
+}
+
+
 
 
 
@@ -815,7 +1021,7 @@ static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata)
     BAND_ELEM(Jac,IDX(i,2),IDX(i+1,2)) += c*udata->dw/dx/dx;
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -830,7 +1036,7 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *) Ydata, "N_VGetArrayPointer", 0)) return 1;
 
   /* set shortcuts */
   long int i;
@@ -861,7 +1067,7 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
 
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -882,7 +1088,7 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -890,15 +1096,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 
