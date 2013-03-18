@@ -165,18 +165,18 @@ Completed components:
 [X] Fix Fortran interface to properly handle user-supplied dense
     Jacobian functions.  C side uses the same user-supplied functions
     for both internal and Lapack solvers, but Fortran does not.
+[X] Track down problem with using iterative solvers with ARKode.  See
+    what the problem is when using a user-supplied J*v routine as
+    opposed to the difference-quotient routine.
+[X] Add stubs for PCG solver as one of the available ARKode linear
+    solvers, and convert an existing test problem to use it.
 
 
 
 Remaining components to build:
-[ ] Track down problem with using iterative solvers with ARKode.  See
-    what the problem is when using a user-supplied J*v routine as
-    opposed to the difference-quotient routine.
 [ ] Clean up documentation system for how a user should tell ARKode
     about his J*v function (and other optional user-supplied
     functions).
-[ ] Add stubs for PCG solver as one of the available ARKode linear
-    solvers, and convert an existing test problem to use it.
 [ ] Update step size logic to handle the case of backwards integration
     (negative h values).
 [ ] Ensure that everything is set up so that a user must only perform
@@ -208,9 +208,10 @@ Remaining components to build:
     the total real/integer work length estimates in ARKodeCreate.  For
     example, ark_fcur is only used in root-finding, so maybe we could
     instead use ark_ftemp in those routines?
-[ ] User-defined operator M : R^n -> R^n, and logic to account for
-    this in step solution & embedding.  Update time step
-    solution/embedding routine to now do solves to compute these.
+[ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
+    logic to account for this in step solution & embedding.  Update
+    time step solution/embedding routine to now do solves to compute
+    these. 
 [ ] Look into root-finding stuff.
 [ ] Move all fancy logic determination stuff that's currently located
     in specific solve routines (including linear solvers) to reside in
