@@ -26,7 +26,8 @@ defined as:
    };
 
 The ``_generic_N_Vector_Op``` structure is essentially a list of
-pointers to the various actual vector operations, and is defined as 
+function pointers to the various actual vector operations, and is
+defined as  
 
 .. code-block: c
 
@@ -70,8 +71,7 @@ module, namely ``N_VScale``, which performs the scaling of a vector
 
 .. code-block:: c
 
-   void N_VScale(realtype c, N_Vector x, N_Vector z) 
-   {
+   void N_VScale(realtype c, N_Vector x, N_Vector z) {
       z->ops->nvscale(c, x, z);
    }
 
@@ -209,7 +209,7 @@ below.
 
   Performs the operation ``z = ax + by``, where ``a`` and ``b`` are
   scalars and ``x`` and ``y`` are of type ``N_Vector``: :math:`z_i = a
-  x_i + b y_i, \; i=0,\ldots,n-1`. 
+  x_i + b y_i, \; i=1,\ldots,n`. 
 
 * N_VConst
 
@@ -218,7 +218,7 @@ below.
      N_VConst(c, z);
 
   Sets all components of the ``N_Vector`` ``z`` to ``c``: :math:`z_i =
-  c, \; i=0,\ldots,n-1`. 
+  c, \; i=1,\ldots,n`. 
 
 * N_VProd
 
@@ -228,7 +228,7 @@ below.
 
   Sets the ``N_Vector z`` to be the component-wise product of the 
   ``N_Vector`` inputs ``x`` and ``y``: :math:`z_i = x_i y_i, \;
-  i=0,\ldots,n-1`.
+  i=1,\ldots,n`.
 
 * N_VDiv
 
@@ -238,7 +238,7 @@ below.
 
   Sets the ``N_Vector`` ``z`` to be the component-wise ratio of the
   ``N_Vector`` inputs ``x`` and ``y``: :math:`z_i = x_i/y_i, \;
-  i=0,\ldots,n-1`.  The yi may not be tested for 0 values. It should
+  i=1,\ldots,n`.  The yi may not be tested for 0 values. It should
   only be called with a ``y`` that is guaranteed to have all nonzero
   components.  
 
@@ -249,7 +249,7 @@ below.
      N_VScale(c, x, z);
 
   Scales the ``N_Vector`` ``x`` by the scalar ``c`` and returns the
-  result in ``z``: :math:`z_i = c x_i, \; i=0,\ldots,n-1`.
+  result in ``z``: :math:`z_i = c x_i, \; i=1,\ldots,n`.
 
 * N_VAbs
 
@@ -259,7 +259,7 @@ below.
 
   Sets the components of the ``N_Vector`` ``z`` to be the absolute
   values of the components of the ``N_Vector`` ``x``: :math:`y_i =
-  |x_i|, \; i=0,\ldots,n-1`.
+  |x_i|, \; i=1,\ldots,n`.
 
 * N_VInv
 
@@ -269,8 +269,8 @@ below.
 
   Sets the components of the ``N_Vector`` ``z`` to be the inverses of
   the components of the ``N_Vector`` ``x``: :math:`z_i = 1.0/x_i, \;
-  i=0,\ldots,n-1`.  This routine may not check for division by 0. It
-  should be called only with an x which is guaranteed to have all
+  i=1,\ldots,n`.  This routine may not check for division by 0. It
+  should be called only with an ``x`` which is guaranteed to have all
   nonzero components.
 
 * N_VAddConst
@@ -281,7 +281,7 @@ below.
 
   Adds the scalar ``b`` to all components of ``x`` and returns the
   result in the ``N_Vector`` ``z``: :math:`z_i = x_i+b, \;
-  i=0,\ldots,n-1`.  
+  i=1,\ldots,n`.
 
 * N_VDotProd
 
@@ -290,7 +290,7 @@ below.
      d = N_VDotProd(x, y);
 
   Returns the value of the ordinary dot product of ``x`` and ``y``:
-  :math:`d = \sum_{i=0}^{n-1} x_i y_i`.
+  :math:`d = \sum_{i=1}^{n} x_i y_i`.
 
 * N_VMaxNorm
 
@@ -298,8 +298,8 @@ below.
 
      m = N_VMaxNorm(x);
 
-  Returns the maximum norm of the ``N_Vector x``: :math:`m = \max_i
-  |x_i|`.
+  Returns the maximum norm of the ``N_Vector x``: :math:`m =
+  \max_{1\le i\le n} |x_i|`.
 
 * N_VWrmsNorm
 
@@ -311,7 +311,7 @@ below.
   with weight vector ``w``: 
  
   .. math::
-     m = \left( \frac1n \sum_{i=0}^{n-1} \left(x_i w_i\right)^2\right)^{1/2}.  
+     m = \left( \frac1n \sum_{i=1}^{n} \left(x_i w_i\right)^2\right)^{1/2}.  
 
 * N_VWrmsNormMask
 
@@ -324,7 +324,7 @@ below.
   corresponding to nonzero elements of the ``N_Vector`` ``id``:
   
   .. math::
-     m = \left( \frac1n \sum_{i=0}^{n-1} \left(x_i w_i \text{sign}(id_i)\right)^2 \right)^{1/2}. 
+     m = \left( \frac1n \sum_{i=1}^{n} \left(x_i w_i \text{sign}(id_i)\right)^2 \right)^{1/2}. 
 
 * N_VMin
 
@@ -333,7 +333,7 @@ below.
      m = N_VMin(x);
 
   Returns the smallest element of the ``N_Vector x``: :math:`m =
-  \min_i x_i`.
+  \min_{1\le i\le n} x_i`.
 
 * N_VWl2Norm
 
@@ -345,7 +345,7 @@ below.
   x`` with weight vector ``w``: 
 
   .. math::
-     m = \left(\sum_{i=0}^{n-1}\left(x_i w_i\right)^2\right)^{1/2}.  
+     m = \left(\sum_{i=1}^{n}\left(x_i w_i\right)^2\right)^{1/2}.  
 
 * N_VL1Norm
 
@@ -353,7 +353,7 @@ below.
 
      m = N_VL1Norm(x);
 
-  Returns the :math:`l_1` norm of the ``N_Vector x``: :math:`m = \sum_{i=0}^{n-1} |x_i|`. 
+  Returns the :math:`l_1` norm of the ``N_Vector x``: :math:`m = \sum_{i=1}^{n} |x_i|`. 
 
 * N_VCompare
 
@@ -362,7 +362,7 @@ below.
      N_VCompare(c, x, z);
 
   Compares the components of the ``N_Vector x`` to the scalar ``c``
-  and returns an ``N_Vector z`` such that: 
+  and returns an ``N_Vector z`` such that for all :math:`1\le i\le n`,
 
   .. math::
      z_i = \begin{cases} 1.0 &\;\text{if}\; |x_i| \ge c,\\
@@ -376,7 +376,7 @@ below.
 
   Sets the components of the ``N_Vector`` ``z`` to be the inverses of
   the components of the ``N_Vector`` ``x``, with prior testing for
-  zero values: :math:z_i = 1.0/x_i, \; i=0,\ldots,n-1`.  This routine
+  zero values: :math:`z_i = 1.0/x_i, \; i=1,\ldots,n`.  This routine
   returns ``TRUE`` if all components of ``x`` are nonzero (successful
   inversion) and returns ``FALSE`` otherwise.
 
@@ -404,10 +404,10 @@ below.
 
      minq = N_VMinQuotient(n, d);
 
-  This routine returns the in ``minq`` the minimum of the quotients
-  obtained by termwise dividing :math:`n_i/d_i`. A zero element in
-  ``d`` will be skipped. If no such quotients are found, then the
-  large value ``BIG_REAL`` (defined in the header file
+  This routine returns in ``minq`` the minimum of the quotients
+  obtained by termwise dividing :math:`n_i/d_i, \; i=1,\ldots,n`. A
+  zero element in ``d`` will be skipped. If no such quotients are
+  found, then the large value ``BIG_REAL`` (defined in the header file 
   ``sundials_types.h``) is returned. 
 
 
@@ -478,7 +478,7 @@ version.
 * ``NV_Ith_S``
 
   This macro gives access to the individual components of the `data`
-  array of an ``N_Vector``. 
+  array of an ``N_Vector``, using standard 0-based C indexing. 
 
   The assignment ``r = NV_Ith_S(v,i)`` sets ``r`` to be the value of
   the ``i``-th component of ``v``. 

@@ -44,12 +44,12 @@ of the local truncation error, selection of step size, and
 interpolation to user output points, among other issues.  Although
 this module currently relies on a modified Newton solver for any
 implicit systems of equations it encounters, it has no knowledge of
-the method being used to solver the linear systems that arise.  For
+the method being used to solve the linear systems that arise.  For
 any given user problem, one of the linear system solver modules should
 be specified by the user, which is then invoked as needed during the
 integration process. 
 
-At present, the package includes the following eight ARKode linear
+At present, the package includes the following ARKode linear
 algebra modules, organized into two families.  The *direct* family of
 linear solvers provides methods for the direct solution of linear
 systems with dense or banded matrices and includes:

@@ -9,17 +9,17 @@ Providing Alternate Linear Solver Modules
 -------------------------------------------
 
 
-The central ARKode module interfaces with the linear solver module to
-be used by way of calls to four routines. These are denoted here by
+The central ARKode module interfaces with the linear solver module
+using calls to one of four routines. These are denoted here by
 :c:func:`linit()`, :c:func:`lsetup()`, :c:func:`lsolve()`, and
 :c:func:`lfree()`. Briefly, their purposes are as follows:
 
-* :c:func:`linit()`: initialize and allocate memory specific to the
+* :c:func:`linit()`: initializes and allocate memory specific to the
   linear solver; 
-* :c:func:`lsetup()`: evaluate and preprocess the Jacobian or
+* :c:func:`lsetup()`: evaluates and preprocesses the Jacobian or
   preconditioner; 
-* :c:func:`lsolve()`: solve the linear system;
-* :c:func:`lfree()`: free the linear solver memory.
+* :c:func:`lsolve()`: solves the linear system;
+* :c:func:`lfree()`: frees the linear solver memory.
 
 A linear solver module must also provide a user-callable specification
 routine (like those described in the section
@@ -28,7 +28,7 @@ routines to the main ARKode memory block. The ARKode memory block is a
 structure defined in the header file ``arkode_impl.h``. A pointer to
 such a structure is defined as the type ``ARKodeMem``. The four
 fields in a ``ARKodeMem`` structure that must point to the linear
-solver’s functions are ``ark_linit``, ``ark_lsetup``, ``ark_lsolve``,
+solver's functions are ``ark_linit``, ``ark_lsetup``, ``ark_lsolve``,
 and ``ark_lfree``, respectively. Note that of the four interface
 routines, only the :c:func:`lsolve()` routine is required. The
 :c:func:`lfree()` routine must be provided only if the solver
@@ -148,10 +148,11 @@ The type definition of :c:func:`lsolve()` is
 
 .. c:function:: typedef int (*lsolve)(ARKodeMem ark_mem, N_Vector b, N_Vector weight, N_Vector ycur, N_Vector fcur)
 
-   Solves the linear equation :math:`A x = b`, where :math:`A` is some
-   approximation to :math:`M - \gamma J`, :math:`J = \frac{\partial
-   f_I}{\partial y}(t_n, ycur)`, and the right-hand side vector
-   :math:`b` is input. Here :math:`\gamma` is available as
+   Solves the linear equation :math:`A x = b`, where :math:`A` arises
+   in the Newton iteration :eq:`Newton_system` and gives
+   some approximation to :math:`M - \gamma J`, :math:`J = \frac{\partial
+   f_I}{\partial y}(t_n, ycur)`.  Note, the right-hand side vector
+   :math:`b` is input, and :math:`\gamma` is available as
    ``ark_mem->ark_gamma``. 
 
    **Arguments:**
@@ -194,11 +195,11 @@ The type definition of :c:func:`lfree()` is
 Generic Linear Solvers in SUNDIALS
 -------------------------------------
 
-In this section, we describe five generic linear solver code modules
-that are included in ARKode, but which are of potential use as generic
-packages in themselves, either in conjunction with the use of ARKode
-or separately.  These generic linear solver modules in SUNDIALS are
-organized in two families of solvers, the DLS family, which includes
+In this section, we describe six generic linear solver code modules
+that are included in ARKode.  While these may be used in conjunction
+with ARKode, they may also be used separately as generic packages in
+themselves.  These generic linear solver modules in SUNDIALS are
+organized in two families of solvers, the DLS family, which includes 
 direct linear solvers appropriate for sequential computations; and the
 SPILS family, which includes scaled preconditioned iterative (Krylov)
 linear solvers. The solvers in each family share common data
@@ -214,9 +215,9 @@ generic linear solvers:
   specified through a matrix type (defined below) or as simple
   arrays. 
 
-Note that this family also includes the BLAS/LAPACK linear solvers
-(dense and band) available to the SUNDIALS solvers, but these are not
-discussed here. 
+We further note that this family also includes the BLAS/LAPACK linear
+solvers (dense and band) available to the SUNDIALS solvers, but these
+are not discussed here. 
 
 The :ref:`SPILS <LinearSolvers.SPILS>` family contains the following
 generic linear solvers: 
@@ -240,7 +241,7 @@ that work with a matrix type and the functions in the SPGMR, SPBCG,
 SPTFQMR and PCG modules are only summarized briefly, since they are less
 likely to be of direct use in connection with a SUNDIALS
 solver. However, the functions for dense matrices treated as simple
-arrays are fully described, because we expect that they will be 
+arrays are fully described, because we anticipate that they will be 
 useful in the implementation of preconditioners used with the
 combination of one of the SUNDIALS solvers and one of the SPILS linear 
 solvers. 
@@ -820,7 +821,7 @@ The nine files listed above can be extracted from the SUNDIALS
 ``srcdir`` and compiled by themselves into an SPGMR library or into a
 larger user code. 
 
-The following functions are available in the SPGMRpackage:
+The following functions are available in the SPGMR package:
 
 * ``SpgmrMalloc``: allocation of memory for ``SpgmrSolve``;
 * ``SpgmrSolve``: solution of :math:`Ax = b` by the SPGMR method;
@@ -886,9 +887,13 @@ The PCG module
 
 The PCG package, in the files ``sundials_pcg.h`` and
 ``sundials_pcg.c``, includes an implementation of the 
-preconditioned conjugate gradient method (symmetric
-linear systems only). For full details, including usage
-instructions, see the file ``sundials_pcg.h``.
+preconditioned conjugate gradient method.  We note that due to the
+requirement of symmetric linear systems for the conjugate gradient
+method, this solver should only be used for problems with symmetric
+linear operators.  Furthermore, aside from allowing a weight vector
+for computing weighted convergence norms, no variable or equation
+scaling is allowed for systems using this solver.  For full details,
+including usage instructions, see the file ``sundials_pcg.h``.
 
 The files needed to use the PCG module by itself are the same as for
 the SPGMR module, but with ``sundials_pcg.h`` and

@@ -42,7 +42,6 @@ For implicit and IMEX methods, the resulting nonlinear system is
 solved approximately at each integration step, using modified or
 inexact Newton methods. When used with the serial NVECTOR module
 in SUNDIALS, ARKode provides both direct (dense and band) and
-preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR) linear
-solvers. When used with the parallel NVECTOR module or a
-user-provided vector data structure, only the Krylov solvers are
-available.
+preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR, PCG) linear
+solvers. When used with the parallel NVECTOR module or a user-provided
+vector data structure, only the Krylov solvers are available.
