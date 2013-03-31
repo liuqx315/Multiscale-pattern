@@ -1,0 +1,283 @@
+Completed components:
+[X] Add an ark_mem integer member denoting the current stage
+[X] ARK nonlinear residual function.
+[X] Code to increment ark_nst_con counter when we experience a
+    convergence failure and need to take a smaller step.  The
+    code/logic may already be there in using ark_ncfn.  However,
+    consider whether this counter should differ at all from
+    ark_nst_con (I can't think of any difference at the moment).
+[X] Expand statistics to count, store and return fe and fi calls
+    separately.
+[X] Dense output evaluation routine, both for solution value and
+    derivatives.  From Hairer, Norsett & Wanner (pp 190-191), we can
+    build dense output of accuracy O(h^3) using the data {yn,yp,fn,fp}
+    via the Hermite cubic interpolant, 
+       y(tau) = (1-tau)*yn + tau*yp 
+              + tau*(tau-1)*((1-2*tau)(yp-yn) + (tau-1)*h*fn + tau*h*fp)
+    where 0\le tau\le 1 transitions us between tn and tp.  This is
+    O(h^3) for y, but only O(h^2) for y'.  If higher order accuracy is
+    desired, we may increase the order of the polynomial by evaluating
+    f at intermediate points, with argument as the interpolated
+    version of the function at the current order.  Each stage of this
+    will increase the order by 1, and all intermediate stages must be
+    chosen to be independent of one another.
+[X] Convert dense output order to a Set routine, so that default is 
+    always 3 unless otherwise specified.  Moreover, if it IS specified 
+    to be higher than 3, we could then allocate storage for fa and fb
+    in memory, along with a flag denoting whether these were current,
+    and if they are current then we don't need to evaluate them.
+[X] Predictor routine to store guesses in Fi array (since
+    that is only filled in after setting the initial guess).
+[X] Routine to calculate time step solution and embedding, along with 
+    time accuracy error estimate.
+[X] Code in InitialSetup routine to fill Fi array with initial
+    condition (trivial predictor) for stages in first step.
+[X] Routine to select appropriate Butcher table for the problem, given 
+    the relevant user-defined constraints.
+[X] Get routine to output the Butcher tables.
+[X] Set routine to manually choose a pre-existing Butcher table (by
+    number?, by name?) -- i.e. not user-supplied, and not the default
+    choice.
+[X] In all set routines, update code to allow specification of the
+    defaults through supplying zeros/NULL to the function.
+[X] Add more Butcher tables to complete our set for low-order methods.
+[X] Remove ark_bd data arrays since we're using a different form of
+    dense output.
+[X] Code to check Butcher tables -- this should check that ERK
+    and IRK tables share root & canopy nodes, that all necessary
+    coefficients are defined.  This should be called inside
+    ARKInitialSetup.
+[X] Create Newton solver for stage systems that uses clearly-named
+    arrays, etc., as opposed to shortcut names to unintelligible
+    temporary arrays.
+[X] Build a new linear solver (ARKLs) to directly tackle the stage
+    solves; call this when the user has specified that the system is
+    linear (so J only needs to be set up at changes to the time step
+    size).  Consider calling this to handle calculation of the updated 
+    solution and embedding when M != I (of course, this would mean
+    that I only allow linear operators for M, but that's a reasonable
+    restriction). 
+[X] Code to fill in values for last successful step: tnew, hold, yold,
+    ynew, fold, fnew.  For arrays, use pointer swap to omit need to
+    copy values from ynew to yold and fnew to fold.  Still do the copy
+    to fill ynew and fnew, since user may input y itself into code,
+    and pointer should remain fixed.
+[X] ARKCompleteStage routine, to evaluate Fe on current solution and
+    perform any other necessary cleanup operations.
+[X] ARKPredict2 routine to do stage prediction [to replace ARKPredict]: 
+    This can use dense output formulae and/or existing solution values
+    for prediction, depending on performance and/or time step sizes.
+[X] Consider removing integer parameter ark_smax_alloc, since I can
+    always check whether the N_Vector is NULL or not and
+    allocate/deallocate appropriately.
+[X] Create ARKStep2 routine to emulate ARKStep, repeating the process
+    for each internal stage.  Add code to always check the diagonal
+    value inside Ai.  If it's zero (ERK or ESDIRK) just declare
+    success (unless M != I).  If I just declare success, I should be
+    certain to still evaluate Fi at the "solution" of the stage, since
+    it would occur already within an implicit solve, and then I can
+    just trust that it is still available for subsequent stages.
+[X] Create ARKSet2 routine to set up data used in either the explicit
+    or implicit RK method for a given stage.  At the ith stage, we  
+    compute 
+       r = -zi + yn + h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) 
+                    + h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
+    so this routine should compute
+       gamma = h * Ai(i,i)
+       data = yn + h*sum_{j=0}^{i-1} [Ae(i,j)*Fe(j) + Ai(i,j)*Fi(j)]
+    and store these in ark_mem->ark_gamma and ark_mem->ark_Fe[i],
+    respectively.  All other gamma-related statistics should be
+    updated appropriately, as is done with the BDF approach.
+[X] Create ARKAdjustParams2 routine to do all of the same things as
+    for BDF method, but with all order changes removed.
+[X] Revise ARKStep and ARKNlsNewton to account for the fact that we
+    now store both ynew and tnew (the last accurate solution and when
+    it is valid), so we can just copy those instead of requiring us to
+    un-apply modifications that have been made to the last valid
+    solution.
+[X] Add code to ARKInitialSetup to fill in yold=ynew and fold=fnew
+    with values from initial condition so that they can be reused
+    later, both for dense output and for calculation of the initial h
+    value.
+[X] Update ARKHin to use ynew and fnew (already filled in by
+    ARKInitialSetup) in estimation of initial time step.
+[X] Check all linear solvers to ensure that they setup/solve the
+    correct system, and access all of the correct data out of ark_mem.
+[X] Replace ark_mem->ark_tq[4] with a different parameter to enforce
+    nonlinear and linear solver tolerances.  For now, since I do not
+    have a general and robust estimate for the actual local truncation
+    error (at least not until the end of the step), go ahead and use
+    the approach promoted by Hairer & Wanner.  Naming the new
+    parameter ark_mem->ark_eLTE (based on its role in CVODE, and our
+    eventual goal for its role in ARKODE), we should have
+        eLTE = nlscoef * (1 - crate),  if crate < 1, 
+    or 
+        eLTE = 0.1 * nlscoef,  otherwise.
+    Then the Newton solver test will use
+        dcon = del * min(1, crate) / eLTE
+    Similarly, the Krylov solver tolerance will use
+        s_deltar = s_eplifac * eLTE
+[X] Think about scenario in which the ARK method has first stage with
+    c[0] = 0.0 or last stage with c[s] = 1.0.  Since I need to fill in
+    fold and fnew for dense output and predictors, if their components
+    are already stored in Fe[0],Fi[0] or Fe[s],Fi[s] I could just copy
+    them instead of recomputing. 
+[X] Go through logic of when everything is updated, especially wrt the
+    predictor data (and if it's ever called after a failed step).
+[X] Ensure that after calling ARKodeReInit (and ark_nst is reset to
+    0), that none of the stuff I put into ARKInitialSetup will
+    backfire if called again.
+[?] Build a Matlab routine to check the analytical order of accuracy
+    and B-stability of a generic Butcher table.  Could even have a
+    routine that would evaluate the stability function for a variety
+    of h*lambda values to test for A-stability (and even L-stability).
+    [didn't I already do this?]
+[X] Currently, I use Fe for temporary storage of the stage RHS within
+    the solver.  Unfortunately, this will not exist for an
+    implicit-only problem.  Create a new array to use (call it
+    ark_sdata). 
+[X] Rename ark_zn[0] to ark_ycur, rename ark_zn[1] to ark_fcur (for
+    root-finding), and remove all references to other ark_zn[i].
+[X] Enable my solver and disable BDF solver.
+[X] Remove BDF code.
+[X] Insert calls to my ARKAdapt function wherever CVODE currently
+    decides on accuracy- or stability-based time step adaptivity
+    (these are currently located in ARKPrepareNextStep and ARKSetEta).
+[X] Get a simple DIRK example running in ARKode (actually, I got a lot
+    of DIRK examples running -- linear/nonlinear, scalar/vector,
+    fixed-h/adaptive-h).
+[X] Extend remaining example problems to using ARKode.
+[X] Clone example problems so that we have two versions: one for
+    automated optimization and regression testing, and the second as
+    an example for new users.
+[X] Test ERK and ARK methods.
+[X] Code to allow a change in the Butcher table, both to allow an
+    increased/decreased number of stages (no real issue for decrease,
+    don't even need to free the N_Vectors if I don't want to; need to
+    malloc the new vectors for an increase, though), and to do the
+    relevant checking/cleaning of the Butcher table, etc.
+[X] Added preconditioned conjugate gradient solver for solution of
+    symmetric linear systems.
+[X] Added ark_hadapt_hhist array (of the same length as
+    ark_hadapt_ehist) to store the step sizes used for the last 3
+    successful steps, to allow for more involved adaptivity
+    algorithms.
+[X] Fix Fortran interface to properly handle user-supplied dense
+    Jacobian functions.  C side uses the same user-supplied functions
+    for both internal and Lapack solvers, but Fortran does not.
+[X] Track down problem with using iterative solvers with ARKode.  See
+    what the problem is when using a user-supplied J*v routine as
+    opposed to the difference-quotient routine.
+[X] Add stubs for PCG solver as one of the available ARKode linear
+    solvers, and convert an existing test problem to use it.
+
+
+
+Remaining components to build:
+[ ] Clean up documentation system for how a user should tell ARKode
+    about his J*v function (and other optional user-supplied
+    functions).
+[ ] Update step size logic to handle the case of backwards integration
+    (negative h values).
+[ ] Ensure that everything is set up so that a user must only perform
+    communication preceding a call to *either* fI or fE (for an ImEx
+    problem), but not both.  It would be most useful is this preceded
+    fI, since that should be called more often throughout the solve.
+[ ] Begin tuning solver parameters for increased efficiency on all
+    test problems.
+[ ] Go through new and existing routines to determine whether we need
+    additional #define control constants, return values and error
+    messages; also prune out unused ones.
+[ ] Set up code to enable user-defined flag for a linearly-implicit
+    problem (only calls linear solver, etc.).  Already have
+    "ark_linear" boolean, just need to use it.
+[ ] Tighten tolerance for iterative linear solvers when running in
+    linearly implicit mode.
+[ ] Add a solver option and update linear solve routine for the
+    scenario that a problem depends linearly on y, but that the linear 
+    dependence changes as a function of time.  In this case, we must
+    call lsetup once prior to EVERY time step.
+[ ] If I need to use any currently-unused N_Vector operations, add
+    them to ARKCheckNvector routine.
+[ ] Determine if I need ark_acor at all.  CVODE uses it to estimate
+    the local truncation error, but it won't really help us out for
+    that purpose, and we may be able to reformulate implicit solver to
+    use one less vector if we don't need it.
+[ ] Create flowchart of which vectors are used when, and trim down
+    memory footprint by reusing some as temporary data.  Then update
+    the total real/integer work length estimates in ARKodeCreate.  For
+    example, ark_fcur is only used in root-finding, so maybe we could
+    instead use ark_ftemp in those routines?
+[ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
+    logic to account for this in step solution & embedding.  Update
+    time step solution/embedding routine to now do solves to compute
+    these. 
+[ ] Look into root-finding stuff.
+[ ] Move all fancy logic determination stuff that's currently located
+    in specific solve routines (including linear solvers) to reside in
+    a self-contained set of functions that ARKode provides.  Attach
+    these functions to linear solver data structures where relevant.
+[ ] Form corresponding nonlinear solver data structures that will
+    contain function pointers for logic arguments, nonlinear residual
+    calculations, tolerances, etc., and have Newton method use
+    information from that structure instead of calling items that are
+    hard-coded into ark_mem.
+
+
+
+
+
+Unknown/Questions:
+[ ] Code for customization of time accuracy norm?  Since SUNDIALS does 
+    not implement a general p-norm, I could swap between WRMS and WMax
+    norms, though the Wmax norm will require a bit of work (product
+    followed by max).  This might break all of our other heuristics,
+    especially since the nonlinear/linear solvers all use WRMS, so
+    maybe I should NOT do this?
+[ ] Code to select the best time step estimation method & parameters
+    for a specific method?  I don't actually know what this would be
+    for ERK, DIRK, ESDIRK, ARK, etc., but if I did then I should pick
+    the best.  Maybe I should build the functionality first, but leave
+    it disabled until after I can run exhaustive testing of the full
+    suite of implemented methods on a range of test problems?
+[ ] Code to perform automated explicit time step stability estimates.
+    This could be approximate, using a "random" vector and
+    approximating the Jacobian of Fe via finite differencing, and then
+    computing the Ritz quotient to estimate the largest eigenvalue.
+    Of course, since each ERK has a different stability region, maybe
+    some of that information should be included as well?  Also, if Fe
+    has complex eigenvalues, the Ritz quotient cannot output complex
+    values since it is the ratio of 2 real numbers.  What could I do
+    in that scenario?  Need to read up on this kind of thing: has it
+    been done before, what did they do, can I do it with the tools at
+    my disposal? 
+[ ] Consider changing logic for initial timestep estimate, since I
+    do not need to start the calculation with a 1st order method and
+    bootstrap my way up.
+[ ] Consider whether a non-identity matrix M will change how
+    preconditioning occurs, i.e. whether it disables either right or
+    left preconditioning.
+[ ] Update ARKSpilsAtimes function (and similar, e.g. arkDenseSetup) 
+    to accommodate a non-identity mass matrix.  This may also change 
+    how gamma/gammap are handled, since changes to gamma may have 
+    more/less effect with a non-identity mass matrix.  Think about 
+    this.
+[ ] Set up non-identity mass matrix infrastructure.  This should
+    include an option to state whether the mass matrix is symmetric or
+    not (or maybe just let the user choose the solver module for it
+    directly).
+[ ] Consider the possibility of estimating the actual local truncation
+    error (used in the nonlinear and linear solver tolerances) based
+    on results from the previous time step and an assumption that this
+    step will not deviate too much from the last.  It would be optimal
+    if this could relate to the deviation between the predictor and
+    corrector, since that is what Newton is actually solving for.
+    These differences could be measured at the end of one step to be
+    used in the next, and due to the varying efficacy of the predictor
+    for each stage, those tolerances could also be stored/set
+    separately for each stage. Moreover, if a time step fails the
+    accuracy test, these tolerances can be reduced for the next step
+    to acknowledge a change in the dynamics.
+[ ] Implement a new nonlinear solver that can allow for a full Newton
+    iteration instead of just the modified Newton iteration currently
+    present.
