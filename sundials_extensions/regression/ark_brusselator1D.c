@@ -366,7 +366,7 @@ int main()
   realtype t  = T0;
   realtype t2 = T0;
   realtype dTout = Tf/Nt;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u, v, w, uerr, verr, werr, errI=0.0, err2=0.0;
   printf("        t      ||u||_rms   ||v||_rms   ||w||_rms     ||uerr||      ||verr||      ||werr||\n");
   printf("   ---------------------------------------------------------------------------------------\n");

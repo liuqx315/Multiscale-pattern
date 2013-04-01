@@ -177,7 +177,7 @@ int main()
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype y0, y1, y2, yt0, yt1, yt2;
   realtype y0err, y1err, y2err, err2=0.0, errI=0.0;
   int Nt=0;
