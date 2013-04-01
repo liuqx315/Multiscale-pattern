@@ -163,7 +163,7 @@ int main()
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u, uerr, errI=0.0, err2=0.0;
   int Nt=0;
   printf("         t             u          error\n");
