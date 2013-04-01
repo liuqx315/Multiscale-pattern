@@ -223,7 +223,7 @@ int main() {
   realtype t  = T0;
   realtype t2 = T0;
   realtype dTout = Tf/Nt;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u, uerr, errI=0.0, err2=0.0;
   printf("        t      ||u||_rms    ||uerr||\n");
   printf("   ------------------------------------\n");

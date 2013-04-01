@@ -340,7 +340,7 @@ int main() {
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype dTout = Tf/Nt;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u, v, w;
   printf("        t      ||u||_rms   ||v||_rms   ||w||_rms\n");
   printf("   ----------------------------------------------\n");
