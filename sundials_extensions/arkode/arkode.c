@@ -250,6 +250,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_fe = fe;
   ark_mem->ark_fi = fi;
   ark_mem->ark_tn = t0;
+  ark_mem->ark_tnew = t0;
 
   /* Set step parameters */
   ark_mem->ark_hold  = ZERO;
@@ -362,6 +363,7 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_fe = fe;
   ark_mem->ark_fi = fi;
   ark_mem->ark_tn = t0;
+  ark_mem->ark_tnew = t0;
   
   /* Set step parameters */
   ark_mem->ark_hold  = ZERO;
