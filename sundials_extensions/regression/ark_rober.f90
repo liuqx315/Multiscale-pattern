@@ -40,8 +40,7 @@ program driver
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
-  !    ipar(2) -> imex flag
-  integer :: ipar(2)
+  integer :: ipar(1)
   real*8  :: rpar(1)
 
   ! solver parameters
@@ -61,8 +60,13 @@ program driver
   read(100,inputs)
   close(100)
   denseout = .true.
-  ipar(2) = imex
   if (dense_order == -1)  denseout = .false.
+
+  ! quit for ImEx or Explicit, since this requires fully implicit solve
+  if (imex /= 0) then
+     print *, 'ark_rober.f90 error: problem requires fully implicit solver'
+     stop
+  end if
 
   ! call problem setup routine, store relevant details
   call prob(fullnm, problm, type, neqn, ndisc, t, numjac, &
@@ -241,12 +245,9 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   ! temporary variables
   real*8 :: tmp(ipar(1))
 
-  ! if fully implicit call feval, otherwise call feval_i
-  if (ipar(2) == 0) then
-     call feval(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
-  else 
-     call feval_i(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
-  end if
+  ! fully implicit solver only, so just call feval
+  call feval(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
+
   ier = 0
   
 end subroutine farkifun
@@ -271,13 +272,8 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   ! temporary variables
   real*8 :: tmp(ipar(1))
 
-  ! if fully explicit call feval, otherwise call feval_e
-  if (ipar(2) == 1) then
-     call feval(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
-  else 
-     call feval_e(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
-  end if
-  ier = 0
+  ! fully implicit solver only, return error flag
+  ier = -1
   
 end subroutine farkefun
 !-----------------------------------------------------------------
@@ -298,12 +294,9 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
   real*8,  intent(out) :: DJac(neq,neq)
 
-  ! if fully implicit call jeval, otherwise call jeval_i
-  if (ipar(2) == 0) then
-     call jeval(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
-  else 
-     call jeval_i(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
-  end if
+  ! fully implicit only, call jeval
+  call jeval(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
+
   ier = 0
   
   
