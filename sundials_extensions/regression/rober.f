@@ -18,15 +18,9 @@ c     $Id: rober.F,v 1.2 2006/10/02 10:29:14 testset Exp $
 c
 c
 c     NOTE: Daniel R. Reynolds, January 2013
-c     This file has been modified from the original to create 
-c     operator-split versions of the feval and jeval routines, named 
-c     feval_e, feval_i and jeval_i corresponding to the explicit and 
-c     implicit components of the right-hand side function and the 
-c     Jacobian of the implicit RHS function.  
-c     
-c     In addition, the prob() routine has been modified to explicitly
-c     specify the length of the input arrays to remove all possibility
-c     of segmentation faults.
+c     This file has been modified from the original so that the prob() 
+c     routine explicitly specifies the length of the input arrays to 
+c     remove all possibility of segmentation faults.
 c
 c     All other routines remain untouched.
 c
@@ -120,28 +114,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine feval_e(neqn,t,y,yprime,f,ierr,rpar,ipar)
-      integer neqn,ierr,ipar(*)
-      double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
-
-      f(1) = -0.04d0*y(1)
-      f(2) = 0.04d0*y(1)
-      f(3) = 0.d0
-      
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine feval_i(neqn,t,y,yprime,f,ierr,rpar,ipar)
-      integer neqn,ierr,ipar(*)
-      double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
-
-      f(1) = 1.d4*y(2)*y(3)
-      f(2) = -1.d4*y(2)*y(3) - 3.d7*y(2)**2
-      f(3) = 3.d7*y(2)**2
-      
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine jeval(ldim,neqn,t,y,yprime,dfdy,ierr,rpar,ipar)
       integer ldim,neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),dfdy(ldim,neqn),rpar(*)
@@ -158,26 +130,6 @@ c-----------------------------------------------------------------------
       dfdy(1,2) = 1.d4*y(3)
       dfdy(1,3) = 1.d4*y(2)
       dfdy(2,1) = 0.04d0
-      dfdy(2,2) = -1.d4*y(3)-6.d7*y(2)
-      dfdy(2,3) = -1.d4*y(2)
-      dfdy(3,2) = 6.d7*y(2)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine jeval_i(ldim,neqn,t,y,yprime,dfdy,ierr,rpar,ipar)
-      integer ldim,neqn,ierr,ipar(*)
-      double precision t,y(neqn),yprime(neqn),dfdy(ldim,neqn),rpar(*)
-      integer i,j
-
-      do 20 j=1,neqn
-         do 10 i=1,neqn
-            dfdy(i,j)=0.d0
-   10    continue
-   20 continue
-
-      dfdy(1,2) = 1.d4*y(3)
-      dfdy(1,3) = 1.d4*y(2)
       dfdy(2,2) = -1.d4*y(3)-6.d7*y(2)
       dfdy(2,3) = -1.d4*y(2)
       dfdy(3,2) = 6.d7*y(2)

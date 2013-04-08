@@ -173,14 +173,34 @@ c-----------------------------------------------------------------------
       integer neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
 
-      double precision r,rp,lh,ls1,ls2,ls3,rg1,rg2,rg3,ri,rc,
-     +                 gamma,delta,pi,uin1
-      parameter (r=25d3,rp=50d0,lh=4.45d0,ls1=2d-3,ls2=5d-4,ls3=5d-4,
+      double precision c,cs,cp,r,rp,lh,ls1,ls2,ls3,rg1,rg2,rg3,ri,rc,
+     +                 gamma,delta,pi,
+     +                 uin1,uin2,ud1,ud2,ud3,ud4,qud1,qud2,qud3,qud4
+      parameter (c=1.6d-8,cs=2d-12,cp=1d-8,r=25d3,rp=50d0,
+     +           lh=4.45d0,ls1=2d-3,ls2=5d-4,ls3=5d-4,
      +           rg1=36.3d0,rg2=17.3d0,rg3=17.3d0,ri=5d1,rc=6d2,
      +           gamma=40.67286402d-9,delta=17.7493332d0,
      +           pi=3.141592653589793238462643383d0)
 
-      uin1  = 0.5d0*sin(2d3*pi*t)
+      uin1   = 0.5d0*sin(2d3*pi*t)
+      uin2   = 2d0*sin(2d4*pi*t)
+      ud1    = +y(3)-y(5)-y(7)-uin2
+      ud2    = -y(4)+y(6)-y(7)-uin2
+      ud3    = +y(4)+y(5)+y(7)+uin2
+      ud4    = -y(3)-y(6)+y(7)+uin2
+
+c     prevent overflow
+c      (double precision ieee .le. 1d304)
+      if (delta*max(ud1,ud2,ud3,ud4).gt.300d0) then
+         ierr = -1
+         return
+      endif
+
+      qud1   = gamma*(exp(delta*ud1)-1d0)
+      qud2   = gamma*(exp(delta*ud2)-1d0)
+      qud3   = gamma*(exp(delta*ud3)-1d0)
+      qud4   = gamma*(exp(delta*ud4)-1d0)
+
       f(1)  = 0.d0
       f(2)  = 0.d0
       f(3)  = 0.d0
@@ -204,17 +224,21 @@ c-----------------------------------------------------------------------
       integer neqn,ierr,ipar(*)
       double precision t,y(neqn),yprime(neqn),f(neqn),rpar(*)
 
-      double precision c,cs,cp,r,rp,gamma,delta,pi,
-     +                 uin2,ud1,ud2,ud3,ud4,qud1,qud2,qud3,qud4
+      double precision c,cs,cp,r,rp,lh,ls1,ls2,ls3,rg1,rg2,rg3,ri,rc,
+     +                 gamma,delta,pi,
+     +                 uin1,uin2,ud1,ud2,ud3,ud4,qud1,qud2,qud3,qud4
       parameter (c=1.6d-8,cs=2d-12,cp=1d-8,r=25d3,rp=50d0,
+     +           lh=4.45d0,ls1=2d-3,ls2=5d-4,ls3=5d-4,
+     +           rg1=36.3d0,rg2=17.3d0,rg3=17.3d0,ri=5d1,rc=6d2,
      +           gamma=40.67286402d-9,delta=17.7493332d0,
      +           pi=3.141592653589793238462643383d0)
 
-      uin2 = 2d0*sin(2d4*pi*t)
-      ud1  = +y(3)-y(5)-y(7)-uin2
-      ud2  = -y(4)+y(6)-y(7)-uin2
-      ud3  = +y(4)+y(5)+y(7)+uin2
-      ud4  = -y(3)-y(6)+y(7)+uin2
+      uin1   = 0.5d0*sin(2d3*pi*t)
+      uin2   = 2d0*sin(2d4*pi*t)
+      ud1    = +y(3)-y(5)-y(7)-uin2
+      ud2    = -y(4)+y(6)-y(7)-uin2
+      ud3    = +y(4)+y(5)+y(7)+uin2
+      ud4    = -y(3)-y(6)+y(7)+uin2
 
 c     prevent overflow
 c      (double precision ieee .le. 1d304)
