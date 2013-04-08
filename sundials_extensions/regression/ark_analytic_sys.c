@@ -122,7 +122,7 @@ int main()
   
   /* Call init_from_file helper routine to read and set solver parameters */
   realtype rtol, atol;
-  flag = init_from_file(arkode_mem, "solve_params.txt", f, fi, fe,
+  flag = init_from_file(arkode_mem, "solve_params.txt", f, fe, fi,
 			T0, y, &imex, &dense_order, &rtol, &atol);
   if (check_flag(&flag, "init_from_file", 1)) return 1;
   if (rtol <= 0.0)  rtol = 1.e-6;

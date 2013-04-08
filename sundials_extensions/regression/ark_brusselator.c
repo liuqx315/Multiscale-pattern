@@ -166,7 +166,7 @@ int main()
   
   /* Call init_from_file helper routine to read and set solver parameters */
   realtype rtol, atol;
-  flag = init_from_file(arkode_mem, "solve_params.txt", f, fi, fe,
+  flag = init_from_file(arkode_mem, "solve_params.txt", f, fe, fi,
 			T0, y, &imex, &dense_order, &rtol, &atol);
   if (check_flag(&flag, "init_from_file", 1)) return 1;
   if (rtol <= 0.0)  rtol = 1.e-6;
@@ -242,11 +242,15 @@ int main()
   realtype u, v, w, uerr, verr, werr, errI=0.0, err2=0.0;
   printf("        t           u           v           w        uerr          verr          werr\n");
   printf("   ---------------------------------------------------------------------------------------\n");
+  printf("  %10.6f  %10.6f  %10.6f  %10.6f  %12.5e  %12.5e  %12.5e\n", 
+	 t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2), 0.0, 0.0, 0.0);
   int iout;
   for (iout=0; iout<Nt; iout++) {
+
     if (!idense)
       flag = ARKodeSetStopTime(arktrue_mem, tout);
     flag = ARKode(arktrue_mem, tout, ytrue, &t2, ARK_NORMAL);
+    if (check_flag(&flag, "ARKode", 1)) break;
     if (!idense)
       flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
