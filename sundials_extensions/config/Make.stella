@@ -9,7 +9,7 @@ F90 = mpif90  # gnu
 #F90 = mpif90_intel
 
 # Fortran compile flags
-#FFLAGS = -p -g -O0 -ffpe-trap=invalid # gfortran 
+#FFLAGS = -g -O0 -ffpe-trap=invalid # gfortran 
 FFLAGS = -O2
 
 # SUNDIALS-specific preprocessor directives (F-to-C conversion)
@@ -21,7 +21,7 @@ CC = mpicc  # gnu
 #CC = mpicc_intel
 
 # C compile flags
-#CFLAGS = -p -g -O0 -Wall
+#CFLAGS = -g -O0 -Wall
 CFLAGS = -O2
 
 # Location of C standard header files (stdlib.h, etc.)
