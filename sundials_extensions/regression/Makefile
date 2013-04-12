@@ -33,6 +33,7 @@ TESTS = nvector_serial_test.exe \
         ark_brusselator1D.exe \
         ark_heat1D.exe \
         ark_robertson.exe \
+        ark_robertson_root.exe \
         ark_set_check.exe \
         ark_bruss.exe \
 	ark_emep.exe \
@@ -100,6 +101,9 @@ ark_heat1D.exe : ark_heat1D.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_robertson.exe : ark_robertson.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_robertson_root.exe : ark_robertson_root.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_set_check.exe : ark_set_check.c init_from_file.c
