@@ -233,8 +233,6 @@ typedef struct ARKodeMemRec {
 			   where the vector is named yout.                   */
   N_Vector ark_ycur;    /* ycur always holds the solver's current version of 
                            the solution */
-  N_Vector ark_fcur;    /* fcur holds the solver's current version of the 
-			   ODE RHS (used in root-finding) */
   N_Vector ark_acor;    /* In the context of the solution of the nonlinear
 			   equation, acor = y_n(m) - y_n(0). On return, 
 			   this vector is scaled to give the est. local err. */

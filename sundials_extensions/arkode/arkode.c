@@ -637,9 +637,9 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     ier = ARKInitialSetup(ark_mem);
     if (ier!= ARK_SUCCESS) return(ier);
     
-    /* Copy f(t0,y0) into ark_fcur */
-    if (!ark_mem->ark_explicit)
-      N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fcur);
+    /* Copy f(t0,y0) into ark_fold */
+    //    if (!ark_mem->ark_explicit)
+    N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
     
     /* Set initial h (from H0 or ARKHin). */
     ark_mem->ark_h = ark_mem->ark_hin;
@@ -677,10 +677,9 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
       }
     }
 
-    /* Scale fcur by h.*/
+    /* Set initial time step factors */
     ark_mem->ark_h0u    = ark_mem->ark_h;
     ark_mem->ark_hprime = ark_mem->ark_h;
-    N_VScale(ark_mem->ark_h, ark_mem->ark_fcur, ark_mem->ark_fcur);
 
     /* Check for zeros of root function g at and near t0. */
     if (ark_mem->ark_nrtfn > 0) {
@@ -1337,7 +1336,7 @@ static booleantype ARKCheckNvector(N_Vector tmpl)  /* to be updated?? */
 /*---------------------------------------------------------------
  ARKAllocVectors:
 
- This routine allocates the ARKODE vectors ewt, acor, ycur, fcur, 
+ This routine allocates the ARKODE vectors ewt, acor, ycur, 
  sdata, tempv, ftemp, fold, fnew, yold, and ynew.  If any of 
  these vectors already exist, they are left alone.  Otherwise, it
  will allocate each vector by cloning the input vector. If all 
@@ -1377,18 +1376,6 @@ static booleantype ARKAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
   if (ark_mem->ark_ycur == NULL) {
     ark_mem->ark_ycur = N_VClone(tmpl);
     if (ark_mem->ark_ycur == NULL) {
-      ARKFreeVectors(ark_mem);
-      return(FALSE);
-    } else {
-      ark_mem->ark_lrw += ark_mem->ark_lrw1;
-      ark_mem->ark_liw += ark_mem->ark_liw1;
-    }
-  }
-
-  /* Allocate fcur if needed */
-  if (ark_mem->ark_fcur == NULL) {
-    ark_mem->ark_fcur = N_VClone(tmpl);
-    if (ark_mem->ark_fcur == NULL) {
       ARKFreeVectors(ark_mem);
       return(FALSE);
     } else {
@@ -1599,12 +1586,6 @@ static void ARKFreeVectors(ARKodeMem ark_mem)
   if (ark_mem->ark_ycur != NULL) {
     N_VDestroy(ark_mem->ark_ycur);
     ark_mem->ark_ycur = NULL;
-    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
-    ark_mem->ark_liw -= ark_mem->ark_liw1;
-  }
-  if (ark_mem->ark_fcur != NULL) {
-    N_VDestroy(ark_mem->ark_fcur);
-    ark_mem->ark_fcur = NULL;
     ark_mem->ark_lrw -= ark_mem->ark_lrw1;
     ark_mem->ark_liw -= ark_mem->ark_liw1;
   }
@@ -3927,8 +3908,8 @@ static int ARKRootCheck1(ARKodeMem ark_mem)
   hratio = MAX(ark_mem->ark_ttol/ABS(ark_mem->ark_h), TENTH);
   smallh = hratio*ark_mem->ark_h;
   tplus = ark_mem->ark_tlo + smallh;
-  N_VLinearSum(ONE, ark_mem->ark_ycur, hratio,
-	       ark_mem->ark_fcur, ark_mem->ark_y);
+  N_VLinearSum(ONE, ark_mem->ark_ycur, smallh,
+	       ark_mem->ark_fold, ark_mem->ark_y);
   retval = ark_mem->ark_gfun(tplus, ark_mem->ark_y, ark_mem->ark_ghi, 
 			     ark_mem->ark_user_data);
   ark_mem->ark_nge++;
@@ -3972,17 +3953,24 @@ static int ARKRootCheck2(ARKodeMem ark_mem)
   realtype smallh, hratio, tplus;
   booleantype zroot;
 
+  /* return if no roots in previous step */
   if (ark_mem->ark_irfnd == 0) return(ARK_SUCCESS);
 
+  /* Set ark_y = y(tlo) */
   (void) ARKodeGetDky(ark_mem, ark_mem->ark_tlo, 0, ark_mem->ark_y);
+
+  /* Evaluate root-finding function: glo = g(tlo, y(tlo)) */
   retval = ark_mem->ark_gfun(ark_mem->ark_tlo, ark_mem->ark_y, 
 			     ark_mem->ark_glo, ark_mem->ark_user_data);
   ark_mem->ark_nge++;
   if (retval != 0) return(ARK_RTFUNC_FAIL);
 
+  /* reset root-finding flags (overall, and for specific eqns) */
   zroot = FALSE;
   for (i = 0; i < ark_mem->ark_nrtfn; i++) 
     ark_mem->ark_iroots[i] = 0;
+
+  /* for all active roots, check if glo_i == 0 to mark roots found */
   for (i = 0; i < ark_mem->ark_nrtfn; i++) {
     if (!ark_mem->ark_gactive[i]) continue;
     if (ABS(ark_mem->ark_glo[i]) == ZERO) {
@@ -3990,20 +3978,25 @@ static int ARKRootCheck2(ARKodeMem ark_mem)
       ark_mem->ark_iroots[i] = 1;
     }
   }
-  if (!zroot) return(ARK_SUCCESS);
+  if (!zroot) return(ARK_SUCCESS);  /* return if no roots */
 
   /* One or more g_i has a zero at tlo.  Check g at tlo+smallh. */
+  /*     set time tolerance */
   ark_mem->ark_ttol = (ABS(ark_mem->ark_tn) + 
 		       ABS(ark_mem->ark_h))*ark_mem->ark_uround*HUND;
+  /*     set tplus = tlo + smallh */
   smallh = (ark_mem->ark_h > ZERO) ? ark_mem->ark_ttol : -ark_mem->ark_ttol;
   tplus = ark_mem->ark_tlo + smallh;
+  /*     update ark_y with small explicit Euler step (if tplus is past tn) */
   if ( (tplus - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO) {
     hratio = smallh/ark_mem->ark_h;
-    N_VLinearSum(ONE, ark_mem->ark_y, hratio, 
-		 ark_mem->ark_fcur, ark_mem->ark_y);
+    N_VLinearSum(ONE, ark_mem->ark_y, smallh, 
+		 ark_mem->ark_fold, ark_mem->ark_y);
   } else {
+    /*   set ark_y = y(tplus) via interpolation */
     (void) ARKodeGetDky(ark_mem, tplus, 0, ark_mem->ark_y);
   }
+  /*     set ghi = g(tplus,y(tplus)) */
   retval = ark_mem->ark_gfun(tplus, ark_mem->ark_y, ark_mem->ark_ghi, 
 			     ark_mem->ark_user_data);
   ark_mem->ark_nge++;
