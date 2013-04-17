@@ -1602,7 +1602,7 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 0.0.  
+   **Notes:** Pass `hmin \le 0.0` to set the default value of 0.
 
 
 
@@ -1811,12 +1811,12 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** This function should return an estimate of the maximum stable
-   time step for the explicit portion of the IMEX system.  It is not
-   required, since accuracy-based adaptivity may be sufficient at
-   retaining stability, but this can be quite useful for problems
-   where the IMEX splitting may retain stiff components in
-   :math:`f_E(t,y)`. 
+   **Notes:** This function should return an estimate of the absolute
+   value of the maximum stable time step for the explicit portion of
+   the IMEX system.  It is not required, since accuracy-based
+   adaptivity may be sufficient at retaining stability, but this can
+   be quite useful for problems where the IMEX splitting may retain
+   stiff components in :math:`f_E(t,y)`. 
 
 
 
@@ -3440,7 +3440,8 @@ step, and the accuracy-based time step.
    **Arguments:**
       * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
       * `t` -- the current value of the independent variable
-      * `hstab` -- the output value with the maximum stable step size.
+      * `hstab` -- the output value with the absolute value of the
+ 	maximum stable step size. 
       * `user_data` -- a pointer to user data, the same as the
         `estab_data` parameter that was passed to :c:func:`ARKodeSetStabilityFn()`.
    
@@ -3449,8 +3450,8 @@ step, and the accuracy-based time step.
    successfully set the upcoming stable step size, and a non-zero
    value otherwise.
    
-   **Notes:**  If this function is not supplied, or if it returns `hstab =
-   0.0`, then ARKode will assume that there is no explicit
+   **Notes:**  If this function is not supplied, or if it returns
+   `hstab \le 0.0`, then ARKode will assume that there is no explicit
    stability restriction on the time step size.
 
 

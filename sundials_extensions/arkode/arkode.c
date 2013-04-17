@@ -3530,7 +3530,7 @@ static int ARKEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
 static int ARKAdapt(ARKodeMem ark_mem)
 {
   int ier;
-  realtype h_acc, h_cfl, safety;
+  realtype h_acc, h_cfl, safety, int_dir;
   safety = ark_mem->ark_hadapt_safety;
 
   /* Call algorithm-specific error adaptivity method */
@@ -3576,10 +3576,10 @@ static int ARKAdapt(ARKodeMem ark_mem)
     return (ARK_ILL_INPUT);
   }
 
+  /* determine direction of integration */
+  int_dir = ark_mem->ark_h / ABS(ark_mem->ark_h);
 
   /* Call explicit stability function */
-  /* TODO -- implement check for zero-valued h_cfl 
-     (that disables stability restriction) */
   ier = ark_mem->ark_expstab(ark_mem->ark_ycur, ark_mem->ark_tn,
 			     &h_cfl, ark_mem->ark_estab_data);
   if (ier != ARK_SUCCESS) {
@@ -3587,6 +3587,7 @@ static int ARKAdapt(ARKodeMem ark_mem)
 		    "Error in explicit stability function.");
     return (ARK_ILL_INPUT);
   }
+  if (h_cfl <= 0.0)  h_cfl = RCONST(1.0e30) * ABS(ark_mem->ark_h);
 
   /* Solver diagnostics reporting */
   if (ark_mem->ark_report) 
@@ -3597,28 +3598,28 @@ static int ARKAdapt(ARKodeMem ark_mem)
 
   /* enforce safety factors */
   h_acc *= safety;
-  h_cfl *= ark_mem->ark_hadapt_cfl;
+  h_cfl *= ark_mem->ark_hadapt_cfl * int_dir;
 
   /* enforce maximum bound on time step growth */
-  h_acc = MIN(h_acc, ark_mem->ark_etamax*ark_mem->ark_h);
+  h_acc = int_dir * MIN(ABS(h_acc), ABS(ark_mem->ark_etamax*ark_mem->ark_h));
 
   /* enforce minimum bound time step reduction */
-  h_acc = MAX(h_acc, ETAMIN*ark_mem->ark_h);
+  h_acc = int_dir * MAX(ABS(h_acc), ABS(ETAMIN*ark_mem->ark_h));
 
   /* Solver diagnostics reporting */
   if (ark_mem->ark_report) 
     fprintf(ark_mem->ark_diagfp, "%19.16g  %19.16g  ", h_acc, h_cfl);
 
   /* increment the relevant step counter, set desired step */
-  if (h_acc < h_cfl)
+  if (ABS(h_acc) < ABS(h_cfl))
     ark_mem->ark_nst_acc++;
   else
     ark_mem->ark_nst_exp++;
-  h_acc = MIN(h_acc, h_cfl);
+  h_acc = int_dir * MIN(ABS(h_acc), ABS(h_cfl));
 
   /* enforce adaptivity bounds to retain Jacobian/preconditioner accuracy */
-  if ( (h_acc > ark_mem->ark_h*ark_mem->ark_hadapt_lbound*ONEMSM) &&
-       (h_acc < ark_mem->ark_h*ark_mem->ark_hadapt_ubound*ONEPSM) )
+  if ( (ABS(h_acc) > ABS(ark_mem->ark_h*ark_mem->ark_hadapt_lbound*ONEMSM)) &&
+       (ABS(h_acc) < ABS(ark_mem->ark_h*ark_mem->ark_hadapt_ubound*ONEPSM)) )
     h_acc = ark_mem->ark_h;
 
   /* set basic value of ark_eta */
@@ -3816,8 +3817,9 @@ static int ARKAdaptImExGus(ARKodeMem ark_mem, realtype *hnew)
 ---------------------------------------------------------------*/
 int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *data)
 {
-  /* explicit stability not used by default, set to large value */
-  *hstab = RCONST(1.0e200);
+  /* explicit stability not used by default, 
+     set to zero to disable */
+  *hstab = RCONST(0.0);
 
   return(ARK_SUCCESS);
 }
@@ -3988,7 +3990,7 @@ static int ARKRootCheck2(ARKodeMem ark_mem)
   smallh = (ark_mem->ark_h > ZERO) ? ark_mem->ark_ttol : -ark_mem->ark_ttol;
   tplus = ark_mem->ark_tlo + smallh;
   /*     update ark_y with small explicit Euler step (if tplus is past tn) */
-  if ( (tplus - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO) {
+  if ( (tplus - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO ) {
     hratio = smallh/ark_mem->ark_h;
     N_VLinearSum(ONE, ark_mem->ark_y, smallh, 
 		 ark_mem->ark_fold, ark_mem->ark_y);

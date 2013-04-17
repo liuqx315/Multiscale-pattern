@@ -1042,18 +1042,20 @@ int ARKodeSetMinStep(void *arkode_mem, realtype hmin)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (hmin<0) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetMinStep", MSGARK_NEG_HMIN);
-    return(ARK_ILL_INPUT);
+  /* Passing a value <= 0 sets hmax = infinity */
+  if (hmin <= ZERO) {
+    ark_mem->ark_hmin = ZERO;
+    return(ARK_SUCCESS);
   }
 
+  /* check that hmin and hmax are agreeable */
   if (hmin * ark_mem->ark_hmax_inv > ONE) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetMinStep", MSGARK_BAD_HMIN_HMAX);
     return(ARK_ILL_INPUT);
   }
 
+  /* set the value */
   ark_mem->ark_hmin = hmin;
 
   return(ARK_SUCCESS);
@@ -1077,18 +1079,13 @@ int ARKodeSetMaxStep(void *arkode_mem, realtype hmax)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  if (hmax < 0) {
-    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetMaxStep", MSGARK_NEG_HMAX);
-    return(ARK_ILL_INPUT);
-  }
-
-  /* Passing 0 sets hmax = infinity */
-  if (hmax == ZERO) {
+  /* Passing a value <= 0 sets hmax = infinity */
+  if (hmax <= ZERO) {
     ark_mem->ark_hmax_inv = ZERO;
     return(ARK_SUCCESS);
   }
 
+  /* check that hmax and hmin are agreeable */
   hmax_inv = ONE/hmax;
   if (hmax_inv * ark_mem->ark_hmin > ONE) {
     ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
@@ -1096,6 +1093,7 @@ int ARKodeSetMaxStep(void *arkode_mem, realtype hmax)
     return(ARK_ILL_INPUT);
   }
 
+  /* set the value */
   ark_mem->ark_hmax_inv = hmax_inv;
 
   return(ARK_SUCCESS);

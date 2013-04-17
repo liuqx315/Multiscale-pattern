@@ -29,6 +29,7 @@ TESTS = nvector_serial_test.exe \
         ark_analytic.exe \
         ark_analytic_sys.exe \
         ark_analytic_nonlin.exe \
+        ark_analytic_nonlin_back.exe \
         ark_brusselator.exe \
         ark_brusselator1D.exe \
         ark_heat1D.exe \
@@ -89,6 +90,9 @@ ark_analytic_sys.exe : ark_analytic_sys.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_analytic_nonlin.exe : ark_analytic_nonlin.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_analytic_nonlin_back.exe : ark_analytic_nonlin_back.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_brusselator.exe : ark_brusselator.c init_from_file.c
