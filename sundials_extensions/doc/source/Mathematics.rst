@@ -841,8 +841,8 @@ IMEX Gustafsson controller
 An IMEX version of these two preceding controllers is available in
 ARKode.  This approach computes the estimates :math:`h'_1` arising from
 equation :eq:`expGus` and the estimate :math:`h'_2` arising from
-equation :eq:`impGus`, and selects :math:`h' = \min\left\{h'_1,
-h'_2\right\}`.  Here, equation :eq:`expGus` uses :math:`k_1` and
+equation :eq:`impGus`, and selects :math:`h' = \frac{h}{|h|}\min\left\{|h'_1|,
+|h'_2|\right\}`.  Here, equation :eq:`expGus` uses :math:`k_1` and
 :math:`k_2` with default values of 0.4 and 0.25, while equation
 :eq:`impGus` sets both parameters to the input :math:`k_3` that
 defaults to 0.95.  All three of these parameters may be modified with
@@ -858,7 +858,7 @@ Finally, ARKode allows the user to define their own time step
 adaptivity function,
 
 .. math::
-   h' = f(y, t, h_n, \varepsilon_n, \varepsilon_{n-1}, \varepsilon_{n-2}, q, p),
+   h' = g(y, t, h_n, h_{n-1}, h_{n-2}, \varepsilon_n, \varepsilon_{n-1}, \varepsilon_{n-2}, q, p),
 
 via a call to :c:func:`ARKodeSetAdaptivityFn()`.
 
@@ -895,21 +895,22 @@ predicted as one satisfying the Courant-Friedrichs-Lewy (CFL)
 stability condition,
 
 .. math::
-   h_{exp} < \frac{\Delta x}{\lambda}
+   |h_{exp}| < \frac{\Delta x}{|\lambda|}
 
 where :math:`\Delta x` is the spatial mesh size and :math:`\lambda` is
 the fastest advective wave speed.
 
 In the case that a user has supplied a routine to predict these
-explicitly stable step sizes, :math:`h_{exp}` is compared against that
-resulting from the local error adaptivity, :math:`h_{acc}`, and the
-step used by ARKode will satisfy 
+explicitly stable step sizes (by calling the function
+:c:func:`ARKodeSetStabilityFn()`), the value :math:`|h_{exp}|` is
+compared against that resulting from the local error adaptivity,
+:math:`|h_{acc}|`, and the step used by ARKode will satisfy 
 
 .. math::
-   h = \min\{c\, h_{exp},\, h_{acc}\},
+   h' = \frac{h}{|h|}\min\{c\, |h_{exp}|,\, |h_{acc}|\},
 
-where the explicit stability step factor :math:`c` may be modified
-throug the function :c:func:`ARKodeSetAdaptivityMethod()`, and has a
+where the explicit stability step factor :math:`c>0` may be modified
+through the function :c:func:`ARKodeSetAdaptivityMethod()`, and has a
 default value of :math:`1/2`.
 
 
