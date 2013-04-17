@@ -48,6 +48,8 @@ tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 
 tests2 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
 nsttol = 10;
 ovtol  = 0.05;
+rtol = 1.e-6;
+atol = 1.e-10;
 
 itot = 0
 ierr = 0
@@ -55,7 +57,7 @@ ierr = 0
 # run tests with base set of parameters to ensure everything runs
 sys.stdout.write("Base tests:")
 p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
 ark.write_parameter_file(p);
 iret = check_tests(tests,nsttol,ovtol);
 ierr += iret
@@ -66,7 +68,7 @@ ords = (2,3,4,5,6);
 for i in range(len(ords)):
     sys.stdout.write("ERK order %i tests:" % (ords[i]))
     p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
     ierr += iret
@@ -78,7 +80,7 @@ ords = (3,4,5);
 for i in range(len(ords)):
     sys.stdout.write("DIRK order %i tests:" % (ords[i]))
     p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
     ierr += iret
@@ -89,7 +91,7 @@ ords = (3,4,5);
 for i in range(len(ords)):
     sys.stdout.write("ARK order %i tests:" % (ords[i]))
     p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     iret = check_tests(tests2,nsttol,ovtol);
     ierr += iret
@@ -100,7 +102,7 @@ algs = (0,1,2,3,4,5);
 for i in range(len(algs)):
     sys.stdout.write("H-adaptivity method %i tests:" % (algs[i]))
     p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
     ierr += iret
@@ -111,7 +113,7 @@ algs = (0,1,2,3);
 for i in range(len(algs)):
     sys.stdout.write("Predictor method %i tests:" % (algs[i]))
     p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     iret = check_tests(tests,nsttol,ovtol);
     ierr += iret
