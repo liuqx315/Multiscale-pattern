@@ -12,7 +12,7 @@ class SolParams:
     """ Holds a set of solver parameters and its associated cost. """
     def __init__(self, cost, order, dense_order, imex, adapt_method, cflfac, safety, bias, 
                  growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, etamxf, etacf, 
-                 small_nef, crdown, rdiv, dgmax, predictor, msbp, maxcor, nlscoef):
+                 small_nef, crdown, rdiv, dgmax, predictor, msbp, maxcor, nlscoef, rtol, atol):
         self.cost = cost;
         self.order = order;
         self.dense_order = dense_order;
@@ -38,15 +38,17 @@ class SolParams:
         self.msbp = msbp;
         self.maxcor = maxcor;
         self.nlscoef = nlscoef;
+        self.rtol = rtol;
+        self.atol = atol;
     def WriteHeader(self):
-        print '   cost    q  dq  imx  adp  cfl   safe  bias  grow  h0l  h0b    k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  mxcr   nlsc'
+        print '   cost    q  dq  imx  adp  cfl   safe  bias  grow  h0l  h0b    k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  mxcr   nlsc   rtol   atol'
     def Write(self):
-        sys.stdout.write(" %f %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %.1e\n" % 
+        sys.stdout.write(" %f %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %.1e  %3.1f  %3.1f\n" % 
                          (self.cost, self.order, self.dense_order, self.imex, self.adapt_method, self.cflfac, 
                           self.safety, self.bias, self.growth, self.hfixed_lb, self.hfixed_ub, 
                           self.k1, self.k2, self.k3, self.etamx1, self.etamxf, self.etacf, 
                           self.small_nef, self.crdown, self.rdiv, self.dgmax, self.predictor,
-                          self.msbp, self.maxcor, self.nlscoef))
+                          self.msbp, self.maxcor, self.nlscoef, self.rtol, self.atol))
         #print ' ',self.cost,' ',self.order,' ',self.dense_order,' ',self.imex,' ',self.adapt_method,' ',self.cflfac,' ',self.safety,' ',self.bias,' ',self.growth,' ',self.hfixed_lb,' ',self.hfixed_ub,' ',self.k1,' ',self.k2,' ',self.k3,' ',self.etamx1,' ',self.etamxf,' ',self.etacf,' ',self.small_nef,' ',self.crdown,' ',self.rdiv,' ',self.dgmax,' ',self.predictor,' ',self.msbp,' ',self.maxcor,' ',self.nlscoef
 
 
@@ -146,6 +148,8 @@ def write_parameter_file(params):
     f.write("msbp = %i\n" % (params.msbp)) 
     f.write("maxcor = %i\n" % (params.maxcor)) 
     f.write("nlscoef = %f\n" % (params.nlscoef)) 
+    f.write("rtol = %f\n" % (params.rtol)) 
+    f.write("atol = %f\n" % (params.atol)) 
     f.close()
     
 

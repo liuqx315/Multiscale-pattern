@@ -73,7 +73,7 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
                      safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
                      k2, k3, etamx1, etamxf, etacf, small_nef, 
                      crdown, rdiv, dgmax, predictor, msbp, maxcor, 
-                     nlscoef, nsaved, tests, CM):
+                     nlscoef, nsaved, tests, CM, rtol, atol):
     """ This routine iterates over all possible combinations of  """
     """ solver parameters, storing 'nsaved' of them to return to """
     """ the calling routine.                                     """
@@ -106,7 +106,8 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
 
     # create parameter file of all defaults, set baseline cost
     p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, 
+                       rtol, atol);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);
     p.cost = 1.0;
@@ -149,7 +150,8 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
                                           small_nef[i12], crdown[i13], 
                                           rdiv[i14], dgmax[i15], 
                                           predictor[i16], msbp[i17], 
-                                          maxcor[i18], nlscoef[i19]);
+                                          maxcor[i18], nlscoef[i19], 
+                                          rtol, atol);
                          
                        # create parameter file 
                        ark.write_parameter_file(p);
@@ -200,7 +202,7 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
                           safety, biases, growth, hfixed_lb, hfixed_ub, k1vals, 
                           k2vals, k3vals, etamx1, etamxf, etacf, small_nef, 
                           crdown, rdiv, dgmax, predictor, msbpvals, maxcor, 
-                          nlscoef, nsaved, tests, CM, ntries):
+                          nlscoef, nsaved, tests, CM, rtol, atol, ntries):
     """ This routine performs a stochastic optimization over the """
     """ set of possible solver parameters.  Each input should be """ 
     """ an array of length 2, storing the bounds of allowed      """
@@ -210,7 +212,7 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
 
     # create parameter file of all defaults, set baseline cost
     p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);
     p.cost = 1.0
@@ -281,7 +283,7 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
         # create parameter object
         p = ark.SolParams(-1.0, order, dord, imex, hmeth, cfl, safe, bias, grow, 
                            hf_lb, hf_ub, k1, k2, k3, emx1, emxf, ecf, snef, crd, 
-                           rdv, dgmx, pred, msbp, mxcr, nlsc);
+                           rdv, dgmx, pred, msbp, mxcr, nlsc, rtol, atol);
                          
         # create parameter file 
         ark.write_parameter_file(p);

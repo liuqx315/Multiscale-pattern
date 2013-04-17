@@ -109,6 +109,8 @@ tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 
 tests2 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
 nsttol = 10;
 ovtol  = 0.05;
+rtol = 1.e-6;
+atol = 1.e-10;
 
 # open test results file
 now = datetime.today()
@@ -126,7 +128,7 @@ f.write("<br>Tests run on %i/%i/%i at %i:%i:%i<br>\n" % (now.month, now.day, now
 # run tests with base set of parameters to ensure everything runs
 test_string = "Base tests (defaults):"
 p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
 ark.write_parameter_file(p);
 pfile = outdir + "/solve_params-" + random_hash() + ".txt"
 shutil.copy("solve_params.txt", pfile)
@@ -138,7 +140,7 @@ ords = (2,3,4,5,6);
 for i in range(len(ords)):
     test_string = "ERK order %i tests:" % (ords[i])
     p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("solve_params.txt", pfile)
@@ -150,7 +152,7 @@ ords = (3,4,5);
 for i in range(len(ords)):
     test_string = "DIRK order %i tests:" % (ords[i])
     p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("solve_params.txt", pfile)
@@ -162,7 +164,7 @@ ords = (3,4,5);
 for i in range(len(ords)):
     test_string = "ARK order %i tests:" % (ords[i])
     p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("solve_params.txt", pfile)
@@ -174,7 +176,7 @@ algs = (0,1,2,3,4,5);
 for i in range(len(algs)):
     test_string = "H-adaptivity method %i tests:" % (algs[i])
     p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("solve_params.txt", pfile)
@@ -186,7 +188,7 @@ algs = (0,1,2,3);
 for i in range(len(algs)):
     test_string = "Predictor method %i tests:" % (algs[i])
     p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0);
+                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("solve_params.txt", pfile)
