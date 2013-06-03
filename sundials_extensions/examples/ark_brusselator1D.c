@@ -40,26 +40,18 @@
  are printed at the end.
 ---------------------------------------------------------------*/
 
+/* Header files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-
-#include <arkode/arkode.h>           /* prototypes for ARKODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <arkode/arkode_band.h>        /* prototype for ARKBand */
-#include <sundials/sundials_band.h>  /* definitions of type DlsMat and macros */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
+#include <arkode/arkode.h>
+#include <nvector/nvector_serial.h>
+#include <arkode/arkode_band.h>
+#include <sundials/sundials_band.h>
+#include <sundials/sundials_types.h>
 
 /* accessor macros between (x,v) location and 1D NVector array */
 #define IDX(x,v) (3*(x)+v)
-
-/* constants */
-#define ONE (RCONST(1.0))
-#define TWO (RCONST(2.0))
-
 
 /* user data structure */
 typedef struct {  
@@ -73,8 +65,6 @@ typedef struct {
   realtype ep;   /* stiffness parameter     */
 } *UserData;
 
-
-
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int Jac(long int N, long int mu, long int ml,
@@ -86,7 +76,6 @@ static int Jac(long int N, long int mu, long int ml,
 static int check_flag(void *flagvalue, char *funcname, int opt);
 static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata);
 static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata);
-
 
 
 /* Main Program */
@@ -111,7 +100,7 @@ int main()
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
-  if (check_flag((void *)udata, "malloc", 2)) return(1);
+  if (check_flag((void *)udata, "malloc", 2)) return 1;
 
   /* read problem parameter and tolerances from input file:
      N - number of spatial discretization points
@@ -164,10 +153,10 @@ int main()
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
 
   /* set spatial mesh spacing */
-  udata->dx = ONE/(N-1);
+  udata->dx = RCONST(1.0)/(N-1);
 
   /* output mesh to disk */
   FID=fopen("bruss_mesh.txt","w");
@@ -177,10 +166,10 @@ int main()
 
   /* Access data array for new NVector y */
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* Set initial conditions into y */
-  realtype pi = RCONST(4.0)*atan(ONE);
+  realtype pi = RCONST(4.0)*atan(RCONST(1.0));
   for (i=0; i<N; i++) {
     data[IDX(i,0)] =  a  + RCONST(0.1)*sin(pi*i*udata->dx);  /* u */
     data[IDX(i,1)] = b/a + RCONST(0.1)*sin(pi*i*udata->dx);  /* v */
@@ -189,67 +178,67 @@ int main()
 
   /* Create serial vector masks for each solution component */
   umask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return 1;
   vmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return 1;
   wmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return 1;
 
   /* Set mask array values for each solution component */
   N_VConst(0.0, umask);
   data = N_VGetArrayPointer(umask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  data[IDX(i,0)] = ONE;
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
+  for (i=0; i<N; i++)  data[IDX(i,0)] = RCONST(1.0);
 
   N_VConst(0.0, vmask);
   data = N_VGetArrayPointer(vmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  data[IDX(i,1)] = ONE;
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
+  for (i=0; i<N; i++)  data[IDX(i,1)] = RCONST(1.0);
 
   N_VConst(0.0, wmask);
   data = N_VGetArrayPointer(wmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
-  for (i=0; i<N; i++)  data[IDX(i,2)] = ONE;
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
+  for (i=0; i<N; i++)  data[IDX(i,2)] = RCONST(1.0);
 
 
   /* Call ARKodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   arkode_mem = ARKodeCreate();
-  if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return(1);
+  if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
   
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
-  if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
   
   /* Call ARKodeSetUserData to pass rdata to user functions */
   flag = ARKodeSetUserData(arkode_mem, (void *) udata);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
-  if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
   /* Call ARKBand to specify the ARKBAND band linear solver */
   flag = ARKBand(arkode_mem, NEQ, 4, 4);
-  if (check_flag(&flag, "ARKBand", 1)) return(1);
+  if (check_flag(&flag, "ARKBand", 1)) return 1;
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = ARKDlsSetBandJacFn(arkode_mem, Jac);
-  if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return(1);
+  if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return 1;
 
   /* Open output stream for results, access data arrays */
   FILE *UFID=fopen("bruss_u.txt","w");
   FILE *VFID=fopen("bruss_v.txt","w");
   FILE *WFID=fopen("bruss_w.txt","w");
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
@@ -263,7 +252,7 @@ int main()
      Break out of loop when the final output time has been reached */
   realtype t  = T0;
   realtype dTout = Tf/Nt;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u, v, w;
   printf("        t      ||u||_rms   ||v||_rms   ||w||_rms\n");
   printf("   ----------------------------------------------\n");
@@ -288,7 +277,7 @@ int main()
     fprintf(WFID,"\n");
 
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag == ARK_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }
@@ -345,7 +334,7 @@ int main()
   /* close solver diagnostics output file */
   fclose(DFID);
 
-  return(0);
+  return 0;
 }
 
 
@@ -376,9 +365,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return 1;
   realtype *dYdata = N_VGetArrayPointer(ydot);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
   realtype uconst = du/dx/dx;
@@ -394,13 +383,13 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w = Ydata[IDX(i,2)];  wl = Ydata[IDX(i-1,2)];  wr = Ydata[IDX(i+1,2)];
 
     /* u_t = du*u_xx + a - (w+1)*u + v*u^2 */
-    dYdata[IDX(i,0)] = (ul - TWO*u + ur)*uconst + a - (w+ONE)*u + v*u*u;
+    dYdata[IDX(i,0)] = (ul - RCONST(2.0)*u + ur)*uconst + a - (w+RCONST(1.0))*u + v*u*u;
 
     /* v_t = dv*v_xx + w*u - v*u^2 */
-    dYdata[IDX(i,1)] = (vl - TWO*v + vr)*vconst + w*u - v*u*u;
+    dYdata[IDX(i,1)] = (vl - RCONST(2.0)*v + vr)*vconst + w*u - v*u*u;
 
     /* w_t = dw*w_xx + (b-w)/ep - w*u */
-    dYdata[IDX(i,2)] = (wl - TWO*w + wr)*wconst + (b-w)/ep - w*u;
+    dYdata[IDX(i,2)] = (wl - RCONST(2.0)*w + wr)*wconst + (b-w)/ep - w*u;
 
   }
 
@@ -408,7 +397,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   dYdata[IDX(0,0)]   = dYdata[IDX(0,1)]   = dYdata[IDX(0,2)]   = 0.0;
   dYdata[IDX(N-1,0)] = dYdata[IDX(N-1,1)] = dYdata[IDX(N-1,2)] = 0.0;
 
-  return(0);
+  return 0;
 }
 
 
@@ -425,18 +414,18 @@ static int Jac(long int M, long int mu, long int ml,
   UserData udata = (UserData) user_data;
 
   /* Fill in the Laplace matrix */
-  if (LaplaceMatrix(ONE, J, udata)) {
+  if (LaplaceMatrix(RCONST(1.0), J, udata)) {
     printf("Jacobian calculation error in calling LaplaceMatrix!\n");
-    return(1);
+    return 1;
   }
 
   /* Add in the Jacobian of the reaction terms matrix */
-  if (ReactionJac(ONE, y, J, udata)) {
+  if (ReactionJac(RCONST(1.0), y, J, udata)) {
     printf("Jacobian calculation error in calling ReactionJac!\n");
-    return(1);
+    return 1;
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -463,15 +452,15 @@ static int LaplaceMatrix(realtype c, DlsMat Jac, UserData udata)
     BAND_ELEM(Jac,IDX(i,0),IDX(i-1,0)) += c*udata->du/dx/dx;
     BAND_ELEM(Jac,IDX(i,1),IDX(i-1,1)) += c*udata->dv/dx/dx;
     BAND_ELEM(Jac,IDX(i,2),IDX(i-1,2)) += c*udata->dw/dx/dx;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += -c*TWO*udata->du/dx/dx;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i,1)) += -c*TWO*udata->dv/dx/dx;
-    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += -c*TWO*udata->dw/dx/dx;
+    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += -c*RCONST(2.0)*udata->du/dx/dx;
+    BAND_ELEM(Jac,IDX(i,1),IDX(i,1)) += -c*RCONST(2.0)*udata->dv/dx/dx;
+    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += -c*RCONST(2.0)*udata->dw/dx/dx;
     BAND_ELEM(Jac,IDX(i,0),IDX(i+1,0)) += c*udata->du/dx/dx;
     BAND_ELEM(Jac,IDX(i,1),IDX(i+1,1)) += c*udata->dv/dx/dx;
     BAND_ELEM(Jac,IDX(i,2),IDX(i+1,2)) += c*udata->dw/dx/dx;
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -486,7 +475,7 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return 1;
 
   /* set shortcuts */
   long int i;
@@ -502,8 +491,8 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
     w = Ydata[IDX(i,2)];
 
     /* all vars wrt u */
-    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += c*(TWO*u*v-(w+ONE));
-    BAND_ELEM(Jac,IDX(i,1),IDX(i,0)) += c*(w - TWO*u*v);
+    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += c*(RCONST(2.0)*u*v-(w+RCONST(1.0)));
+    BAND_ELEM(Jac,IDX(i,1),IDX(i,0)) += c*(w - RCONST(2.0)*u*v);
     BAND_ELEM(Jac,IDX(i,2),IDX(i,0)) += c*(-w);
 
     /* all vars wrt v */
@@ -513,11 +502,11 @@ static int ReactionJac(realtype c, N_Vector y, DlsMat Jac, UserData udata)
     /* all vars wrt w */
     BAND_ELEM(Jac,IDX(i,0),IDX(i,2)) += c*(-u);
     BAND_ELEM(Jac,IDX(i,1),IDX(i,2)) += c*(u);
-    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += c*(-ONE/ep - u);
+    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += c*(-RCONST(1.0)/ep - u);
 
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -538,7 +527,7 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -546,15 +535,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 

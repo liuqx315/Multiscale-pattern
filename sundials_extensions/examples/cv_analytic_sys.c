@@ -34,18 +34,14 @@
  * Run statistics (optional outputs) are printed at the end.
  * -----------------------------------------------------------------*/
 
+/* Header files */
 #include <stdio.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-
-#include <cvode/cvode.h>             /* prototypes for CVODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <cvode/cvode_dense.h>       /* prototype for CVDense */
-#include <sundials/sundials_dense.h> /* definitions DlsMat DENSE_ELEM */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
-
+#include <cvode/cvode.h>
+#include <nvector/nvector_serial.h>
+#include <cvode/cvode_dense.h>
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_types.h>
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -56,7 +52,6 @@ static int Jac(long int N, realtype t,
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C);
-
 
 
 /* Main Program */
@@ -100,9 +95,9 @@ int main()
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(NEQ);
-  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)ytrue, "N_VNew_Serial", 0)) return 1;
 
   /* Initialize y to 0 */
   NV_Ith_S(y,0) = 1.0;
@@ -112,35 +107,35 @@ int main()
   /* Call CVodeCreate to create the solver memory and specify the 
      Backward Differentiation Formula and the use of a Newton iteration */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  if (check_flag((void *)cvode_mem, "CVodeCreate", 0)) return 1;
   
   /* Call CVodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = CVodeInit(cvode_mem, f, T0, y);
-  if (check_flag(&flag, "CVodeInit", 1)) return(1);
+  if (check_flag(&flag, "CVodeInit", 1)) return 1;
 
   /* Call CVodeSetUserData to pass lamda to user functions */
   flag = CVodeSetUserData(cvode_mem, (void *) &lamda);
-  if (check_flag(&flag, "CVodeSetUserData", 1)) return(1);
+  if (check_flag(&flag, "CVodeSetUserData", 1)) return 1;
 
   /* Call CVodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-  if (check_flag(&flag, "CVodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "CVodeSStolerances", 1)) return 1;
 
   /* Call CVDense to specify the CVDENSE dense linear solver */
   flag = CVDense(cvode_mem, NEQ);
-  if (check_flag(&flag, "CVDense", 1)) return(1);
+  if (check_flag(&flag, "CVDense", 1)) return 1;
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = CVDlsSetDenseJacFn(cvode_mem, Jac);
-  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return(1);
+  if (check_flag(&flag, "CVDlsSetDenseJacFn", 1)) return 1;
 
   /* In loop, call CVode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype y0, y1, y2;
   printf("      t        y0        y1        y2\n");
   printf("   --------------------------------------\n");
@@ -153,7 +148,7 @@ int main()
     printf("  %8.4f  %8.5f  %8.5f  %8.5f\n", t, y0, y1, y2);
 
     if (check_flag(&flag, "CVode", 1)) break;
-    if (flag == CV_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }
@@ -195,7 +190,7 @@ int main()
   /* Free integrator memory */
   CVodeFree(&cvode_mem);
 
-  return(0);
+  return 0;
 }
 
 
@@ -237,7 +232,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   NV_Ith_S(ydot,1) = yd1;
   NV_Ith_S(ydot,2) = yd2;
 
-  return(0);
+  return 0;
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
@@ -287,19 +282,19 @@ static int Jac(long int N, realtype t,
   /* J = D*Vi */
   if (dense_MM(D,Vi,J) != 0) {
     fprintf(stderr, "matmul error\n");
-    return(1);
+    return 1;
   }
 
   /* D = V*J [= V*D*Vi] */
   if (dense_MM(V,J,D) != 0) {
     fprintf(stderr, "matmul error\n");
-    return(1);
+    return 1;
   }
 
   /* J = D [= V*D*Vi] */
   DenseCopy(D, J);
 
-  return(0);
+  return 0;
 }
 
 
@@ -324,7 +319,7 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -332,15 +327,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 /* DlsMat matrix-multiply utility routine: C = A*B. */
@@ -349,7 +344,7 @@ static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
   /* check for legal dimensions */
   if ((A->N != B->M) || (C->M != A->M) || (C->N != B->N)) {
     fprintf(stderr, "\n matmul error: dimension mismatch\n\n");
-    return(1);
+    return 1;
   }
     
   /* access data and extents */
@@ -370,7 +365,7 @@ static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
       for (k=0; k<l; k++) 
 	cdata[i][j] += adata[i][k] * bdata[k][j];
 
-  return(0);
+  return 0;
 
 }
 

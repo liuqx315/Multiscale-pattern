@@ -1,39 +1,41 @@
-/* -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
- * -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Example problem:
- * 
- * The following is a simple example problem with analytical 
- * solution,
- *    dy/dt = lamda*y + 1/(1+t^2) - lamda*atan(t)
- * for t in the interval [0.0, 10.0], with initial condition: y=0. 
- * 
- * The stiffness of the problem is directly proportional to the 
- * value of "lamda", which is specified through an input file, along 
- * with the desired relative and absolute tolerances.  The value of
- * lamda should be negative to result in a well-posed ODE; for values
- * with magnitude larger than 100 the problem becomes quite stiff.
- *
- * In the example input file, we choose lamda = -100.
- * 
- * This program solves the problem with the DIRK method,
- * Newton iteration with the ARKDENSE dense linear solver, and a
- * user-supplied Jacobian routine.
- * Output is printed every 1.0 units of time (10 total).
- * Run statistics (optional outputs) are printed at the end.
- * -----------------------------------------------------------------*/
+/*---------------------------------------------------------------
+ $Revision: $
+ $Date: $
+-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+-----------------------------------------------------------------
+ Example problem:
+ 
+ The following test simulates the Robertson problem, 
+ corresponding to the kinetics of an autocatalytic reaction.  
+ This is an ODE system with 3 components, Y = [u,v,w], satisfying
+ the equations,
+    du/dt = -0.04*u + 1e4*v*w
+    dv/dt = 0.04*u - 1e4*v*w - 3e7*v^2
+    dw/dt = 3e7*v^2
+ for t in the interval [0.0, 1e11], with initial conditions 
+ Y0 = [1,0,0]. 
+ 
+ In the input file, input_robertson.txt, we allow specification 
+ of the desired relative and absolute tolerances.
+ 
+ This program solves the problem with one of the solvers, ERK, 
+ DIRK or ARK.  For DIRK and ARK, implicit subsystems are solved 
+ using a Newton iteration with the ARKDENSE dense linear solver, 
+ and a user-supplied Jacobian routine.
+
+ 100 outputs are printed at equal intervals, and run statistics 
+ are printed at the end.
+---------------------------------------------------------------*/
 
 /* Header files */
 #include <stdio.h>
 #include <math.h>
-#include <arkode/arkode.h>           /* prototypes for ARKODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <arkode/arkode_dense.h>     /* prototype for ARKDense */
-#include <sundials/sundials_dense.h> /* definitions DlsMat DENSE_ELEM */
-#include <sundials/sundials_types.h> /* definition of type realtype */
+#include <arkode/arkode.h>
+#include <nvector/nvector_serial.h>
+#include <arkode/arkode_dense.h>
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_types.h>
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -50,52 +52,43 @@ int main()
 {
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
-  realtype Tf = RCONST(10.0);
-  realtype dTout = RCONST(1.0);
-  long int NEQ = 1;
+  realtype Tf = RCONST(1.e11);
+  realtype dTout = (Tf-T0)/100;
+  int Nt = ceil(Tf/dTout);
+  realtype u0, v0, w0, h0;
+  long int NEQ = 3;
+
+  /* declare solver parameters */
+  int flag;
 
   /* general problem variables */
-  int flag;
+  int idense;
   N_Vector y = NULL;
   void *arkode_mem = NULL;
 
-  /* read problem parameter and tolerances from input file:
-     lamda  - problem stiffness parameter
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  double reltol_, abstol_, lamda_;
-  FILE *FID;
-  FID=fopen("input_analytic.txt","r");
-  fscanf(FID,"  lamda = %lf\n",  &lamda_);
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
-  fclose(FID);
-
-  /* convert the inputs to 'realtype' format */
-  realtype reltol = reltol_;
-  realtype abstol = abstol_;
-  realtype lamda  = lamda_;
-
   /* open solver diagnostics output file for writing */
   FILE *DFID;
-  DFID=fopen("diags_ark_analytic.txt","w");
+  DFID=fopen("diags_ark_robertson.txt","w");
   
+  /* set up the initial conditions */
+  u0 = RCONST(1.0);
+  v0 = RCONST(0.0);
+  w0 = RCONST(0.0);
+
   /* Initial problem output */
-  printf("\nAnalytical ODE test problem:\n");
-  printf("    lamda = %g\n",    lamda);
-  printf("   reltol = %.1e\n",  reltol);
-  printf("   abstol = %.1e\n\n",abstol);
+  printf("\nRobertson ODE test problem:\n");
+  printf("    initial conditions:  u0 = %g,  v0 = %g,  w0 = %g\n",u0,v0,w0);
 
-
-  /* Create serial vector of length NEQ for initial condition */
+  /* Create serial vectors of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
+  if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
 
-  /* Initialize y to 0 */
-  NV_Ith_S(y,0) = 0.0;
+  /* Set initial conditions into y */
+  NV_Ith_S(y,0) = u0;
+  NV_Ith_S(y,1) = v0;
+  NV_Ith_S(y,2) = w0;
 
-  /* Call ARKodeCreate to create the solver memory and specify the 
-     Backward Differentiation Formula and the use of a Newton iteration */
+  /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
   
@@ -105,13 +98,34 @@ int main()
   flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
   if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
-  /* Call ARKodeSetUserData to pass lamda to user functions */
-  flag = ARKodeSetUserData(arkode_mem, (void *) &lamda);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
+  /* Set tolerances */
+  realtype reltol = 1.e-4;
+  realtype abstol = 1.e-8;
+  h0 = 1.e-4 * reltol;
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
+
+  /* Set custom initial step */
+  flag = ARKodeSetInitStep(arkode_mem, h0);
+  if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
+
+  /* Increase maximum number of error test failures */
+  flag = ARKodeSetMaxErrTestFails(arkode_mem, 20);
+  if (check_flag(&flag, "ARKodeSetMaxErrTestFails", 1)) return 1;
+
+  /* Call ARKodeSetmaxNonlinIters to increase default for this problem*/
+  flag = ARKodeSetMaxNonlinIters(arkode_mem, 8);
+  if (check_flag(&flag, "ARKodeSetMaxNonlinIters", 1)) return 1;
+
+  /* Call ARKodeSetNonlinConvCoef */
+  flag = ARKodeSetNonlinConvCoef(arkode_mem, 1.e-7);
+  if (check_flag(&flag, "ARKodeSetNonlinConvCoef", 1)) return 1;
+
+  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
@@ -130,22 +144,26 @@ int main()
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype tout = T0+dTout;
-  realtype u;
-  printf("        t           u\n");
-  printf("   ---------------------\n");
-  while (Tf - t > 1.0e-15) {
+  realtype u, v, w;
+  printf("        t           u           v           w\n");
+  printf("   --------------------------------------------------\n");
+  printf("  %10.3e  %12.5e  %12.5e  %12.5e\n", 
+	 t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
+  int iout;
+  for (iout=0; iout<Nt; iout++) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    u = NV_Ith_S(y,0);
-    printf("  %10.6f  %10.6f\n", t, u);
+    printf("  %10.3e  %12.5e  %12.5e  %12.5e\n", 
+	   t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
 
     if (check_flag(&flag, "ARKode", 1)) break;
     if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }
+
   }
-  printf("   ---------------------\n");
+  printf("   --------------------------------------------------\n");
 
   /* Print some final statistics */
   long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
@@ -169,14 +187,15 @@ int main()
   check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
 
   printf("\nFinal Solver Statistics:\n");
-  printf("   Internal solver steps = %li (attempted = %li)\n", nst, nst_a);
+  printf("   Internal solver steps = %li (attempted = %li)\n", 
+	 nst, nst_a);
   printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
-  printf("   Total number of linear solver convergence failures = %li\n", ncfn);
-  printf("   Total number of error test failures = %li\n\n", netf);
+  printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
+  printf("   Total number of error test failures = %li\n", netf);
 
   /* Free y vector */
   N_VDestroy_Serial(y);
@@ -196,27 +215,45 @@ int main()
  *-------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
-
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype lamda = rdata[0];
   realtype u = NV_Ith_S(y,0);
+  realtype v = NV_Ith_S(y,1);
+  realtype w = NV_Ith_S(y,2);
 
-  NV_Ith_S(ydot,0) = lamda*u + 1.0/(1.0+t*t) - lamda*atan(t);
+  /* du/dt = -0.04*u + 1.e4*v*w */
+  NV_Ith_S(ydot,0) = -0.04*u + 1.e4*v*w;
+
+  /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
+  NV_Ith_S(ydot,1) = 0.04*u - 1.e4*v*w - 3.e7*v*v;
+
+  /* dw/dt = 3.e7*v*v */
+  NV_Ith_S(ydot,2) = 3.e7*v*v;
 
   return 0;
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
-
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype *rdata = (realtype *) user_data;
-  realtype lamda = rdata[0];
-  DENSE_ELEM(J,0,0) = lamda;
+  realtype v = NV_Ith_S(y,1);
+  realtype w = NV_Ith_S(y,2);
+  SetToZero(J);
+
+  /* du/dt = -0.04*u + 1.e4*v*w */
+  DENSE_ELEM(J,0,0) = -0.04;
+  DENSE_ELEM(J,0,1) = 1.e4*w;
+  DENSE_ELEM(J,0,2) = 1.e4*v;
+
+  /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
+  DENSE_ELEM(J,1,0) = 0.04;
+  DENSE_ELEM(J,1,1) = -1.e4*w - 6.e7*v;
+  DENSE_ELEM(J,1,2) = -1.e4*v;
+
+  /* dw/dt = 3.e7*v*v */
+  DENSE_ELEM(J,2,1) = 6.e7*v;
 
   return 0;
 }

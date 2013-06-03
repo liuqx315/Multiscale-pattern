@@ -20,18 +20,14 @@
  * Run statistics (optional outputs) are printed at the end.
  * -----------------------------------------------------------------*/
 
+/* Header files */
 #include <stdio.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-
-#include <arkode/arkode.h>             /* prototypes for ARKODE fcts., consts. */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <arkode/arkode_dense.h>       /* prototype for ARKDense */
-#include <sundials/sundials_dense.h> /* definitions DlsMat DENSE_ELEM */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
-
+#include <arkode/arkode.h>
+#include <nvector/nvector_serial.h>
+#include <arkode/arkode_dense.h>
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_types.h>
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -41,7 +37,6 @@ static int Jac(long int N, realtype t,
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
-
 
 
 /* Main Program */
@@ -85,52 +80,53 @@ int main()
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
 
   /* Initialize y to 0 */
   NV_Ith_S(y,0) = 0.0;
 
   /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
-  if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return(1);
+  if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
   
   /* Call ARKodeInit to initialize the integrator memory and specify the
      user's right hand side function in y'=f(t,y), the inital time T0, and
      the initial dependent variable vector y */
   flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
-  if (check_flag(&flag, "ARKodeInit", 1)) return(1);
+  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
-  if (check_flag(&flag, "ARKodeSStolerances", 1)) return(1);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
   /* Call ARKDense to specify the ARKDENSE dense linear solver */
   flag = ARKDense(arkode_mem, NEQ);
-  if (check_flag(&flag, "ARKDense", 1)) return(1);
+  if (check_flag(&flag, "ARKDense", 1)) return 1;
 
   /* Set the Jacobian routine to Jac (user-supplied) */
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
-  if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return(1);
+  if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
   /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
   realtype t = T0;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u;
   printf("        t           u\n");
   printf("   ---------------------\n");
   while (Tf - t > 1.0e-15) {
+
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     u = NV_Ith_S(y,0);
     printf("  %10.6f  %10.6f\n", t, u);
 
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag == ARK_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }
@@ -177,7 +173,7 @@ int main()
   /* close solver diagnostics output file */
   fclose(DFID);
 
-  return(0);
+  return 0;
 }
 
 
@@ -189,7 +185,7 @@ int main()
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   NV_Ith_S(ydot,0) = (t+1.0)*exp(-NV_Ith_S(y,0));
-  return(0);
+  return 0;
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
@@ -198,7 +194,7 @@ static int Jac(long int N, realtype t,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
   DENSE_ELEM(J,0,0) = -(t+1.0)*exp(-NV_Ith_S(y,0));
-  return(0);
+  return 0;
 }
 
 
@@ -223,7 +219,7 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -231,15 +227,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 

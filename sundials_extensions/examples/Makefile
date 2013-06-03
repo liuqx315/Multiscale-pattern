@@ -26,46 +26,62 @@ TESTS = cv_analytic.exe \
         ark_analytic_sys.exe \
         ark_analytic_nonlin.exe \
         ark_brusselator.exe \
-        ark_brusselator1D.exe
+        ark_brusselator1D.exe \
+        ark_bruss.exe \
+        ark_heat1D.exe \
+        ark_robertson.exe \
+        ark_robertson_root.exe
 
 # target to build all test executables
 all : ${TESTS}
 
 cv_analytic.exe : cv_analytic.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 cv_analytic_sys.exe : cv_analytic_sys.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 cv_analytic_nonlin.exe : cv_analytic_nonlin.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 cv_VanderPol.exe : cv_VanderPol.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 cv_brusselator.exe : cv_brusselator.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 cv_brusselator1D.exe : cv_brusselator1D.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ida_brusselator1D_FEM.exe : ida_brusselator1D_FEM.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_analytic.exe : ark_analytic.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_analytic_sys.exe : ark_analytic_sys.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_analytic_nonlin.exe : ark_analytic_nonlin.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_brusselator.exe : ark_brusselator.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_brusselator1D.exe : ark_brusselator1D.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} -o $@
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_bruss.exe : ark_bruss.f90
+	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_heat1D.exe : ark_heat1D.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_robertson.exe : ark_robertson.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_robertson_root.exe : ark_robertson_root.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 clean :
 	\rm -f *.o *.exe
