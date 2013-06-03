@@ -59,18 +59,15 @@
  * statistics are printed at the end.
  * -----------------------------------------------------------------*/
 
+/* Header files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-/* Header files with a description of contents used */
-
-#include <ida/ida.h>                 /* IDA functions & constants */
-#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
-#include <ida/ida_band.h>            /* prototype for IDABand */
-#include <sundials/sundials_band.h>  /* definitions of type DlsMat and macros */
-#include <sundials/sundials_types.h> /* definition of type realtype */
-
+#include <ida/ida.h>
+#include <nvector/nvector_serial.h>
+#include <ida/ida_band.h>
+#include <sundials/sundials_band.h>
+#include <sundials/sundials_types.h>
 
 /* accessor macros between (x,v) location and 1D NVector array */
 /* [variables are grouped according to spatial location] */
@@ -83,9 +80,10 @@
 #define HALF (RCONST(0.5))
 
 /* Gaussian quadrature nodes, weights and formula (3 node, 7th-order accurate) */
-#define X1(xl,xr)   (HALF*(xl+xr) - HALF*(xr-xl)*RCONST(0.774596669241483377035853079956))
+#define N1          RCONST(0.774596669241483377035853079956)
+#define X1(xl,xr)   (HALF*(xl+xr) - HALF*(xr-xl)*N1)
 #define X2(xl,xr)   (HALF*(xl+xr))
-#define X3(xl,xr)   (HALF*(xl+xr) + HALF*(xr-xl)*RCONST(0.774596669241483377035853079956))
+#define X3(xl,xr)   (HALF*(xl+xr) + HALF*(xr-xl)*N1)
 #define W1          (RCONST(0.55555555555555555555555555555556))
 #define W2          (RCONST(0.88888888888888888888888888888889))
 #define W3          (RCONST(0.55555555555555555555555555555556))
@@ -99,8 +97,6 @@
 #define Eval(ul,ur,xl,xr,x) (ul*ChiL(xl,xr,x) + ur*ChiR(xl,xr,x))
 #define Eval_x(ul,ur,xl,xr) (ul*ChiL_x(xl,xr) + ur*ChiR_x(xl,xr))
 
-
-
 /* user data structure */
 typedef struct {  
   long int N;    /* number of intervals     */
@@ -113,8 +109,6 @@ typedef struct {
   realtype ep;   /* stiffness parameter     */
   realtype fsc;  /* residual scaling factor */
 } *UserData;
-
-
 
 /* User-supplied Functions Called by the Solver */
 static int F(realtype t, N_Vector y, N_Vector y_t, N_Vector r, void *user_data);
@@ -152,7 +146,7 @@ int main()
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
   udata->x = NULL;
-  if (check_flag((void *)udata, "malloc", 2)) return(1);
+  if (check_flag((void *)udata, "malloc", 2)) return 1;
 
   /* read problem parameter and tolerances from input file:
      N - number of spatial intervals
@@ -202,17 +196,17 @@ int main()
 
   /* Create serial vectors of length NEQ for initial condition & abs tol */
   y = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
   y_t = N_VNew_Serial(NEQ);
-  if (check_flag((void *)y_t, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)y_t, "N_VNew_Serial", 0)) return 1;
   avtol = N_VNew_Serial(NEQ);
-  if (check_flag((void *)avtol, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)avtol, "N_VNew_Serial", 0)) return 1;
 
 
   /* allocate and set up spatial mesh; this clusters more intervals 
      near the endpoints of the interval */
   udata->x = (realtype *) malloc(N*sizeof(realtype));
-  if (check_flag((void *)udata->x, "malloc", 2)) return(1);
+  if (check_flag((void *)udata->x, "malloc", 2)) return 1;
   realtype z, h = ONE/(N-1);
   for (i=0; i<N; i++) {
     z = h*i - 0.5;
@@ -233,7 +227,7 @@ int main()
   
   /* Access data array for new NVector y */
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* Set initial conditions into y */
   realtype pi = RCONST(4.0)*atan(ONE);
@@ -246,7 +240,7 @@ int main()
 
   /* Access data array for absolute tolerance NVector avtol */
   data = N_VGetArrayPointer(avtol);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* Set support widths into avtol */
   i = 0; {
@@ -268,52 +262,52 @@ int main()
   
   /* Create serial vector masks for each solution component */
   umask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)umask, "N_VNew_Serial", 0)) return 1;
   vmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)vmask, "N_VNew_Serial", 0)) return 1;
   wmask = N_VNew_Serial(NEQ);
-  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return(1);
+  if (check_flag((void *)wmask, "N_VNew_Serial", 0)) return 1;
 
   /* Set mask array values for each solution component */
   N_VConst(0.0, umask);
   data = N_VGetArrayPointer(umask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,0)] = ONE;
 
   N_VConst(0.0, vmask);
   data = N_VGetArrayPointer(vmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,1)] = ONE;
 
   N_VConst(0.0, wmask);
   data = N_VGetArrayPointer(wmask);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  data[IDX(i,2)] = ONE;
 
   
   /* Call IDACreate to create the solver memory */
   ida_mem = IDACreate();
-  if (check_flag((void *)ida_mem, "IDACreate", 0)) return(1);
+  if (check_flag((void *)ida_mem, "IDACreate", 0)) return 1;
   
   /* Call IDASetUserData to pass rdata to user functions */
   flag = IDASetUserData(ida_mem, (void *) udata);
-  if (check_flag(&flag, "IDASetUserData", 1)) return(1);
+  if (check_flag(&flag, "IDASetUserData", 1)) return 1;
 
   /* Call IDAInit to initialize the integrator memory, specify the
      residual function, the inital time T0, and the initial dependent
      variable vectors y and y_t */
   flag = IDAInit(ida_mem, F, T0, y, y_t);
-  if (check_flag(&flag, "IDAInit", 1)) return(1);
+  if (check_flag(&flag, "IDAInit", 1)) return 1;
   
   /* Call IDASVtolerances to set tolerances */
   flag = IDASVtolerances(ida_mem, reltol, avtol);
-  if(check_flag(&flag, "IDASVtolerances", 1)) return(1);
+  if(check_flag(&flag, "IDASVtolerances", 1)) return 1;
 
   /* Compute the initial condition for y_t to satisfy residual,
      using avtol for temporary storage since it's no longer used */
   if (Calc_y0dot(T0, y, y_t, avtol, udata)) {
     printf("Error in calculating initial condition for y_t!\n");
-    return(1);
+    return 1;
   }
 
   /* Free avtol */
@@ -321,14 +315,14 @@ int main()
 
   /* Call IDABand to specify the linear solver */
   flag = IDABand(ida_mem, NEQ, 5, 5);
-  if (check_flag(&flag, "IDABand", 1)) return(1);
+  if (check_flag(&flag, "IDABand", 1)) return 1;
 
   /* Open output stream for results, access data arrays */
   FILE *UFID=fopen("bruss_u.txt","w");
   FILE *VFID=fopen("bruss_v.txt","w");
   FILE *WFID=fopen("bruss_w.txt","w");
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
@@ -342,7 +336,7 @@ int main()
      Break out of loop when the final output time has been reached */
   realtype t = T0;
   realtype dTout = Tf/Nt;
-  realtype tout = dTout;
+  realtype tout = T0+dTout;
   realtype u, v, w;
   printf("        t      ||u||_rms   ||v||_rms   ||w||_rms\n");
   printf("   ----------------------------------------------\n");
@@ -364,7 +358,7 @@ int main()
     fprintf(WFID,"\n");
 
     if (check_flag(&flag, "IDASolve", 1)) break;
-    if (flag == IDA_SUCCESS) {
+    if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     }
@@ -413,7 +407,7 @@ int main()
   /* Free integrator memory */
   IDAFree(&ida_mem);
 
-  return(0);
+  return 0;
 }
 
 
@@ -437,14 +431,14 @@ static int F(realtype t, N_Vector y, N_Vector y_t, N_Vector r, void *user_data)
 
   /* access data arrays */
   realtype *dYdata = N_VGetArrayPointer(y_t);
-  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)dYdata, "N_VGetArrayPointer", 0)) return 1;
   realtype *ResData = N_VGetArrayPointer(r);
-  if (check_flag((void *)ResData, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)ResData, "N_VGetArrayPointer", 0)) return 1;
 
   /* first, fill in RHS portion, f(t,y) */
   if (Calc_RHS(t, y, r, udata)) {
     printf("Residual calculation error in calling Calc_RHS!\n");
-    return(1);
+    return 1;
   }
   
   /* set r = -fsc * r */
@@ -508,7 +502,7 @@ static int F(realtype t, N_Vector y, N_Vector y_t, N_Vector r, void *user_data)
     ResData[IDX(i+1,2)] += udata->fsc * Quad(f1,f2,f3,xl,xr);
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -536,9 +530,9 @@ static int Calc_RHS(realtype t, N_Vector y, N_Vector RHS, UserData udata)
 
   /* access data arrays */
   realtype *Ydata = N_VGetArrayPointer(y);
-  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)Ydata, "N_VGetArrayPointer", 0)) return 1;
   realtype *RHSdata = N_VGetArrayPointer(RHS);
-  if (check_flag((void *)RHSdata, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)RHSdata, "N_VGetArrayPointer", 0)) return 1;
 
   /* set shortcuts */
   long int i;
@@ -694,7 +688,7 @@ static int Calc_RHS(realtype t, N_Vector y, N_Vector RHS, UserData udata)
     }
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -748,7 +742,7 @@ static int MassMatrix(realtype c, DlsMat Jac, UserData udata)
 
   }
 
-  return(0);
+  return 0;
 }
 
 
@@ -771,43 +765,43 @@ static int Calc_y0dot(realtype t0, N_Vector y, N_Vector y_t,
   SetToZero(M);
   if (MassMatrix(c, M, udata)) {
     printf("Calc_y0dot error in calling MassMatrix!\n");
-    return(1);
+    return 1;
   }
 
   /* store (RHS) in y_t N_Vector */
   if (Calc_RHS(t0, y, y_t, udata)) {
     printf("Calc_y0dot error in calling CalcRHS!\n");
-    return(1);
+    return 1;
   }
 
   /* factor mass matrix */
   if (BandGBTRF(M, p)) {
     printf("Calc_y0dot error in factoring mass matrix!\n");
-    return(1);
+    return 1;
   }
 
   /* solve with factored matrix, using storage from y_t for rhs and sol */
   realtype *b = N_VGetArrayPointer(y_t);
-  if (check_flag((void *)b, "N_VGetArrayPointer", 0)) return(1);
+  if (check_flag((void *)b, "N_VGetArrayPointer", 0)) return 1;
   BandGBTRS(M, p, b);
 
   /* check whether y_t satisfies the initial residual, storing resid in tmp */
   realtype resid;
   if (F(t0, y, y_t, tmp, (void *) udata)) {
     printf("Calc_y0dot error in calling residual routine!\n");
-    return(1);
+    return 1;
   }
   resid = N_VMaxNorm(tmp);
   printf(" Calc_y0dot:  || F(t0,y0,y0_t) ||_max = %g\n\n", resid);
 
   /* if the initial residual is too large, return with an error */
-  if (resid > 1.0e-7)  return(1);
+  if (resid > 1.0e-7)  return 1;
 
   /* clean up */
   free(p);
   DestroyMat(M);
 
-  return(0);
+  return 0;
 }
 
 
@@ -828,7 +822,7 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
   if (opt == 0 && flagvalue == NULL) {
     fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
   /* Check if flag < 0 */
   else if (opt == 1) {
@@ -836,15 +830,15 @@ static int check_flag(void *flagvalue, char *funcname, int opt)
     if (*errflag < 0) {
       fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
 	      funcname, *errflag);
-      return(1); }}
+      return 1; }}
 
   /* Check if function returned NULL pointer - no memory allocated */
   else if (opt == 2 && flagvalue == NULL) {
     fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
 	    funcname);
-    return(1); }
+    return 1; }
 
-  return(0);
+  return 0;
 }
 
 
