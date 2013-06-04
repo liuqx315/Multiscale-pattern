@@ -1,3 +1,5 @@
+:tocdepth: 3
+
 .. _CInterface:
 
 Using ARKode for C and C++ Applications
@@ -307,33 +309,33 @@ NVECTOR_SERIAL.
 
 10. Specify rootfinding problem
 
-   Optionally, call :c:func:`ARKodeRootInit()` to initialize a rootfinding
-   problem to be solved during the integration of the ODE system. See
-   the section :ref:`CInterface.RootFinding` for general details, and
-   the section :ref:`CInterface.OptionalInputs` for relevant optional
-   input calls. 
+    Optionally, call :c:func:`ARKodeRootInit()` to initialize a rootfinding
+    problem to be solved during the integration of the ODE system. See
+    the section :ref:`CInterface.RootFinding` for general details, and
+    the section :ref:`CInterface.OptionalInputs` for relevant optional
+    input calls. 
 
 11. Advance solution in time
 
-   For each point at which output is desired, call 
+    For each point at which output is desired, call 
 
-   ``ier = ARKode(arkode_mem, tout, yout, &tret, itask)``
+    ``ier = ARKode(arkode_mem, tout, yout, &tret, itask)``
 
-   Here, :c:func:`ARKode()` requires that ``itask``
-   specify the return mode. The vector ``y`` (which can be the same as
-   the vector ``y0`` above) will contain :math:`y(t)`. See the section
-   :ref:`CInterface.Integration` for details. 
+    Here, :c:func:`ARKode()` requires that ``itask``
+    specify the return mode. The vector ``y`` (which can be the same as
+    the vector ``y0`` above) will contain :math:`y(t)`. See the section
+    :ref:`CInterface.Integration` for details. 
 
 12. Get optional outputs 
 
-   Call ``ARK*Get*`` functions to obtain optional output. See
-   the section :ref:`CInterface.OptionalInputs` for details.  
+    Call ``ARK*Get*`` functions to obtain optional output. See
+    the section :ref:`CInterface.OptionalInputs` for details.  
 
 13. Deallocate memory for solution vector 
 
-   Upon completion of the integration, deallocate memory for the
-   vector ``y`` by calling the destructor function defined by the
-   NVECTOR implementation:
+    Upon completion of the integration, deallocate memory for the
+    vector ``y`` by calling the destructor function defined by the
+    NVECTOR implementation:
 
     [S] ``N_VDestroy_Serial(y);``
 
@@ -341,11 +343,11 @@ NVECTOR_SERIAL.
 
 14. Free solver memory 
 
-   Call ``ARKodeFree(&arkode_mem)`` to free the memory allocated for ARKode. 
+    Call ``ARKodeFree(&arkode_mem)`` to free the memory allocated for ARKode. 
 
 15. [P] Finalize MPI 
 
-   Call ``MPI_Finalize`` to terminate MPI.
+    Call ``MPI_Finalize`` to terminate MPI.
 
 
 

@@ -1,3 +1,5 @@
+:tocdepth: 3
+
 .. _NVectors:
 
 Description of the NVECTOR Modules
