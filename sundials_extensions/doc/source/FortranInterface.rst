@@ -1,3 +1,5 @@
+:tocdepth: 3
+
 .. _FortranInterface:
 
 FARKode, an Interface Module for FORTRAN Applications

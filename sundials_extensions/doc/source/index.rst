@@ -36,7 +36,7 @@ B598130 from `Lawrence Livermore National Laboratory
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    Introduction
    Mathematics
