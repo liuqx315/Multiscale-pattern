@@ -22,7 +22,7 @@
 ! This program solves a the Fortran ODE test problem using the 
 ! FARKODE interface for the ARKode ODE solver module.
 ! 
-! This program will switch use the IMEX ARK solver; here the 
+! This program uses the IMEX ARK solver; here the 
 ! implicit systems are solved with a modified Newton iteration
 ! with the ARKDENSE dense linear solver.  The Jacobian routine 
 ! and right-hand side routines come from the file user-supplied 
