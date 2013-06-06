@@ -172,19 +172,21 @@ Completed components:
     solvers, and convert an existing test problem to use it.
 [X] Implement root-finding.
 [X] Create root-finding regression test.
+[X] Update step size logic to handle the case of backwards integration
+    (negative h values).
 
 
 
 Remaining components to build:
+[ ] Documentation for example problems.
+[ ] Update ARKodeGetEstLocalErrors().
 [ ] Clean up documentation system for how a user should tell ARKode
     about his J*v function (and other optional user-supplied
     functions).
-[ ] Update step size logic to handle the case of backwards integration
-    (negative h values).
 [ ] Ensure that everything is set up so that a user must only perform
-    communication preceding a call to *either* fI or fE (for an ImEx
-    problem), but not both.  It would be most useful is this preceded
-    fI, since that should be called more often throughout the solve.
+    communication preceding a call to fI for an ImEx problem.  A call
+    preceding fI would be more useful than one preceding fE, since fI
+    should be called more often throughout the solve. 
 [ ] Begin tuning solver parameters for increased efficiency on all
     test problems.
 [ ] Go through new and existing routines to determine whether we need
