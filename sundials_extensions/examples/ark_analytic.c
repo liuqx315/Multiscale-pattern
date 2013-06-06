@@ -94,8 +94,7 @@ int main()
   /* Initialize y to 0 */
   NV_Ith_S(y,0) = 0.0;
 
-  /* Call ARKodeCreate to create the solver memory and specify the 
-     Backward Differentiation Formula and the use of a Newton iteration */
+  /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
   
@@ -196,7 +195,6 @@ int main()
  *-------------------------------*/
 
 /* f routine to compute the ODE RHS function f(t,y). */
-
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   realtype *rdata = (realtype *) user_data;
@@ -209,7 +207,6 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
-
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
