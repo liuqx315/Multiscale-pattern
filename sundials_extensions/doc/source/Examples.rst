@@ -24,15 +24,15 @@ that is most closely related to your own.
 ============================================  ==========  =============  ====  ========  =============================================================
 Problem                                       Integrator  Linear Solver  Size  Language  Extras
 ============================================  ==========  =============  ====  ========  =============================================================
-:ref:`analytic <ark_analytic>`                DIRK        Dense          1     C         Has an analytical solution and variable stiffness
-:ref:`analytic_nonlin <ark_analytic_nonlin>`  DIRK        Dense          1     C         Nonlinear, has an analytical solution
-:ref:`analytic_sys <ark_analytic_sys>`        DIRK        Dense          3     C         ODE system, has an analytical solution and variable stiffness
-:ref:`brusselator <ark_brusselator>`          DIRK        Dense          3     C         Stiff nonlinear ODE system, "standard" ODE test problem
-:ref:`bruss <ark_bruss>`                      ARK         Dense          3     F90       Stiff nonlinear ODE system, "standard" ODE test problem
-:ref:`robertson <ark_robertson>`              DIRK        Dense          3     C         Stiff nonlinear ODE system, "standard" ODE test problem
-:ref:`robertson_root <ark_robertson_root>`    DIRK        Dense          3     C         Root-finding capabilities enabled
+:ref:`analytic <ark_analytic>`                DIRK        Dense          1     C         Analytical solution, variable stiffness
+:ref:`analytic_nonlin <ark_analytic_nonlin>`  ERK         N.A.           1     C         Nonlinear, analytical solution
+:ref:`analytic_sys <ark_analytic_sys>`        DIRK        Dense          3     C         ODE system, analytical solution, variable stiffness
+:ref:`brusselator <ark_brusselator>`          DIRK        Dense          3     C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`bruss <ark_bruss>`                      ARK         Dense          3     F90       Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`robertson <ark_robertson>`              DIRK        Dense          3     C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`robertson_root <ark_robertson_root>`    DIRK        Dense          3     C         Utilizes root-finding capabilities
 :ref:`brusselator1D <ark_brusselator1D>`      DIRK        Band           3N    C         Stiff, nonlinear, reaction-diffusion PDE system
-:ref:`heat1D <ark_heat1D>`                    DIRK        PCG            N     C         Stiff, linear, iterative linear solver
+:ref:`heat1D <ark_heat1D>`                    DIRK        PCG            N     C         Stiff, linear, diffusion PDE, iterative linear solver
 ============================================  ==========  =============  ====  ========  =============================================================
 
 
@@ -44,6 +44,8 @@ Simple linear example (ark_analytic)
 
 This is a very simple C example that merely shows how to use the
 ARKode solver interface.
+
+**add more description here**
 
 ODE system
 ----------
@@ -253,12 +255,15 @@ plots below, the computed solution tracks the analytical solution
 quite well, and results in errors below those specified by the input
 error tolerances.
 
+**add plots and more discussion here**
 
 
 .. _ark_analytic_nonlin:
 
 Simple nonlinear example (ark_analytic_nonlin)
 ==============================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -276,9 +281,7 @@ for the interval :math:`t \in [0.0, 10.0]`, with initial condition
 Numerical method
 ----------------
 
-This program solves the problem with the DIRK method,
-Newton iteration with the ARKDENSE dense linear solver, and a
-user-supplied Jacobian routine.
+This program solves the problem with the ERK method.
 Output is printed every 1.0 units of time (10 total).
 Run statistics (optional outputs) are printed at the end.
 
@@ -297,15 +300,10 @@ comments for details; error-checking has been removed for brevity):
    #include <math.h>
    #include <arkode/arkode.h>            /* prototypes for ARKode fcts., consts. */
    #include <nvector/nvector_serial.h>   /* serial N_Vector types, fcts., macros */
-   #include <arkode/arkode_dense.h>      /* prototype for ARKDense solver */
-   #include <sundials/sundials_dense.h>  /* defs. of DlsMat and DENSE_ELEM */
    #include <sundials/sundials_types.h>  /* def. of type 'realtype' */
    
    /* User-supplied functions called by the solver */
    static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-   static int Jac(long int N, realtype t,
-                  N_Vector y, N_Vector fy, DlsMat J, void *user_data,
-                  N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
    
    /* Main program */
    int main()
@@ -319,7 +317,7 @@ comments for details; error-checking has been removed for brevity):
      /* general problem variables */
      int flag;                      /* reusable error-checking flag */
      N_Vector y = NULL;             /* empty vector for storing solution */
-     void *arkode_mem = NULL;        /* empty ARKode memory structure */
+     void *arkode_mem = NULL;       /* empty ARKode memory structure */
    
      /* read problem parameter and tolerances from input file:
         reltol - desired relative tolerance
@@ -348,15 +346,11 @@ comments for details; error-checking has been removed for brevity):
      /* Call ARKodeInit to initialize the integrator memory and specify the
         hand-side side function in y'=f(t,y), the inital time T0, and
         the initial dependent variable vector y.  Note: since this
-	problem is fully implicit, we set f_E to NULL and f_I to f. */
-     ARKodeInit(arkode_mem, NULL, f, T0, y);
+	problem is fully explicit, we set f_U to NULL and f_E to f. */
+     ARKodeInit(arkode_mem, f, NULL, T0, y);
 
      /* Specify tolerances */
      ARKodeSStolerances(arkode_mem, reltol, abstol);
-   
-     /* Linear solver specification */
-     ARKDense(arkode_mem, NEQ);              /* Specify dense linear solver */
-     ARKDlsSetDenseJacFn(arkode_mem, Jac);   /* Set Jacobian routine */
    
      /* Main time-stepping loop: calls ARKode to perform the integration, then 
         prints results.  Stops when the final time has been reached */
@@ -379,25 +373,15 @@ comments for details; error-checking has been removed for brevity):
      printf("   ---------------------\n");
    
      /* Print some final statistics */
-     long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
+     long int nst, nst_a, nfe, nfi, netf;
      ARKodeGetNumSteps(arkode_mem, &nst);
      ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
      ARKodeGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-     ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
      ARKodeGetNumErrTestFails(arkode_mem, &netf);
-     ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
-     ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-     ARKDlsGetNumJacEvals(arkode_mem, &nje);
-     ARKDlsGetNumRhsEvals(arkode_mem, &nfeLS);
    
      printf("\nFinal Solver Statistics:\n");
      printf("   Internal solver steps = %li (attempted = %li)\n", nst, nst_a);
      printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
-     printf("   Total linear solver setups = %li\n", nsetups);
-     printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
-     printf("   Total number of Jacobian evaluations = %li\n", nje);
-     printf("   Total number of Newton iterations = %li\n", nni);
-     printf("   Total number of linear solver convergence failures = %li\n", ncfn);
      printf("   Total number of error test failures = %li\n\n", netf);
    
      /* Clean up and return with successful completion */
@@ -417,24 +401,20 @@ comments for details; error-checking has been removed for brevity):
      return 0;
    }
    
-   /* Jacobian routine to compute J(t,y) = df/dy. */
-   static int Jac(long int N, realtype t,
-                  N_Vector y, N_Vector fy, DlsMat J, void *user_data,
-                  N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-   {
-     DENSE_ELEM(J,0,0) = -(t+1.0)*exp(-NV_Ith_S(y,0));
-     return 0;
-   }
 
 
 Solutions
 ---------
+
+**add plots and discussion here**
 
 
 .. _ark_analytic_sys:
 
 Simple linear system example (ark_analytic_sys)
 ===============================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -704,11 +684,16 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
+**add plots and discussion here**
+
+
 
 .. _ark_brusselator:
 
 Stiff nonlinear system example (ark_brusselator)
 ================================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -988,6 +973,9 @@ Test 3: Here, all components undergo very rapid initial transients
 during the first 0.3 time units, and all then proceed very smoothly
 for the remainder of the simulation.
 
+**add plots and more of a discussion here**
+
+
 
 .. _ark_bruss:
 
@@ -996,6 +984,8 @@ Stiff nonlinear system, Fortran example (ark_bruss)
 
 This is a Fortran-90 version of the same test brusselator test problem
 as above.  
+
+**add more of a description here**
 
 ODE system
 ----------
@@ -1279,12 +1269,17 @@ With this setup, all three solution components exhibit a rapid
 transient change during the first 0.2 time units, followed by a slow
 and smooth evolution, as seen in the figure below.
 
+**add plots and more of a discussion here**
+
+
 
 
 .. _ark_robertson:
 
 Stiff nonlinear system example (ark_robertson)
 ==============================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -1493,11 +1488,16 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
+**add plots and discussion here**
+
+
 
 .. _ark_robertson_root:
 
 Stiff nonlinear system with root-finding example (ark_robertson_root)
 =====================================================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -1741,11 +1741,16 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
+**add plots and discussion here**
+
+
 
 .. _ark_brusselator1D:
 
 Stiff PDE system example (ark_brusselator1D)
 ============================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -2189,11 +2194,16 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
+**add plots and discussion here**
+
+
 
 .. _ark_heat1D:
 
 PDE system example with iterative linear solver (ark_heat1D)
 ============================================================
+
+**add a description here**
 
 ODE system
 ----------
@@ -2456,5 +2466,8 @@ comments for details; error-checking has been removed for brevity):
 
 Solutions
 ---------
+
+**add plots and discussion here**
+
 
 
