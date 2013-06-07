@@ -34,8 +34,10 @@
  * Run statistics (optional outputs) are printed at the end.
  * -----------------------------------------------------------------*/
 
-/* Header files */
+// Header files
 #include <stdio.h>
+#include <iostream>
+#include <string.h>
 #include <math.h>
 #include <arkode/arkode.h>
 #include <nvector/nvector_serial.h>
@@ -43,27 +45,29 @@
 #include <sundials/sundials_dense.h>
 #include <sundials/sundials_types.h>
 
-/* User-supplied Functions Called by the Solver */
+using namespace std;
+
+// User-supplied Functions Called by the Solver
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
-/* Private function to check function return values */
-static int check_flag(void *flagvalue, char *funcname, int opt);
+// Private function to check function return values
+static int check_flag(void *flagvalue, const string funcname, int opt);
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C);
 
 
-/* Main Program */
+// Main Program
 int main()
 {
-  /* general problem parameters */
+  // general problem parameters
   realtype T0 = RCONST(0.0);
   realtype Tf = RCONST(0.05);
   realtype dTout = RCONST(0.005);
   long int NEQ = 3;
 
-  /* general problem variables */
+  // general problem variables
   int flag;
   N_Vector y = NULL;
   void *arkode_mem = NULL;
@@ -75,38 +79,36 @@ int main()
   double reltol_, abstol_, lamda_;
   FILE *FID;
   FID=fopen("input_analytic_sys.txt","r");
-  fscanf(FID,"  lamda = %lf\n",  &lamda_);
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
+  flag = fscanf(FID,"  lamda = %lf\n",  &lamda_);
+  flag = fscanf(FID,"  reltol = %lf\n", &reltol_);
+  flag = fscanf(FID,"  abstol = %lf\n", &abstol_);
   fclose(FID);
 
-  /* convert the inputs to 'realtype' format */
+  // convert the inputs to 'realtype' format
   realtype reltol = reltol_;
   realtype abstol = abstol_;
   realtype lamda  = lamda_;
 
-  /* open solver diagnostics output file for writing */
+  // open solver diagnostics output file for writing
   FILE *DFID;
-  DFID=fopen("diags_ark_analytic_sys.txt","w");
+  DFID = fopen("diags_ark_analytic_sys.txt","w");
   
-  /* Initial problem output */
-  printf("\nAnalytical ODE test problem:\n");
-  printf("    lamda = %g\n",    lamda);
-  printf("   reltol = %.1e\n",  reltol);
-  printf("   abstol = %.1e\n\n",abstol);
+  // Initial problem output
+  cout << "\nAnalytical ODE test problem:\n";
+  cout << "    lamda = " << lamda << "\n";
+  cout << "   reltol = " << reltol << "\n";
+  cout << "   abstol = " << abstol << "\n\n";
 
-
-  /* Create serial vector of length NEQ for initial condition */
+  // Create serial vector of length NEQ for initial condition
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
 
-  /* Initialize y to 0 */
+  // Initialize y to 0
   NV_Ith_S(y,0) = 1.0;
   NV_Ith_S(y,1) = 1.0;
   NV_Ith_S(y,2) = 1.0;
 
-  /* Call ARKodeCreate to create the solver memory and specify the 
-     Backward Differentiation Formula and the use of a Newton iteration */
+  // Call ARKodeCreate to create the solver memory
   arkode_mem = ARKodeCreate();
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
   
@@ -116,24 +118,23 @@ int main()
   flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
   if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
-  /* Call ARKodeSetUserData to pass lamda to user functions */
+  // Call ARKodeSetUserData to pass lamda to user functions
   flag = ARKodeSetUserData(arkode_mem, (void *) &lamda);
   if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
 
-  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
+  // Call ARKodeSetDiagnostics to set diagnostics output file pointer 
   flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
 
-  /* Call ARKodeSStolerances to specify the scalar relative and absolute
-     tolerances */
+  // Call ARKodeSStolerances to specify the scalar relative and absolute tolerances
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* Call ARKDense to specify the ARKDENSE dense linear solver */
+  // Call ARKDense to specify the ARKDENSE dense linear solver
   flag = ARKDense(arkode_mem, NEQ);
   if (check_flag(&flag, "ARKDense", 1)) return 1;
 
-  /* Set the Jacobian routine to Jac (user-supplied) */
+  // Set the Jacobian routine to Jac (user-supplied)
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
@@ -142,8 +143,8 @@ int main()
   realtype t = T0;
   realtype tout = T0+dTout;
   realtype y0, y1, y2;
-  printf("      t        y0        y1        y2\n");
-  printf("   --------------------------------------\n");
+  cout << "      t        y0        y1        y2\n";
+  cout << "   --------------------------------------\n";
   while (Tf - t > 1.0e-15) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
@@ -158,9 +159,9 @@ int main()
       tout = (tout > Tf) ? Tf : tout;
     }
   }
-  printf("   --------------------------------------\n");
+  cout << "   --------------------------------------\n";
 
-  /* Print some final statistics */
+  // Print some final statistics
   long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
@@ -191,13 +192,13 @@ int main()
   printf("   Total number of linear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n\n", netf);
 
-  /* Free y vector */
+  // Free y vector
   N_VDestroy_Serial(y);
 
-  /* Free integrator memory */
+  // Free integrator memory
   ARKodeFree(&arkode_mem);
 
-  /* close solver diagnostics output file */
+  // close solver diagnostics output file
   fclose(DFID);
 
   return 0;
@@ -208,7 +209,7 @@ int main()
  * Functions called by the solver
  *-------------------------------*/
 
-/* f routine to compute the ODE RHS function f(t,y). */
+// f routine to compute the ODE RHS function f(t,y).
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   realtype *rdata = (realtype *) user_data;
@@ -223,17 +224,17 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         Vi = 0.25*[5 1 -3; 2 2 -2; 1 1 1]
         D = [-0.5 0 0; 0 -0.1 0; 0 0 lam] */
 
-  /*   yd = Vi*y */
+  //   yd = Vi*y
   yd0 = 0.25*(5.0*y0 + 1.0*y1 - 3.0*y2);
   yd1 = 0.25*(2.0*y0 + 2.0*y1 - 2.0*y2);
   yd2 = 0.25*(1.0*y0 + 1.0*y1 + 1.0*y2);
 
-  /*   y = D*yd */
+  //   y = D*yd
   y0  = -0.5*yd0;
   y1  = -0.1*yd1;
   y2  =  lam*yd2;
 
-  /*   yd = V*y */
+  //   yd = V*y
   yd0 =  1.0*y0 - 1.0*y1 + 1.0*y2;
   yd1 = -1.0*y0 + 2.0*y1 + 1.0*y2;
   yd2 =  0.0*y0 - 1.0*y1 + 2.0*y2;
@@ -245,7 +246,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   return 0;
 }
 
-/* Jacobian routine to compute J(t,y) = df/dy. */
+// Jacobian routine to compute J(t,y) = df/dy.
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
@@ -256,7 +257,7 @@ static int Jac(long int N, realtype t,
   DlsMat D  = NewDenseMat(3,3);
   DlsMat Vi = NewDenseMat(3,3);
 
-  /* initialize temporary matrices to zero */
+  // initialize temporary matrices to zero
   DenseScale(0.0, V);
   DenseScale(0.0, D);
   DenseScale(0.0, Vi);
@@ -289,75 +290,39 @@ static int Jac(long int N, realtype t,
   DENSE_ELEM(D,1,1) = -0.1;
   DENSE_ELEM(D,2,2) = lam;
 
-  /* J = D*Vi */
+  // J = D*Vi
   if (dense_MM(D,Vi,J) != 0) {
-    fprintf(stderr, "matmul error\n");
+    cerr << "matmul error\n";
     return 1;
   }
 
-  /* D = V*J [= V*D*Vi] */
+  // D = V*J [= V*D*Vi]
   if (dense_MM(V,J,D) != 0) {
-    fprintf(stderr, "matmul error\n");
+    cerr << "matmul error\n";
     return 1;
   }
 
-  /* J = D [= V*D*Vi] */
+  // J = D [= V*D*Vi]
   DenseCopy(D, J);
 
   return 0;
 }
 
 
-
 /*-------------------------------
  * Private helper functions
  *-------------------------------*/
 
-/* Check function return value...
-    opt == 0 means SUNDIALS function allocates memory so check if
-             returned NULL pointer
-    opt == 1 means SUNDIALS function returns a flag so check if
-             flag >= 0
-    opt == 2 means function allocates memory so check if returned
-             NULL pointer  
-*/
-static int check_flag(void *flagvalue, char *funcname, int opt)
-{
-  int *errflag;
-
-  /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
-  if (opt == 0 && flagvalue == NULL) {
-    fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
-	    funcname);
-    return 1; }
-
-  /* Check if flag < 0 */
-  else if (opt == 1) {
-    errflag = (int *) flagvalue;
-    if (*errflag < 0) {
-      fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
-	      funcname, *errflag);
-      return 1; }}
-  
-  /* Check if function returned NULL pointer - no memory allocated */
-  else if (opt == 2 && flagvalue == NULL) {
-    fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
-	    funcname);
-    return 1; }
-
-  return 0;
-}
-
-/* DlsMat matrix-multiply utility routine: C = A*B. */
+// DlsMat matrix-multiply utility routine: C = A*B.
 static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
 {
-  /* check for legal dimensions */
+  // check for legal dimensions
   if ((A->N != B->M) || (C->M != A->M) || (C->N != B->N)) {
-    fprintf(stderr, "\n matmul error: dimension mismatch\n\n");
+    cerr << "\n matmul error: dimension mismatch\n\n";
     return 1;
   }
     
-  /* access data and extents */
+  // access data and extents
   realtype **adata = A->cols;
   realtype **bdata = B->cols;
   realtype **cdata = C->cols;
@@ -366,10 +331,10 @@ static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
   long int l = A->N;
   int i, j, k;
 
-  /* initialize output */
+  // initialize output
   DenseScale(0.0, C);
 
-  /* perform multiply (not optimal, but fine for 3x3 matrices) */
+  // perform multiply (not optimal, but fine for 3x3 matrices)
   for (i=0; i<m; i++) 
     for (j=0; j<n; j++) 
       for (k=0; k<l; k++) 
@@ -380,6 +345,40 @@ static int dense_MM(DlsMat A, DlsMat B, DlsMat C)
 }
 
 
+/* Check function return value...
+    opt == 0 means SUNDIALS function allocates memory so check if
+             returned NULL pointer
+    opt == 1 means SUNDIALS function returns a flag so check if
+             flag >= 0
+    opt == 2 means function allocates memory so check if returned
+             NULL pointer  
+*/
+static int check_flag(void *flagvalue, const string funcname, int opt)
+{
+  int *errflag;
+
+  // Check if SUNDIALS function returned NULL pointer - no memory allocated
+  if (opt == 0 && flagvalue == NULL) {
+    cerr << "\nSUNDIALS_ERROR: " << funcname << " failed - returned NULL pointer\n\n";
+    return 1; }
+
+  // Check if flag < 0
+  else if (opt == 1) {
+    errflag = (int *) flagvalue;
+    if (*errflag < 0) {
+      cerr << "\nSUNDIALS_ERROR: " << funcname << " failed with flag = " << *errflag << "\n\n";
+      return 1; 
+    }
+  }
+  
+  // Check if function returned NULL pointer - no memory allocated
+  else if (opt == 2 && flagvalue == NULL) {
+    cerr << "\nMEMORY_ERROR: " << funcname << " failed - returned NULL pointer\n\n";
+    return 1; }
+
+  return 0;
+}
 
 
-/*---- end of file ----*/
+
+//---- end of file ----

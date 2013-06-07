@@ -101,8 +101,7 @@ int main()
   /* Initialize y to 0 */
   NV_Ith_S(y,0) = 0.0;
 
-  /* Call ARKodeCreate to create the solver memory and specify the 
-     Backward Differentiation Formula and the use of a Newton iteration */
+  /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
 

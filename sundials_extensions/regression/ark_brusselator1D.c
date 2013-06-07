@@ -236,8 +236,7 @@ int main()
   for (i=0; i<N; i++)  data[IDX(i,2)] = ONE;
 
 
-  /* Call ARKodeCreate to create the solver memory and specify the 
-     Backward Differentiation Formula and the use of a Newton iteration */
+  /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
   arktrue_mem = ARKodeCreate();
