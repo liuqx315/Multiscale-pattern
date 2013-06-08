@@ -590,7 +590,7 @@ comments for details; error-checking has been removed for brevity):
      cout << "   Internal solver steps = " << nst << " (attempted = " << nst_a << ")\n";
      cout << "   Total RHS evals:  Fe = " << nfe << ",  Fi = " << nfi << "\n";
      cout << "   Total linear solver setups = " << nsetups << "\n";
-     cout << "   Total RHS evals for setting up the linear system = << nfeLS << "\n";
+     cout << "   Total RHS evals for setting up the linear system = " << nfeLS << "\n";
      cout << "   Total number of Jacobian evaluations = " << nje << "\n";
      cout << "   Total number of Newton iterations = " << nni << "\n";
      cout << "   Total number of linear solver convergence failures = " << ncfn << "\n";
@@ -1181,10 +1181,6 @@ comments for details; error-checking has been removed for brevity):
      print '(A,i7)', '   Total number of Newton iterations =', iout(11)
      print '(A,i7)', '   Total number of nonlinear solver convergence failures =', iout(12)
      print '(A,i7)', '   Total number of error test failures =', iout(10)
-     print *, '  '
-   
-     ! output final solution
-     print *, '     y(Tf) =', y
      print *, '  '
    
      ! clean up
@@ -2429,8 +2425,7 @@ comments for details; error-checking has been removed for brevity):
      ARKSpilsGetNumConvFails(arkode_mem, &nlcf);
    
      printf("\nFinal Solver Statistics:\n");
-     printf("   Internal solver steps = %li (attempted = %li)\n", 
-   	 nst, nst_a);
+     printf("   Internal solver steps = %li (attempted = %li)\n", nst, nst_a);
      printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
      printf("   Total linear solver setups = %li\n", nsetups);
      printf("   Total linear iterations = %li\n", nli);

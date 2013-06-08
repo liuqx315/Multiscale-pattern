@@ -36,7 +36,6 @@
 ! Main driver program
 !-----------------------------------------------------------------
 program driver
-
   ! Declarations
   implicit none
 
@@ -51,25 +50,25 @@ program driver
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> unused
   !    rpar(1) -> "a" parameter
-  !    rpar(2) -> "b" parameter 
+  !    rpar(2) -> "b" parameter
   !    rpar(3) -> "ep" parameter
   integer :: ipar
   real*8  :: rpar(3)
 
   ! solver parameters
   integer :: order, adapt_method, maxcor
-  real*8 :: nlscoef
+  real*8  :: nlscoef
 
   !-----------------------
   ! set some solver parameters
-  order = 4
-  adapt_method = 2
-  maxcor = 8
-  nlscoef = 1.d-8
+  order = 4          ! 4th order method
+  adapt_method = 2   ! I-controller
+  maxcor = 8         ! up to 8 Newton iterations
+  nlscoef = 1.d-8    ! Newton solver tolerance coefficient
 
   ! time-stepping information
-  dTout = (Tf-T0)/10.d0
-  Nt = Tf/dTout + 0.5
+  dTout = (Tf-T0)/10.d0    ! output time interval
+  Nt = Tf/dTout + 0.5      ! number of outputs
 
   ! set initial conditions, problem parameters
   y(1) = 3.9d0     ! u0
@@ -85,21 +84,57 @@ program driver
   
   ! initialize vector module
   call FNVInitS(4, NEQ, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FNVInitS = ',ier
+     stop
+  endif
 
   ! initialize ARKode solver to use IMEX integrator, scalar tolerances
   call FARKMalloc(T0, y, 2, 1, rtol, atol, &
                   iout, rout, ipar, rpar, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKMalloc = ',ier
+     stop
+  endif
 
   ! set integrator options
   call FARKSetIin('ORDER', order, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKSetIin = ',ier
+     stop
+  endif
   call FARKSetIin('ADAPT_METHOD', adapt_method, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKSetIin = ',ier
+     stop
+  endif
   call FARKSetIin('MAX_NITERS', maxcor, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKSetIin = ',ier
+     stop
+  endif
   call FARKSetRin('NLCONV_COEF', nlscoef, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKSetIin = ',ier
+     stop
+  endif
   call FARKSetIin('MAX_NSTEPS', 1000, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKSetIin = ',ier
+     stop
+  endif
 
   ! specify use of dense linear solver
   call FARKDense(NEQ, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKDense = ',ier
+     stop
+  endif
   call FARKDenseSetJac(1, ier)
+  if (ier < 0) then
+     write(0,*) 'Error in FARKDenseSetJac = ',ier
+     stop
+  endif
 
   ! loop over time outputs
   Tout = T0
@@ -109,17 +144,14 @@ program driver
   print '(3x,4(es12.5,1x))', Tcur, y
   do it = 1,Nt
 
-     ! set next output time
-     Tout = min(Tout + dTout, Tf)
-
-     ! call solver
-     call FARKode(Tout, Tcur, y, 1, ier)
+     Tout = min(Tout + dTout, Tf)           ! set next output time
+     call FARKode(Tout, Tcur, y, 1, ier)    ! call solver
      if (ier < 0) then
         print *, 'Error at step ',it,', FARKode return flag =',ier
         exit
      end if
 
-     ! output current solution information
+     ! output current solution
      print '(3x,4(es12.5,1x))', Tcur, y
 
   end do
@@ -136,13 +168,8 @@ program driver
   print '(A,i7)', '   Total RHS evals for setting up the linear system =', iout(17)
   print '(A,i7)', '   Total number of Jacobian evaluations =', iout(18)
   print '(A,i7)', '   Total number of Newton iterations =', iout(11)
-  print '(A,i7)', '   Total number of nonlinear solver convergence failures =', &
-       iout(12)
+  print '(A,i7)', '   Total number of nonlinear solver convergence failures =', iout(12)
   print '(A,i7)', '   Total number of error test failures =', iout(10)
-  print *, '  '
-
-  ! output final solution
-  print *, '     y(Tf) =', y
   print *, '  '
 
   ! clean up
@@ -151,12 +178,9 @@ program driver
 end program driver
 !-----------------------------------------------------------------
 
-
-
 !-----------------------------------------------------------------
 ! Required subroutines for FARKODE interface
 !-----------------------------------------------------------------
-
 
 subroutine farkifun(t, y, ydot, ipar, rpar, ier)
 !-----------------------------------------------------------------
@@ -184,7 +208,7 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   v  = y(2)
   w  = y(3)
 
-  ! fill implicit RHS
+  ! fill implicit RHS, set success flag
   ydot(1) = 0.d0
   ydot(2) = 0.d0
   ydot(3) = (b-w)/ep
@@ -192,7 +216,6 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   
 end subroutine farkifun
 !-----------------------------------------------------------------
-
 
 subroutine farkefun(t, y, ydot, ipar, rpar, ier)
 !-----------------------------------------------------------------
@@ -220,7 +243,7 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   v  = y(2)
   w  = y(3)
 
-  ! fill explicit RHS
+  ! fill explicit RHS, set success flag
   ydot(1) = a - (w+1.d0)*u + v*u*u
   ydot(2) = w*u - v*u*u
   ydot(3) = -w*u
@@ -228,7 +251,6 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   
 end subroutine farkefun
 !-----------------------------------------------------------------
-
 
 subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
 !-----------------------------------------------------------------
@@ -256,11 +278,10 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   v  = y(2)
   w  = y(3)
 
-  ! fill implicit Jacobian
+  ! fill implicit Jacobian, set success flag
   DJac = 0.d0
   DJac(3,3) = -1.d0/ep
   ier = 0
-  
-  
+    
 end subroutine farkdjac
 !-----------------------------------------------------------------
