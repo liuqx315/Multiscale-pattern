@@ -34,78 +34,66 @@
 /* Header files */
 #include <stdio.h>
 #include <math.h>
-#include <arkode/arkode.h>
-#include <nvector/nvector_serial.h>
-#include <arkode/arkode_dense.h>
-#include <sundials/sundials_dense.h>
-#include <sundials/sundials_types.h>
+#include <arkode/arkode.h>            /* prototypes for ARKode fcts., consts. */
+#include <nvector/nvector_serial.h>   /* serial N_Vector types, fcts., macros */
+#include <arkode/arkode_dense.h>      /* prototype for ARKDense solver */
+#include <sundials/sundials_dense.h>  /* defs. of DlsMat and DENSE_ELEM */
+#include <sundials/sundials_types.h>  /* def. of type 'realtype' */
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-static int g(realtype t, N_Vector y, 
-	     realtype *gout, void *user_data);
-
+static int g(realtype t, N_Vector y,
+          realtype *gout, void *user_data);
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
-
 
 /* Main Program */
 int main()
 {
   /* general problem parameters */
-  realtype T0 = RCONST(0.0);
-  realtype T1 = RCONST(0.4);
-  realtype TMult = RCONST(10.0);
-  int Nt = 12;
-  realtype u0, v0, w0;
-  long int NEQ = 3;
+  realtype T0 = RCONST(0.0);     /* initial time */
+  realtype T1 = RCONST(0.4);     /* final time */
+  realtype TMult = RCONST(10.0); /* output time multiplication factor */
+  int Nt = 12;                   /* total number of output times */
+  long int NEQ = 3;              /* number of dependent vars. */
   int rootsfound[2];
   long int nst, nst_a, nfe, nfi, nsetups;
   long int nje, nfeLS, nni, ncfn, netf, nge;
-  
-  /* declare solver parameters */
-  int flag, rtflag;
+  int flag, rtflag;              /* reusable error-checking flags */
 
   /* general problem variables */
-  N_Vector y = NULL;
-  N_Vector atols = NULL;
-  void *arkode_mem = NULL;
+  N_Vector y = NULL;             /* empty vector for storing solution */
+  N_Vector atols = NULL;         /* empty vector for absolute tolerances */
+  void *arkode_mem = NULL;       /* empty ARKode memory structure */
 
-  /* open solver diagnostics output file for writing */
-  FILE *DFID;
-  DFID=fopen("diags_ark_robertson_root.txt","w");
-  
   /* set up the initial conditions */
-  u0 = RCONST(1.0);
-  v0 = RCONST(0.0);
-  w0 = RCONST(0.0);
+  realtype u0 = RCONST(1.0);
+  realtype v0 = RCONST(0.0);
+  realtype w0 = RCONST(0.0);
 
   /* Initial problem output */
   printf("\nRobertson ODE test problem (with rootfinding):\n");
   printf("    initial conditions:  u0 = %g,  v0 = %g,  w0 = %g\n",u0,v0,w0);
 
-  /* Create serial vectors of length NEQ for initial condition */
-  y = N_VNew_Serial(NEQ);
+  /* Initialize data structures */
+  y = N_VNew_Serial(NEQ);        /* Create serial vector for solution */
   if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
-  atols = N_VNew_Serial(NEQ);
+  atols = N_VNew_Serial(NEQ);    /* Create serial vector absolute tolerances */
   if (check_flag((void *) atols, "N_VNew_Serial", 0)) return 1;
-
-  /* Set initial conditions into y */
-  NV_Ith_S(y,0) = u0;
+  NV_Ith_S(y,0) = u0;            /* Set initial conditions into y */
   NV_Ith_S(y,1) = v0;
   NV_Ith_S(y,2) = w0;
-
-  /* Call ARKodeCreate to create the solver memory */
-  arkode_mem = ARKodeCreate();
+  arkode_mem = ARKodeCreate();   /* Create the solver memory */
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
-  
+
   /* Call ARKodeInit to initialize the integrator memory and specify the
-     user's right hand side function in y'=f(t,y), the inital time T0, and
-     the initial dependent variable vector y */
+     hand-side side function in y'=f(t,y), the inital time T0, and
+     the initial dependent variable vector y.  Note: since this
+     problem is fully implicit, we set f_E to NULL and f_I to f. */
   flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
   if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
@@ -115,78 +103,57 @@ int main()
   NV_Ith_S(atols,1) = RCONST(1.0e-8);
   NV_Ith_S(atols,2) = RCONST(1.0e-8);
 
-  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
-  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
-
-  /* Increase maximum number of error test failures */
-  flag = ARKodeSetMaxErrTestFails(arkode_mem, 20);
+  /* Set routines */
+  flag = ARKodeSetMaxErrTestFails(arkode_mem, 20);        /* Increase max error test fails */
   if (check_flag(&flag, "ARKodeSetMaxErrTestFails", 1)) return 1;
-
-  /* Call ARKodeSetmaxNonlinIters to increase default for this problem*/
-  flag = ARKodeSetMaxNonlinIters(arkode_mem, 8);
+  flag = ARKodeSetMaxNonlinIters(arkode_mem, 8);          /* Increase max nonlinear iterations  */
   if (check_flag(&flag, "ARKodeSetMaxNonlinIters", 1)) return 1;
-
-  /* Call ARKodeSetNonlinConvCoef */
-  flag = ARKodeSetNonlinConvCoef(arkode_mem, 1.e-7);
+  flag = ARKodeSetNonlinConvCoef(arkode_mem, 1.e-7);      /* Update nonlinear solver convergence coeff. */
   if (check_flag(&flag, "ARKodeSetNonlinConvCoef", 1)) return 1;
-
-  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
-  flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);        /* Increase max number of steps */
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
-
-  /* Call ARKodeSStolerances to specify the scalar relative and absolute
-     tolerances */
-  flag = ARKodeSVtolerances(arkode_mem, reltol, atols);
+  flag = ARKodeSVtolerances(arkode_mem, reltol, atols);   /* Specify tolerances */
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* Call ARKodeRootInit to specify the root function with 2 equations */
+  /* Specify the root-finding function, having 2 equations */
   flag = ARKodeRootInit(arkode_mem, 2, g);
   if (check_flag(&flag, "ARKodeRootInit", 1)) return 1;
 
-  /* Call ARKDense to specify the ARKDENSE dense linear solver */
-  flag = ARKDense(arkode_mem, NEQ);
+  /* Linear solver specification */
+  flag = ARKDense(arkode_mem, NEQ);                /* Specify dense linear solver */
   if (check_flag(&flag, "ARKDense", 1)) return 1;
-
-  /* Set the Jacobian routine to Jac (user-supplied) */
-  flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);
+  flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);     /* Set the Jacobian routine */
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
-
-  /* Print out root-finding expectations */
-  printf("\n Roots should be found at the following times and values:\n");
-  printf("   t=2.64019e-1, u=9.89965e-1, v=3.47049e-5,  w=1.00000e-2  [ 0 1]\n");
-  printf("   t=2.07956e+7, u=1.00000e-4, v=3.96207e-10, w=9.99900e-1  [-1 0]\n\n");
-
-  /* In loop, call ARKode, print results, and test for error.
-     Break out of loop when Nt preset output times have been reached */
+  /* Main time-stepping loop: calls ARKode to perform the integration, then
+     prints results.  Stops when the final time has been reached */
   realtype t = T0;
   printf("        t             u             v             w\n");
   printf("   -----------------------------------------------------\n");
-  printf("  %12.5e  %12.5e  %12.5e  %12.5e\n", 
-	 t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
+  printf("  %12.5e  %12.5e  %12.5e  %12.5e\n",
+      t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
   realtype tout = T1;
   int iout=0;
   while(1) {
 
-    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    printf("  %12.5e  %12.5e  %12.5e  %12.5e\n",  t, 
-	   NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
-
-    if (flag == ARK_ROOT_RETURN) {
-      rtflag = ARKodeGetRootInfo(arkode_mem, rootsfound);
-      if (check_flag(&flag, "ARKodeGetRootInfo", 1)) return 1;
-      printf("      rootsfound[] = %3d %3d\n", 
-	     rootsfound[0], rootsfound[1]);
-    }
-
+    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);     /* call integrator */
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag >= 0) {
+    printf("  %12.5e  %12.5e  %12.5e  %12.5e\n",  t,        /* access/print solution */
+        NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
+    if (flag == ARK_ROOT_RETURN) {                          /* check if a root was found */
+      rtflag = ARKodeGetRootInfo(arkode_mem, rootsfound);
+      if (check_flag(&rtflag, "ARKodeGetRootInfo", 1)) return 1;
+      printf("      rootsfound[] = %3d %3d\n",
+          rootsfound[0], rootsfound[1]);
+    }
+    if (flag >= 0) {                                        /* successful solve: update output time */
       iout++;
       tout *= TMult;
+    } else {                                                /* unsuccessful solve: break */
+      fprintf(stderr,"Solver failure, stopping integration\n");
+      break;
     }
-
-    if (iout == Nt) break;
+    if (iout == Nt) break;                                  /* stop after enough outputs */
   }
   printf("   -----------------------------------------------------\n");
 
@@ -209,7 +176,6 @@ int main()
   check_flag(&flag, "ARKDlsGetNumJacEvals", 1);
   flag = ARKDlsGetNumRhsEvals(arkode_mem, &nfeLS);
   check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
-
   flag = ARKodeGetNumGEvals(arkode_mem, &nge);
   check_flag(&flag, "ARKodeGetNumGEvals", 1);
 
@@ -225,18 +191,11 @@ int main()
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
 
-  /* Free y vector */
-  N_VDestroy_Serial(y);
-
-  /* Free integrator memory */
-  ARKodeFree(&arkode_mem);
-
-  /* close solver diagnostics output file */
-  fclose(DFID);
-
+  /* Clean up and return with successful completion */
+  N_VDestroy_Serial(y);        /* Free y vector */
+  ARKodeFree(&arkode_mem);     /* Free integrator memory */
   return 0;
 }
-
 
 /*-------------------------------
  * Functions called by the solver
@@ -245,20 +204,16 @@ int main()
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  realtype u = NV_Ith_S(y,0);
+  realtype u = NV_Ith_S(y,0);     /* access current solution */
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
-  /* du/dt = -0.04*u + 1.e4*v*w */
+  /* Fill in the ODE RHS function */
   NV_Ith_S(ydot,0) = -0.04*u + 1.e4*v*w;
-
-  /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
   NV_Ith_S(ydot,1) = 0.04*u - 1.e4*v*w - 3.e7*v*v;
-
-  /* dw/dt = 3.e7*v*v */
   NV_Ith_S(ydot,2) = 3.e7*v*v;
 
-  return 0;
+  return 0;                      /* Return with success */
 }
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
@@ -266,43 +221,35 @@ static int Jac(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-  realtype v = NV_Ith_S(y,1);
+  realtype v = NV_Ith_S(y,1);    /* access current solution */
   realtype w = NV_Ith_S(y,2);
-  SetToZero(J);
+  SetToZero(J);                  /* initialize Jacobian to zero */
 
-  /* du/dt = -0.04*u + 1.e4*v*w */
+  /* Fill in the Jacobian of the ODE RHS function */
   DENSE_ELEM(J,0,0) = -0.04;
   DENSE_ELEM(J,0,1) = 1.e4*w;
   DENSE_ELEM(J,0,2) = 1.e4*v;
 
-  /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
   DENSE_ELEM(J,1,0) = 0.04;
   DENSE_ELEM(J,1,1) = -1.e4*w - 6.e7*v;
   DENSE_ELEM(J,1,2) = -1.e4*v;
 
-  /* dw/dt = 3.e7*v*v */
   DENSE_ELEM(J,2,1) = 6.e7*v;
 
-  return 0;
+  return 0;                      /* Return with success */
 }
 
 /* g routine to compute the root-finding function g(t,y). */
 static int g(realtype t, N_Vector y, realtype *gout, void *user_data)
 {
-  realtype u = NV_Ith_S(y,0);
+  realtype u = NV_Ith_S(y,0);    /* access current solution */
   realtype w = NV_Ith_S(y,2);
 
-  /* check for u == 1e-4 */
-  gout[0] = u - RCONST(0.0001);
+  gout[0] = u - RCONST(0.0001);  /* check for u == 1e-4 */
+  gout[1] = w - RCONST(0.01);    /* check for w == 1e-2 */
 
-  /* check for w == 1e-2 */
-  gout[1] = w - RCONST(0.01);
-
-  return 0;
+  return 0;                      /* Return with success */
 }
-
-
-
 
 /*-------------------------------
  * Private helper functions

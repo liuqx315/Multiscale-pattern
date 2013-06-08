@@ -36,46 +36,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <arkode/arkode.h>
-#include <nvector/nvector_serial.h>
-#include <arkode/arkode_pcg.h>
-#include <sundials/sundials_types.h>
+#include <arkode/arkode.h>            /* prototypes for ARKode fcts., consts. */
+#include <nvector/nvector_serial.h>   /* serial N_Vector types, fcts., macros */
+#include <arkode/arkode_pcg.h>        /* prototype for ARKPcg solver */
+#include <sundials/sundials_types.h>  /* def. of type 'realtype' */
 
 /* user data structure */
-typedef struct {  
-  long int N;    /* number of intervals     */
-  realtype dx;   /* mesh spacing            */
-  realtype k;    /* diffusion coefficient   */
+typedef struct {
+  long int N;    /* number of intervals   */
+  realtype dx;   /* mesh spacing          */
+  realtype k;    /* diffusion coefficient */
 } *UserData;
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
-static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
-	       N_Vector fy, void *user_data, N_Vector tmp);
+static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
+            N_Vector fy, void *user_data, N_Vector tmp);
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
-
 
 /* Main Program */
 int main() {
 
   /* general problem parameters */
-  realtype T0 = RCONST(0.0);
-  realtype Tf = RCONST(1.0);
-  int Nt = 10;
+  realtype T0 = RCONST(0.0);   /* initial time */
+  realtype Tf = RCONST(1.0);   /* final time */
+  int Nt = 10;                 /* total number of output times */
+  realtype rtol = 1.e-6;       /* relative tolerance */
+  realtype atol = 1.e-10;      /* absolute tolerance */
   UserData udata = NULL;
   realtype *data;
   long int N, i;
 
   /* general problem variables */
-  int flag;
-  N_Vector y = NULL;
-  void *arkode_mem = NULL;
-
-  /* allocate udata structure */
-  udata = (UserData) malloc(sizeof(*udata));
-  if (check_flag((void *) udata, "malloc", 2)) return 1;
+  int flag;                 /* reusable error-checking flag */
+  N_Vector y = NULL;             /* empty vector for storing solution */
+  void *arkode_mem = NULL;        /* empty ARKode memory structure */
 
   /* read problem parameter and tolerances from input file:
      N - number of spatial discretization points
@@ -87,106 +84,78 @@ int main() {
   flag = fscanf(FID,"  k = %lf\n", &k);
   fclose(FID);
 
-  /* store the inputs in the UserData structure */
+  /* allocate and fill udata structure */
+  udata = (UserData) malloc(sizeof(*udata));
   udata->N = N;
   udata->k = k;
+  udata->dx = RCONST(1.0)/(1.0*N-1.0);     /* mesh spacing */
 
-  /* open solver diagnostics output file for writing */
-  FILE *DFID;
-  DFID=fopen("diags_ark_heat1D.txt","w");
-  
   /* Initial problem output */
   printf("\n1D Heat PDE test problem:\n");
   printf("  N = %li\n", udata->N);
   printf("  diffusion coefficient:  k = %g\n", udata->k);
 
-  /* Create serial vector of length N for initial condition */
-  y = N_VNew_Serial(N);
+  /* Initialize data structures */
+  y = N_VNew_Serial(N);            /* Create serial vector for solution */
   if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
+  N_VConst(0.0, y);                /* Set initial conditions */
+  arkode_mem = ARKodeCreate();     /* Create the solver memory */
+  if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
 
-  /* set spatial mesh spacing */
-  udata->dx = RCONST(1.0)/(1.0*N-1.0);
+  /* Call ARKodeInit to initialize the integrator memory and specify the
+     hand-side side function in y'=f(t,y), the inital time T0, and
+     the initial dependent variable vector y.  Note: since this
+     problem is fully implicit, we set f_E to NULL and f_I to f. */
+  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
+  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
+
+  /* Set routines */
+  flag = ARKodeSetUserData(arkode_mem, (void *) udata);   /* Pass udata to user functions */
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);         /* Increase max num steps  */
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
+  flag = ARKodeSStolerances(arkode_mem, rtol, atol);      /* Specify tolerances */
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
+
+  /* Linear solver specification */
+  flag = ARKPcg(arkode_mem, 0, N);                        /* Specify the PCG solver */
+  if (check_flag(&flag, "ARKPcg", 1)) return 1;
+  flag = ARKSpilsSetJacTimesVecFn(arkode_mem, Jac);       /* Set the Jacobian routine */
+  if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
   /* output mesh to disk */
   FID=fopen("heat_mesh.txt","w");
   for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
   fclose(FID);
-  
-  /* Set initial conditions into y */
-  N_VConst(0.0, y);
 
-
-  /* Call ARKodeCreate to create the solver memory */
-  arkode_mem = ARKodeCreate();
-  if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
-
-  /* Call ARKodeInit to initialize the integrator memory and specify the
-     user's right hand side function in y'=f(t,y), the inital time T0, and
-     the initial dependent variable vector y */
-  flag = ARKodeInit(arkode_mem, NULL, f, T0, y);
-  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
-
-  /* Call init_from_file helper routine to read and set solver parameters */
-  realtype rtol = 1.e-6;
-  realtype atol = 1.e-10;
-
-  /* Call ARKodeSetUserData to pass rdata to user functions */
-  flag = ARKodeSetUserData(arkode_mem, (void *) udata);
-  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
-
-  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
-  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
-
-  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
-  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
-  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
-
-  /* Call ARKodeSStolerances to specify the scalar relative and absolute
-     tolerances */
-  flag = ARKodeSStolerances(arkode_mem, rtol, atol);
-  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
-
-  /* Specify the linear solver */
-  flag = ARKPcg(arkode_mem, 0, N);
-  if (check_flag(&flag, "ARKPcg", 1)) return 1;
-
-  /* Set the Jacobian routine to Jac (user-supplied) */
-  flag = ARKSpilsSetJacTimesVecFn(arkode_mem, Jac);
-  if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
-
-  /* Open output stream for results, access data arrays */
+  /* Open output stream for results, access data array */
   FILE *UFID=fopen("heat.txt","w");
   data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
   fprintf(UFID,"\n");
 
-  /* In loop, call ARKode, print results, and test for error.
-     Break out of loop when the final output time has been reached */
-  realtype t  = T0;
-  realtype dTout = Tf/Nt;
+  /* Main time-stepping loop: calls ARKode to perform the integration, then
+     prints results.  Stops when the final time has been reached */
+  realtype t = T0;
+  realtype dTout = (Tf-T0)/Nt;
   realtype tout = T0+dTout;
-  realtype u;
   printf("        t      ||u||_rms\n");
   printf("   -------------------------\n");
-  u = N_VDotProd(y,y);
-  u = sqrt(u/N);
-  printf("  %10.6f  %10.6f\n", t, u);
+  printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/N));
   int iout;
   for (iout=0; iout<Nt; iout++) {
 
-    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    u = N_VDotProd(y,y);
-    u = sqrt(u/N);
-    printf("  %10.6f  %10.6f\n", t, u);
-
+    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         /* call integrator */
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag >= 0) {
+    printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/N));   /* print solution stats */
+    if (flag >= 0) {                                            /* successful solve: update output time */
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
+    } else {                                                    /* unsuccessful solve: break */
+      fprintf(stderr,"Solver failure, stopping integration\n");
+      break;
     }
 
     /* output results to disk */
@@ -195,7 +164,6 @@ int main() {
   }
   printf("   -------------------------\n");
   fclose(UFID);
-    
 
   /* Print some final statistics */
   long int nst, nst_a, nfe, nfi, nsetups, nli, nJv, nlcf, nni, ncfn, netf;
@@ -221,8 +189,7 @@ int main() {
   check_flag(&flag, "ARKSpilsGetNumConvFails", 1);
 
   printf("\nFinal Solver Statistics:\n");
-  printf("   Internal solver steps = %li (attempted = %li)\n", 
-	 nst, nst_a);
+  printf("   Internal solver steps = %li (attempted = %li)\n", nst, nst_a);
   printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
   printf("   Total linear iterations = %li\n", nli);
@@ -232,21 +199,12 @@ int main() {
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
 
-  /* Free vectors */
-  N_VDestroy_Serial(y);
-
-  /* Free user data */
-  free(udata);
-
-  /* Free integrator memory */
-  ARKodeFree(&arkode_mem);
-
-  /* close solver diagnostics output file */
-  fclose(DFID);
-
+  /* Clean up and return with successful completion */
+  N_VDestroy_Serial(y);        /* Free vectors */
+  free(udata);                 /* Free user data */
+  ARKodeFree(&arkode_mem);     /* Free integrator memory */
   return 0;
 }
-
 
 /*--------------------------------
  * Functions called by the solver
@@ -255,19 +213,12 @@ int main() {
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  /* clear out ydot (to be careful) */
-  N_VConst(0.0, ydot);
-
-  /* problem data */
-  UserData udata = (UserData) user_data;
-
-  /* shortcuts to number of intervals, background values */
-  long int N  = udata->N;
+  N_VConst(0.0, ydot);                      /* Initialize ydot to zero */
+  UserData udata = (UserData) user_data;    /* access problem data */
+  long int N  = udata->N;                   /* set variable shortcuts */
   realtype k  = udata->k;
   realtype dx = udata->dx;
-
-  /* access data arrays */
-  realtype *Y = N_VGetArrayPointer(y);
+  realtype *Y = N_VGetArrayPointer(y);      /* access data arrays */
   if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
   realtype *Ydot = N_VGetArrayPointer(ydot);
   if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return 1;
@@ -281,28 +232,21 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   for (i=1; i<N-1; i++)
     Ydot[i] = c1*Y[i-1] + c2*Y[i] + c1*Y[i+1];
   Ydot[N-1] = 0.0;               /* right boundary condition */
-  Ydot[isource] += 1.0;          /* f */
+  Ydot[isource] += 1.0;          /* source term */
 
-  return 0;
+  return 0;                      /* Return with success */
 }
-
-
 
 /* Jacobian routine to compute J(t,y) = df/dy. */
 static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
 	       N_Vector fy, void *user_data, N_Vector tmp)
 {
-  /* clear out result (to be careful) */
-  N_VConst(0.0, Jv);
-
-  /* shortcuts to number of intervals, background values */
-  UserData udata = (UserData) user_data;
+  N_VConst(0.0, Jv);                         /* initialize Jv product to zero */
+  UserData udata = (UserData) user_data;     /* variable shortcuts */
   long int N  = udata->N;
   realtype k  = udata->k;
   realtype dx = udata->dx;
-
-  /* access data arrays */
-  realtype *V = N_VGetArrayPointer(v);
+  realtype *V = N_VGetArrayPointer(v);       /* access data arrays */
   if (check_flag((void *) V, "N_VGetArrayPointer", 0)) return 1;
   realtype *JV = N_VGetArrayPointer(Jv);
   if (check_flag((void *) JV, "N_VGetArrayPointer", 0)) return 1;
@@ -316,10 +260,8 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
     JV[i] = c1*V[i-1] + c2*V[i] + c1*V[i+1];
   JV[N-1] = 0.0;
 
-  return 0;
+  return 0;                                  /* Return with success */
 }
-
-
 
 /*-------------------------------
  * Private helper functions

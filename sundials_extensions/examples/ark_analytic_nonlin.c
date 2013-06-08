@@ -21,9 +21,9 @@
 /* Header files */
 #include <stdio.h>
 #include <math.h>
-#include <arkode/arkode.h>
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_types.h>
+#include <arkode/arkode.h>            /* prototypes for ARKode fcts., consts. */
+#include <nvector/nvector_serial.h>   /* serial N_Vector types, fcts., macros */
+#include <sundials/sundials_types.h>  /* def. of type 'realtype' */
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -31,20 +31,19 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
-
 /* Main Program */
 int main()
 {
   /* general problem parameters */
-  realtype T0 = RCONST(0.0);
-  realtype Tf = RCONST(10.0);
-  realtype dTout = RCONST(1.0);
-  long int NEQ = 1;
+  realtype T0 = RCONST(0.0);     /* initial time */
+  realtype Tf = RCONST(10.0);    /* final time */
+  realtype dTout = RCONST(1.0);  /* time between outputs */
+  long int NEQ = 1;              /* number of dependent vars. */
 
   /* general problem variables */
-  int flag;
-  N_Vector y = NULL;
-  void *arkode_mem = NULL;
+  int flag;                      /* reusable error-checking flag */
+  N_Vector y = NULL;             /* empty vector for storing solution */
+  void *arkode_mem = NULL;       /* empty ARKode memory structure */
 
   /* read problem parameter and tolerances from input file:
      reltol - desired relative tolerance
@@ -52,67 +51,54 @@ int main()
   double reltol_, abstol_;
   FILE *FID;
   FID=fopen("input_analytic_nonlin.txt","r");
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
+  flag = fscanf(FID,"  reltol = %lf\n", &reltol_);
+  flag = fscanf(FID,"  abstol = %lf\n", &abstol_);
   fclose(FID);
 
   /* convert the inputs to 'realtype' format */
   realtype reltol = reltol_;
   realtype abstol = abstol_;
 
-  /* open solver diagnostics output file for writing */
-  FILE *DFID;
-  DFID=fopen("diags_ark_analytic_nonlin.txt","w");
-  
   /* Initial problem output */
   printf("\nAnalytical ODE test problem:\n");
   printf("   reltol = %.1e\n",  reltol);
   printf("   abstol = %.1e\n\n",abstol);
 
-
-  /* Create serial vector of length NEQ for initial condition */
-  y = N_VNew_Serial(NEQ);
+  /* Initialize data structures */
+  y = N_VNew_Serial(NEQ);          /* Create serial vector for solution */
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
-
-  /* Initialize y to 0 */
-  NV_Ith_S(y,0) = 0.0;
-
-  /* Call ARKodeCreate to create the solver memory */
-  arkode_mem = ARKodeCreate();
+  NV_Ith_S(y,0) = 0.0;             /* Specify initial condition */
+  arkode_mem = ARKodeCreate();     /* Create the solver memory */
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0)) return 1;
-  
+
   /* Call ARKodeInit to initialize the integrator memory and specify the
-     user's right hand side function in y'=f(t,y), the inital time T0, and
-     the initial dependent variable vector y */
+     hand-side side function in y'=f(t,y), the inital time T0, and
+     the initial dependent variable vector y.  Note: since this
+     problem is fully explicit, we set f_U to NULL and f_E to f. */
   flag = ARKodeInit(arkode_mem, f, NULL, T0, y);
   if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
-  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
-  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
-
-  /* Call ARKodeSStolerances to specify the scalar relative and absolute
-     tolerances */
+  /* Specify tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* In loop, call ARKode, print results, and test for error.
-     Break out of loop when the final output time has been reached */
+  /* Main time-stepping loop: calls ARKode to perform the integration, then
+     prints results.  Stops when the final time has been reached */
   realtype t = T0;
   realtype tout = T0+dTout;
-  realtype u;
   printf("        t           u\n");
   printf("   ---------------------\n");
   while (Tf - t > 1.0e-15) {
 
-    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    u = NV_Ith_S(y,0);
-    printf("  %10.6f  %10.6f\n", t, u);
-
+    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);       /* call integrator */
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (flag >= 0) {
+    printf("  %10.6f  %10.6f\n", t, NV_Ith_S(y,0));           /* access/print solution */
+    if (flag >= 0) {                                          /* successful solve: update time */
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
+    } else {                                                  /* unsuccessful solve: break */
+      fprintf(stderr,"Solver failure, stopping integration\n");
+      break;
     }
   }
   printf("   ---------------------\n");
@@ -133,18 +119,11 @@ int main()
   printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total number of error test failures = %li\n\n", netf);
 
-  /* Free y vector */
-  N_VDestroy_Serial(y);
-
-  /* Free integrator memory */
-  ARKodeFree(&arkode_mem);
-
-  /* close solver diagnostics output file */
-  fclose(DFID);
-
+  /* Clean up and return with successful completion */
+  N_VDestroy_Serial(y);        /* Free y vector */
+  ARKodeFree(&arkode_mem);     /* Free integrator memory */
   return 0;
 }
-
 
 /*-------------------------------
  * Functions called by the solver
@@ -156,8 +135,6 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   NV_Ith_S(ydot,0) = (t+1.0)*exp(-NV_Ith_S(y,0));
   return 0;
 }
-
-
 
 /*-------------------------------
  * Private helper functions
