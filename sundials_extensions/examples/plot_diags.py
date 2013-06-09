@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # matplotlib-based plotting script for RMHD3d tests
 # Daniel R. Reynolds, reynolds@smu.edu
 
