@@ -273,6 +273,7 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   real*8 :: tmp(ipar(1))
 
   ! fully implicit solver only, return error flag
+  ydot = 0.d0
   ier = -1
   
 end subroutine farkefun
@@ -296,7 +297,6 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
 
   ! fully implicit only, call jeval
   call jeval(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
-
   ier = 0
   
   
