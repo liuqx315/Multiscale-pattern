@@ -60,29 +60,29 @@ using namespace std;
 
 // user data structure 
 typedef struct {
-  long int nx;    // global number of x grid points 
-  long int ny;    // global number of y grid points
-  long int is;    // global x indices of this proc's subdomain
+  long int nx;          // global number of x grid points 
+  long int ny;          // global number of y grid points
+  long int is;          // global x indices of this subdomain
   long int ie;
-  long int js;    // global y indices of this proc's subdomain
+  long int js;          // global y indices of this subdomain
   long int je;
-  long int nxl;   // local number of x grid points 
-  long int nyl;   // local number of y grid points 
-  realtype dx;    // x-directional mesh spacing 
-  realtype dy;    // y-directional mesh spacing 
-  realtype kx;    // x-directional diffusion coefficient 
-  realtype ky;    // y-directional diffusion coefficient 
-  N_Vector h;     // heat source vector
-  N_Vector d;     // inverse of Jacobian diagonal
-  MPI_Comm comm;  // communicator object
-  int myid;       // MPI process ID
-  int nprocs;     // total number of MPI processes
-  bool HaveBdry[2][2];   // flags denoting if on physical boundary
-  realtype *Erecv;       // receive buffers for neighbor exchange
+  long int nxl;         // local number of x grid points 
+  long int nyl;         // local number of y grid points 
+  realtype dx;          // x-directional mesh spacing 
+  realtype dy;          // y-directional mesh spacing 
+  realtype kx;          // x-directional diffusion coefficient 
+  realtype ky;          // y-directional diffusion coefficient 
+  N_Vector h;           // heat source vector
+  N_Vector d;           // inverse of Jacobian diagonal
+  MPI_Comm comm;        // communicator object
+  int myid;             // MPI process ID
+  int nprocs;           // total number of MPI processes
+  bool HaveBdry[2][2];  // flags denoting if on physical boundary
+  realtype *Erecv;      // receive buffers for neighbor exchange
   realtype *Wrecv;
   realtype *Nrecv;
   realtype *Srecv;
-  realtype *Esend;       // send buffers for neighbor exchange
+  realtype *Esend;      // send buffers for neighbor exchange
   realtype *Wsend;
   realtype *Nsend;
   realtype *Ssend;
@@ -100,6 +100,8 @@ static int PSol(realtype t, N_Vector y, N_Vector fy, N_Vector r,
 // Private functions 
 //    checks function return values 
 static int check_flag(void *flagvalue, const string funcname, int opt);
+//    sets default values into UserData structure
+static int InitUserData(UserData *udata);
 //    sets up parallel decomposition
 static int SetupDecomp(UserData *udata);
 //    performs neighbor exchange
@@ -116,31 +118,52 @@ int main(int argc, char* argv[]) {
   int Nt = 20;                 // total number of output times 
   UserData *udata = NULL;
   realtype *data;
-  long int N, i, j;
+  long int N, Ntot, i, j;
 
   // general problem variables 
   int flag;                      // reusable error-checking flag 
+  int myid;                      // MPI process ID
   N_Vector y = NULL;             // empty vector for storing solution 
   void *arkode_mem = NULL;       // empty ARKode memory structure 
 
   // initialize MPI
   flag = MPI_Init(&argc, &argv);
   if (check_flag(&flag, "MPI_Init", 1)) return 1;
+  flag = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  if (check_flag(&flag, "MPI_Comm_rank", 1)) return 1;
 
-  /* read problem parameter and tolerances from input file:
-     N - number of spatial discretization points
-     k - diffusion coefficient */
-  double kx, ky, rtol_, atol_;
-  long int nx, ny;
-  FILE *FID;
-  FID = fopen("input_heat2D.txt","r");
-  flag = fscanf(FID,"nx = %li\n", &nx);
-  flag = fscanf(FID,"ny = %li\n", &ny);
-  flag = fscanf(FID,"kx = %lf\n", &kx);
-  flag = fscanf(FID,"ky = %lf\n", &ky);
-  flag = fscanf(FID,"rtol = %lf\n", &rtol_);
-  flag = fscanf(FID,"atol = %lf\n", &atol_);
-  fclose(FID);
+  /* root process reads problem parameters from input file and 
+     broadcasts to other processes */
+  double kx, ky, rtol_, atol_, dbuff[4];
+  long int nx, ny, ibuff[2];
+  if (myid == 0) {
+    FILE *FID;
+    FID = fopen("input_heat2D.txt","r");
+    flag = fscanf(FID,"nx = %li\n", &nx);
+    flag = fscanf(FID,"ny = %li\n", &ny);
+    flag = fscanf(FID,"kx = %lf\n", &kx);
+    flag = fscanf(FID,"ky = %lf\n", &ky);
+    flag = fscanf(FID,"rtol = %lf\n", &rtol_);
+    flag = fscanf(FID,"atol = %lf\n", &atol_);
+    fclose(FID);
+    ibuff[0] = nx;    // pack buffers
+    ibuff[1] = ny;
+    dbuff[0] = kx;
+    dbuff[1] = ky;
+    dbuff[2] = rtol_;
+    dbuff[3] = atol_;
+  }
+  // perform broadcast
+  flag = MPI_Bcast(ibuff, 2, MPI_LONG, 0, MPI_COMM_WORLD);
+  if (check_flag(&flag, "MPI_Bcast", 1)) return 1;
+  flag = MPI_Bcast(dbuff, 4, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  if (check_flag(&flag, "MPI_Bcast", 1)) return 1;
+  nx = ibuff[0];       // unpack buffers
+  ny = ibuff[1];
+  kx = dbuff[0];
+  ky = dbuff[1];
+  rtol_ = dbuff[2];
+  atol_ = dbuff[3];
 
   // convert input tolerances to realtype type 
   realtype rtol = rtol_;      // relative tolerance 
@@ -148,6 +171,8 @@ int main(int argc, char* argv[]) {
 
   // allocate and fill udata structure 
   udata = new UserData;
+  flag = InitUserData(udata);
+  if (check_flag(&flag, "InitUserData", 1)) return 1;
   udata->nx = nx;
   udata->ny = ny;
   udata->kx = kx;
@@ -169,19 +194,25 @@ int main(int argc, char* argv[]) {
     cout << "   kx = " << udata->kx << "\n";
     cout << "   ky = " << udata->ky << "\n";
     cout << "   rtol = " << rtol << "\n";
-    cout << "   atol = " << atol << "\n\n";
+    cout << "   atol = " << atol << "\n";
+    cout << "   nxl (proc 0) = " << udata->nxl << "\n";
+    cout << "   nyl (proc 0) = " << udata->nyl << "\n\n";
   }
 
   // Initialize data structures 
   N = (udata->nxl)*(udata->nyl);
-  y = N_VNew_Parallel(udata->comm, N, nx*ny);            // Create parallel vector for solution 
+  Ntot = nx*ny;
+  //  y = N_VNew_Parallel(udata->comm, N, Ntot);         // Create parallel vector for solution 
+  y = N_VNew_Parallel(MPI_COMM_WORLD, N, Ntot);         // Create parallel vector for solution 
   if (check_flag((void *) y, "N_VNew_Parallel", 0)) return 1;
-  N_VConst(0.0, y);                                      // Set initial conditions 
-  udata->h = N_VNew_Parallel(udata->comm, N, nx*ny);     // Create vector for heat source
+  N_VConst(0.0, y);                                  // Set initial conditions 
+  //  udata->h = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for heat source
+  udata->h = N_VNew_Parallel(MPI_COMM_WORLD, N, Ntot);  // Create vector for heat source
   if (check_flag((void *) udata->h, "N_VNew_Parallel", 0)) return 1;
-  udata->d = N_VNew_Parallel(udata->comm, N, nx*ny);     // Create vector for Jacobian diagonal
+  //  udata->d = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for Jacobian diagonal
+  udata->d = N_VNew_Parallel(MPI_COMM_WORLD, N, Ntot);  // Create vector for Jacobian diagonal
   if (check_flag((void *) udata->d, "N_VNew_Parallel", 0)) return 1;
-  arkode_mem = ARKodeCreate();                           // Create the solver memory 
+  arkode_mem = ARKodeCreate();                       // Create the solver memory 
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
 
   // fill in the heat source array
@@ -234,18 +265,19 @@ int main(int argc, char* argv[]) {
   realtype t = T0;
   realtype dTout = (Tf-T0)/Nt;
   realtype tout = T0+dTout;
+  realtype urms = sqrt(N_VDotProd(y,y)/nx/ny);
   if (outproc) {
     cout << "        t      ||u||_rms\n";
     cout << "   ----------------------\n";
-    printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/nx/ny));
+    printf("  %10.6f  %10.6f\n", t, urms);
   }
   int iout;
   for (iout=0; iout<Nt; iout++) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         // call integrator 
     if (check_flag(&flag, "ARKode", 1)) break;
-    if (outproc)  printf("  %10.6f  %10.6f\n", t,               // print solution stats 
-			 sqrt(N_VDotProd(y,y)/nx/ny));   
+    urms = sqrt(N_VDotProd(y,y)/nx/ny);
+    if (outproc)  printf("  %10.6f  %10.6f\n", t, urms);        // print solution stats 
     if (flag >= 0) {                                            // successful solve: update output time
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
@@ -330,13 +362,13 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype dx = udata->dx;
   realtype dy = udata->dy;
   realtype *Y = N_VGetArrayPointer(y);           // access data arrays 
-  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
+  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return -1;
   realtype *Ydot = N_VGetArrayPointer(ydot);
-  if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return 1;
+  if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return -1;
 
   // Exchange boundary data with neighbors
   int ierr = Exchange(y, udata);
-  if (check_flag(&ierr, "Exchange", 1)) return 1;
+  if (check_flag(&ierr, "Exchange", 1)) return -1;
 
   // iterate over subdomain interior, computing approximation to RHS
   realtype c1 = kx/dx/dx;
@@ -423,7 +455,7 @@ static int PSet(realtype t, N_Vector y, N_Vector fy, booleantype jok,
   realtype dx = udata->dx;
   realtype dy = udata->dy;
   realtype *diag = N_VGetArrayPointer(tmp1);  // access data arrays 
-  if (check_flag((void *) diag, "N_VGetArrayPointer", 0)) return 1;
+  if (check_flag((void *) diag, "N_VGetArrayPointer", 0)) return -1;
 
   // set all entries of tmp1 to the diagonal values of interior
   // (since boundary RHS is 0, set boundary diagonals to the same)
@@ -487,7 +519,7 @@ static int SetupDecomp(UserData *udata)
   // check that this has not been called before
   if (udata->Erecv != NULL || udata->Wrecv != NULL || 
       udata->Srecv != NULL || udata->Nrecv != NULL) {
-    cerr << "SetupDecomp error: parallel decomposition already set up\n";
+    cerr << "SetupDecomp warning: parallel decomposition already set up\n";
     return 1;
   }
 
@@ -496,12 +528,12 @@ static int SetupDecomp(UserData *udata)
   ierr = MPI_Comm_size(MPI_COMM_WORLD, &(udata->nprocs));
   if (ierr != MPI_SUCCESS) {
     cerr << "Error in MPI_Comm_size = " << ierr << "\n";
-    return 1;
+    return -1;
   }
   ierr = MPI_Dims_create(udata->nprocs, 2, dims);
   if (ierr != MPI_SUCCESS) {
     cerr << "Error in MPI_Dims_create = " << ierr << "\n";
-    return 1;
+    return -1;
   }
 
   // set up 2D Cartesian communicator
@@ -509,12 +541,12 @@ static int SetupDecomp(UserData *udata)
   ierr = MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &(udata->comm));
   if (ierr != MPI_SUCCESS) {
     cerr << "Error in MPI_Cart_create = " << ierr << "\n";
-    return 1;
+    return -1;
   }
   ierr = MPI_Comm_rank(udata->comm, &(udata->myid));
   if (ierr != MPI_SUCCESS) {
     cerr << "Error in MPI_Comm_rank = " << ierr << "\n";
-    return 1;
+    return -1;
   }
 
   // determine local extents
@@ -522,7 +554,7 @@ static int SetupDecomp(UserData *udata)
   ierr = MPI_Cart_get(udata->comm, 2, dims, periods, coords);
   if (ierr != MPI_SUCCESS) {
     cerr << "Error in MPI_Cart_get = " << ierr << "\n";
-    return 1;
+    return -1;
   }
   udata->is = (udata->nx)*(coords[0])/(dims[0]);
   udata->ie = (udata->nx)*(coords[0]+1)/(dims[0])-1;
@@ -569,7 +601,7 @@ static int Exchange(N_Vector y, UserData *udata)
 
   // access data array
   realtype *Y = N_VGetArrayPointer(y);
-  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
+  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return -1;
 
   // MPI equivalent of realtype type
   #if defined(SUNDIALS_SINGLE_PRECISION)
@@ -584,7 +616,7 @@ static int Exchange(N_Vector y, UserData *udata)
   ierr = MPI_Cart_get(udata->comm, 2, dims, periods, coords);
   if (ierr != MPI_SUCCESS) {
     cerr << "Error in MPI_Cart_get = " << ierr << "\n";
-    return 1;
+    return -1;
   }
   if (!udata->HaveBdry[0][0]) {
     nbcoords[0] = coords[0]-1; 
@@ -592,7 +624,7 @@ static int Exchange(N_Vector y, UserData *udata)
     ierr = MPI_Cart_rank(udata->comm, nbcoords, &ipW);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Cart_rank = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[0][1]) {
@@ -601,7 +633,7 @@ static int Exchange(N_Vector y, UserData *udata)
     ierr = MPI_Cart_rank(udata->comm, nbcoords, &ipE);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Cart_rank = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][0]) {
@@ -610,7 +642,7 @@ static int Exchange(N_Vector y, UserData *udata)
     ierr = MPI_Cart_rank(udata->comm, nbcoords, &ipS);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Cart_rank = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][1]) {
@@ -619,7 +651,7 @@ static int Exchange(N_Vector y, UserData *udata)
     ierr = MPI_Cart_rank(udata->comm, nbcoords, &ipN);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Cart_rank = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   
@@ -629,7 +661,7 @@ static int Exchange(N_Vector y, UserData *udata)
                    MPI_ANY_TAG, udata->comm, &reqRW);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Irecv = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[0][1]) {
@@ -637,7 +669,7 @@ static int Exchange(N_Vector y, UserData *udata)
                    MPI_ANY_TAG, udata->comm, &reqRE);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Irecv = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][0]) {
@@ -645,7 +677,7 @@ static int Exchange(N_Vector y, UserData *udata)
                    MPI_ANY_TAG, udata->comm, &reqRS);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Irecv = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][1]) {
@@ -653,7 +685,7 @@ static int Exchange(N_Vector y, UserData *udata)
                    MPI_ANY_TAG, udata->comm, &reqRN);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Irecv = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
 
@@ -664,7 +696,7 @@ static int Exchange(N_Vector y, UserData *udata)
               udata->comm, &reqSW);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Isend = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[0][1]) {
@@ -673,7 +705,7 @@ static int Exchange(N_Vector y, UserData *udata)
               udata->comm, &reqSE);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Isend = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][0]) {
@@ -682,7 +714,7 @@ static int Exchange(N_Vector y, UserData *udata)
               udata->comm, &reqSS);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Isend = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][1]) {
@@ -691,7 +723,7 @@ static int Exchange(N_Vector y, UserData *udata)
               udata->comm, &reqSS);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Isend = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
 
@@ -700,50 +732,86 @@ static int Exchange(N_Vector y, UserData *udata)
     ierr = MPI_Wait(&reqRW, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
     ierr = MPI_Wait(&reqSW, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[0][1]) {
     ierr = MPI_Wait(&reqRE, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
     ierr = MPI_Wait(&reqSE, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][0]) {
     ierr = MPI_Wait(&reqRS, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
     ierr = MPI_Wait(&reqSS, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
   if (!udata->HaveBdry[1][1]) {
     ierr = MPI_Wait(&reqRN, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
     ierr = MPI_Wait(&reqSN, &stat);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Wait = " << ierr << "\n";
-      return 1;
+      return -1;
     }
   }
+
+  return 0;     // return with success flag
+}
+
+// Initialize memory allocated within Userdata
+static int InitUserData(UserData *udata)
+{
+  udata->nx = 0;
+  udata->ny = 0;
+  udata->is = 0;
+  udata->ie = 0;  
+  udata->js = 0;
+  udata->je = 0;  
+  udata->nxl = 0;
+  udata->nyl = 0;
+  udata->dx = 0.0;
+  udata->dy = 0.0;
+  udata->kx = 0.0;
+  udata->ky = 0.0;
+  udata->h = NULL;
+  udata->d = NULL;
+  udata->comm = MPI_COMM_WORLD;
+  udata->myid = 0;
+  udata->nprocs = 0;
+  udata->HaveBdry[0][0] = 1;
+  udata->HaveBdry[0][1] = 1;
+  udata->HaveBdry[1][0] = 1;
+  udata->HaveBdry[1][1] = 1;
+  udata->Erecv = NULL;
+  udata->Wrecv = NULL;
+  udata->Nrecv = NULL;
+  udata->Srecv = NULL;
+  udata->Esend = NULL;
+  udata->Wsend = NULL;
+  udata->Nsend = NULL;
+  udata->Ssend = NULL;
 
   return 0;     // return with success flag
 }
