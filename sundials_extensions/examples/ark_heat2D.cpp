@@ -202,15 +202,12 @@ int main(int argc, char* argv[]) {
   // Initialize data structures 
   N = (udata->nxl)*(udata->nyl);
   Ntot = nx*ny;
-  //  y = N_VNew_Parallel(udata->comm, N, Ntot);         // Create parallel vector for solution 
-  y = N_VNew_Parallel(MPI_COMM_WORLD, N, Ntot);         // Create parallel vector for solution 
+  y = N_VNew_Parallel(udata->comm, N, Ntot);         // Create parallel vector for solution 
   if (check_flag((void *) y, "N_VNew_Parallel", 0)) return 1;
   N_VConst(0.0, y);                                  // Set initial conditions 
-  //  udata->h = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for heat source
-  udata->h = N_VNew_Parallel(MPI_COMM_WORLD, N, Ntot);  // Create vector for heat source
+  udata->h = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for heat source
   if (check_flag((void *) udata->h, "N_VNew_Parallel", 0)) return 1;
-  //  udata->d = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for Jacobian diagonal
-  udata->d = N_VNew_Parallel(MPI_COMM_WORLD, N, Ntot);  // Create vector for Jacobian diagonal
+  udata->d = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for Jacobian diagonal
   if (check_flag((void *) udata->d, "N_VNew_Parallel", 0)) return 1;
   arkode_mem = ARKodeCreate();                       // Create the solver memory 
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
@@ -719,8 +716,8 @@ static int Exchange(N_Vector y, UserData *udata)
   }
   if (!udata->HaveBdry[1][1]) {
     for (i=0; i<nxl; i++)  udata->Nsend[i] = Y[IDX(i,nyl-1,nxl)];
-    ierr = MPI_Isend(udata->Ssend, udata->nxl, REALTYPE_MPI_TYPE, ipS, 2,
-              udata->comm, &reqSS);
+    ierr = MPI_Isend(udata->Nsend, udata->nxl, REALTYPE_MPI_TYPE, ipN, 3,
+              udata->comm, &reqSN);
     if (ierr != MPI_SUCCESS) {
       cerr << "Error in MPI_Isend = " << ierr << "\n";
       return -1;
