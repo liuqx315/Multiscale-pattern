@@ -9,6 +9,7 @@ include ../Make.machine
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
+CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
 INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../
@@ -40,7 +41,7 @@ all : ${TESTS}
 	${CC} ${CFLAGS_} ${INCS} $< ${LIBS} ${LDFLAGS} -o $@
 
 %.exe : %.cpp
-	${CXX} ${CFLAGS_} ${INCS} $< ${LIBS} ${LDFLAGS} -o $@
+	${CXX} ${CXXFLAGS_} ${INCS} $< ${LIBS} ${LDFLAGS} -o $@
 
 %.exe : %.f90
 	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
