@@ -72,10 +72,15 @@ maxtemp = 1.1*results.max()
 mintemp = 0.9*results.min()
 
 # generate plots of results
+kx = 0.5
+ky = 0.75
+kprod = (kx+4.0*ky)*np.pi**2
+dt = 0.015
 for tstep in range(nt):
 
     # set string constants for output plots, current time, mesh size
     pname = 'heat2d_surf.' + repr(tstep).zfill(3) + '.png'
+    cname = 'heat2d_err.' + repr(tstep).zfill(3) + '.png'
     tstr  = repr(tstep)
     nxstr = repr(nx)
     nystr = repr(ny)
@@ -97,6 +102,21 @@ for tstep in range(nt):
     title('u(x,y) at output ' + tstr + ', mesh = ' + nxstr + 'x' + nystr)
     savefig(pname)
     plt.close()
+
+    # plot error in current solution (as a contour, and save to disk)
+    t = tstep*dt;
+    at = (1.0 - np.exp(-t*kprod))/kprod
+    utrue = at*np.sin(np.pi*X)*np.sin(2.0*np.pi*Y);
+    uerr = np.abs(utrue - results[tstep,:,:])
+    plt.contourf(xspan,yspan,uerr,15, cmap=plt.cm.jet)
+    plt.colorbar()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Error at output ' + tstr + ', mesh = ' + nxstr + 'x' + nystr)
+    plt.savefig(cname)
+    plt.close()
+
+
 
 
 ##### end of script #####
