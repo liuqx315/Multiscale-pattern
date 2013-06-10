@@ -65,7 +65,7 @@ if (nprocs > 1):
         nxl = iend-istart+1
         nyl = jend-jstart+1
         for i in range(nt):
-            results[i,istart:iend+1,jstart:jend+1] = np.reshape(data[i,:], (nyl,nxl))
+            results[i,jstart:jend+1,istart:iend+1] = np.reshape(data[i,:], (nyl,nxl))
 
 # generate plots of results
 for tstep in range(nt):
