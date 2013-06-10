@@ -66,7 +66,7 @@ int main()
   realtype v0 = RCONST(0.0);
   realtype w0 = RCONST(0.0);
   realtype reltol = 1.e-4;
-  realtype abstol = 1.e-8;
+  realtype abstol = 1.e-11;
   realtype h0 = 1.e-4 * reltol;
 
   /* Initial problem output */

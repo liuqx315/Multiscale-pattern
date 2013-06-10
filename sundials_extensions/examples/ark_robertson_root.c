@@ -100,7 +100,7 @@ int main()
   /* Set tolerances */
   realtype reltol = RCONST(1.0e-4);
   NV_Ith_S(atols,0) = RCONST(1.0e-8);
-  NV_Ith_S(atols,1) = RCONST(1.0e-8);
+  NV_Ith_S(atols,1) = RCONST(1.0e-11);
   NV_Ith_S(atols,2) = RCONST(1.0e-8);
 
   /* Set routines */

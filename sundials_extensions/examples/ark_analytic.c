@@ -66,9 +66,9 @@ int main()
   double reltol_, abstol_, lamda_;
   FILE *FID;
   FID = fopen("input_analytic.txt","r");
-  fscanf(FID,"  lamda = %lf\n",  &lamda_);
-  fscanf(FID,"  reltol = %lf\n", &reltol_);
-  fscanf(FID,"  abstol = %lf\n", &abstol_);
+  flag = fscanf(FID,"  lamda = %lf\n",  &lamda_);
+  flag = fscanf(FID,"  reltol = %lf\n", &reltol_);
+  flag = fscanf(FID,"  abstol = %lf\n", &abstol_);
   fclose(FID);
 
   /* convert the inputs to 'realtype' format */
