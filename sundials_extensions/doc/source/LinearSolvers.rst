@@ -388,7 +388,7 @@ the underlying data representation in a banded matrix of type
 
 .. _DLS_figure:
 
-.. figure:: dls_diagram.png
+.. figure:: figs/dls_diagram.png
 
    DLS Diagram: Storage for a banded matrix of type :ref:`DlsMat`. Here
    ``A`` is an :math:`N \times N` band matrix of type :ref:`DlsMat`
