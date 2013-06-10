@@ -44,12 +44,7 @@ Simple linear example (ark_analytic)
 ====================================
 
 This is a very simple C example that merely shows how to use the
-ARKode solver interface.
-
-**add more description here**
-
-ODE system
-----------
+ARKode solver interface.  
 
 The problem is that of a scalar-valued initial value problem (IVP)
 that is linear in the dependent variable :math:`y`, but nonlinear in
@@ -253,10 +248,16 @@ Solutions
 This problem is included both as a simple example, but also because it
 has an analytical solution, :math:`y(t) = \arctan(t)`.  As seen in the
 plots below, the computed solution tracks the analytical solution
-quite well, and results in errors below those specified by the input
-error tolerances.
+quite well (left), and results in errors below those specified by the input
+error tolerances (right).
 
-**add plots and more discussion here**
+.. image:: figs/plot-ark_analytic.png
+   :width: 45 %
+.. image:: figs/plot-ark_analytic_error.png
+   :width: 45 %
+
+
+
 
 
 .. _ark_analytic_nonlin:
@@ -264,10 +265,14 @@ error tolerances.
 Simple nonlinear example (ark_analytic_nonlin)
 ==============================================
 
-**add a description here**
+This example problem is only marginally more difficult than the
+preceding problem, in that the ODE right-hand side function is
+nonlinear in the solution :math:`y`.  While the implicit solver from
+the preceding problem would also work on this example, because it is
+not stiff we use this to demonstrate how to use ARKode's explicit
+solver interface.
 
-ODE system
-----------
+The ODE problem is
 
 .. math::
 
@@ -407,7 +412,18 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
-**add plots and discussion here**
+This problem is included both as a simple example to test the
+nonlinear solvers within ARKode, but also because it has an analytical
+solution, :math:`y(t) = \log\left(\frac{t^2}{2} + t + 1\right)`.  As
+seen in the plots below, the computed solution tracks the analytical solution
+quite well (left), and results in errors comparable with those
+specified by the requested error tolerances (right).
+
+.. image:: figs/plot-ark_analytic_nonlin.png
+   :width: 45 %
+.. image:: figs/plot-ark_analytic_nonlin_error.png
+   :width: 45 %
+
 
 
 .. _ark_analytic_sys:
@@ -415,16 +431,15 @@ Solutions
 Simple linear system example (ark_analytic_sys)
 ===============================================
 
-**add a description here**
-
-ODE system
-----------
+This example demonstrates the use of ARKode's fully implicit solver on
+a stiff ODE system, again having an analytical solution.  The problem
+is that of a linear ODE system,
 
 .. math::
 
    \frac{dy}{dt} = Ay
 
-where :math:`A = V D V^{-1}`.  Here, we use
+where :math:`A = V D V^{-1}`.  In this example, we use
 
 .. math::
 
@@ -436,7 +451,7 @@ where :math:`A = V D V^{-1}`.  Here, we use
        \lambda \end{array}\right].
 
 where :math:`\lambda` is a large negative number. The analytical
-solution to this problem is 
+solution to this problem may be computed using the matrix exponential,
 
 .. math::
 
@@ -722,7 +737,19 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
-**add plots and discussion here**
+This problem is included both as a simple example to test systems of
+ODE within ARKode on a problem having an analytical 
+solution, :math:`Y(t) = V e^{Dt} V^{-1} Y(0)`.  As
+seen in the plots below, the computed solution tracks the analytical solution
+quite well (left), and results in errors with exactly the magnitude as
+specified by the requested error tolerances (right).
+
+.. image:: figs/plot-ark_analytic_sys.png
+   :width: 45 %
+.. image:: figs/plot-ark_analytic_sys_error.png
+   :width: 45 %
+
+
 
 
 
@@ -731,14 +758,11 @@ Solutions
 Stiff nonlinear system example (ark_brusselator)
 ================================================
 
-**add a description here**
-
-ODE system
-----------
-
-The following test simulates a brusselator problem from chemical 
-kinetics.  This is an ODE system with 3 components, :math:`Y = [u,\,
-v,\, w]`, satisfying the equations,
+We now wish to exercise the ARKode solvers on more challenging
+nonlinear ODE systems.  The following test simulates a brusselator
+problem from chemical kinetics, and is used throughout the community
+as a standard benchmark problem for new solvers.  The ODE system has
+with 3 components, :math:`Y = [u,\, v,\, w]`, satisfying the equations,
 
 .. math::
 
@@ -1011,7 +1035,20 @@ Test 3: Here, all components undergo very rapid initial transients
 during the first 0.3 time units, and all then proceed very smoothly
 for the remainder of the simulation.
 
-**add plots and more of a discussion here**
+Unfortunately, there are no known analytical solutions to the
+Brusselator problem, but the following results have been verified
+in code comparisons against both CVODE and the built-in ODE solver
+``ode15s`` from Matlab:
+
+.. image:: figs/plot-ark_brusselator1.png
+   :width: 30 %
+.. image:: figs/plot-ark_brusselator2.png
+   :width: 30 %
+.. image:: figs/plot-ark_brusselator3.png
+   :width: 30 %
+
+Brusselator solution plots: left is test 1, center is test 2, right is
+test 3.
 
 
 
@@ -1020,17 +1057,11 @@ for the remainder of the simulation.
 Stiff nonlinear system, Fortran example (ark_bruss)
 ===================================================
 
-This is a Fortran-90 version of the same test brusselator test problem
-as above.  
-
-**add more of a description here**
-
-ODE system
-----------
-
-The test problem has 3 dependent variables :math:`u`, :math:`v` and
-:math:`w`, that depend on the independent variable :math:`t` via the
-IVP system
+This test problem is a Fortran-90 version of the same brusselator
+problem as above, in which the "test 2" parameters are hard-coded into
+the solver.  As with the previous test, this problem has 3 dependent
+variables :math:`u`, :math:`v` and :math:`w`, that depend on the
+independent variable :math:`t` via the IVP system
 
 .. math::
 
@@ -1301,9 +1332,13 @@ Solutions
 
 With this setup, all three solution components exhibit a rapid
 transient change during the first 0.2 time units, followed by a slow
-and smooth evolution, as seen in the figure below.
+and smooth evolution, as seen in the figure below.  Note that these
+results identically match those from the previous C example with the
+same equations (test 1).
 
-**add plots and more of a discussion here**
+.. figure:: figs/plot-ark_bruss1.png
+   :scale: 70 %
+   :align: center
 
 
 
@@ -1313,13 +1348,9 @@ and smooth evolution, as seen in the figure below.
 Stiff nonlinear system example (ark_robertson)
 ==============================================
 
-**add a description here**
-
-ODE system
-----------
-
-This test simulates the Robertson problem, corresponding to the
-kinetics of an autocatalytic reaction.  This is an ODE system with 3
+Our next two tests simulate the Robertson problem, corresponding to the
+kinetics of an autocatalytic reaction, corresponding to the CVODE
+example of the same name.  This is an ODE system with 3
 components, :math:`Y = [u,\, v,\, w]^T`, satisfying the equations,
 
 .. math::
@@ -1522,7 +1553,26 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
-**add plots and discussion here**
+Due to the linearly-spaced requested output times in this example, and
+since we plot in a log-log scale, by the first output at
+:math:`t=10^9`, the solutions have already undergone a sharp
+transition from their initial values of :math:`(u,v,w) = (1, 0, 0)`. 
+For additional detail on the early evolution of this problem, see the
+following example, that requests logarithmically-spaced output times.
+
+From the plot here, it is somewhat difficult to see the solution
+values for :math:`w`, which here all have a value of
+:math:`1\pm10^{-5}`.  Additionally, we see that near the end of the
+evolution, the values for :math:`v` begin to exhibit oscillations;
+this is due to the fact that by this point those values have fallen
+below their specified absolute tolerance.  A smoother behavior (with
+an increase in time steps) may be obtained by reducing the absolute
+tolerance for that variable.
+
+.. figure:: figs/plot-ark_robertson.png
+   :scale: 70 %
+   :align: center
+
 
 
 
@@ -1531,14 +1581,11 @@ Solutions
 Stiff nonlinear system with root-finding example (ark_robertson_root)
 =====================================================================
 
-**add a description here**
-
-ODE system
-----------
-
-This is the same test as in the above problem (the Robertson problem).
-This is an ODE system with 3 components, :math:`Y = [u,\, v,\, w]^T`,
-satisfying the equations,
+We again test the Robertson problem, but in this example we will
+utilize both a logarithmically-spaced set of output times (to properly
+show the solution behavior), as well as ARKode's root-finding
+capabilities.  Again, the Robertson problem consists of an ODE system
+with 3 components, :math:`Y = [u,\, v,\, w]^T`, satisfying the equations,
 
 .. math::
 
@@ -1547,7 +1594,19 @@ satisfying the equations,
    \frac{dw}{dt} &= 3\cdot10^7 v^2.
 
 We integrate over the interval :math:`0\le t\le 10^{11}`, with initial
-conditions  :math:`Y(0) = [1,\, 0,\, 0]^T`. 
+conditions  :math:`Y(0) = [1,\, 0,\, 0]^T`.  
+
+Additionally, we supply the following two root-finding equations:
+
+.. math::
+
+   g_1(u) = u - 10^{-4}, \\
+   g_2(w) = w - 10^{-2}.
+
+While these are not inherently difficult nonlinear equations, they
+easily serve the purpose of determining the times at which our
+solutions attain desired target values.
+
 
 
 Numerical method
@@ -1775,7 +1834,21 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
-**add plots and discussion here**
+In the solutions below, we now see the early-time evolution of the
+solution components for the Robertson ODE system.  
+
+.. figure:: figs/plot-ark_robertson_root.png
+   :scale: 70 %
+   :align: center
+
+We note that when running this example, the root-finding capabilities
+of ARKode report outside of the typical logarithmically-spaced output
+times to declare that at time :math:`t=0.264019` the variable
+:math:`w` attains the value :math:`10^{-2}`, and that at time
+:math:`t=2.07951\cdot10^{7}` the variable :math:`u` attains the value
+:math:`10^{-4}`; both of our thresholds specified by the root-finding
+function ``g()``.
+
 
 
 
@@ -1784,14 +1857,10 @@ Solutions
 Stiff PDE system example (ark_brusselator1D)
 ============================================
 
-**add a description here**
-
-PDE system
-----------
-
-This test simulates a brusselator problem from chemical kinetics, but
-in PDE form.  This system has 3 components, :math:`Y = [u,\, v,\, w]^T`,  
-satisfying the equations,
+We now investigate a time-dependent system of partial differential
+equations.  We adapt the previously brusselator test problem by adding
+diffusion into the chemical reaction network.  We again have a system
+with 3 components, :math:`Y = [u,\, v,\, w]^T` that satisfy the equations,
 
 .. math::
 
@@ -1802,7 +1871,8 @@ satisfying the equations,
    \frac{\partial w}{\partial t} &= d_w \frac{\partial^2 w}{\partial
       x^2} + \frac{b-w}{\varepsilon} - w u.
 
-We integrate for :math:`t \in [0, 80]`, and :math:`x \in [0, 1]`, with
+However, now these solutions are also spatially dependent.  We
+integrate for :math:`t \in [0, 80]`, and :math:`x \in [0, 1]`, with
 initial conditions 
 
 .. math::
@@ -1827,9 +1897,12 @@ conditions with values identical to the initial conditions.
 Numerical method
 ----------------
 
-The spatial derivatives are computed using second-order 
-centered differences, with the data distributed over :math:`N` points 
-on a uniform spatial grid.
+We employ a *method of lines* approach, wherein we first
+semi-discretize in space to convert the system of 3 PDEs into a larger
+system of ODEs.  To this end, the spatial derivatives are computed
+using second-order centered differences, with the data distributed
+over :math:`N` points on a uniform spatial grid.  Resultingly, ARKode
+approaches the problem as one involving :math:`3N` coupled ODEs.
 
 The number of spatial points :math:`N`, the parameters :math:`a`,
 :math:`b`, :math:`d_u`, :math:`d_v`, :math:`d_w` and
@@ -2228,7 +2301,16 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
-**add plots and discussion here**
+.. image:: figs/plot-ark_brusselator1D_1.png
+   :width: 30 %
+.. image:: figs/plot-ark_brusselator1D_2.png
+   :width: 30 %
+.. image:: figs/plot-ark_brusselator1D_3.png
+   :width: 30 %
+
+Brusselator PDE solution snapshots: left is at time :math:`t=0`,
+center is at time :math:`t=2.9`, right is at time :math:`t=8.8`.
+
 
 
 
@@ -2237,19 +2319,15 @@ Solutions
 PDE system example with iterative linear solver (ark_heat1D)
 ============================================================
 
-**add a description here**
-
-PDE system
-----------
-
-This example simulates a simple 1D heat equation,
+As with the previous brusselator problrem, this example simulates a
+simple one-dimensional heat equation, 
 
 .. math::
 
    \frac{\partial u}{\partial t} = k \frac{\partial^2 u}{\partial x^2} + f,
 
 for :math:`t \in [0, 10]`, and :math:`x \in [0, 1]`, with initial
-condition :math:`u(0,x) = 0`, Dirichlet boundary conditions,
+condition :math:`u(0,x) = 0`, stationary boundary conditions,
 
 .. math::
 
@@ -2261,25 +2339,26 @@ and a point-source heating term,
 
    f(t,x) = \begin{cases} 1 & \text{if}\;\; x=1/2, \\
                           0 & \text{otherwise}. \end{cases}
+
  
 
 Numerical method
 ----------------
 
-The spatial derivatives are computed using second-order 
-centered differences, with the data distributed over :math:`N` points
-on a uniform spatial grid. 
+As with the ``brusselator1D.c`` test problem, this test computes
+spatial derivatives using second-order centered differences, with the
+data distributed over :math:`N` points on a uniform spatial grid. 
 
 The number of spatial points :math:`N` and the heat conductivity
 parameter :math:`k`, as well as the desired relative and absolute
 solver tolerances, are provided in the input file ``input_heat1D.txt``.
  
 This program solves the problem with a DIRK method, utilizing a Newton
-iteration with the PCG iterative linear solver, and a user-supplied
-Jacobian-vector product routine.
+iteration.  The primary utility in including this example is that each
+Newton system is now solved with the PCG iterative linear solver, and
+a user-supplied Jacobian-vector product routine, in order to provide
+examples of their use.
 
-100 outputs are printed at equal intervals, and run statistics are
-printed at the end. 
 
 
 Routines
@@ -2500,7 +2579,15 @@ comments for details; error-checking has been removed for brevity):
 Solutions
 ---------
 
-**add plots and discussion here**
+.. image:: figs/plot-ark_heat1d_1.png
+   :width: 30 %
+.. image:: figs/plot-ark_heat1d_2.png
+   :width: 30 %
+.. image:: figs/plot-ark_heat1d_3.png
+   :width: 30 %
+
+One-dimensional heat PDE solution snapshots: left is at time :math:`t=0.01`,
+center is at time :math:`t=0.13`, right is at time :math:`t=1.0`.
 
 
 
@@ -2512,12 +2599,8 @@ Solutions
 Parallel PDE system example with iterative linear solver (ark_heat2D)
 ======================================================================
 
-**add a description here**
-
-PDE system
-----------
-
-This example simulates a simple 2D heat equation,
+Our final example problem extends the previous test to now simulate a
+simple two-dimenaional heat equation, 
 
 .. math::
 
@@ -2558,14 +2641,14 @@ conductivity parameters :math:`k_x` and :math:`k_y`, as well as the
 desired relative and absolute solver tolerances, are provided in the
 input file ``input_heat2D.txt``. 
  
-This program solves the problem with a DIRK method.  This 
-employs a Newton iteration with the PCG iterative linear solver, 
-which itself uses a Jacobi preconditioner.  The example uses the 
-built-in finite-difference Jacobian-vector product routine, but 
-supplies both the RHS and preconditioner setup/solve functions.
+As with the 1D version, this program solves the problem with a DIRK
+method, that itself uses a Newton iteration and PCG iterative linear
+solver.  However, unlike the previous example, here the PCG solver is
+preconditioned using a single Jacobi iteration, and uses the 
+built-in finite-difference Jacobian-vector product routine.
+Additionally, this problem uses MPI and the ``NVECTOR_PARALLEL``
+module for parallelization.
 
-20 outputs are printed at equal intervals, and run statistics 
-are printed at the end.
 
 
 Routines
@@ -2600,29 +2683,29 @@ error-checking has been removed for brevity):
    
    // user data structure 
    typedef struct {
-     long int nx;    // global number of x grid points 
-     long int ny;    // global number of y grid points
-     long int is;    // global x indices of this proc's subdomain
+     long int nx;          // global number of x grid points 
+     long int ny;          // global number of y grid points
+     long int is;          // global x indices of this subdomain
      long int ie;
-     long int js;    // global y indices of this proc's subdomain
+     long int js;          // global y indices of this subdomain
      long int je;
-     long int nxl;   // local number of x grid points 
-     long int nyl;   // local number of y grid points 
-     realtype dx;    // x-directional mesh spacing 
-     realtype dy;    // y-directional mesh spacing 
-     realtype kx;    // x-directional diffusion coefficient 
-     realtype ky;    // y-directional diffusion coefficient 
-     N_Vector h;     // heat source vector
-     N_Vector d;     // inverse of Jacobian diagonal
-     MPI_Comm comm;  // communicator object
-     int myid;       // MPI process ID
-     int nprocs;     // total number of MPI processes
-     bool HaveBdry[2][2];   // flags denoting if on physical boundary
-     realtype *Erecv;       // receive buffers for neighbor exchange
+     long int nxl;         // local number of x grid points 
+     long int nyl;         // local number of y grid points 
+     realtype dx;          // x-directional mesh spacing 
+     realtype dy;          // y-directional mesh spacing 
+     realtype kx;          // x-directional diffusion coefficient 
+     realtype ky;          // y-directional diffusion coefficient 
+     N_Vector h;           // heat source vector
+     N_Vector d;           // inverse of Jacobian diagonal
+     MPI_Comm comm;        // communicator object
+     int myid;             // MPI process ID
+     int nprocs;           // total number of MPI processes
+     bool HaveBdry[2][2];  // flags denoting if on physical boundary
+     realtype *Erecv;      // receive buffers for neighbor exchange
      realtype *Wrecv;
      realtype *Nrecv;
      realtype *Srecv;
-     realtype *Esend;       // send buffers for neighbor exchange
+     realtype *Esend;      // send buffers for neighbor exchange
      realtype *Wsend;
      realtype *Nsend;
      realtype *Ssend;
@@ -2637,7 +2720,8 @@ error-checking has been removed for brevity):
    		N_Vector z, realtype gamma, realtype delta, int lr, 
    		void *user_data, N_Vector tmp);
    
-   // Private helper functions 
+   // Private functions 
+   static int InitUserData(UserData *udata);          // sets default values into UserData structure
    static int SetupDecomp(UserData *udata);           // sets up parallel decomposition
    static int Exchange(N_Vector y, UserData *udata);  // performs neighbor exchange
    static int FreeUserData(UserData *udata);          // frees memory allocated within UserData
@@ -2651,30 +2735,48 @@ error-checking has been removed for brevity):
      int Nt = 20;                 // total number of output times 
      UserData *udata = NULL;
      realtype *data;
-     long int N, i, j;
+     long int N, Ntot, i, j;
    
      // general problem variables 
      int flag;                      // reusable error-checking flag 
+     int myid;                      // MPI process ID
      N_Vector y = NULL;             // empty vector for storing solution 
      void *arkode_mem = NULL;       // empty ARKode memory structure 
    
      // initialize MPI
      MPI_Init(&argc, &argv);
+     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
    
-     /* read problem parameter and tolerances from input file:
-        N - number of spatial discretization points
-        k - diffusion coefficient */
-     double kx, ky, rtol_, atol_;
-     long int nx, ny;
-     FILE *FID;
-     FID = fopen("input_heat2D.txt","r");
-     flag = fscanf(FID,"nx = %li\n", &nx);
-     flag = fscanf(FID,"ny = %li\n", &ny);
-     flag = fscanf(FID,"kx = %lf\n", &kx);
-     flag = fscanf(FID,"ky = %lf\n", &ky);
-     flag = fscanf(FID,"rtol = %lf\n", &rtol_);
-     flag = fscanf(FID,"atol = %lf\n", &atol_);
-     fclose(FID);
+     /* root process reads problem parameters from input file and 
+        broadcasts to other processes */
+     double kx, ky, rtol_, atol_, dbuff[4];
+     long int nx, ny, ibuff[2];
+     if (myid == 0) {
+       FILE *FID;
+       FID = fopen("input_heat2D.txt","r");
+       flag = fscanf(FID,"nx = %li\n", &nx);
+       flag = fscanf(FID,"ny = %li\n", &ny);
+       flag = fscanf(FID,"kx = %lf\n", &kx);
+       flag = fscanf(FID,"ky = %lf\n", &ky);
+       flag = fscanf(FID,"rtol = %lf\n", &rtol_);
+       flag = fscanf(FID,"atol = %lf\n", &atol_);
+       fclose(FID);
+       ibuff[0] = nx;    // pack buffers
+       ibuff[1] = ny;
+       dbuff[0] = kx;
+       dbuff[1] = ky;
+       dbuff[2] = rtol_;
+       dbuff[3] = atol_;
+     }
+     // perform broadcast
+     MPI_Bcast(ibuff, 2, MPI_LONG, 0, MPI_COMM_WORLD);
+     MPI_Bcast(dbuff, 4, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+     nx = ibuff[0];       // unpack buffers
+     ny = ibuff[1];
+     kx = dbuff[0];
+     ky = dbuff[1];
+     rtol_ = dbuff[2];
+     atol_ = dbuff[3];
    
      // convert input tolerances to realtype type 
      realtype rtol = rtol_;      // relative tolerance 
@@ -2682,6 +2784,7 @@ error-checking has been removed for brevity):
    
      // allocate and fill udata structure 
      udata = new UserData;
+     InitUserData(udata);
      udata->nx = nx;
      udata->ny = ny;
      udata->kx = kx;
@@ -2690,7 +2793,7 @@ error-checking has been removed for brevity):
      udata->dy = RCONST(1.0)/(1.0*ny-1.0);   // y mesh spacing 
    
      // Set up parallel decomposition
-     flag = SetupDecomp(udata);
+     SetupDecomp(udata);
    
      // Initial problem output 
      bool outproc = (udata->myid == 0);
@@ -2702,16 +2805,19 @@ error-checking has been removed for brevity):
        cout << "   kx = " << udata->kx << "\n";
        cout << "   ky = " << udata->ky << "\n";
        cout << "   rtol = " << rtol << "\n";
-       cout << "   atol = " << atol << "\n\n";
+       cout << "   atol = " << atol << "\n";
+       cout << "   nxl (proc 0) = " << udata->nxl << "\n";
+       cout << "   nyl (proc 0) = " << udata->nyl << "\n\n";
      }
    
      // Initialize data structures 
      N = (udata->nxl)*(udata->nyl);
-     y = N_VNew_Parallel(udata->comm, N, nx*ny);            // Create parallel vector for solution 
-     N_VConst(0.0, y);                                      // Set initial conditions 
-     udata->h = N_VNew_Parallel(udata->comm, N, nx*ny);     // Create vector for heat source
-     udata->d = N_VNew_Parallel(udata->comm, N, nx*ny);     // Create vector for Jacobian diagonal
-     arkode_mem = ARKodeCreate();                           // Create the solver memory 
+     Ntot = nx*ny;
+     y = N_VNew_Parallel(udata->comm, N, Ntot);         // Create parallel vector for solution 
+     N_VConst(0.0, y);                                  // Set initial conditions 
+     udata->h = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for heat source
+     udata->d = N_VNew_Parallel(udata->comm, N, Ntot);  // Create vector for Jacobian diagonal
+     arkode_mem = ARKodeCreate();                       // Create the solver memory 
    
      // fill in the heat source array
      data = N_VGetArrayPointer(udata->h);
@@ -2740,7 +2846,7 @@ error-checking has been removed for brevity):
      sprintf(outname, "heat2d_subdomain.%03i.txt", udata->myid);
      FILE *UFID = fopen(outname,"w");
      fprintf(UFID, "%li  %li  %li  %li  %li  %li\n", 
-             udata->nx, udata->ny, udata->is, udata->ie, udata->js, udata->je);
+   	  udata->nx, udata->ny, udata->is, udata->ie, udata->js, udata->je);
      fclose(UFID);
    
      // Open output streams for results, access data array 
@@ -2757,24 +2863,25 @@ error-checking has been removed for brevity):
      realtype t = T0;
      realtype dTout = (Tf-T0)/Nt;
      realtype tout = T0+dTout;
+     realtype urms = sqrt(N_VDotProd(y,y)/nx/ny);
      if (outproc) {
-        cout << "        t      ||u||_rms\n";
-        cout << "   ----------------------\n";
-        printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/nx/ny));
+       cout << "        t      ||u||_rms\n";
+       cout << "   ----------------------\n";
+       printf("  %10.6f  %10.6f\n", t, urms);
      }
      int iout;
      for (iout=0; iout<Nt; iout++) {
    
        flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         // call integrator 
-       if (outproc)  printf("  %10.6f  %10.6f\n", t,               // print solution stats 
-   		            sqrt(N_VDotProd(y,y)/nx/ny));   
+       urms = sqrt(N_VDotProd(y,y)/nx/ny);
+       if (outproc)  printf("  %10.6f  %10.6f\n", t, urms);        // print solution stats 
        if (flag >= 0) {                                            // successful solve: update output time
          tout += dTout;
          tout = (tout > Tf) ? Tf : tout;
        } else {                                                    // unsuccessful solve: break 
-       if (outproc)  
-          cerr << "Solver failure, stopping integration\n";
-          break;
+         if (outproc)  
+   	cerr << "Solver failure, stopping integration\n";
+         break;
        }
    
        // output results to disk 
@@ -2815,20 +2922,20 @@ error-checking has been removed for brevity):
      }
    
      // Clean up and return with successful completion 
-     N_VDestroy_Parallel(y);        // Free vectors 
+     N_VDestroy_Parallel(y);       // Free vectors 
      N_VDestroy_Parallel(udata->h);
      N_VDestroy_Parallel(udata->d);
-     FreeUserData(udata);           // Free user data 
-     delete udata;       
-     ARKodeFree(&arkode_mem);       // Free integrator memory 
-     MPI_Finalize();                // Finalize MPI
+     FreeUserData(udata);          // Free user data 
+     delete udata;        
+     ARKodeFree(&arkode_mem);      // Free integrator memory 
+     MPI_Finalize();               // Finalize MPI
      return 0;
    }
    
    /*--------------------------------
     * Functions called by the solver
     *--------------------------------*/
-
+   
    // f routine to compute the ODE RHS function f(t,y). 
    static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
    {
@@ -2844,7 +2951,7 @@ error-checking has been removed for brevity):
      realtype *Ydot = N_VGetArrayPointer(ydot);
    
      // Exchange boundary data with neighbors
-     int ierr = Exchange(y, udata);
+     Exchange(y, udata);
    
      // iterate over subdomain interior, computing approximation to RHS
      realtype c1 = kx/dx/dx;
@@ -2931,6 +3038,7 @@ error-checking has been removed for brevity):
      realtype dx = udata->dx;
      realtype dy = udata->dy;
      realtype *diag = N_VGetArrayPointer(tmp1);  // access data arrays 
+     if (check_flag((void *) diag, "N_VGetArrayPointer", 0)) return -1;
    
      // set all entries of tmp1 to the diagonal values of interior
      // (since boundary RHS is 0, set boundary diagonals to the same)
@@ -2951,79 +3059,80 @@ error-checking has been removed for brevity):
    }
    
    /*-------------------------------
-   * Private helper functions
-   *-------------------------------*/
-
+    * Private helper functions
+    *-------------------------------*/
+   
    // Set up parallel decomposition
    static int SetupDecomp(UserData *udata)
    {
-      // check that this has not been called before
-      if (udata->Erecv != NULL || udata->Wrecv != NULL || 
-          udata->Srecv != NULL || udata->Nrecv != NULL) {
-        cerr << "SetupDecomp error: parallel decomposition already set up\n";
-        return 1;
-      }
+     // check that this has not been called before
+     if (udata->Erecv != NULL || udata->Wrecv != NULL || 
+         udata->Srecv != NULL || udata->Nrecv != NULL) {
+       cerr << "SetupDecomp warning: parallel decomposition already set up\n";
+       return 1;
+     }
    
-      // get suggested parallel decomposition
-      int dims[] = {0, 0};
-      MPI_Comm_size(MPI_COMM_WORLD, &(udata->nprocs));
-      MPI_Dims_create(udata->nprocs, 2, dims);
+     // get suggested parallel decomposition
+     int dims[] = {0, 0};
+     MPI_Comm_size(MPI_COMM_WORLD, &(udata->nprocs));
+     MPI_Dims_create(udata->nprocs, 2, dims);
    
-      // set up 2D Cartesian communicator
-      int periods[] = {0, 0};
-      MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &(udata->comm));
-      MPI_Comm_rank(udata->comm, &(udata->myid));
+     // set up 2D Cartesian communicator
+     int periods[] = {0, 0};
+     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &(udata->comm));
+     MPI_Comm_rank(udata->comm, &(udata->myid));
    
-      // determine local extents
-      int coords[2];
-      MPI_Cart_get(udata->comm, 2, dims, periods, coords);
-      udata->is = (udata->nx)*(coords[0])/(dims[0]);
-      udata->ie = (udata->nx)*(coords[0]+1)/(dims[0])-1;
-      udata->js = (udata->ny)*(coords[1])/(dims[1]);
-      udata->je = (udata->ny)*(coords[1]+1)/(dims[1])-1;
-      udata->nxl = (udata->ie)-(udata->is)+1;
-      udata->nyl = (udata->je)-(udata->js)+1;
-    
-      // determine if I have neighbors, and allocate exchange buffers
-      udata->HaveBdry[0][0] = (udata->is == 0);
-      udata->HaveBdry[0][1] = (udata->ie == udata->nx-1);
-      udata->HaveBdry[1][0] = (udata->js == 0);
-      udata->HaveBdry[1][1] = (udata->je == udata->ny-1);
-      if (!udata->HaveBdry[0][0]) {
-         udata->Wrecv = new realtype[udata->nyl];
-         udata->Wsend = new realtype[udata->nyl];
-      }
-      if (!udata->HaveBdry[0][1]) {
-         udata->Erecv = new realtype[udata->nyl];
-         udata->Esend = new realtype[udata->nyl];
-      }
-      if (!udata->HaveBdry[1][0]) {
-         udata->Srecv = new realtype[udata->nxl];
-         udata->Ssend = new realtype[udata->nxl];
-      }
-      if (!udata->HaveBdry[1][1]) {
-         udata->Nrecv = new realtype[udata->nxl];
-         udata->Nsend = new realtype[udata->nxl];
-      }
+     // determine local extents
+     int coords[2];
+     MPI_Cart_get(udata->comm, 2, dims, periods, coords);
+     udata->is = (udata->nx)*(coords[0])/(dims[0]);
+     udata->ie = (udata->nx)*(coords[0]+1)/(dims[0])-1;
+     udata->js = (udata->ny)*(coords[1])/(dims[1]);
+     udata->je = (udata->ny)*(coords[1]+1)/(dims[1])-1;
+     udata->nxl = (udata->ie)-(udata->is)+1;
+     udata->nyl = (udata->je)-(udata->js)+1;
    
-      return 0;     // return with success flag
+     // determine if I have neighbors, and allocate exchange buffers
+     udata->HaveBdry[0][0] = (udata->is == 0);
+     udata->HaveBdry[0][1] = (udata->ie == udata->nx-1);
+     udata->HaveBdry[1][0] = (udata->js == 0);
+     udata->HaveBdry[1][1] = (udata->je == udata->ny-1);
+     if (!udata->HaveBdry[0][0]) {
+       udata->Wrecv = new realtype[udata->nyl];
+       udata->Wsend = new realtype[udata->nyl];
+     }
+     if (!udata->HaveBdry[0][1]) {
+       udata->Erecv = new realtype[udata->nyl];
+       udata->Esend = new realtype[udata->nyl];
+     }
+     if (!udata->HaveBdry[1][0]) {
+       udata->Srecv = new realtype[udata->nxl];
+       udata->Ssend = new realtype[udata->nxl];
+     }
+     if (!udata->HaveBdry[1][1]) {
+       udata->Nrecv = new realtype[udata->nxl];
+       udata->Nsend = new realtype[udata->nxl];
+     }
+   
+     return 0;     // return with success flag
    }
    
    // Perform neighbor exchange
    static int Exchange(N_Vector y, UserData *udata)
    {
-      // local variables
-      MPI_Request reqSW, reqSE, reqSS, reqSN, reqRW, reqRE, reqRS, reqRN;
-      MPI_Status stat;
-      int i, ipW=-1, ipE=-1, ipS=-1, ipN=-1;
-      int coords[2], dims[2], periods[2], nbcoords[2];
-      int nyl = udata->nyl;
-      int nxl = udata->nxl;
+     // local variables
+     MPI_Request reqSW, reqSE, reqSS, reqSN, reqRW, reqRE, reqRS, reqRN;
+     MPI_Status stat;
+     int i, ipW=-1, ipE=-1, ipS=-1, ipN=-1;
+     int coords[2], dims[2], periods[2], nbcoords[2];
+     int nyl = udata->nyl;
+     int nxl = udata->nxl;
    
-      // access data array
-      realtype *Y = N_VGetArrayPointer(y);
+     // access data array
+     realtype *Y = N_VGetArrayPointer(y);
+     if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return -1;
    
-      // MPI equivalent of realtype type
+     // MPI equivalent of realtype type
    #if defined(SUNDIALS_SINGLE_PRECISION)
    #define REALTYPE_MPI_TYPE MPI_FLOAT
    #elif defined(SUNDIALS_DOUBLE_PRECISION)
@@ -3032,111 +3141,168 @@ error-checking has been removed for brevity):
    #define REALTYPE_MPI_TYPE MPI_LONG_DOUBLE
    #endif
    
-      // MPI neighborhood information
-      MPI_Cart_get(udata->comm, 2, dims, periods, coords);
-      if (!udata->HaveBdry[0][0]) {
-         nbcoords[0] = coords[0]-1; 
-         nbcoords[1] = coords[1];
-         MPI_Cart_rank(udata->comm, nbcoords, &ipW);
-      }
-      if (!udata->HaveBdry[0][1]) {
-         nbcoords[0] = coords[0]+1; 
-         nbcoords[1] = coords[1];
-         MPI_Cart_rank(udata->comm, nbcoords, &ipE);
-      }
-      if (!udata->HaveBdry[1][0]) {
-         nbcoords[0] = coords[0]; 
-         nbcoords[1] = coords[1]-1;
-         MPI_Cart_rank(udata->comm, nbcoords, &ipS);
-      }
-      if (!udata->HaveBdry[1][1]) {
-         nbcoords[0] = coords[0]; 
-         nbcoords[1] = coords[1]+1;
-         MPI_Cart_rank(udata->comm, nbcoords, &ipN);
-      }
+     // MPI neighborhood information
+     MPI_Cart_get(udata->comm, 2, dims, periods, coords);
+     if (!udata->HaveBdry[0][0]) {
+       nbcoords[0] = coords[0]-1; 
+       nbcoords[1] = coords[1];
+       MPI_Cart_rank(udata->comm, nbcoords, &ipW);
+     }
+     if (!udata->HaveBdry[0][1]) {
+       nbcoords[0] = coords[0]+1; 
+       nbcoords[1] = coords[1];
+       MPI_Cart_rank(udata->comm, nbcoords, &ipE);
+     }
+     if (!udata->HaveBdry[1][0]) {
+       nbcoords[0] = coords[0]; 
+       nbcoords[1] = coords[1]-1;
+       MPI_Cart_rank(udata->comm, nbcoords, &ipS);
+     }
+     if (!udata->HaveBdry[1][1]) {
+       nbcoords[0] = coords[0]; 
+       nbcoords[1] = coords[1]+1;
+       MPI_Cart_rank(udata->comm, nbcoords, &ipN);
+     }
      
-      // open Irecv buffers
-      if (!udata->HaveBdry[0][0]) {
-         MPI_Irecv(udata->Wrecv, udata->nyl, REALTYPE_MPI_TYPE, ipW,
-                   MPI_ANY_TAG, udata->comm, &reqRW);
-      }
-      if (!udata->HaveBdry[0][1]) {
-         MPI_Irecv(udata->Erecv, udata->nyl, REALTYPE_MPI_TYPE, ipE,
-                   MPI_ANY_TAG, udata->comm, &reqRE);
-      }
-      if (!udata->HaveBdry[1][0]) {
-         MPI_Irecv(udata->Srecv, udata->nxl, REALTYPE_MPI_TYPE, ipS,
-                   MPI_ANY_TAG, udata->comm, &reqRS);
-      }
-      if (!udata->HaveBdry[1][1]) {
-         MPI_Irecv(udata->Nrecv, udata->nxl, REALTYPE_MPI_TYPE, ipN,
-                   MPI_ANY_TAG, udata->comm, &reqRN);
-      }
+     // open Irecv buffers
+     if (!udata->HaveBdry[0][0]) {
+       MPI_Irecv(udata->Wrecv, udata->nyl, REALTYPE_MPI_TYPE, ipW,
+                      MPI_ANY_TAG, udata->comm, &reqRW);
+     }
+     if (!udata->HaveBdry[0][1]) {
+       MPI_Irecv(udata->Erecv, udata->nyl, REALTYPE_MPI_TYPE, ipE,
+                      MPI_ANY_TAG, udata->comm, &reqRE);
+     }
+     if (!udata->HaveBdry[1][0]) {
+       MPI_Irecv(udata->Srecv, udata->nxl, REALTYPE_MPI_TYPE, ipS,
+                      MPI_ANY_TAG, udata->comm, &reqRS);
+     }
+     if (!udata->HaveBdry[1][1]) {
+       MPI_Irecv(udata->Nrecv, udata->nxl, REALTYPE_MPI_TYPE, ipN,
+                      MPI_ANY_TAG, udata->comm, &reqRN);
+     }
    
-      // send data
-      if (!udata->HaveBdry[0][0]) {
-         for (i=0; i<nyl; i++)  udata->Wsend[i] = Y[IDX(0,i,nxl)];
-         MPI_Isend(udata->Wsend, udata->nyl, REALTYPE_MPI_TYPE, ipW, 0,
-                   udata->comm, &reqSW);
-      }
-      if (!udata->HaveBdry[0][1]) {
-         for (i=0; i<nyl; i++)  udata->Esend[i] = Y[IDX(nxl-1,i,nxl)];
-         MPI_Isend(udata->Esend, udata->nyl, REALTYPE_MPI_TYPE, ipE, 1,
-                   udata->comm, &reqSE);
-      }
-      if (!udata->HaveBdry[1][0]) {
-         for (i=0; i<nxl; i++)  udata->Ssend[i] = Y[IDX(i,0,nxl)];
-         MPI_Isend(udata->Ssend, udata->nxl, REALTYPE_MPI_TYPE, ipS, 2,
-                   udata->comm, &reqSS);
-      }
-      if (!udata->HaveBdry[1][1]) {
-         for (i=0; i<nxl; i++)  udata->Nsend[i] = Y[IDX(i,nyl-1,nxl)];
-         MPI_Isend(udata->Ssend, udata->nxl, REALTYPE_MPI_TYPE, ipS, 2,
-                   udata->comm, &reqSS);
-      }
+     // send data
+     if (!udata->HaveBdry[0][0]) {
+       for (i=0; i<nyl; i++)  udata->Wsend[i] = Y[IDX(0,i,nxl)];
+       MPI_Isend(udata->Wsend, udata->nyl, REALTYPE_MPI_TYPE, ipW, 0,
+                 udata->comm, &reqSW);
+     }
+     if (!udata->HaveBdry[0][1]) {
+       for (i=0; i<nyl; i++)  udata->Esend[i] = Y[IDX(nxl-1,i,nxl)];
+       MPI_Isend(udata->Esend, udata->nyl, REALTYPE_MPI_TYPE, ipE, 1,
+                 udata->comm, &reqSE);
+     }
+     if (!udata->HaveBdry[1][0]) {
+       for (i=0; i<nxl; i++)  udata->Ssend[i] = Y[IDX(i,0,nxl)];
+       MPI_Isend(udata->Ssend, udata->nxl, REALTYPE_MPI_TYPE, ipS, 2,
+                 udata->comm, &reqSS);
+     }
+     if (!udata->HaveBdry[1][1]) {
+       for (i=0; i<nxl; i++)  udata->Nsend[i] = Y[IDX(i,nyl-1,nxl)];
+       MPI_Isend(udata->Nsend, udata->nxl, REALTYPE_MPI_TYPE, ipN, 3,
+                 udata->comm, &reqSN);
+     }
    
-      // wait for messages to finish
-      if (!udata->HaveBdry[0][0]) {
-         MPI_Wait(&reqRW, &stat);
-         MPI_Wait(&reqSW, &stat);
-      }
-      if (!udata->HaveBdry[0][1]) {
-         MPI_Wait(&reqRE, &stat);
-         MPI_Wait(&reqSE, &stat);
-      }
-      if (!udata->HaveBdry[1][0]) {
-         MPI_Wait(&reqRS, &stat);
-         MPI_Wait(&reqSS, &stat);
-      }
-      if (!udata->HaveBdry[1][1]) {
-         MPI_Wait(&reqRN, &stat);
-         MPI_Wait(&reqSN, &stat);
-      }
+     // wait for messages to finish
+     if (!udata->HaveBdry[0][0]) {
+       MPI_Wait(&reqRW, &stat);
+       MPI_Wait(&reqSW, &stat);
+     }
+     if (!udata->HaveBdry[0][1]) {
+       MPI_Wait(&reqRE, &stat);
+       MPI_Wait(&reqSE, &stat);
+     }
+     if (!udata->HaveBdry[1][0]) {
+       MPI_Wait(&reqRS, &stat);
+       MPI_Wait(&reqSS, &stat);
+     }
+     if (!udata->HaveBdry[1][1]) {
+       MPI_Wait(&reqRN, &stat);
+       MPI_Wait(&reqSN, &stat);
+     }
    
-      return 0;     // return with success flag
+     return 0;     // return with success flag
+   }
+   
+   // Initialize memory allocated within Userdata
+   static int InitUserData(UserData *udata)
+   {
+     udata->nx = 0;
+     udata->ny = 0;
+     udata->is = 0;
+     udata->ie = 0;  
+     udata->js = 0;
+     udata->je = 0;  
+     udata->nxl = 0;
+     udata->nyl = 0;
+     udata->dx = 0.0;
+     udata->dy = 0.0;
+     udata->kx = 0.0;
+     udata->ky = 0.0;
+     udata->h = NULL;
+     udata->d = NULL;
+     udata->comm = MPI_COMM_WORLD;
+     udata->myid = 0;
+     udata->nprocs = 0;
+     udata->HaveBdry[0][0] = 1;
+     udata->HaveBdry[0][1] = 1;
+     udata->HaveBdry[1][0] = 1;
+     udata->HaveBdry[1][1] = 1;
+     udata->Erecv = NULL;
+     udata->Wrecv = NULL;
+     udata->Nrecv = NULL;
+     udata->Srecv = NULL;
+     udata->Esend = NULL;
+     udata->Wsend = NULL;
+     udata->Nsend = NULL;
+     udata->Ssend = NULL;
+   
+     return 0;     // return with success flag
    }
    
    // Free memory allocated within Userdata
    static int FreeUserData(UserData *udata)
    {
-      // free exchange buffers
-      if (udata->Wrecv != NULL)  delete[] udata->Wrecv;
-      if (udata->Wsend != NULL)  delete[] udata->Wsend;
-      if (udata->Erecv != NULL)  delete[] udata->Erecv;
-      if (udata->Esend != NULL)  delete[] udata->Esend;
-      if (udata->Srecv != NULL)  delete[] udata->Srecv;
-      if (udata->Ssend != NULL)  delete[] udata->Ssend;
-      if (udata->Nrecv != NULL)  delete[] udata->Nrecv;
-      if (udata->Nsend != NULL)  delete[] udata->Nsend;
+     // free exchange buffers
+     if (udata->Wrecv != NULL)  delete[] udata->Wrecv;
+     if (udata->Wsend != NULL)  delete[] udata->Wsend;
+     if (udata->Erecv != NULL)  delete[] udata->Erecv;
+     if (udata->Esend != NULL)  delete[] udata->Esend;
+     if (udata->Srecv != NULL)  delete[] udata->Srecv;
+     if (udata->Ssend != NULL)  delete[] udata->Ssend;
+     if (udata->Nrecv != NULL)  delete[] udata->Nrecv;
+     if (udata->Nsend != NULL)  delete[] udata->Nsend;
    
-      return 0;     // return with success flag
+     return 0;     // return with success flag
    }
+   
 
 
 Solutions
 ---------
 
-**add plots and discussion here**
+Top row: 2D heat PDE solution snapshots, the left is at time :math:`t=0`,
+center is at time :math:`t=0.03`, right is at time :math:`t=0.3`.
+Bottom row, absolute error in these solutions.  Note that the relative
+error in these results is on the order :math:`10^{-4}`, corresponding
+to the spatial accuracy of the relatively coarse finite-difference mesh.
+
+
+.. image:: figs/plot-ark_heat2d_1.png
+   :width: 30 %
+.. image:: figs/plot-ark_heat2d_2.png
+   :width: 30 %
+.. image:: figs/plot-ark_heat2d_3.png
+   :width: 30 %
+
+.. image:: figs/plot-ark_heat2d_err_1.png
+   :width: 30 %
+.. image:: figs/plot-ark_heat2d_err_2.png
+   :width: 30 %
+.. image:: figs/plot-ark_heat2d_err_3.png
+   :width: 30 %
+
 
 
 
