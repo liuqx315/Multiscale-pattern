@@ -34,12 +34,12 @@ CXX = mpicxx
 # C++ compile flags
 #CXXFLAGS = -p -g -O0 -Wall -DMPICH_SKIP_MPICXX # intel debug
 #CXXFLAGS = -O2 -DMPICH_SKIP_MPICXX # intel
-#CXXFLAGS = -p -g -O0 -Wall -DOMPI_SKIP_MPICXX # gnu debug
-CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX # gnu
+#CXXFLAGS = -p -g -O0 -Wall -DMPICH_SKIP_MPICXX # gnu debug
+CXXFLAGS = -O2 -DMPICH_SKIP_MPICXX # gnu
 
 # linking flags
-#LDFLAGS = -L/usr/lib -lefence
-LDFLAGS = 
+#LDFLAGS = -L/usr/lib -lefence -lm
+LDFLAGS = -lm
 
 # SUNDIALS installation location, etc.
 #SUNDROOT = /usr/local/sundials-2.5.0/intel_debug
