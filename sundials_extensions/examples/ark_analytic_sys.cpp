@@ -124,6 +124,14 @@ int main()
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);   // Set Jacobian routine
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
+  // Open output stream for results, output comment line
+  FILE *UFID = fopen("solution.txt","w");
+  fprintf(UFID,"# t y1 y2 y3\n");
+
+  // output initial condition to disk 
+  fprintf(UFID," %.16e %.16e %.16e %.16e\n", 
+	  T0, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));  
+
   /* Main time-stepping loop: calls ARKode to perform the integration, then
      prints results.  Stops when the final time has been reached */
   realtype t = T0;
@@ -136,6 +144,8 @@ int main()
     if (check_flag(&flag, "ARKode", 1)) break;
     printf("  %8.4f  %8.5f  %8.5f  %8.5f\n",                  // access/print solution
            t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
+    fprintf(UFID," %.16e %.16e %.16e %.16e\n", 
+	    t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));  
     if (flag >= 0) {                                          // successful solve: update time
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
@@ -145,6 +155,7 @@ int main()
     }
   }
   cout << "   --------------------------------------\n";
+  fclose(UFID);
 
   // Print some final statistics
   long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
