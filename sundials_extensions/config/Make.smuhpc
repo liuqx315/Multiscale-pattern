@@ -1,0 +1,66 @@
+# -*- Mode: Makefile; -*-
+###################################################################
+#  Daniel R. Reynolds, SMU Mathematics
+#  Copyright 2012; all rights reserved
+###################################################################
+
+# Fortran compilers
+F90 = mpif90
+
+# Fortran compile flags
+#FFLAGS = -g -O0 # debug
+FFLAGS = -O2
+
+# SUNDIALS-specific preprocessor directives (F-to-C conversion)
+SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
+            -DSUNDIALS_DOUBLE_PRECISION
+
+# C compiler
+CC = mpicc
+
+# C compile flags
+#CFLAGS = -g -O0 -Wall # debug
+CFLAGS = -O2
+
+# C++ compiler
+CXX = mpicxx
+
+# C++ compile flags
+#CXXFLAGS = -p -g -O0 -Wall -DMPICH_SKIP_MPICXX # debug
+CXXFLAGS = -O2 -DMPICH_SKIP_MPICXX
+
+# Location of C standard header files (stdlib.h, etc.)
+C_INCD = 
+
+# linking flags
+LDFLAGS = 
+
+# SUNDIALS installation location, etc.
+SUNDROOT = /users/dreynolds/sw/sundials-2.5.0_batch
+#SUNDROOT = /users/dreynolds/sw/sundials-2.5.0_inode
+#SUNDROOT = /users/dreynolds/sw/sundials-2.5.0_inode_PGI
+#SUNDROOT = /users/dreynolds/sw/sundials-2.5.0_iwnode
+#SUNDROOT = /users/dreynolds/sw/sundials-2.5.0_iwnode_PGI
+SUND_INCD = -I${SUNDROOT}/include
+SUND_LIBD = -L${SUNDROOT}/lib
+SUND_LIBS = -lm -lsundials_fkinsol -lsundials_kinsol -lsundials_fcvode \
+            -lsundials_cvode -lsundials_fida -lsundials_ida \
+            -lsundials_fnvecparallel -lsundials_nvecparallel \
+            -lsundials_fnvecserial -lsundials_nvecserial
+SUND_LIB  = ${SUND_LIBD} ${SUND_LIBS}
+
+# LAPACK installation location, etc.
+LAPACKROOT = /usr
+LAPACK_LIBD = -L${LAPACKROOT}/lib
+LAPACK_LIBS = -llapack -lblas
+LAPACK_LIB  = ${LAPACK_LIBD} ${LAPACK_LIBS}
+
+# MPI installation location (F90 compatible), and required libs
+# [not needed if using mpif90 compiler script wrapper]
+MPIROOT  = 
+MPI_INCD = 
+MPI_LIBD = 
+MPI_LIBS = 
+MPI_LIB  = 
+
+####### End of Makefile #######
