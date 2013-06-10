@@ -26,8 +26,8 @@ CFLAGS = -O2
 CXX = mpicxx  # gnu
 
 # C++ compile flags
-#CXXFLAGS = -p -g -O0 -Wall -DOMPI_SKIP_MPICXX # gcc 
-CXXFLAGS = -O2 -DMPICH_SKIP_MPICXX # gcc 
+#CXXFLAGS = -p -g -O0 -Wall -DMPICH_SKIP_MPICXX # gnu
+CXXFLAGS = -O2 -DMPICH_SKIP_MPICXX # gnu
 
 # Location of C standard header files (stdlib.h, etc.)
 C_INCD = 

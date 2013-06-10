@@ -24,6 +24,16 @@ CC = mpicc  # gnu
 #CFLAGS = -g -O0 -Wall
 CFLAGS = -O2
 
+# C++ compiler
+CXX = mpicxx  # gnu
+CXX = mpicxx_intel
+
+# C++ compile flags
+#CXXFLAGS = -p -g -O0 -Wall -DOMPI_SKIP_MPICXX # gnu
+CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX # gnu
+#CXXFLAGS = -p -g -O0 -Wall -DMPICH_SKIP_MPICXX # intel
+#CXXFLAGS = -O2 -DMPICH_SKIP_MPICXX # intel
+
 # Location of C standard header files (stdlib.h, etc.)
 C_INCD = 
 
