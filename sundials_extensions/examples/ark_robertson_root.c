@@ -125,6 +125,14 @@ int main()
   flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);     /* Set the Jacobian routine */
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
+  /* Open output stream for results, output comment line */
+  FILE *UFID = fopen("solution.txt","w");
+  fprintf(UFID,"# t u v w\n");
+
+  /* output initial condition to disk */
+  fprintf(UFID," %.16e %.16e %.16e %.16e\n", 
+	  T0, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));  
+
   /* Main time-stepping loop: calls ARKode to perform the integration, then
      prints results.  Stops when the final time has been reached */
   realtype t = T0;
@@ -140,6 +148,8 @@ int main()
     if (check_flag(&flag, "ARKode", 1)) break;
     printf("  %12.5e  %12.5e  %12.5e  %12.5e\n",  t,        /* access/print solution */
         NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));
+    fprintf(UFID," %.16e %.16e %.16e %.16e\n", 
+	    t, NV_Ith_S(y,0), NV_Ith_S(y,1), NV_Ith_S(y,2));  
     if (flag == ARK_ROOT_RETURN) {                          /* check if a root was found */
       rtflag = ARKodeGetRootInfo(arkode_mem, rootsfound);
       if (check_flag(&rtflag, "ARKodeGetRootInfo", 1)) return 1;
@@ -156,6 +166,7 @@ int main()
     if (iout == Nt) break;                                  /* stop after enough outputs */
   }
   printf("   -----------------------------------------------------\n");
+  fclose(UFID);
 
   /* Print some final statistics */
   flag = ARKodeGetNumSteps(arkode_mem, &nst);

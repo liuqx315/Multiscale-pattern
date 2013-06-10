@@ -136,6 +136,13 @@ program driver
      stop
   endif
 
+  ! Open output stream for results, output comment line
+  open(100, file='solution.txt')
+  write(100,*) '# t u v w'
+
+  ! output initial condition to disk 
+  write(100,'(3x,4(es23.16,1x))') T0, y
+
   ! loop over time outputs
   Tout = T0
   Tcur = T0
@@ -153,9 +160,11 @@ program driver
 
      ! output current solution
      print '(3x,4(es12.5,1x))', Tcur, y
+     write(100,'(3x,4(es23.16,1x))') Tcur, y
 
   end do
   print *, '  ----------------------------------------------------'
+  close(100)
 
   ! output solver statistics
   print *, '  '

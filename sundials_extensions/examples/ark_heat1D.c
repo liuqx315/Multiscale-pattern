@@ -129,7 +129,7 @@ int main() {
   fclose(FID);
 
   /* Open output stream for results, access data array */
-  FILE *UFID=fopen("heat.txt","w");
+  FILE *UFID=fopen("heat1D.txt","w");
   data = N_VGetArrayPointer(y);
 
   /* output initial condition to disk */

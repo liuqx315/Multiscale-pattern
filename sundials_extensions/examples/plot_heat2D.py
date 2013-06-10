@@ -67,6 +67,10 @@ if (nprocs > 1):
         for i in range(nt):
             results[i,jstart:jend+1,istart:iend+1] = np.reshape(data[i,:], (nyl,nxl))
 
+# determine extents of plots
+maxtemp = 1.1*results.max()
+mintemp = 0.9*results.min()
+
 # generate plots of results
 for tstep in range(nt):
 
@@ -88,6 +92,7 @@ for tstep in range(nt):
                     cmap=cm.jet, linewidth=0, antialiased=True, shade=True)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
+    ax.set_zlim((mintemp, maxtemp))
     ax.view_init(20,45)
     title('u(x,y) at output ' + tstr + ', mesh = ' + nxstr + 'x' + nystr)
     savefig(pname)
