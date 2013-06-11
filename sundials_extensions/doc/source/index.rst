@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+====================================
 Welcome to the ARKode documentation!
 ====================================
 
@@ -34,18 +35,19 @@ ARKode is developed by `Southern Methodist University
 B598130 from `Lawrence Livermore National Laboratory
 <http://www.llnl.gov>`_. 
 
+Documentation sections:
 
 .. toctree::
    :maxdepth: 1
 
    Introduction
-   Mathematics
+   mathematics/index.rst
    Organization
-   CInterface
-   FortranInterface
-   NVectors
-   LinearSolvers
-   Installation
+   c_interface/index.rst
+   f_interface/index.rst
+   nvectors/index.rst
+   linear_solvers/index.rst
+   install/index.rst
    Constants
    examples/index.rst
    References

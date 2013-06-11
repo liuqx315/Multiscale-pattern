@@ -1,358 +1,9 @@
 :tocdepth: 3
 
-.. _CInterface:
-
-Using ARKode for C and C++ Applications
-=======================================
-
-This chapter is concerned with the use of ARKode for the solution
-of initial value problems (IVPs) in a C or C++ language setting.  The
-following sections treat the header files and the layout of the user's
-main program, and provide descriptions of the ARKode user-callable 
-functions and user-supplied functions. 
-
-The sample programs described in the companion document
-[R2013]_ may also be helpful. Those codes may be used as
-templates (with the removal of some lines used in testing) and are
-included in the ARKode package. 
-
-Users with applications written in Fortran should see the chapter
-:ref:`FortranInterface`, that describes the Fortran/C interface
-module. 
-
-The user should be aware that not all linear solver modules are
-compatible with all NVECTOR implementations.  For example,
-NVECTOR_PARALLEL is not compatible with the direct dense or direct
-band linear solvers since these linear solver modules need to form the
-complete system Jacobian on a single processor.  Specifically, the
-following ARKode modules can only be used with NVECTOR_SERIAL:
-ARKDENSE, ARKBAND (using either the internal or the LAPACK
-implementation) and ARKBANDPRE. Also, the preconditioner module
-ARKBBDPRE can only be used with NVECTOR_PARALLEL. 
-
-ARKode uses various constants for both input and output. These are
-defined as needed in this chapter, but for convenience are also listed
-separately in the section :ref:`Constants`. 
-
-
-.. _CInterface.Headers:
-
-Access to library and header files
-----------------------------------
-
-At this point, it is assumed that the installation of ARKode,
-following the procedure described in the section :ref:`Installation`,
-has been completed successfully. 
-
-Regardless of where the user's application program resides, its
-associated compilation and load commands must make reference to the
-appropriate locations for the library and header files required by
-ARKode. The relevant library files are 
-
-- ``libdir/libsundialsarkode.lib``,
-- ``libdir/libsundials_nvec*.lib`` (one or two files), 
-
-where the file extension ``.lib`` is typically ``.so`` for shared
-libraries and ``.a`` for static libraries. The relevant header files are
-located in the subdirectories 
-
-- ``incdir/include/arkode``
-- ``incdir/include/sundials``
-- ``incdir/include/nvector``
-
-The directories ``libdir`` and ``incdir`` are the install library and
-include directories, respectively.  For a default installation, these
-are ``instdir/lib`` and ``instdir/include``, respectively, where ``instdir``
-is the directory where SUNDIALS was installed (see the section
-:ref:`Installation`).
-
-
-.. _CInterface.DataTypes:
-
-Data Types
-----------
-
-The ``sundials_types.h`` file contains the definition of the type
-``realtype``, which is used by the SUNDIALS solvers for all
-floating-point data.  The type ":index:`realtype`" can be ``float``,
-``double``, or ``long double``, depending on how SUNDIALS was
-installed (with the default being ``double``). The user can change the
-precision of the SUNDIALS solvers floating-point arithmetic at the
-configuration stage (see the section :ref:`Installation`). 
-
-Additionally, based on the current precision, ``sundials_types.h``
-defines the values :index:`BIG_REAL` to be the largest value
-representable as a ``realtype``, :index:`SMALL_REAL` to be the
-smallest positive value representable as a ``realtype``, and
-:index:`UNIT_ROUNDOFF` to be the difference between 1.0 and the
-minimum ``realtype`` greater than 1.0.  
-
-Within SUNDIALS, real constants may be set to have the appropriate
-precision by way of a macro called :index:`RCONST`.  It is this macro
-that needs the ability to branch on the definition ``realtype``.  In
-ANSI C, a floating-point constant with no suffix is stored as a
-``double``. Placing the suffix "F" at the end of a floating point
-constant makes it a ``float``, whereas using the suffix "L" makes it a
-``long double``. For example,
-
-.. code-block:: c
-
-   #define A 1.0 
-   #define B 1.0F 
-   #define C 1.0L
-
-defines ``A`` to be a ``double`` constant equal to 1.0, ``B`` to be a
-``float`` constant equal to 1.0, and ``C`` to be a ``long double`` constant
-equal to 1.0.  The macro call ``RCONST(1.0)`` automatically expands to
-1.0 if ``realtype`` is ``double``, to ``1.0F`` if ``realtype`` is ``float``, or
-to ``1.0L`` if ``realtype`` is ``long double``. SUNDIALS uses the ``RCONST``
-macro internally to declare all of its floating-point constants. 
-
-A user program which uses the type ``realtype`` and the ``RCONST`` macro
-to handle floating-point constants is precision-independent except for
-any calls to precision-specific standard math library functions (Our
-example programs use both ``realtype`` and ``RCONST``).  Users can,
-however, use the types ``double``, ``float``, or ``long double`` in their
-code (assuming that this usage is consistent with the ``typedef`` for
-``realtype``).  Thus, a previously existing piece of ANSI C code can use
-SUNDIALS without modifying the code to use ``realtype``, so long as
-the SUNDIALS libraries have been compiled using the same precision
-(for details see the section :ref:`Installation`). 
-
-SUNDIALS also defines a type ":index:`booleantype`", that can have
-values ``TRUE`` and ``FALSE``, which is used for logic arguments
-within the library.
-
-
-
-Header Files
-------------
-
-The calling program must include several header files so that various
-macros and data types can be used. The header file that is always
-required is: 
-
-- ``arkode.h``, the main header file for ARKode, which defines the
-  several types and various constants, and includes function
-  prototypes. 
-
-Note that ``arkode.h`` includes ``sundials_types.h`` directly, which
-defines the types ``realtype`` and ``booleantype`` and the
-constants ``FALSE`` and ``TRUE``, so a user program does not need to
-include ``sundials_types.h`` directly. 
-
-The calling program must also include an NVECTOR implementation
-header file (see the chapter :ref:`NVectors` for details).  For the two
-NVECTOR implementations that are included in the ARKode package, the
-corresponding header files are: 
-
-* ``nvector_serial.h``, which defines the serial implementation
-  NVECTOR_SERIAL; 
-* ``nvector_parallel.h``, which defines the parallel (MPI)
-  implementation, NVECTOR_PARALLEL.
-
-Note that both these files in turn include the header file
-``sundials_nvector.h`` which defines the abstract ``N_Vector`` data
-type.
-
-Finally, if the user includes a non-trivial implicit component to their
-ODE system (and hence requires a Newton solver for the resulting
-nonlinear systems of equations), then a linear solver module header
-file will be required. The header files corresponding to the various
-linear solvers availble for use with ARKode are: 
-
-- ``arkode_dense.h``, which is used with the dense direct linear solver; 
-- ``arkode_band.h``, which is used with the band direct linear solver;
-- ``arkode_lapack.h``, which is used with LAPACK implementations of dense
-  or band direct linear solvers; 
-- ``arkode_spgmr.h``, which is used with the scaled, preconditioned GMRES
-  Krylov linear solver SPGMR;
-- ``arkode_spbcgs.h``, which is used with the scaled, preconditioned
-  Bi-CGStab Krylov linear solver SPBCG;
-- ``arkode_sptfqmr.h``, which is used with the scaled, preconditioned
-  TFQMR Krylov solver SPTFQMR.
-- ``arkode_pcg.h``, which is used with the preconditioned
-  conjugate gradient linear solver PCG;
-
-The header files for the dense and banded linear solvers (both
-internal and LAPACK) include the file ``arkode_direct.h``, which defines
-common functions.  This in turn includes a file (``sundials_direct.h``)
-which defines the matrix type for these direct linear solvers
-(``DlsMat``), as well as various functions and macros for acting on and
-accessing entries of such matrices. 
-
-The header files for the Krylov iterative solvers each include
-``arkode_spils.h`` which defines common functions and which in turn
-includes a header file (``sundials_iterative.h``) which enumerates the
-preconditioning type and the choices for the Gram-Schmidt process (for
-the SPGMR solver). 
-
-Other headers may be needed, according to the choice of
-preconditioner, etc.  For example, in the ``arkDiurnal_kry_p.c`` example
-(see [R2013]_), preconditioning is done with a block-diagonal
-matrix.  For this, even though the :c:func:`ARKSpgmr()` linear solver
-is used, the header ``sundials_dense.h`` is included for access to the
-underlying generic dense linear solver that is used for preconditioning.
-
-
-
-.. _CInterface.Skeleton:
-
-A skeleton of the user's main program
--------------------------------------
-
-The following is a skeleton of the user's main program (or calling
-program) for the integration of an ODE IVP.  Some steps are
-independent of the NVECTOR implementation used; where this is not
-the case, usage specifications are given for the two implementations
-provided with ARKode: steps marked [P] correspond to
-NVECTOR_PARALLEL, while steps marked [S] correspond to
-NVECTOR_SERIAL. 
-
-1. [P] Initialize MPI 
- 
-   Call ``MPI_Init`` to initialize MPI if used by the user's program.
-
-2. Set problem dimensions
-
-   [S] Set ``N``, the problem size :math:`N`.
-
-   [P] Set ``Nlocal``, the local vector length (the sub-vector length
-   for this process); ``N``, the global vector length (the problem size
-   :math:`n`, and the sum of all the values of ``Nlocal``); and the
-   active set of processes. 
-
-3. Set vector of initial values
-
-   To set the vector ``y0`` of initial values, use the appropriate
-   functions defined by the particular NVECTOR implementation.  If a
-   ``realtype`` array ``ydata`` containing the initial values of :math:`y`
-   already exists, then make the call: 
-
-   [S] ``y0 = N_VMake_Serial(N, ydata);``
-
-   [P] ``y0 = N_VMake_Parallel(comm, Nlocal, N, ydata);``
-
-   Otherwise, make the call: 
-
-   [S] ``y0 = N_VNew_Serial(N);``
-
-   [P] ``y0 = N_VNew_Parallel(comm, Nlocal, N);``
-
-   and load initial values into the structure defined by: 
-
-   [S] ``NV_DATA_S(y0)``
-
-   [P] ``NV_DATA_P(y0)``
-
-   Here ``comm`` is the MPI communicator containing the set of active
-   processes to be used (may be ``MPI_COMM_WORLD``). 
-
-4. Create ARKode object
-
-   Call ``arkode_mem = ARKodeCreate()`` to create the ARKode memory
-   block. :c:func:`ARKodeCreate()` returns a pointer to the ARKode memory
-   structure. See the section :ref:`CInterface.Initialization` for
-   details.  
-
-5. Initialize ARKode solver
-
-   Call :c:func:`ARKodeInit()` to provide required problem specifications,
-   allocate internal memory for ARKode, and initialize
-   ARKode. :c:func:`ARKodeInit()` returns a flag, the value of which indicates
-   either success or an illegal argument value. See the section
-   :ref:`CInterface.Initialization` for details. 
-
-6. Specify integration tolerances
-
-   Call :c:func:`ARKodeSStolerances()` or :c:func:`ARKodeSVtolerances()` to
-   specify either a scalar relative tolerance and scalar absolute
-   tolerance, or a scalar relative tolerance and a vector of absolute
-   tolerances, respectively. Alternatively, call :c:func:`ARKodeWFtolerances()`
-   to specify a function which sets directly the weights used in
-   evaluating WRMS vector norms. See the section
-   :ref:`CInterface.Tolerances` for details. 
-
-7. Set optional inputs 
-
-   Call ``ARKodeSet*`` functions to change any optional inputs that
-   control the behavior of ARKode from their default values. See
-   the section :ref:`CInterface.OptionalInputs` for details. 
-
-8. Attach linear solver module
-
-   If an implicit solve is required, initialize the linear solver
-   module with one of the following calls (for details see the section
-   :ref:`CInterface.LinearSolvers`):  
-
-   [S] ``ier = ARKDense(...);``
-
-   [S] ``ier = ARKBand(...);``
-
-   [S] ``ier = ARKLapackDense(...);`` 
-
-   [S] ``ier = ARKLapackBand(...);``
-
-   ``ier = ARKSpgmr(...);``
-
-   ``ier = ARKSpbcg(...);``
-
-   ``ier = ARKSptfqmr(...);``
-
-   ``ier = ARKPcg(...);``
-
-9. Set linear solver optional inputs 
-
-   Call ``ARK*Set*`` functions from the selected linear solver module to
-   change optional inputs specific to that linear solver. See the section
-   :ref:`CInterface.OptionalInputs` for details. 
-
-10. Specify rootfinding problem
-
-    Optionally, call :c:func:`ARKodeRootInit()` to initialize a rootfinding
-    problem to be solved during the integration of the ODE system. See
-    the section :ref:`CInterface.RootFinding` for general details, and
-    the section :ref:`CInterface.OptionalInputs` for relevant optional
-    input calls. 
-
-11. Advance solution in time
-
-    For each point at which output is desired, call 
-
-    ``ier = ARKode(arkode_mem, tout, yout, &tret, itask)``
-
-    Here, :c:func:`ARKode()` requires that ``itask``
-    specify the return mode. The vector ``y`` (which can be the same as
-    the vector ``y0`` above) will contain :math:`y(t)`. See the section
-    :ref:`CInterface.Integration` for details. 
-
-12. Get optional outputs 
-
-    Call ``ARK*Get*`` functions to obtain optional output. See
-    the section :ref:`CInterface.OptionalInputs` for details.  
-
-13. Deallocate memory for solution vector 
-
-    Upon completion of the integration, deallocate memory for the
-    vector ``y`` by calling the destructor function defined by the
-    NVECTOR implementation:
-
-    [S] ``N_VDestroy_Serial(y);``
-
-    [P] ``N_VDestroy_Parallel(y);`` 
-
-14. Free solver memory 
-
-    Call ``ARKodeFree(&arkode_mem)`` to free the memory allocated for ARKode. 
-
-15. [P] Finalize MPI 
-
-    Call ``MPI_Finalize`` to terminate MPI.
-
-
+.. _CInterface.UserCallable:
 
 User-callable functions
------------------------
+=============================
 
 This section describes the ARKode functions that are called by the
 user to setup and then solve an IVP. Some of these are
@@ -374,7 +25,7 @@ error output or can provide his own error handler function
 .. _CInterface.Initialization:
 
 ARKode initialization and deallocation functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------------
 
 .. c:function:: void *ARKodeCreate()
 
@@ -428,7 +79,7 @@ ARKode initialization and deallocation functions
 .. _CInterface.Tolerances:
 
 ARKode tolerance specification functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------------
 
 These functions specify the integration tolerances. One of them
 **should** be called before the first call to :c:func:`ARKode()`; otherwise
@@ -519,7 +170,7 @@ Alternatively, the user may supply a custom function to supply the
 
 
 General advice on the choice of tolerances
-""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For many users, the appropriate choices for tolerance values in reltol
 and abstol are a concern. The following pieces of advice are
@@ -542,10 +193,10 @@ relevant.
     scalar) or ``abstol[i]`` (if a vector) needs to be set to that
     noise level. If the different components have different noise
     levels, then ``abstol`` should be a vector. See the example
-    ``arkRoberts_dns.c`` in the ARKode package, and the discussion
-    of it in the ARKode Examples document [R2013]_. In that
-    problem, the three components vary betwen 0 and 1, and have
-    different noise levels; hence the ``abstol`` vector. It is
+    ``ark_robertson.c`` in the ARKode package, and the discussion
+    of it in the ARKode Examples section :ref:`ark_robertson_root`. In
+    that problem, the three components vary betwen 0 and 1, and have
+    different noise levels; hence the ``atols`` vector therein. It is
     impossible to give any general advice on ``abstol`` values,
     because the appropriate noise levels are completely
     problem-dependent. The user or modeler hopefully has some idea as
@@ -564,7 +215,8 @@ relevant.
 
 
 Advice on controlling unphysical negative values
-""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 In many applications, some components in the true solution are always
 positive or non-negative, though at times very small.  In the
 numerical solution, however, small negative (hence unphysical) values
@@ -608,7 +260,7 @@ are relevant.
 .. _CInterface.LinearSolvers:
 
 Linear solver specification functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------
 
 As previously explained, the modified Newton iteration used in solving
 implicit systems within ARKode requires the solution of linear
@@ -880,7 +532,7 @@ are described separately in the section :ref:`LinearSolvers`.
 .. _CInterface.RootFinding:
 
 Rootfinding initialization function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------
 
 While solving the IVP, ARKode has the capability to find the roots
 of a set of user-defined functions.  To activate the root-finding
@@ -915,7 +567,7 @@ algorithm, call the following function:
 .. _CInterface.Integration:
 
 ARKode solver function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 This is the central step in the solution process -- the call to perform
 the integration of the IVP.  One of the input arguments (`itask`)
@@ -1010,7 +662,7 @@ has requested rootfinding.
 .. _CInterface.OptionalInputs:
 
 Optional input functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 There are numerous optional input parameters that control the behavior
 of the ARKode solver. ARKode provides functions that can be
@@ -1032,9 +684,8 @@ arguments for negative values will catch all errors.
 
 .. _CInterface.ARKodeInputTable:
 
-
 Table: Optional inputs for ARKode
-"""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. cssclass:: table-bordered
 
@@ -1904,7 +1555,7 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
 
 
 Direct linear solvers optional input functions
-""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _CInterface.ARKDlsInputTable:
 
@@ -2000,7 +1651,7 @@ data in the program. The pointer user data may be specified through
 
 
 Iterative linear solvers optional input functions
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If any preconditioning is to be done within one of the ARKSPILS
 linear solvers, then the user must supply a preconditioner solve
@@ -2201,7 +1852,7 @@ Maximum Krylov subspace size `(b)`             :c:func:`ARKSpilsSetMaxl()`      
 
 
 Rootfinding optional input functions
-"""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following functions can be called to set optional inputs to
 control the rootfinding algorithm.
@@ -2269,7 +1920,7 @@ Disabling inactive root warnings               :c:func:`ARKodeSetNoInactiveRootW
 .. _CInterface.InterpolatedOutput:
 
 Interpolated output function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------
 
 An optional function :c:func:`ARKodeGetDky()` is available to obtain
 additional output values.  This function should only be called after a
@@ -2319,7 +1970,7 @@ internal step taken by :c:func:`ARKode()`.
 .. _CInterface.OptionalOutputs:
 
 Optional output functions
-^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
 ARKode provides an extensive set of functions that can be used to
 obtain solver performance information. In the tables 
@@ -2357,7 +2008,7 @@ steps).
 
 
 Main solver optional output functions
-"""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _CInterface.ARKodeOutputTable:
 
@@ -2753,7 +2404,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 Rootfinding optional output functions
-"""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _CInterface.ARKodeRootOutputTable:
 
@@ -2812,7 +2463,7 @@ No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals
 
 
 Direct linear solvers optional output functions
-""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following optional outputs are available from the ARKDLS
 modules: workspace requirements, number of calls to the Jacobian
@@ -2946,7 +2597,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 Iterative linear solvers optional output functions
-""""""""""""""""""""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following optional outputs are available from the ARKSPILS
 modules: workspace requirements, number of linear iterations, number
@@ -3189,7 +2840,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 .. _CInterface.Reinitialization:
 
 ARKode reinitialization function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------
 
 The function :c:func:`ARKodeReInit()` reinitializes the main ARKode solver
 for the solution of a problem, where a prior call to
@@ -3233,1188 +2884,3 @@ in the section :ref:`CInterface.LinearSolvers`.
    
    **Notes:** If an error occurred, ARKodeReInit also sends an error
    message to the error handler function.
-
-
-
-
-.. _CInterface.UserSupplied:
-
-User-supplied functions
------------------------
-
-The user-supplied functions consist of at least one function defining
-the ODE, (optionally) a function that handles error and warning
-messages, (optionally) a function that provides the error weight
-vector, (optionally) a function that handles adaptive time step error
-control, (optionally) a function that handles explicit time step
-stability, (optionally) a function that defines the root-finding
-problem(s) to solve, (optionally) a function that provides
-Jacobian-related information for the linear solver (if Newton
-iteration is chosen), and (optionally) one or two functions that
-define the preconditioner for use in any of the Krylov iterative
-algorithms.
-
-
-.. _CInterface.ODERHS:
-
-ODE right-hand side
-^^^^^^^^^^^^^^^^^^^
-
-The user must supply at least one function of type :c:func:`ARKRhsFn()` to
-specify the explicit and/or implicit portions of the ODE system:
-
-
-
-.. c:function:: typedef int (*ARKRhsFn)(realtype t, N_Vector y, N_Vector ydot, void *user_data)
-
-   These functions compute the ODE right-hand side for a given
-   value of the independent variable :math:`t` and state vector :math:`y`.
-   
-   **Arguments:**
-      * `t` -- the current value of the independent variable.
-      * `y` -- the current value of teh dependent variable vector, :math:`y(t)`.
-      * `ydot` -- the output vector that forms a portion of the ODE RHS :math:`f_E(t,y) + f_I(t,y)`
-      * `user_data` -- the `user_data` pointer that was passed to :c:func:`ARKodeSetUserData()`.
-   
-   **Return value:** 
-   An ARKRhsFn should return 0 if successful, a
-   positive value if a recoverable error occurred (in which case
-   ARKode will attempt to correct), or a negative value if it
-   failed unrecoverably (in which case the integration is halted and
-   ARK_RHSFUNC_FAIL is returned).
-   
-   **Notes:** Allocation of memory for `ydot` is handled within
-   ARKode. A recoverable failure error return from the
-   ARKRhsFn is typically used to flag a value of the dependent
-   variable :math:`y` that is "illegal" in some way (e.g., negative
-   where only a nonnegative value is physically meaningful).  If such
-   a return is made, ARKode will attempt to recover (possibly
-   repeating the Newton iteration, or reducing the step size) in order
-   to avoid this recoverable error return.  There are some situations
-   in which recovery is not possible even if the right-hand side
-   function returns a recoverable error flag.  One is when this occurs
-   at the very first call to the ARKRhsFn (in which case
-   ARKode returns ARK_FIRST_RHSFUNC_ERR).  Another is when a
-   recoverable error is reported by ARKRhsFn after the integrator
-   completes a successful stage, in which case ARKode returns
-   ARK_UNREC_RHSFUNC_ERR).
-
-
-
-.. _CInterface.ErrorHandler:
-
-Error message handler function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-As an alternative to the default behavior of directing error and
-warning messages to the file pointed to by `errfp` (see
-:c:func:`ARKodeSetErrFile()`), the user may provide a function of type
-:c:func:`ARKErrHandlerFn()` to process any such messages. 
-
-
-
-.. c:function:: typedef void (*ARKErrHandlerFn)(int error_code, const char *module, const char *function, char *msg, void *user_data)
-
-   This function processes error and warning messages from
-   ARKode and is sub-modules.
-   
-   **Arguments:**
-      * `error_code` -- the error code.
-      * `module` -- the name of the ARKode module reporting the error.
-      * `function` -- the name of the function in which the error occurred.
-      * `msg` -- the error message.
-      * `user_data` -- a pointer to user data, the same as the
-        `eh_data` parameter that was passed to :c:func:`ARKodeSetErrHandlerFn()`.
-   
-   **Return value:** 
-   An ARKErrHandlerFn function has no return value.
-   
-   **Notes:** `error_code` is negative for errors and positive
-   (ARK_WARNING) for warnings.  If a function that returns a
-   pointer to memory encounters an error, it sets `error_code` to
-   0.
-
-
-
-
-.. _CInterface.ErrorWeight:
-
-Error weight function
-^^^^^^^^^^^^^^^^^^^^^^
-
-As an alternative to providing the relative and absolute tolerances,
-the user may provide a function of type :c:func:`ARKEwtFn()` to compute a
-vector `ewt` containing the weights in the WRMS norm
-:math:`\|v\|_{WRMS} = \left(\frac{1}{n} \sum_{i=1}^n \left(ewt_i * v_i\right)^2
-\right)^{1/2}`.  These weights will be used in place of those defined
-in the section :ref:`Mathematics`.
-
-
-
-.. c:function:: typedef int (*ARKEwtFn)(N_Vector y, N_Vector ewt, void *user_data)
-
-   This function computes the WRMS error weights for the vector
-   :math:`y`.
-   
-   **Arguments:**
-      * `y` -- the dependent variable vector at which the
-        weight vector is to be computed.
-      * `ewt` -- the output vector containing the error weights.
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-   **Return value:** 
-   An ARKEwtFn function must return 0 if it
-   successfully set the error weights, and -1 otherwise.
-   
-   **Notes:** Allocation of memory for `ewt` is handled within ARKode.
-   
-   The error weight vector must have all components positive.  It is
-   the user's responsibility to perform this test and return -1 if it
-   is not satisfied.
-
-
-
-.. _CInterface.AdaptivityFn:
-
-Time step adaptivity function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-As an alternative to using one of the built-in time step adaptivity
-methods for controlling solution error, the user may provide a
-function of type :c:func:`ARKAdaptFn()` to compute a target step size
-:math:`h` for the next integration step.  These steps should be chosen
-as the maximum value such that the error estimates remain below 1.
-
-
-
-.. c:function:: typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h1, realtype h2, realtype h3, realtype e1, realtype e2,  realtype e3, int q, int p, realtype *hnew, void *user_data)
-
-   This function implements a time step adaptivity algorithm
-   that chooses :math:`h` satisfying the error tolerances..
-   
-   **Arguments:**
-      * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
-      * `t` -- the current value of the independent variable.
-      * `h1` -- the current step size, :math:`t_m - t_{m-1}`.
-      * `h2` -- the previous step size, :math:`t_{m-1} - t_{m-2}`.
-      * `h3` -- the step size :math:`t_{m-2}-t_{m-3}`.
-      * `e1` -- the error estimate from the current step, :math:`m`.
-      * `e2` -- the error estimate from the previous step, :math:`m-1`.
-      * `e3` -- the error estimate from the step :math:`m-2`.
-      * `q` -- the global order of accuracy for the integration method.
-      * `p` -- the global order of accuracy for the embedding.
-      * `hnew` -- the output value of the next step size.
-      * `user_data` -- a pointer to user data, the same as the
-        `h_data` parameter that was passed to :c:func:`ARKodeSetAdaptivityFn()`.
-   
-   **Return value:** 
-   An ARKAdaptFn function should return 0 if it
-   successfuly set the next step size, and a non-zero value otherwise.
-
-
-
-
-.. _CInterface.StabilityFn:
-
-Explicit stability function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A user may supply a function to predict the maximum stable step size
-for the explicit portion of the ImEx system, :math:`f_E(t,y)`.  While
-the accuracy-based time step adaptivity algorithms may be sufficient
-for retaining a stable solution to the ODE system, these may be
-inefficient if :math:`f_E(t,y)` contains moderately stiff terms.  In
-this scenario, a user may provide a function of type :c:func:`ARKExpStabFn()`
-to provide this stability information to ARKode.  This function
-must set the scalar step size satisfying the stability restriction for
-the upcoming time step.  This value will subsequently be bounded by
-the user-supplied values for the minimum and maximum allowed time
-step, and the accuracy-based time step.  
-
-
-
-.. c:function:: typedef int (*ARKExpStabFn)(N_Vector y, realtype t, realtype *hstab, void *user_data)
-
-   This function predicts the maximum stable step size for the
-   explicit portions of the ImEx ODE system.
-   
-   **Arguments:**
-      * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
-      * `t` -- the current value of the independent variable
-      * `hstab` -- the output value with the absolute value of the
- 	maximum stable step size. 
-      * `user_data` -- a pointer to user data, the same as the
-        `estab_data` parameter that was passed to :c:func:`ARKodeSetStabilityFn()`.
-   
-   **Return value:** 
-   An ARKExpStabFn function should return 0 if it
-   successfully set the upcoming stable step size, and a non-zero
-   value otherwise.
-   
-   **Notes:**  If this function is not supplied, or if it returns
-   `hstab \le 0.0`, then ARKode will assume that there is no explicit
-   stability restriction on the time step size.
-
-
-
-.. _CInterface.RootfindingFn:
-
-Rootfinding function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If a rootfinding problem is to be solved during the integration of the
-ODE system, the user must supply a function of type :c:func:`ARKRootFn()`.
-
-
-
-.. c:function:: typedef int (*ARKRootFn)(realtype t, N_Vector y, realtype *gout, void *user_data)
-
-   This function implements a vector-valued function
-   :math:`g(t,y)` such that the roots of the `nrtfn` components
-   :math:`g_i(t,y)` are sought.
-   
-   **Arguments:**
-      * `t` -- the current value of the independent variable
-      * `y` -- the current value of the dependent variable vector, :math:`y(t)`.
-      * `gout` -- the output array, of length `nrtfn`, with components :math:`g_i(t,y)`.
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-   
-   **Return value:** 
-   An ARKRootFn function should return 0 if successful
-   or a non-zero value if an error occurred (in which case the
-   integration is halted and ARKode returns ARK_RTFUNC_FAIL).
-   
-   **Notes:** Allocation of memory for `gout` is handled within ARKode.
-
-
-
-.. _CInterface.DenseJacobianFn:
-
-Jacobian information (direct method with dense Jacobian)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the direct linear solver with dense treatment of the Jacobian is
-used (i.e., :c:func:`ARKDense()` or :c:func:`ARKLapackDense()` is called in Step 8 of
-the section :ref:`CInterface.Skeleton`), the user may provide a
-function of type :c:func:`ARKDlsDenseJacFn()` to provide the Jacobian
-approximation. 
-
-
-
-.. c:function:: typedef int (*ARKDlsDenseJacFn)(long int N, realtype t, N_Vector y, N_Vector fy, DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-
-   This function computes the dense Jacobian :math:`J =
-   \frac{\partial f_I}{\partial y}` (or an approximation to it).
-   
-   **Arguments:**
-      * `N` -- the size of the ODE system.
-      * `t` -- the current value of the independent variable
-      * `y` -- the current value of the dependent variable vector, namely
-        the predicted value of :math:`y(t)`.
-      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
-      * `Jac` -- the output dense Jacobian matrix (of type ``DlsMat``).
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
-        variables of type ``N_Vector`` which can be used by an
-        ARKDlsDenseJacFn as temporary storage or work space.
-   
-   **Return value:** 
-   An ARKDlsDenseJacFn function should return 0 if
-   successful, a positive value if a recoverable error occurred (in
-   which case ARKode will attempt to correct, while ARKDENSE
-   sets `last_flag` to ARKDLS_JACFUNC_RECVR), or a negative
-   value if it failed unrecoverably (in which case the integration is
-   halted, :c:func:`ARKode()` returns ARK_LSETUP_FAIL and
-   ARKDENSE sets `last_flag` to ARKDLS_JACFUNC_UNRECVR). 
-   
-   **Notes:** A user-supplied dense Jacobian function must load the `N` by
-   `N` dense matrix `Jac` with an approximation to the Jacobian
-   matrix :math:`J(t,y)` at the point :math:`(t,y)`. Only nonzero
-   elements need to be loaded into `Jac` because `Jac` is set to
-   the zero matrix before the call to the Jacobian function. The type
-   of `Jac` is ``DlsMat``. 
-   
-   The accessor macros ``DENSE_ELEM`` and ``DENSE_COL`` allow the user
-   to read and write dense matrix elements without making explicit
-   references to the underlying representation of the ``DlsMat``
-   type. ``DENSE_ELEM(J,i,j)`` references the ``(i,j)``-th element of
-   the dense matrix ``J`` (for ``i``, ``j`` between 0 and
-   N-1). This macro is meant for small problems for which
-   efficiency of access is not a major concern. Thus, in terms of the
-   indices :math:`m` and :math:`n` ranging from 1 to `N`, the
-   Jacobian element :math:`J_{m,n}` can be set using the statement
-   ``DENSE_ELEM(J, m-1, n-1)`` :math:`= J_{m,n}`. Alternatively,
-   ``DENSE_COL(J,j)`` returns a pointer to the first element of the
-   ``j``-th column of ``J`` (for ``j`` ranging from 0 to `N`-1),
-   and the elements of the ``j``-th column can then be accessed using
-   ordinary array indexing. Consequently, :math:`J_{m,n}` can be
-   loaded using the statements ``col_n = DENSE_COL(J, n-1);
-   col_n[m-1]`` :math:`= J_{m,n}`. For large problems, it is more
-   efficient to use ``DENSE_COL`` than to use ``DENSE_ELEM``. Note
-   that both of these macros number rows and columns starting from 0. 
-   
-   The ``DlsMat`` type and accessor macros ``DENSE_ELEM`` and
-   ``DENSE_COL`` are documented in the section :ref:`LinearSolvers`.
-   
-   If the user's ARKDenseJacFn function uses difference quotient
-   approximations, then it may need to access quantities not in the
-   argument list. These include the current step size, the error
-   weights, etc..  To obtain these, use the ARKodeGet* functions
-   listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
-   can be accessed as ``UNIT_ROUNDOFF``, which is defined in the
-   header file ``sundials_types.h``.
-   
-   For the sake of uniformity, the argument `N` is of type ``long int``,
-   even in the case that the LAPACK dense solver is to be used. 
-
-
-
-.. _CInterface.BandJacobianFn:
-
-Jacobian information (direct method with banded Jacobian)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the direct linear solver with banded treatment of the Jacobian is
-used (i.e. :c:func:`ARKBand()` or :c:func:`ARKLapackBand()` is called in Step 8 of the
-section :ref:`CInterface.Skeleton`), the user may provide a function
-of type :c:func:`ARKDlsBandJacFn()` to provide the Jacobian approximation.
-
-
-
-.. c:function:: typedef int (*ARKDlsBandJacFn)(long int N, long int mupper, long int mlower, realtype t, N_Vector y, N_Vector fy, DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-
-   This function computes the banded Jacobian :math:`J =
-   \frac{\partial f_I}{\partial y}` (or an approximation to it).
-   
-   **Arguments:**
-      * `N` -- the size of the ODE system.
-      * `mlower`, `mupper` -- the lower and upper half-bandwidths of
-        the Jacobian.
-      * `t` -- the current value of the independent variable
-      * `y` -- the current value of the dependent variable vector, namely
-        the predicted value of :math:`y(t)`.
-      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
-      * `Jac` -- the output dense Jacobian matrix (of type ``DlsMat``).
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
-        variables of type ``N_Vector`` which can be used by an
-        ARKDlsBandJacFn as temporary storage or work space.
-   
-   **Return value:** 
-   An ARKDlsBandJacFn function should return 0 if
-   successful, a positive value if a recoverable error occurred (in
-   which case ARKode will attempt to correct, while ARKBAND
-   sets `last_flag` to ARKDLS_JACFUNC_RECVR), or a negative
-   value if it failed unrecoverably (in which case the integration is
-   halted, :c:func:`ARKode()` returns ARK_LSETUP_FAIL and
-   ARKBAND sets `last_flag` to ARKDLS_JACFUNC_UNRECVR). 
-   
-   **Notes:** A user-supplied banded Jacobian function must load the band
-   matrix `Jac` of type ``DlsMat`` with the elements of the Jacobian
-   :math:`J(t,y)` at the point :math:`(t,y)`. Only nonzero elements
-   need to be loaded into `Jac` because `Jac` is initialized to
-   the zero matrix before the call to the Jacobian function. 
-  
-   The accessor macros ``BAND_ELEM``, ``BAND_COL``, and
-   ``BAND_COL_ELEM`` allow the user to read and write band matrix
-   elements without making specific references to the underlying
-   representation of the ``DlsMat`` type.  ``BAND_ELEM(J, i, j)``
-   references the ``(i,j)``-th element of the band matrix ``J``,
-   counting from 0. This macro is meant for use in small problems for
-   which efficiency of access is not a major concern. Thus, in terms
-   of the indices :math:`m` and :math:`n` ranging from 1 to `N` with
-   :math:`(m, n)` within the band defined by `mupper` and
-   `mlower`, the Jacobian element :math:`J_{m,n}` can be loaded
-   using the statement ``BAND_ELEM(J, m-1, n-1)`` :math:`=
-   J_{m,n}`. The elements within the band are those with `-mupper`
-   :math:`\le m-n \le` `mlower`.  Alternatively, ``BAND_COL(J, j)``
-   returns a pointer to the diagonal element of the ``j``-th column of
-   ``J``, and if we assign this address to ``realtype *col_j``, then
-   the ``i``-th element of the ``j``-th column is given by
-   ``BAND_COL_ELEM(col_j, i, j)``, counting from 0. Thus, for
-   :math:`(m,n)` within the band, :math:`J_{m,n}` can be loaded by
-   setting ``col_n = BAND_COL(J, n-1); BAND_COL_ELEM(col_n, m-1,
-   n-1)`` :math:`= J_{m,n}` . The elements of the ``j``-th column can
-   also be accessed via ordinary array indexing, but this approach
-   requires knowledge of the underlying storage for a band matrix of
-   type ``DlsMat``. The array ``col_n`` can be indexed from
-   `-mupper` to `mlower`. For large problems, it is more efficient
-   to use ``BAND_COL`` and ``BAND_COL_ELEM`` than to use the
-   ``BAND_ELEM`` macro. As in the dense case, these macros all number
-   rows and columns starting from 0. 
-   
-   The ``DlsMat`` type and the accessor macros ``BAND_ELEM``,
-   ``BAND_COL`` and ``BAND_COL_ELEM`` are documented in the section 
-   :ref:`LinearSolvers`.
-
-   If the user's ARKBandJacFn function uses difference quotient
-   approximations, then it may need to access quantities not in the
-   argument list.  These include the current step size, the error
-   weights, etc.. To obtain these, use the ARKodeGet* functions
-   listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
-   can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
-   ``sundials_types.h``.
-   
-   For the sake of uniformity, the arguments `N`, `mlower`, and
-   `mupper` are of type ``long int``, even in the case that the
-   LAPACK band solver is to be used.  
-
-
-
-.. _CInterface.JTimesFn:
-
-Jacobian information (matrix-vector product)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If one of the Krylov iterative linear solvers SPGMR, SPBCG, 
-SPTFQMR, or PCG is selected (i.e. ARKSp* is called in step 8 of the
-section :ref:`CInterface.Skeleton`), the user may provide a function
-of type :c:func:`ARKSpilsJacTimesVecFn()` in the following form, to compute
-matrix-vector products :math:`J*v`. If such a function is not
-supplied, the default is a difference quotient approximation to these
-products. 
-
-
-
-.. c:function:: typedef int (*ARKSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv, realtype t, N_Vector y, N_Vector fy, void *user_data, N_Vector tmp)
-
-   This function computes the product :math:`Jv =
-   \left(\frac{\partial f_I}{\partial y}\right)v` (or an approximation to it).
-   
-   **Arguments:**
-      * `v` -- the vector to multiply.
-      * `Jv` -- the output vector computed.
-      * `t` -- the current value of the independent variable
-      * `y` -- the current value of the dependent variable vector.
-      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-      * `tmp` -- pointer to memory allocated to a variable of type
-        ``N_Vector`` which can be used as temporary storage or work space.
-   
-   **Return value:** 
-   The value to be returned by the Jacobian-vector product
-   function should be 0 if successful. Any other return value will
-   result in an unrecoverable error of the SPILS generic solver,
-   in which case the integration is halted. 
-   
-   **Notes:** If the user's ARKSpilsJacTimesVecFn function uses
-   difference quotient approximations, it may need to access
-   quantities not in the argument list.  These include the current
-   step size, the error weights, etc..  To obtain these, use the
-   ARKodeGet* functions listed in
-   :ref:`CInterface.ARKodeOutputTable`. The unit roundoff can be
-   accessed as ``UNIT_ROUNDOFF`` defined in the header file
-   ``sundials_types.h``. 
-
-
-
-
-.. _CInterface.PrecSolveFn:
-
-Preconditioning (linear system solution)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If one of the Krylov iterative linear solvers SPGMR, SPBCG,
-SPTFQMR, or PCG is selected, and preconditioning is used, then the user
-must provide a function of type :c:func:`ARKSpilsPrecSolveFn()` to solve the
-linear system :math:`Pz=r`, where :math:`P` may be either a left or
-right preconditioning matrix.  Here :math:`P` should approximate (at
-least crudely) the Newton matrix :math:`A=M-\gamma J`, where :math:`M`
-is the mass matrix (typically :math:`M=I` unless working in a
-finite-element setting) and :math:`J = \frac{\partial f_I}{\partial
-y}`  If preconditioning is done on both sides, the product of the two
-preconditioner matrices should approximate :math:`A`. 
-
-
-
-.. c:function:: typedef int (*ARKSpilsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy, N_Vector r, N_Vector z, realtype gamma, realtype delta, int lr, void *user_data, N_Vector tmp)
-
-   This function solves the preconditioner system :math:`Pz=r`.
-   
-   **Arguments:**
-      * `t` -- the current value of the independent variable.
-      * `y` -- the current value of the dependent variable vector.
-      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
-      * `r` -- the right-hand side vector of the linear system.
-      * `z` -- the computed output solution vector 
-      * `gamma` -- the scalar :math:`\gamma` appearing in the Newton
-        matrix given by :math:`A=M-\gamma J`.
-      * `delta` -- an input tolerance to be used if an iterative method
-        is employed in the solution.  In that case, the resdual vector
-        :math:`Res = r-Pz` of the system should be made to be less than `delta`
-        in the weighted :math:`l_2` norm, i.e. :math:`\left(\sum_{i=1}^n
-        \left(Res_i * ewt_i\right)^2 \right)^{1/2} < \delta`, where :math:`\delta =`
-        `delta`.  To obtain the ``N_Vector`` `ewt`, call
-        :c:func:`ARKodeGetErrWeights()`. 
-      * `lr` -- an input flag indicating whether the preconditioner
-        solve is to use the left preconditioner (`lr = 1`) or the right
-        preconditioner (`lr = 2`).
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-      * `tmp` -- pointer to memory allocated to a variable of type
-        ``N_Vector`` which can be used as temporary storage or work space.
-   
-   **Return value:** 
-   The value to be returned by the preconditioner solve
-   function is a flag indicating whether it was successful. This value
-   should be 0 if successful, positive for a recoverable error (in
-   which case the step will be retried), or negative for an
-   unrecoverable error (in which case the integration is halted).  
-
-
-
-
-.. _CInterface.PrecSetupFn:
-
-Preconditioning (Jacobian data)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the user's preconditioner requires that any Jacobian-related data
-be preprocessed or evaluated, then these actions need to occur within
-a user-supplied function of type :c:func:`ARKSpilsPrecSetupFn()`. 
-
-
-
-.. c:function:: typedef int (*ARKSpilsPrecSetupFn)(realtype t, N_Vector y, N_Vector fy, booleantype jok, booleantype *jcurPtr, realtype gamma, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-
-   This function preprocesses and/or evaluates Jacobian-related
-   data needed by the preconditioner.
-   
-   **Arguments:**
-      * `t` -- the current value of the independent variable.
-      * `y` -- the current value of the dependent variable vector.
-      * `fy` -- the current value of the vector :math:`f_I(t,y)`.
-      * `jok` -- is an input flag indicating whether the Jacobian-related
-        data needs to be updated. The `jok` argument provides for the
-        reuse of Jacobian data in the preconditioner solve function. When
-        `jok` = ``FALSE``, the Jacobian-related data should be recomputed
-        from scratch. When `jok` = ``TRUE`` the Jacobian data, if saved from the
-        previous call to this function, can be reused (with the current
-        value of `gamma`). A call with `jok` = ``TRUE`` can only occur
-        after a call with `jok` = ``FALSE``. 
-      * `jcurPtr` -- is a pointer to a flag which should be set to
-        ``TRUE`` if Jacobian data was recomputed, or set to ``FALSE`` if
-        Jacobian data was not recomputed, but saved data was still reused. 
-      * `gamma` -- the scalar :math:`\gamma` appearing in the Newton
-        matrix given by :math:`A=M-\gamma J`.
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
-      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
-        variables of type ``N_Vector`` which can be used as temporary
-        storage or work space.
-   
-   **Return value:** 
-   The value to be returned by the preconditioner setup
-   function is a flag indicating whether it was successful. This value
-   should be 0 if successful, positive for a recoverable error (in
-   which case the step will be retried), or negative for an
-   unrecoverable error (in which case the integration is halted). 
-   
-   **Notes:**  The operations performed by this function might include
-   forming a crude approximate Jacobian, and performing an LU
-   factorization of the resulting approximation to :math:`A = M -
-   \gamma J`. 
-   
-   Each call to the preconditioner setup function is preceded by a
-   call to the implicit :c:func:`ARKRhsFn()` user function with the same
-   :math:`(t,y)` arguments.  Thus, the preconditioner setup function can
-   use any auxiliary data that is computed and saved during the
-   evaluation of the ODE right-hand side. 
-   
-   This function is not called in advance of every call to the
-   preconditioner solve function, but rather is called only as often
-   as needed to achieve convergence in the Newton iteration. 
-   
-   If the user's ARKSpilsPrecSetupFn function uses difference
-   quotient approximations, it may need to access quantities not in
-   the call list. These include the current step size, the error
-   weights, etc. To obtain these, use the ARKodeGet* functions
-   listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
-   can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
-   ``sundials_types.h``. 
-
-
-
-
-.. _CInterface.PreconditionerModules:
-
-Preconditioner modules
------------------------
-
-The efficiency of Krylov iterative methods for the solution of linear
-systems can be greatly enhanced through preconditioning. For problems
-in which the user cannot define a more effective, problem-specific
-preconditioner, ARKode provides a banded preconditioner in the
-module ARKBANDPRE and a band-block-diagonal preconditioner module
-ARKBBDPRE. 
-
-
-.. _CInterface.BandPre:
-
-A serial banded preconditioner module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This preconditioner provides a band matrix preconditioner for use with
-any of the Krylov iterative linear solvers, when used in a serial
-setting (i.e. with the NVECTOR_SERIAL module). It uses difference
-quotients of the ODE right-hand side function :math:`f_I` to generate
-a band matrix of bandwidth ``ml + mu + 1``, where the number of
-super-diagonals (``mu``, the upper half-bandwidth) and sub-diagonals
-(``ml``, the lower half-bandwidth) are specified by the user, and uses
-this to form a preconditioner for use with the Krylov linear
-solver. Although this matrix is intended to approximate the Jacobian
-:math:`\frac{\partial f_I}{\partial y}`, it may be a very crude
-approximation. The true Jacobian need not be banded, or its true
-bandwidth may be larger than ``ml + mu + 1``, as long as the banded
-approximation generated here is sufficiently accurate to speed
-convergence as a preconditioner. 
-
-In order to use the ARKBANDPRE module, the user need not define
-any additional functions. Aside from the header files required for the
-integration of the ODE problem (see the section
-:ref:`CInterface.Headers`), to use the ARKBANDPRE module, the main
-program must include the header file ``arkode_bandpre.h`` which
-declares the needed function prototypes.  The following is a summary
-of the usage of this module.  Steps that are unchanged from the
-skeleton program presented in :ref:`CInterface.Skeleton` are
-`italicized`. 
-
-1. `Set problem dimensions`
-
-2. `Set vector of initial values` 
-
-3. `Create ARKode object` 
-
-4. `Allocate internal memory` 
-
-5. `Set optional inputs` 
-
-6. Attach iterative linear solver, one of:
-
-   (a) ``flag = ARKSpgmr(arkode_mem, pretype, maxl);`` 
-
-   (b) ``flag = ARKSpbcg(arkode_mem, pretype, maxl);``
-
-   (c) ``flag = ARKSptfqmr(arkode_mem, pretype, maxl);``
-
-   (d) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
-
-7. Initialize the ARKBANDPRE preconditioner module 
-
-   Specify the upper and lower half-bandwidths (``mu`` and ``ml``,
-   respectively) and call 
-
-   ``flag = ARKBandPrecInit(arkode_mem, N, mu, ml);``
-
-   to allocate memory and initialize the internal preconditioner
-   data. 
-
-8. `Set linear solver optional inputs`
-
-    Note that the user should not overwrite the preconditioner setup
-    function or solve function through calls to the ARKSpilsSet*
-    optional input functions. 
-
-9. `Advance solution in time`
-
-10. Get optional outputs 
-
-   Additional optional outputs associated with ARKBANDPRE are
-   available by way of the two routines described below,
-   :c:func:`ARKBandPrecGetWorkSpace()` and
-   :c:func:`ARKBandPrecGetNumRhsEvals()`.  
-
-11. `Deallocate memory for solution vector`
-
-12. `Free solver memory`
-
-The ARKBANDPRE preconditioner module is initialized and attached
-by calling the following function:
-
-
-
-.. c:function:: int ARKBandPrecInit(void *arkode_mem, long int N, long int mu, long int ml)
-
-   Initializes the ARKBANDPRE preconditioner and
-   allocates required (internal) memory for it.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `N` -- problem dimension (size of ODE system).
-      * `mu` -- upper half-bandwidth of the Jacobian approximation.
-      * `ml` -- lower half-bandwidth of the Jacobian approximation.
-   
-   **Return value:** 
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_ILL_INPUT if an input has an illegal value
-      * ARKSPILS_MEM_FAIL if a memory allocation request failed
-
-   **Notes:** The banded approximate Jacobian will have nonzero elements
-   only in locations :math:`(i,j)` with `ml` :math:`\le j-i \le` `mu`.
-
-
-The following two optional output functions are available for use with
-the ARKBANDPRE module:
-
-
-
-.. c:function:: int ARKBandPrecGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
-
-   Returns the sizes of the ARKBANDPRE real and integer
-   workspaces.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `lenrwLS` -- the number of ``realtype`` values in the
-        ARKBANDPRE workspace.
-      * `leniwLS` -- the number of integer values in the  ARKBANDPRE workspace.
-   
-   **Return value:** 
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   **Notes:** In terms of the problem size :math:`N` and `smu` :math:`=
-   \min(N-1,` `mu+ml` :math:`)`, the actual size of the real
-   workspace is :math:`(2` `ml + mu + smu` :math:`+2)N` ``realtype``
-   words, and the actual size of the integer workspace is :math:`N`
-   integer words.
-   
-   The workspaces referred to here exist in addition to those given by
-   the corresponding function ARKSpils*GetWorkspace.
-
-
-
-.. c:function:: int ARKBandPrecGetNumRhsEvals(void *arkode_mem, long int *nfevalsBP)
-
-   Returns the number of calls made to the user-supplied
-   right-hand side function :math:`f_I` for constructing the
-   finite-difference banded Jacobian approximation used within the
-   preconditioner setup function.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `nfevalsBP` -- number of calls to :math:`f_I`
-   
-   **Return value:**  
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   **Notes:**  The counter `nfevalsBP` is distinct from the counter
-   `nfevalsLS` returned by the corresponding function
-   ARKSpils*GetNumRhsEvals and also from `nfi_evals` returned by
-   :c:func:`ARKodeGetNumRhsEvals()`.  The total number of right-hand
-   side function evaluations is the sum of all three of these
-   counters, plus the `nfe_evals` counter for :math:`f_E` calls
-   returned by :c:func:`ARKodeGetNumRhsEvals()`.
-
-
-
-.. _CInterface.BBDPre:
-
-A parallel band-block-diagonal preconditioner module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A principal reason for using a parallel ODE solver such as ARKode
-lies in the solution of partial differential equations
-(PDEs). Moreover, the use of a Krylov iterative method for the
-solution of many such problems is motivated by the nature of the
-underlying linear system of equations that must be solved at each time
-step. For many PDEs, the linear algebraic system is large, sparse and
-structured.  However, if a Krylov iterative method is to be effective
-in this setting, then a nontrivial preconditioner needs to be used.
-Otherwise, the rate of convergence of the Krylov iterative method is
-usually unacceptably slow.  Unfortunately, an effective preconditioner
-tends to be problem-specific.  However, we have developed one type of
-preconditioner that treats a rather broad class of PDE-based
-problems. It has been successfully used with CVODE for several
-realistic, large-scale problems [HT1998]_ and is included
-in a software module within the ARKode package. This module works
-with the parallel vector module NVECTOR_PARALLEL and is usable
-with any of the Krylov iterative linear solvers. It generates a
-preconditioner that is a block-diagonal matrix with each block being a
-band matrix. The blocks need not have the same number of super- and
-sub-diagonals and these numbers may vary from block to block. This
-Band-Block-Diagonal Preconditioner module is called ARKBBDPRE. 
-
-One way to envision these preconditioners is to think of the domain of
-the computational PDE problem as being subdivided into :math:`Q`
-non-overlapping subdomains. Each of these subdomains is then assigned
-to one of the :math:`Q` processes to be used to solve the ODE
-system. The basic idea is to isolate the preconditioning so that it is
-local to each process, and also to use a (possibly cheaper)
-approximate right-hand side function. This requires the definition of
-a new function :math:`g(t,y)` which approximates the function
-:math:`f_I(t,y)` in the definition of the ODE system, 
-
-.. math::
-   M\dot{y} = f_E(t,y) + f_I(t,y),
-
-where :math:`f_I` corresponds to the ODE components to be treated
-implicitly.  However, the user may set :math:`g = f_I`. Corresponding
-to the domain decomposition, there is a decomposition of the solution
-vector :math:`y` into :math:`Q` disjoint blocks :math:`y_q`, and a
-decomposition of :math:`g` into blocks :math:`g_q`. The block
-:math:`g_q` depends both on :math:`y_p` and on components of blocks
-:math:`y_{q'}`	associated with neighboring subdomains (so-called
-ghost-cell data). Let :math:`\bar{y}_q` denote :math:`y_q` augmented
-with those other components on which :math:`g_q` depends. Then we have 
-
-.. math::
-   g(t,y) = \left[ g_1(t,\bar{y}_1), g_2(t,\bar{y}_2), \ldots , g_Q(t,\bar{y}_Q) \right]^T
-
-and each of the blocks :math:`g_q(t,\bar{y}_q)` is decoupled from the
-others.
-
-The preconditioner associated with this decomposition has the form
-
-.. math::
-   P = diag[P_1, P_2, \ldots, P_Q]
-
-where
-
-.. math::
-   P_q \approx M - \gamma J_q
-
-and where :math:`J_q` is a difference quotient approximation to
-:math:`\frac{\partial g_q}{\partial \bar{y}_q}`.  This matrix is taken
-to be banded, with upper and lower half-bandwidths `mudq` and
-`mldq` defined as the number of non-zero diagonals above and below
-the main diagonal, respectively.  The difference quotient
-approximation is computed using `mudq + mldq + 2` evaluations of
-:math:`g_m`, but only a matrix of bandwidth `mukeep + mlkeep + 1` is
-retained. Neither pair of parameters need be the true half-bandwidths
-of the Jacobian of the local block of :math:`g`, if smaller values
-provide a more efficient preconditioner. The solution of the complete
-linear system 
-
-.. math::
-   Px = b
-
-reduces to solving each of the distinct equations
-
-.. math::
-   P_q x_q = b_q, \quad q=1,\ldots,Q,
-
-and this is done by banded LU factorization of :math:`P_q` followed by
-a banded backsolve.
-
-Similar block-diagonal preconditioners could be considered with
-different treatments of the blocks :math:`P_q`.  For example,
-incomplete LU factorization or an iterative method could be used
-instead of banded LU factorization.
-
-The ARKBBDPRE module calls two user-provided functions to
-construct :math:`P`: a required function `gloc` (of type
-:c:func:`ARKLocalFn()`) which approximates the right-hand side function
-:math:`g(t,y) \approx f_I(t,y)` and which is computed locally, and an
-optional function `cfn` (of type :c:func:`ARKCommFn()`) which performs all
-interprocess communication necessary to evaluate the approximate
-right-hand side :math:`g`. These are in addition to the user-supplied
-right-hand side function :math:`f_I`. Both functions take as input the
-same pointer `user_data` that is passed by the user to
-:c:func:`ARKodeSetUserData()` and that was passed to the user's
-function :math:`f_I`. The user is responsible for providing space
-(presumably within `user_data`) for components of :math:`y` that are
-communicated between processes by `cfn`, and that are then used by
-`gloc`, which should not do any communication.
-
-
-
-.. c:function:: typedef int (*ARKLocalFn)(long int Nlocal, realtype t, N_Vector y, N_Vector glocal, void *user_data)
-
-   This `gloc` function computes :math:`g(t,y)`.  It
-   loads the vector `glocal` as a function of `t` and `y`.
-   
-   **Arguments:**
-      * `Nlocal` -- the local vector length
-      * `t` -- the value of the independent variable
-      * `y` -- the value of the dependent variable vector on this process
-      * `glocal` -- the output vector of :math:`g(t,y)` on this process
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter passed to :c:func:`ARKodeSetUserData()`.
-   
-   **Return value:**  
-   An ARKLocalFn should return 0 if successful, a
-   positive value if a recoverable error occurred (in which case
-   ARKode will attempt to correct), or a negative value if it
-   failed unrecoverably (in which case the integration is halted and
-   :c:func:`ARKode()` will return ARK_LSETUP_FAIL).
-   
-   **Notes:**  This function must assume that all interprocess communication
-   of data needed to calculate `glocal` has already been done, and that
-   this data is accessible within user data. 
-   
-   The case where :math:`g` is mathematically identical to :math:`f_I`
-   is allowed. 
-
-
-
-.. c:function:: typedef int (*ARKCommFn)(long int Nlocal, realtype t, N_Vector y, void *user_data)
-
-   This `cfn` function performs all interprocess
-   communication necessary for the executation of the `gloc` function
-   above, using the input vector `y`.
-   
-   **Arguments:**
-      *  `Nlocal` -- the local vector length
-      * `t` -- the value of the independent variable
-      * `y` -- the value of the dependent variable vector on this process
-      * `user_data` -- a pointer to user data, the same as the
-        `user_data` parameter passed to :c:func:`ARKodeSetUserData()`.
-   
-   **Return value:**  
-   An ARKCommFn should return 0 if successful, a
-   positive value if a recoverable error occurred (in which case
-   ARKode will attempt to correct), or a negative value if it
-   failed unrecoverably (in which case the integration is halted and
-   :c:func:`ARKode()` will return ARK_LSETUP_FAIL).
-   
-   **Notes:**  The `cfn` function is expected to save communicated data in
-   space defined within the data structure `user_data`.
-   
-   Each call to the `cfn` function is preceded by a call to the
-   right-hand side function :math:`f_I` with the same :math:`(t,y)`
-   arguments. Thus, `cfn` can omit any communication done by
-   :math:`f_I` if relevant to the evaluation of `glocal`. If all
-   necessary communication was done in :math:`f_I`, then `cfn` =
-   ``NULL`` can be passed in the call to :c:func:`ARKBBDPrecInit()` (see
-   below).
-
-
-
-Besides the header files required for the integration of the ODE problem (see the section
-:ref:`CInterface.Headers`), to use the ARKBBDPRE module, the main
-program must include the header file ``arkode_bbdpre.h`` which
-declares the needed function prototypes. 
-
-The following is a summary of the proper usage of this module. Steps
-that are unchanged from the skeleton program presented in
-:ref:`CInterface.Skeleton` are `italicized`.
-
-1. `Initialize MPI`
-
-2. `Set problem dimensions`
-
-3. `Set vector of initial values`
-
-4. `Create ARKode object`
-
-5. `Allocate internal memory`
-
-6. `Set optional inputs`
-
-7. Attach iterative linear solver, one of:
-
-   (a) ``flag = ARKSpgmr(arkode_mem, pretype, maxl);``
-
-   (b) ``flag = ARKSpbcg(arkode_mem, pretype, maxl);``
-
-   (c) ``flag = ARKSptfqmr(arkode_mem, pretype, maxl);``
-
-   (d) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
-
-8. Initialize the ARKBBDPRE preconditioner module 
-
-   Specify the upper and lower half-bandwidths for computation
-   ``mudq`` and ``mldq``, the upper and lower half-bandwidths for
-   storage ``mukeep`` and ``mlkeep``, and call 
-
-   ``flag = ARKBBDPrecInit(arkode_mem, Nlocal, mudq, mldq, mukeep, mlkeep, dqrely, gloc, cfn);``
-
-   to allocate memory and initialize the internal preconditioner
-   data. The last two arguments of :c:func:`ARKBBDPrecInit()` are the
-   two user-supplied functions of type :c:func:`ARKLocalFn()` and
-   :c:func:`ARKCommFn()` described above, respectivelyl. 
-
-9. `Set the linear solver optional inputs`
-
-   Note that the user should not overwrite the preconditioner setup
-   function or solve function through calls to ARKSPILS optional
-   input functions. 
-
-10. `Advance solution in time`
-
-11. `Get optional outputs`
-
-    Additional optional outputs associated with ARKBBDPRE are
-    available by way of the two routines described below,
-    :c:func:`ARKBBDPrecGetWorkSpace()` and
-    :c:func:`ARKBBDPrecGetNumGfnEvals()`. 
-
-12. `Deallocate memory for solution vector`
-
-13. `Free solver memory`
-
-14. `Finalize MPI`
-
-The user-callable functions that initialize (step 8 above) or
-re-initialize the ARKBBDPRE preconditioner module are described
-next.
-
-
-
-.. c:function:: int ARKBBDPrecInit(void *arkode_mem, long int Nlocal, long int mudq, long int mldq, long int mukeep, long int mlkeep, realtype dqrely, ARKLocalFn gloc, ARKCommFn cfn)
-
-   Initializes and allocates (internal) memory for the
-   ARKBBDPRE preconditioner.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `Nlocal` -- local vector length.
-      * `mudq` -- upper half-bandwidth to be used in the difference
-        quotient Jacobian approximation.
-      * `mldq` -- lower half-bandwidth to be used in the difference
-        quotient Jacobian approximation.
-      * `mukeep` -- upper half-bandwidth of the retained banded
-        approximate Jacobian block.
-      * `mlkeep` -- lower half-bandwidth of the retained banded
-        approximate Jacobian block.
-      * `dqrely` -- the relative increment in components of `y` used in
-        the difference quotient approximations.  The default is `dqrely`
-        = :math:`\sqrt{\text{unit roundoff}}`, which can be specified by
-        passing `dqrely` = 0.0.
-      * `gloc` -- the name of the C function (of type :c:func:`ARKLocalFn()`)
-        which computes the approximation :math:`g(t,y) \approx f_I(t,y)`.
-      * `cfn` -- the name of the C function (of type :c:func:`ARKCommFn()`) which
-        performs all interprocess communication required for the
-        computation of :math:`g(t,y)`.
-   
-   **Return value:**  
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_ILL_INPUT if an input has an illegal value
-      * ARKSPILS_MEM_FAIL if a memory allocation request failed
-   
-   **Notes:**  If one of the half-bandwidths `mudq` or `mldq` to be used
-   in the difference quotient calculation of the approximate Jacobian is
-   negative or exceeds the value `Nlocal-1`, it is replaced by 0 or
-   `Nlocal-1` accordingly. 
-   
-   The half-bandwidths `mudq` and `mldq` need not be the true
-   half-bandwidths of the Jacobian of the local block of :math:`g`
-   when smaller values may provide a greater efficiency. 
-   
-   Also, the half-bandwidths `mukeep` and `mlkeep` of the retained
-   banded approximate Jacobian block may be even smaller than
-   `mudq` and `mldq`, to reduce storage and computational costs
-   further. 
-   
-   For all four half-bandwidths, the values need not be the same on
-   every processor.
-
-
-
-The ARKBBDPRE module also provides a reinitialization function to
-allow solving a sequence of problems of the same size, with the same
-linear solver choice, provided there is no change in `Nlocal`,
-`mukeep`, or `mlkeep`. After solving one problem, and after
-calling :c:func:`ARKodeReInit()` to re-initialize ARKode for a
-subsequent problem, a call to :c:func:`ARKBBDPrecReInit()` can be made
-to change any of the following: the half-bandwidths `mudq` and
-`mldq` used in the difference-quotient Jacobian approximations, the
-relative increment `dqrely`, or one of the user-supplied functions
-`gloc` and `cfn`. If there is a change in any of the linear solver
-inputs, an additional call to :c:func:`ARKSpgmr()`,
-:c:func:`ARKSpbcg()`, :c:func:`ARKSptfqmr()`, or :c:func:`ARKPcg()`,
-and/or one or more of the corresponding ARKSpils*Set* functions, must
-also be made (in the proper order).
-
-
-
-.. c:function:: int ARKBBDPrecReInit(void *arkode_mem, long int mudq, long int mldq, realtype dqrely)
-
-   Re-initializes the ARKBBDPRE preconditioner module.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `mudq` -- upper half-bandwidth to be used in the difference
-        quotient Jacobian approximation.
-      * `mldq` -- lower half-bandwidth to be used in the difference
-        quotient Jacobian approximation.
-      * `dqrely` -- the relative increment in components of `y` used in
-        the difference quotient approximations.  The default is `dqrely`
-        = :math:`\sqrt{\text{unit roundoff}}`, which can be specified by
-        passing `dqrely` = 0.0.
-   
-   **Return value:**  
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   **Notes:**  If one of the half-bandwidths `mudq` or `mldq` is
-   negative or exceeds the value `Nlocal-1`, it is replaced by 0 or
-   `Nlocal-1` accordingly. 
-
-
-The following two optional output functions are available for use with
-the ARKBBDPRE module:
-
-
-
-.. c:function:: int ARKBBDPrecGetWorkSpace(void *arkode_mem, long int *lenrwBBDP, long int *leniwBBDP)
-
-   Returns the processor-local ARKBBDPRE real and
-   integer workspace sizes.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `lenrwBBDP` -- the number of ``realtype`` values in the
-        ARKBBDPRE workspace.
-      * `leniwBBDP` -- the number of integer values in the  ARKBBDPRE workspace.
-   
-   **Return value:**  
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   **Notes:**  In terms of `Nlocal` and `smu = min(Nlocal-1,
-   mukeep+mlkeep)`, the actual size of the real workspace is `(2
-   mlkeep + mukeep + smu + 2)*Nlocal`  ``realtype`` words, and the
-   actual size of the integer workspace is `Nlocal` integer
-   words. These values are local to each process. 
-   
-   The workspaces referred to here exist in addition to those given by
-   the corresponding function ARKSpils*GetWorkSpace. 
-
-
-
-.. c:function:: int ARKBBDPrecGetNumGfnEvals(void *arkode_mem, long int *ngevalsBBDP)
-
-   Returns the number of calls made to the user-supplied
-   `gloc` function (of type :c:func:`ARKLocalFn()`) due to the finite
-   difference approximation of the Jacobian blocks used within the
-   preconditioner setup function. 
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `ngevalsBBDP` -- the number of calls made to the user-supplied
-        `gloc` function. 
-   
-   **Return value:**  
-      * ARKSPILS_SUCCESS if no errors occurred
-      * ARKSPILS_MEM_NULL if the integrator memory is ``NULL``
-      * ARKSPILS_LMEM_NULL if the linear solver memory is ``NULL``
-      * ARKSPILS_PMEM_NULL if the preconditioner memory is ``NULL``
-   
-   
-In addition to the `ngevalsBBDP` `gloc` evaluations, the costs
-associated with ARKBBDPRE also include `nlinsetups` LU
-factorizations, `nlinsetups` calls to `cfn`, `npsolves` banded
-backsolve calls, and `nfevalsLS` right-hand side function
-evaluations, where `nlinsetups` is an optional ARKode output and
-`npsolves` and `nfevalsLS` are linear solver optional outputs (see
-the table :ref:`CInterface.ARKSpilsOutputTable`).

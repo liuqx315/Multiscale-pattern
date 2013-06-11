@@ -4,7 +4,7 @@
 
 .. _ark_heat1D:
 
-PDE system example with iterative linear solver (ark_heat1D)
+ark_heat1D
 ============================================================
 
 As with the previous brusselator problrem, this example simulates a

@@ -21,34 +21,37 @@ that is most closely related to your own.
 
 .. cssclass:: table-bordered
 
-============================================  ==========  =============  ===========  ========  ===============================================================
-Problem                                       Integrator  Linear Solver  Size         Language  Extras
-============================================  ==========  =============  ===========  ========  ===============================================================
-:ref:`analytic <ark_analytic>`                DIRK        Dense          1            C         Analytical solution, variable stiffness
-:ref:`analytic_nonlin <ark_analytic_nonlin>`  ERK         N.A.           1            C         Nonlinear, analytical solution
-:ref:`analytic_sys <ark_analytic_sys>`        DIRK        Dense          3            C++       ODE system, analytical solution, variable stiffness
-:ref:`brusselator <ark_brusselator>`          DIRK        Dense          3            C         Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`bruss <ark_bruss>`                      ARK         Dense          3            F90       Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`robertson <ark_robertson>`              DIRK        Dense          3            C         Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`robertson_root <ark_robertson_root>`    DIRK        Dense          3            C         Utilizes root-finding capabilities
-:ref:`brusselator1D <ark_brusselator1D>`      DIRK        Band           3N           C         Stiff, nonlinear, reaction-diffusion PDE system
-:ref:`heat1D <ark_heat1D>`                    DIRK        PCG            N            C         Stiff, linear, diffusion PDE, iterative linear solver
-:ref:`heat2D <ark_heat2D>`                    DIRK        PCG            :math:`N^2`  C++       Parallel, stiff, linear, diffusion PDE, iterative linear solver
-============================================  ==========  =============  ===========  ========  ===============================================================
+================================================  ==========  =============  =============  ========  ===============================================================
+Problem                                           Integrator  Linear Solver  Size           Language  Extras
+================================================  ==========  =============  =============  ========  ===============================================================
+:ref:`ark_analytic <ark_analytic>`                DIRK        Dense          1              C         Analytical solution, variable stiffness
+:ref:`ark_analytic_nonlin <ark_analytic_nonlin>`  ERK         N.A.           1              C         Nonlinear, analytical solution
+:ref:`ark_analytic_sys <ark_analytic_sys>`        DIRK        Dense          3              C++       ODE system, analytical solution, variable stiffness
+:ref:`ark_brusselator <ark_brusselator>`          DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_bruss <ark_bruss>`                      ARK         Dense          3              F90       Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_robertson <ark_robertson>`              DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_robertson_root <ark_robertson_root>`    DIRK        Dense          3              C         Utilizes root-finding capabilities
+:ref:`ark_brusselator1D <ark_brusselator1D>`      DIRK        Band           3N             C         Stiff, nonlinear, reaction-diffusion PDE system
+:ref:`ark_heat1D <ark_heat1D>`                    DIRK        PCG            N              C         Stiff, linear, diffusion PDE, iterative linear solver
+:ref:`ark_heat2D <ark_heat2D>`                    DIRK        PCG            :math:`nx*ny`  C++       Parallel, stiff, linear, diffusion PDE, iterative linear solver
+================================================  ==========  =============  =============  ========  ===============================================================
 
 
+Further details on each of the above-listed examples, including both
+source code and plots of the computed results, are provided in the
+following sub-sections:
 
 .. toctree::
    :maxdepth: 1
 
-   analytic
-   analytic_nonlin
-   analytic_sys
-   brusselator
-   bruss
-   robertson
-   robertson_root
-   brusselator1D
-   heat1D
-   heat2D
+   Simple linear example (ark_analytic) <analytic>
+   Simple nonlinear example (ark_analytic_nonlin) <analytic_nonlin>
+   Simple linear system example (ark_analytic_sys) <analytic_sys>
+   Stiff nonlinear system example (ark_brusselator) <brusselator>
+   Stiff nonlinear system, Fortran example (ark_bruss) <bruss>
+   Stiff nonlinear system example (ark_robertson) <robertson>
+   Stiff nonlinear system with root-finding example (ark_robertson_root) <robertson_root>
+   Stiff PDE system example (ark_brusselator1D) <brusselator1D>
+   PDE example with iterative linear solver (ark_heat1D) <heat1D>
+   Parallel PDE example with iterative linear solver (ark_heat2D) <heat2D>
    

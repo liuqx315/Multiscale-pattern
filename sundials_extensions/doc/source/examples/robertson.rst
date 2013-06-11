@@ -4,7 +4,7 @@
 
 .. _ark_robertson:
 
-Stiff nonlinear system example (ark_robertson)
+ark_robertson
 ==============================================
 
 Our next two tests simulate the Robertson problem, corresponding to the

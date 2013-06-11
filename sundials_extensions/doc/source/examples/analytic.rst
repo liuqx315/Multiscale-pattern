@@ -2,7 +2,7 @@
 
 .. _ark_analytic:
 
-Simple linear example (ark_analytic)
+ark_analytic
 ====================================
 
 This is a very simple C example that merely shows how to use the

@@ -4,7 +4,7 @@
 
 .. _ark_heat2D:
 
-Parallel PDE system example with iterative linear solver (ark_heat2D)
+ark_heat2D
 ======================================================================
 
 Our final example problem extends the previous test to now simulate a

@@ -40,9 +40,6 @@
    Runge-Kutta schemes for convection-diffusion-reaction
    equations. *Appl. Numer. Math.*, 44:139-181, 2003.
 
-.. [R2013] D.R. Reynolds. Example Programs for ARKode
-   v0.1.  Technical report, SMU, 2013.
-
 .. [S1998] G. Soderlind. The automatic control of numerical
    integration.  *CWI Quarterly*, 11:55-74, 1998.
 

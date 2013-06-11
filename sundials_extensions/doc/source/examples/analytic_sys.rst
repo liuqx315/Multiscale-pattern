@@ -3,7 +3,7 @@
 
 .. _ark_analytic_sys:
 
-Simple linear system example (ark_analytic_sys)
+ark_analytic_sys
 ===============================================
 
 This example demonstrates the use of ARKode's fully implicit solver on

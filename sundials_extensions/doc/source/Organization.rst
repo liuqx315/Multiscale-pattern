@@ -2,6 +2,7 @@
 
 .. _Organization:
 
+=================
 Code Organization
 =================
 
@@ -32,7 +33,7 @@ solver packages presently available:
 
 
 ARKode organization
------------------------
+==========================
 
 The ARKode package is written in the ANSI C language.  The
 following summarizes the basic structure of the package, although
@@ -135,8 +136,3 @@ ARKode package, and so in this respect it is reentrant.  State
 information specific to the linear solver is saved in a separate data
 structure, a pointer to which resides in the ARKode memory
 structure.
-
-
-
-
-

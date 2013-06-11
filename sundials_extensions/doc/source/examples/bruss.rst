@@ -4,7 +4,7 @@
 
 .. _ark_bruss:
 
-Stiff nonlinear system, Fortran example (ark_bruss)
+ark_bruss
 ===================================================
 
 This test problem is a Fortran-90 version of the same brusselator
