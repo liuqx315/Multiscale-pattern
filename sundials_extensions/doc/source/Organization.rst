@@ -12,7 +12,7 @@ CVODE (linear multistep solvers for ODE systems), ARKode
 algebraic systems), and IDA (for differential-algebraic systems).
 In addition, SUNDIALS also includes variants of CVODE and
 IDA with sensitivity analysis capabilities (using either forward
-or adjoint methods: CVODES and IDAS, respectively.
+or adjoint methods: CVODES and IDAS, respectively).
 
 The various solvers of this family share many subordinate modules.
 For this reason, it is organized as a family, with a directory
@@ -37,7 +37,7 @@ ARKode organization
 
 The ARKode package is written in the ANSI C language.  The
 following summarizes the basic structure of the package, although
-knoledge of this structure is not necessary for its use.
+knowledge of this structure is not necessary for its use.
 
 The overall organization of the ARKode package is as follows.  The 
 central integration module, implemented in the files ``arkode.h``,
