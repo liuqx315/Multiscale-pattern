@@ -75,7 +75,7 @@ intended to be expanded in the future as new algorithms are developed,
 and may additionally be expanded through user-supplied linear solver
 modules, as will be described later.
 
-In the case of the direct methods ARKDENSE and ARKBAND the
+In the case of the direct methods ARKDENSE and ARKBAND, the
 package includes an algorithm for approximation of the Jacobian by
 difference quotients, but the user also has the option of supplying
 the Jacobian (or an approximation to it) directly.  In the case of the
