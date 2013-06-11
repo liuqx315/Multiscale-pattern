@@ -1,258 +1,10 @@
 :tocdepth: 3
 
-.. _LinearSolvers:
-
-Linear Solvers in ARKode
-========================
-
-
-
-Providing Alternate Linear Solver Modules
--------------------------------------------
-
-
-The central ARKode module interfaces with the linear solver module
-using calls to one of four routines. These are denoted here by
-:c:func:`linit()`, :c:func:`lsetup()`, :c:func:`lsolve()`, and
-:c:func:`lfree()`. Briefly, their purposes are as follows:
-
-* :c:func:`linit()`: initializes and allocate memory specific to the
-  linear solver; 
-* :c:func:`lsetup()`: evaluates and preprocesses the Jacobian or
-  preconditioner; 
-* :c:func:`lsolve()`: solves the linear system;
-* :c:func:`lfree()`: frees the linear solver memory.
-
-A linear solver module must also provide a user-callable specification
-routine (like those described in the section
-:ref:`CInterface.LinearSolvers`) which will attach the above four
-routines to the main ARKode memory block. The ARKode memory block is a
-structure defined in the header file ``arkode_impl.h``. A pointer to
-such a structure is defined as the type ``ARKodeMem``. The four
-fields in a ``ARKodeMem`` structure that must point to the linear
-solver's functions are ``ark_linit``, ``ark_lsetup``, ``ark_lsolve``,
-and ``ark_lfree``, respectively. Note that of the four interface
-routines, only the :c:func:`lsolve()` routine is required. The
-:c:func:`lfree()` routine must be provided only if the solver
-specification routine makes any memory allocation. The linear
-solver specification function must also set the value of the field
-``ark_setupNonNull`` in the ARKode memory block -- to ``TRUE`` if
-:c:func:`lsetup()` is used, or ``FALSE`` otherwise. 
-
-For consistency with the existing ARKode linear solver modules, we
-recommend that the return value of the specification function be 0 for
-a successful return or a negative value if an error occurs (e.g. if
-the pointer to the main ARKode memory block is ``NULL``, an input is
-illegal, the NVECTOR implementation is not compatible, a memory
-allocation fails, etc). 
-
-To facilitate data exchange between the four interface functions, the
-field ``ark_lmem`` in the ARKode memory block can be used to attach a
-linear solver-specific memory block. That memory should be allocated
-in the linear solver specification function. 
-
-These four routines that interface between ARKode and the linear
-solver module necessarily have fixed call sequences.  Thus, a user
-wishing to implement another linear solver within the ARKode package
-must adhere to this set of interfaces. The following is a complete
-description of the call list for each of these routines. Note that the
-call list of each routine includes a pointer to the main ARKode memory
-block, by which the routine can access various data related to the
-ARKode solution. The contents of this memory block are given in the
-file ``arkode_impl.h`` (but not reproduced here, for the sake of
-space).
-
-
-Initialization function
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The type definition of :c:func:`linit()` is
-
-.. c:function:: typedef int (*linit)(ARKodeMem ark_mem)
-
-   Completes initializations for the specific linear solver, such as
-   counters and statistics. 
-
-   **Arguments:**
-      * `ark_mem` -- pointer to the ARKode memory block.
-   
-   **Return value:**  Should return 0 if it has successfully
-   initialized the ARKode linear solver and -1 otherwise.
-
-
-
-Setup function
-^^^^^^^^^^^^^^^^^
-
-   
-The type definition of :c:func:`lsetup()` is
-
-.. c:function:: typedef int (*lsetup)(ARKodeMem ark_mem, int convfail, N_Vector ypred, N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3)
-
-   Prepares the linear solver for subsequent calls to
-   :c:func:`lsolve()`. It may re-compute Jacobian-related data is it
-   deems necessary.
-   
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `convfail` -- an input flag used to indicate any problem that
-	occurred during the solution of the nonlinear equation on the
-	current time step for which the linear solver is being
-	used. This flag can be used to help decide whether the
-	Jacobian data kept by a linear solver needs to be
-	updated or not. Its possible values are:
-
-        - ARK_NO_FAILURES: this value is passed if either this is the
-	  first call for this step, or the local error test failed on
-	  the previous attempt at this step (but the Newton iteration
-	  converged).
-        - ARK_FAIL_BAD_J: this value is passed if (a) the previous
-	  Newton corrector iteration did not converge and the linear
-	  solver's setup routine indicated that its Jacobian-related
-	  data is not current, or (b) during the previous Newton
-	  corrector iteration, the linear solver's solve routine
-	  failed in a recoverable manner and the linear solver's setup
-	  routine indicated that its Jacobian-related data is not
-	  current. 
-        - ARK_FAIL_OTHER: this value is passed if during the current
-	  internal step try, the previous Newton iteration failed to
-	  converge even though the linear solver was using current
-	  Jacobian-related data.
-
-      * `ypred` -- is the predicted :math:`y` vector for the current
-	ARKode internal step. 
-      * `fpred` -- is the value of the implicit right-hand side at
-	`ypred`, i.e. :math:`f_I(t_n,ypred)`. 
-      * `jcurPtr` -- is a pointer to a boolean to be filled in by
-	:c:func:`lsetup()`. The function should set ``*jcurPtr = TRUE``
-        if its Jacobian data is current after the call and should set
-	``*jcurPtr = FALSE`` if its Jacobian data is not current. If
-	:c:func:`lsetup()` calls for re-evaluation of Jacobian data
-	(based on `convfail` and ARKode state data), it should return
-	``*jcurPtr = TRUE`` unconditionally; otherwise an infinite
-	loop can result.
-      * `vtemp1`, `vtemp2`, `vtemp3` -- are temporary variables of
-	type ``N_Vector`` provided for use by :c:func:`lsetup()`. 
-   
-   **Return value:** 
-   Should return 0 if successful, a positive value
-   for a recoverable error, and a negative value for an unrecoverable
-   error.
-
-
-
-
-
-Solve function
-^^^^^^^^^^^^^^^^^
-
-The type definition of :c:func:`lsolve()` is
-
-.. c:function:: typedef int (*lsolve)(ARKodeMem ark_mem, N_Vector b, N_Vector weight, N_Vector ycur, N_Vector fcur)
-
-   Solves the linear equation :math:`A x = b`, where :math:`A` arises
-   in the Newton iteration :eq:`Newton_system` and gives
-   some approximation to :math:`M - \gamma J`, :math:`J = \frac{\partial
-   f_I}{\partial y}(t_n, ycur)`.  Note, the right-hand side vector
-   :math:`b` is input, and :math:`\gamma` is available as
-   ``ark_mem->ark_gamma``. 
-
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-      * `b` -- is the right-hand side vector :math:`b`. The solution
-	is also to be returned in the vector :math:`b`. 
-      * `weight` -- is a vector that contains the error weights. These
-	are the :math:`w_i` of :ref:`CInterface.ErrorWeight`.
-      * `ycur` -- is a vector that contains the solver's current
-	approximation to :math:`y(t_n)`. 
-      * `fcur` -- is a vector that contains :math:`f_I(t_n, ycur)`.
-
-   **Return value:**  Should return 0 if successful, a positive value
-   for a recoverable error, and a negative value for an unrecoverable
-   error. 
-
-
-
-Memory deallocation function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The type definition of :c:func:`lfree()` is
-
-.. c:function:: typedef void (*lfree)(ARKodeMem ark_mem)
-
-   free up any memory allocated by the linear solver.
-
-   **Arguments:**
-      * `arkode_mem` -- pointer to the ARKode memory block.
-
-   **Return value:**  None
-
-   **Notes:**  This routine is called once a problem has been
-   completed and the linear solver is no longer needed.
-
-
-
-
-
-Generic Linear Solvers in SUNDIALS
--------------------------------------
-
-In this section, we describe six generic linear solver code modules
-that are included in ARKode.  While these may be used in conjunction
-with ARKode, they may also be used separately as generic packages in
-themselves.  These generic linear solver modules in SUNDIALS are
-organized in two families of solvers, the DLS family, which includes 
-direct linear solvers appropriate for sequential computations; and the
-SPILS family, which includes scaled preconditioned iterative (Krylov)
-linear solvers. The solvers in each family share common data
-structures and functions. 
-
-The :ref:`DLS <LinearSolvers.DLS>` family contains the following two
-generic linear solvers: 
-
-* The DENSE package, a linear solver for dense matrices either
-  specified through a matrix type (defined below) or as simple
-  arrays. 
-* The BAND package, a linear solver for banded matrices either
-  specified through a matrix type (defined below) or as simple
-  arrays. 
-
-We further note that this family also includes the BLAS/LAPACK linear
-solvers (dense and band) available to the SUNDIALS solvers, but these
-are not discussed here. 
-
-The :ref:`SPILS <LinearSolvers.SPILS>` family contains the following
-generic linear solvers: 
-
-* The SPGMR package, a solver for the scaled preconditioned GMRES
-  method. 
-* The SPBCG package, a solver for the scaled preconditioned Bi-CGStab
-  method. 
-* The SPTFQMR package, a solver for the scaled preconditioned TFQMR
-  method. 
-* The PCG package, a solver for the preconditioned conjugate gradient
-  method. 
-
-For reasons related to installation, the names of the files involved
-in these generic solvers begin with the prefix SUNDIALS. But despite
-this, each of the solvers is in fact generic, in that it is usable
-completely independently of SUNDIALS. 
-
-For the sake of space, the functions for the DENSE and BAND modules
-that work with a matrix type and the functions in the SPGMR, SPBCG,
-SPTFQMR and PCG modules are only summarized briefly, since they are less
-likely to be of direct use in connection with a SUNDIALS
-solver. However, the functions for dense matrices treated as simple
-arrays are fully described, because we anticipate that they will be 
-useful in the implementation of preconditioners used with the
-combination of one of the SUNDIALS solvers and one of the SPILS linear 
-solvers. 
-
 
 .. _LinearSolvers.DLS:
 
 The DLS modules: DENSE and BAND
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+========================================
 
 The files comprising the DENSE generic linear solver, and their
 locations in the SUNDIALS ``srcdir``, are as follows:
@@ -310,7 +62,7 @@ or into a larger user code.
 .. _DlsMat:
 
 DlsMat
-""""""""""""
+--------------------
 
 The type :ref:`DlsMat`, defined in ``sundials_direct.h`` is a
 pointer to a structure defining a generic matrix, and is used with all
@@ -403,7 +155,7 @@ the underlying data representation in a banded matrix of type
 
 
 Accessor macros for the DLS modules
-""""""""""""""""""""""""""""""""""""""
+-------------------------------------------
 
 The macros below allow a user to efficiently access individual matrix
 elements without writing out explicit data structure references and
@@ -474,7 +226,7 @@ access to data in the :ref:`DlsMat` type:
 
 
 Functions in the DENSE module
-"""""""""""""""""""""""""""""""
+-------------------------------------------
 
 The DENSE module defines two sets of functions with corresponding
 names. The first set contains functions (with names starting with a
@@ -649,7 +401,7 @@ DENSE package:
 
 
 Functions in the BAND module
-""""""""""""""""""""""""""""""""
+-------------------------------------------
 
 The BAND module defines two sets of functions with corresponding
 names. The first set contains functions (with names starting with a
@@ -746,165 +498,3 @@ BAND package:
   has been set by a successful call to
   ``bandGETRF(a,n,mu,ml,smu,p)``. The solution ``x`` is written into
   the ``b`` array. 
-
-
-
-.. _LinearSolvers.SPILS:
-
-The SPILS modules: SPGMR, SPBCG, SPTFQMR and PCG
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A linear solver module from the SPILS family can only be used in
-conjunction with an actual NVECTOR implementation library, such as the
-NVECTOR_SERIAL or NVECTOR_PARALLEL provided with SUNDIALS. 
-
-
-The SPGMR module
-"""""""""""""""""
-
-The SPGMR package, in the files ``sundials_spgmr.h`` and
-``sundials_spgmr.c``, includes an implementation of the scaled
-preconditioned GMRES method. A separate code module, implemented in 
-``sundials_iterative.h`` and ``sundials_iterative.c``, contains
-auxiliary functions that support SPGMR, as well as the other Krylov
-solvers in SUNDIALS (SPBCG, SPTFQMR and PCG). For full details, including
-usage instructions, see the header files ``sundials_spgmr.h`` and
-``sundials_iterative.h``. 
-
-The files comprising the SPGMR generic linear solver, and their
-locations in the SUNDIALS ``srcdir``, are as follows:
-
-* header files (located in ``srcdir/include/sundials``)
-
-  ``sundials_spgmr.h``, ``sundials_iterative.h``,
-  ``sundials_nvector.h``, ``sundials_types.h``, ``sundials_math.h``,
-  ``sundials_config.h``
-
-* source files (located in ``srcdir/src/sundials``)
-
-  ``sundials_spgmr.c``, ``sundials_iterative.c``, ``sundials_nvector.c``
-
-
-Only two of the preprocessing directives in the header file
-``sundials_config.h`` are required to use the SPGMR package by itself
-(see the section :ref:`Installation` for details): 
-
-* (required) definition of the precision of the SUNDIALS type
-  ``realtype``. One of the following lines must be present:
-
-  .. code-block:: c
-
-     #define SUNDIALS_DOUBLE_PRECISION 1
-     #define SUNDIALS_SINGLE_PRECISION 1
-     #define SUNDIALS_EXTENDED_PRECISION 1
-
-* (optional) use of generic math functions:
-
-  .. code-block:: c
-
-     #define SUNDIALS USE GENERIC MATH 1
-
-
-The ``sundials_types.h`` header file defines the SUNDIALS ``realtype``
-and ``booleantype`` types and the macro ``RCONST``, while the
-``sundials_math.h`` header file is needed for the ``MAX`` and ``ABS``
-macros and ``RAbs`` and ``RSqrt`` functions.
-
-The generic NVECTOR files, ``sundials_nvector.h`` and
-``sundials_nvector.c`` are needed for the definition of the generic
-``N_Vector`` type and functions. The NVECTOR functions used by the
-SPGMR module are: :c:func:`N_VDotProd()`, :c:func:`N_VLinearSum()`,
-:c:func:`N_VScale()`, :c:func:`N_VProd()`, :c:func:`N_VDiv()`,
-:c:func:`N_VConst()`, :c:func:`N_VClone()`,
-:c:func:`N_VCloneVectorArray()`, :c:func:`N_VDestroy()`, and
-:c:func:`N_VDestroyVectorArray()`. 
-
-The nine files listed above can be extracted from the SUNDIALS
-``srcdir`` and compiled by themselves into an SPGMR library or into a
-larger user code. 
-
-The following functions are available in the SPGMR package:
-
-* ``SpgmrMalloc``: allocation of memory for ``SpgmrSolve``;
-* ``SpgmrSolve``: solution of :math:`Ax = b` by the SPGMR method;
-* ``SpgmrFree``: free memory allocated by ``SpgmrMalloc``.
-
-The following functions are available in the support package
-``sundials_iterative.h`` and ``sundials_iterative.c``:
-
-* ``ModifiedGS``: performs modified Gram-Schmidt procedure;
-* ``ClassicalGS``: performs classical Gram-Schmidt procedure;
-* ``QRfact``: performs QR factorization of Hessenberg matrix;
-* ``QRsol``: solves a least squares problem with a Hessenberg matrix
-  factored by ``QRfact``. 
-
-
-
-
-The SPBCG module
-"""""""""""""""""""
-
-The SPBCG package, in the files ``sundials_spbcgs.h`` and
-``sundials_spbcgs.c``, includes an implementation of the scaled
-preconditioned Bi-CGStab method. For full details, including usage
-instructions, see the file ``sundials_spbcgs.h``.
-
-The files needed to use the SPBCG module by itself are the same as for
-the SPGMR module, but with ``sundials_spbcgs.h`` and
-``sundials_spbcgs.c`` in place of ``sundials_spgmr.h`` and
-``sundials_spgmr.c``. 
-
-The following functions are available in the SPBCG package:
-
-* ``SpbcgMalloc``: allocation of memory for ``SpbcgSolve``;
-* ``SpbcgSolve``: solution of :math:`Ax = b` by the SPBCG method;
-* ``SpbcgFree``: free memory allocated by ``SpbcgMalloc``.
-
-
-
-The SPTFQMR module
-""""""""""""""""""""""
-
-
-The SPTFQMR package, in the files ``sundials_sptfqmr.h`` and
-``sundials_sptfqmr.c``, includes an implementation of the scaled
-preconditioned TFQMR method. For full details, including usage
-instructions, see the file ``sundials_sptfqmr.h``.
-
-The files needed to use the SPTFQMR module by itself are the same as
-for the SPGMR module, but with ``sundials_sptfqmr.h`` and
-``sundials_sptfqmr.c`` in place of ``sundials_spgmr.h`` and
-``sundials_spgmr.c``. 
-
-The following functions are available in the SPTFQMR package:
-
-* ``SptfqmrMalloc``: allocation of memory for ``SptfqmrSolve``;
-* ``SptfqmrSolve``: solution of :math:`Ax = b` by the SPTFQMR method;
-* ``SptfqmrFree``: free memory allocated by ``SptfqmrMalloc``.
-
-
-
-The PCG module
-"""""""""""""""""""
-
-The PCG package, in the files ``sundials_pcg.h`` and
-``sundials_pcg.c``, includes an implementation of the 
-preconditioned conjugate gradient method.  We note that due to the
-requirement of symmetric linear systems for the conjugate gradient
-method, this solver should only be used for problems with symmetric
-linear operators.  Furthermore, aside from allowing a weight vector
-for computing weighted convergence norms, no variable or equation
-scaling is allowed for systems using this solver.  For full details,
-including usage instructions, see the file ``sundials_pcg.h``.
-
-The files needed to use the PCG module by itself are the same as for
-the SPGMR module, but with ``sundials_pcg.h`` and
-``sundials_pcs.c`` in place of ``sundials_spgmr.h`` and
-``sundials_spgmr.c``. 
-
-The following functions are available in the PCG package:
-
-* ``PcgMalloc``: allocation of memory for ``PcgSolve``;
-* ``PcgSolve``: solution of :math:`Ax = b` by the PCG method;
-* ``PcgFree``: free memory allocated by ``PcgMalloc``.
-

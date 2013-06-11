@@ -2,6 +2,7 @@
 
 .. _Constants:
 
+================
 ARKode Constants
 ================
 
@@ -11,9 +12,10 @@ short description of their meaning.
 
 
 ARKode input constants
---------------------------
+==========================
 
-**ARKode main solver module**
+ARKode main solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`ARK_NORMAL` (1): 
      Solver returns at a specified output time.
@@ -22,7 +24,8 @@ ARKode input constants
      Solver returns after each successful step.
 
 
-**Iterative linear solver module**
+Iterative linear solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`PREC_NONE`  (0): 
      No preconditioning.
@@ -46,9 +49,10 @@ ARKode input constants
 
 
 ARKode output constants
---------------------------
+==========================
 
-**ARKode main solver module**
+ARKode main solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`ARK_SUCCESS`  (0): 
      Successful function return.
@@ -139,7 +143,8 @@ ARKode output constants
      each other.
 
 
-**ARKDLS linear solver modules**
+ARKDLS linear solver modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`ARKDLS_SUCCESS`  (0): 
      Successful function return.
@@ -166,7 +171,8 @@ ARKode output constants
 
 
 
-**ARKSPILS linear solver modules**
+ARKSPILS linear solver modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`ARKSPILS_SUCCESS`  (0): 
      Successful function return.
@@ -189,7 +195,8 @@ ARKode output constants
 
 
 
-**ARKSPGMR generic linear solver module**
+ARKSPGMR generic linear solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
   :index:`SPGMR_SUCCESS`  (0): 
@@ -242,7 +249,8 @@ ARKode output constants
 
 
 
-**ARKSPBCG generic linear solver module**
+ARKSPBCG generic linear solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`SPBCG_SUCCESS`  (0): 
      Converged.
@@ -283,7 +291,8 @@ ARKode output constants
 
 
 
-**ARKSPTFQMR generic linear solver module**
+ARKSPTFQMR generic linear solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`SPTFQMR_SUCCESS`  (0): 
      Converged.
@@ -323,7 +332,8 @@ ARKode output constants
      failed unrecoverably.
 
 
-**ARKPCG generic linear solver module**
+ARKPCG generic linear solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   :index:`PCG_SUCCESS`  (0): 
      Converged.

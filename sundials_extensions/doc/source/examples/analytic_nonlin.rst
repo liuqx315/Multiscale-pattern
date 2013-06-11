@@ -3,7 +3,7 @@
 
 .. _ark_analytic_nonlin:
 
-Simple nonlinear example (ark_analytic_nonlin)
+ark_analytic_nonlin
 ==============================================
 
 This example problem is only marginally more difficult than the

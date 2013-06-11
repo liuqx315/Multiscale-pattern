@@ -1,10 +1,9 @@
 :tocdepth: 3
 
 
-
 .. _ark_brusselator1D:
 
-Stiff PDE system example (ark_brusselator1D)
+ark_brusselator1D
 ============================================
 
 We now investigate a time-dependent system of partial differential

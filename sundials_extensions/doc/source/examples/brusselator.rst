@@ -1,11 +1,9 @@
 :tocdepth: 3
 
 
-
-
 .. _ark_brusselator:
 
-Stiff nonlinear system example (ark_brusselator)
+ark_brusselator
 ================================================
 
 We now wish to exercise the ARKode solvers on more challenging
