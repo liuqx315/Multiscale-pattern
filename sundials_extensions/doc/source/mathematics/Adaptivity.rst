@@ -188,7 +188,8 @@ the previous controller, at initialization :math:`k_1 = k_2 = 1.0` and
 the floor of :math:`10^{-10}` is enforced on the local error
 estimates.  
 
-
+.. should the last sentence have the error history value,
+   epsilon_{n-1}, equal to 1.0 rather than k_1 and k_2
 
 .. _Mathematics.Adaptivity.ErrorControl.I:
 

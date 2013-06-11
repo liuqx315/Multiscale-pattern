@@ -314,6 +314,6 @@ In the following four sub-sections (:ref:`Mathematics.Preconditioning`,
 :ref:`Mathematics.Stability`), we provide details on optional
 user-supplied information that can be used to better control the
 behavior of ARKode.  In these sections, we also discuss the algorithms
-currently provided by ARKode.  Finally, in the final sub-section of this
+currently provided by ARKode.  Finally, in the last sub-section of this
 chapter, :ref:`Mathematics.Rootfinding`, we discuss the algorithms
 providing root-finding capabilities within ARKode.

@@ -19,7 +19,7 @@ guesses :math:`z_i^{(0)}` are constructed explicitly using
 readily-available information, including the previous step solutions
 :math:`y_{n-1}` and :math:`y_{n-2}`, as well as any previous stage
 solutions :math:`z_j, \quad j<i`.  In all cases, prediction is
-performed through construction of an interpolating polynomial through
+performed by constructing an interpolating polynomial through
 existing data, which is then evaluated at the subsequent stage times
 to hopefully provide a reasonable prediction of the future solution
 value.  Specifically, for all of the Runge-Kutta methods implemented
