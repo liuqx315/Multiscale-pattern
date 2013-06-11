@@ -18,7 +18,7 @@ preconditioning. A system :math:`Ax=b` can be preconditioned as one of:
 .. math::
    (P^{-1}A)x = P^{-1}b & \qquad\text{[left preconditioning]}, \\
    (AP^{-1})Px = b  & \qquad\text{[right preconditioning]}, \\
-   (P_L^{-1} A P_R^{-1}) P_R x = P_L^{-1} & \qquad\text{[left and right
+   (P_L^{-1} A P_R^{-1}) P_R x = P_L^{-1}b & \qquad\text{[left and right
    preconditioning]}.
 
 The Krylov method is then applied to a system with the
@@ -34,7 +34,7 @@ convergence and low cost can be quite challenging.  Good choices are
 often problem-dependent (for example, see [BH1989]_ for an
 extensive study of preconditioners for reaction-transport systems). 
 
-The ARKode solver allow for preconditioning either side, or on both
+The ARKode solver allows for preconditioning either side, or on both
 sides, although for non-symmetric matrices :math:`A` we know of few
 situations where preconditioning on both sides is superior to
 preconditioning on one side only (with the product :math:`P = P_L P_R`).
