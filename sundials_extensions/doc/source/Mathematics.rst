@@ -646,7 +646,7 @@ is made, and the error test is repeated.  If it fails multiple times
 (as specified through the `small_nef` input to
 :c:func:`ARKodeSetAdaptivityConstants()`, which defaults to 2), then
 :math:`h'/h` is limited above to 0.3 (this is modifiable via the
-etamxf` argument to :c:func:`ARKodeSetAdaptivityConstants()`), and
+`etamxf` argument to :c:func:`ARKodeSetAdaptivityConstants()`), and
 limited below to 0.1 after an additional step failure.  After
 seven error test failures (modifiable via the function
 :c:func:`ARKodeSetMaxErrTestFails()`), ARKode returns to the user

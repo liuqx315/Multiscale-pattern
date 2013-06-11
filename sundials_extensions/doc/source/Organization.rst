@@ -59,7 +59,7 @@ systems with dense or banded matrices and includes:
 - ARKDENSE: LU factorization and backsolving with dense matrices
   (using either an internal implementation or BLAS/LAPACK);
 - ARKBAND: LU factorization and backsolving with banded matrices
-  (using either na internal implementation or BLAS/LAPACK).
+  (using either an internal implementation or BLAS/LAPACK).
 
 The *spils* family of linear solvers provides scaled preconditioned
 linear solvers and includes:

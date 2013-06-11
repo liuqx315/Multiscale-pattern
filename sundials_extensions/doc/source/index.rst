@@ -47,7 +47,7 @@ B598130 from `Lawrence Livermore National Laboratory
    LinearSolvers
    Installation
    Constants
-   Examples
+   examples/index.rst
    References
 
 .. only:: html
