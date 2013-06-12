@@ -204,7 +204,7 @@ int main() {
   if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
   /* Open output stream for results, access data arrays */
-  FILE *UFID=fopen("heat.txt","w");
+  FILE *UFID=fopen("heat1D.txt","w");
   data = N_VGetArrayPointer(y);
   if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
