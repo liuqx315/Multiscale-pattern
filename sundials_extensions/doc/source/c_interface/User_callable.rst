@@ -573,7 +573,7 @@ This is the central step in the solution process -- the call to perform
 the integration of the IVP.  One of the input arguments (`itask`)
 specifies one of two modes as to where ARKode is to return a
 solution.  These modes are modified if the user has set a stop time
-(with a call to the optional input function :c:func`ARKodeSetStopTime()`) or
+(with a call to the optional input function :c:func:`ARKodeSetStopTime()`) or
 has requested rootfinding. 
 
 
@@ -591,7 +591,7 @@ has requested rootfinding.
         user step. The ARK_NORMAL option causes the solver to take internal
         steps until it has reached or just passed the user-specified `tout`
         parameter. The solver then interpolates in order to return an
-        approximate value of :math:`y`(`tout`). This interpolation is
+        approximate value of :math:`y(tout)`. This interpolation is
         typically less accurate than the full time step solutions produced
         by the solver, since the interpolation uses a cubic Hermite
         polynomial even when the RK method is of higher order.  If the user 
