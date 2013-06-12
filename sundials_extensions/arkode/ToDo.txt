@@ -174,11 +174,34 @@ Completed components:
 [X] Create root-finding regression test.
 [X] Update step size logic to handle the case of backwards integration
     (negative h values).
+[X] Documentation for example problems.
 
 
 
 Remaining components to build:
-[ ] Documentation for example problems.
+[ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
+    logic to account for this in step solution & embedding.  Update
+    time step solution/embedding routine to now do solves to compute
+    these. 
+[ ] Consider whether a non-identity matrix M will change how
+    preconditioning occurs, i.e. whether it disables either right or
+    left preconditioning.
+[ ] Update ARKSpilsAtimes function (and similar, e.g. arkDenseSetup) 
+    to accommodate a non-identity mass matrix.  This may also change 
+    how gamma/gammap are handled, since changes to gamma may have 
+    more/less effect with a non-identity mass matrix.  Think about 
+    this.
+[ ] Set up function to allow ARKode to retain basic data structures
+    while re-initializing with a new set of NVectors (to better allow
+    spatial adaptivity).  Worst-case scenario is for users to just
+    start over from scratch with a "better" initial step size on
+    successive steps, but it would be ideal to retain everything
+    except the NVectors themselves, and potentially supply a time step
+    restriction factor (e.g. 0.5) so that after spatial adaptivity
+    we'll take a slightly smaller time step.
+[ ] Determine optimal input parameters for a user to control how often
+    mesh adaptivity should be enabled (e.g. a physical amount of time,
+    a fixed number of time steps, etc.).
 [ ] Update ARKodeGetEstLocalErrors().
 [ ] Clean up documentation system for how a user should tell ARKode
     about his J*v function (and other optional user-supplied
@@ -210,18 +233,6 @@ Remaining components to build:
 [ ] Create flowchart of which vectors are used when, and trim down
     memory footprint by reusing some as temporary data.  Then update
     the total real/integer work length estimates in ARKodeCreate.
-[ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
-    logic to account for this in step solution & embedding.  Update
-    time step solution/embedding routine to now do solves to compute
-    these. 
-[ ] Consider whether a non-identity matrix M will change how
-    preconditioning occurs, i.e. whether it disables either right or
-    left preconditioning.
-[ ] Update ARKSpilsAtimes function (and similar, e.g. arkDenseSetup) 
-    to accommodate a non-identity mass matrix.  This may also change 
-    how gamma/gammap are handled, since changes to gamma may have 
-    more/less effect with a non-identity mass matrix.  Think about 
-    this.
 [ ] Move all fancy logic determination stuff that's currently located
     in specific solve routines (including linear solvers) to reside in
     a self-contained set of functions that ARKode provides.  Attach
