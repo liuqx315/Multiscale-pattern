@@ -9,6 +9,7 @@ include ../Make.machine
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
+CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
 INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../
@@ -33,6 +34,7 @@ TESTS = nvector_serial_test.exe \
         ark_brusselator.exe \
         ark_brusselator1D.exe \
         ark_heat1D.exe \
+        ark_heat2D.exe \
         ark_robertson.exe \
         ark_robertson_root.exe \
         ark_set_check.exe \
@@ -50,68 +52,11 @@ TESTS = nvector_serial_test.exe \
 # target to build all test executables
 all : ${TESTS}
 
-nvector_serial_test.exe : nvector_serial_test.c
+%.exe : %.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
-nvector_parallel_test.exe : nvector_parallel_test.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-nvector_parallel_grid_test.exe : nvector_parallel_grid_test.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-pcg_tester.exe : pcg_tester.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-cv_analytic.exe : cv_analytic.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-cv_analytic_sys.exe : cv_analytic_sys.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-cv_analytic_nonlin.exe : cv_analytic_nonlin.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-cv_VanderPol.exe : cv_VanderPol.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-cv_brusselator.exe : cv_brusselator.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-cv_brusselator1D.exe : cv_brusselator1D.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ida_brusselator1D_FEM.exe : ida_brusselator1D_FEM.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_analytic.exe : ark_analytic.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_analytic_sys.exe : ark_analytic_sys.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_analytic_nonlin.exe : ark_analytic_nonlin.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_analytic_nonlin_back.exe : ark_analytic_nonlin_back.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_brusselator.exe : ark_brusselator.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_brusselator1D.exe : ark_brusselator1D.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_heat1D.exe : ark_heat1D.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_robertson.exe : ark_robertson.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_robertson_root.exe : ark_robertson_root.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-
-ark_set_check.exe : ark_set_check.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+%.exe : %.cpp init_from_file.c
+	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_bruss.exe : ark_bruss.f90
 	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
@@ -142,7 +87,6 @@ ark_vdpol.exe : ark_vdpol.f90 vdpol.f
 
 ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
 	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
-
 
 clean :
 	\rm -f *.o *.exe

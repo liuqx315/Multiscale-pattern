@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # analysis script for ARKODE solver statistics
 # Daniel R. Reynolds, reynolds@smu.edu
 
