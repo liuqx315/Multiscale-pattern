@@ -11,7 +11,7 @@ required. However, starting with the section
 :ref:`CInterface.OptionalInputs`, the functions listed involve
 optional inputs/outputs or restarting, and those paragraphs may be
 skipped for a casual use of ARKode. In any 
-case, refer to the ssection :ref:`CInterface.Skeleton` for the correct
+case, refer to the section :ref:`CInterface.Skeleton` for the correct
 order of these calls. 
 
 On an error, each user-callable function returns a negative value and
@@ -146,7 +146,7 @@ Alternatively, the user may supply a custom function to supply the
    
    **Return value:** 
       * ARK_SUCCESS if successful
-      * ARK_MEM_NULL  if the ARKode memory was ````NULL````
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
       * ARK_NO_MALLOC  if the ARKode memory was not allocated by :c:func:`ARKodeInit()`
       * ARK_ILL_INPUT if an argument has an illegal value (e.g. a
         negative tolerance).
@@ -186,7 +186,7 @@ relevant.
 (2) The absolute tolerances ``abstol`` (whether scalar or vector) need
     to be set to control absolute errors when any components of the
     solution vector :math:`y` may be so small that pure relative error
-    control is meaningless.  For example, if :math`y_i` starts at some
+    control is meaningless.  For example, if :math:`y_i` starts at some
     nonzero value, but in time decays to zero, then pure relative
     error control on :math:`y_i` makes no sense (and is overly costly)
     after :math:`y_i` is below some noise level. Then ``abstol`` (if
@@ -300,7 +300,7 @@ linear solver sections in :ref:`CInterface.OptionalOutputs` and
 
 If preconditioning is done, user-supplied functions define left and
 right preconditioner matrices :math:`P_1` and :math:`P_2` (either of
-which could be the identity matrix), such that the product P1P2
+which could be the identity matrix), such that the product :math:`P_{1}P_{2}`
 approximates the Newton matrix  :math:`A = M - \gamma J`. 
 
 To specify a ARKode linear solver, after the call to
