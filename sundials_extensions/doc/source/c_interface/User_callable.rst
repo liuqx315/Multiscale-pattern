@@ -330,8 +330,8 @@ are described separately in the section :ref:`LinearSolvers`.
 .. c:function:: int ARKDense(void *arkode_mem, long int N)
 
    A call to the ARKDense function links the main
-   integrator with the ARKDENSE linear solver.
-   
+   ARKode integrator with the ARKDENSE linear solver.  
+
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
       * `N` -- the number of components in the ODE system.
@@ -352,7 +352,7 @@ are described separately in the section :ref:`LinearSolvers`.
 .. c:function:: int ARKLapackDense(void *arkode_mem, int N)
 
    A call to the ARKLapackDense function links the main
-   integrator with the ARKLAPACK linear solver dense Jacobians.
+   ARKode integrator with the ARKLAPACK linear solver dense Jacobians.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
@@ -372,7 +372,7 @@ are described separately in the section :ref:`LinearSolvers`.
 .. c:function:: int ARKBand(void *arkode_mem, long int N, long int mupper, long int mlower)
 
    A call to the ARKBand function links the main
-   integrator with the ARKBAND linear solver.
+   ARKode integrator with the ARKBAND linear solver.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
@@ -399,7 +399,7 @@ are described separately in the section :ref:`LinearSolvers`.
 .. c:function:: int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
 
    A call to the ARKLapackBand function links the main
-   integrator with the ARKLAPACK linear solver using banded Jacobians.
+   ARKode integrator with the ARKLAPACK linear solver using banded Jacobians.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
