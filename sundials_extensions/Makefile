@@ -16,7 +16,12 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 EXTEN = nvector arkode arkode/fcmix arkode/pcg
 
 # executable directories
-EXEC = examples regression
+EXEC = examples/arkode/serial \
+       examples/arkode/parallel \
+       examples/arkode/fcmix_serial \
+       examples/cvode/serial \
+       examples/ida/serial \
+       regression
 
 
 # build all library source code and tests
