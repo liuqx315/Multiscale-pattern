@@ -19,6 +19,7 @@ LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 TESTS = cv_analytic.exe \
         cv_analytic_sys.exe \
         cv_analytic_nonlin.exe \
+        cvKrylovDemo_prec.exe \
         cv_VanderPol.exe \
         cv_brusselator.exe \
         cv_brusselator1D.exe \
@@ -31,6 +32,7 @@ TESTS = cv_analytic.exe \
         ark_bruss.exe \
         ark_heat1D.exe \
         ark_heat2D.exe \
+        ark_KrylovDemo_prec.exe \
         ark_robertson.exe \
         ark_robertson_root.exe
 
