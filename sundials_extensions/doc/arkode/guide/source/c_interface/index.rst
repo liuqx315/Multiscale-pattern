@@ -12,9 +12,9 @@ following sections treat the header files and the layout of the user's
 main program, and provide descriptions of the ARKode user-callable 
 functions and user-supplied functions. 
 
-The example programs described in the section :ref:`Examples`
-may be helpful. Those codes may be used as templates for new codes and
-are included in the ARKode package ``examples`` subdirectory.
+The example programs described in the companion document [R2013]_ may
+be helpful. Those codes may be used as templates for new codes and are
+included in the ARKode package ``examples`` subdirectory. 
 
 Users with applications written in Fortran should see the chapter
 :ref:`FortranInterface`, that describes the Fortran/C interface

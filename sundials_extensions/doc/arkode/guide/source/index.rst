@@ -49,7 +49,6 @@ Documentation sections:
    linear_solvers/index.rst
    install/index.rst
    Constants
-   examples/index.rst
    References
 
 .. only:: html
