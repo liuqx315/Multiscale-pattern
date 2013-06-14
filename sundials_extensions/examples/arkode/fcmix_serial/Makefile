@@ -12,7 +12,7 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../../../
+INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../../../include/
 LIBS = ../../../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 
 # listing of all test routines
