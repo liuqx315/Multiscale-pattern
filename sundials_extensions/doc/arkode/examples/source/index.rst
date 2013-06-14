@@ -1,13 +1,38 @@
-:tocdepth: 3
+.. ARKode_example documentation master file, created by
+   sphinx-quickstart on Sat Dec 22 20:38:03 2012.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-.. _Examples:
+==============================================
+ARKode Example documentation
+==============================================
 
-=================
- ARKode Examples
-=================
+This is the documentation for the ARKode examples.  ARKode is an
+adaptive step time integration package for stiff, nonstiff and
+multi-rate systems of ordinary differential equations (ODEs).  
+The ARKode solver is a component of the `SUNDIALS
+<https://computation.llnl.gov/casc/sundials/main.html>`_ suite of
+nonlinear and differential/algebraic equation solvers. It is designed
+to have a similar user experience to the `CVODE
+<https://computation.llnl.gov/casc/sundials/description/description.html#descr_cvode>`_
+solver, with user modes to allow adaptive integration to specified
+output times, return after each internal step and root-finding
+capabilities, for calculations both in serial and parallel (via
+MPI). The default integration and solver options should apply to most
+users, though complete control over all internal parameters and time
+adaptivity algorithms is enabled through optional interface routines.  
 
-ARKode comes packaged with a variety of example problems, that
-exercise options including explicit, implicit and ImEx solvers,
+ARKode is developed by `Southern Methodist University
+<http://www.smu.edu>`_, with support by the `US Department of Energy
+<http://www.doe.gov>`_ through the `FASTMath
+<http://www.fastmath-scidac.org/>`_ SciDAC Institute, under subcontract
+B598130 from `Lawrence Livermore National Laboratory
+<http://www.llnl.gov>`_. 
+
+Along with the ARKode solver, we have created a suite of example
+problems demonstrating its usage on applications written in C, C++ and
+Fortran.  These examples demonstrate a large variety of ARKode solver
+options, including explicit, implicit and ImEx solvers,
 root-finding, direct and iterative linear solvers, and the Fortran
 solver interface, FARKODE.  While these examples are not an exhaustive
 set of all possible usage scenarios, they are designed to show a
@@ -55,3 +80,8 @@ following sub-sections:
    PDE example with iterative linear solver (ark_heat1D) <heat1D>
    Parallel PDE example with iterative linear solver (ark_heat2D) <heat2D>
    
+.. only:: html
+
+   * :ref:`search`
+
+
