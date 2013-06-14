@@ -17,7 +17,7 @@
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 #include <sundials/sundials_math.h>
-#include <arkode/pcg/sundials_pcg.h>
+#include <sundials/sundials_pcg.h>
 
 
 /* User-supplied Functions Called by the Solver */

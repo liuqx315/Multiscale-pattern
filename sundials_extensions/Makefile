@@ -13,18 +13,18 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 
 # extension directories
-EXTEN = nvector \
-        arkode \
-        arkode/fcmix \
-        arkode/pcg \
-        arkode/spfgmr
+EXTEN = src/arkode \
+	src/arkode/fcmix \
+	src/sundials \
+        src/nvec_pargrid \
+        src/nvec_pargrid/fcmix
 
 # lib directories
-LIBFILES = nvector/*.o \
-           arkode/*.o \
-           arkode/fcmix/*.o \
-           arkode/pcg/*.o \
-           arkode/spfgmr/*.o
+LIBFILES = src/arkode/*.o \
+           src/arkode/fcmix/*.o \
+           src/sundials/*.o \
+           src/nvec_pargrid/*.o \
+           src/nvec_pargrid/fcmix/*.o
 
 # executable directories
 EXEC = examples/arkode/serial \
