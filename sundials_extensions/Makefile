@@ -13,7 +13,18 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 
 # extension directories
-EXTEN = nvector arkode arkode/fcmix arkode/pcg
+EXTEN = nvector \
+        arkode \
+        arkode/fcmix \
+        arkode/pcg \
+        arkode/spfgmr
+
+# lib directories
+LIBFILES = nvector/*.o \
+           arkode/*.o \
+           arkode/fcmix/*.o \
+           arkode/pcg/*.o \
+           arkode/spfgmr/*.o
 
 # executable directories
 EXEC = examples/arkode/serial \
@@ -29,7 +40,7 @@ all :
 	for dir in ${EXTEN}; do \
 	  $(MAKE) -C $$dir; \
 	done
-	ar -cr sundials_extensions.a nvector/*.o arkode/*.o arkode/fcmix/*.o arkode/pcg/*.o
+	ar -cr sundials_extensions.a ${LIBFILES}
 	for dir in ${EXEC}; do \
 	  $(MAKE) -C $$dir; \
 	done
