@@ -5,29 +5,18 @@
 
 # Make.machine is used for setting machine-dependent compilation
 # variables: e.g. compilers, libraries, F90-to-C conversion vars
-include ../Make.machine
+include ../../Make.machine
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../
-LIBS = ../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
+INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../../
+LIBS = ../../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
 
 # listing of all test routines
-TESTS = nvector_serial_test.exe \
-        nvector_parallel_test.exe \
-        nvector_parallel_grid_test.exe \
-        pcg_tester.exe \
-        cv_analytic.exe \
-        cv_analytic_sys.exe \
-        cv_analytic_nonlin.exe \
-        cv_VanderPol.exe \
-        cv_brusselator.exe \
-        cv_brusselator1D.exe \
-        ida_brusselator1D_FEM.exe \
-        ark_analytic.exe \
+TESTS = ark_analytic.exe \
         ark_analytic_sys.exe \
         ark_analytic_nonlin.exe \
         ark_analytic_nonlin_back.exe \

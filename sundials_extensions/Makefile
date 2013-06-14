@@ -32,8 +32,10 @@ EXEC = examples/arkode/serial \
        examples/arkode/fcmix_serial \
        examples/cvode/serial \
        examples/ida/serial \
-       regression
-
+       regression/arkode \
+       regression/cvode \
+       regression/ida \
+       regression/sundials
 
 # build all library source code and tests
 all : 
