@@ -28,6 +28,7 @@ OBJ = arkode.o \
       arkode_spbcgs.o \
       arkode_sptfqmr.o \
       arkode_spgmr.o \
+      arkode_spfgmr.o \
       arkode_spils.o
 
 
@@ -70,10 +71,13 @@ arkode_spbcgs.o : arkode_spbcgs.c arkode_spbcgs.h arkode_spils_impl.h arkode_imp
 arkode_sptfqmr.o : arkode_sptfqmr.c arkode_sptfqmr.h arkode_spils_impl.h arkode_impl.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_sptfqmr.c -o $@
 
-arkode_spgmr.o : arkode_spgmr.c arkode_spils.h
+arkode_spgmr.o : arkode_spgmr.c arkode_spils.h arkode_spgmr.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_spgmr.c -o $@
 
-arkode_spils.o: arkode_spils.c
+arkode_spfgmr.o : arkode_spfgmr.c arkode_spils.h arkode_spfgmr.h
+	${CC} -c ${CFLAGS_} ${INCS} arkode_spfgmr.c -o $@
+
+arkode_spils.o: arkode_spils.c arkode_spils.h arkode_spils_impl.h
 	${CC} -c ${CFLAGS_} ${INCS} arkode_spils.c -o $@
 
 

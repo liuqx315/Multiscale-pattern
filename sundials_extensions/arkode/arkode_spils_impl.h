@@ -24,6 +24,7 @@ extern "C" {
 #define SPILS_SPBCG   2
 #define SPILS_SPTFQMR 3
 #define SPILS_PCG     4
+#define SPILS_SPFGMR  5
 
 
 /*---------------------------------------------------------------
