@@ -15,7 +15,7 @@
 # Add variable FARKODE_examples with the names of the serial FARKODE examples
 
 SET(FARKODE_examples
-  #ark_bruss
+  ark_bruss
   )
 
 # Add variable fcvode_bl_examples with the names of the serial FCVODE examples

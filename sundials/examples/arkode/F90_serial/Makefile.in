@@ -58,7 +58,7 @@ fortran-update = ${SHELL} ${top_builddir}/bin/fortran-update.sh
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
-EXAMPLES = #ark_bruss
+EXAMPLES = ark_bruss
 
 EXAMPLES_BL = 
 
