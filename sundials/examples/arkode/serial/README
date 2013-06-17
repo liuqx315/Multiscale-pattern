@@ -1,0 +1,24 @@
+List of serial ARKODE examples
+
+  ark_analytic         : simple stiff, linear, ODE example
+  ark_analytic_nonlin  : simple nonstiff, nonlinear ODE example
+  ark_analytic_sys     : simple stiff, linear, ODE system example
+  ark_brusselator      : stiff chemical kinetics ODE system example (DIRK/DENSE)
+  ark_brusselator1D    : stiff chemical kinetics PDE system example (DIRK/BAND)
+  ark_heat1D           : stiff 1D heat PDE example (DIRK/PCG)
+  ark_KrylovDemo_prec  : demonstration program for Krylov methods (SPGMR)
+  ark_robertson        : stiff chemical kinetics ODE system example (DIRK/DENSE)
+  ark_robertson_root   : stiff chemical kinetics ODE system with root-finding example
+
+Sample results:
+
+  SUNDIALS was built with the following options:
+
+  ./configure CC=gcc F77=g77 CFLAGS="-g3 -O0" FFLAGS="-g3 -O0" --with-blas-lapack-libs="-L/home/radu/apps/lib -lSimTKlapack" --enable-examples 
+
+  System Architecture: IA-32
+  Processor Type: Intel Pentium 4 Xeon DP (i686)
+  Operating System: Red Hat Enterprise Linux WS 3 (Taroon Update 7)
+  C/Fortran Compilers: gcc/gfortran v4.1.0
+
+  The SimTKlapack library provides ATLAS-tunned Blas and Lapack functions
