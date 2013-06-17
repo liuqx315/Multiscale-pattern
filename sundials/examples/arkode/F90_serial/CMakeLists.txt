@@ -52,11 +52,11 @@ ENDIF(LAPACK_FOUND)
 # Add the build and install targets for each FARKODE example
 
 FOREACH(example ${FARKODE_examples})
-  ADD_EXECUTABLE(${example} ${example}.f)
+  ADD_EXECUTABLE(${example} ${example}.f90)
   ADD_TEST(${example} ${TESTRUNNER} ${example})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(EXAMPLES_INSTALL)
-    INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/fcmix_serial)
+    INSTALL(FILES ${example}.f90 ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial)
   ENDIF(EXAMPLES_INSTALL)
 ENDFOREACH(example ${FARKODE_examples})
 
@@ -64,10 +64,10 @@ ENDFOREACH(example ${FARKODE_examples})
 
 IF(LAPACK_FOUND)
   FOREACH(example ${FARKODE_examples_BL})
-    ADD_EXECUTABLE(${example} ${example}.f)
+    ADD_EXECUTABLE(${example} ${example}.f90)
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
-      INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/fcmix_serial)
+      INSTALL(FILES ${example}.f90 ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial)
     ENDIF(EXAMPLES_INSTALL)
   ENDFOREACH(example ${FARKODE_examples_BL})
 ENDIF(LAPACK_FOUND)
@@ -75,7 +75,7 @@ ENDIF(LAPACK_FOUND)
 IF(EXAMPLES_INSTALL)
 
   # Install the README file
-  INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/fcmix_serial)
+  INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial)
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
   SET(SOLVER "ARKODE")
@@ -94,15 +94,15 @@ IF(EXAMPLES_INSTALL)
 
   # generate CMakelists.txt in the binary directory
   CONFIGURE_FILE(
-      ${PROJECT_SOURCE_DIR}/examples/templates/cmakelists_serial_F77_ex.in
-      ${PROJECT_BINARY_DIR}/examples/arkode/fcmix_serial/CMakeLists.txt
+      ${PROJECT_SOURCE_DIR}/examples/templates/cmakelists_serial_F90_ex.in
+      ${PROJECT_BINARY_DIR}/examples/arkode/F90_serial/CMakeLists.txt
       @ONLY
       )
 
   # install CMakelists.txt
   INSTALL(
-    FILES ${PROJECT_BINARY_DIR}/examples/arkode/fcmix_serial/CMakeLists.txt
-    DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/fcmix_serial 
+    FILES ${PROJECT_BINARY_DIR}/examples/arkode/F90_serial/CMakeLists.txt
+    DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial 
     )
 
   # On UNIX-type platforms, we also  generate and install a makefile for 
@@ -112,14 +112,14 @@ IF(EXAMPLES_INSTALL)
   IF(UNIX)
     # generate Makefile and place it in the binary dir
     CONFIGURE_FILE(
-      ${PROJECT_SOURCE_DIR}/examples/templates/makefile_serial_F77_ex.in
-      ${PROJECT_BINARY_DIR}/examples/arkode/fcmix_serial/Makefile_ex
+      ${PROJECT_SOURCE_DIR}/examples/templates/makefile_serial_F90_ex.in
+      ${PROJECT_BINARY_DIR}/examples/arkode/F90_serial/Makefile_ex
       @ONLY
       )
     # install the configured Makefile_ex as Makefile
     INSTALL(
-      FILES ${PROJECT_BINARY_DIR}/examples/arkode/fcmix_serial/Makefile_ex 
-      DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/fcmix_serial 
+      FILES ${PROJECT_BINARY_DIR}/examples/arkode/F90_serial/Makefile_ex 
+      DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial 
       RENAME Makefile
       )
   ENDIF(UNIX)

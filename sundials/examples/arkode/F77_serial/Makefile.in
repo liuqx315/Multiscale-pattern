@@ -9,7 +9,7 @@
 # All rights reserved.
 # For details, see the LICENSE file.
 # -----------------------------------------------------------------
-# Makefile for FARKODE serial examples
+# Makefile for FARKODE F77 serial examples
 #
 # @configure_input@
 # -----------------------------------------------------------------
@@ -58,7 +58,7 @@ fortran-update = ${SHELL} ${top_builddir}/bin/fortran-update.sh
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
-EXAMPLES = #ark_bruss
+EXAMPLES = # none yet
 
 EXAMPLES_BL = 
 
@@ -85,34 +85,34 @@ all:
 
 
 install:
-	$(mkinstalldirs) $(EXS_INSTDIR)/arkode/fcmix_serial
-	$(INSTALL_FILE) Makefile_ex $(EXS_INSTDIR)/arkode/fcmix_serial/Makefile
-	$(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_serial/README $(EXS_INSTDIR)/arkode/fcmix_serial/
+	$(mkinstalldirs) $(EXS_INSTDIR)/arkode/F77_serial
+	$(INSTALL_FILE) Makefile_ex $(EXS_INSTDIR)/arkode/F77_serial/Makefile
+	$(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_serial/README $(EXS_INSTDIR)/arkode/F77_serial/
 	for i in ${EXAMPLES} ; do \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_serial/$${i}.f   $(EXS_INSTDIR)/arkode/fcmix_serial/ ; \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_serial/$${i}.out $(EXS_INSTDIR)/arkode/fcmix_serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_serial/$${i}.f   $(EXS_INSTDIR)/arkode/F77_serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_serial/$${i}.out $(EXS_INSTDIR)/arkode/F77_serial/ ; \
 	done
 	@if test "X${LAPACK_ENABLED}" = "Xyes"; then \
 	for i in ${EXAMPLES_BL} ; do \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_serial/$${i}.f   $(EXS_INSTDIR)/arkode/fcmix_serial/ ; \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_serial/$${i}.out $(EXS_INSTDIR)/arkode/fcmix_serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_serial/$${i}.f   $(EXS_INSTDIR)/arkode/F77_serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_serial/$${i}.out $(EXS_INSTDIR)/arkode/F77_serial/ ; \
 	done ; \
 	fi
 
 uninstall:
-	rm -f $(EXS_INSTDIR)/arkode/fcmix_serial/Makefile
-	rm -f $(EXS_INSTDIR)/arkode/fcmix_serial/README
+	rm -f $(EXS_INSTDIR)/arkode/F77_serial/Makefile
+	rm -f $(EXS_INSTDIR)/arkode/F77_serial/README
 	for i in ${EXAMPLES} ; do \
-	  rm -f $(EXS_INSTDIR)/arkode/fcmix_serial/$${i}.f ; \
-	  rm -f $(EXS_INSTDIR)/arkode/fcmix_serial/$${i}.out ; \
+	  rm -f $(EXS_INSTDIR)/arkode/F77_serial/$${i}.f ; \
+	  rm -f $(EXS_INSTDIR)/arkode/F77_serial/$${i}.out ; \
 	done
 	@if test "X${LAPACK_ENABLED}" = "Xyes"; then \
 	for i in ${EXAMPLES_BL} ; do \
-	  rm -f $(EXS_INSTDIR)/arkode/fcmix_serial/$${i}.f ; \
-	  rm -f $(EXS_INSTDIR)/arkode/fcmix_serial/$${i}.out ; \
+	  rm -f $(EXS_INSTDIR)/arkode/F77_serial/$${i}.f ; \
+	  rm -f $(EXS_INSTDIR)/arkode/F77_serial/$${i}.out ; \
 	done ; \
 	fi
-	$(rminstalldirs) $(EXS_INSTDIR)/arkode/fcmix_serial
+	$(rminstalldirs) $(EXS_INSTDIR)/arkode/F77_serial
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 
 clean:

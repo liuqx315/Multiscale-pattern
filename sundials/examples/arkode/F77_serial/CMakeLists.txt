@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
 # $Revision: 1.7 $
-# $Date: 2012-09-18 23:01:37 $
+# $Date: 2012-09-18 23:01:35 $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -9,26 +9,19 @@
 # All rights reserved.
 # For details, see the LICENSE file.
 # ---------------------------------------------------------------
-# CMakeLists.txt file for ARKODE serial examples
+# CMakeLists.txt file for the FARKODE F77 serial examples
 
-# Add variable ARKODE_examples with the names of the serial ARKODE examples
 
-SET(ARKODE_examples
-  ark_analytic
-  ark_analytic_nonlin
-  #ark_analytic_sys
-  ark_brusselator
-  ark_brusselator1D
-  ark_heat1D
-  ark_KrylovDemo_prec
-  ark_robertson
-  ark_robertson_root
+# Add variable FARKODE_examples with the names of the serial FARKODE examples
+
+SET(FARKODE_examples
+  # none yet
   )
 
-# Add variable ARKODE_examples_BL with the names of the serial ARKODE examples
+# Add variable fcvode_bl_examples with the names of the serial FCVODE examples
 # that use Lapack
 
-SET(ARKODE_examples_BL
+SET(FCVODE_examples_BL
   )
 
 # Specify libraries to link against (through the target that was used to 
@@ -37,53 +30,60 @@ SET(ARKODE_examples_BL
 IF(LINK_LIBRARY_TYPE MATCHES "static")
   SET(ARKODE_LIB sundials_arkode_static)
   SET(NVECS_LIB sundials_nvecserial_static)
+  SET(FNVECS_LIB sundials_fnvecserial_static)
 ELSE(LINK_LIBRARY_TYPE MATCHES "static")
   SET(ARKODE_LIB sundials_arkode_shared)
   SET(NVECS_LIB sundials_nvecserial_shared)
+  SET(FNVECS_LIB sundials_fnvecserial_shared)
 ENDIF(LINK_LIBRARY_TYPE MATCHES "static")
+
+# Only static FCMIX libraries are available
+
+SET(FARKODE_LIB sundials_farkode_static)
 
 # Set-up linker flags and link libraries
 
-SET(SUNDIALS_LIBS ${ARKODE_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
+SET(SUNDIALS_LIBS ${FARKODE_LIB} ${ARKODE_LIB} ${FNVECS_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
 IF(LAPACK_FOUND)
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
   SET(SUNDIALS_LIBS "${SUNDIALS_LIBS} ${LAPACK_LIBRARIES}")
 ENDIF(LAPACK_FOUND)
 
-# Add the build and install targets for each ARKODE example
+# Add the build and install targets for each FARKODE example
 
-FOREACH(example ${ARKODE_examples})
-  ADD_EXECUTABLE(${example} ${example}.c)
+FOREACH(example ${FARKODE_examples})
+  ADD_EXECUTABLE(${example} ${example}.f)
   ADD_TEST(${example} ${TESTRUNNER} ${example})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(EXAMPLES_INSTALL)
-    INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/serial)
+    INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)
   ENDIF(EXAMPLES_INSTALL)
-ENDFOREACH(example ${ARKODE_examples})
+ENDFOREACH(example ${FARKODE_examples})
 
-# Add the build and install targets for each Lapack ARKODE example (if needed)
+# Add the build and install targets for each Lapack FARKODE example (if needed)
 
 IF(LAPACK_FOUND)
-  FOREACH(example ${ARKODE_examples_BL})
-    ADD_EXECUTABLE(${example} ${example}.c)
+  FOREACH(example ${FARKODE_examples_BL})
+    ADD_EXECUTABLE(${example} ${example}.f)
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
-      INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/serial)
+      INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)
     ENDIF(EXAMPLES_INSTALL)
-  ENDFOREACH(example ${ARKODE_examples_BL})
+  ENDFOREACH(example ${FARKODE_examples_BL})
 ENDIF(LAPACK_FOUND)
 
 IF(EXAMPLES_INSTALL)
 
   # Install the README file
-  INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/serial)
+  INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
   SET(SOLVER "ARKODE")
   SET(SOLVER_LIB "sundials_arkode")
-  LIST2STRING(ARKODE_examples EXAMPLES)
+  SET(SOLVER_FLIB "sundials_farkode")
+  LIST2STRING(FARKODE_examples EXAMPLES)
   IF(LAPACK_FOUND)
-    LIST2STRING(ARKODE_examples_BL EXAMPLES_BL)
+    LIST2STRING(FARKODE_examples_BL EXAMPLES_BL)
   ELSE(LAPACK_FOUND)
     SET(EXAMPLES_BL "")
   ENDIF(LAPACK_FOUND)
@@ -94,15 +94,15 @@ IF(EXAMPLES_INSTALL)
 
   # generate CMakelists.txt in the binary directory
   CONFIGURE_FILE(
-      ${PROJECT_SOURCE_DIR}/examples/templates/cmakelists_serial_C_ex.in
-      ${PROJECT_BINARY_DIR}/examples/arkode/serial/CMakeLists.txt
+      ${PROJECT_SOURCE_DIR}/examples/templates/cmakelists_serial_F77_ex.in
+      ${PROJECT_BINARY_DIR}/examples/arkode/F77_serial/CMakeLists.txt
       @ONLY
       )
 
   # install CMakelists.txt
   INSTALL(
-    FILES ${PROJECT_BINARY_DIR}/examples/arkode/serial/CMakeLists.txt
-    DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/serial 
+    FILES ${PROJECT_BINARY_DIR}/examples/arkode/F77_serial/CMakeLists.txt
+    DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial 
     )
 
   # On UNIX-type platforms, we also  generate and install a makefile for 
@@ -112,14 +112,14 @@ IF(EXAMPLES_INSTALL)
   IF(UNIX)
     # generate Makefile and place it in the binary dir
     CONFIGURE_FILE(
-      ${PROJECT_SOURCE_DIR}/examples/templates/makefile_serial_C_ex.in
-      ${PROJECT_BINARY_DIR}/examples/arkode/serial/Makefile_ex
+      ${PROJECT_SOURCE_DIR}/examples/templates/makefile_serial_F77_ex.in
+      ${PROJECT_BINARY_DIR}/examples/arkode/F77_serial/Makefile_ex
       @ONLY
       )
     # install the configured Makefile_ex as Makefile
     INSTALL(
-      FILES ${PROJECT_BINARY_DIR}/examples/arkode/serial/Makefile_ex 
-      DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/serial 
+      FILES ${PROJECT_BINARY_DIR}/examples/arkode/F77_serial/Makefile_ex 
+      DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial 
       RENAME Makefile
       )
   ENDIF(UNIX)
