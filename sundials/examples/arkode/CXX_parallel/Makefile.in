@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------
-# $Revision: 1.11 $
-# $Date: 2009-03-11 23:20:14 $
+# $Revision: 1.9 $
+# $Date: 2009-02-17 02:58:47 $
 # -----------------------------------------------------------------
 # Programmer(s): Radu Serban and Aaron Collier @ LLNL
 # -----------------------------------------------------------------
@@ -9,7 +9,7 @@
 # All rights reserved.
 # For details, see the LICENSE file.
 # -----------------------------------------------------------------
-# Makefile for FARKODE parallel examples
+# Makefile for ARKODE C++ parallel examples
 #
 # @configure_input@
 # -----------------------------------------------------------------
@@ -32,16 +32,17 @@ INSTALL_FILE = @INSTALL_DATA@
 LIBTOOL      = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 
-FFLAGS       = @FFLAGS@
-F77_LDFLAGS  = @F77_LDFLAGS@
-F77_LIBS     = @F77_LIBS@
-
-MPIF77       = @MPIF77@
-MPI_INC_DIR  = @MPI_INC_DIR@
-MPI_FLAGS    = @MPI_FLAGS@
-MPIF77_LNKR  = @MPIF77_LNKR@
-MPI_LIB_DIR  = @MPI_LIB_DIR@
-MPI_LIBS     = @MPI_LIBS@
+CPP         = @CPP@
+CPPFLAGS    = @CPPFLAGS@
+CXX         = @CXX@
+CXXFLAGS    = @CXXFLAGS@
+LDFLAGS     = @LDFLAGS@
+LIBS        = @LIBS@
+MPICXX      = @MPICXX@
+MPI_INC_DIR = @MPI_INC_DIR@
+MPI_LIB_DIR = @MPI_LIB_DIR@
+MPI_LIBS    = @MPI_LIBS@
+MPI_FLAGS   = @MPI_FLAGS@
 
 BLAS_LAPACK_LIBS = @BLAS_LAPACK_LIBS@
 
@@ -52,17 +53,15 @@ EXS_INSTDIR = @EXS_INSTDIR@
 
 top_srcdir = $(srcdir)/../../..
 
-SUNDIALS_LIBS = $(top_builddir)/src/arkode/fcmix/libsundials_farkode.la     \
-                $(top_builddir)/src/arkode/libsundials_arkode.la            \
-                $(top_builddir)/src/nvec_par/libsundials_fnvecparallel.la \
-                $(top_builddir)/src/nvec_par/libsundials_nvecparallel.la
+SUNDIALS_INCS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-fortran-update = ${SHELL} ${top_builddir}/bin/fortran-update.sh
+SUNDIALS_LIBS = $(top_builddir)/src/arkode/libsundials_arkode.la $(top_builddir)/src/nvec_par/libsundials_nvecparallel.la
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
-EXAMPLES = 
+
+EXAMPLES = ark_heat2D
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}
@@ -71,34 +70,32 @@ EXECS = ${EXAMPLES:=${EXE_EXT}}
 
 all:
 	@for i in ${EXAMPLES} ; do \
-	  ${fortran-update} ${srcdir} $${i}.f ; \
-	  ${LIBTOOL} --mode=compile ${MPIF77} ${MPI_FLAGS} -I${MPI_INC_DIR} ${FFLAGS} -c ${builddir}/$${i}-updated.f ; \
-	  ${LIBTOOL} --mode=link ${MPIF77_LNKR} -o ${builddir}/$${i}${EXE_EXT} ${builddir}/$${i}-updated${OBJ_EXT} ${MPI_FLAGS} ${F77_LDFLAGS} ${SUNDIALS_LIBS} -L${MPI_LIB_DIR} ${MPI_LIBS} ${F77_LIBS} $(BLAS_LAPACK_LIBS) ; \
+	  $(LIBTOOL) --mode=compile $(MPICXX) $(CPPFLAGS) $(MPI_FLAGS) $(SUNDIALS_INCS) -I$(MPI_INC_DIR) $(CFLAGS) -c $(srcdir)/$${i}.cpp -o $${i}${OBJ_EXT} ; \
+	  $(LIBTOOL) --mode=link $(MPICXX) -o $(builddir)/$${i}$(EXE_EXT) $(builddir)/$${i}$(OBJ_EXT) $(MPI_FLAGS) $(CFLAGS) $(LDFLAGS) $(SUNDIALS_LIBS) -L$(MPI_LIB_DIR) $(MPI_LIBS) $(LIBS) $(BLAS_LAPACK_LIBS) ; \
 	done
 
 install:
-	$(mkinstalldirs) $(EXS_INSTDIR)/arkode/fcmix_parallel
-	$(INSTALL_FILE) Makefile_ex  $(EXS_INSTDIR)/arkode/fcmix_parallel/Makefile
-	$(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_parallel/README  $(EXS_INSTDIR)/arkode/fcmix_parallel/
+	$(mkinstalldirs) $(EXS_INSTDIR)/arkode/CXX_parallel
+	$(INSTALL_FILE) Makefile_ex $(EXS_INSTDIR)/arkode/CXX_parallel/Makefile
+	$(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_parallel/README $(EXS_INSTDIR)/arkode/CXX_parallel/
 	for i in ${EXAMPLES} ; do \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_parallel/$${i}.f   $(EXS_INSTDIR)/arkode/fcmix_parallel/ ; \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/fcmix_parallel/$${i}.out $(EXS_INSTDIR)/arkode/fcmix_parallel/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_parallel/$${i}.cpp $(EXS_INSTDIR)/arkode/CXX_parallel/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_parallel/$${i}.out $(EXS_INSTDIR)/arkode/CXX_parallel/ ; \
 	done
 
 uninstall:
-	rm -f $(EXS_INSTDIR)/arkode/fcmix_parallel/Makefile
-	rm -f $(EXS_INSTDIR)/arkode/fcmix_parallel/README
+	rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/Makefile
+	rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/README
 	for i in ${EXAMPLES} ; do \
-	  rm -f $(EXS_INSTDIR)/arkode/fcmix_parallel/$${i}.f ; \
-	  rm -f $(EXS_INSTDIR)/arkode/fcmix_parallel/$${i}.out ; \
+	  rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/$${i}.cpp ; \
+	  rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/$${i}.out ; \
 	done
-	$(rminstalldirs) $(EXS_INSTDIR)/arkode/fcmix_parallel
+	$(rminstalldirs) $(EXS_INSTDIR)/arkode/CXX_parallel
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 
 clean:
 	rm -rf .libs
 	rm -f *.lo *.o
-	rm -f *-updated.f
 	rm -f ${OBJECTS}
 	rm -f $(EXECS)
 

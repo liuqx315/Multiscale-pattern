@@ -9,7 +9,7 @@
 # All rights reserved.
 # For details, see the LICENSE file.
 # -----------------------------------------------------------------
-# Makefile for ARKODE serial examples
+# Makefile for ARKODE C serial examples
 #
 # @configure_input@
 # -----------------------------------------------------------------
@@ -66,8 +66,7 @@ EXAMPLES = ark_analytic \
            ark_heat1D \
 	   ark_KrylovDemo_prec \
 	   ark_robertson \
-	   ark_robertson_root #\
-	   #ark_analytic_sys
+	   ark_robertson_root
 
 EXAMPLES_BL = 
 
@@ -91,34 +90,34 @@ all:
 	fi
 
 install:
-	$(mkinstalldirs) $(EXS_INSTDIR)/arkode/serial
-	$(INSTALL_FILE) Makefile_ex $(EXS_INSTDIR)/arkode/serial/Makefile
-	$(INSTALL_FILE) $(top_srcdir)/examples/arkode/serial/README $(EXS_INSTDIR)/arkode/serial/
+	$(mkinstalldirs) $(EXS_INSTDIR)/arkode/C_serial
+	$(INSTALL_FILE) Makefile_ex $(EXS_INSTDIR)/arkode/C_serial/Makefile
+	$(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/README $(EXS_INSTDIR)/arkode/C_serial/
 	for i in ${EXAMPLES} ; do \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/serial/$${i}.c   $(EXS_INSTDIR)/arkode/serial/ ; \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/serial/$${i}.out $(EXS_INSTDIR)/arkode/serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/$${i}.c   $(EXS_INSTDIR)/arkode/C_serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/$${i}.out $(EXS_INSTDIR)/arkode/C_serial/ ; \
 	done
 	@if test "X${LAPACK_ENABLED}" = "Xyes"; then \
 	for i in ${EXAMPLES_BL} ; do \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/serial/$${i}.c   $(EXS_INSTDIR)/arkode/serial/ ; \
-	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/serial/$${i}.out $(EXS_INSTDIR)/arkode/serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/$${i}.c   $(EXS_INSTDIR)/arkode/C_serial/ ; \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/$${i}.out $(EXS_INSTDIR)/arkode/C_serial/ ; \
 	done ; \
 	fi
 
 uninstall:
-	rm -f $(EXS_INSTDIR)/arkode/serial/Makefile
-	rm -f $(EXS_INSTDIR)/arkode/serial/README
+	rm -f $(EXS_INSTDIR)/arkode/C_serial/Makefile
+	rm -f $(EXS_INSTDIR)/arkode/C_serial/README
 	for i in ${EXAMPLES} ; do \
-	  rm -f $(EXS_INSTDIR)/arkode/serial/$${i}.c ; \
-	  rm -f $(EXS_INSTDIR)/arkode/serial/$${i}.out ; \
+	  rm -f $(EXS_INSTDIR)/arkode/C_serial/$${i}.c ; \
+	  rm -f $(EXS_INSTDIR)/arkode/C_serial/$${i}.out ; \
 	done
 	@if test "X${LAPACK_ENABLED}" = "Xyes"; then \
 	for i in ${EXAMPLES_BL} ; do \
-	  rm -f $(EXS_INSTDIR)/arkode/serial/$${i}.c ; \
-	  rm -f $(EXS_INSTDIR)/arkode/serial/$${i}.out ; \
+	  rm -f $(EXS_INSTDIR)/arkode/C_serial/$${i}.c ; \
+	  rm -f $(EXS_INSTDIR)/arkode/C_serial/$${i}.out ; \
 	done ; \
 	fi
-	$(rminstalldirs) $(EXS_INSTDIR)/arkode/serial
+	$(rminstalldirs) $(EXS_INSTDIR)/arkode/C_serial
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 
 clean:

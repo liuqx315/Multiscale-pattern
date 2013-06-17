@@ -2,7 +2,6 @@ List of serial ARKODE examples
 
   ark_analytic         : simple stiff, linear, ODE example
   ark_analytic_nonlin  : simple nonstiff, nonlinear ODE example
-  ark_analytic_sys     : simple stiff, linear, ODE system example
   ark_brusselator      : stiff chemical kinetics ODE system example (DIRK/DENSE)
   ark_brusselator1D    : stiff chemical kinetics PDE system example (DIRK/BAND)
   ark_heat1D           : stiff 1D heat PDE example (DIRK/PCG)

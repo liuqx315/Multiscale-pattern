@@ -2489,28 +2489,52 @@ if test "X${ARKODE_ENABLED}" = "Xyes"; then
     SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} src/arkode/fcmix/Makefile"
   fi
 
-  if test "X${SERIAL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/serial ; then
-    EXS_MODULES="${EXS_MODULES} examples/arkode/serial"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/serial/Makefile"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/serial/Makefile_ex:examples/templates/makefile_serial_C_ex.in"
+  if test "X${SERIAL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/C_serial ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/C_serial"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/C_serial/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/C_serial/Makefile_ex:examples/templates/makefile_serial_C_ex.in"
   fi
 
-  if test "X${SERIAL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/fcmix_serial ; then
-    EXS_MODULES="${EXS_MODULES} examples/arkode/fcmix_serial"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/fcmix_serial/Makefile"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/fcmix_serial/Makefile_ex:examples/templates/makefile_serial_F77_ex.in"
+  if test "X${SERIAL_CXX_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/CXX_serial ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/CXX_serial"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/CXX_serial/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/CXX_serial/Makefile_ex:examples/templates/makefile_serial_CXX_ex.in"
   fi
 
-  if test "X${PARALLEL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/parallel ; then
-    EXS_MODULES="${EXS_MODULES} examples/arkode/parallel"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/parallel/Makefile"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/parallel/Makefile_ex:examples/templates/makefile_parallel_C_ex.in"
+  if test "X${SERIAL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F77_serial ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/F77_serial"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F77_serial/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F77_serial/Makefile_ex:examples/templates/makefile_serial_F77_ex.in"
   fi
 
-  if test "X${PARALLEL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/fcmix_parallel ; then
-    EXS_MODULES="${EXS_MODULES} examples/arkode/fcmix_parallel"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/fcmix_parallel/Makefile"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/fcmix_parallel/Makefile_ex:examples/templates/makefile_parallel_F77_ex.in"
+  if test "X${SERIAL_F90_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F90_serial ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/F90_serial"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F90_serial/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F90_serial/Makefile_ex:examples/templates/makefile_serial_F90_ex.in"
+  fi
+
+  if test "X${PARALLEL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/C_parallel ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/C_parallel"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/C_parallel/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/C_parallel/Makefile_ex:examples/templates/makefile_parallel_C_ex.in"
+  fi
+
+  if test "X${PARALLEL_CXX_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/CXX_parallel ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/CXX_parallel"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/CXX_parallel/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/CXX_parallel/Makefile_ex:examples/templates/makefile_parallel_CXX_ex.in"
+  fi
+
+  if test "X${PARALLEL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F77_parallel ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/F77_parallel"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F77_parallel/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F77_parallel/Makefile_ex:examples/templates/makefile_parallel_F77_ex.in"
+  fi
+
+  if test "X${PARALLEL_F90_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F90_parallel ; then
+    EXS_MODULES="${EXS_MODULES} examples/arkode/F90_parallel"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F90_parallel/Makefile"
+    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/arkode/F90_parallel/Makefile_ex:examples/templates/makefile_parallel_F90_ex.in"
   fi
 
 fi
@@ -2729,37 +2753,89 @@ AC_DEFUN([SUNDIALS_POST_PROCESSING],
 # ARKODE module
 if test "X${ARKODE_ENABLED}" = "Xyes"; then
 
-  if test "X${SERIAL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/serial ; then
+  if test "X${SERIAL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/C_serial ; then
      if test "X${LAPACK_ENABLED}" = "Xyes"; then
        AC_CONFIG_COMMANDS([arkode_ser_ex_bl],
        [   
-       IN_FILE="examples/arkode/serial/Makefile_ex"
+       IN_FILE="examples/arkode/C_serial/Makefile_ex"
        SOLVER="ARKODE"
        SOLVER_LIB="sundials_arkode"
        SOLVER_FLIB=""
-       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_analytic_sys ark_brusselator ark_brusselator1D ark_heat1D ark_robertson ark_robertson_root"
+       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_brusselator ark_brusselator1D ark_heat1D ark_robertson ark_robertson_root"
        EXAMPLES_BL=""
        ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
        ])
      else
        AC_CONFIG_COMMANDS([arkode_ser_ex],
        [   
-       IN_FILE="examples/arkode/serial/Makefile_ex"
+       IN_FILE="examples/arkode/C_serial/Makefile_ex"
        SOLVER="ARKODE"
        SOLVER_LIB="sundials_arkode"
        SOLVER_FLIB=""
-       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_analytic_sys ark_brusselator ark_brusselator1D ark_heat1D ark_robertson ark_robertson_root"
+       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_brusselator ark_brusselator1D ark_heat1D ark_robertson ark_robertson_root"
        EXAMPLES_BL=""
        ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
        ])
      fi
   fi
 
-  if test "X${SERIAL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/fcmix_serial ; then
+  if test "X${SERIAL_CXX_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/CXX_serial ; then
+     if test "X${LAPACK_ENABLED}" = "Xyes"; then
+       AC_CONFIG_COMMANDS([arkode_cxx_ser_ex_bl],
+       [   
+       IN_FILE="examples/arkode/CXX_serial/Makefile_ex"
+       SOLVER="ARKODE"
+       SOLVER_LIB="sundials_arkode"
+       SOLVER_FLIB=""
+       EXAMPLES="ark_analytic_sys"
+       EXAMPLES_BL=""
+       ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
+       ])
+     else
+       AC_CONFIG_COMMANDS([arkode_cxx_ser_ex],
+       [   
+       IN_FILE="examples/arkode/CXX_serial/Makefile_ex"
+       SOLVER="ARKODE"
+       SOLVER_LIB="sundials_arkode"
+       SOLVER_FLIB=""
+       EXAMPLES="ark_analytic_sys"
+       EXAMPLES_BL=""
+       ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
+       ])
+     fi
+  fi
+
+  if test "X${SERIAL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F77_serial ; then
      if test "X${LAPACK_ENABLED}" = "Xyes"; then
        AC_CONFIG_COMMANDS([arkode_fser_ex_bl],
        [
-       IN_FILE="examples/arkode/fcmix_serial/Makefile_ex"
+       IN_FILE="examples/arkode/F77_serial/Makefile_ex"
+       SOLVER="ARKODE"
+       SOLVER_LIB="sundials_arkode"
+       SOLVER_FLIB="sundials_farkode"
+       EXAMPLES=""
+       EXAMPLES_BL=""
+       ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
+       ])
+     else
+       AC_CONFIG_COMMANDS([arkode_fser_ex],
+       [
+       IN_FILE="examples/arkode/F77_serial/Makefile_ex"
+       SOLVER="ARKODE"
+       SOLVER_LIB="sundials_arkode"
+       SOLVER_FLIB="sundials_farkode"
+       EXAMPLES=""
+       EXAMPLES_BL=""
+       ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
+       ])
+     fi
+  fi
+
+  if test "X${SERIAL_F90_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F90_serial ; then
+     if test "X${LAPACK_ENABLED}" = "Xyes"; then
+       AC_CONFIG_COMMANDS([arkode_f90_ser_ex_bl],
+       [
+       IN_FILE="examples/arkode/F90_serial/Makefile_ex"
        SOLVER="ARKODE"
        SOLVER_LIB="sundials_arkode"
        SOLVER_FLIB="sundials_farkode"
@@ -2768,9 +2844,9 @@ if test "X${ARKODE_ENABLED}" = "Xyes"; then
        ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
        ])
      else
-       AC_CONFIG_COMMANDS([arkode_fser_ex],
+       AC_CONFIG_COMMANDS([arkode_f90_ser_ex],
        [
-       IN_FILE="examples/arkode/fcmix_serial/Makefile_ex"
+       IN_FILE="examples/arkode/F90_serial/Makefile_ex"
        SOLVER="ARKODE"
        SOLVER_LIB="sundials_arkode"
        SOLVER_FLIB="sundials_farkode"
@@ -2781,10 +2857,23 @@ if test "X${ARKODE_ENABLED}" = "Xyes"; then
      fi
   fi
 
-  if test "X${PARALLEL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/parallel ; then
+  if test "X${PARALLEL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/C_parallel ; then
      AC_CONFIG_COMMANDS([arkode_par_ex],
      [
      IN_FILE="examples/arkode/parallel/Makefile_ex"
+     SOLVER="ARKODE"
+     SOLVER_LIB="sundials_arkode"
+     SOLVER_FLIB=""
+     EXAMPLES=""
+     EXAMPLES_BL=""
+     ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
+     ])
+  fi
+
+  if test "X${PARALLEL_CXX_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/CXX_parallel ; then
+     AC_CONFIG_COMMANDS([arkode_cxx_par_ex],
+     [
+     IN_FILE="examples/arkode/CXX_parallel/Makefile_ex"
      SOLVER="ARKODE"
      SOLVER_LIB="sundials_arkode"
      SOLVER_FLIB=""
@@ -2794,10 +2883,23 @@ if test "X${ARKODE_ENABLED}" = "Xyes"; then
      ])
   fi
 
-  if test "X${PARALLEL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/fcmix_parallel ; then
+  if test "X${PARALLEL_F77_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F77_parallel ; then
      AC_CONFIG_COMMANDS([arkode_fpar_ex],
      [
-     IN_FILE="examples/arkode/fcmix_parallel/Makefile_ex"
+     IN_FILE="examples/arkode/F77_parallel/Makefile_ex"
+     SOLVER="ARKODE"
+     SOLVER_LIB="sundials_arkode"
+     SOLVER_FLIB="sundials_farkode"
+     EXAMPLES=""
+     EXAMPLES_BL=""
+     ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
+     ])
+  fi
+
+  if test "X${PARALLEL_F90_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/arkode/F90_parallel ; then
+     AC_CONFIG_COMMANDS([arkode_f90_par_ex],
+     [
+     IN_FILE="examples/arkode/F90_parallel/Makefile_ex"
      SOLVER="ARKODE"
      SOLVER_LIB="sundials_arkode"
      SOLVER_FLIB="sundials_farkode"
@@ -3344,10 +3446,14 @@ Examples
 --------
 "
 
-echo "  Serial C examples:         ${SERIAL_C_EXAMPLES}"
-echo "  Parallel C examples:       ${PARALLEL_C_EXAMPLES}"
-echo "  Serial Fortran examples:   ${SERIAL_F77_EXAMPLES}"
-echo "  Parallel Fortran examples: ${PARALLEL_F77_EXAMPLES}"
+echo "  Serial C examples:           ${SERIAL_C_EXAMPLES}"
+echo "  Parallel C examples:         ${PARALLEL_C_EXAMPLES}"
+echo "  Serial C++ examples:         ${SERIAL_CXX_EXAMPLES}"
+echo "  Parallel C++ examples:       ${PARALLEL_CXX_EXAMPLES}"
+echo "  Serial Fortran examples:     ${SERIAL_F77_EXAMPLES}"
+echo "  Parallel Fortran examples:   ${PARALLEL_F77_EXAMPLES}"
+echo "  Serial Fortran90 examples:   ${SERIAL_F90_EXAMPLES}"
+echo "  Parallel Fortran90 examples: ${PARALLEL_F90_EXAMPLES}"
 
 fi
 
