@@ -16,9 +16,6 @@
  for t in the interval [0.0, 1e11], with initial conditions 
  Y0 = [1,0,0]. 
  
- In the input file, input_robertson.txt, we allow specification 
- of the desired relative and absolute tolerances.
- 
  This program solves the problem with one of the solvers, ERK, 
  DIRK or ARK.  For DIRK and ARK, implicit subsystems are solved 
  using a Newton iteration with the ARKDENSE dense linear solver, 

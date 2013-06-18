@@ -27,11 +27,6 @@
  centered differences, with the data distributed over N points 
  on a uniform spatial grid.
 
- The number of spatial points N, the parameters a, b, du, dv, 
- dw and ep, as well as the desired relative and absolute solver 
- tolerances, are provided in the input file 
- input_brusselator1D.txt.
- 
  This program solves the problem with the BDF method, using a
  Newton iteration with the CVBAND band linear solver, and a
  user-supplied Jacobian routine.
@@ -89,7 +84,16 @@ int main()
   int Nvar = 3;                 /* number of solution fields */
   UserData udata = NULL;
   realtype *data;
-  long int N, NEQ, i;
+  long int N = 201;             /* spatial mesh size */
+  realtype a = 0.6;             /* problem parameters */
+  realtype b = 2.0;
+  realtype du = 0.025;
+  realtype dv = 0.025;
+  realtype dw = 0.025;
+  realtype ep = 1.0e-5;         /* stiffness parameter */
+  realtype reltol = 1.0e-6;     /* tolerances */
+  realtype abstol = 1.0e-10;
+  long int NEQ, i;
 
   /* general problem variables */
   int flag;                     /* reusable error-checking flag */
@@ -98,30 +102,6 @@ int main()
   N_Vector vmask = NULL;
   N_Vector wmask = NULL;
   void *arkode_mem = NULL;      /* empty ARKode memory structure */
-
-  /* read problem parameter and tolerances from input file:
-     N - number of spatial discretization points
-     a - constant forcing on u
-     b - steady-state value of w
-     du - diffusion coefficient for u
-     dv - diffusion coefficient for v
-     dw - diffusion coefficient for w
-     ep - stiffness parameter
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  double a, b, du, dv, dw, ep, reltol, abstol;
-  FILE *FID;
-  FID = fopen("input_brusselator1D.txt","r");
-  flag = fscanf(FID,"  N = %li\n", &N);
-  flag = fscanf(FID,"  a = %lf\n", &a);
-  flag = fscanf(FID,"  b = %lf\n", &b);
-  flag = fscanf(FID,"  du = %lf\n", &du);
-  flag = fscanf(FID,"  dv = %lf\n", &dv);
-  flag = fscanf(FID,"  dw = %lf\n", &dw);
-  flag = fscanf(FID,"  ep = %lf\n", &ep);
-  flag = fscanf(FID,"  reltol = %lf\n", &reltol);
-  flag = fscanf(FID,"  abstol = %lf\n", &abstol);
-  fclose(FID);
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
@@ -208,7 +188,7 @@ int main()
   if (check_flag(&flag, "ARKDlsSetBandJacFn", 1)) return 1;
 
   /* output spatial mesh to disk */
-  FID = fopen("bruss_mesh.txt","w");
+  FILE *FID = fopen("bruss_mesh.txt","w");
   for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
   fclose(FID);
 

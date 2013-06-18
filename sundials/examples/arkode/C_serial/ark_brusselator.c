@@ -36,10 +36,7 @@
  *    during the first 0.3 time units, and all then proceed very 
  *    smoothly for the remainder of the simulation.
  *
- * These tests are selected within the input file (test = {1,2,3}), 
- * with the default set to test 2 in case the input is invalid.
- * Also in the input file, we allow specification of the desired 
- * relative and absolute tolerances.
+ * This file is hard-coded to use test 2.
  * 
  * This program solves the problem with the DIRK method, using a
  * Newton iteration with the ARKDENSE dense linear solver, and a
@@ -76,29 +73,15 @@ int main()
   realtype dTout = RCONST(1.0);  /* time between outputs */
   long int NEQ = 3;              /* number of dependent vars. */
   int Nt = ceil(Tf/dTout);       /* number of output times */
+  int test = 2;                  /* test problem to run */
+  realtype reltol = 1.0e-6;      /* tolerances */
+  realtype abstol = 1.0e-10;
   realtype a, b, ep, u0, v0, w0;
 
   /* general problem variables */
   int flag;                      /* reusable error-checking flag */
   N_Vector y = NULL;             /* empty vector for storing solution */
   void *arkode_mem = NULL;       /* empty ARKode memory structure */
-
-  /* read problem parameter and tolerances from input file:
-     test   - test problem choice
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  int test;
-  double reltol_, abstol_;
-  FILE *FID;
-  FID = fopen("input_brusselator.txt","r");
-  flag = fscanf(FID,"  test = %i\n", &test);
-  flag = fscanf(FID,"  reltol = %lf\n", &reltol_);
-  flag = fscanf(FID,"  abstol = %lf\n", &abstol_);
-  fclose(FID);
-
-  /* convert the inputs to 'realtype' format */
-  realtype reltol = reltol_;
-  realtype abstol = abstol_;
 
   /* set up the test problem according to the desired input */
   if (test == 1) {

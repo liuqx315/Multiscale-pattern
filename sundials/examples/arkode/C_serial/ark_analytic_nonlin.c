@@ -39,25 +39,13 @@ int main()
   realtype Tf = RCONST(10.0);    /* final time */
   realtype dTout = RCONST(1.0);  /* time between outputs */
   long int NEQ = 1;              /* number of dependent vars. */
+  realtype reltol = 1.0e-6;      /* tolerances */
+  realtype abstol = 1.0e-10;
 
   /* general problem variables */
   int flag;                      /* reusable error-checking flag */
   N_Vector y = NULL;             /* empty vector for storing solution */
   void *arkode_mem = NULL;       /* empty ARKode memory structure */
-
-  /* read problem parameter and tolerances from input file:
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  double reltol_, abstol_;
-  FILE *FID;
-  FID=fopen("input_analytic_nonlin.txt","r");
-  flag = fscanf(FID,"  reltol = %lf\n", &reltol_);
-  flag = fscanf(FID,"  abstol = %lf\n", &abstol_);
-  fclose(FID);
-
-  /* convert the inputs to 'realtype' format */
-  realtype reltol = reltol_;
-  realtype abstol = abstol_;
 
   /* Initial problem output */
   printf("\nAnalytical ODE test problem:\n");
