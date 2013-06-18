@@ -22,7 +22,7 @@ SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
 # compilation flags 
 CFLAGS = -O2
 FFLAGS = -O2
-CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX
+CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
@@ -30,7 +30,7 @@ CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
 INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial
+LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
 FLIBS = -L../../install/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
 
 # listing of all test routines
