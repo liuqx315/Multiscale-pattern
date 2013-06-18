@@ -62,6 +62,7 @@ rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
 
 EXAMPLES = # none yet
+EXTRAFILES = # none yet
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}
@@ -81,6 +82,9 @@ install:
 	for i in ${EXAMPLES} ; do \
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_parallel/$${i}.c   $(EXS_INSTDIR)/arkode/C_parallel/ ; \
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_parallel/$${i}.out $(EXS_INSTDIR)/arkode/C_parallel/ ; \
+	done
+	for i in ${EXTRAFILES} ; do \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_parallel/$${i} $(EXS_INSTDIR)/arkode/C_parallel/ ; \
 	done
 
 uninstall:
