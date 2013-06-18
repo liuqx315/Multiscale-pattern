@@ -116,6 +116,12 @@ int main(int argc, char* argv[]) {
   realtype T0 = RCONST(0.0);   // initial time 
   realtype Tf = RCONST(0.3);   // final time 
   int Nt = 20;                 // total number of output times 
+  long int nx = 60;            // spatial mesh size
+  long int ny = 120;
+  realtype kx = 0.5;           // heat conductivity coefficients
+  realtype ky = 0.75;
+  realtype rtol = 1.e-5;       // relative and absolute tolerances
+  realtype atol = 1.e-10;
   UserData *udata = NULL;
   realtype *data;
   long int N, Ntot, i, j;
@@ -131,43 +137,6 @@ int main(int argc, char* argv[]) {
   if (check_flag(&flag, "MPI_Init", 1)) return 1;
   flag = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   if (check_flag(&flag, "MPI_Comm_rank", 1)) return 1;
-
-  /* root process reads problem parameters from input file and 
-     broadcasts to other processes */
-  double kx, ky, rtol_, atol_, dbuff[4];
-  long int nx, ny, ibuff[2];
-  if (myid == 0) {
-    FILE *FID;
-    FID = fopen("input_heat2D.txt","r");
-    flag = fscanf(FID,"nx = %li\n", &nx);
-    flag = fscanf(FID,"ny = %li\n", &ny);
-    flag = fscanf(FID,"kx = %lf\n", &kx);
-    flag = fscanf(FID,"ky = %lf\n", &ky);
-    flag = fscanf(FID,"rtol = %lf\n", &rtol_);
-    flag = fscanf(FID,"atol = %lf\n", &atol_);
-    fclose(FID);
-    ibuff[0] = nx;    // pack buffers
-    ibuff[1] = ny;
-    dbuff[0] = kx;
-    dbuff[1] = ky;
-    dbuff[2] = rtol_;
-    dbuff[3] = atol_;
-  }
-  // perform broadcast
-  flag = MPI_Bcast(ibuff, 2, MPI_LONG, 0, MPI_COMM_WORLD);
-  if (check_flag(&flag, "MPI_Bcast", 1)) return 1;
-  flag = MPI_Bcast(dbuff, 4, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  if (check_flag(&flag, "MPI_Bcast", 1)) return 1;
-  nx = ibuff[0];       // unpack buffers
-  ny = ibuff[1];
-  kx = dbuff[0];
-  ky = dbuff[1];
-  rtol_ = dbuff[2];
-  atol_ = dbuff[3];
-
-  // convert input tolerances to realtype type 
-  realtype rtol = rtol_;      // relative tolerance 
-  realtype atol = atol_;      // absolute tolerance 
 
   // allocate and fill udata structure 
   udata = new UserData;
