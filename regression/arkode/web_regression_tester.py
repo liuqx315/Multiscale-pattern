@@ -115,15 +115,16 @@ atol = 1.e-10;
 
 # open test results file
 now = datetime.today()
-s = "regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d.html" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+s = "results/regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d.html" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
 f = open(s,'w')
 
 # create test results directory
-outdir = "regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+outdir = "results/regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
 os.mkdir(outdir)
 
 # print header
 f.write("<br>Tests run on %i/%i/%i at %.2i:%.2i:%.2i<br>\n" % (now.month, now.day, now.year, now.hour, now.minute, now.second))
+f.write("<br><a href=\"regression_results_old.shtml\">Previous regression test results</a><br>")
 
 
 # run tests with base set of parameters to ensure everything runs
@@ -204,5 +205,15 @@ f.write("[\"oversolve\" is defined as tolerance/error (ideally over 1.0)\n")
 # close output file
 f.close()
     
+
+# copy output file to overwrite previous "new" results
+s2 = "%.4i/%.2i/%.2i -- %.2d:%.2d:%.2d" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+shutil.copy(s,"regression_newresults.html")
+
+# append new file name to "oldresults" list
+f2 = open("regression_oldresults.html","a")
+f2.write("<a href=\"" + s + "\">" + s2 + "</a><br>\n")
+f2.close()
+
 
 ##### end of script #####

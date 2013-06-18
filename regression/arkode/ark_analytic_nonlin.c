@@ -182,7 +182,7 @@ int main()
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
   printf("   Error: max = %g, rms = %g\n", errI, err2);
-  printf("   Oversolve = %g\n\n", reltol/err2);
+  printf("   Oversolve = %g\n\n", reltol/(err2+1.e-10*reltol));
 
   /* Free y vector */
   N_VDestroy_Serial(y);
