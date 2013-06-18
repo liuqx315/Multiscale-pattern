@@ -201,7 +201,7 @@ program driver
   print '(A,8(es10.2))', '     y(Tf) =', y
   print '(A,8(es10.2))', '  yref(Tf) =', ytrue
   print '(A,8(es10.2))', '     error =', ytrue-y
-  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ)
+  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-10)
   print *, '  '
 
   ! clean up
