@@ -384,7 +384,7 @@ int main(int argc, char* argv[]) {
     cout << "   Total number of nonlinear solver convergence failures = " << ncfn << "\n";
     cout << "   Total number of error test failures = " << netf << "\n";
     cout << "   Error: max = " << errI << ", rms = " << err2 << "\n";
-    cout << "   Oversolve = " << reltol/err2 << "\n\n";
+    cout << "   Oversolve = " << reltol/(err2+1.e-10*reltol) << "\n\n";
   }
 
   // Clean up and return with successful completion 

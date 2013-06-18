@@ -202,7 +202,7 @@ program driver
   ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
   print *, ' ||error|| =', sqrt(sum((abs(ytrue-y)/(abs(ytrue)))**2)/NEQ)
-  print *, ' Oversolve =', rtol/sqrt(sum((abs(ytrue-y)/(abs(ytrue)))**2)/NEQ)
+  print *, ' Oversolve =', rtol/sqrt(sum((abs(ytrue-y)/(abs(ytrue)))**2)/NEQ+1.d-10)
   print *, '  '
 
   ! clean up
