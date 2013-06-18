@@ -94,6 +94,9 @@ uninstall:
 	  rm -f $(EXS_INSTDIR)/arkode/C_parallel/$${i}.c ; \
 	  rm -f $(EXS_INSTDIR)/arkode/C_parallel/$${i}.out ; \
 	done
+	for i in ${EXTRAFILES} ; do \
+	  rm -f $(EXS_INSTDIR)/arkode/C_parallel/$${i} ; \
+	done
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode/C_parallel
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 

@@ -63,6 +63,7 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
 EXAMPLES = # none yet
+EXTRAFILES = # none yet
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}
@@ -84,6 +85,9 @@ install:
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_parallel/$${i}.f   $(EXS_INSTDIR)/arkode/F77_parallel/ ; \
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_parallel/$${i}.out $(EXS_INSTDIR)/arkode/F77_parallel/ ; \
 	done
+	for i in ${EXTRAFILES} ; do \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/F77_parallel/$${i} $(EXS_INSTDIR)/arkode/F77_parallel/ ; \
+	done
 
 uninstall:
 	rm -f $(EXS_INSTDIR)/arkode/F77_parallel/Makefile
@@ -91,6 +95,9 @@ uninstall:
 	for i in ${EXAMPLES} ; do \
 	  rm -f $(EXS_INSTDIR)/arkode/F77_parallel/$${i}.f ; \
 	  rm -f $(EXS_INSTDIR)/arkode/F77_parallel/$${i}.out ; \
+	done
+	for i in ${EXTRAFILES} ; do \
+	  rm -f $(EXS_INSTDIR)/arkode/F77_parallel/$${i} ; \
 	done
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode/F77_parallel
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
