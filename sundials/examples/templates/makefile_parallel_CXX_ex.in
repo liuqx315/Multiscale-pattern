@@ -37,7 +37,7 @@ includedir   = @includedir@
 libdir       = @libdir@
 
 CPP         = @CPP@
-CPPFLAGS    = @CPPFLAGS@
+CPPFLAGS    = @CPPFLAGS@ -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX -DLAM_BUILDING
 CXX         = @CXX@
 CXXFLAGS    = @CXXFLAGS@
 LDFLAGS     = @LDFLAGS@
