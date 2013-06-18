@@ -1,19 +1,37 @@
 ###################################################################
 #  Daniel R. Reynolds, SMU Mathematics
-#  Copyright 2012; all rights reserved
+#  Copyright 2013; all rights reserved
+#
+#  Regression directory Makefile: assumes that SUNDIALS+ARKode
+#  has been built in this same source repository, with the 
+#  directory structure:
+#      <arkode>/regression  -- parent of this directory
+#      <arkode>/sundials    -- SUNDIALS source files
+#      <arkode>/install     -- SUNDIALS+ARKode install location
 ###################################################################
 
-# Make.machine is used for setting machine-dependent compilation
-# variables: e.g. compilers, libraries, F90-to-C conversion vars
-include ../../Make.machine
+# compilers (assumes standard MPICH/OpenMPI compiler wrappers)
+CC = mpicc
+CXX = mpicxx
+F90 = mpif90
+
+# SUNDIALS definitions (assumes standard installation)
+SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
+            -DSUNDIALS_DOUBLE_PRECISION
+
+# compilation flags 
+CFLAGS = -O2
+FFLAGS = -O2
+CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../../include/
-LIBS = ../../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
+INCS = -I../../install/include/
+LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial
+FLIBS = -L../../install/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
@@ -48,34 +66,34 @@ all : ${TESTS}
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_bruss.exe : ark_bruss.f90
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_emep.exe : ark_emep.f90 emep.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_hires.exe : ark_hires.f90 hires.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_medakzo.exe : ark_medakzo.f90 medakzo.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_orego.exe : ark_orego.f90 orego.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_pollu.exe : ark_pollu.f90 pollu.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_ringmod.exe : ark_ringmod.f90 ringmod.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_rober.exe : ark_rober.f90 rober.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_vdpol.exe : ark_vdpol.f90 vdpol.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
-	${F90} ${FFLAGS} $^ ${LIBS} ${LDFLAGS} -o $@
+	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 clean :
 	\rm -f *.o *.exe
