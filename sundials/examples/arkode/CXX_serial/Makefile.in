@@ -113,6 +113,9 @@ uninstall:
 	  rm -f $(EXS_INSTDIR)/arkode/CXX_serial/$${i}.out ; \
 	done ; \
 	fi
+	for i in ${EXTRAFILES} ; do \
+	  rm -f $(EXS_INSTDIR)/arkode/CXX_serial/$${i} ; \
+	done
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode/CXX_serial
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 

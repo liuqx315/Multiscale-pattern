@@ -94,6 +94,9 @@ uninstall:
 	  rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/$${i}.cpp ; \
 	  rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/$${i}.out ; \
 	done
+	for i in ${EXTRAFILES} ; do \
+	  rm -f $(EXS_INSTDIR)/arkode/CXX_parallel/$${i} ; \
+	done
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode/CXX_parallel
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 

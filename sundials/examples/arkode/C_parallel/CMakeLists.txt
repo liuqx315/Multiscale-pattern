@@ -76,7 +76,7 @@ IF(EXAMPLES_INSTALL)
 
   # Install the extra files
   FOREACH(extrafile ${ARKODE_extras})
-    INSTALL(FILES ${extrafile} DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/CXX_parallel)
+    INSTALL(FILES ${extrafile} DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/C_parallel)
   ENDFOREACH(extrafile ${ARKODE_extras})
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates

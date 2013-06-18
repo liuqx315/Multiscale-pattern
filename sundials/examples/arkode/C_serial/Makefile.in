@@ -70,6 +70,11 @@ EXAMPLES = ark_analytic \
 
 EXAMPLES_BL = 
 
+EXTRAFILES = plot_brusselator1D.py \
+             plot_heat1D.py \
+             plot_sol.py \
+             plot_sol_log.py
+
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 OBJECTS_BL = ${EXAMPLES_BL:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}
@@ -103,6 +108,9 @@ install:
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/$${i}.out $(EXS_INSTDIR)/arkode/C_serial/ ; \
 	done ; \
 	fi
+	for i in ${EXTRAFILES} ; do \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/C_serial/$${i} $(EXS_INSTDIR)/arkode/C_serial/ ; \
+	done
 
 uninstall:
 	rm -f $(EXS_INSTDIR)/arkode/C_serial/Makefile
@@ -117,6 +125,9 @@ uninstall:
 	  rm -f $(EXS_INSTDIR)/arkode/C_serial/$${i}.out ; \
 	done ; \
 	fi
+	for i in ${EXTRAFILES} ; do \
+	  rm -f $(EXS_INSTDIR)/arkode/C_serial/$${i} ; \
+	done
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode/C_serial
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 
