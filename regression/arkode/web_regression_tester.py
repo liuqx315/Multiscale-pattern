@@ -123,7 +123,7 @@ outdir = "regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d" % (now.year, now.mon
 os.mkdir(outdir)
 
 # print header
-f.write("<br>Tests run on %i/%i/%i at %i:%i:%i<br>\n" % (now.month, now.day, now.year, now.hour, now.minute, now.second))
+f.write("<br>Tests run on %i/%i/%i at %.2i:%.2i:%.2i<br>\n" % (now.month, now.day, now.year, now.hour, now.minute, now.second))
 
 
 # run tests with base set of parameters to ensure everything runs
