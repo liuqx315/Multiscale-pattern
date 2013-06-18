@@ -62,6 +62,7 @@ rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
 
 EXAMPLES = ark_heat2D
+EXTRAFILES = plot_heat2d.py
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}
@@ -81,6 +82,9 @@ install:
 	for i in ${EXAMPLES} ; do \
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_parallel/$${i}.cpp $(EXS_INSTDIR)/arkode/CXX_parallel/ ; \
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_parallel/$${i}.out $(EXS_INSTDIR)/arkode/CXX_parallel/ ; \
+	done
+	for i in ${EXTRAFILES} ; do \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_parallel/$${i} $(EXS_INSTDIR)/arkode/CXX_parallel/ ; \
 	done
 
 uninstall:
