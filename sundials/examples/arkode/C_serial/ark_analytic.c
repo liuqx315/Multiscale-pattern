@@ -17,7 +17,7 @@
  * lamda should be negative to result in a well-posed ODE; for values
  * with magnitude larger than 100 the problem becomes quite stiff.
  *
- * In the example input file, we choose lamda = -100.
+ * In this example, we choose lamda = -100.
  * 
  * This program solves the problem with the DIRK method,
  * Newton iteration with the ARKDENSE dense linear solver, and a
@@ -53,28 +53,14 @@ int main()
   realtype Tf = RCONST(10.0);     /* final time */
   realtype dTout = RCONST(1.0);   /* time between outputs */
   long int NEQ = 1;               /* number of dependent vars. */
+  realtype reltol = 1.0e-6;       /* tolerances */
+  realtype abstol = 1.0e-10;
+  realtype lamda  = -100.0;       /* stiffness parameter */
 
   /* general problem variables */
   int flag;                       /* reusable error-checking flag */
   N_Vector y = NULL;              /* empty vector for storing solution */
   void *arkode_mem = NULL;        /* empty ARKode memory structure */
-
-  /* read problem parameter and tolerances from input file:
-     lamda  - problem stiffness parameter
-     reltol - desired relative tolerance
-     abstol - desired absolute tolerance */
-  double reltol_, abstol_, lamda_;
-  FILE *FID;
-  FID = fopen("input_analytic.txt","r");
-  flag = fscanf(FID,"  lamda = %lf\n",  &lamda_);
-  flag = fscanf(FID,"  reltol = %lf\n", &reltol_);
-  flag = fscanf(FID,"  abstol = %lf\n", &abstol_);
-  fclose(FID);
-
-  /* convert the inputs to 'realtype' format */
-  realtype reltol = reltol_;
-  realtype abstol = abstol_;
-  realtype lamda  = lamda_;
 
   /* Initial diagnostics output */
   printf("\nAnalytical ODE test problem:\n");
