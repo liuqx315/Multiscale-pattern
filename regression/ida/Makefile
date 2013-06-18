@@ -1,19 +1,31 @@
 ###################################################################
 #  Daniel R. Reynolds, SMU Mathematics
-#  Copyright 2012; all rights reserved
+#  Copyright 2013; all rights reserved
+#
+#  Regression directory Makefile: assumes that SUNDIALS+ARKode
+#  has been built in this same source repository, with the 
+#  directory structure:
+#      <arkode>/regression  -- parent of this directory
+#      <arkode>/sundials    -- SUNDIALS source files
+#      <arkode>/install     -- SUNDIALS+ARKode install location
 ###################################################################
 
-# Make.machine is used for setting machine-dependent compilation
-# variables: e.g. compilers, libraries, F90-to-C conversion vars
-include ../../Make.machine
+# compilers (assumes standard MPICH/OpenMPI compiler wrappers)
+CC = mpicc
+
+# SUNDIALS definitions (assumes standard installation)
+SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
+            -DSUNDIALS_DOUBLE_PRECISION
+
+# compilation flags 
+CFLAGS = -O2
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
-CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = ${MPI_INCD} ${SUND_INCD} ${C_INCD} -I../../include/
-LIBS = ../../sundials_extensions.a ${SUND_LIB} ${MPI_LIB}
+INCS = -I../../install/include/
+LIBS = -L../../install/lib -lsundials_ida -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = ida_brusselator1D_FEM.exe 
