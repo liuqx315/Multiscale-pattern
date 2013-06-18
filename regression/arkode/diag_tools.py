@@ -12,7 +12,10 @@ class ErrorTest:
     def __init__(self, step, h, dsm):
         self.index    = step;
         self.h        = h;
-        self.estimate = dsm;
+        if (dsm <= 0.0):
+            self.estimate = 1.e-10
+        else:
+            self.estimate = dsm;
         self.errfail  = 0;
         if (dsm > 1.0):
             self.errfail = 1;
