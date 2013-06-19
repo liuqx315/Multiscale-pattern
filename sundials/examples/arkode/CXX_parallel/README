@@ -1,4 +1,4 @@
-List of parallel ARKODE examples
+List of parallel ARKODE C++ examples
 
   ark_heat2D : 2-D diffusion (PCG with Jacobi preconditioner)
 
@@ -6,10 +6,10 @@ Sample results:
 
   SUNDIALS was built with the following options:
 
-  ./configure CC=gcc F77=gfortran CFLAGS="-g3 -O0" FFLAGS="-g3 -O0" --enable-examples
+  ./configure CC=mpicc F77=mpif90 CFLAGS="-O3" FFLAGS="-O3" --enable-examples
 
-  System Architecture: IA-32
-  Processor Type: Intel Pentium 4 Xeon DP (i686)
-  Operating System: Red Hat Enterprise Linux WS 3 (Taroon Update 7)
-  C/Fortran Compilers: gcc/gfortran v4.1.0
-  MPI Implementation: Open MPI v1.1
+  System Architecture: x86_64
+  Processor Type: Intel Xeon E5462
+  Operating System: Ubuntu 12.0.4 LTS
+  C/Fortran Compilers: gcc/gfortran v4.6.3
+  MPI: MPICH2 v1.4.1

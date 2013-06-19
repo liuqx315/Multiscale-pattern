@@ -18,10 +18,15 @@ SET(FARKODE_examples
   # none yet
   )
 
-# Add variable fcvode_bl_examples with the names of the serial FCVODE examples
+# Add variable fcvode_bl_examples with the names of the serial FARKODE examples
 # that use Lapack
 
-SET(FCVODE_examples_BL
+SET(FARKODE_examples_BL
+  )
+
+# Add variable ARKODE_extras with the names of auxiliary files to install
+
+SET(ARKODE_extras
   )
 
 # Specify libraries to link against (through the target that was used to 
@@ -76,6 +81,11 @@ IF(EXAMPLES_INSTALL)
 
   # Install the README file
   INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)
+
+  # Install the extra files
+  FOREACH(extrafile ${ARKODE_extras})
+    INSTALL(FILES ${extrafile} DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)
+  ENDFOREACH(extrafile ${ARKODE_extras})
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
   SET(SOLVER "ARKODE")

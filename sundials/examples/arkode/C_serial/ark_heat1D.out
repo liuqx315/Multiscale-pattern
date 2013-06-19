@@ -1,0 +1,29 @@
+
+1D Heat PDE test problem:
+  N = 201
+  diffusion coefficient:  k = 0.5
+        t      ||u||_rms
+   -------------------------
+    0.000000    0.000000
+    0.100000    0.000583
+    0.200000    0.000913
+    0.300000    0.001118
+    0.400000    0.001243
+    0.500000    0.001320
+    0.600000    0.001366
+    0.700000    0.001395
+    0.800000    0.001412
+    0.900000    0.001423
+    1.000000    0.001430
+   -------------------------
+
+Final Solver Statistics:
+   Internal solver steps = 272 (attempted = 272)
+   Total RHS evals:  Fe = 0,  Fi = 4066
+   Total linear solver setups = 0
+   Total linear iterations = 18932
+   Total number of Jacobian-vector products = 18932
+   Total number of linear solver convergence failures = 0
+   Total number of Newton iterations = 2702
+   Total number of nonlinear solver convergence failures = 0
+   Total number of error test failures = 0

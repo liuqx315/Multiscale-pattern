@@ -24,6 +24,11 @@ SET(FARKODE_examples
 SET(FCVODE_examples_BL
   )
 
+# Add variable ARKODE_extras with the names of auxiliary files to install
+
+SET(ARKODE_extras
+  )
+
 # Specify libraries to link against (through the target that was used to 
 # generate them) based on the value of the variable LINK_LIBRARY_TYPE
 
@@ -76,6 +81,11 @@ IF(EXAMPLES_INSTALL)
 
   # Install the README file
   INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial)
+
+  # Install the extra files
+  FOREACH(extrafile ${ARKODE_extras})
+    INSTALL(FILES ${extrafile} DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_serial)
+  ENDFOREACH(extrafile ${ARKODE_extras})
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
   SET(SOLVER "ARKODE")

@@ -19,10 +19,6 @@
  centered differences, with the data distributed over N points 
  on a uniform spatial grid.
 
- The number of spatial points N and the parameter k, as well as 
- the desired relative and absolute solver tolerances, are 
- provided in the input file input_heat1D.txt.
- 
  This program solves the problem with either an ERK or DIRK
  method.  For the DIRK method, we use a Newton iteration with 
  the PCG linear solver, and a user-supplied Jacobian-vector 
@@ -67,22 +63,14 @@ int main() {
   realtype atol = 1.e-10;      /* absolute tolerance */
   UserData udata = NULL;
   realtype *data;
-  long int N, i;
+  long int N = 201;            /* spatial mesh size */
+  realtype k = 0.5;            /* heat conductivity */
+  long int i;
 
   /* general problem variables */
   int flag;                 /* reusable error-checking flag */
   N_Vector y = NULL;             /* empty vector for storing solution */
   void *arkode_mem = NULL;        /* empty ARKode memory structure */
-
-  /* read problem parameter and tolerances from input file:
-     N - number of spatial discretization points
-     k - diffusion coefficient */
-  double k;
-  FILE *FID;
-  FID = fopen("input_heat1D.txt","r");
-  flag = fscanf(FID,"  N = %li\n", &N);
-  flag = fscanf(FID,"  k = %lf\n", &k);
-  fclose(FID);
 
   /* allocate and fill udata structure */
   udata = (UserData) malloc(sizeof(*udata));
@@ -124,7 +112,7 @@ int main() {
   if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
   /* output mesh to disk */
-  FID=fopen("heat_mesh.txt","w");
+  FILE *FID=fopen("heat_mesh.txt","w");
   for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
   fclose(FID);
 
