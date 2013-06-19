@@ -1,0 +1,100 @@
+Unresolved User Complaints as of 29 May 2013
+
+* Jourdan, 3/29/10. Problems with FCVODE -- related to N type.
+  May be OK now, or may still be a problem on 64-bit machines.
+
+* Peter Brown, 5/25/10 and 3/23/11.  With IDA + Matlab, errors in monitor
+  function (no yp).  He has found and fixed these himself.
+  Also says SundialsTB/IDA (V2.4) does not have monitor function in 1-step
+  mode, but did in V2.3.
+
+* Allu, 6/25/10.  IDACalcIC failed; has question.  Most likely user error.
+  Waiting for response to my questions.
+
+* Platz, 7/26/10. Unable to compile in 64-bit mode.
+
+* Romanenko, 8/4/10.  Remove static variables in CVODES and IDAS to allow
+  multithreading.  (Radu says much more is needed.)
+
+* Amrit, 9/9/10.  Bug suspected in IDASensWrmsNormUpdate -- ewtS not
+  initialized.  Bug disputed.  Awaiting response to my request for more
+  data (5/19/11, resent 8/3/11).
+
+* Fort, 10/3/10.  Unable to install Fortran library under Windows7.
+
+* Teranishi, 11/23/10.  Wants option to not search for library links.
+
+* John T.G., 2/8/11.  Seg fault in CVodeMonitor -- incompatible w. Matlab.
+
+* Escobar, 2/13/11. Unable to install CVODE on Windows7, 64-bit machine.
+
+* Andersson, 2/23/11.  Suspects bug in CVODES/IDAS checkpointing scheme.
+  Says it is not solved with fix reported 11/23/11.  Awaiting more info from him.
+
+* Kandula, 3/8/11.  Getting different results from KINSOL in C vs C++ for
+  the same problem.  Awaiting response to request to do more debugging.
+
+* Pitt-Francis, 4/14/11.  Wants Package Version number as an accessible
+  constant at compile time.
+
+* Washington, 8/3/11.  In IDAS+Matlab, there is no Matlab interface to get ypS.
+
+* Kaira, 9/1/11.  Failure of code that combines Sundials and Boost.
+
+* Goebbert, 11/3/11.  On web-page (and elsewhere), note that none of the
+  solvers are thread-safe (?).
+
+* Abraham, 11/3/11. Would like CVODES to provide adjoint state values at
+  specified times, without doing any sensitivity analysis.  Awaiting more input.
+  May be partly resolved with use of (newly found) CVodeGetAdjY.
+
+* Er, 7/14/12. Failure to install under Windows/Cmake.
+
+* Stickel, 8/20/12.  Provides fixes to Makefile.in files to make use of the
+  DESTDIR option in auto-tools installation.  Fixed already?
+
+* Andersson, 9/12/12. Requesting a feature in CVODES/IDAS to toggle on/off
+  sensitivity components, without memory reallocation.
+
+* Andersson, 9/15/12. Proposes a different way to organize the support for
+  second-order sensitivity analysis.
+
+* Bogle, 10/5/12. Claims typo on config/SundialsMPIC.cmake.
+
+* Ollivier, 10/8/12. cvRoberts_dns failed to load without BLAS/LAPACK.
+  Bug in build files: By default, they add links to BLAS/LAPACK (if found).
+  Will change the default.
+
+* Puech, 10/18/12. Question on libraries to specify.
+
+* Barnard, 10/31/12. Question on relative speeds of LAPACK vs CVDense/CVBand.
+
+* Margolis, 11/17/12. Claims CVode gave ewt<=0 return even though all abstol>0.
+
+* Kharche, 11/19/12. Claims CVODE gives solution with wrong sign.
+
+* Nakhimovski, 11/26/12. Claims our CMake files need changes to build Sundials
+  under Windows 7 with Visual Studio.
+
+* Nakhimovski, 11/26/12. Asks for guidelines on KINSOL tolerance inputs.
+
+* Todorovski, 12/5/12. Asks for suggestions on CVODE/Java integration.
+
+* Leconte, 3/13/13.  CMake fails under Microsoft Visual Studio 2010 Express,
+
+* Huangfan, 3/26/13. Wants help installing in Ubuntu.
+
+* Oxberry, 3/27/13.  Plans to instrument Sundials solvers for timing, if not
+  already done by someone.
+
+* Ledru, 3/30/13.  Offers Sundials extensions with 3 RK methods, plus other
+  corrections.
+
+* Fredriksson, 4/3/13.  Wants to add ability to handle root functions that
+  are identically zero for an interval in time; asks our opinion.
+
+* Miller, 4/23/13.  Wants to call KINSol repeatedly after one call to
+  KINCreate/KINInit.  This now fails because of a bad mxnewtstep value.
+
+* Combourieu, 5/7/13. Trouble with installation under ubuntu/Kdevelop4.
+
