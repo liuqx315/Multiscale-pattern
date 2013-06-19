@@ -18,6 +18,11 @@ SET(FARKODE_examples
   # none yet
   )
 
+# Add variable ARKODE_extras with the names of auxiliary files to install
+
+SET(ARKODE_extras
+  )
+
 # Check whether we use MPI compiler scripts.
 # If yes, then change the Fortran compiler to the MPIF77 script.
 # If not, then add the MPI include directory for MPI headers.
@@ -73,6 +78,11 @@ IF(EXAMPLES_INSTALL)
 
   # Install the README file
   INSTALL(FILES README DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_parallel)
+
+  # Install the extra files
+  FOREACH(extrafile ${ARKODE_extras})
+    INSTALL(FILES ${extrafile} DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_parallel)
+  ENDFOREACH(extrafile ${ARKODE_extras})
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
   SET(SOLVER "ARKODE")

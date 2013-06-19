@@ -60,8 +60,8 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
 EXAMPLES = ark_analytic_sys
-
 EXAMPLES_BL = 
+EXTRAFILES = plot_sol.py
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 OBJECTS_BL = ${EXAMPLES_BL:=${OBJ_EXT}}
@@ -96,6 +96,9 @@ install:
 	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_serial/$${i}.out $(EXS_INSTDIR)/arkode/CXX_serial/ ; \
 	done ; \
 	fi
+	for i in ${EXTRAFILES} ; do \
+	  $(INSTALL_FILE) $(top_srcdir)/examples/arkode/CXX_serial/$${i} $(EXS_INSTDIR)/arkode/CXX_serial/ ; \
+	done
 
 uninstall:
 	rm -f $(EXS_INSTDIR)/arkode/CXX_serial/Makefile
@@ -110,6 +113,9 @@ uninstall:
 	  rm -f $(EXS_INSTDIR)/arkode/CXX_serial/$${i}.out ; \
 	done ; \
 	fi
+	for i in ${EXTRAFILES} ; do \
+	  rm -f $(EXS_INSTDIR)/arkode/CXX_serial/$${i} ; \
+	done
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode/CXX_serial
 	$(rminstalldirs) $(EXS_INSTDIR)/arkode
 
