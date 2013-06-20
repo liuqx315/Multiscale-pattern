@@ -2,11 +2,13 @@
 
 # Add variable farkode_SOURCES with the sources for the FARKODE library
 SET(farkode_SOURCES
+  farkadapt.c
   farkband.c
   farkbbd.c
   farkbp.c
   farkdense.c
   farkewt.c
+  farkexpstab.c
   farkjtimes.c
   farkode.c
   farkpreco.c

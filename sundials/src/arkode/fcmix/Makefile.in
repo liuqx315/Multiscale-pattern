@@ -49,7 +49,7 @@ LIB_REVISION = 0:1:0
 
 FARKODE_LIB    = libsundials_farkode.la
 
-FARKODE_SRC_FILES = farkband.c farkbbd.c farkbp.c farkdense.c farkewt.c farkjtimes.c farkode.c farkpreco.c farkroot.c
+FARKODE_SRC_FILES = farkadapt.c farkband.c farkbbd.c farkbp.c farkdense.c farkewt.c farkexpstab.c farkjtimes.c farkode.c farkpreco.c farkroot.c
 FARKODE_BL_SRC_FILES = farklapack.c
 
 FARKODE_OBJ_FILES = $(FARKODE_SRC_FILES:.c=.o)
@@ -94,6 +94,8 @@ clean:
 distclean: clean
 	rm -f Makefile
 
+farkadapt.lo: $(srcdir)/farkadapt.c
+	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $(srcdir)/farkadapt.c
 farkband.lo: $(srcdir)/farkband.c
 	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $(srcdir)/farkband.c
 farkbbd.lo: $(srcdir)/farkbbd.c
@@ -104,6 +106,8 @@ farkdense.lo: $(srcdir)/farkdense.c
 	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $(srcdir)/farkdense.c
 farkewt.lo: $(srcdir)/farkewt.c
 	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $(srcdir)/farkewt.c
+farkexpstab.lo: $(srcdir)/farkexpstab.c
+	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $(srcdir)/farkexpstab.c
 farkjtimes.lo: $(srcdir)/farkjtimes.c
 	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(INCLUDES) $(CFLAGS) -c $(srcdir)/farkjtimes.c
 farklapack.lo: $(srcdir)/farklapack.c

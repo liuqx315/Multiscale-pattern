@@ -8,7 +8,8 @@
   the ARKODE package.  See farkode.h for usage.
   NOTE: some routines are necessarily stored elsewhere to avoid
   linking problems.  Therefore, see also farkpreco.c, farkpsol.c,
-  and farkjtimes.c for all the available options.
+  farkjtimes.c, farkadapt.c, farkexpstab.c and farkvecresize.c 
+  for all the available options.
  --------------------------------------------------------------*/
 
 #include <stdio.h>
