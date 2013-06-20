@@ -298,6 +298,10 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_h0u    = ZERO;
   ark_mem->ark_next_h = ZERO;
 
+  /* Indicate that problem size is new */
+  ark_mem->ark_resized = TRUE;
+  ark_mem->ark_firststage = TRUE;
+
   /* Problem has been successfully initialized */
   ark_mem->ark_MallocDone = TRUE;
 
@@ -403,11 +407,384 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nge          = 0;
   ark_mem->ark_irfnd        = 0;
 
+  /* Indicate that problem size is new */
+  ark_mem->ark_resized = TRUE;
+  ark_mem->ark_firststage = TRUE;
+
   /* Initialize other integrator optional outputs */
   ark_mem->ark_h0u    = ZERO;
   ark_mem->ark_next_h = ZERO;
 
   /* Problem has been successfully re-initialized */
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeResize:
+
+ ARKodeResize re-initializes ARKODE's memory for a problem with a
+ changing vector size.  It is assumed that the problem dynamics 
+ before and after the vector resize will be comparable, so that 
+ all time-stepping heuristics prior to calling ARKodeResize 
+ remain valid after the call.  If instead the dynamics should be 
+ re-calibrated, the ARKode memory structure should be deleted 
+ with a call to ARKodeFree, and re-created with calls to 
+ ARKodeCreate and ARKodeInit.
+
+ To aid in the vector-resize operation, the user can supply a 
+ vector resize function, that will take as input an N_Vector with
+ the previous size, and return as output a corresponding vector 
+ of the new size.  If this function (of type ARKVecResizeFn) is 
+ not supplied (i.e. is set to NULL), then all existing N_Vectors 
+ will be destroyed and re-cloned from the input vector.
+
+ In the case that the dynamical time scale should be modified 
+ slightly from the previous time scale, an input "hscale" is 
+ allowed, that will re-scale the upcoming time step by the 
+ specified factor.  If a value <= 0 is specified, the default of 
+ 1.0 will be used.
+
+ Other arguments:
+   arkode_mem       Existing ARKode memory data structure.
+   ynew             The newly-sized solution vector, holding 
+                    the current dependent variable values.
+   t0               The current value of the independent 
+                    variable.
+   resize_data      User-supplied data structure that will be 
+                    passed to the supplied resize function.
+
+ The return value is ARK_SUCCESS = 0 if no errors occurred, or
+ a negative value otherwise.
+---------------------------------------------------------------*/
+int ARKodeResize(void *arkode_mem, N_Vector y0, 
+		 realtype hscale, realtype t0, 
+		 ARKVecResizeFn resize, void *resize_data)
+{
+  ARKodeMem ark_mem;
+  int ier;
+ 
+  /* Check arkode_mem */
+  if (arkode_mem==NULL) {
+    ARKProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeResize", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* Check if arkode_mem was allocated */
+  if (ark_mem->ark_MallocDone == FALSE) {
+    ARKProcessError(ark_mem, ARK_NO_MALLOC, "ARKODE", 
+		    "ARKodeResize", MSGARK_NO_MALLOC);
+    return(ARK_NO_MALLOC);
+  }
+
+  /* Check for legal input parameters */
+  if (y0 == NULL) {
+    ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeResize", MSGARK_NULL_Y0);
+    return(ARK_ILL_INPUT);
+  }
+  
+  /* Copy the input parameters into ARKODE state */
+  ark_mem->ark_tn = t0;
+  ark_mem->ark_tnew = t0;
+
+  /* Update time-stepping parameters */
+  /*   adjust upcoming step size depending on hscale */
+  if (hscale < 0.0)  hscale = 1.0;
+  if (hscale != 1.0) {
+
+    /* Encode hscale into ark_mem structure */
+    ark_mem->ark_eta = hscale;
+    ark_mem->ark_hprime = ark_mem->ark_h * hscale;
+
+    /* If next step would overtake tstop, adjust stepsize */
+    if ( ark_mem->ark_tstopset ) 
+      if ( (ark_mem->ark_tn+ark_mem->ark_hprime-ark_mem->ark_tstop)*ark_mem->ark_hprime > ZERO ) {
+	ark_mem->ark_hprime = (ark_mem->ark_tstop-ark_mem->ark_tn)*(ONE-FOUR*ark_mem->ark_uround);
+	ark_mem->ark_eta = ark_mem->ark_hprime/ark_mem->ark_h;
+      }
+
+  }
+
+  /* Determing change in vector sizes */
+  long int lrw1=0, liw1=0;
+  if (y0->ops->nvspace != NULL) 
+    N_VSpace(y0, &lrw1, &liw1);
+  long int lrw_diff = lrw1 - ark_mem->ark_lrw1;
+  long int liw_diff = liw1 - ark_mem->ark_liw1;
+  ark_mem->ark_lrw1 = lrw1;
+  ark_mem->ark_liw1 = liw1;
+
+  /* Resize the ARKode vectors */
+  /*     Vabstol */
+  if (ark_mem->ark_Vabstol != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_Vabstol);
+      ark_mem->ark_Vabstol = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_Vabstol, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     ark_Fe */
+  int i;
+  for (i=0; i<ARK_S_MAX; i++) {
+    if (ark_mem->ark_Fe[i] != NULL) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_Fe[i]);
+	ark_mem->ark_Fe[i] = N_VClone(y0);
+      } else {
+	if (resize(ark_mem->ark_Fe[i], y0, resize_data)) {
+	  ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "ARKodeResize", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+      ark_mem->ark_lrw += lrw_diff;
+      ark_mem->ark_liw += liw_diff;
+    }
+  }
+  /*     ark_Fi */
+  for (i=0; i<ARK_S_MAX; i++) {
+    if (ark_mem->ark_Fi[i] != NULL) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_Fi[i]);
+	ark_mem->ark_Fi[i] = N_VClone(y0);
+      } else {
+	if (resize(ark_mem->ark_Fi[i], y0, resize_data)) {
+	  ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "ARKodeResize", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+      ark_mem->ark_lrw += lrw_diff;
+      ark_mem->ark_liw += liw_diff;
+    }
+  }
+  /*     ewt */
+  if (ark_mem->ark_ewt != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_ewt);
+      ark_mem->ark_ewt = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_ewt, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     y */
+  if (ark_mem->ark_y != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_y);
+      ark_mem->ark_y = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_y, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     ycur */
+  if (ark_mem->ark_ycur != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_ycur);
+      ark_mem->ark_ycur = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_ycur, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     acor */
+  if (ark_mem->ark_acor != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_acor);
+      ark_mem->ark_acor = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_acor, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     sdata */
+  if (ark_mem->ark_sdata != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_sdata);
+      ark_mem->ark_sdata = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_sdata, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     tempv */
+  if (ark_mem->ark_tempv != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_tempv);
+      ark_mem->ark_tempv = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_tempv, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     ftemp */
+  if (ark_mem->ark_ftemp != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_ftemp);
+      ark_mem->ark_ftemp = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_ftemp, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     fold */
+  if (ark_mem->ark_fold != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_fold);
+      ark_mem->ark_fold = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_fold, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     fnew */
+  if (ark_mem->ark_fnew != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_fnew);
+      ark_mem->ark_fnew = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_fnew, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     yold */
+  if (ark_mem->ark_yold != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_yold);
+      ark_mem->ark_yold = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_yold, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+  /*     ynew */
+  if (ark_mem->ark_ynew != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_ynew);
+      ark_mem->ark_ynew = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_ynew, y0, resize_data)) {
+	ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+
+
+  /* Copy y0 into ark_ycur to set the current solution */
+  N_VScale(ONE, y0, ark_mem->ark_ycur);
+
+  /* Load updated error weights */
+  ier = ark_mem->ark_efun(ark_mem->ark_ycur,
+			  ark_mem->ark_ewt, 
+			  ark_mem->ark_e_data);
+  if (ier != 0) {
+    if (ark_mem->ark_itol == ARK_WF) 
+      ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKodeResize", MSGARK_EWT_FAIL);
+    else 
+      ARKProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		      "ARKodeResize", MSGARK_BAD_EWT);
+    return(ARK_ILL_INPUT);
+  }
+
+  /* Update the linear solver (retain routine names, but 
+     update their internal data structures).
+     NOTE: consider adding ark_lresize function (and implement 
+     for my solvers) that will grow the linear solver memory 
+     instead of deleting/reallocating as well. */
+  if (!ark_mem->ark_explicit) {
+    if (ark_mem->ark_lfree != NULL) {
+      ark_mem->ark_lfree(ark_mem);
+    }
+    if (ark_mem->ark_linit != NULL) {
+      ier = ark_mem->ark_linit(ark_mem);
+      if (ier != 0) {
+	ARKProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", 
+			"ARKodeResize", MSGARK_LINIT_FAIL);
+	return(ARK_LINIT_FAIL);
+      }
+    }
+  }
+
+  /* Fill initial ynew and fnew arrays */
+  N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_ynew);
+  ier = ARKFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
+		   ark_mem->ark_ftemp, ark_mem->ark_fnew);
+
+  /* Copy f(t0,y0) into ark_fold */
+  /* if (!ark_mem->ark_explicit) */
+  N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
+
+  /* Indicate that problem size is new */
+  ark_mem->ark_resized = TRUE;
+  ark_mem->ark_firststage = TRUE;
+  
+  /* Problem has been successfully re-sized */
   return(ARK_SUCCESS);
 }
 
@@ -638,7 +1015,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     if (ier!= ARK_SUCCESS) return(ier);
     
     /* Copy f(t0,y0) into ark_fold */
-    //    if (!ark_mem->ark_explicit)
+    /*   if (!ark_mem->ark_explicit)*/
     N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
     
     /* Set initial h (from H0 or ARKHin). */
@@ -704,7 +1081,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
        - check if we are close to tstop
          (adjust step size if needed)
   -------------------------------------------------------*/
-  if (ark_mem->ark_nst > 0) {
+  if (ark_mem->ark_nst > 0 && !ark_mem->ark_resized) {
 
     /* Estimate an infinitesimal time interval to be used as
        a roundoff for time quantities (based on current time 
@@ -825,7 +1202,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     ark_mem->ark_next_h = ark_mem->ark_h;
     
     /* Reset and check ewt */
-    if (ark_mem->ark_nst > 0) {
+    if (ark_mem->ark_nst > 0 && !ark_mem->ark_resized) {
       ewtsetOK = ark_mem->ark_efun(ark_mem->ark_ycur,
 				   ark_mem->ark_ewt, 
 				   ark_mem->ark_e_data);
@@ -2465,8 +2842,8 @@ static void ARKPredict(ARKodeMem ark_mem, int istage)
   realtype tau, tau_tol = 0.5;
   N_Vector yguess = ark_mem->ark_ycur;
 
-  /* if this is the first step, use initial condition as guess */
-  if (ark_mem->ark_nst == 0) {
+  /* if the first step (or if resized), use initial condition as guess */
+  if (ark_mem->ark_nst == 0 || ark_mem->ark_resized) {
     N_VScale(ONE, ark_mem->ark_ynew, yguess);
     return;
   }
@@ -2547,10 +2924,10 @@ static void ARKSet(ARKodeMem ark_mem)
 
   /* Update gamma */
   ark_mem->ark_gamma = ark_mem->ark_h * ARK_A(ark_mem->ark_Ai,i,i);
-  if (ark_mem->ark_nst == 0)  
+  if (ark_mem->ark_firststage)  
     ark_mem->ark_gammap = ark_mem->ark_gamma;
-  ark_mem->ark_gamrat = (ark_mem->ark_nst > 0) ? 
-    ark_mem->ark_gamma / ark_mem->ark_gammap : ONE;  /* protect x/x != 1.0 */
+  ark_mem->ark_gamrat = (ark_mem->ark_firststage) ? 
+    ONE : ark_mem->ark_gamma / ark_mem->ark_gammap;  /* protect x/x != 1.0 */
 }
 
 
@@ -2716,6 +3093,9 @@ static int ARKCompleteStep(ARKodeMem ark_mem, realtype dsm)
   ark_mem->ark_nst++;
   ark_mem->ark_hold = ark_mem->ark_h;
   ark_mem->ark_tnew = ark_mem->ark_tn;
+
+  /* turn off flag regarding resized problem */
+  ark_mem->ark_resized = FALSE;
 
   /* update error history array */
   ark_mem->ark_hadapt_ehist[2] = ark_mem->ark_hadapt_ehist[1];
@@ -2888,7 +3268,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
   /* Decide whether or not to call setup routine (if one exists) */
   if (ark_mem->ark_setupNonNull) {      
     callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
-      (ark_mem->ark_nni == 0) || 
+      (ark_mem->ark_firststage) || 
       (ark_mem->ark_nst >= ark_mem->ark_nstlp + ark_mem->ark_msbp) || 
       (ABS(ark_mem->ark_gamrat-ONE) > ark_mem->ark_dgmax);
   } else {  
@@ -2924,6 +3304,7 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 				vtemp1, vtemp2, vtemp3);
       ark_mem->ark_nsetups++;
       callSetup = FALSE;
+      ark_mem->ark_firststage = FALSE;
       ark_mem->ark_gamrat = ark_mem->ark_crate = ONE; 
       ark_mem->ark_gammap = ark_mem->ark_gamma;
       ark_mem->ark_nstlp  = ark_mem->ark_nst;
@@ -3009,8 +3390,6 @@ static int ARKNlsNewton(ARKodeMem ark_mem, int nflag)
 	fprintf(ark_mem->ark_diagfp, "    newt  %i  %19.16g  %19.16g\n", m, del, dcon);
     
       if (dcon <= ONE) {
-	ark_mem->ark_acnrm = (m==0) ? 
-	  del : N_VWrmsNorm(ark_mem->ark_acor, ark_mem->ark_ewt);
 	ark_mem->ark_jcur = FALSE;
 	ier = ARK_SUCCESS;
 	break;
@@ -3109,7 +3488,7 @@ static int ARKLs(ARKodeMem ark_mem, int nflag)
   /* Decide whether or not to call setup routine (if one exists) */
   if (ark_mem->ark_setupNonNull) {      
     callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
-      (ark_mem->ark_nst == 0) || 
+      (ark_mem->ark_firststage) || 
       (ABS(ark_mem->ark_gamrat-ONE) > TINY);
   } else {  
     ark_mem->ark_crate = ONE;
@@ -3132,8 +3511,10 @@ static int ARKLs(ARKodeMem ark_mem, int nflag)
 			      vtemp1, vtemp2, vtemp3);
     ark_mem->ark_nsetups++;
     callSetup = FALSE;
+    ark_mem->ark_firststage = FALSE;
     ark_mem->ark_gamrat = ark_mem->ark_crate = ONE; 
     ark_mem->ark_gammap = ark_mem->ark_gamma;
+    ark_mem->ark_nstlp  = ark_mem->ark_nst;
     
     /* Return if lsetup failed */
     if (ier < 0) return(ARK_LSETUP_FAIL);
@@ -3163,8 +3544,7 @@ static int ARKLs(ARKodeMem ark_mem, int nflag)
   ark_mem->ark_nni++;
   if (retval < 0)  return(ARK_LSOLVE_FAIL);
   
-  /* Get WRMS norm of correction; add correction to acor and y */
-  ark_mem->ark_acnrm = N_VWrmsNorm(b, ark_mem->ark_ewt);
+  /* Add correction to acor and y */
   N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
   N_VLinearSum(ONE, ark_mem->ark_ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
   return(ARK_SUCCESS);
@@ -3763,8 +4143,10 @@ static int ARKAdaptImpGus(ARKodeMem ark_mem, realtype *hnew)
     k2 = -ark_mem->ark_hadapt_k2 / ark_mem->ark_p;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
-    hcur = ark_mem->ark_h;
-    hrat = hcur / ark_mem->ark_hold;
+    /* hcur = ark_mem->ark_h; */
+    /* hrat = hcur / ark_mem->ark_hold; */
+    hcur = ark_mem->ark_hadapt_hhist[0];
+    hrat = hcur / ark_mem->ark_hadapt_hhist[1];
     h_acc = hcur * hrat * RPowerR(e1,k1) * RPowerR(e2,k2);
 
   }
@@ -3798,8 +4180,10 @@ static int ARKAdaptImExGus(ARKodeMem ark_mem, realtype *hnew)
     k3 = -ark_mem->ark_hadapt_k3 / ark_mem->ark_p;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
-    hcur = ark_mem->ark_h;
-    hrat = hcur / ark_mem->ark_hold;
+    /* hcur = ark_mem->ark_h; */
+    /* hrat = hcur / ark_mem->ark_hold; */
+    hcur = ark_mem->ark_hadapt_hhist[0];
+    hrat = hcur / ark_mem->ark_hadapt_hhist[1];
     /* implicit estimate */
     h_acc = hcur * hrat * RPowerR(e1,k3) * RPowerR(e2,k3);
     /* explicit estimate */

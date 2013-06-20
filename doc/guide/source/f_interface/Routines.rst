@@ -30,6 +30,13 @@ with the corresponding ARKODE functions, are as follows:
 
   - :c:func:`FARKEWTSET()` interfaces to :c:func:`ARKodeWFtolerances()`.
 
+  - :c:func:`FARKADAPTSET()` interfaces to :c:func:`ARKodeSetAdaptivityFn()`.
+
+  - :c:func:`FARKEXPSTABSET()` interfaces to :c:func:`ARKodeSetStabilityFn()`.
+
+  ..
+     - :c:func:`FARKSETDIAGNOSTICS()` interfaces to :c:func:`ARKodeSetDiagnostics()`.
+
   - :c:func:`FARKODE()` interfaces to :c:func:`ARKode()`, the
     ARKodeGet* functions (see :ref:`CInterface.OptionalOutputs`), 
     and to the optional output functions for the selected linear
@@ -90,36 +97,49 @@ with the corresponding ARKODE functions, are as follows:
 
 
 As with the native C interface, the FARKode solver interface requires
-the following user-supplied functions.  Each of which is listed with
-the corresponding internal interface function which calls it (and its
-type within ARKode):
+user-supplied functions to specify the ODE problem to be solved.  In
+contrast to the case of direct use of ARKode, and of most Fortran ODE
+solvers, the names of all user-supplied routines here are fixed, in
+order to maximize portability for the resulting mixed-language program. 
+As a result, whether using a purely implicit, purely explicit, or
+mixed implicit-explicit solver, two routines must be provided by the
+user (though one of which may do nothing):
 
 .. cssclass:: table-bordered
 
-+--------------------------+------------------------+-----------------------------------+
-| FARKODE routine          | ARKode routine         | ARKode interface                  |
-| (FORTRAN, user-supplied) | (C, interface)         | function type                     |
-+==========================+========================+===================================+
-| :c:func:`FARKIFUN()`     | FARKfi                 | :c:func:`ARKRhsFn()`              |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKEFUN()`     | FARKfe                 | :c:func:`ARKRhsFn()`              |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKDJAC()`     | FARKDenseJac           | :c:func:`ARKDlsDenseJacFn()`      |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKBJAC()`     | FARKBandJac            | :c:func:`ARKDlsBandJacFn()`       |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKPSET()`     | FARKPSet               | :c:func:`ARKSpilsPrecSetupFn()`   |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKPSOL()`     | FARKPSol               | :c:func:`ARKSpilsPrecSolveFn()`   |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKJTIMES()`   | FARKJtimes             | :c:func:`ARKSpilsJacTimesVecFn()` |
-+--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKEWT()`      | FARKEwtSet             | :c:func:`ARKEwtFn()`              |
-+--------------------------+------------------------+-----------------------------------+
++--------------------------+-----------------------------------+
+| FARKODE routine          | ARKode interface                  |
+| (FORTRAN, user-supplied) | function type                     |
++==========================+===================================+
+| :c:func:`FARKIFUN()`     | :c:func:`ARKRhsFn()`              |
++--------------------------+-----------------------------------+
+| :c:func:`FARKEFUN()`     | :c:func:`ARKRhsFn()`              |
++--------------------------+-----------------------------------+
 
-In contrast to the case of direct use of ARKode, and of most
-Fortran ODE solvers, the names of all user-supplied routines here are
-fixed, in order to maximize portability for the resulting
-mixed-language program. 
+In addition, as with the native C interface a user may provide
+additional routines to assist in the solution process.  Each of the
+following user-supplied routines is activated by calling the specified
+"activation" routine: 
 
+.. cssclass:: table-bordered
 
++--------------------------+-----------------------------------+-------------------------------+
+| FARKODE routine          | ARKode interface                  | FARKODE "activation" routine  |
+| (FORTRAN, user-supplied) | function type                     |                               |
++==========================+===================================+===============================+
+| :c:func:`FARKDJAC()`     | :c:func:`ARKDlsDenseJacFn()`      | :c:func:`FARKDENSESETJAC()`   |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKBJAC()`     | :c:func:`ARKDlsBandJacFn()`       |  :c:func:`FARKBANDSETJAC()`   |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKPSET()`     | :c:func:`ARKSpilsPrecSetupFn()`   |  :c:func:`FARKSPILSSETPREC()` |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKPSOL()`     | :c:func:`ARKSpilsPrecSolveFn()`   |  :c:func:`FARKSPILSSETPREC()` |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKJTIMES()`   | :c:func:`ARKSpilsJacTimesVecFn()` |  :c:func:`FARKSPILSSETJAC()`  |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKEWT()`      | :c:func:`ARKEwtFn()`              |  :c:func:`FARKEWTSET()`       |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKADAPT()`    | :c:func:`ARKAdaptFn()`            |  :c:func:`FARKADAPTSET()`     |
++--------------------------+-----------------------------------+-------------------------------+
+| :c:func:`FARKEXPSTAB()`  | :c:func:`ARKExpStabFn()`          |  :c:func:`FARKEXPSTABSET()`   |
++--------------------------+-----------------------------------+-------------------------------+

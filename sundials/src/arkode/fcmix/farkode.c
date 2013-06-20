@@ -8,7 +8,8 @@
   the ARKODE package.  See farkode.h for usage.
   NOTE: some routines are necessarily stored elsewhere to avoid
   linking problems.  Therefore, see also farkpreco.c, farkpsol.c,
-  and farkjtimes.c for all the available options.
+  farkjtimes.c, farkadapt.c, farkexpstab.c and farkvecresize.c 
+  for all the available options.
  --------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -425,6 +426,47 @@ void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c,
 {
   *ier = ARKodeSetARKTables(ARK_arkodemem, *s, *q, 
 			    *p, c, Ai, Ae, b, b2);
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKodeSetDiagnostics; see 
+   farkode.h for further details */
+void FARK_SETDIAGNOSTICS(char fname[], int *flen, int *ier)
+{
+  char *filename=NULL;   /* copy fname into array of specified length */
+  filename = (char *) malloc((*flen)*sizeof(char));
+  int i;
+  for (i=0; i<*flen; i++)  filename[i] = fname[i];
+  FILE *DFID=NULL;       /* open diagnostics output file */
+  DFID = fopen(filename,"w");
+  if (DFID == NULL) {
+    *ier = 1;
+    return;
+  }
+  *ier = ARKodeSetDiagnostics(ARK_arkodemem, DFID);
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran routine to close diagnostics output file; see farkode.h 
+   for further details */
+void FARK_STOPDIAGNOSTICS(int *ier)
+{
+  ARKodeMem ark_mem;
+  if (ARK_arkodemem == NULL) {
+    *ier = 1;
+    return;
+  }
+  ark_mem = (ARKodeMem) ARK_arkodemem;
+
+  if (ark_mem->ark_diagfp == NULL) {
+    *ier = 1;
+    return;
+  }
+  *ier = fclose(ark_mem->ark_diagfp);
   return;
 }
 
