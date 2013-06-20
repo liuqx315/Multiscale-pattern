@@ -104,6 +104,13 @@ program driver
   call FARKMalloc(T0, y, imex, 2, rtol, atols, &
                   iout, rout, ipar, rpar, ier)
 
+  ! set diagnostics output file
+  call FARKSetDiagnostics("diags_ark_rober.txt", 19, ier);
+  if (ier /= 0) then
+     print *, 'FARKSetDiagnostics error = ',ier
+     stop
+  endif
+  
   ! set optional inputs
   if (order /= 0) then
      call FARKSetIin('ORDER', order, ier)
@@ -210,10 +217,11 @@ program driver
   print *, '     y(Tf) =', y
   print *, '  yref(Tf) =', ytrue
   print *, '     error =', ytrue-y
-  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-10)
+  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-20)
   print *, '  '
 
   ! clean up
+  call FARKStopDiagnostics(ier);
   call FARKFree()
   deallocate(y, ytrue, rtols, atols)
 

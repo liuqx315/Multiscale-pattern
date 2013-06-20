@@ -431,6 +431,47 @@ void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c,
 
 /*=============================================================*/
 
+/* Fortran interface to C routine ARKodeSetDiagnostics; see 
+   farkode.h for further details */
+void FARK_SETDIAGNOSTICS(char fname[], int *flen, int *ier)
+{
+  char *filename=NULL;   /* copy fname into array of specified length */
+  filename = (char *) malloc((*flen)*sizeof(char));
+  int i;
+  for (i=0; i<*flen; i++)  filename[i] = fname[i];
+  FILE *DFID=NULL;       /* open diagnostics output file */
+  DFID = fopen(filename,"w");
+  if (DFID == NULL) {
+    *ier = 1;
+    return;
+  }
+  *ier = ARKodeSetDiagnostics(ARK_arkodemem, DFID);
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran routine to close diagnostics output file; see farkode.h 
+   for further details */
+void FARK_STOPDIAGNOSTICS(int *ier)
+{
+  ARKodeMem ark_mem;
+  if (ARK_arkodemem == NULL) {
+    *ier = 1;
+    return;
+  }
+  ark_mem = (ARKodeMem) ARK_arkodemem;
+
+  if (ark_mem->ark_diagfp == NULL) {
+    *ier = 1;
+    return;
+  }
+  *ier = fclose(ark_mem->ark_diagfp);
+  return;
+}
+
+/*=============================================================*/
+
 /* Fortran interface to C routine ARKDense; see farkode.h for 
    further details */
 void FARK_DENSE(long int *neq, int *ier)

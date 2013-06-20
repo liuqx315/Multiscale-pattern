@@ -35,6 +35,9 @@
    FARKSETIIN                 ARKodeSet* (integer arguments)
    FARKSETRIN                 ARKodeSet* (real arguments)
    FARKEWTSET                 ARKodeWFtolerances
+   FARKADAPTSET               ARKodeSetAdaptivityFn
+   FARKEXPSTABSET             ARKodeSetStabilityFn
+   FARKSETDIAGNOSTICS         ARKodeSetDiagnostics
 
    FARKDENSE                  ARKDense
    FARKDENSESETJAC            ARKDlsSetDenseJacFn
@@ -588,6 +591,23 @@
        DGMAX = maximum allowable gamma ratio [realtype, input]
        MSBP = maximum number of time steps between lsetup calls [int, input]
 
+ (8.5) To set a solver diagnostics output file, make the folowing call:
+
+       CALL FARKSETDIAGNOSTICS(FNAME, FLEN, IER)
+
+     The desired diagnostics filename should be supplied by the 
+     quoted character string FNAME.  The integer argument FLEN should contain
+     the length (in characters) of FNAME (for portability).  The int return 
+     flag IER is 0 if successful (able to open file), and nonzero otherwise.
+
+ (8.6) To close the solver diagnostics output file, make the folowing call:
+
+       CALL FARKSTOPDIAGNOSTICS(IER)
+
+     The int return flag IER is 0 if successful (able to close file), and
+     nonzero otherwise.
+
+
  -----------------------------------------------------------------------------
 
  (9) Specification of linear system solution method.
@@ -1046,6 +1066,12 @@ extern "C" {
 #define FARK_SETERKTABLE         SUNDIALS_F77_FUNC(farkseterktable,         FARKSETERKTABLE)
 #define FARK_SETIRKTABLE         SUNDIALS_F77_FUNC(farksetirktable,         FARKSETIRKTABLE)
 #define FARK_SETARKTABLES        SUNDIALS_F77_FUNC(farksetarktables,        FARKSETARKTABLES)
+#define FARK_SETADAPTIVITYMETHOD SUNDIALS_F77_FUNC(farksetadaptivitymethod, FARKSETADAPTIVITYMETHOD)
+#define FARK_SETADAPTIVITYCONSTANTS SUNDIALS_F77_FUNC(farksetadaptivityconstants, FARKSETADAPTIVITYCONSTANTS)
+#define FARK_SETNEWTONCONSTANTS  SUNDIALS_F77_FUNC(farksetnewtonconstants,  FARKSETNEWTONCONSTANTS)
+#define FARK_SETLSETUPCONSTANTS  SUNDIALS_F77_FUNC(farksetlsetupconstants,  FARKSETLSETUPCONSTANTS)
+#define FARK_SETDIAGNOSTICS      SUNDIALS_F77_FUNC(farksetdiagnostics,      FARKSETLSETDIAGNOSTICS)
+#define FARK_STOPDIAGNOSTICS     SUNDIALS_F77_FUNC(farkstopdiagnostics,     FARKSTOPLSETDIAGNOSTICS)
 #define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,               FARKDENSE)
 #define FARK_DENSESETJAC         SUNDIALS_F77_FUNC(farkdensesetjac,         FARKDENSESETJAC)
 #define FARK_BAND                SUNDIALS_F77_FUNC(farkband,                FARKBAND)
@@ -1092,6 +1118,12 @@ extern "C" {
 #define FARK_SETERKTABLE         farkseterktable_
 #define FARK_SETIRKTABLE         farksetirktable_
 #define FARK_SETARKTABLES        farksetarktables_
+#define FARK_SETADAPTIVITYMETHOD farksetadaptivitymethod_
+#define FARK_SETADAPTIVITYCONSTANTS farksetadaptivityconstants_
+#define FARK_SETNEWTONCONSTANTS  farksetnewtonconstants_
+#define FARK_SETLSETUPCONSTANTS  farksetlsetupconstants_
+#define FARK_SETDIAGNOSTICS      farksetdiagnostics_
+#define FARK_STOPDIAGNOSTICS     farkstopdiagnostics_
 #define FARK_DENSE               farkdense_
 #define FARK_DENSESETJAC         farkdensesetjac_
 #define FARK_BAND                farkband_
@@ -1155,6 +1187,13 @@ extern "C" {
 			realtype *A, realtype *b, realtype *b2, int *ier);
   void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c, realtype *Ai, 
 			 realtype *Ae, realtype *b, realtype *b2, int *ier);
+  void FARK_SETADAPTIVITYMETHOD(int *method, realtype *params, int *ier);
+  void FARK_SETADAPTIVITYCONSTANTS(realtype *etamx1, realtype *etamxf, 
+				   realtype *etacf, int *smallnef, int *ier);
+  void FARK_SETNEWTONCONSTANTS(realtype *crdown, realtype *rdiv, int *ier);
+  void FARK_SETLSETUPCONSTANTS(realtype *dgmax, int *msbp, int *ier);
+  void FARK_SETDIAGNOSTICS(char fname[], int *flen, int *ier);
+  void FARK_STOPDIAGNOSTICS(int *ier);
 
   void FARK_EWTSET(int *flag, int *ier);
   void FARK_ADAPTSET(int *flag, int *ier);

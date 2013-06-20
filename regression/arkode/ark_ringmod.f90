@@ -99,6 +99,13 @@ program driver
   call FARKMalloc(T0, y, imex, 2, rtol, atols, &
                   iout, rout, ipar, rpar, ier)
 
+  ! set diagnostics output file
+  call FARKSetDiagnostics("diags_ark_ringmod.txt", 21, ier);
+  if (ier /= 0) then
+     print *, 'FARKSetDiagnostics error = ',ier
+     stop
+  endif
+  
   ! set optional inputs
   if (order /= 0) then
      call FARKSetIin('ORDER', order, ier)
@@ -207,10 +214,11 @@ program driver
   ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
   print *, ' ||error|| =', sqrt(sum((ytrue-y)**2)/NEQ)
-  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-10)
+  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-20)
   print *, '  '
 
   ! clean up
+  call FARKStopDiagnostics(ier);
   call FARKFree()
   deallocate(y, ytrue, rtols, atols)
 
