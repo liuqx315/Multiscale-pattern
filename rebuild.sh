@@ -12,5 +12,6 @@ hg up
 #    <arkode>/install  -- installation directory
 cd build
 cmake ../sundials/
+make clean
 make
 make install

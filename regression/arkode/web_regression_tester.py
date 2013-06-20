@@ -106,8 +106,8 @@ def random_hash():
 
 
 # set up a list of executable names to use in tests
-tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
-tests2 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
+tests = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe');
+tests2 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe');
 nsttol = 10;
 ovtol  = 0.05;
 rtol = 1.e-6;
@@ -115,11 +115,11 @@ atol = 1.e-10;
 
 # open test results file
 now = datetime.today()
-s = "results/regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d.html" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+s = "./results/regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d.html" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
 f = open(s,'w')
 
 # create test results directory
-outdir = "results/regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+outdir = "./results/regression_results_%.4i_%.2i_%.2i_%.2d_%.2d_%.2d" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
 os.mkdir(outdir)
 
 # print header
@@ -133,7 +133,7 @@ p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                    0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
 ark.write_parameter_file(p);
 pfile = outdir + "/solve_params-" + random_hash() + ".txt"
-shutil.copy("solve_params.txt", pfile)
+shutil.copy("./solve_params.txt", pfile)
 f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
 iret = run_tests(outdir,f,tests,nsttol,ovtol);
 
@@ -145,7 +145,7 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
-    shutil.copy("solve_params.txt", pfile)
+    shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,tests,nsttol,ovtol);
 
@@ -157,7 +157,7 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
-    shutil.copy("solve_params.txt", pfile)
+    shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,tests,nsttol,ovtol);
 
@@ -169,7 +169,7 @@ for i in range(len(ords)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
-    shutil.copy("solve_params.txt", pfile)
+    shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,tests2,nsttol,ovtol);
 
@@ -181,7 +181,7 @@ for i in range(len(algs)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
-    shutil.copy("solve_params.txt", pfile)
+    shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,tests,nsttol,ovtol);
 
@@ -193,7 +193,7 @@ for i in range(len(algs)):
                        0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
-    shutil.copy("solve_params.txt", pfile)
+    shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,tests,nsttol,ovtol);
 
@@ -208,10 +208,10 @@ f.close()
 
 # copy output file to overwrite previous "new" results
 s2 = "%.4i/%.2i/%.2i -- %.2d:%.2d:%.2d" % (now.year, now.month, now.day, now.hour, now.minute, now.second)
-shutil.copy(s,"regression_newresults.html")
+shutil.copy(s,"./regression_newresults.html")
 
 # append new file name to "oldresults" list
-f2 = open("regression_oldresults.html","a")
+f2 = open("./regression_oldresults.html","a")
 f2.write("<a href=\"" + s + "\">" + s2 + "</a><br>\n")
 f2.close()
 
