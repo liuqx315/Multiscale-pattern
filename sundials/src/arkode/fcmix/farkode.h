@@ -38,6 +38,7 @@
    FARKADAPTSET               ARKodeSetAdaptivityFn
    FARKEXPSTABSET             ARKodeSetStabilityFn
    FARKSETDIAGNOSTICS         ARKodeSetDiagnostics
+   FARKSTOPDIAGNOSTICS        (none)
 
    FARKDENSE                  ARKDense
    FARKDENSESETJAC            ARKDlsSetDenseJacFn
@@ -551,46 +552,6 @@
        B2 = array of length S containing the embedding coefficients
            [realtype, input]
 
-     To set the time step adaptivity algorithm (and it's associated 
-     parameters -- ARKodeSetAdaptivityMethod), make the following call:
-
-       CALL FARKSETADAPTIVITYMETHOD(METHOD, PARAMS, IER)
-
-     The arguments are:
-       METHOD = integer between 0 and 5 to specify the method [int, input]
-       PARAMS = array of length 9 containing the adaptivity parameters 
-           [realtype, input]
-
-     To set the time step change heuristics (see 
-     ARKodeSetAdaptivityConstants), make the following call:
-
-       CALL FARKSETADAPTIVITYCONSTANTS(ETAMX1, ETAMXF, ETACF, SMALLNEF, IER)
-
-     The arguments are:
-       ETAMX1 = maximum step change for the first step [realtype, input]
-       ETAMXF = step change on an error failure [realtype, input]
-       ETACF = step change on a convergence failure [realtype, input]
-       SMALLNEF = number of error failures before ETAMXF is enforced 
-           [int, input]
-
-     To set the Newton convergence heuristics (see ARKodeSetNewtonConstants), 
-     make the following call:
-
-       CALL FARKSETNEWTONCONSTANTS(CRDOWN, RDIV, IER)
-
-     The arguments are:
-       CRDOWN = convergence rate estimation constant [realtype, input]
-       RDIV = divergence bound [realtype, input]
-
-     To set the heuristics governing when to rebuild the Jacobian or
-     preconditioner (see ARKodeSetLSetupConstants), make the following call: 
-
-       CALL FARKSETLSETUPCONSTANTS(DGMAX, MSBP, IER)
-
-     The arguments are:
-       DGMAX = maximum allowable gamma ratio [realtype, input]
-       MSBP = maximum number of time steps between lsetup calls [int, input]
-
  (8.5) To set a solver diagnostics output file, make the folowing call:
 
        CALL FARKSETDIAGNOSTICS(FNAME, FLEN, IER)
@@ -1066,10 +1027,6 @@ extern "C" {
 #define FARK_SETERKTABLE         SUNDIALS_F77_FUNC(farkseterktable,         FARKSETERKTABLE)
 #define FARK_SETIRKTABLE         SUNDIALS_F77_FUNC(farksetirktable,         FARKSETIRKTABLE)
 #define FARK_SETARKTABLES        SUNDIALS_F77_FUNC(farksetarktables,        FARKSETARKTABLES)
-#define FARK_SETADAPTIVITYMETHOD SUNDIALS_F77_FUNC(farksetadaptivitymethod, FARKSETADAPTIVITYMETHOD)
-#define FARK_SETADAPTIVITYCONSTANTS SUNDIALS_F77_FUNC(farksetadaptivityconstants, FARKSETADAPTIVITYCONSTANTS)
-#define FARK_SETNEWTONCONSTANTS  SUNDIALS_F77_FUNC(farksetnewtonconstants,  FARKSETNEWTONCONSTANTS)
-#define FARK_SETLSETUPCONSTANTS  SUNDIALS_F77_FUNC(farksetlsetupconstants,  FARKSETLSETUPCONSTANTS)
 #define FARK_SETDIAGNOSTICS      SUNDIALS_F77_FUNC(farksetdiagnostics,      FARKSETLSETDIAGNOSTICS)
 #define FARK_STOPDIAGNOSTICS     SUNDIALS_F77_FUNC(farkstopdiagnostics,     FARKSTOPLSETDIAGNOSTICS)
 #define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,               FARKDENSE)
@@ -1118,10 +1075,6 @@ extern "C" {
 #define FARK_SETERKTABLE         farkseterktable_
 #define FARK_SETIRKTABLE         farksetirktable_
 #define FARK_SETARKTABLES        farksetarktables_
-#define FARK_SETADAPTIVITYMETHOD farksetadaptivitymethod_
-#define FARK_SETADAPTIVITYCONSTANTS farksetadaptivityconstants_
-#define FARK_SETNEWTONCONSTANTS  farksetnewtonconstants_
-#define FARK_SETLSETUPCONSTANTS  farksetlsetupconstants_
 #define FARK_SETDIAGNOSTICS      farksetdiagnostics_
 #define FARK_STOPDIAGNOSTICS     farkstopdiagnostics_
 #define FARK_DENSE               farkdense_
@@ -1187,11 +1140,6 @@ extern "C" {
 			realtype *A, realtype *b, realtype *b2, int *ier);
   void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c, realtype *Ai, 
 			 realtype *Ae, realtype *b, realtype *b2, int *ier);
-  void FARK_SETADAPTIVITYMETHOD(int *method, realtype *params, int *ier);
-  void FARK_SETADAPTIVITYCONSTANTS(realtype *etamx1, realtype *etamxf, 
-				   realtype *etacf, int *smallnef, int *ier);
-  void FARK_SETNEWTONCONSTANTS(realtype *crdown, realtype *rdiv, int *ier);
-  void FARK_SETLSETUPCONSTANTS(realtype *dgmax, int *msbp, int *ier);
   void FARK_SETDIAGNOSTICS(char fname[], int *flen, int *ier);
   void FARK_STOPDIAGNOSTICS(int *ier);
 
