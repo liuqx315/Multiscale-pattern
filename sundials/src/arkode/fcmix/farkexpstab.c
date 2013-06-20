@@ -5,7 +5,7 @@
   Programmer(s): Daniel R. Reynolds @ SMU
  ----------------------------------------------------------------
   Fortran/C interface routines for ARKODE, for the case of a 
-  user-supplied error weight calculation routine.
+  user-supplied explicit stability routine.
  --------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -21,9 +21,8 @@
 extern "C" {
 #endif
 
-  extern void FARK_EWT(realtype *Y, realtype *EWT, 
-		       long int *IPAR, realtype *RPAR, 
-		       int *IER);
+  extern void FARK_EXPSTAB(realtype *Y, realtype *T, realtype *HSTAB, 
+			   long int *IPAR, realtype *RPAR, int *IER);
 
 #ifdef __cplusplus
 }
@@ -31,32 +30,33 @@ extern "C" {
 
 /*=============================================================*/
 
-/* Fortran interface to C routine ARKodeWFtolerances; see 
+/* Fortran interface to C routine ARKodeSetStabilityFn; see 
    farkode.h for further information */
-void FARK_EWTSET(int *flag, int *ier)
+void FARK_EXPSTABSET(int *flag, int *ier)
 {
-  if (*flag != 0) {
-    *ier = ARKodeWFtolerances(ARK_arkodemem, FARKEwt);
+  if (*flag == 0) {
+    *ier = ARKodeSetStabilityFn(ARK_arkodemem, NULL, NULL);
+  } else {
+    *ier = ARKodeSetStabilityFn(ARK_arkodemem, FARKExpStab, NULL);
   }
   return;
 }
 
 /*=============================================================*/
 
-/* C interface to user-supplied fortran routine FARKEWT; see 
+/* C interface to user-supplied fortran routine FARKEXPSTAB; see 
    farkode.h for further information */
-int FARKEwt(N_Vector y, N_Vector ewt, void *user_data)
+int FARKExpStab(N_Vector y, realtype t, realtype *hstab, void *udata)
 {
   int ier = 0;
-  realtype *ydata, *ewtdata;
+  realtype *ydata;
   FARKUserData ARK_userdata;
 
-  ydata  = N_VGetArrayPointer(y);
-  ewtdata = N_VGetArrayPointer(ewt);
-  ARK_userdata = (FARKUserData) user_data;
+  ydata = N_VGetArrayPointer(y);
+  ARK_userdata = (FARKUserData) udata;
 
-  FARK_EWT(ydata, ewtdata, ARK_userdata->ipar, 
-	   ARK_userdata->rpar, &ier);
+  FARK_EXPSTAB(ydata, &t, hstab, ARK_userdata->ipar, 
+	       ARK_userdata->rpar, &ier);
   return(ier);
 }
 
