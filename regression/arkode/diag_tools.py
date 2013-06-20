@@ -311,9 +311,9 @@ def plot_h_vs_t(TimeSteps,fname):
 
     # generate plot
     plt.figure()
-    plt.plot(t,h,'b-')
-    plt.plot(et,eh,'rx')
-    plt.plot(ct,ch,'go')
+    plt.semilogy(t,h,'b-')
+    plt.semilogy(et,eh,'rx')
+    plt.semilogy(ct,ch,'go')
     plt.xlabel('time')
     plt.ylabel('step size')
     plt.title('Step size versus time')
@@ -366,9 +366,9 @@ def plot_h_vs_iter(TimeSteps,fname):
 
     # generate plot
     plt.figure()
-    plt.plot(I,h,'b-')
-    plt.plot(eI,eh,'rx')
-    plt.plot(cI,ch,'go')
+    plt.semilogy(I,h,'b-')
+    plt.semilogy(eI,eh,'rx')
+    plt.semilogy(cI,ch,'go')
     plt.xlabel('time step')
     plt.ylabel('step size')
     plt.title('Step size versus iteration')
@@ -470,8 +470,8 @@ def plot_work_vs_h(TimeSteps,fname):
 
     # generate plot
     plt.figure()
-    plt.plot(h,N,'b.')
-    plt.plot(ch,cN,'rx')
+    plt.semilogx(h,N,'b.')
+    plt.semilogx(ch,cN,'rx')
     plt.xlabel('step size')
     plt.ylabel('Newton iters')
     plt.title('Newton iterations versus step size')
