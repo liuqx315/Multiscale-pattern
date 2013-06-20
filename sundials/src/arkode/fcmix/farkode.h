@@ -35,6 +35,10 @@
    FARKSETIIN                 ARKodeSet* (integer arguments)
    FARKSETRIN                 ARKodeSet* (real arguments)
    FARKEWTSET                 ARKodeWFtolerances
+   FARKADAPTSET               ARKodeSetAdaptivityFn
+   FARKEXPSTABSET             ARKodeSetStabilityFn
+   FARKSETDIAGNOSTICS         ARKodeSetDiagnostics
+   FARKSTOPDIAGNOSTICS        (none)
 
    FARKDENSE                  ARKDense
    FARKDENSESETJAC            ARKDlsSetDenseJacFn
@@ -74,17 +78,19 @@
  The user-supplied functions, each listed with the corresponding interface
  function which calls it (and its type within ARKODE), are as follows:
 
-   Fortran:         Interface Fcn:           ARKODE Type:
-   ----------       ------------------       ---------------------
-   FARKIFUN         FARKfi                   ARKRhsFn
-   FARKEFUN         FARKfe                   ARKRhsFn
-   FARKDJAC         FARKDenseJac             ARKDlsDenseJacFn
-   FARKBJAC         FARKBandJac              ARKDlsBandJacFn
-   FARKPSOL         FARKPSol                 ARKSpilsPrecSolveFn
-   FARKPSET         FARKPSet                 ARKSpilsPrecSetupFn
-   FARKJTIMES       FARKJtimes               ARKSpilsJacTimesVecFn
-   FARKEWT          FARKEwtSet               ARKEwtFn
-   ----------       ------------------       ---------------------
+   Fortran:           Interface Fcn:           ARKODE Type:
+   -------------      ------------------       ---------------------
+   FARKIFUN           FARKfi                   ARKRhsFn
+   FARKEFUN           FARKfe                   ARKRhsFn
+   FARKDJAC           FARKDenseJac             ARKDlsDenseJacFn
+   FARKBJAC           FARKBandJac              ARKDlsBandJacFn
+   FARKPSOL           FARKPSol                 ARKSpilsPrecSolveFn
+   FARKPSET           FARKPSet                 ARKSpilsPrecSetupFn
+   FARKJTIMES         FARKJtimes               ARKSpilsJacTimesVecFn
+   FARKEWT            FARKEwt                  ARKEwtFn
+   FARKADAPT          FARKAdapt                ARKAdaptFn
+   FARKEXPSTAB        FARKExpStab              ARKExpStabFn
+   -------------      ------------------       ---------------------
 
  In contrast to the case of direct use of ARKODE, and of most Fortran ODE
  solvers, the names of all user-supplied routines here are fixed, in
@@ -288,11 +294,66 @@
                   0 if successful, 
                   nonzero if an error.
 
+ (6) Optional user-supplied error weight vector routine: FARKADAPT
+ 
+     As an option to providing the time step adaptivity, the user
+     may supply a routine that computes the new time step for ARKode to 
+     use, based on information about the three most recent errors and 
+     previous time steps taken by the solver. If supplied, it must have 
+     the following form:
+
+       SUBROUTINE FARKADAPT(Y, T, H1, H2, H3, E1, E2, E3, Q, P, HNEW, IPAR, RPAR, IER)
+
+     It must output the new time step in HNEW. 
+
+     The arguments are:
+       Y    -- array containing state variables [realtype, input]
+       T    -- current time [realtype, input]
+       H1   -- current step size [realtype, input]
+       H2   -- previous step size [realtype, input]
+       H3   -- previous-previous step size [realtype, input]
+       E1   -- estimated temporal error in current step [realtype, input]
+       E2   -- estimated temporal error in previous step [realtype, input]
+       E3   -- estimated temporal error in previous-previous step [realtype, input]
+       Q    -- global order of accuracy for RK method [int, input]
+       P    -- global order of accuracy for RK embedding [int, input]
+       HNEW -- predicted next step size [realtype, output]
+       IPAR -- array containing integer user data that was passed to
+               FARKMALLOC [long int, input]
+       RPAR -- array containing real user data that was passed to
+               FARKMALLOC [realtype, input]
+       IER  -- return flag [int, output]:
+                  0 if successful, 
+                  nonzero if an error.
+
+ (7) Optional user-supplied explicitly stable time step routine: FARKEXPSTAB
+ 
+     As an option, the user may provide a routine to return the maximum stable 
+     time step size for the explicit ODE RHS function.  If supplied, it must 
+     have the following form:
+
+       SUBROUTINE FARKEXPSTAB(Y, T, HSTAB, IPAR, RPAR, IER)
+
+     It must store the explicitly stable step size in the ouptut HSTAB. 
+
+     The arguments are:
+       Y     -- array containing state variables [realtype, input]
+       T     -- current time [realtype, input]
+       HSTAB -- explicitly-stable step size [realtype, output]
+       IPAR  -- array containing integer user data that was passed to
+                FARKMALLOC [long int, input]
+       RPAR  -- array containing real user data that was passed to
+                FARKMALLOC [realtype, input]
+       IER   -- return flag [int, output]:
+                  0 if successful, 
+                  nonzero if an error.
+
+
  -----------------------------------------------------------------------------
 
- (6) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT
+ (8) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT
  
- (6.1s) To initialize the serial vector specification, the user must make the
+ (8.1s) To initialize the serial vector specification, the user must make the
      following call:
 
         CALL FNVINITS(4, NEQ, IER)
@@ -304,7 +365,7 @@
 	          0 = success, 
 		 -1 = failure.
  
- (6.1p) To initialize the parallel machine environment, the user must make 
+ (8.1p) To initialize the parallel machine environment, the user must make 
      the following call:
 
         CALL FNVINITP(COMM, 4, NLOCAL, NGLOBAL, IER)
@@ -322,7 +383,7 @@
      MPI_COMM_WORLD.  If not, this routine initializes MPI and sets the
      communicator equal to MPI_COMM_WORLD.
  
- (6.2) To set various problem and solution parameters and allocate
+ (8.2) To set various problem and solution parameters and allocate
      internal memory, make the following call:
 
        CALL FARKMALLOC(T0, Y0, IMEX, IATOL, RTOL, ATOL, IOUT, ROUT, 
@@ -380,15 +441,31 @@
            UROUND  = ROUT( 6) from UNIT_ROUNDOFF
      See the ARKODE manual for details. 
 
-     If the user program includes the FARKEWT routine for the evaluation of 
-     the error weights, the following call must be made
+ (8.2a) If the user program includes the FARKEWT routine for the evaluation 
+     of the error weights, the following call must be made
 
        CALL FARKEWTSET(FLAG, IER)
 
      with the int argument FLAG = 1 to specify that FARKEWT is provided.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
- (6.3) To re-initialize the ARKODE solver for the solution of a new problem
+ (8.2b) If the user program includes the FARKADAPT routine for performing 
+     step adaptivity, the following call must be made
+
+       CALL FARKADAPTSET(FLAG, IER)
+
+     with the int argument FLAG = 1 to specify that FARKADAPT is provided.
+     The int return flag IER is 0 if successful, and nonzero otherwise.
+
+ (8.2c) If the user program includes the FARKEXPSTAB routine for calculation of
+     the maximum explicitly stable step size, the following call must be made
+
+       CALL FARKEXPSTABSET(FLAG, IER)
+
+     with the int argument FLAG = 1 to specify that FARKEXPSTAB is provided.
+     The int return flag IER is 0 if successful, and nonzero otherwise.
+
+ (8.3) To re-initialize the ARKODE solver for the solution of a new problem
      of the same size as one already solved, make the following call:
 
        CALL FARKREINIT(T0, Y0, IMEX, IATOL, RTOL, ATOL, IER)
@@ -399,7 +476,7 @@
      the previous FARKMALLOC call.  The subsequent call to specify the linear 
      system solution method may or may not be needed; see paragraph (9) below.
  
- (6.4) To set various integer optional inputs, make the folowing call:
+ (8.4) To set various integer optional inputs, make the folowing call:
 
        CALL FARKSETIIN(KEY, VALUE, IER)
 
@@ -475,49 +552,26 @@
        B2 = array of length S containing the embedding coefficients
            [realtype, input]
 
-     To set the time step adaptivity algorithm (and it's associated 
-     parameters -- ARKodeSetAdaptivityMethod), make the following call:
+ (8.5) To set a solver diagnostics output file, make the folowing call:
 
-       CALL FARKSETADAPTIVITYMETHOD(METHOD, PARAMS, IER)
+       CALL FARKSETDIAGNOSTICS(FNAME, FLEN, IER)
 
-     The arguments are:
-       METHOD = integer between 0 and 5 to specify the method [int, input]
-       PARAMS = array of length 9 containing the adaptivity parameters 
-           [realtype, input]
+     The desired diagnostics filename should be supplied by the 
+     quoted character string FNAME.  The integer argument FLEN should contain
+     the length (in characters) of FNAME (for portability).  The int return 
+     flag IER is 0 if successful (able to open file), and nonzero otherwise.
 
-     To set the time step change heuristics (see 
-     ARKodeSetAdaptivityConstants), make the following call:
+ (8.6) To close the solver diagnostics output file, make the folowing call:
 
-       CALL FARKSETADAPTIVITYCONSTANTS(ETAMX1, ETAMXF, ETACF, SMALLNEF, IER)
+       CALL FARKSTOPDIAGNOSTICS(IER)
 
-     The arguments are:
-       ETAMX1 = maximum step change for the first step [realtype, input]
-       ETAMXF = step change on an error failure [realtype, input]
-       ETACF = step change on a convergence failure [realtype, input]
-       SMALLNEF = number of error failures before ETAMXF is enforced 
-           [int, input]
+     The int return flag IER is 0 if successful (able to close file), and
+     nonzero otherwise.
 
-     To set the Newton convergence heuristics (see ARKodeSetNewtonConstants), 
-     make the following call:
-
-       CALL FARKSETNEWTONCONSTANTS(CRDOWN, RDIV, IER)
-
-     The arguments are:
-       CRDOWN = convergence rate estimation constant [realtype, input]
-       RDIV = divergence bound [realtype, input]
-
-     To set the heuristics governing when to rebuild the Jacobian or
-     preconditioner (see ARKodeSetLSetupConstants), make the following call: 
-
-       CALL FARKSETLSETUPCONSTANTS(DGMAX, MSBP, IER)
-
-     The arguments are:
-       DGMAX = maximum allowable gamma ratio [realtype, input]
-       MSBP = maximum number of time steps between lsetup calls [int, input]
 
  -----------------------------------------------------------------------------
 
- (7) Specification of linear system solution method.
+ (9) Specification of linear system solution method.
 
      In the case of using either an implicit or ImEx method, the solution of 
      each Runge-Kutta stage may involve the solution of linear systems related 
@@ -526,7 +580,7 @@
      these systems, and the user of FARKODE must call a routine with a
      specific name to make the desired choice. 
  
- (7.1s) DENSE treatment of the linear system.
+ (9.1s) DENSE treatment of the linear system.
 
      The user must make the call
 
@@ -556,7 +610,7 @@
         NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
  
- (7.2s) BAND treatment of the linear system
+ (9.2s) BAND treatment of the linear system
 
      The user must make the call
 
@@ -585,7 +639,7 @@
         NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
 
- (7.3s) LAPACK dense treatment of the linear system
+ (9.3s) LAPACK dense treatment of the linear system
 
      The user must make the call
 
@@ -603,7 +657,7 @@
      The optional outputs when using FARKLAPACKDENSE match those from 
      FARKDENSE.
 
- (7.4s) LAPACK band treatment of the linear system
+ (9.4s) LAPACK band treatment of the linear system
 
      The user must make the call
 
@@ -620,7 +674,7 @@
 
      The optional outputs when using FARKLAPACKBAND match those from FARKBAND.
 
- (7.5) SPGMR treatment of the linear systems.
+ (9.5) SPGMR treatment of the linear systems.
 
      For the Scaled Preconditioned GMRES solution of the linear systems,
      the user must make the following call:
@@ -666,7 +720,7 @@
      The arguments have the same meanings as for FARKSPGMR.  If MAXL is being
      changed, then the user should call FARKSPGMR instead.
  
- (7.6) SPBCG treatment of the linear systems.
+ (9.6) SPBCG treatment of the linear systems.
 
      For the Scaled Preconditioned Bi-CGSTAB solution of the linear systems,
      the user must make the following call:
@@ -707,7 +761,7 @@
 
      The arguments have the same meanings as for FARKSPBCG.
 
- (7.7) SPTFQMR treatment of the linear systems.
+ (9.7) SPTFQMR treatment of the linear systems.
 
      For the Scaled Preconditioned TFQMR solution of the linear systems, the
      user must make the following call:
@@ -748,7 +802,7 @@
 
      The arguments have the same meanings as for FARKSPTFQMR.
 
- (7.8) PCG treatment of the linear systems.
+ (9.8) PCG treatment of the linear systems.
 
      For the Preconditioned Conjugate Gradient solution of the linear systems,
      the user must make the following call:
@@ -789,7 +843,7 @@
 
      The arguments have the same meanings as for FARKPCG.
 
- (7.9) Usage of user-supplied routines for the Krylov solvers
+ (9.9) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
      the Jacobian vector product, the following call must be made
@@ -872,7 +926,7 @@
 
  -----------------------------------------------------------------------------
 
- (8) The integrator: FARKODE
+ (10) The integrator: FARKODE
 
      Carrying out the integration is accomplished by making calls as follows:
 
@@ -900,7 +954,7 @@
  
  -----------------------------------------------------------------------------
 
- (9) Computing solution derivatives: FARKDKY
+ (11) Computing solution derivatives: FARKDKY
 
      To obtain a derivative of the solution, of order up to the method order,
      make the following call:
@@ -916,7 +970,7 @@
  
  -----------------------------------------------------------------------------
 
- (10) Get the current weight vector: FARKGETERRWEIGHTS
+ (12) Get the current weight vector: FARKGETERRWEIGHTS
 
      To obtain the current weight vector, make the following call:
 
@@ -928,7 +982,7 @@
  
  -----------------------------------------------------------------------------
 
- (11) Get an estimate of the local error: FARKGETESTLOCALERR
+ (13) Get an estimate of the local error: FARKGETESTLOCALERR
 
      To obtain the current error estimate vector, make the following call:
 
@@ -940,7 +994,7 @@
  
  -----------------------------------------------------------------------------
 
- (12) Memory freeing: FARKFREE 
+ (14) Memory freeing: FARKFREE 
 
      To free the internal memory created by the calls to FARKMALLOC and
      FNVINITS or FNVINITP, make the call
@@ -973,7 +1027,8 @@ extern "C" {
 #define FARK_SETERKTABLE         SUNDIALS_F77_FUNC(farkseterktable,         FARKSETERKTABLE)
 #define FARK_SETIRKTABLE         SUNDIALS_F77_FUNC(farksetirktable,         FARKSETIRKTABLE)
 #define FARK_SETARKTABLES        SUNDIALS_F77_FUNC(farksetarktables,        FARKSETARKTABLES)
-#define FARK_EWTSET              SUNDIALS_F77_FUNC(farkewtset,              FARKEWTSET)
+#define FARK_SETDIAGNOSTICS      SUNDIALS_F77_FUNC(farksetdiagnostics,      FARKSETLSETDIAGNOSTICS)
+#define FARK_STOPDIAGNOSTICS     SUNDIALS_F77_FUNC(farkstopdiagnostics,     FARKSTOPLSETDIAGNOSTICS)
 #define FARK_DENSE               SUNDIALS_F77_FUNC(farkdense,               FARKDENSE)
 #define FARK_DENSESETJAC         SUNDIALS_F77_FUNC(farkdensesetjac,         FARKDENSESETJAC)
 #define FARK_BAND                SUNDIALS_F77_FUNC(farkband,                FARKBAND)
@@ -1001,9 +1056,14 @@ extern "C" {
 #define FARK_PSET                SUNDIALS_F77_FUNC(farkpset,                FARKPSET)
 #define FARK_JTIMES              SUNDIALS_F77_FUNC(farkjtimes,              FARKJTIMES)
 #define FARK_EWT                 SUNDIALS_F77_FUNC(farkewt,                 FARKEWT)
+#define FARK_EWTSET              SUNDIALS_F77_FUNC(farkewtset,              FARKEWTSET)
 #define FARK_GETERRWEIGHTS       SUNDIALS_F77_FUNC(farkgeterrweights,       FARKGETERRWEIGHTS)
 #define FARK_GETESTLOCALERR      SUNDIALS_F77_FUNC(farkgetestlocalerr,      FARKGETESTLOCALERR)
 #define FARK_WRITEPARAMETERS     SUNDIALS_F77_FUNC(farkwriteparameters,     FARKWRITEPARAMETERS)
+#define FARK_ADAPT               SUNDIALS_F77_FUNC(farkadapt,               FARKADAPT)
+#define FARK_ADAPTSET            SUNDIALS_F77_FUNC(farkadaptset,            FARKADAPTSET)
+#define FARK_EXPSTAB             SUNDIALS_F77_FUNC(farkexpstab,             FARKEXPSTAB)
+#define FARK_EXPSTABSET          SUNDIALS_F77_FUNC(farkexpstabset,          FARKEXPSTABSET)
 
 #else
 
@@ -1015,7 +1075,8 @@ extern "C" {
 #define FARK_SETERKTABLE         farkseterktable_
 #define FARK_SETIRKTABLE         farksetirktable_
 #define FARK_SETARKTABLES        farksetarktables_
-#define FARK_EWTSET              farkewtset_
+#define FARK_SETDIAGNOSTICS      farksetdiagnostics_
+#define FARK_STOPDIAGNOSTICS     farkstopdiagnostics_
 #define FARK_DENSE               farkdense_
 #define FARK_DENSESETJAC         farkdensesetjac_
 #define FARK_BAND                farkband_
@@ -1043,9 +1104,14 @@ extern "C" {
 #define FARK_PSET                farkpset_
 #define FARK_JTIMES              farkjtimes_
 #define FARK_EWT                 farkewt_
+#define FARK_EWTSET              farkewtset_
 #define FARK_GETERRWEIGHTS       farkgeterrweights_
 #define FARK_GETESTLOCALERR      farkgetestlocalerr_
 #define FARK_WRITEPARAMETERS     farkwriteparameters_
+#define FARK_ADAPT               farkadapt_
+#define FARK_ADAPTSET            farkadaptset_
+#define FARK_EXPSTAB             farkexpstab_
+#define FARK_EXPSTABSET          farkexpstabset_
 
 #endif
 
@@ -1074,8 +1140,12 @@ extern "C" {
 			realtype *A, realtype *b, realtype *b2, int *ier);
   void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c, realtype *Ai, 
 			 realtype *Ae, realtype *b, realtype *b2, int *ier);
+  void FARK_SETDIAGNOSTICS(char fname[], int *flen, int *ier);
+  void FARK_STOPDIAGNOSTICS(int *ier);
 
   void FARK_EWTSET(int *flag, int *ier);
+  void FARK_ADAPTSET(int *flag, int *ier);
+  void FARK_EXPSTABSET(int *flag, int *ier);
 
   void FARK_DENSE(long int *neq, int *ier);
   void FARK_DENSESETJAC(int *flag, int *ier);
@@ -1139,7 +1209,13 @@ extern "C" {
 		 N_Vector y, N_Vector fy,
 		 void *user_data, N_Vector work);
   
-  int FARKEwtSet(N_Vector y, N_Vector ewt, void *user_data);
+  int FARKEwt(N_Vector y, N_Vector ewt, void *user_data);
+
+  int FARKAdapt(N_Vector y, realtype t, realtype h1, realtype h2, 
+		realtype h3, realtype e1, realtype e2, realtype e3, 
+		int q, int p, realtype *hnew, void *user_data);
+
+  int FARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 
   /* Declarations for global variables shared amongst various routines */
   extern N_Vector F2C_ARKODE_vec;   /* defined in FNVECTOR module */
