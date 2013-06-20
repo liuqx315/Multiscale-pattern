@@ -81,6 +81,7 @@ extern "C" {
 #define ARK_REPTD_RHSFUNC_ERR    -10
 #define ARK_UNREC_RHSFUNC_ERR    -11
 #define ARK_RTFUNC_FAIL          -12
+#define ARK_LFREE_FAIL           -13
 
 #define ARK_MEM_FAIL             -20
 #define ARK_MEM_NULL             -21
@@ -230,6 +231,35 @@ typedef int (*ARKAdaptFn)(N_Vector y, realtype t, realtype h1,
 ---------------------------------------------------------------*/
 typedef int (*ARKExpStabFn)(N_Vector y, realtype t, 
 			    realtype *hstab, void *user_data);
+
+/*---------------------------------------------------------------
+ Type : ARKVecResizeFn
+-----------------------------------------------------------------
+ When calling ARKodeResize, the user may specify a vector resize
+ function to be used to convert any existing N_Vectors in the 
+ ARKode memory structure to the new problem size.  This would 
+ typically be used if there is a user-supplied N_Vector module 
+ that allows dynamic resizing of the vector data structures 
+ without the need to delete/allocate memory on each call.  
+
+ The default behavior will be to delete the vector memory and 
+ re-clone from the new vector; if this is the desired behavior 
+ then specification of the ARKVecResizeFn is not recommended.
+
+ The first argument, 'y', is the vector to be resized.
+
+ The second argument, 'ytemplate', is the user-provided vector 
+ with the "new" size, that may be used as a template.
+
+ The third argument, 'user_data', is a user-provided data 
+ structure to ARKodeResize, in case additional data is 
+ necessary for the resize operation.
+
+ A ARKVecResizeFn should return 0 if successful, and a nonzero 
+ value if an error occurred.
+---------------------------------------------------------------*/
+typedef int (*ARKVecResizeFn)(N_Vector y, N_Vector ytemplate, 
+			      void *user_data);
 
 
 /*===============================================================
@@ -618,6 +648,61 @@ SUNDIALS_EXPORT int ARKodeInit(void *arkode_mem, ARKRhsFn fe,
  --------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, 
 				 ARKRhsFn fi, realtype t0, N_Vector y0);
+
+/*---------------------------------------------------------------
+ Function : ARKodeResize
+-----------------------------------------------------------------
+ ARKodeResize re-initializes ARKODE's memory for a problem with a
+ changing vector size.  It is assumed that the problem dynamics 
+ before and after the vector resize will be comparable, so that 
+ all time-stepping heuristics prior to calling ARKodeResize 
+ remain valid after the call.  If instead the dynamics should be 
+ re-calibrated, the ARKode memory structure should be deleted 
+ with a call to ARKodeFree, and re-created with calls to 
+ ARKodeCreate and ARKodeInit.
+
+ To aid in the vector-resize operation, the user can supply a 
+ vector resize function, that will take as input an N_Vector with
+ the previous size, and return as output a corresponding vector 
+ of the new size.  If this function (of type ARKVecResizeFn) is 
+ not supplied (i.e. is set to NULL), then all existing N_Vectors 
+ will be destroyed and re-cloned from the input vector.
+
+ In the case that the dynamical time scale should be modified 
+ slightly from the previous time scale, an input "hscale" is 
+ allowed, that will re-scale the upcoming time step by the 
+ specified factor.  If a value <= 0 is specified, the default of 
+ 1.0 will be used.
+
+ Other arguments:
+   arkode_mem       Existing ARKode memory data structure.
+   ynew             The newly-sized solution vector, holding 
+                    the current dependent variable values.
+   t0               The current value of the independent 
+                    variable.
+   resize_data      User-supplied data structure that will be 
+                    passed to the supplied resize function.
+
+ The return value of ARKodeResize is equal to ARK_SUCCESS = 0 if
+ there were no errors; otherwise it is a negative int equal to:
+   ARK_MEM_NULL     indicating arkode_mem was NULL (i.e.,
+                    ARKodeCreate has not been called).
+   ARK_NO_MALLOC    indicating that arkode_mem has not been
+                    allocated (i.e., ARKodeInit has not been
+                    called).
+   ARK_ILL_INPUT    indicating an input argument was illegal
+                    (including an error from the supplied 
+		    resize function).
+   ARK_LINIT_FAIL   indicating the linear solver initialization 
+                    routine failed.
+   ARK_LFREE_FAIL   indicating the linear solver free routine 
+                    failed.
+ In case of an error return, an error message is also printed.
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKodeResize(void *arkode_mem, N_Vector ynew, 
+				 realtype hscale, realtype t0,
+				 ARKVecResizeFn resize, 
+				 void *resize_data);
 
 /*---------------------------------------------------------------
  Functions : ARKodeSStolerances

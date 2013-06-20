@@ -285,8 +285,6 @@ typedef struct ARKodeMemRec {
   realtype ark_nlscoef;         /* coeficient in nonlinear convergence test */
   int      ark_mnewt;           /* Newton iteration counter                 */
 
-  realtype ark_acnrm;           /* ||acor||_wrms  (to remove???)            */
-
 
   /*-------------------------
     Time Step Adaptivity Data 
@@ -393,6 +391,8 @@ typedef struct ARKodeMemRec {
   booleantype ark_setupNonNull; /* does setup do anything?                    */
   booleantype ark_VabstolMallocDone;
   booleantype ark_MallocDone;  
+  booleantype ark_resized;      /* denotes first step after ARKodeResize      */
+  booleantype ark_firststage;   /* denotes first stage in simulation          */
 
   /*-------------------------------------------
     Error handler function and error ouput file 
@@ -632,6 +632,7 @@ void ARKProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_EWT_FAIL       "The user-provide EwtSet function failed."
 #define MSGARK_EWT_NOW_FAIL   "At " MSG_TIME ", the user-provide EwtSet function failed."
 #define MSGARK_LINIT_FAIL     "The linear solver's init routine failed."
+#define MSGARK_LFREE_FAIL     "The linear solver's free routine failed."
 #define MSGARK_HNIL_DONE      "The above warning has been issued mxhnil times and will not be issued again for this problem."
 #define MSGARK_TOO_CLOSE      "tout too close to t0 to start integration."
 #define MSGARK_MAX_STEPS      "At " MSG_TIME ", mxstep steps taken before reaching tout."
@@ -652,6 +653,7 @@ void ARKProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_MISSING_FE     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 #define MSGARK_MISSING_FI     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 #define MSGARK_MISSING_F      "Cannot specify that method is ImEx without providing function pointers to fi(t,y) and fe(t,y)."
+#define MSGARK_RESIZE_FAIL    "Error in user-supplied resize() function."
 
 #ifdef __cplusplus
 }
