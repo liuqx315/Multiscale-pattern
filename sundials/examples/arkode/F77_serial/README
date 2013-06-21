@@ -1,5 +1,7 @@
 List of serial ARKODE F77 examples
 
+  fark_diurnal_kry_bp : kinetics-transport example (DIRK/SPGMR/FARKBP)
+  fark_roberts_dnsL   : chemical kinetics example (DIRK/DENSE lapack)
 
 Sample results:
 

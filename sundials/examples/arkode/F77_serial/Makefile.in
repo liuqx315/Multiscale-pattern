@@ -58,9 +58,9 @@ fortran-update = ${SHELL} ${top_builddir}/bin/fortran-update.sh
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
-EXAMPLES = # none yet
+EXAMPLES = fark_diurnal_kry_bp
 
-EXAMPLES_BL = 
+EXAMPLES_BL = fark_roberts_dnsL
 
 EXTRAFILES = # none yet
 

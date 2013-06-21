@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------
-# $Revision: 1.7 $
-# $Date: 2012-09-18 23:01:34 $
+# $Revision: 1.0 $
+# $Date: $
 # ---------------------------------------------------------------
-# Programmer:  Radu Serban @ LLNL
+# Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
 # Copyright (c) 2007, The Regents of the University of California.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -15,7 +15,8 @@
 # Add variable FARKODE_examples with the names of the parallel ARKODE examples
 
 SET(FARKODE_examples
-  # none yet
+  fark_diag_non_p
+  fark_diag_kry_bbd_p
   )
 
 # Add variable ARKODE_extras with the names of auxiliary files to install

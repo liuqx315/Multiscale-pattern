@@ -1,21 +1,22 @@
 # ---------------------------------------------------------------
-# $Revision: 1.6 $
-# $Date: 2012-09-18 23:01:36 $
+# $Revision: 1.0 $
+# $Date: $
 # ---------------------------------------------------------------
-# Programmer:  Radu Serban @ LLNL
+# Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
 # Copyright (c) 2007, The Regents of the University of California.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
 # ---------------------------------------------------------------
-# CMakeLists.txt file for ARKODE parallel examples
+# CMakeLists.txt file for ARKODE parallel C examples
 
 
 # Add variable ARKODE_examples with the names of the parallel ARKODE examples
 
 SET(ARKODE_examples
-  # none yet
+  ark_diurnal_kry_p
+  ark_diurnal_kry_bbd_p
   )
 
 # Add variable ARKODE_extras with the names of auxiliary files to install
