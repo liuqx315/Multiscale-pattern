@@ -1,5 +1,7 @@
 List of parallel ARKode F77 examples
 
+  fark_diag_non_p     : diagonal ODE example - non-stiff case (ERK)
+  fark_diag_kry_bbd_p : diagonal ODE example - stiff case (DIRK/SPGMR/FARKBBD)
 
 Sample results:
 

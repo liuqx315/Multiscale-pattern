@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------
-# $Revision: 1.7 $
-# $Date: 2012-09-18 23:01:35 $
+# $Revision: 1.0 $
+# $Date: $
 # ---------------------------------------------------------------
-# Programmer:  Radu Serban @ LLNL
+# Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
 # Copyright (c) 2007, The Regents of the University of California.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -15,13 +15,14 @@
 # Add variable FARKODE_examples with the names of the serial FARKODE examples
 
 SET(FARKODE_examples
-  # none yet
+  fark_diurnal_kry_bp
   )
 
 # Add variable fcvode_bl_examples with the names of the serial FARKODE examples
 # that use Lapack
 
 SET(FARKODE_examples_BL
+  fark_roberts_dnsL
   )
 
 # Add variable ARKODE_extras with the names of auxiliary files to install

@@ -62,7 +62,9 @@ fortran-update = ${SHELL} ${top_builddir}/bin/fortran-update.sh
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
-EXAMPLES = # none yet
+EXAMPLES = fark_diag_non_p \
+           fark_diag_kry_bbd_p
+
 EXTRAFILES = # none yet
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}

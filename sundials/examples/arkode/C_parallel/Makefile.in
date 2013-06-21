@@ -61,7 +61,8 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
 
-EXAMPLES = # none yet
+EXAMPLES = ark_diurnal_kry_p \
+           ark_diurnal_kry_bbd_p
 EXTRAFILES = # none yet
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
