@@ -27,9 +27,9 @@ linear solvers.
 The two user-callable functions in this package, with the
 corresponding ARKode function around which they wrap, are: 
 
-* :c:func:`FARKBPINIT()` interfaces to :c:func:`ARKBandPrecInit()`.
+* :f:func:`FARKBPINIT()` interfaces to :c:func:`ARKBandPrecInit()`.
 
-* :c:func:`FARKBPOPT()` interfaces to the ARKBANDPRE optional output
+* :f:func:`FARKBPOPT()` interfaces to the ARKBANDPRE optional output
   functions, :c:func:`ARKBandPrecGetWorkSpace()` and
   :c:func:`ARKBandPrecGetNumRhsEvals()`. 
 
@@ -53,32 +53,32 @@ unchanged from the main program described in the section
 5. Linear solver specification 
 
    First, specify one of the ARKSPILS iterative linear solvers, by
-   calling one of :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`, 
-   :c:func:`FARKSPTFQMR()`, or :c:func:`FARKPCG()`. 
+   calling one of :f:func:`FARKSPGMR()`, :f:func:`FARKSPBCG()`, 
+   :f:func:`FARKSPTFQMR()`, or :f:func:`FARKPCG()`. 
 
    Optionally, to specify that SPGMR, SPBCG, SPTFQMR, or PCG
-   should use the supplied :c:func:`FARKJTIMES()` routine, the user
-   should call :c:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
+   should use the supplied :f:func:`FARKJTIMES()` routine, the user
+   should call :f:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
    as described in the section :ref:`FInterface.SpilsUserSupplied`.
 
    Then, to initialize the ARKBANDPRE preconditioner, call the
-   routine :c:func:`FARKBPINIT()`, as follows:
+   routine :f:func:`FARKBPINIT()`, as follows:
 
 
 
-      .. c:function:: SUBROUTINE FARKBPINIT(NEQ, MU, ML, IER)
+   .. f:subroutine:: FARKBPINIT(NEQ, MU, ML, IER)
    
-         Interfaces with the :c:func:`ARKBandPrecInit()`
-         function to allocates memory and initialize data associated
-         with the ARKBANDPRE preconditioner.
+      Interfaces with the :c:func:`ARKBandPrecInit()`
+      function to allocates memory and initialize data associated
+      with the ARKBANDPRE preconditioner.
    
-         **Arguments:** 
-	    * NEQ (``long int``, input) -- problem size 
-            * MU (``long int``, input) -- upper half-bandwidth of the band matrix that is 
-              retained as an approximation of the Jacobian 
-            * ML  (``long int``, input) -- lower half-bandwidth of the band matrix approximant 
-              to the Jacobian 	  
-            * IER  (``int``, output) -- return flag  (0 if success, -1 if a memory failure)
+      **Arguments:** 
+         * NEQ (``long int``, input) -- problem size 
+         * MU (``long int``, input) -- upper half-bandwidth of the band matrix that is 
+           retained as an approximation of the Jacobian 
+         * ML  (``long int``, input) -- lower half-bandwidth of the band matrix approximant 
+           to the Jacobian 	  
+         * IER  (``int``, output) -- return flag  (0 if success, -1 if a memory failure)
             
 
 
@@ -89,31 +89,29 @@ unchanged from the main program described in the section
    Optional outputs specific to the SPGMR, SPBCG, SPTFQMR or PCG
    solver are listed in :ref:`FInterface.SpilsIOUTTable`.  To obtain
    the optional outputs associated with the ARKBANDPRE module, the
-   user should call the :c:func:`FARKBPOPT()`, as specified below: 
+   user should call the :f:func:`FARKBPOPT()`, as specified below: 
 
 
 
-      .. c:function:: SUBROUTINE FARKBPOPT(LENRWBP, LENIWBP, NFEBP)
+   .. f:subroutine:: FARKBPOPT(LENRWBP, LENIWBP, NFEBP)
       
-         Interfaces with the ARKBANDPRE optional output
-         functions.
+      Interfaces with the ARKBANDPRE optional output
+      functions.
          
-         **Arguments:** 
-	    * LENRWBP (``long int``, output) -- length of real preconditioner work
-              space (from :c:func:`ARKBandPrecGetWorkSpace()`)  
-            * LENIWBP (``long int``, output) -- length of integer preconditioner work space, in 
-              integer words (from :c:func:`ARKBandPrecGetWorkSpace()`)  
-            * NFEBP (``long int``, output) -- number of :math:`f_I(t,y)` evaluations (from
-              :c:func:`ARKBandPrecGetNumRhsEvals()`)  
+      **Arguments:** 
+         * LENRWBP (``long int``, output) -- length of real preconditioner work
+           space (from :c:func:`ARKBandPrecGetWorkSpace()`)  
+         * LENIWBP (``long int``, output) -- length of integer preconditioner work space, in 
+           integer words (from :c:func:`ARKBandPrecGetWorkSpace()`)  
+         * NFEBP (``long int``, output) -- number of :math:`f_I(t,y)` evaluations (from
+           :c:func:`ARKBandPrecGetNumRhsEvals()`)  
 
 
 
 8. `Memory deallocation` 
 
    (The memory allocated for the FARKBP module is deallocated
-   automatically by :c:func:`FARKFREE()`)
-
-
+   automatically by :f:func:`FARKFREE()`)
 
 
 
@@ -133,15 +131,15 @@ solvers.
 The user-callable functions in this package, with the corresponding
 ARKode and ARKBBDPRE functions, are as follows:
 
-* :c:func:`FARKBBDINIT()` interfaces to :c:func:`ARKBBDPrecInit()`.
+* :f:func:`FARKBBDINIT()` interfaces to :c:func:`ARKBBDPrecInit()`.
 
-* :c:func:`FARKBBDREINIT()` interfaces to :c:func:`ARKBBDPrecReInit()`.
+* :f:func:`FARKBBDREINIT()` interfaces to :c:func:`ARKBBDPrecReInit()`.
 
-* :c:func:`FARKBBDOPT()` interfaces to the ARKBBDPRE optional output
+* :f:func:`FARKBBDOPT()` interfaces to the ARKBBDPRE optional output
   functions.
 
 In addition to the Fortran right-hand side function
-:c:func:`FARKFUN()`, the user-supplied functions used by this package
+:f:func:`FARKFUN()`, the user-supplied functions used by this package
 are listed in the table below, each with the
 corresponding interface function which calls it (and its type within
 ARKBBDPRE or ARKode).
@@ -155,11 +153,11 @@ ARKBBDPRE or ARKode).
 | FARKBBD routine          | ARKode routine         | ARKode interface                  |
 | (FORTRAN, user-supplied) | (C, interface)         | function type                     |
 +==========================+========================+===================================+
-| :c:func:`FARKJTIMES()`   | FARKJtimes             | :c:func:`ARKSpilsJacTimesVecFn()` |
+| :f:func:`FARKJTIMES()`   | FARKJtimes             | :c:func:`ARKSpilsJacTimesVecFn()` |
 +--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKLOCFN()`    | FARKgloc               | :c:func:`ARKLocalFn()`            |
+| :f:func:`FARKLOCFN()`    | FARKgloc               | :c:func:`ARKLocalFn()`            |
 +--------------------------+------------------------+-----------------------------------+
-| :c:func:`FARKCOMMF()`    | FARKcfn                | :c:func:`ARKCommFn()`             |
+| :f:func:`FARKCOMMF()`    | FARKcfn                | :c:func:`ARKCommFn()`             |
 +--------------------------+------------------------+-----------------------------------+
 
 As with the rest of the FARKODE routines, the names of all
@@ -184,41 +182,41 @@ unchanged from the main program described in the section
 5. Linear solver specification 
 
    First, specify one of the ARKSPILS iterative linear solvers, by
-   calling one of :c:func:`FARKSPGMR()`, :c:func:`FARKSPBCG()`, 
-   :c:func:`FARKSPTFQMR()`, or :c:func:`FARKPCG()`.  
+   calling one of :f:func:`FARKSPGMR()`, :f:func:`FARKSPBCG()`, 
+   :f:func:`FARKSPTFQMR()`, or :f:func:`FARKPCG()`.  
 
    Optionally, to specify that SPGMR, SPBCG, SPTFQMR, or PCG
-   should use the supplied :c:func:`FARKJTIMES()` routine, the user
-   should call :c:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
+   should use the supplied :f:func:`FARKJTIMES()` routine, the user
+   should call :f:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
    as described in the section :ref:`FInterface.SpilsUserSupplied`.
 
    Then, to initialize the ARKBBDPRE preconditioner, call the function
-   :c:func:`FARKBBDINIT()`, as described below:
+   :f:func:`FARKBBDINIT()`, as described below:
 
 
 
-      .. c:function:: SUBROUTINE FARKBBDINIT(NLOCAL, MUDQ, MLDQ, MU, ML, DQRELY, IER)
+   .. f:subroutine:: FARKBBDINIT(NLOCAL, MUDQ, MLDQ, MU, ML, DQRELY, IER)
       
-         Interfaces with the :c:func:`ARKBBDPrecInit()`
-         routine to initialize the ARKBBDPRE preconditioning module.
+      Interfaces with the :c:func:`ARKBBDPrecInit()`
+      routine to initialize the ARKBBDPRE preconditioning module.
          
-         **Arguments:** 
-	    * NLOCAL (``long int``, input) -- local vector size on this process
-   	    * MUDQ (``long int``, input) -- upper half-bandwidth to be
-   	      used in the computation of the local Jacobian blocks by
-   	      difference quotients.  These may be smaller than the
-   	      true half-bandwidths of the Jacobian of the local block
-   	      of :math:`g`, when smaller values may provide greater efficiency  
-	    * MLDQ (``long int``, input) -- lower half-bandwidth to be used in the computation
-              of the local Jacobian blocks by difference quotients
-	    * MU (``long int``, input) -- upper half-bandwidth of the band matrix that is
-              retained as an approximation of the local Jacobian block (may be smaller than MUDQ)  
-	    * ML (``long int``, input) -- lower half-bandwidth of the band matrix that is
-              retained as an approximation of the local Jacobian block (may be smaller than MLDQ)  
-	    * DQRELY (``realtype``, input) -- relative increment factor in :math:`y` for
-              difference quotients (0.0 indicates to use the default)
-            * IER  (``int``, output) -- return flag  (0 if success, -1 if a memory
-              failure) 
+      **Arguments:** 
+	 * NLOCAL (``long int``, input) -- local vector size on this process
+   	 * MUDQ (``long int``, input) -- upper half-bandwidth to be
+   	   used in the computation of the local Jacobian blocks by
+   	   difference quotients.  These may be smaller than the
+   	   true half-bandwidths of the Jacobian of the local block
+   	   of :math:`g`, when smaller values may provide greater efficiency  
+	 * MLDQ (``long int``, input) -- lower half-bandwidth to be used in the computation
+           of the local Jacobian blocks by difference quotients
+	 * MU (``long int``, input) -- upper half-bandwidth of the band matrix that is
+           retained as an approximation of the local Jacobian block (may be smaller than MUDQ)  
+	 * ML (``long int``, input) -- lower half-bandwidth of the band matrix that is
+           retained as an approximation of the local Jacobian block (may be smaller than MLDQ)  
+	 * DQRELY (``realtype``, input) -- relative increment factor in :math:`y` for
+           difference quotients (0.0 indicates to use the default)
+         * IER  (``int``, output) -- return flag  (0 if success, -1 if a memory
+           failure) 
 
 
 
@@ -229,22 +227,22 @@ unchanged from the main program described in the section
    Optional outputs specific to the SPGMR, SPBCG, SPTFQMR or PCG solver
    are listed in :ref:`FInterface.SpilsIOUTTable`.  To obtain the
    optional outputs associated with the ARKBBDPRE module, the user
-   should call the :c:func:`FARKBBDOPT()`, as specified below:
+   should call the :f:func:`FARKBBDOPT()`, as specified below:
 
 
 
-      .. c:function:: SUBROUTINE FARKBBDOPT(LENRWBBD, LENIWBBD, NGEBBD)
+   .. f:subroutine:: FARKBBDOPT(LENRWBBD, LENIWBBD, NGEBBD)
       
-         Interfaces with the ARKBBDPRE optional output
-         functions.
+      Interfaces with the ARKBBDPRE optional output
+      functions.
          
-         **Arguments:** 
-	    * LENRWBP (``long int``, output) -- length of real preconditioner work
-              space on this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)  
-            * LENIWBP (``long int``, output) -- length of integer preconditioner work space on
-              this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)
-            * NGEBBD (``long int``, output) -- number of :math:`g(t,y)` evaluations (from
-              :c:func:`ARKBBDPrecGetNumGfnEvals()`) so far  
+      **Arguments:** 
+	 * LENRWBP (``long int``, output) -- length of real preconditioner work
+           space on this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)  
+         * LENIWBP (``long int``, output) -- length of integer preconditioner work space on
+           this process (from :c:func:`ARKBBDPrecGetWorkSpace()`)
+         * NGEBBD (``long int``, output) -- number of :math:`g(t,y)` evaluations (from
+           :c:func:`ARKBBDPrecGetNumGfnEvals()`) so far  
 
 
 
@@ -254,30 +252,30 @@ unchanged from the main program described in the section
    the same linear solver (SPGMR, SPBCG, SPTFQMR or PCG) in combination
    with the ARKBBDPRE preconditioner, then the ARKode package can be
    re-initialized for the second and subsequent problems by calling
-   :c:func:`FARKREINIT()`, following which a call to
-   :c:func:`FARKBBDREINIT()` may or may not be needed. If the input
-   arguments are the same, no :c:func:`FARKBBDREINIT()` call is
+   :f:func:`FARKREINIT()`, following which a call to
+   :f:func:`FARKBBDREINIT()` may or may not be needed. If the input
+   arguments are the same, no :f:func:`FARKBBDREINIT()` call is
    needed.
 
    If there is a change in input arguments other than MU or
-   ML, then the user program should call :c:func:`FARKBBDREINIT()` as
+   ML, then the user program should call :f:func:`FARKBBDREINIT()` as
    specified beloe: 
 
 
 
-      .. c:function:: SUBROUTINE FARKBBDREINIT(NLOCAL, MUDQ, MLDQ, DQRELY, IER)
+   .. f:subroutine:: FARKBBDREINIT(NLOCAL, MUDQ, MLDQ, DQRELY, IER)
       
-         Interfaces with the
-         :c:func:`ARKBBDPrecReInit()` function to reinitialize the
-         ARKBBDPRE module.
+      Interfaces with the
+      :c:func:`ARKBBDPrecReInit()` function to reinitialize the
+      ARKBBDPRE module.
          
-         **Arguments:**  The arguments of the same names have the same
-	 meanings as in :c:func:`FARKBBDINIT()`.
+      **Arguments:**  The arguments of the same names have the same
+      meanings as in :f:func:`FARKBBDINIT()`.
 
 
 
    However, if the value of MU or ML is being changed, then a call to
-   :c:func:`FARKBBDINIT()` must be made instead. 
+   :f:func:`FARKBBDINIT()` must be made instead. 
 
    Finally, if there is a change in any of the linear solver inputs,
    then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR or FARKPCG must
@@ -286,7 +284,7 @@ unchanged from the main program described in the section
 9. `Memory deallocation` 
 
    (The memory allocated for the FARKBBD module is deallocated
-   automatically by :c:func:`FARKFREE()`) 
+   automatically by :f:func:`FARKFREE()`) 
 
 10. User-supplied routines 
 
@@ -295,48 +293,48 @@ unchanged from the main program described in the section
 
 
 
-      .. c:function:: SUBROUTINE FARKGLOCFN(NLOC, T, YLOC, GLOC, IPAR, RPAR, IER)
+    .. f:subroutine:: FARKGLOCFN(NLOC, T, YLOC, GLOC, IPAR, RPAR, IER)
       
-         User-supplied routine (of type :c:func:`ARKLocalFn()`) that
-	 computes a processor-local approximation :math:`g(t,y)` to
-	 the right-hand side function :math:`f_I(t,y)`.
+       User-supplied routine (of type :c:func:`ARKLocalFn()`) that
+       computes a processor-local approximation :math:`g(t,y)` to
+       the right-hand side function :math:`f_I(t,y)`.
          
-         **Arguments:** 
-	    * NLOC (``long int``, input) -- local problem size 
-            * T (``realtype``, input) -- current value of the independent variable
-	    * YLOC (``realtype``, input) -- array containing local dependent state variables
-	    * GLOC (``realtype``, output) -- array containing local dependent state derivatives
-            * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
-              :c:func:`FARKMALLOC()` 
-            * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
-              :c:func:`FARKMALLOC()` 
-            * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
-              occurred, <0 if an unrecoverable error occurred) 
+       **Arguments:** 
+          * NLOC (``long int``, input) -- local problem size 
+          * T (``realtype``, input) -- current value of the independent variable
+	  * YLOC (``realtype``, input) -- array containing local dependent state variables
+	  * GLOC (``realtype``, output) -- array containing local dependent state derivatives
+          * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
+            :f:func:`FARKMALLOC()` 
+          * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
+            :f:func:`FARKMALLOC()` 
+          * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+            occurred, <0 if an unrecoverable error occurred) 
 
 
 
-      .. c:function:: SUBROUTINE FARKCOMMFN(NLOC, T, YLOC, IPAR, RPAR, IER)
+    .. f:subroutine:: FARKCOMMFN(NLOC, T, YLOC, IPAR, RPAR, IER)
       
-         User-supplied routine (of type
-	 :c:func:`ARKCommFn()`) that performs all interprocess
-         communication necessary for the executation of the
-	 :c:func:`FARKGLOCFN()` function above, using the input vector
-	 YLOC.
+       User-supplied routine (of type
+       :c:func:`ARKCommFn()`) that performs all interprocess
+       communication necessary for the executation of the
+       :f:func:`FARKGLOCFN()` function above, using the input vector
+       YLOC.
          
-         **Arguments:** 
-            * NLOC (``long int``, input) -- local problem size 
-	    * T (``realtype``, input) -- current value of the independent variable
-	    * YLOC (``realtype``, input) -- array containing local dependent state variables
-            * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
-              :c:func:`FARKMALLOC()` 
-            * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
-              :c:func:`FARKMALLOC()` 
-            * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
-              occurred, <0 if an unrecoverable error occurred) 
+       **Arguments:** 
+          * NLOC (``long int``, input) -- local problem size 
+	  * T (``realtype``, input) -- current value of the independent variable
+	  * YLOC (``realtype``, input) -- array containing local dependent state variables
+          * IPAR (``long int``, input/output) -- array containing integer user data that was passed to
+            :f:func:`FARKMALLOC()` 
+          * RPAR (``realtype``, input/output) -- array containing real user data that was passed to
+            :f:func:`FARKMALLOC()` 
+          * IER (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+            occurred, <0 if an unrecoverable error occurred) 
 
-         **Notes:**
-	 The subroutine FARKCOMMFN must be supplied even if it is not
-	 needed and must return IER=0.  
+       **Notes:**
+       The subroutine FARKCOMMFN must be supplied even if it is not
+       needed and must return IER=0.  
 
 
 

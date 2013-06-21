@@ -18,7 +18,7 @@ not through individual functions, but rather through a pair of arrays,
 IOUT (``long int`` type) of dimension at least 22, and ROUT
 (``realtype`` type) of dimension at least 6. These arrays are owned
 (and allocated) by the user and are passed as arguments to
-:c:func:`FARKMALLOC()`. 
+:f:func:`FARKMALLOC()`. 
 
 :ref:`FInterface.IOUTTable` and
 :ref:`FInterface.ROUTTable` list the entries in these
@@ -136,43 +136,43 @@ the following user-callable routines are available:
 
 To obtain the error weight array EWT, containing the
 multiplicative error weights used the WRMS norms, the user may call
-the routine :c:func:`FARKGETERRWEIGHTS()` as follows:
+the routine :f:func:`FARKGETERRWEIGHTS()` as follows:
 
 
 
-   .. c:function:: SUBROUTINE FARKGETERRWEIGHTS(EWT, IER)
+.. f:subroutine:: FARKGETERRWEIGHTS(EWT, IER)
    
-      Retrieves the current error weight vector (interfaces
-      with :c:func:`ARKodeGetErrWeights()`).
+   Retrieves the current error weight vector (interfaces
+   with :c:func:`ARKodeGetErrWeights()`).
       
-      **Arguments:** 
-         * EWT (``realtype``, output) -- array containing the error weight vector
-         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+   **Arguments:** 
+      * EWT (``realtype``, output) -- array containing the error weight vector
+      * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
       
-      **Notes:**
-      The array EWT, of length NEQ if using NVECTOR_SERIAL or NLOCAL
-      if using NVECTOR_PARALLEL, must already have been declared by
-      the user.
+   **Notes:**
+   The array EWT, of length NEQ if using NVECTOR_SERIAL or NLOCAL
+   if using NVECTOR_PARALLEL, must already have been declared by
+   the user.
 
 
 
 Similarly, to obtain the estimated local errors, following a
-successful call to :c:func:`FARKODE()`, the user may call the routine
-:c:func:`FARKGETESTLOCALERR()` as follows:
+successful call to :f:func:`FARKODE()`, the user may call the routine
+:f:func:`FARKGETESTLOCALERR()` as follows:
 
 
 
-   .. c:function:: SUBROUTINE FARKGETESTLOCALERR(ELE, IER)
+.. f:subroutine:: FARKGETESTLOCALERR(ELE, IER)
    
-      Retrieves the current local truncation error estimate
-      vector (interfaces with :c:func:`ARKodeGetEstLocalErrors()`).
+   Retrieves the current local truncation error estimate
+   vector (interfaces with :c:func:`ARKodeGetEstLocalErrors()`).
       
-      **Arguments:** 
-         * ELE (``realtype``, output) -- array with the estimated local error vector
-         * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+   **Arguments:** 
+      * ELE (``realtype``, output) -- array with the estimated local error vector
+      * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
       
-      **Notes:**
-      The array ELE, of length NEQ if using NVECTOR_SERIAL or NLOCAL
-      if using NVECTOR_PARALLEL, must already have been declared by
-      the user.  
+   **Notes:**
+   The array ELE, of length NEQ if using NVECTOR_SERIAL or NLOCAL
+   if using NVECTOR_PARALLEL, must already have been declared by
+   the user.  
 
