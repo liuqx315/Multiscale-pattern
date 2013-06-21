@@ -23,7 +23,7 @@ C     0 .le. t .le. 86400 sec (1 day).
 C
 C     The PDE system is treated by central differences on a uniform
 C     10 x 10 mesh, with simple polynomial initial profiles.
-C     The problem is solved with ARKODE, with the BDF/GMRES method and
+C     The problem is solved with ARKODE, with the DIRK/GMRES method and
 C     using the FARKBP banded preconditioner
 C     
 C     The second and third dimensions of U here must match the values of
@@ -31,27 +31,26 @@ C     MX and MY, for consistency with the output statements below.
 C     ----------------------------------------------------------------
 C
       IMPLICIT NONE
-C
-      INTEGER*4 MX, MY, NEQ
+      INTEGER*4 MX, MY
       PARAMETER (MX=10, MY=10)
+      INTEGER*8 NEQ
       PARAMETER (NEQ=2*MX*MY)
 C
-      INTEGER LNST, LNFE, LNSETUP, LNNI, LNCF, LNPE, LNLI, LNPS
-      INTEGER LNCFL, LH, LQ, METH, ITMETH, IATOL, ITASK
-      INTEGER LNETF, IER, MAXL, JPRETYPE, IGSTYPE, JOUT
-      INTEGER LLENRW, LLENIW, LLENRWLS, LLENIWLS
-      INTEGER*4 IOUT(25), IPAR(4)
-      INTEGER*4 NST, NFE, NPSET, NPE, NPS, NNI
-      INTEGER*4 NLI, NCFN, NCFL, NETF, MU, ML
-      INTEGER*4 LENRW, LENIW, LENRWLS, LENIWLS, LENRWBP, LENIWBP, NFEBP
+      INTEGER*4 LNST, LNST_ATT, LNFE, LNFI, LNSETUP, LNNI, LNCF, LNPE
+      INTEGER*4 LNLI, LNPS, LNCFL, LH, LNETF, LLENRW, LLENIW, LLENRWLS
+      INTEGER*4 LLENIWLS, METH, IATOL, ITASK, IER, MAXL, JPRETYPE
+      INTEGER*4 IGSTYPE, JOUT
+      INTEGER*8 IOUT(22), IPAR(4), NST, NST_ATT, NFE, NFI, NPSET, NPE
+      INTEGER*8 NPS, NNI, NLI, NCFN, NCFL, NETF, MU, ML, LENRW, LENIW
+      INTEGER*8 LENRWLS, LENIWLS, LENRWBP, LENIWBP, NFEBP, MXSTEPS
       DOUBLE PRECISION ATOL, AVDIM, DELT, FLOOR, RTOL, T, TOUT, TWOHR
-      DOUBLE PRECISION ROUT(10), U(2,MX,MY), RPAR(12)
+      DOUBLE PRECISION ROUT(6), U(2,MX,MY), RPAR(12)
 C
       DATA TWOHR/7200.0D0/, RTOL/1.0D-5/, FLOOR/100.0D0/,
-     1     JPRETYPE/1/, IGSTYPE/1/, MAXL/0/, DELT/0.0D0/
-      DATA LLENRW/1/, LLENIW/2/, LNST/3/, LNFE/4/, LNETF/5/,  LNCF/6/,
-     1     LNNI/7/, LNSETUP/8/, LQ/9/, LLENRWLS/13/, LLENIWLS/14/,
-     1     LNPE/18/, LNLI/20/, LNPS/19/, LNCFL/21/
+     1     JPRETYPE/1/, IGSTYPE/1/, MAXL/0/, DELT/0.0D0/, MXSTEPS/10000/
+      DATA LLENRW/1/, LLENIW/2/, LNST/3/, LNST_ATT/6/, LNFE/7/, LNFI/8/, 
+     1     LNETF/10/, LNCF/12/, LNNI/11/, LNSETUP/9/, LLENRWLS/14/, 
+     1     LLENIWLS/15/, LNPE/19/, LNLI/21/, LNPS/20/, LNCFL/22/
       DATA LH/2/
 C
 C Load IPAR, RPAR, and initial values
@@ -59,8 +58,7 @@ C Load IPAR, RPAR, and initial values
 C
 C     Set other input arguments.
       T = 0.0D0
-      METH = 2
-      ITMETH = 2
+      METH = 0
       IATOL = 1
       ATOL = RTOL * FLOOR
       ITASK = 1
@@ -70,7 +68,7 @@ C
      1       ' Kinetics-transport, NEQ = ', I4/)
 C     
 C     Initialize vector specification
-      CALL FNVINITS(1, NEQ, IER)
+      CALL FNVINITS(4, NEQ, IER)
       IF (IER .NE. 0) THEN
          WRITE(6,20) IER
  20      FORMAT(///' SUNDIALS_ERROR: FNVINITS returned IER = ', I5)
@@ -78,12 +76,19 @@ C     Initialize vector specification
       ENDIF
 C     
 C     Initialize ARKODE
-      CALL FARKMALLOC(T, U, METH, ITMETH, IATOL, RTOL, ATOL,
+      CALL FARKMALLOC(T, U, METH, IATOL, RTOL, ATOL,
      1               IOUT, ROUT, IPAR, RPAR, IER)
       IF (IER .NE. 0) THEN
          WRITE(6,30) IER
  30      FORMAT(///' SUNDIALS_ERROR: FARKMALLOC returned IER = ', I5)
          STOP
+      ENDIF
+C
+      CALL FARKSETIIN('MAX_NSTEPS', MXSTEPS, IER)
+      IF (IER .NE. 0) THEN
+        WRITE(6,35) IER
+ 35     FORMAT(///' SUNDIALS_ERROR: FARKSETIIN returned IER = ', I5)
+        STOP
       ENDIF
 C     
 C     Initialize SPGMR solver
@@ -112,16 +117,16 @@ C     Loop over output points, call FARKODE, print sample solution values.
 C
          CALL FARKODE(TOUT, T, U, ITASK, IER)
 C     
-         WRITE(6,50) T, IOUT(LNST), IOUT(LQ), ROUT(LH)
- 50      FORMAT(/' t = ', E14.6, 5X, 'no. steps = ', I5,
-     1        '   order = ', I3, '   stepsize = ', E14.6)
+         WRITE(6,50) T, IOUT(LNST), IOUT(LNST_ATT), ROUT(LH)
+ 50      FORMAT(/' t = ', E14.6, 5X, 'no. steps = ', I5, 
+     1        'no. att. steps = ', I5, '   stepsize = ', E14.6)
          WRITE(6,55) U(1,1,1), U(1,5,5), U(1,10,10),
      1               U(2,1,1), U(2,5,5), U(2,10,10)
  55      FORMAT('  c1 (bot.left/middle/top rt.) = ', 3E14.6/
      1        '  c2 (bot.left/middle/top rt.) = ', 3E14.6)
 C     
          IF (IER .NE. 0) THEN
-            WRITE(6,60) IER, IOUT(15)
+            WRITE(6,60) IER, IOUT(16)
  60         FORMAT(///' SUNDIALS_ERROR: FARKODE returned IER = ', I5, /,
      1             '                 Linear Solver returned IER = ', I5)
             CALL FARKFREE
@@ -133,7 +138,9 @@ C
       
 C     Print final statistics.
       NST = IOUT(LNST)
+      NST_ATT = IOUT(LNST_ATT)
       NFE = IOUT(LNFE)
+      NFI = IOUT(LNFI)
       NPSET = IOUT(LNSETUP)
       NPE = IOUT(LNPE)
       NPS = IOUT(LNPS)
@@ -147,15 +154,17 @@ C     Print final statistics.
       LENIW = IOUT(LLENIW)
       LENRWLS = IOUT(LLENRWLS)
       LENIWLS = IOUT(LLENIWLS)
-      WRITE(6,80) NST, NFE, NPSET, NPE, NPS, NNI, NLI, AVDIM, NCFN,
-     1     NCFL, NETF, LENRW, LENIW, LENRWLS, LENIWLS
+      WRITE(6,80) NST, NST_ATT, NFE, NFI, NPSET, NPE, NPS, NNI, NLI, 
+     1     AVDIM, NCFN, NCFL, NETF, LENRW, LENIW, LENRWLS, LENIWLS
  80   FORMAT(//'Final statistics:'//
-     &   ' number of steps        = ', I5, 4X,
-     &   ' number of f evals.     = ', I5/
+     &   ' number of steps        = ', I5/
+     &   ' number of step att.    = ', I5/
+     &   ' number of fe evals.    = ', I5/
+     &   ' number of fi evals.    = ', I5/
      &   ' number of prec. setups = ', I5/
-     &   ' number of prec. evals. = ', I5, 4X,
+     &   ' number of prec. evals. = ', I5/
      &   ' number of prec. solves = ', I5/
-     &   ' number of nonl. iters. = ', I5, 4X,
+     &   ' number of nonl. iters. = ', I5/
      &   ' number of lin. iters.  = ', I5/
      &   ' average Krylov subspace dimension (NLI/NNI) = ', E14.6/
      &   ' number of conv. failures.. nonlinear =', I3,
@@ -181,10 +190,11 @@ C Routine to set problem constants and initial values
 C
       IMPLICIT NONE
 C
-      INTEGER*4 MX, MY, IPAR(*)
+      INTEGER*4 MX, MY
+      INTEGER*8 IPAR(*), NEQ
       DOUBLE PRECISION RPAR(*)
 C
-      INTEGER*4 MM, JY, JX, NEQ
+      INTEGER*8 MM, JY, JX
       DOUBLE PRECISION U0
       DIMENSION U0(2,MX,MY)
       DOUBLE PRECISION Q1, Q2, Q3, Q4, A3, A4, OM, C3, DY, HDCO
@@ -246,15 +256,16 @@ C
       
 C     ----------------------------------------------------------------
 
-      SUBROUTINE FARKFUN(T, U, UDOT, IPAR, RPAR, IER)
-C     Routine for right-hand side function f
+      SUBROUTINE FARKIFUN(T, U, UDOT, IPAR, RPAR, IER)
+C     Routine for right-hand side function fi
       IMPLICIT NONE
 C
-      INTEGER*4 IPAR(*), IER
+      INTEGER*4 IER
+      INTEGER*8 IPAR(*)
       DOUBLE PRECISION T, U(2,*), UDOT(2,*), RPAR(*)
 C
-      INTEGER ILEFT, IRIGHT
-      INTEGER*4 MX, MY, MM, JY, JX, IBLOK0, IDN, IUP, IBLOK
+      INTEGER*4 ILEFT, IRIGHT
+      INTEGER*8 MX, MY, MM, JY, JX, IBLOK0, IDN, IUP, IBLOK
       DOUBLE PRECISION Q1,Q2,Q3,Q4, A3, A4, OM, C3, DY, HDCO, VDCO, HACO
       DOUBLE PRECISION C1, C2, C1DN, C2DN, C1UP, C2UP, C1LT, C2LT
       DOUBLE PRECISION C1RT, C2RT, CYDN, CYUP, HORD1, HORD2, HORAD1
@@ -334,6 +345,37 @@ C     Set horizontal diffusion and advection terms.
 C     Load all terms into UDOT.
             UDOT(1,IBLOK) = VERTD1 + HORD1 + HORAD1 + RKIN1
             UDOT(2,IBLOK) = VERTD2 + HORD2 + HORAD2 + RKIN2
+ 10      CONTINUE
+ 20   CONTINUE
+C
+      IER = 0
+C
+      RETURN
+      END
+      
+C     ----------------------------------------------------------------
+
+      SUBROUTINE FARKEFUN(T, U, UDOT, IPAR, RPAR, IER)
+C     Routine for right-hand side function fe
+      IMPLICIT NONE
+C
+      INTEGER*4 IER
+      INTEGER*8 IPAR(*)
+      DOUBLE PRECISION T, U(2,*), UDOT(2,*), RPAR(*)
+C
+      INTEGER*8 MX, MY, JY, JX, IBLOK0, IBLOK
+C
+C     Extract constants from IPAR
+      MX = IPAR(1)
+      MY = IPAR(2)
+C     
+C     Loop over all grid points, setting UDOT to zero
+      DO 20 JY = 1, MY
+         IBLOK0 = (JY - 1) * MX
+         DO 10 JX = 1, MX
+            IBLOK = IBLOK0 + JX
+            UDOT(1,IBLOK) = 0.D0
+            UDOT(2,IBLOK) = 0.D0
  10      CONTINUE
  20   CONTINUE
 C

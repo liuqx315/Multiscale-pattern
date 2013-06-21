@@ -2,9 +2,10 @@
  $Revision: 1.0 $
  $Date: $
  -----------------------------------------------------------------
- Programmer(s): S. D. Cohen, A. C. Hindmarsh, M. R. Wittman, and
-                Radu Serban  @ LLNL
-  and Daniel R. Reynolds @ SMU
+ Programmer(s): 
+  CVODE version: S. D. Cohen, A. C. Hindmarsh, M. R. Wittman, and
+                 Radu Serban  @ LLNL
+  ARKODE version: Daniel R. Reynolds @ SMU
  -----------------------------------------------------------------
  Example problem:
 
@@ -31,7 +32,7 @@
  MX = MXSUB*NPEX and MY = MYSUB*NPEY, and the ODE system size is
  neq = 2*MX*MY.
 
- The solution is done with the BDF/GMRES method (i.e. using the
+ The solution is done with the DIRK/GMRES method (i.e. using the
  ARKSPGMR linear solver) and the block-diagonal part of the
  Newton matrix as a left preconditioner. A copy of the
  block-diagonal part of the Jacobian is saved and conditionally
@@ -43,25 +44,21 @@
 
  This version uses MPI for user routines.
  
- Execution: mpirun -np N arkDiurnal_kry_p   with N = NPEX*NPEY
+ Execution: mpiexec -n N ark_diurnal_kry_p   with N = NPEX*NPEY
  (see constants below).
  ---------------------------------------------------------------*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-#include <arkode/arkode.h>               /* prototypes for ARKODE fcts. */
-#include <arkode/arkode_spgmr.h>         /* prototypes & constants for ARKSPGMR  */
+#include <arkode/arkode.h>             /* prototypes for ARKODE fcts. */
+#include <arkode/arkode_spgmr.h>       /* prototypes & constants for ARKSPGMR  */
 #include <nvector/nvector_parallel.h>  /* def. of N_Vector, macro NV_DATA_P  */
 #include <sundials/sundials_dense.h>   /* prototypes for small dense fcts. */
 #include <sundials/sundials_types.h>   /* definitions of realtype, booleantype */
 #include <sundials/sundials_math.h>    /* definition of macros SQR and EXP */
-
 #include <mpi.h>                       /* MPI constants and types */
 
 /* Problem Constants */
-
 #define NVARS        2                    /* number of species         */
 #define KH           RCONST(4.0e-6)       /* horizontal diffusivity Kh */
 #define VEL          RCONST(0.001)        /* advection velocity V      */
@@ -69,9 +66,9 @@
 #define Q1           RCONST(1.63e-16)     /* coefficients q1, q2, c3   */ 
 #define Q2           RCONST(4.66e-16)
 #define C3           RCONST(3.7e16)
-#define A3           RCONST(22.62)     /* coefficient in expression for q3(t) */
-#define A4           RCONST(7.601)     /* coefficient in expression for q4(t) */
-#define C1_SCALE     RCONST(1.0e6)     /* coefficients in initial profiles    */
+#define A3           RCONST(22.62)        /* coefficient in expression for q3(t) */
+#define A4           RCONST(7.601)        /* coefficient in expression for q4(t) */
+#define C1_SCALE     RCONST(1.0e6)        /* coefficients in initial profiles    */
 #define C2_SCALE     RCONST(1.0e12)
 
 #define T0           RCONST(0.0)          /* initial time */
@@ -85,40 +82,38 @@
 #define YMIN         RCONST(30.0)         /* grid boundaries in y  */
 #define YMAX         RCONST(50.0)
 
-#define NPEX         2              /* no. PEs in x direction of PE array */
-#define NPEY         2              /* no. PEs in y direction of PE array */
-                                    /* Total no. PEs = NPEX*NPEY */
-#define MXSUB        5              /* no. x points per subgrid */
-#define MYSUB        5              /* no. y points per subgrid */
+#define NPEX         2                    /* no. PEs in x direction of PE array */
+#define NPEY         2                    /* no. PEs in y direction of PE array */
+                                          /* Total no. PEs = NPEX*NPEY */
+#define MXSUB        5                    /* no. x points per subgrid */
+#define MYSUB        5                    /* no. y points per subgrid */
 
-#define MX           (NPEX*MXSUB)   /* MX = number of x mesh points */
-#define MY           (NPEY*MYSUB)   /* MY = number of y mesh points */
-                                    /* Spatial mesh is MX by MY */
+#define MX           (NPEX*MXSUB)         /* MX = number of x mesh points */
+#define MY           (NPEY*MYSUB)         /* MY = number of y mesh points */
+                                          /* Spatial mesh is MX by MY */
+
 /* ARKodeInit Constants */
+#define RTOL    RCONST(1.0e-5)            /* scalar relative tolerance */
+#define FLOOR   RCONST(100.0)             /* value of C1 or C2 at which tolerances */
+                                          /* change from relative to absolute      */
+#define ATOL    (RTOL*FLOOR)              /* scalar absolute tolerance */
 
-#define RTOL    RCONST(1.0e-5)    /* scalar relative tolerance */
-#define FLOOR   RCONST(100.0)     /* value of C1 or C2 at which tolerances */
-                                  /* change from relative to absolute      */
-#define ATOL    (RTOL*FLOOR)      /* scalar absolute tolerance */
 
+/* User-defined matrix accessor macro: IJth 
 
-/* User-defined matrix accessor macro: IJth */
-
-/* IJth is defined in order to write code which indexes into dense
+   IJth is defined in order to write code which indexes into dense
    matrices with a (row,column) pair, where 1 <= row,column <= NVARS.   
 
    IJth(a,i,j) references the (i,j)th entry of the small matrix realtype **a,
    where 1 <= i,j <= NVARS. The small matrix routines in sundials_dense.h
    work with matrices stored by column in a 2-dimensional array. In C,
    arrays are indexed starting at 0, not 1. */
-
 #define IJth(a,i,j) (a[j-1][i-1])
 
 /* Type : UserData 
    contains problem constants, preconditioner blocks, pivot arrays, 
    grid constants, and processor indices, as well as data needed
    for the preconditiner */
-
 typedef struct {
 
   realtype q4, om, dx, dy, hdco, haco, vdco;
@@ -134,7 +129,6 @@ typedef struct {
 } *UserData;
 
 /* Private Helper Functions */
-
 static void InitUserData(int my_pe, MPI_Comm comm, UserData data);
 static void FreeUserData(UserData data);
 static void SetInitialProfiles(N_Vector u, UserData data);
@@ -159,27 +153,21 @@ static void fcalc(realtype t, realtype udata[], realtype dudata[],
 
 
 /* Functions Called by the Solver */
-
 static int f(realtype t, N_Vector u, N_Vector udot, void *user_data);
-
 static int Precond(realtype tn, N_Vector u, N_Vector fu,
                    booleantype jok, booleantype *jcurPtr, 
                    realtype gamma, void *user_data, 
                    N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
-
 static int PSolve(realtype tn, N_Vector u, N_Vector fu, 
                   N_Vector r, N_Vector z, 
                   realtype gamma, realtype delta,
                   int lr, void *user_data, N_Vector vtemp);
 
-
 /* Private function to check function return values */
-
 static int check_flag(void *flagvalue, char *funcname, int opt, int id);
 
 
 /***************************** Main Program ******************************/
-
 int main(int argc, char *argv[])
 {
   realtype abstol, reltol, t, tout;
@@ -225,9 +213,8 @@ int main(int argc, char *argv[])
   SetInitialProfiles(u, data);
   abstol = ATOL; reltol = RTOL;
 
-  /* Call ARKodeCreate to create the solver memory and specify the 
-   * Backward Differentiation Formula and the use of a Newton iteration */
-  arkode_mem = ARKodeCreate(ARK_BDF, ARK_NEWTON);
+  /* Call ARKodeCreate to create the solver memory */
+  arkode_mem = ARKodeCreate();
   if (check_flag((void *)arkode_mem, "ARKodeCreate", 0, my_pe)) MPI_Abort(comm, 1);
 
   /* Set the pointer to user-defined data */
@@ -235,18 +222,22 @@ int main(int argc, char *argv[])
   if (check_flag(&flag, "ARKodeSetUserData", 1, my_pe)) MPI_Abort(comm, 1);
 
   /* Call ARKodeInit to initialize the integrator memory and specify the
-   * user's right hand side function in u'=f(t,u), the inital time T0, and
-   * the initial dependent variable vector u. */
-  flag = ARKodeInit(arkode_mem, f, T0, u);
+     user's right hand side functions in u'=fe(t,u)+fi(t,u) [here fe is NULL], 
+     the inital time T0, and the initial dependent variable vector u. */
+  flag = ARKodeInit(arkode_mem, NULL, f, T0, u);
   if(check_flag(&flag, "ARKodeInit", 1, my_pe)) return(1);
 
+  /* Call ARKodeSetMaxNumSteps to increase default */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1, my_pe)) return(1);
+
   /* Call ARKodeSStolerances to specify the scalar relative tolerance
-   * and scalar absolute tolerances */
+     and scalar absolute tolerances */
   flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
   if (check_flag(&flag, "ARKodeSStolerances", 1, my_pe)) return(1);
 
   /* Call ARKSpgmr to specify the linear solver ARKSPGMR 
-     with left preconditioning and the maximum Krylov dimension maxl */
+     with left preconditioning and the default Krylov dimension maxl */
   flag = ARKSpgmr(arkode_mem, PREC_LEFT, 0);
   if (check_flag(&flag, "ARKSpgmr", 1, my_pe)) MPI_Abort(comm, 1);
 
@@ -259,7 +250,7 @@ int main(int argc, char *argv[])
     printf("\n2-species diurnal advection-diffusion problem\n\n");
 
   /* In loop over output points, call ARKode, print results, test for error */
-  for (iout=1, tout = TWOHR; iout <= NOUT; iout++, tout += TWOHR) {
+  for (iout=1, tout=TWOHR; iout<=NOUT; iout++, tout+=TWOHR) {
     flag = ARKode(arkode_mem, tout, u, &t, ARK_NORMAL);
     if (check_flag(&flag, "ARKode", 1, my_pe)) break;
     PrintOutput(arkode_mem, my_pe, comm, u, t);
@@ -272,18 +263,13 @@ int main(int argc, char *argv[])
   N_VDestroy_Parallel(u);
   FreeUserData(data);
   ARKodeFree(&arkode_mem);
-
   MPI_Finalize();
-
   return(0);
 }
 
-
 /*********************** Private Helper Functions ************************/
 
-
 /* Load constants in data */
-
 static void InitUserData(int my_pe, MPI_Comm comm, UserData data)
 {
   int isubx, isuby;
@@ -322,11 +308,9 @@ static void InitUserData(int my_pe, MPI_Comm comm, UserData data)
 }
 
 /* Free user data memory */
-
 static void FreeUserData(UserData data)
 {
   int lx, ly;
-
   for (lx = 0; lx < MXSUB; lx++) {
     for (ly = 0; ly < MYSUB; ly++) {
       destroyMat((data->P)[lx][ly]);
@@ -334,12 +318,10 @@ static void FreeUserData(UserData data)
       destroyArray((data->pivot)[lx][ly]);
     }
   }
-
   free(data);
 }
 
 /* Set initial conditions in u */
-
 static void SetInitialProfiles(N_Vector u, UserData data)
 {
   int isubx, isuby, lx, ly, jx, jy;
@@ -378,11 +360,10 @@ static void SetInitialProfiles(N_Vector u, UserData data)
 }
 
 /* Print current t, step count, order, stepsize, and sampled c1,c2 values */
-
 static void PrintOutput(void *arkode_mem, int my_pe, MPI_Comm comm,
                         N_Vector u, realtype t)
 {
-  int qu, flag;
+  int flag;
   realtype hu, *udata, tempu[2];
   int npelast;
   long int i0, i1, nst;
@@ -410,24 +391,22 @@ static void PrintOutput(void *arkode_mem, int my_pe, MPI_Comm comm,
       MPI_Recv(&tempu[0], 2, PVEC_REAL_MPI_TYPE, npelast, 0, comm, &status);
     flag = ARKodeGetNumSteps(arkode_mem, &nst);
     check_flag(&flag, "ARKodeGetNumSteps", 1, my_pe);
-    flag = ARKodeGetLastOrder(arkode_mem, &qu);
-    check_flag(&flag, "ARKodeGetLastOrder", 1, my_pe);
     flag = ARKodeGetLastStep(arkode_mem, &hu);
     check_flag(&flag, "ARKodeGetLastStep", 1, my_pe);
 
 #if defined(SUNDIALS_EXTENDED_PRECISION)
-    printf("t = %.2Le   no. steps = %ld   order = %d   stepsize = %.2Le\n",
-           t, nst, qu, hu);
+    printf("t = %.2Le   no. steps = %ld   stepsize = %.2Le\n",
+           t, nst, hu);
     printf("At bottom left:  c1, c2 = %12.3Le %12.3Le \n", udata[0], udata[1]);
     printf("At top right:    c1, c2 = %12.3Le %12.3Le \n\n", tempu[0], tempu[1]);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-    printf("t = %.2le   no. steps = %ld   order = %d   stepsize = %.2le\n",
-           t, nst, qu, hu);
+    printf("t = %.2le   no. steps = %ld   stepsize = %.2le\n",
+           t, nst, hu);
     printf("At bottom left:  c1, c2 = %12.3le %12.3le \n", udata[0], udata[1]);
     printf("At top right:    c1, c2 = %12.3le %12.3le \n\n", tempu[0], tempu[1]);
 #else
-    printf("t = %.2e   no. steps = %ld   order = %d   stepsize = %.2e\n",
-           t, nst, qu, hu);
+    printf("t = %.2e   no. steps = %ld   stepsize = %.2e\n",
+           t, nst, hu);
     printf("At bottom left:  c1, c2 = %12.3e %12.3e \n", udata[0], udata[1]);
     printf("At top right:    c1, c2 = %12.3e %12.3e \n\n", tempu[0], tempu[1]);
 #endif
@@ -435,12 +414,11 @@ static void PrintOutput(void *arkode_mem, int my_pe, MPI_Comm comm,
 }
 
 /* Print final statistics contained in iopt */
-
 static void PrintFinalStats(void *arkode_mem)
 {
   long int lenrw, leniw ;
   long int lenrwLS, leniwLS;
-  long int nst, nfe, nsetups, nni, ncfn, netf;
+  long int nst, nfe, nfi, nsetups, nni, ncfn, netf;
   long int nli, npe, nps, ncfl, nfeLS;
   int flag;
 
@@ -448,7 +426,7 @@ static void PrintFinalStats(void *arkode_mem)
   check_flag(&flag, "ARKodeGetWorkSpace", 1, 0);
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1, 0);
-  flag = ARKodeGetNumRhsEvals(arkode_mem, &nfe);
+  flag = ARKodeGetNumRhsEvals(arkode_mem, &nfe, &nfi);
   check_flag(&flag, "ARKodeGetNumRhsEvals", 1, 0);
   flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
   check_flag(&flag, "ARKodeGetNumLinSolvSetups", 1, 0);
@@ -475,16 +453,15 @@ static void PrintFinalStats(void *arkode_mem)
   printf("\nFinal Statistics: \n\n");
   printf("lenrw   = %5ld     leniw   = %5ld\n", lenrw, leniw);
   printf("lenrwls = %5ld     leniwls = %5ld\n", lenrwLS, leniwLS);
-  printf("nst     = %5ld\n"                  , nst);
-  printf("nfe     = %5ld     nfels   = %5ld\n"  , nfe, nfeLS);
-  printf("nni     = %5ld     nli     = %5ld\n"  , nni, nli);
-  printf("nsetups = %5ld     netf    = %5ld\n"  , nsetups, netf);
-  printf("npe     = %5ld     nps     = %5ld\n"  , npe, nps);
+  printf("nst     = %5ld     nfe     = %5ld\n", nst, nfe);
+  printf("nfi     = %5ld     nfels   = %5ld\n", nfi, nfeLS);
+  printf("nni     = %5ld     nli     = %5ld\n", nni, nli);
+  printf("nsetups = %5ld     netf    = %5ld\n", nsetups, netf);
+  printf("npe     = %5ld     nps     = %5ld\n", npe, nps);
   printf("ncfn    = %5ld     ncfl    = %5ld\n\n", ncfn, ncfl); 
 }
  
 /* Routine to send boundary data to neighboring PEs */
-
 static void BSend(MPI_Comm comm, 
                   int my_pe, int isubx, int isuby, 
                   long int dsizex, long int dsizey,
