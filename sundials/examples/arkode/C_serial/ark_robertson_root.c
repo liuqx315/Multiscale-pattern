@@ -56,7 +56,7 @@ int main()
 {
   /* general problem parameters */
   realtype T0 = RCONST(0.0);     /* initial time */
-  realtype T1 = RCONST(0.4);     /* final time */
+  realtype T1 = RCONST(0.4);     /* first output time */
   realtype TMult = RCONST(10.0); /* output time multiplication factor */
   int Nt = 12;                   /* total number of output times */
   long int NEQ = 3;              /* number of dependent vars. */

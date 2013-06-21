@@ -10,20 +10,20 @@ C
       IMPLICIT NONE
 C
       INCLUDE "mpif.h"
-C
-      INTEGER*4 NLOCAL
+      INTEGER*8 NLOCAL
       PARAMETER (NLOCAL=2)
 C
-      INTEGER IER, MYPE, NPES, NOUT, LNST, LNFE, LNNI, LNCF, LNETF
-      INTEGER METH, ITMETH, IATOL, ITASK, JOUT
-      INTEGER*4 NEQ, I, NST, NFE, NNI, NCFN, NETF
-      INTEGER*4 IOUT(25), IPAR(2)
-      DOUBLE PRECISION Y(128), ROUT(10), RPAR(1)
+      INTEGER*4 IER, MYPE, NPES, NOUT, LNST, LNST_ATT, LNFE, LNFI, LNNI
+      INTEGER*4 LNCF, LNETF, METH, IATOL, ITASK, JOUT
+      INTEGER*8 NEQ, I, NST, NST_ATT, NFE, NFI, NNI, NCFN, NETF
+      INTEGER*8 IOUT(22), IPAR(2)
+      DOUBLE PRECISION Y(128), ROUT(6), RPAR(1)
       DOUBLE PRECISION ATOL, RTOL, DTOUT, T, ALPHA, TOUT
       DOUBLE PRECISION ERMAX, ERRI, GERMAX
 C
       DATA ATOL/1.0D-10/, RTOL/1.0D-5/, DTOUT/0.1D0/, NOUT/10/
-      DATA LNST/3/, LNFE/4/, LNNI/7/, LNCF/6/, LNETF/5/
+      DATA LNST/3/, LNST_ATT/6/, LNFE/7/, LNFI/8/, LNNI/11/, LNCF/12/, 
+     1     LNETF/10/
 C
 C     Get NPES and MYPE.  Requires initialization of MPI.
       CALL MPI_INIT(IER)
@@ -51,7 +51,6 @@ C     Set input arguments.
       NEQ = NPES * NLOCAL
       T = 0.0D0
       METH = 1
-      ITMETH = 1
       IATOL = 1
       ITASK = 1
 c     Set parameter ALPHA
@@ -66,20 +65,21 @@ C
   10    Y(I) = 1.0D0
 C
       IF (MYPE .EQ. 0) THEN
-        WRITE(6,11) NEQ, ALPHA
+        WRITE(6,11) NEQ, NLOCAL, ALPHA
   11    FORMAT('Diagonal test problem:'//' NEQ = ', I3, /
-     1         ' parameter alpha = ', F8.3)
+     1       ' NLOCAL = ', I3, /
+     2       ' parameter alpha = ', F8.3)
         WRITE(6,12)
   12    FORMAT(' ydot_i = -alpha*i * y_i (i = 1,...,NEQ)')
         WRITE(6,13) RTOL, ATOL
   13    FORMAT(' RTOL, ATOL = ', 2E10.1)
         WRITE(6,14)
-  14    FORMAT(' Method is ADAMS/FUNCTIONAL')
+  14    FORMAT(' Method is ERK')
         WRITE(6,15) NPES
   15    FORMAT(' Number of processors = ', I3//)
         ENDIF
 C
-      CALL FNVINITP(MPI_COMM_WORLD, 1, NLOCAL, NEQ, IER)
+      CALL FNVINITP(MPI_COMM_WORLD, 4, NLOCAL, NEQ, IER)
 C
       IF (IER .NE. 0) THEN
         WRITE(6,20) IER
@@ -88,7 +88,7 @@ C
         STOP
         ENDIF
 C
-      CALL FARKMALLOC(T, Y, METH, ITMETH, IATOL, RTOL, ATOL,
+      CALL FARKMALLOC(T, Y, METH, IATOL, RTOL, ATOL,
      1               IOUT, ROUT, IPAR, RPAR, IER)
 C
       IF (IER .NE. 0) THEN
@@ -104,12 +104,14 @@ C     Loop through tout values, call solver, print output, test for failure.
 C
         CALL FARKODE(TOUT, T, Y, ITASK, IER)
 C
-        IF (MYPE .EQ. 0) WRITE(6,40) T, IOUT(LNST), IOUT(LNFE)
-  40    FORMAT(' t = ', D10.2, 5X, 'no. steps = ', I5,
-     &         '   no. f-s = ', I5)
+        IF (MYPE .EQ. 0) WRITE(6,40) T, IOUT(LNST), IOUT(LNST_ATT), 
+     &       IOUT(LNFE), IOUT(LNFI)
+  40    FORMAT(' t = ', D10.2, 5X, 'steps = ', I5, 
+     &         '  (attempted = ', I5, '),  fe = ', I5, 
+     &         '  fi = ', I5)
 C
         IF (IER .NE. 0) THEN
-          WRITE(6,60) IER, IOUT(15)
+          WRITE(6,60) IER, IOUT(16)
   60      FORMAT(///' SUNDIALS_ERROR: FARKODE returned IER = ', I5, /,
      &           '                 Linear Solver returned IER = ', I5)
           CALL MPI_ABORT(MPI_COMM_WORLD, 1, IER)
@@ -139,14 +141,19 @@ C     Get global max. error from MPI_REDUCE call.
 C
 C     Print final statistics.
       NST = IOUT(LNST)
+      NST_ATT = IOUT(LNST_ATT)
       NFE = IOUT(LNFE)
+      NFI = IOUT(LNFI)
       NNI = IOUT(LNNI)
       NCFN = IOUT(LNCF)
       NETF = IOUT(LNETF)
-      IF (MYPE .EQ. 0) WRITE (6,90) NST, NFE, NNI, NCFN, NETF
+      IF (MYPE .EQ. 0) WRITE (6,90) NST, NST_ATT, NFE, NFI, NNI, NCFN, 
+     &     NETF
   90  FORMAT(/'Final statistics:'//
-     &       ' number of steps = ', I5, 5X, /,
-     &       ' number of f evals. = ', I5/
+     &       ' number of steps = ', I5/
+     &       ' number of step attempts = ', I5/
+     &       ' number of fe evals. = ', I5/
+     &       ' number of fi evals. = ', I5/
      &       ' number of nonlinear iters. = ', I5/
      &       ' number of nonlinear conv. failures = ', I3/
      &       ' number of error test failures = ', I3)
@@ -165,16 +172,40 @@ C
 C
 C     ------------------------------------------------------------------------
 C
-      SUBROUTINE FARKFUN(T, Y, YDOT, IPAR, RPAR, IER)
-C     Routine for right-hand side function f
+      SUBROUTINE FARKIFUN(T, Y, YDOT, IPAR, RPAR, IER)
+C     Routine for right-hand side function fi
 C
       IMPLICIT NONE
 C
-      INTEGER*4 IPAR(*), IER
+      INTEGER*4 IER
+      INTEGER*8 IPAR(*)
       DOUBLE PRECISION T, Y(*), YDOT(*), RPAR(*)
 C
-      INTEGER MYPE
-      INTEGER*4 NLOCAL, I
+      INTEGER*8 NLOCAL, I
+C
+      NLOCAL = IPAR(1)
+C
+      DO I = 1, NLOCAL
+         YDOT(I) = 0.D0
+      ENDDO
+C
+      IER = 0
+C
+      RETURN
+      END
+C     ------------------------------------------------------------------------
+C
+      SUBROUTINE FARKEFUN(T, Y, YDOT, IPAR, RPAR, IER)
+C     Routine for right-hand side function fe
+C
+      IMPLICIT NONE
+C
+      INTEGER*4 IER
+      INTEGER*8 IPAR(*)
+      DOUBLE PRECISION T, Y(*), YDOT(*), RPAR(*)
+C
+      INTEGER*8 MYPE
+      INTEGER*8 NLOCAL, I
       DOUBLE PRECISION ALPHA
 C
       NLOCAL = IPAR(1)

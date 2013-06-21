@@ -183,13 +183,19 @@ Completed components:
     except the NVectors themselves, and potentially supply a time step
     restriction factor (e.g. 0.5) so that after spatial adaptivity
     we'll take a slightly smaller time step.
+[X] Update FARKODE documentation to add in discussion of diagnostics
+    output file, optional user-supplied functions for adaptivity and
+    explicit stability, etc.
+[X] Automate regression testing infrastructure to run nightly, and
+    store archive of all previous results.
+[X] Update documentation system to add f90 "domain" so that Fortran
+    routines are properly referenced.
 
 
 
 Remaining components to build:
-[ ] Update FARKODE documentation to add in discussion of diagnostics
-    output file, optional user-supplied functions for adaptivity and
-    explicit stability, etc.
+[ ] Add F77 serial/parallel, C parallel, F90 parallel examples for
+    ARKode. 
 [ ] Update ARKode/FARKODE documentation regarding vector resize
     capabilities. 
 [ ] Test problem resize capabilities.
