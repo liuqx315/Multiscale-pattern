@@ -1,698 +1,568 @@
-// should I do it like heat2D.cpp? I mean use N_Vector and ark_mem, something like this? function init_from_file? how to test my code? Do you have an example? how to get the max absolute eigenvalue?
-// can't compile and hg pull has to merge branches，type emacs in terminal X11 doesn't pop up
-
 #include <iostream>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <arkode/arkode.h>
+#include <arkode/arkode_spgmr.h>
+#include <arkode/arkode_spbcgs.h>
+#include <arkode/arkode_sptfqmr.h>
+#include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 
+using namespace std;
 
-#define idx(i,j,Nx,Ny,k) ((k)*(Nx)*(Ny)+(j)*(Nx)+i)
-#define idx_v(i,j,Nx) ((j)*(Nx)+i)
+#define ONE (RCONST(1.0))
+#define pi RCONST(3.1415926535897932)
 
-// what is the input u exactly? I do it as below, is it ok?
+//#define idx(i,j,Nx,Ny,k) ((k)*(Nx)*(Ny)+(j)*(Nx)+i)
+//#define idx_v(i,j,Nx) ((j)*(Nx)+i)
+
+/* user data structure */
+typedef struct {  
+  long int N;     /* grids                   */
+  realtype dx;    /* mesh spacing            */
+  realtype delta; /* ratio of dt/dx          */
+} *UserData;
+
+/* User-supplied Functions Called by the Solver */
+static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+/* Private function to check function return values */
+static int check_flag(void *flagvalue, const string funcname, int opt);
+
 int main(int argc, const char * argv[])
 {
-    int k,i,j;
-    // Can I use realtype like this?
-    realtype *rou = new realtype[Nx*Ny];
-    realtype *qx = new realtype[Nx*Ny];
-    realtype *qy = new realtype[Nx*Ny];
-    realtype *E = new realtype[Nx*Ny];
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            rou[idx_v(i, j, Nx)]=u[idx(i, j, Nx, Ny, 0)];
-            qx[idx_v(i, j, Nx)]=u[idx(i, j, Nx, Ny, 1)];
-            qy[idx_v(i, j, Nx)]=u[idx(i, j, Nx, Ny, 2)];
-            E[idx_v(i, j, Nx)]=u[idx(i, j, Nx, Ny, 3)];
-        }
+
+   /* general problem parameters */
+  realtype T0 = RCONST(0.0);
+  realtype Tf = RCONST(150.0);
+  int Nt = 30000;
+  UserData udata = NULL;
+  realtype *data;
+  long int N, i;
+
+  /* general problem variables */
+  int flag;
+  N_Vector y = NULL;
+  void *arkode_mem = NULL;
+
+  /* allocate udata structure */
+  //udata = new UserData;
+  udata = (UserData) malloc(sizeof(*udata));
+  if (check_flag((void *) udata, "malloc", 2)) return 1;
+
+  /* read problem parameter and tolerances from input file:
+     N - number of spatial discretization points
+     delta - ratio of dt/dx */
+  double delta;
+  FILE *FID;
+  FID = fopen("input_WENO1D.txt","r");
+  flag = fscanf(FID,"  N = %li\n", &N);
+  flag = fscanf(FID,"  delta = %lf\n", &delta);
+  fclose(FID);
+
+  /* store the inputs in the UserData structure */
+  udata->N = N;
+  udata->delta = delta;
+
+  /* open solver diagnostics output file for writing */
+  FILE *DFID;
+  DFID=fopen("diags_ark_WENO1D.txt","w");
+  
+  /* Initial problem output */
+  printf("\n1D WENO ODE test problem:\n");
+  printf("  N = %li\n", udata->N);
+  printf("  ratio of dt/dx:  delta = %g\n", udata->delta);
+
+  /* Create serial vector of length N for initial condition */
+  y = N_VNew_Serial(N);
+  if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
+
+  /* set spatial mesh spacing */
+  udata->dx = RCONST(2.0)/(1.0*N-1.0);
+
+  /* output mesh to disk */
+  FID=fopen("WENO1D_mesh.txt","w");
+  for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
+  fclose(FID);
+
+  /* Access data array for new NVector y */
+  data = N_VGetArrayPointer(y);
+  if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
+
+  /* Set initial conditions into y */
+  //realtype pi = RCONST(4.0)*atan(ONE);
+  for (i=0; i<N; i++) {
+    data[i] = sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx);
+  }
+
+  /* Call ARKodeCreate to create the solver memory */
+  arkode_mem = ARKodeCreate();
+  if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
+
+  /* Reference solution will be computed with default explicit method */
+  flag = ARKodeInit(arkode_mem, f, NULL, T0, y);
+  if (check_flag(&flag, "ARKodeInit", 1)) return 1;
+
+  /* Call ARKodeSetUserData to pass rdata to user functions */
+  flag = ARKodeSetUserData(arkode_mem, (void *) udata);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
+
+  /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
+  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
+  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
+
+  /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
+  flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
+
+  /* Open output stream for results, access data arrays */
+  FILE *UFID=fopen("WENO1D.txt","w");
+  data = N_VGetArrayPointer(y);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
+
+  /* output initial condition to disk */
+  for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+  fprintf(UFID,"\n");
+
+  /* In loop, call ARKode, print results.
+     Break out of loop when the final output time has been reached */
+  realtype t  = T0;
+  //  realtype dTout = udata->delta*udata->dx;
+  realtype dTout = Tf/Nt;
+  realtype tout = T0+dTout;
+  int iout;
+  for(iout=0;iout<Nt;iout++){
+
+    flag = ARKodeSetStopTime(arkode_mem, tout);
+    
+    flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
+    printf("iteration is %i",iout);
+    if (check_flag(&flag, "ARKode", 1)) break;
+    
+    if (flag >= 0) {
+      tout += dTout;
+      tout = (tout > Tf) ? Tf : tout;
     }
-// how to get Nx and Ny? divide tao to 4 different short vectors, is it ok?
-    realtype *tao_xx = new realtype[Nx*Ny];
-    realtype *tao_xy = new realtype[Nx*Ny];
-    realtype *tao_yx = new realtype[Nx*Ny];
-    realtype *tao_yy = new realtype[Nx*Ny];
-    realtype *Cj_x = new realtype[Nx*Ny];
-    realtype *Cj_y = new realtype[Nx*Ny];
-    
-    Gettao(rou, qx, qy, E, Nx, Ny, tao_xx, tao_xy, tao_yx, tao_yy);
-    GetCj(rou, qx, qy, E, Nx, Ny, Cj_x, Cj_y);
-    
-    realtype *F = new realtype[4*Nx*Ny];
-    
-//    for (k=0;k<4;k++){
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            F[idx(i,j,Nx,Ny,0)]=WENO(i,j,0,Nx,Ny,dx, qx,u,0)+WENO(i,j,0,Nx,Ny,dy, qy,u,1);
-        }
-    }
-//    }
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            F[idx(i,j,Nx,Ny,1)]=WENO(i,j,1,Nx,Ny,dx, tao_xx,u,0)+WENO(i,j,1,Nx,Ny,dy, tao_xy,u,1);
-        }
-    }
+  
+    /* output results to disk */
+    for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+    fprintf(UFID,"\n");
+  }
+  fclose(UFID);
 
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            F[idx(i,j,Nx,Ny,2)]=WENO(i,j,2,Nx,Ny,dx, tao_yx,u,0)+WENO(i,j,2,Nx,Ny,dy, tao_yy,u,1);
-        }
-    }
+  /* Print some final statistics */
+  // long int nst;
+  //flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  //check_flag(&flag, "ARKodeGetNumSteps", 1);
 
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            F[idx(i,j,Nx,Ny,3)]=WENO(i,j,3,Nx,Ny,dx, Cj_x,u,0)+WENO(i,j,3,Nx,Ny,dy, Cj_y,u,1);
-        }
-    }
-    
-    delete []rou;
-    delete []qx;
-    delete []qy;
-    delete []E;
-    delete []tao_xx;
-    delete []tao_xy;
-    delete []tao_yx;
-    delete []tao_yy;
-    delete []Cj_x;
-    delete []Cj_y;
-    delete []F;
-    
-}
+  /* Free vectors */
+  N_VDestroy_Serial(y);
 
-static realtype WENO(int i, int j, int k, int Nx, int Ny, realtype dx, realtype *f, realtype *u, int flag){
-    realtype result;
-    realtype IS0_p,IS1_p,IS2_p,IS0_n,IS1_n,IS2_n,Epsilon,alpha_0p,alpha_1p,alpha_2p,alpha_0n,alpha_1n,alpha_2n,w0_p,w1_p,w2_p,w0_n,w1_n,w2_n,u_tpph,u_tpnh,u_tnph,u_tnnh;
-    int m,n;
-    realtype f_p = new realtype [Nx*Ny];
-    realtype f_n = new realtype [Nx*Ny];
-    for (n=0;n<Ny;n++){
-        for (m=0;m<Nx;m++){
-            f_p[idx_v(m, n, Nx)]=0.5*(f[idx_v(m, n, Nx)]+abs(max(d_f[idx_v(m, n, Nx)]))*u[idx(m, n, Nx, Ny, k)]);
-            f_n[idx_v(m, n, Nx)]=0.5*(f[idx_v(m, n, Nx)]-abs(max(d_f[idx_v(m, n, Nx)]))*u[idx(m, n, Nx, Ny, k)]);
-        }
-    }
-    if (flag==0){
-        if(i==0){
-            IS0_p=(13/12)*(f_p[idx_v(Nx-2,j,Nx)]-2*f_p[idx_v(Nx-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(Nx-2,j,Nx)]-4*f_p[idx_v(Nx-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(Nx-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i+1,j,Nx)])^2+(1/4)*(f_p[idx_v(Nx-1,j,Nx)]-1*f_p[idx_v(i+1,j,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i+1,j,Nx)]-2*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2+(1/4)*(3*f_n[idx_v(i+1,j,Nx)]-4*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i+1,j,Nx)]+f_n[idx_v(i+2,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i+2,j,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(Nx-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i+1,j,Nx)])^2+(1/4)*(f_n[idx_v(Nx-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i+1,j,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(Nx-2,j,Nx)]-(7/6)*f_p[idx_v(Nx-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(Nx-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i+1,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i+1,j,Nx)]-(1/6)*f_p[idx_v(i+2,j,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(Nx-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i+1,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i+1,j,Nx)]-(1/6)*f_n[idx_v(i+2,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i+1,j,Nx)]-(7/6)*f_n[idx_v(i+2,j,Nx)]+(2/6)*f_n[idx_v(i+3,j,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(Nx-3,j,Nx)]-(7/6)*f_p[idx_v(Nx-2,j,Nx)]+(11/6)*f_p[idx_v(Nx-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(Nx-2,j,Nx)]+(5/6)*f_p[idx_v(Nx-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(Nx-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i+1,j,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(Nx-2,j,Nx)]+(5/6)*f_n[idx_v(Nx-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(Nx-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i+1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i+1,j,Nx)]+(2/6)*f_n[idx_v(i+2,j,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-        
-        if(i==1){
-            IS0_p=(13/12)*(f_p[idx_v(Nx-1,j,Nx)]-2*f_p[idx_v(i-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(Nx-1,j,Nx)]-4*f_p[idx_v(i-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i+1,j,Nx)])^2+(1/4)*(f_p[idx_v(i-1,j,Nx)]-1*f_p[idx_v(i+1,j,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i+1,j,Nx)]-2*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2+(1/4)*(3*f_n[idx_v(i+1,j,Nx)]-4*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i+1,j,Nx)]+f_n[idx_v(i+2,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i+2,j,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i+1,j,Nx)])^2+(1/4)*(f_n[idx_v(i-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i+1,j,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(Nx-1,j,Nx)]-(7/6)*f_p[idx_v(i-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i+1,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i+1,j,Nx)]-(1/6)*f_p[idx_v(i+2,j,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i+1,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i+1,j,Nx)]-(1/6)*f_n[idx_v(i+2,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i+1,j,Nx)]-(7/6)*f_n[idx_v(i+2,j,Nx)]+(2/6)*f_n[idx_v(i+3,j,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(Nx-2,j,Nx)]-(7/6)*f_p[idx_v(Nx-1,j,Nx)]+(11/6)*f_p[idx_v(i-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(Nx-1,j,Nx)]+(5/6)*f_p[idx_v(i-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i+1,j,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(Nx-1,j,Nx)]+(5/6)*f_n[idx_v(i-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i+1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i+1,j,Nx)]+(2/6)*f_n[idx_v(i+2,j,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
+  /* Free user data */
+  free(udata);
 
-        if(i==2){
-            IS0_p=(13/12)*(f_p[idx_v(i-2,j,Nx)]-2*f_p[idx_v(i-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i-2,j,Nx)]-4*f_p[idx_v(i-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i+1,j,Nx)])^2+(1/4)*(f_p[idx_v(i-1,j,Nx)]-1*f_p[idx_v(i+1,j,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i+1,j,Nx)]-2*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2+(1/4)*(3*f_n[idx_v(i+1,j,Nx)]-4*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i+1,j,Nx)]+f_n[idx_v(i+2,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i+2,j,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i+1,j,Nx)])^2+(1/4)*(f_n[idx_v(i-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i+1,j,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i-2,j,Nx)]-(7/6)*f_p[idx_v(i-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i+1,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i+1,j,Nx)]-(1/6)*f_p[idx_v(i+2,j,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i+1,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i+1,j,Nx)]-(1/6)*f_n[idx_v(i+2,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i+1,j,Nx)]-(7/6)*f_n[idx_v(i+2,j,Nx)]+(2/6)*f_n[idx_v(i+3,j,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(Nx-1,j,Nx)]-(7/6)*f_p[idx_v(i-2,j,Nx)]+(11/6)*f_p[idx_v(i-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-2,j,Nx)]+(5/6)*f_p[idx_v(i-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i+1,j,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i-2,j,Nx)]+(5/6)*f_n[idx_v(i-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i+1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i+1,j,Nx)]+(2/6)*f_n[idx_v(i+2,j,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
+  /* Free integrator memory */
+  ARKodeFree(&arkode_mem);
 
-        if(i==Nx-1){
-            IS0_p=(13/12)*(f_p[idx_v(i-2,j,Nx)]-2*f_p[idx_v(i-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i-2,j,Nx)]-4*f_p[idx_v(i-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(0,j,Nx)])^2+(1/4)*(f_p[idx_v(i-1,j,Nx)]-1*f_p[idx_v(0,j,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(0,j,Nx)]+f_p[idx_v(1,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(0,j,Nx)]+f_p[idx_v(1,j,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(0,j,Nx)]-2*f_n[idx_v(1,j,Nx)]+f_n[idx_v(2,j,Nx)])^2+(1/4)*(3*f_n[idx_v(0,j,Nx)]-4*f_n[idx_v(1,j,Nx)]+f_n[idx_v(2,j,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(0,j,Nx)]+f_n[idx_v(1,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(1,j,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(0,j,Nx)])^2+(1/4)*(f_n[idx_v(i-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(0,j,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i-2,j,Nx)]-(7/6)*f_p[idx_v(i-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(0,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(0,j,Nx)]-(1/6)*f_p[idx_v(1,j,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(0,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(0,j,Nx)]-(1/6)*f_n[idx_v(1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(0,j,Nx)]-(7/6)*f_n[idx_v(1,j,Nx)]+(2/6)*f_n[idx_v(2,j,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i-3,j,Nx)]-(7/6)*f_p[idx_v(i-2,j,Nx)]+(11/6)*f_p[idx_v(i-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-2,j,Nx)]+(5/6)*f_p[idx_v(i-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(0,j,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i-2,j,Nx)]+(5/6)*f_n[idx_v(i-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(0,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(0,j,Nx)]+(2/6)*f_n[idx_v(1,j,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
+  /* close solver diagnostics output file */
+  fclose(DFID);
 
-        if(i==Nx-2){
-            IS0_p=(13/12)*(f_p[idx_v(i-2,j,Nx)]-2*f_p[idx_v(i-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i-2,j,Nx)]-4*f_p[idx_v(i-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i+1,j,Nx)])^2+(1/4)*(f_p[idx_v(i-1,j,Nx)]-1*f_p[idx_v(i+1,j,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(0,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(0,j,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i+1,j,Nx)]-2*f_n[idx_v(0,j,Nx)]+f_n[idx_v(1,j,Nx)])^2+(1/4)*(3*f_n[idx_v(i+1,j,Nx)]-4*f_n[idx_v(0,j,Nx)]+f_n[idx_v(1,j,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i+1,j,Nx)]+f_n[idx_v(0,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(0,j,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i+1,j,Nx)])^2+(1/4)*(f_n[idx_v(i-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i+1,j,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i-2,j,Nx)]-(7/6)*f_p[idx_v(i-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i+1,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i+1,j,Nx)]-(1/6)*f_p[idx_v(0,j,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i+1,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i+1,j,Nx)]-(1/6)*f_n[idx_v(0,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i+1,j,Nx)]-(7/6)*f_n[idx_v(0,j,Nx)]+(2/6)*f_n[idx_v(1,j,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i-3,j,Nx)]-(7/6)*f_p[idx_v(i-2,j,Nx)]+(11/6)*f_p[idx_v(i-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-2,j,Nx)]+(5/6)*f_p[idx_v(i-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i+1,j,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i-2,j,Nx)]+(5/6)*f_n[idx_v(i-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i+1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i+1,j,Nx)]+(2/6)*f_n[idx_v(0,j,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-
-        if(i==Nx-3){
-            IS0_p=(13/12)*(f_p[idx_v(i-2,j,Nx)]-2*f_p[idx_v(i-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i-2,j,Nx)]-4*f_p[idx_v(i-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i+1,j,Nx)])^2+(1/4)*(f_p[idx_v(i-1,j,Nx)]-1*f_p[idx_v(i+1,j,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i+1,j,Nx)]-2*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(0,j,Nx)])^2+(1/4)*(3*f_n[idx_v(i+1,j,Nx)]-4*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(0,j,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i+1,j,Nx)]+f_n[idx_v(i+2,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i+2,j,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i+1,j,Nx)])^2+(1/4)*(f_n[idx_v(i-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i+1,j,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i-2,j,Nx)]-(7/6)*f_p[idx_v(i-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i+1,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i+1,j,Nx)]-(1/6)*f_p[idx_v(i+2,j,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i+1,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i+1,j,Nx)]-(1/6)*f_n[idx_v(i+2,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i+1,j,Nx)]-(7/6)*f_n[idx_v(i+2,j,Nx)]+(2/6)*f_n[idx_v(0,j,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i-3,j,Nx)]-(7/6)*f_p[idx_v(i-2,j,Nx)]+(11/6)*f_p[idx_v(i-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-2,j,Nx)]+(5/6)*f_p[idx_v(i-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i+1,j,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i-2,j,Nx)]+(5/6)*f_n[idx_v(i-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i+1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i+1,j,Nx)]+(2/6)*f_n[idx_v(i+2,j,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-
-        if(i>2&&i<Nx-3){
-            IS0_p=(13/12)*(f_p[idx_v(i-2,j,Nx)]-2*f_p[idx_v(i-1,j,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i-2,j,Nx)]-4*f_p[idx_v(i-1,j,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-    
-            IS1_p=(13/12)*(f_p[idx_v(i-1,j,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i+1,j,Nx)])^2+(1/4)*(f_p[idx_v(i-1,j,Nx)]-1*f_p[idx_v(i+1,j,Nx)])^2;
-    
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i+1,j,Nx)]+f_p[idx_v(i+2,j,Nx)])^2;
-    
-            IS0_n=(13/12)*(f_n[idx_v(i+1,j,Nx)]-2*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2+(1/4)*(3*f_n[idx_v(i+1,j,Nx)]-4*f_n[idx_v(i+2,j,Nx)]+f_n[idx_v(i+3,j,Nx)])^2;
-    
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i+1,j,Nx)]+f_n[idx_v(i+2,j,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i+2,j,Nx)])^2;
-    
-            IS2_n=(13/12)*(f_n[idx_v(i-1,j,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i+1,j,Nx)])^2+(1/4)*(f_n[idx_v(i-1,j,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i+1,j,Nx)])^2;
-    
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-    
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-    
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i-2,j,Nx)]-(7/6)*f_p[idx_v(i-1,j,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i+1,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i+1,j,Nx)]-(1/6)*f_p[idx_v(i+2,j,Nx)]);
-    
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i+1,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i+1,j,Nx)]-(1/6)*f_n[idx_v(i+2,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i+1,j,Nx)]-(7/6)*f_n[idx_v(i+2,j,Nx)]+(2/6)*f_n[idx_v(i+3,j,Nx)]);
-    
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i-3,j,Nx)]-(7/6)*f_p[idx_v(i-2,j,Nx)]+(11/6)*f_p[idx_v(i-1,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i-2,j,Nx)]+(5/6)*f_p[idx_v(i-1,j,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i-1,j,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i+1,j,Nx)]);
-    
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i-2,j,Nx)]+(5/6)*f_n[idx_v(i-1,j,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i-1,j,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i+1,j,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i+1,j,Nx)]+(2/6)*f_n[idx_v(i+2,j,Nx)]);
-    
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-    }
-
-    if (flag==1){
-        
-        if(j==0){
-            IS0_p=(13/12)*(f_p[idx_v(i,Ny-2,Nx)]-2*f_p[idx_v(i,Ny-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,Ny-2,Nx)]-4*f_p[idx_v(i,Ny-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,Ny-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,j+1,Nx)])^2+(1/4)*(f_p[idx_v(i,Ny-1,Nx)]-1*f_p[idx_v(i,j+1,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,j+1,Nx)]-2*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2+(1/4)*(3*f_n[idx_v(i,j+1,Nx)]-4*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,j+1,Nx)]+f_n[idx_v(i,j+2,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,j+2,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,Ny-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,j+1,Nx)])^2+(1/4)*(f_n[idx_v(i,Ny-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,j+1,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,Ny-2,Nx)]-(7/6)*f_p[idx_v(i,Ny-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,Ny-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,j+1,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,j+1,Nx)]-(1/6)*f_p[idx_v(i,j+2,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,Ny-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,j+1,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,j+1,Nx)]-(1/6)*f_n[idx_v(i,j+2,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j+1,Nx)]-(7/6)*f_n[idx_v(i,j+2,Nx)]+(2/6)*f_n[idx_v(i,j+3,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,Ny-3,Nx)]-(7/6)*f_p[idx_v(i,Ny-2,Nx)]+(11/6)*f_p[idx_v(i,Ny-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,Ny-2,Nx)]+(5/6)*f_p[idx_v(i,Ny-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,Ny-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,j+1,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,Ny-2,Nx)]+(5/6)*f_n[idx_v(i,Ny-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,Ny-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,j+1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,j+1,Nx)]+(2/6)*f_n[idx_v(i,j+2,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-        
-        if(j==1){
-            IS0_p=(13/12)*(f_p[idx_v(i,Ny-1,Nx)]-2*f_p[idx_v(i,j-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,Ny-1,Nx)]-4*f_p[idx_v(i,j-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,j-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,j+1,Nx)])^2+(1/4)*(f_p[idx_v(i,j-1,Nx)]-1*f_p[idx_v(i,j+1,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,j+1,Nx)]-2*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2+(1/4)*(3*f_n[idx_v(i,j+1,Nx)]-4*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,j+1,Nx)]+f_n[idx_v(i,j+2,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,j+2,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,j-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,j+1,Nx)])^2+(1/4)*(f_n[idx_v(i,j-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,j+1,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,Ny-1,Nx)]-(7/6)*f_p[idx_v(i,j-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,j+1,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,j+1,Nx)]-(1/6)*f_p[idx_v(i,j+2,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,j+1,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,j+1,Nx)]-(1/6)*f_n[idx_v(i,j+2,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j+1,Nx)]-(7/6)*f_n[idx_v(i,j+2,Nx)]+(2/6)*f_n[idx_v(i,j+3,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,Ny-2,Nx)]-(7/6)*f_p[idx_v(i,Ny-1,Nx)]+(11/6)*f_p[idx_v(i,j-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,Ny-1,Nx)]+(5/6)*f_p[idx_v(i,j-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,j+1,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,Ny-1,Nx)]+(5/6)*f_n[idx_v(i,j-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,j+1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,j+1,Nx)]+(2/6)*f_n[idx_v(i,j+2,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-
-        if(i==2){
-            IS0_p=(13/12)*(f_p[idx_v(i,j-2,Nx)]-2*f_p[idx_v(i,j-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,j-2,Nx)]-4*f_p[idx_v(i,j-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,j-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,j+1,Nx)])^2+(1/4)*(f_p[idx_v(i,j-1,Nx)]-1*f_p[idx_v(i,j+1,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,j+1,Nx)]-2*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2+(1/4)*(3*f_n[idx_v(i,j+1,Nx)]-4*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,j+1,Nx)]+f_n[idx_v(i,j+2,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,j+2,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,j-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,j+1,Nx)])^2+(1/4)*(f_n[idx_v(i,j-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,j+1,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,j-2,Nx)]-(7/6)*f_p[idx_v(i,j-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,j+1,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,j+1,Nx)]-(1/6)*f_p[idx_v(i,j+2,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,j+1,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,j+1,Nx)]-(1/6)*f_n[idx_v(i,j+2,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j+1,Nx)]-(7/6)*f_n[idx_v(i,j+2,Nx)]+(2/6)*f_n[idx_v(i,j+3,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,Ny-1,Nx)]-(7/6)*f_p[idx_v(i,j-2,Nx)]+(11/6)*f_p[idx_v(i,j-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-2,Nx)]+(5/6)*f_p[idx_v(i,j-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,j+1,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,j-2,Nx)]+(5/6)*f_n[idx_v(i,j-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,j+1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,j+1,Nx)]+(2/6)*f_n[idx_v(i,j+2,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-        
-        if(j==Ny-1){
-            IS0_p=(13/12)*(f_p[idx_v(i,j-2,Nx)]-2*f_p[idx_v(i,j-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,j-2,Nx)]-4*f_p[idx_v(i,j-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,j-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,0,Nx)])^2+(1/4)*(f_p[idx_v(i,j-1,Nx)]-1*f_p[idx_v(i,0,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,0,Nx)]+f_p[idx_v(i,1,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,0,Nx)]+f_p[idx_v(i,1,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,0,Nx)]-2*f_n[idx_v(i,1,Nx)]+f_n[idx_v(i,2,Nx)])^2+(1/4)*(3*f_n[idx_v(i,0,Nx)]-4*f_n[idx_v(i,1,Nx)]+f_n[idx_v(i,2,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,0,Nx)]+f_n[idx_v(i,1,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,1,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,j-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,0,Nx)])^2+(1/4)*(f_n[idx_v(i,j-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,0,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,j-2,Nx)]-(7/6)*f_p[idx_v(i,j-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,0,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,0,Nx)]-(1/6)*f_p[idx_v(i,1,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,0,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,0,Nx)]-(1/6)*f_n[idx_v(i,1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,0,Nx)]-(7/6)*f_n[idx_v(i,1,Nx)]+(2/6)*f_n[idx_v(i,2,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,j-3,Nx)]-(7/6)*f_p[idx_v(i,j-2,Nx)]+(11/6)*f_p[idx_v(i,j-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-2,Nx)]+(5/6)*f_p[idx_v(i,j-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,0,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,j-2,Nx)]+(5/6)*f_n[idx_v(i,j-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,0,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,0,Nx)]+(2/6)*f_n[idx_v(i,1,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-        
-        if(i==Nx-2){
-            IS0_p=(13/12)*(f_p[idx_v(i,j-2,Nx)]-2*f_p[idx_v(i,j-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,j-2,Nx)]-4*f_p[idx_v(i,j-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,j-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,j+1,Nx)])^2+(1/4)*(f_p[idx_v(i,j-1,Nx)]-1*f_p[idx_v(i,j+1,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,0,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,0,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,j+1,Nx)]-2*f_n[idx_v(i,0,Nx)]+f_n[idx_v(i,1,Nx)])^2+(1/4)*(3*f_n[idx_v(i,j+1,Nx)]-4*f_n[idx_v(i,0,Nx)]+f_n[idx_v(i,1,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,j+1,Nx)]+f_n[idx_v(i,0,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,0,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,j-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,j+1,Nx)])^2+(1/4)*(f_n[idx_v(i,j-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,j+1,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,j-2,Nx)]-(7/6)*f_p[idx_v(i,j-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,j+1,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,j+1,Nx)]-(1/6)*f_p[idx_v(i,0,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,j+1,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,j+1,Nx)]-(1/6)*f_n[idx_v(i,0,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j+1,Nx)]-(7/6)*f_n[idx_v(i,0,Nx)]+(2/6)*f_n[idx_v(i,1,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,j-3,Nx)]-(7/6)*f_p[idx_v(i,j-2,Nx)]+(11/6)*f_p[idx_v(i,j-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-2,Nx)]+(5/6)*f_p[idx_v(i,j-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,j+1,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,j-2,Nx)]+(5/6)*f_n[idx_v(i,j-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,j+1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,j+1,Nx)]+(2/6)*f_n[idx_v(i,0,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-
-        if(i==Nx-3){
-            IS0_p=(13/12)*(f_p[idx_v(i,j-2,Nx)]-2*f_p[idx_v(i,j-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,j-2,Nx)]-4*f_p[idx_v(i,j-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,j-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,j+1,Nx)])^2+(1/4)*(f_p[idx_v(i,j+1,Nx)]-1*f_p[idx_v(i,j+1,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,j+1,Nx)]-2*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,0,Nx)])^2+(1/4)*(3*f_n[idx_v(i,j+1,Nx)]-4*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,0,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,j+1,Nx)]+f_n[idx_v(i,j+2,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,j+2,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,j-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,j+1,Nx)])^2+(1/4)*(f_n[idx_v(i,j-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,j+1,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,j-2,Nx)]-(7/6)*f_p[idx_v(i,j-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,j+1,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,j+1,Nx)]-(1/6)*f_p[idx_v(i,j+2,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,j+1,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,j+1,Nx)]-(1/6)*f_n[idx_v(i,j+2,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j+1,Nx)]-(7/6)*f_n[idx_v(i,j+2,Nx)]+(2/6)*f_n[idx_v(i,0,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,j-3,Nx)]-(7/6)*f_p[idx_v(i,j-2,Nx)]+(11/6)*f_p[idx_v(i,j-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-2,Nx)]+(5/6)*f_p[idx_v(i,j-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,j+1,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,j-2,Nx)]+(5/6)*f_n[idx_v(i,j-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,j+1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,j+1,Nx)]+(2/6)*f_n[idx_v(i,j+2,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-
-        if(j>2&&i<Ny-3){
-            IS0_p=(13/12)*(f_p[idx_v(i,j-2,Nx)]-2*f_p[idx_v(i,j-1,Nx)]+f_p[idx_v(i,j,Nx)])^2+(1/4)*(f_p[idx_v(i,j-2,Nx)]-4*f_p[idx_v(i,j-1,Nx)]+3*f_p[idx_v(i,j,Nx)])^2;
-            
-            IS1_p=(13/12)*(f_p[idx_v(i,j-1,Nx)]-2*f_p[idx_v(i,j,Nx)]+f_p[idx_v(i,j+1,Nx)])^2+(1/4)*(f_p[idx_v(i,j-1,Nx)]-1*f_p[idx_v(i,j+1,Nx)])^2;
-            
-            IS2_p=(13/12)*(f_p[idx_v(i,j,Nx)]-2*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2+(1/4)*(3*f_p[idx_v(i,j,Nx)]-4*f_p[idx_v(i,j+1,Nx)]+f_p[idx_v(i,j+2,Nx)])^2;
-            
-            IS0_n=(13/12)*(f_n[idx_v(i,j+1,Nx)]-2*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2+(1/4)*(3*f_n[idx_v(i,j+1,Nx)]-4*f_n[idx_v(i,j+2,Nx)]+f_n[idx_v(i,j+3,Nx)])^2;
-            
-            IS1_n=(13/12)*(f_n[idx_v(i,j,Nx)]-2*f_n[idx_v(i,j+1,Nx)]+f_n[idx_v(i,j+2,Nx)])^2+(1/4)*(f_n[idx_v(i,j,Nx)]-1*f_n[idx_v(i,j+2,Nx)])^2;
-            
-            IS2_n=(13/12)*(f_n[idx_v(i,j-1,Nx)]-2*f_n[idx_v(i,j,Nx)]+f_n[idx_v(i,j+1,Nx)])^2+(1/4)*(f_n[idx_v(i,j-1,Nx)]-4*f_n[idx_v(i,j,Nx)]+3*f_n[idx_v(i,j+1,Nx)])^2;
-            
-            Epsilon=10e-6;
-            alpha_0p=(1/10)*(1/(Epsilon+IS0_p))^2;
-            alpha_1p=(6/10)*(1/(Epsilon+IS1_p))^2;
-            alpha_2p=(3/10)*(1/(Epsilon+IS2_p))^2;
-            alpha_0n=(1/10)*(1/(Epsilon+IS0_n))^2;
-            alpha_1n=(6/10)*(1/(Epsilon+IS1_n))^2;
-            alpha_2n=(3/10)*(1/(Epsilon+IS2_n))^2;
-            
-            w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
-            w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
-            w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
-            w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
-            w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
-            w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
-            
-            u_tpph=w0_p*((2/6)*f_p[idx_v(i,j-2,Nx)]-(7/6)*f_p[idx_v(i,j-1,Nx)]+(11/6)*f_p[idx_v(i,j,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]+(2/6)*f_p[idx_v(i,j+1,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j,Nx)]+(5/6)*f_p[idx_v(i,j+1,Nx)]-(1/6)*f_p[idx_v(i,j+2,Nx)]);
-            
-            u_tnph=w2_n*((-1/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]+(2/6)*f_n[idx_v(i,j+1,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j,Nx)]+(5/6)*f_n[idx_v(i,j+1,Nx)]-(1/6)*f_n[idx_v(i,j+2,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j+1,Nx)]-(7/6)*f_n[idx_v(i,j+2,Nx)]+(2/6)*f_n[idx_v(i,j+3,Nx)]);
-            
-            u_tpnh=w0_p*((2/6)*f_p[idx_v(i,j-3,Nx)]-(7/6)*f_p[idx_v(i,j-2,Nx)]+(11/6)*f_p[idx_v(i,j-1,Nx)])+w1_p*((-1/6)*f_p[idx_v(i,j-2,Nx)]+(5/6)*f_p[idx_v(i,j-1,Nx)]+(2/6)*f_p[idx_v(i,j,Nx)])+w2_p*((2/6)*f_p[idx_v(i,j-1,Nx)]+(5/6)*f_p[idx_v(i,j,Nx)]-(1/6)*f_p[idx_v(i,j+1,Nx)]);
-            
-            u_tnnh=w2_n*((-1/6)*f_n[idx_v(i,j-2,Nx)]+(5/6)*f_n[idx_v(i,j-1,Nx)]+(2/6)*f_n[idx_v(i,j,Nx)])+w1_n*((2/6)*f_n[idx_v(i,j-1,Nx)]+(5/6)*f_n[idx_v(i,j,Nx)]-(1/6)*f_n[idx_v(i,j+1,Nx)])+w0_n*((11/6)*f_n[idx_v(i,j,Nx)]-(7/6)*f_n[idx_v(i,j+1,Nx)]+(2/6)*f_n[idx_v(i,j+2,Nx)]);
-            
-            result=-(1/dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-        }
-
-    }
-    delete []f_p;
-    delete []f_n;
-    return result;
+  return 0;
 }
 
 
-static int Gettao(realtype *rou, realtype *qx, realtype *qy, realtype *E, int Nx, int Ny, realtype *tao_xx, realtype *tao_xy, realtype *tao_yx, realtype *tao_yy){
-    int k,i,j;
-    realtype *vx = new realtype [Nx*Ny];
-    realtype *vy = new realtype [Nx*Ny];
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            vx[idx_v(i,j,Nx)]=qx[idx_v(i, j, Nx)]/rou[idx_v(i, j, Nx)];
-            vy[idx_v(i,j,Nx)]=qy[idx_v(i, j, Nx)]/rou[idx_v(i, j, Nx)];
-         }
-    }
-//    for (k=0;k<4;k++){
+/*--------------------------------
+ * Functions called by the solver
+ *--------------------------------*/
+
+/* f routine to compute the ODE RHS function f(t,y). */
+static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+{
+  /* clear out ydot (to be careful) */
+  N_VConst(0.0, ydot);
+  
+  int i; 
+  realtype IS0_p,IS1_p,IS2_p,IS0_n,IS1_n,IS2_n,Epsilon;
+  realtype alpha_0p,alpha_1p,alpha_2p,alpha_0n,alpha_1n,alpha_2n;
+  realtype w0_p,w1_p,w2_p,w0_n,w1_n,w2_n,u_tpph,u_tpnh,u_tnph,u_tnnh;
+
+  /* problem data */
+  UserData udata = (UserData) user_data;
+  
+  /* y_positive and y_negative */
+  N_Vector yp = NULL;
+  N_Vector yn = NULL;
+
+  /* shortcuts to number of intervals, background values */
+  long int N  = udata->N;
+  realtype delta  = udata->delta;
+  realtype dx = udata->dx;
+
+  /* Create serial vector of length N for initial condition */
+  yp = N_VNew_Serial(N);
+  if (check_flag((void *) yp, "N_VNew_Serial", 0)) return 1;
+  yn = N_VNew_Serial(N);
+  if (check_flag((void *) yn, "N_VNew_Serial", 0)) return 1;
+
+  N_VLinearSum( 0.5, y, 0.5, y, yp );
+  N_VLinearSum( 0.5, y, -0.5, y, yn );
+
+  /* access data arrays */
+  realtype *Y = N_VGetArrayPointer(y);
+  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
+  realtype *Ydot = N_VGetArrayPointer(ydot);
+  if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return 1;
+  realtype *YP = N_VGetArrayPointer(yp);
+  if (check_flag((void *) YP, "N_VGetArrayPointer", 0)) return 1;
+  realtype *YN = N_VGetArrayPointer(yn);
+  if (check_flag((void *) YN, "N_VGetArrayPointer", 0)) return 1;
+  
+  /* iterate over domain, computing all equations */
+
+    IS0_p=(13/12)*(YP[N-3]-2*YP[N-2]+YP[0])*(YP[N-3]-2*YP[N-2]+YP[0])+(1/4)*(YP[N-3]-4*YP[N-2]+3*YP[0])*(YP[N-3]-4*YP[N-2]+3*YP[0]);
+
+    IS1_p=(13/12)*(YP[N-2]-2*YP[0]+YP[1])*(YP[N-2]-2*YP[0]+YP[1])+(1/4)*(YP[N-2]-1*YP[1])*(YP[N-2]-1*YP[1]);
+
+    IS2_p=(13/12)*(YP[0]-2*YP[1]+YP[2])*(YP[0]-2*YP[1]+YP[2])+(1/4)*(3*YP[0]-4*YP[1]+YP[2])*(3*YP[0]-4*YP[1]+YP[2]);
+
+    IS0_n=(13/12)*(YN[1]-2*YN[2]+YN[3])*(YN[1]-2*YN[2]+YN[3])+(1/4)*(3*YN[1]-4*YN[2]+YN[3])*(3*YN[1]-4*YN[2]+YN[3]);
+
+    IS1_n=(13/12)*(YN[0]-2*YN[1]+YN[2])*(YN[0]-2*YN[1]+YN[2])+(1/4)*(YN[0]-1*YN[2])*(YN[0]-1*YN[2]);
+
+    IS2_n=(13/12)*(YN[N-2]-2*YN[0]+YN[1])*(YN[N-2]-2*YN[0]+YN[1])+(1/4)*(YN[N-2]-4*YN[0]+3*YN[1])*(YN[N-2]-4*YN[0]+3*YN[1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[N-3]-(7/6)*YP[N-2]+(11/6)*YP[0])+w1_p*((-1/6)*YP[N-2]+(5/6)*YP[0]+(2/6)*YP[1])+w2_p*((2/6)*YP[0]+(5/6)*YP[1]-(1/6)*YP[2]);
+
+    u_tnph=w2_n*((-1/6)*YN[N-2]+(5/6)*YN[0]+(2/6)*YN[1])+w1_n*((2/6)*YN[0]+(5/6)*YN[1]-(1/6)*YN[2])+w0_n*((11/6)*YN[1]-(7/6)*YN[2]+(2/6)*YN[3]);
+
+    u_tpnh=w0_p*((2/6)*YP[N-4]-(7/6)*YP[N-3]+(11/6)*YP[N-2])+w1_p*((-1/6)*YP[N-3]+(5/6)*YP[N-2]+(2/6)*YP[0])+w2_p*((2/6)*YP[N-2]+(5/6)*YP[0]-(1/6)*YP[1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[N-3]+(5/6)*YN[N-2]+(2/6)*YN[0])+w1_n*((2/6)*YN[N-2]+(5/6)*YN[0]-(1/6)*YN[1])+w0_n*((11/6)*YN[0]-(7/6)*YN[1]+(2/6)*YN[2]);
+
+    Ydot[0]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+
+    i=1;
+    IS0_p=(13/12)*(YP[N-2]-2*YP[i-1]+YP[i])*(YP[N-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[N-2]-4*YP[i-1]+3*YP[i])*(YP[N-2]-4*YP[i-1]+3*YP[i]);
+
+    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+
+    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+
+    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[i+3])*(YN[i+1]-2*YN[i+2]+YN[i+3])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[i+3])*(3*YN[i+1]-4*YN[i+2]+YN[i+3]);
+
+    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+
+    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[N-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+
+    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[i+3]);
+
+    u_tpnh=w0_p*((2/6)*YP[N-3]-(7/6)*YP[N-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[N-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[N-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+
+    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+
+      i=2;
+      IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+
+    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+
+    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+
+    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[i+3])*(YN[i+1]-2*YN[i+2]+YN[i+3])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[i+3])*(3*YN[i+1]-4*YN[i+2]+YN[i+3]);
+
+    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+
+    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+
+    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[i+3]);
+
+    u_tpnh=w0_p*((2/6)*YP[N-2]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+
+    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+
+  for (i=3; i<N-3; i++){
+
+    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+
+    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+
+    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+
+    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[i+3])*(YN[i+1]-2*YN[i+2]+YN[i+3])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[i+3])*(3*YN[i+1]-4*YN[i+2]+YN[i+3]);
+
+    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+
+    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+
+    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[i+3]);
+
+    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+
+    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+  }
     
-        for(j=0;j<Ny;j++){
-            for(i=0;i<Nx;i++){
-                tao_xx[idx_v(i,j,Nx)]=qx[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)];
-                tao_xy[idx_v(i,j,Nx)]=qx[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)];
-                tao_yx[idx_v(i,j,Nx)]=qy[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)];
-                tao_yy[idx_v(i,j,Nx)]=qy[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)];
-            }
-        }
-    delete *vx;
-    delete *vy;
-    return 0;
-//    }
+    i=N-3;
+  
+    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+
+    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+
+    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+
+    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[1])*(YN[i+1]-2*YN[i+2]+YN[1])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[1])*(3*YN[i+1]-4*YN[i+2]+YN[1]);
+
+    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+
+    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+
+    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[1]);
+
+    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+
+    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+
+    i=N-2;
+    
+    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+
+    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+
+    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[1])*(YP[i]-2*YP[i+1]+YP[1])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[1])*(3*YP[i]-4*YP[i+1]+YP[1]);
+
+    IS0_n=(13/12)*(YN[i+1]-2*YN[1]+YN[2])*(YN[i+1]-2*YN[1]+YN[2])+(1/4)*(3*YN[i+1]-4*YN[1]+YN[2])*(3*YN[i+1]-4*YN[1]+YN[2]);
+
+    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[1])*(YN[i]-2*YN[i+1]+YN[1])+(1/4)*(YN[i]-1*YN[1])*(YN[i]-1*YN[1]);
+
+    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[1]);
+
+    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[1])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[1]+(2/6)*YN[2]);
+
+    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[1]);
+
+    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+
+    i=N-1;
+
+    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+
+    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[1])*(YP[i-1]-2*YP[i]+YP[1])+(1/4)*(YP[i-1]-1*YP[1])*(YP[i-1]-1*YP[1]);
+
+    IS2_p=(13/12)*(YP[i]-2*YP[1]+YP[2])*(YP[i]-2*YP[1]+YP[2])+(1/4)*(3*YP[i]-4*YP[1]+YP[2])*(3*YP[i]-4*YP[1]+YP[2]);
+
+    IS0_n=(13/12)*(YN[1]-2*YN[2]+YN[3])*(YN[1]-2*YN[2]+YN[3])+(1/4)*(3*YN[1]-4*YN[2]+YN[3])*(3*YN[1]-4*YN[2]+YN[3]);
+
+    IS1_n=(13/12)*(YN[i]-2*YN[1]+YN[2])*(YN[i]-2*YN[1]+YN[2])+(1/4)*(YN[i]-1*YN[2])*(YN[i]-1*YN[2]);
+
+    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[1])*(YN[i-1]-2*YN[i]+YN[1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[1])*(YN[i-1]-4*YN[i]+3*YN[1]);
+
+    Epsilon=0.000001;
+    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
+    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
+    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
+    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
+    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
+    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+
+    w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
+    w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
+    w2_p=alpha_2p/(alpha_0p+alpha_1p+alpha_2p);
+    w0_n=alpha_0n/(alpha_0n+alpha_1n+alpha_2n);
+    w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
+    w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
+
+    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[1])+w2_p*((2/6)*YP[i]+(5/6)*YP[1]-(1/6)*YP[2]);
+
+    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[1])+w1_n*((2/6)*YN[i]+(5/6)*YN[1]-(1/6)*YN[2])+w0_n*((11/6)*YN[1]-(7/6)*YN[2]+(2/6)*YN[3]);
+
+    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[1]);
+
+    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[1])+w0_n*((11/6)*YN[i]-(7/6)*YN[1]+(2/6)*YN[2]);
+
+    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+
+ /* Free vectors */
+  N_VDestroy_Serial(yp);
+  N_VDestroy_Serial(yn);
+
+  return 0;
 }
 
+/*-------------------------------
+ * Private helper functions
+ *-------------------------------*/
 
-static int GetCj(realtype *rou, realtype *qx, realtype *qy, realtype *E, int Nx, int Ny, realtype *Cj_x, realtype *Cj_y){
-    int k,i,j;
-    realtype *vx = new realtype [Nx*Ny];
-    realtype *vy = new realtype [Nx*Ny];
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            vx[idx_v(i,j,Nx)]=qx[idx_v(i, j, Nx)]/rou[idx_v(i, j, Nx)];
-            vy[idx_v(i,j,Nx)]=qy[idx_v(i, j, Nx)]/rou[idx_v(i, j, Nx)];
-        }
-    }
-    //    for (k=0;k<4;k++){
-    
-    for(j=0;j<Ny;j++){
-        for(i=0;i<Nx;i++){
-            Cj_x[idx_v(i,j,Nx)]=qx[idx_v(i,j,Nx)]*qx[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)]*qx[idx_v(i,j,Nx)]+qx[idx_v(i,j,Nx)]*qy[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)];
-            Cj_y[idx_v(i,j,Nx)]=qy[idx_v(i,j,Nx)]*qy[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)]*qy[idx_v(i,j,Nx)]+qx[idx_v(i,j,Nx)]*qy[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)];
-        }
-    }
-    delete *vx;
-    delete *vy;
-    return 0;
-    //    }
+/* Check function return value...
+    opt == 0 means SUNDIALS function allocates memory so check if
+             returned NULL pointer
+    opt == 1 means SUNDIALS function returns a flag so check if
+             flag >= 0
+    opt == 2 means function allocates memory so check if returned
+             NULL pointer  
+*/
+/*
+static int check_flag(void *flagvalue, string funcname, int opt)
+{
+  int *errflag;
+
+  // Check if SUNDIALS function returned NULL pointer - no memory allocated 
+  if (opt == 0 && flagvalue == NULL) {
+    fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
+            funcname);
+    return 1; }
+
+  // Check if flag < 0 
+  else if (opt == 1) {
+    errflag = (int *) flagvalue;
+    if (*errflag < 0) {
+      fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
+              funcname, *errflag);
+      return 1; }}
+
+  // Check if function returned NULL pointer - no memory allocated 
+  else if (opt == 2 && flagvalue == NULL) {
+    fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
+            funcname);
+    return 1; }
+
+  return 0;
 }
+*/
+
+static int check_flag(void *flagvalue, const string funcname, int opt)
+{
+  int *errflag;
+
+  // Check if SUNDIALS function returned NULL pointer - no memory allocated
+  if (opt == 0 && flagvalue == NULL) {
+    cerr << "\nSUNDIALS_ERROR: " << funcname << " failed - returned NULL pointer\n\n";
+    return 1; }
+
+  // Check if flag < 0
+  else if (opt == 1) {
+    errflag = (int *) flagvalue;
+    if (*errflag < 0) {
+      cerr << "\nSUNDIALS_ERROR: " << funcname << " failed with flag = " << *errflag << "\n\n";
+      return 1; 
+    }
+  }
+  
+  // Check if function returned NULL pointer - no memory allocated
+  else if (opt == 2 && flagvalue == NULL) {
+    cerr << "\nMEMORY_ERROR: " << funcname << " failed - returned NULL pointer\n\n";
+    return 1; }
+
+  return 0;
+}
+
+/*---- end of file ----*/
+
