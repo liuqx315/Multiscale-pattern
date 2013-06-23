@@ -93,12 +93,30 @@ int main(int argc, const char * argv[])
   /* Set initial conditions into y */
   //realtype pi = RCONST(4.0)*atan(ONE);
   for (i=0; i<N; i++) {
-    data[i] = sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx);
+    if (i*udata->dx<0.5||(i*udata->dx<=2&&i*udata->dx>1.5))
+      data[i]=1.0;
+    else
+      data[i]=0.0;
+    //data[i] = sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx);
   }
 
   /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
+
+  /* Call init_from_file helper routine to read and set solver parameters */
+  realtype rtol, atol;
+  //flag = init_from_file(arkode_mem, "solve_params.txt", f, NULL, NULL,
+  //                       T0, y, &imex, &dense_order, &rtol, &atol);
+  //if (check_flag(&flag, "init_from_file", 1)) return 1;
+  //if (rtol <= 0.0)  rtol = 1.e-6;
+  //if (atol <= 0.0)  atol = 1.e-10;
+  rtol = 1.e-3;
+  atol = 1.e-5;
+  realtype reltol = rtol;
+  realtype abstol = atol;
+  //realtype reltol2 = reltol*1.0e-2;
+  //realtype abstol2 = abstol*1.0e-2;
 
   /* Reference solution will be computed with default explicit method */
   flag = ARKodeInit(arkode_mem, f, NULL, T0, y);
@@ -109,12 +127,17 @@ int main(int argc, const char * argv[])
   if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
 
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
-  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-  if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
+  //  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
+  //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
+
+  /* Call ARKodeSStolerances to specify the scalar relative and absolute
+     tolerances */
+  flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
   /* Open output stream for results, access data arrays */
   FILE *UFID=fopen("WENO1D.txt","w");
@@ -137,7 +160,7 @@ int main(int argc, const char * argv[])
     flag = ARKodeSetStopTime(arkode_mem, tout);
     
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    printf("iteration is %i",iout);
+    printf("\n iteration is %i",iout);
     if (check_flag(&flag, "ARKode", 1)) break;
     
     if (flag >= 0) {
@@ -182,7 +205,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   /* clear out ydot (to be careful) */
   N_VConst(0.0, ydot);
   
-  int i; 
+  long int i; 
   realtype IS0_p,IS1_p,IS2_p,IS0_n,IS1_n,IS2_n,Epsilon;
   realtype alpha_0p,alpha_1p,alpha_2p,alpha_0n,alpha_1n,alpha_2n;
   realtype w0_p,w1_p,w2_p,w0_n,w1_n,w2_n,u_tpph,u_tpnh,u_tnph,u_tnnh;
@@ -219,7 +242,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   if (check_flag((void *) YN, "N_VGetArrayPointer", 0)) return 1;
   
   /* iterate over domain, computing all equations */
-
+    i=0;
     IS0_p=(13/12)*(YP[N-3]-2*YP[N-2]+YP[0])*(YP[N-3]-2*YP[N-2]+YP[0])+(1/4)*(YP[N-3]-4*YP[N-2]+3*YP[0])*(YP[N-3]-4*YP[N-2]+3*YP[0]);
 
     IS1_p=(13/12)*(YP[N-2]-2*YP[0]+YP[1])*(YP[N-2]-2*YP[0]+YP[1])+(1/4)*(YP[N-2]-1*YP[1])*(YP[N-2]-1*YP[1]);
@@ -256,7 +279,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1/6)*YN[N-3]+(5/6)*YN[N-2]+(2/6)*YN[0])+w1_n*((2/6)*YN[N-2]+(5/6)*YN[0]-(1/6)*YN[1])+w0_n*((11/6)*YN[0]-(7/6)*YN[1]+(2/6)*YN[2]);
 
     Ydot[0]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-
+    printf("\n i is %li",i);
     i=1;
     IS0_p=(13/12)*(YP[N-2]-2*YP[i-1]+YP[i])*(YP[N-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[N-2]-4*YP[i-1]+3*YP[i])*(YP[N-2]-4*YP[i-1]+3*YP[i]);
 
@@ -294,7 +317,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1/6)*YN[N-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
 
     Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-
+    printf("\n i is %li",i);
       i=2;
       IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
 
@@ -489,7 +512,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[1])+w0_n*((11/6)*YN[i]-(7/6)*YN[1]+(2/6)*YN[2]);
 
     Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-
+    printf("\n i is %li",i);
  /* Free vectors */
   N_VDestroy_Serial(yp);
   N_VDestroy_Serial(yn);
