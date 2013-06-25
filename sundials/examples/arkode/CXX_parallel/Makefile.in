@@ -62,7 +62,7 @@ rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
 
 EXAMPLES = ark_heat2D
-EXTRAFILES = plot_heat2d.py
+EXTRAFILES = plot_heat2D.py
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}

@@ -62,8 +62,8 @@ fortran-update = ${SHELL} ${top_builddir}/bin/fortran-update.sh
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 rminstalldirs = $(SHELL) $(top_srcdir)/config/rminstalldirs
 
-EXAMPLES = 
-EXTRAFILES = # none yet
+EXAMPLES = fark_heat2D
+EXTRAFILES = plot_heat2D.py
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 EXECS = ${EXAMPLES:=${EXE_EXT}}

@@ -43,7 +43,7 @@ program driver
   integer*8, parameter :: NEQ=3
   real*8,    parameter :: T0=0.d0, Tf=10.d0
   real*8    :: dTout, Tout, Tcur, rtol, atol, rout(6)
-  integer   :: it, Nt, ier, btable2(2)
+  integer   :: it, Nt, ier
   integer*8 :: iout(22)
   real*8, dimension(NEQ) :: y
 
