@@ -1049,7 +1049,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
 
   default:
 
-    ARKProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
+    arkProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeGetButcherTable", "Unknown Butcher table");
     return(ARK_ILL_INPUT);
 

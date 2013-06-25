@@ -90,7 +90,7 @@ int ARKLapackDense(void *arkode_mem, int N)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKLAPACK", 
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKLAPACK", 
 		    "ARKLapackDense", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
@@ -99,7 +99,7 @@ int ARKLapackDense(void *arkode_mem, int N)
   /* Test if the NVECTOR package is compatible with the LAPACK solver */
   if (ark_mem->ark_tempv->ops->nvgetarraypointer == NULL ||
       ark_mem->ark_tempv->ops->nvsetarraypointer == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKLAPACK", 
 		    "ARKLapackDense", MSGD_BAD_NVECTOR);
     return(ARKDLS_ILL_INPUT);
   }
@@ -116,7 +116,7 @@ int ARKLapackDense(void *arkode_mem, int N)
   arkdls_mem = NULL;
   arkdls_mem = (ARKDlsMem) malloc(sizeof(struct ARKDlsMemRec));
   if (arkdls_mem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackDense", MSGD_MEM_FAIL);
     return(ARKDLS_MEM_FAIL);
   }
@@ -142,14 +142,14 @@ int ARKLapackDense(void *arkode_mem, int N)
 
   arkdls_mem->d_M = NewDenseMat(arkdls_mem->d_n, arkdls_mem->d_n);
   if (arkdls_mem->d_M == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackDense", MSGD_MEM_FAIL);
     free(arkdls_mem); arkdls_mem = NULL;
     return(ARKDLS_MEM_FAIL);
   }
   arkdls_mem->d_pivots = NewIntArray(N);
   if (arkdls_mem->d_pivots == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackDense", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     free(arkdls_mem); arkdls_mem = NULL;
@@ -157,7 +157,7 @@ int ARKLapackDense(void *arkode_mem, int N)
   }
   arkdls_mem->d_savedJ = NewDenseMat(arkdls_mem->d_n, arkdls_mem->d_n);
   if (arkdls_mem->d_savedJ == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackDense", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     DestroyArray(arkdls_mem->d_pivots);
@@ -203,7 +203,7 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKLAPACK", 
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
@@ -211,7 +211,7 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
 
   /* Test if the NVECTOR package is compatible with the BAND solver */
   if (ark_mem->ark_tempv->ops->nvgetarraypointer == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_BAD_NVECTOR);
     return(ARKDLS_ILL_INPUT);
   }
@@ -228,7 +228,7 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
   arkdls_mem = NULL;
   arkdls_mem = (ARKDlsMem) malloc(sizeof(struct ARKDlsMemRec));
   if (arkdls_mem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_MEM_FAIL);
     return(ARKDLS_MEM_FAIL);
   }
@@ -255,7 +255,7 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
   if ((arkdls_mem->d_ml < 0) || (arkdls_mem->d_mu < 0) || 
       (arkdls_mem->d_ml >= arkdls_mem->d_n) || 
       (arkdls_mem->d_mu >= arkdls_mem->d_n)) {
-    ARKProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_BAD_SIZES);
     free(arkdls_mem); arkdls_mem = NULL;
     return(ARKDLS_ILL_INPUT);
@@ -273,14 +273,14 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
   arkdls_mem->d_M = NewBandMat(arkdls_mem->d_n, arkdls_mem->d_mu, 
 			       arkdls_mem->d_ml, arkdls_mem->d_smu);
   if (arkdls_mem->d_M == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_MEM_FAIL);
     free(arkdls_mem); arkdls_mem = NULL;
     return(ARKDLS_MEM_FAIL);
   }  
   arkdls_mem->d_pivots = NewIntArray(N);
   if (arkdls_mem->d_pivots == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     free(arkdls_mem); arkdls_mem = NULL;
@@ -289,7 +289,7 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
   arkdls_mem->d_savedJ = NewBandMat(arkdls_mem->d_n, arkdls_mem->d_mu, 
 				    arkdls_mem->d_ml, arkdls_mem->d_smu);
   if (arkdls_mem->d_savedJ == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKLAPACK", 
 		    "ARKLapackBand", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     DestroyArray(arkdls_mem->d_pivots);
@@ -387,7 +387,7 @@ static int arkLapackDenseSetup(ARKodeMem ark_mem, int convfail,
       dcopy_f77(&lenmat, arkdls_mem->d_M->data, &one, 
 		arkdls_mem->d_savedJ->data, &one);
     } else if (retval < 0) {
-      ARKProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKLAPACK", 
+      arkProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKLAPACK", 
 		      "arkLapackDenseSetup", MSGD_JACFUNC_FAILED);
       arkdls_mem->d_last_flag = ARKDLS_JACFUNC_UNRECVR;
       return(-1);
@@ -553,7 +553,7 @@ static int arkLapackBandSetup(ARKodeMem ark_mem, int convfail,
       dcopy_f77(&lenmat, arkdls_mem->d_M->data, &one, 
 		arkdls_mem->d_savedJ->data, &one);
     } else if (retval < 0) {
-      ARKProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKLAPACK", 
+      arkProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKLAPACK", 
 		      "arkLapackBandSetup", MSGD_JACFUNC_FAILED);
       arkdls_mem->d_last_flag = ARKDLS_JACFUNC_UNRECVR;
       return(-1);

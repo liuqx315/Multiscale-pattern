@@ -37,6 +37,7 @@
    Set y0
    ...
    arkode_mem = ARKodeCreate();
+   ier = ARKodeInit(...);
    ...
    flag = ARKSptfqmr(arkode_mem, pretype, maxl);
      -or-

@@ -58,7 +58,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPGMR", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
@@ -66,7 +66,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
 
   /* Check if N_VDotProd is present */
   if(ark_mem->ark_tempv->ops->nvdotprod == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPGMR", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_BAD_NVECTOR);
     return(ARKSPILS_ILL_INPUT);
   }
@@ -83,7 +83,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
   arkspils_mem = NULL;
   arkspils_mem = (ARKSpilsMem) malloc(sizeof(struct ARKSpilsMemRec));
   if (arkspils_mem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_MEM_FAIL);
     return(ARKSPILS_MEM_FAIL);
   }
@@ -115,7 +115,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
       (pretype != PREC_RIGHT) && (pretype != PREC_BOTH)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPGMR", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_BAD_PRETYPE);
     free(arkspils_mem); arkspils_mem = NULL;
     return(ARKSPILS_ILL_INPUT);
@@ -124,7 +124,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
   /* Allocate memory for ytemp and x */
   arkspils_mem->s_ytemp = N_VClone(ark_mem->ark_tempv);
   if (arkspils_mem->s_ytemp == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_MEM_FAIL);
     free(arkspils_mem); arkspils_mem = NULL;
     return(ARKSPILS_MEM_FAIL);
@@ -132,7 +132,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
 
   arkspils_mem->s_x = N_VClone(ark_mem->ark_tempv);
   if (arkspils_mem->s_x == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_MEM_FAIL);
     N_VDestroy(arkspils_mem->s_ytemp);
     free(arkspils_mem); arkspils_mem = NULL;
@@ -148,7 +148,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
   spgmr_mem = NULL;
   spgmr_mem = SpgmrMalloc(mxl, ark_mem->ark_tempv);
   if (spgmr_mem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKSPGMR", 
 		    "ARKSpgmr", MSGS_MEM_FAIL);
     N_VDestroy(arkspils_mem->s_ytemp);
     N_VDestroy(arkspils_mem->s_x);
@@ -186,7 +186,7 @@ static int ARKSpgmrInit(ARKodeMem ark_mem)
   /* Check for legal combination pretype - psolve */
   if ((arkspils_mem->s_pretype != PREC_NONE) 
       && (arkspils_mem->s_psolve == NULL)) {
-    ARKProcessError(ark_mem, -1, "ARKSPGMR", "ARKSpgmrInit", 
+    arkProcessError(ark_mem, -1, "ARKSPGMR", "ARKSpgmrInit", 
 		    MSGS_PSOLVE_REQ);
     arkspils_mem->s_last_flag = ARKSPILS_ILL_INPUT;
     return(-1);
@@ -248,7 +248,7 @@ static int ARKSpgmrSetup(ARKodeMem ark_mem, int convfail,
 				arkspils_mem->s_P_data, vtemp1, 
 				vtemp2, vtemp3);
   if (retval < 0) {
-    ARKProcessError(ark_mem, SPGMR_PSET_FAIL_UNREC, "ARKSPGMR", 
+    arkProcessError(ark_mem, SPGMR_PSET_FAIL_UNREC, "ARKSPGMR", 
 		    "ARKSpgmrSetup", MSGS_PSET_FAILED);
     arkspils_mem->s_last_flag = SPGMR_PSET_FAIL_UNREC;
   }
@@ -366,12 +366,12 @@ static int ARKSpgmrSolve(ARKodeMem ark_mem, N_Vector b,
     return(-1);
     break;
   case SPGMR_ATIMES_FAIL_UNREC:
-    ARKProcessError(ark_mem, SPGMR_ATIMES_FAIL_UNREC, "ARKSPGMR", 
+    arkProcessError(ark_mem, SPGMR_ATIMES_FAIL_UNREC, "ARKSPGMR", 
 		    "ARKSpgmrSolve", MSGS_JTIMES_FAILED);    
     return(-1);
     break;
   case SPGMR_PSOLVE_FAIL_UNREC:
-    ARKProcessError(ark_mem, SPGMR_PSOLVE_FAIL_UNREC, "ARKSPGMR", 
+    arkProcessError(ark_mem, SPGMR_PSOLVE_FAIL_UNREC, "ARKSPGMR", 
 		    "ARKSpgmrSolve", MSGS_PSOLVE_FAILED);
     return(-1);
     break;

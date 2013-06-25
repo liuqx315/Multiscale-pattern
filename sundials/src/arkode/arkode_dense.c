@@ -60,7 +60,7 @@ int ARKDense(void *arkode_mem, long int N)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKDLS_MEM_NULL, "ARKDENSE", 
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDENSE", 
 		    "ARKDense", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
@@ -69,7 +69,7 @@ int ARKDense(void *arkode_mem, long int N)
   /* Test if the NVECTOR package is compatible with the DENSE solver */
   if (ark_mem->ark_tempv->ops->nvgetarraypointer == NULL ||
       ark_mem->ark_tempv->ops->nvsetarraypointer == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKDENSE", 
+    arkProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKDENSE", 
 		    "ARKDense", MSGD_BAD_NVECTOR);
     return(ARKDLS_ILL_INPUT);
   }
@@ -86,7 +86,7 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem = NULL;
   arkdls_mem = (ARKDlsMem) malloc(sizeof(struct ARKDlsMemRec));
   if (arkdls_mem == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
 		    "ARKDense", MSGD_MEM_FAIL);
     return(ARKDLS_MEM_FAIL);
   }
@@ -108,7 +108,7 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem->d_M = NULL;
   arkdls_mem->d_M = NewDenseMat(N, N);
   if (arkdls_mem->d_M == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
 		    "ARKDense", MSGD_MEM_FAIL);
     free(arkdls_mem); arkdls_mem = NULL;
     return(ARKDLS_MEM_FAIL);
@@ -116,7 +116,7 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem->d_savedJ = NULL;
   arkdls_mem->d_savedJ = NewDenseMat(N, N);
   if (arkdls_mem->d_savedJ == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
 		    "ARKDense", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     free(arkdls_mem); arkdls_mem = NULL;
@@ -125,7 +125,7 @@ int ARKDense(void *arkode_mem, long int N)
   arkdls_mem->d_lpivots = NULL;
   arkdls_mem->d_lpivots = NewLintArray(N);
   if (arkdls_mem->d_lpivots == NULL) {
-    ARKProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
+    arkProcessError(ark_mem, ARKDLS_MEM_FAIL, "ARKDENSE", 
 		    "ARKDense", MSGD_MEM_FAIL);
     DestroyMat(arkdls_mem->d_M);
     DestroyMat(arkdls_mem->d_savedJ);
@@ -216,7 +216,7 @@ static int arkDenseSetup(ARKodeMem ark_mem, int convfail,
 				fpred, arkdls_mem->d_M, arkdls_mem->d_J_data, 
 				vtemp1, vtemp2, vtemp3);
     if (retval < 0) {
-      ARKProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKDENSE", 
+      arkProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKDENSE", 
 		      "arkDenseSetup",  MSGD_JACFUNC_FAILED);
       arkdls_mem->d_last_flag = ARKDLS_JACFUNC_UNRECVR;
       return(-1);
