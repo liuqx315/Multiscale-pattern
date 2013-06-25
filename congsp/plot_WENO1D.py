@@ -33,7 +33,7 @@ for tstep in range(nt):
     plt.xlabel('x')
     plt.ylabel('solution')
     plt.title('u(x) at output ' + tstr + ', mesh = ' + nxstr)
-    plt.axis((0.0, 2.0, 0.0, maxtemp))
+    plt.axis((0.0, 2.0, -maxtemp, maxtemp))
     plt.grid()
     plt.savefig(pname)
     plt.close()

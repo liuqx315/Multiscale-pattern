@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <arkode/arkode.h>
-#include <arkode/arkode_spgmr.h>
-#include <arkode/arkode_spbcgs.h>
-#include <arkode/arkode_sptfqmr.h>
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 
@@ -66,8 +63,8 @@ int main(int argc, const char * argv[])
   udata->delta = delta;
 
   /* open solver diagnostics output file for writing */
-  FILE *DFID;
-  DFID=fopen("diags_ark_WENO1D.txt","w");
+  //FILE *DFID;
+  //DFID=fopen("diags_ark_WENO1D.txt","w");
   
   /* Initial problem output */
   printf("\n1D WENO ODE test problem:\n");
@@ -105,16 +102,16 @@ int main(int argc, const char * argv[])
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
 
   /* Call init_from_file helper routine to read and set solver parameters */
-  realtype rtol, atol;
+  //realtype rtol, atol;
   //flag = init_from_file(arkode_mem, "solve_params.txt", f, NULL, NULL,
   //                       T0, y, &imex, &dense_order, &rtol, &atol);
   //if (check_flag(&flag, "init_from_file", 1)) return 1;
   //if (rtol <= 0.0)  rtol = 1.e-6;
   //if (atol <= 0.0)  atol = 1.e-10;
-  rtol = 1.e-3;
-  atol = 1.e-5;
-  realtype reltol = rtol;
-  realtype abstol = atol;
+  //rtol = 1.e-3;
+  //atol = 1.e-5;
+  realtype reltol = 1.e+12;
+  realtype abstol = 1.e+12;
   //realtype reltol2 = reltol*1.0e-2;
   //realtype abstol2 = abstol*1.0e-2;
 
@@ -129,6 +126,15 @@ int main(int argc, const char * argv[])
   /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
   //  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
+
+  flag = ARKodeSetInitStep(arkode_mem, (udata->delta*udata->dx));
+  if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
+
+  flag = ARKodeSetMinStep(arkode_mem, (udata->delta*udata->dx));
+  if (check_flag(&flag, "ARKodeSetMinStep", 1)) return 1;
+
+  flag = ARKodeSetMaxStep(arkode_mem, (udata->delta*udata->dx));
+  if (check_flag(&flag, "ARKodeSetMaxStep", 1)) return 1;
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
@@ -145,9 +151,10 @@ int main(int argc, const char * argv[])
   if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
-  for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
-  fprintf(UFID,"\n");
+  // for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+  //fprintf(UFID,"\n");
 
+  // add retrun
   /* In loop, call ARKode, print results.
      Break out of loop when the final output time has been reached */
   realtype t  = T0;
@@ -156,8 +163,8 @@ int main(int argc, const char * argv[])
   realtype tout = T0+dTout;
   int iout;
   for(iout=0;iout<Nt;iout++){
-
-    flag = ARKodeSetStopTime(arkode_mem, tout);
+    // stop exactly at this time
+    //flag = ARKodeSetStopTime(arkode_mem, tout);
     
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
     printf("\n iteration is %i",iout);
@@ -168,10 +175,13 @@ int main(int argc, const char * argv[])
       tout = (tout > Tf) ? Tf : tout;
     }
   
+    if (iout>29990){
     /* output results to disk */
-    for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
-    fprintf(UFID,"\n");
+      for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+     fprintf(UFID,"\n");
+    }
   }
+  
   fclose(UFID);
 
   /* Print some final statistics */
@@ -189,7 +199,7 @@ int main(int argc, const char * argv[])
   ARKodeFree(&arkode_mem);
 
   /* close solver diagnostics output file */
-  fclose(DFID);
+  //fclose(DFID);
 
   return 0;
 }
@@ -241,27 +251,28 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype *YN = N_VGetArrayPointer(yn);
   if (check_flag((void *) YN, "N_VGetArrayPointer", 0)) return 1;
   
+  // change the 13/12
   /* iterate over domain, computing all equations */
     i=0;
-    IS0_p=(13/12)*(YP[N-3]-2*YP[N-2]+YP[0])*(YP[N-3]-2*YP[N-2]+YP[0])+(1/4)*(YP[N-3]-4*YP[N-2]+3*YP[0])*(YP[N-3]-4*YP[N-2]+3*YP[0]);
+    IS0_p=(13.0/12.0)*(YP[N-3]-2.0*YP[N-2]+YP[0])*(YP[N-3]-2.0*YP[N-2]+YP[0])+(1.0/4.0)*(YP[N-3]-4.0*YP[N-2]+3.0*YP[0])*(YP[N-3]-4.0*YP[N-2]+3.0*YP[0]);
 
-    IS1_p=(13/12)*(YP[N-2]-2*YP[0]+YP[1])*(YP[N-2]-2*YP[0]+YP[1])+(1/4)*(YP[N-2]-1*YP[1])*(YP[N-2]-1*YP[1]);
+    IS1_p=(13.0/12.0)*(YP[N-2]-2.0*YP[0]+YP[1])*(YP[N-2]-2.0*YP[0]+YP[1])+(1.0/4.0)*(YP[N-2]-YP[1])*(YP[N-2]-YP[1]);
 
-    IS2_p=(13/12)*(YP[0]-2*YP[1]+YP[2])*(YP[0]-2*YP[1]+YP[2])+(1/4)*(3*YP[0]-4*YP[1]+YP[2])*(3*YP[0]-4*YP[1]+YP[2]);
+    IS2_p=(13.0/12.0)*(YP[0]-2.0*YP[1]+YP[2])*(YP[0]-2.0*YP[1]+YP[2])+(1.0/4.0)*(3.0*YP[0]-4.0*YP[1]+YP[2])*(3.0*YP[0]-4.0*YP[1]+YP[2]);
 
-    IS0_n=(13/12)*(YN[1]-2*YN[2]+YN[3])*(YN[1]-2*YN[2]+YN[3])+(1/4)*(3*YN[1]-4*YN[2]+YN[3])*(3*YN[1]-4*YN[2]+YN[3]);
+    IS0_n=(13.0/12.0)*(YN[1]-2.0*YN[2]+YN[3])*(YN[1]-2.0*YN[2]+YN[3])+(1.0/4.0)*(3.0*YN[1]-4.0*YN[2]+YN[3])*(3.0*YN[1]-4.0*YN[2]+YN[3]);
 
-    IS1_n=(13/12)*(YN[0]-2*YN[1]+YN[2])*(YN[0]-2*YN[1]+YN[2])+(1/4)*(YN[0]-1*YN[2])*(YN[0]-1*YN[2]);
+    IS1_n=(13.0/12.0)*(YN[0]-2.0*YN[1]+YN[2])*(YN[0]-2.0*YN[1]+YN[2])+(1.0/4.0)*(YN[0]-YN[2])*(YN[0]-YN[2]);
 
-    IS2_n=(13/12)*(YN[N-2]-2*YN[0]+YN[1])*(YN[N-2]-2*YN[0]+YN[1])+(1/4)*(YN[N-2]-4*YN[0]+3*YN[1])*(YN[N-2]-4*YN[0]+3*YN[1]);
+    IS2_n=(13.0/12.0)*(YN[N-2]-2.0*YN[0]+YN[1])*(YN[N-2]-2.0*YN[0]+YN[1])+(1.0/4.0)*(YN[N-2]-4.0*YN[0]+3.0*YN[1])*(YN[N-2]-4.0*YN[0]+3.0*YN[1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -270,36 +281,36 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[N-3]-(7/6)*YP[N-2]+(11/6)*YP[0])+w1_p*((-1/6)*YP[N-2]+(5/6)*YP[0]+(2/6)*YP[1])+w2_p*((2/6)*YP[0]+(5/6)*YP[1]-(1/6)*YP[2]);
+    u_tpph=w0_p*((2.0/6.0)*YP[N-3]-(7.0/6.0)*YP[N-2]+(11.0/6.0)*YP[0])+w1_p*((-1.0/6.0)*YP[N-2]+(5.0/6.0)*YP[0]+(2.0/6.0)*YP[1])+w2_p*((2.0/6.0)*YP[0]+(5.0/6.0)*YP[1]-(1.0/6.0)*YP[2]);
 
-    u_tnph=w2_n*((-1/6)*YN[N-2]+(5/6)*YN[0]+(2/6)*YN[1])+w1_n*((2/6)*YN[0]+(5/6)*YN[1]-(1/6)*YN[2])+w0_n*((11/6)*YN[1]-(7/6)*YN[2]+(2/6)*YN[3]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[N-2]+(5.0/6.0)*YN[0]+(2.0/6.0)*YN[1])+w1_n*((2.0/6.0)*YN[0]+(5.0/6.0)*YN[1]-(1.0/6.0)*YN[2])+w0_n*((11.0/6.0)*YN[1]-(7.0/6.0)*YN[2]+(2.0/6.0)*YN[3]);
 
-    u_tpnh=w0_p*((2/6)*YP[N-4]-(7/6)*YP[N-3]+(11/6)*YP[N-2])+w1_p*((-1/6)*YP[N-3]+(5/6)*YP[N-2]+(2/6)*YP[0])+w2_p*((2/6)*YP[N-2]+(5/6)*YP[0]-(1/6)*YP[1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[N-4]-(7.0/6.0)*YP[N-3]+(11.0/6.0)*YP[N-2])+w1_p*((-1.0/6.0)*YP[N-3]+(5.0/6.0)*YP[N-2]+(2.0/6.0)*YP[0])+w2_p*((2.0/6.0)*YP[N-2]+(5.0/6.0)*YP[0]-(1.0/6.0)*YP[1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[N-3]+(5/6)*YN[N-2]+(2/6)*YN[0])+w1_n*((2/6)*YN[N-2]+(5/6)*YN[0]-(1/6)*YN[1])+w0_n*((11/6)*YN[0]-(7/6)*YN[1]+(2/6)*YN[2]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[N-3]+(5.0/6.0)*YN[N-2]+(2.0/6.0)*YN[0])+w1_n*((2.0/6.0)*YN[N-2]+(5.0/6.0)*YN[0]-(1.0/6.0)*YN[1])+w0_n*((11.0/6.0)*YN[0]-(7.0/6.0)*YN[1]+(2.0/6.0)*YN[2]);
 
-    Ydot[0]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-    printf("\n i is %li",i);
+    Ydot[0]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    //  printf("\n i is %li",i);
     i=1;
-    IS0_p=(13/12)*(YP[N-2]-2*YP[i-1]+YP[i])*(YP[N-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[N-2]-4*YP[i-1]+3*YP[i])*(YP[N-2]-4*YP[i-1]+3*YP[i]);
+    IS0_p=(13.0/12.0)*(YP[N-2]-2.0*YP[i-1]+YP[i])*(YP[N-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[N-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[N-2]-4.0*YP[i-1]+3.0*YP[i]);
 
-    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+    IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
 
-    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+    IS2_p=(13.0/12.0)*(YP[i]-2.0*YP[i+1]+YP[i+2])*(YP[i]-2.0*YP[i+1]+YP[i+2])+(1.0/4.0)*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2])*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2]);
 
-    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[i+3])*(YN[i+1]-2*YN[i+2]+YN[i+3])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[i+3])*(3*YN[i+1]-4*YN[i+2]+YN[i+3]);
+    IS0_n=(13.0/12.0)*(YN[i+1]-2.0*YN[i+2]+YN[i+3])*(YN[i+1]-2.0*YN[i+2]+YN[i+3])+(1.0/4.0)*(3.0*YN[i+1]-4.0*YN[i+2]+YN[i+3])*(3.0*YN[i+1]-4.0*YN[i+2]+YN[i+3]);
 
-    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+    IS1_n=(13.0/12.0)*(YN[i]-2.0*YN[i+1]+YN[i+2])*(YN[i]-2.0*YN[i+1]+YN[i+2])+(1.0/4.0)*(YN[i]-YN[i+2])*(YN[i]-YN[i+2]);
 
-    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+    IS2_n=(13.0/12.0)*(YN[i-1]-2.0*YN[i]+YN[i+1])*(YN[i-1]-2.0*YN[i]+YN[i+1])+(1.0/4.0)*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1])*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -308,36 +319,36 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[N-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+    u_tpph=w0_p*((2.0/6.0)*YP[N-2]-(7.0/6.0)*YP[i-1]+(11.0/6.0)*YP[i])+w1_p*((-1.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]+(2.0/6.0)*YP[i+1])+w2_p*((2.0/6.0)*YP[i]+(5.0/6.0)*YP[i+1]-(1.0/6.0)*YP[i+2]);
 
-    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[i+3]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]+(2.0/6.0)*YN[i+1])+w1_n*((2.0/6.0)*YN[i]+(5.0/6.0)*YN[i+1]-(1.0/6.0)*YN[i+2])+w0_n*((11.0/6.0)*YN[i+1]-(7.0/6.0)*YN[i+2]+(2.0/6.0)*YN[i+3]);
 
-    u_tpnh=w0_p*((2/6)*YP[N-3]-(7/6)*YP[N-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[N-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[N-3]-(7.0/6.0)*YP[N-2]+(11.0/6.0)*YP[i-1])+w1_p*((-1.0/6.0)*YP[N-2]+(5.0/6.0)*YP[i-1]+(2.0/6.0)*YP[i])+w2_p*((2.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]-(1.0/6.0)*YP[i+1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[N-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[N-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[i+2]);
 
-    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-    printf("\n i is %li",i);
+    Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    //   printf("\n i is %li",i);
       i=2;
-      IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+      IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
-    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+    IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
 
-    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+    IS2_p=(13.0/12.0)*(YP[i]-2.0*YP[i+1]+YP[i+2])*(YP[i]-2.0*YP[i+1]+YP[i+2])+(1.0/4.0)*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2])*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2]);
 
-    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[i+3])*(YN[i+1]-2*YN[i+2]+YN[i+3])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[i+3])*(3*YN[i+1]-4*YN[i+2]+YN[i+3]);
+    IS0_n=(13.0/12.0)*(YN[i+1]-2.0*YN[i+2]+YN[i+3])*(YN[i+1]-2.0*YN[i+2]+YN[i+3])+(1.0/4.0)*(3.0*YN[i+1]-4.0*YN[i+2]+YN[i+3])*(3.0*YN[i+1]-4.0*YN[i+2]+YN[i+3]);
 
-    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+    IS1_n=(13.0/12.0)*(YN[i]-2.0*YN[i+1]+YN[i+2])*(YN[i]-2.0*YN[i+1]+YN[i+2])+(1.0/4.0)*(YN[i]-YN[i+2])*(YN[i]-YN[i+2]);
 
-    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+    IS2_n=(13.0/12.0)*(YN[i-1]-2.0*YN[i]+YN[i+1])*(YN[i-1]-2.0*YN[i]+YN[i+1])+(1.0/4.0)*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1])*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -346,37 +357,37 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+    u_tpph=w0_p*((2.0/6.0)*YP[i-2]-(7.0/6.0)*YP[i-1]+(11.0/6.0)*YP[i])+w1_p*((-1.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]+(2.0/6.0)*YP[i+1])+w2_p*((2.0/6.0)*YP[i]+(5.0/6.0)*YP[i+1]-(1.0/6.0)*YP[i+2]);
 
-    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[i+3]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]+(2.0/6.0)*YN[i+1])+w1_n*((2.0/6.0)*YN[i]+(5.0/6.0)*YN[i+1]-(1.0/6.0)*YN[i+2])+w0_n*((11.0/6.0)*YN[i+1]-(7.0/6.0)*YN[i+2]+(2.0/6.0)*YN[i+3]);
 
-    u_tpnh=w0_p*((2/6)*YP[N-2]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[N-2]-(7.0/6.0)*YP[i-2]+(11.0/6.0)*YP[i-1])+w1_p*((-1.0/6.0)*YP[i-2]+(5.0/6.0)*YP[i-1]+(2.0/6.0)*YP[i])+w2_p*((2.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]-(1.0/6.0)*YP[i+1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[i+2]);
 
-    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
 
   for (i=3; i<N-3; i++){
 
-    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+    IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
-    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+    IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
 
-    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+    IS2_p=(13.0/12.0)*(YP[i]-2.0*YP[i+1]+YP[i+2])*(YP[i]-2.0*YP[i+1]+YP[i+2])+(1.0/4.0)*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2])*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2]);
 
-    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[i+3])*(YN[i+1]-2*YN[i+2]+YN[i+3])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[i+3])*(3*YN[i+1]-4*YN[i+2]+YN[i+3]);
+    IS0_n=(13.0/12.0)*(YN[i+1]-2.0*YN[i+2]+YN[i+3])*(YN[i+1]-2.0*YN[i+2]+YN[i+3])+(1.0/4.0)*(3.0*YN[i+1]-4.0*YN[i+2]+YN[i+3])*(3.0*YN[i+1]-4.0*YN[i+2]+YN[i+3]);
 
-    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+    IS1_n=(13.0/12.0)*(YN[i]-2.0*YN[i+1]+YN[i+2])*(YN[i]-2.0*YN[i+1]+YN[i+2])+(1.0/4.0)*(YN[i]-YN[i+2])*(YN[i]-YN[i+2]);
 
-    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+    IS2_n=(13.0/12.0)*(YN[i-1]-2.0*YN[i]+YN[i+1])*(YN[i-1]-2.0*YN[i]+YN[i+1])+(1.0/4.0)*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1])*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -385,38 +396,38 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+    u_tpph=w0_p*((2.0/6.0)*YP[i-2]-(7.0/6.0)*YP[i-1]+(11.0/6.0)*YP[i])+w1_p*((-1.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]+(2.0/6.0)*YP[i+1])+w2_p*((2.0/6.0)*YP[i]+(5.0/6.0)*YP[i+1]-(1.0/6.0)*YP[i+2]);
 
-    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[i+3]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]+(2.0/6.0)*YN[i+1])+w1_n*((2.0/6.0)*YN[i]+(5.0/6.0)*YN[i+1]-(1.0/6.0)*YN[i+2])+w0_n*((11.0/6.0)*YN[i+1]-(7.0/6.0)*YN[i+2]+(2.0/6.0)*YN[i+3]);
 
-    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[i-3]-(7.0/6.0)*YP[i-2]+(11.0/6.0)*YP[i-1])+w1_p*((-1.0/6.0)*YP[i-2]+(5.0/6.0)*YP[i-1]+(2.0/6.0)*YP[i])+w2_p*((2.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]-(1.0/6.0)*YP[i+1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[i+2]);
 
-    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
   }
     
     i=N-3;
   
-    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+    IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
-    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+    IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
 
-    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[i+2])*(YP[i]-2*YP[i+1]+YP[i+2])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[i+2])*(3*YP[i]-4*YP[i+1]+YP[i+2]);
+    IS2_p=(13.0/12.0)*(YP[i]-2.0*YP[i+1]+YP[i+2])*(YP[i]-2.0*YP[i+1]+YP[i+2])+(1.0/4.0)*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2])*(3.0*YP[i]-4.0*YP[i+1]+YP[i+2]);
 
-    IS0_n=(13/12)*(YN[i+1]-2*YN[i+2]+YN[1])*(YN[i+1]-2*YN[i+2]+YN[1])+(1/4)*(3*YN[i+1]-4*YN[i+2]+YN[1])*(3*YN[i+1]-4*YN[i+2]+YN[1]);
+    IS0_n=(13.0/12.0)*(YN[i+1]-2.0*YN[i+2]+YN[1])*(YN[i+1]-2.0*YN[i+2]+YN[1])+(1.0/4.0)*(3.0*YN[i+1]-4.0*YN[i+2]+YN[1])*(3.0*YN[i+1]-4.0*YN[i+2]+YN[1]);
 
-    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[i+2])*(YN[i]-2*YN[i+1]+YN[i+2])+(1/4)*(YN[i]-1*YN[i+2])*(YN[i]-1*YN[i+2]);
+    IS1_n=(13.0/12.0)*(YN[i]-2.0*YN[i+1]+YN[i+2])*(YN[i]-2.0*YN[i+1]+YN[i+2])+(1.0/4.0)*(YN[i]-YN[i+2])*(YN[i]-YN[i+2]);
 
-    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+    IS2_n=(13.0/12.0)*(YN[i-1]-2.0*YN[i]+YN[i+1])*(YN[i-1]-2.0*YN[i]+YN[i+1])+(1.0/4.0)*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1])*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -425,37 +436,37 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[i+2]);
+    u_tpph=w0_p*((2.0/6.0)*YP[i-2]-(7.0/6.0)*YP[i-1]+(11.0/6.0)*YP[i])+w1_p*((-1.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]+(2.0/6.0)*YP[i+1])+w2_p*((2.0/6.0)*YP[i]+(5.0/6.0)*YP[i+1]-(1.0/6.0)*YP[i+2]);
 
-    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[i+2])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[i+2]+(2/6)*YN[1]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]+(2.0/6.0)*YN[i+1])+w1_n*((2.0/6.0)*YN[i]+(5.0/6.0)*YN[i+1]-(1.0/6.0)*YN[i+2])+w0_n*((11.0/6.0)*YN[i+1]-(7.0/6.0)*YN[i+2]+(2.0/6.0)*YN[1]);
 
-    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[i-3]-(7.0/6.0)*YP[i-2]+(11.0/6.0)*YP[i-1])+w1_p*((-1.0/6.0)*YP[i-2]+(5.0/6.0)*YP[i-1]+(2.0/6.0)*YP[i])+w2_p*((2.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]-(1.0/6.0)*YP[i+1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[i+2]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[i+2]);
 
-    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
 
     i=N-2;
     
-    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+    IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
-    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[i+1])*(YP[i-1]-2*YP[i]+YP[i+1])+(1/4)*(YP[i-1]-1*YP[i+1])*(YP[i-1]-1*YP[i+1]);
+    IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
 
-    IS2_p=(13/12)*(YP[i]-2*YP[i+1]+YP[1])*(YP[i]-2*YP[i+1]+YP[1])+(1/4)*(3*YP[i]-4*YP[i+1]+YP[1])*(3*YP[i]-4*YP[i+1]+YP[1]);
+    IS2_p=(13.0/12.0)*(YP[i]-2.0*YP[i+1]+YP[1])*(YP[i]-2.0*YP[i+1]+YP[1])+(1.0/4.0)*(3.0*YP[i]-4.0*YP[i+1]+YP[1])*(3.0*YP[i]-4.0*YP[i+1]+YP[1]);
 
-    IS0_n=(13/12)*(YN[i+1]-2*YN[1]+YN[2])*(YN[i+1]-2*YN[1]+YN[2])+(1/4)*(3*YN[i+1]-4*YN[1]+YN[2])*(3*YN[i+1]-4*YN[1]+YN[2]);
+    IS0_n=(13.0/12.0)*(YN[i+1]-2.0*YN[1]+YN[2])*(YN[i+1]-2.0*YN[1]+YN[2])+(1.0/4.0)*(3.0*YN[i+1]-4.0*YN[1]+YN[2])*(3.0*YN[i+1]-4.0*YN[1]+YN[2]);
 
-    IS1_n=(13/12)*(YN[i]-2*YN[i+1]+YN[1])*(YN[i]-2*YN[i+1]+YN[1])+(1/4)*(YN[i]-1*YN[1])*(YN[i]-1*YN[1]);
+    IS1_n=(13.0/12.0)*(YN[i]-2.0*YN[i+1]+YN[1])*(YN[i]-2.0*YN[i+1]+YN[1])+(1.0/4.0)*(YN[i]-YN[1])*(YN[i]-YN[1]);
 
-    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[i+1])*(YN[i-1]-2*YN[i]+YN[i+1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[i+1])*(YN[i-1]-4*YN[i]+3*YN[i+1]);
+    IS2_n=(13.0/12.0)*(YN[i-1]-2.0*YN[i]+YN[i+1])*(YN[i-1]-2.0*YN[i]+YN[i+1])+(1.0/4.0)*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1])*(YN[i-1]-4.0*YN[i]+3.0*YN[i+1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -464,37 +475,37 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[i+1])+w2_p*((2/6)*YP[i]+(5/6)*YP[i+1]-(1/6)*YP[1]);
+    u_tpph=w0_p*((2.0/6.0)*YP[i-2]-(7.0/6.0)*YP[i-1]+(11.0/6.0)*YP[i])+w1_p*((-1.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]+(2.0/6.0)*YP[i+1])+w2_p*((2.0/6.0)*YP[i]+(5.0/6.0)*YP[i+1]-(1.0/6.0)*YP[1]);
 
-    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[i+1])+w1_n*((2/6)*YN[i]+(5/6)*YN[i+1]-(1/6)*YN[1])+w0_n*((11/6)*YN[i+1]-(7/6)*YN[1]+(2/6)*YN[2]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]+(2.0/6.0)*YN[i+1])+w1_n*((2.0/6.0)*YN[i]+(5.0/6.0)*YN[i+1]-(1.0/6.0)*YN[1])+w0_n*((11.0/6.0)*YN[i+1]-(7.0/6.0)*YN[1]+(2.0/6.0)*YN[2]);
 
-    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[i+1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[i-3]-(7.0/6.0)*YP[i-2]+(11.0/6.0)*YP[i-1])+w1_p*((-1.0/6.0)*YP[i-2]+(5.0/6.0)*YP[i-1]+(2.0/6.0)*YP[i])+w2_p*((2.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]-(1.0/6.0)*YP[i+1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[i+1])+w0_n*((11/6)*YN[i]-(7/6)*YN[i+1]+(2/6)*YN[1]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[1]);
 
-    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
 
     i=N-1;
 
-    IS0_p=(13/12)*(YP[i-2]-2*YP[i-1]+YP[i])*(YP[i-2]-2*YP[i-1]+YP[i])+(1/4)*(YP[i-2]-4*YP[i-1]+3*YP[i])*(YP[i-2]-4*YP[i-1]+3*YP[i]);
+    IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
-    IS1_p=(13/12)*(YP[i-1]-2*YP[i]+YP[1])*(YP[i-1]-2*YP[i]+YP[1])+(1/4)*(YP[i-1]-1*YP[1])*(YP[i-1]-1*YP[1]);
+    IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[1])*(YP[i-1]-2.0*YP[i]+YP[1])+(1.0/4.0)*(YP[i-1]-YP[1])*(YP[i-1]-YP[1]);
 
-    IS2_p=(13/12)*(YP[i]-2*YP[1]+YP[2])*(YP[i]-2*YP[1]+YP[2])+(1/4)*(3*YP[i]-4*YP[1]+YP[2])*(3*YP[i]-4*YP[1]+YP[2]);
+    IS2_p=(13.0/12.0)*(YP[i]-2.0*YP[1]+YP[2])*(YP[i]-2.0*YP[1]+YP[2])+(1.0/4.0)*(3.0*YP[i]-4.0*YP[1]+YP[2])*(3.0*YP[i]-4.0*YP[1]+YP[2]);
 
-    IS0_n=(13/12)*(YN[1]-2*YN[2]+YN[3])*(YN[1]-2*YN[2]+YN[3])+(1/4)*(3*YN[1]-4*YN[2]+YN[3])*(3*YN[1]-4*YN[2]+YN[3]);
+    IS0_n=(13.0/12.0)*(YN[1]-2.0*YN[2]+YN[3])*(YN[1]-2.0*YN[2]+YN[3])+(1.0/4.0)*(3.0*YN[1]-4.0*YN[2]+YN[3])*(3.0*YN[1]-4.0*YN[2]+YN[3]);
 
-    IS1_n=(13/12)*(YN[i]-2*YN[1]+YN[2])*(YN[i]-2*YN[1]+YN[2])+(1/4)*(YN[i]-1*YN[2])*(YN[i]-1*YN[2]);
+    IS1_n=(13.0/12.0)*(YN[i]-2.0*YN[1]+YN[2])*(YN[i]-2.0*YN[1]+YN[2])+(1.0/4.0)*(YN[i]-YN[2])*(YN[i]-YN[2]);
 
-    IS2_n=(13/12)*(YN[i-1]-2*YN[i]+YN[1])*(YN[i-1]-2*YN[i]+YN[1])+(1/4)*(YN[i-1]-4*YN[i]+3*YN[1])*(YN[i-1]-4*YN[i]+3*YN[1]);
+    IS2_n=(13.0/12.0)*(YN[i-1]-2.0*YN[i]+YN[1])*(YN[i-1]-2.0*YN[i]+YN[1])+(1.0/4.0)*(YN[i-1]-4.0*YN[i]+3.0*YN[1])*(YN[i-1]-4.0*YN[i]+3.0*YN[1]);
 
     Epsilon=0.000001;
-    alpha_0p=(1/10)*(1/(Epsilon+IS0_p))*(1/(Epsilon+IS0_p));
-    alpha_1p=(6/10)*(1/(Epsilon+IS1_p))*(1/(Epsilon+IS1_p));
-    alpha_2p=(3/10)*(1/(Epsilon+IS2_p))*(1/(Epsilon+IS2_p));
-    alpha_0n=(1/10)*(1/(Epsilon+IS0_n))*(1/(Epsilon+IS0_n));
-    alpha_1n=(6/10)*(1/(Epsilon+IS1_n))*(1/(Epsilon+IS1_n));
-    alpha_2n=(3/10)*(1/(Epsilon+IS2_n))*(1/(Epsilon+IS2_n));
+    alpha_0p=(1.0/10.0)*(1.0/(Epsilon+IS0_p))*(1.0/(Epsilon+IS0_p));
+    alpha_1p=(6.0/10.0)*(1.0/(Epsilon+IS1_p))*(1.0/(Epsilon+IS1_p));
+    alpha_2p=(3.0/10.0)*(1.0/(Epsilon+IS2_p))*(1.0/(Epsilon+IS2_p));
+    alpha_0n=(1.0/10.0)*(1.0/(Epsilon+IS0_n))*(1.0/(Epsilon+IS0_n));
+    alpha_1n=(6.0/10.0)*(1.0/(Epsilon+IS1_n))*(1.0/(Epsilon+IS1_n));
+    alpha_2n=(3.0/10.0)*(1.0/(Epsilon+IS2_n))*(1.0/(Epsilon+IS2_n));
 
     w0_p=alpha_0p/(alpha_0p+alpha_1p+alpha_2p);
     w1_p=alpha_1p/(alpha_0p+alpha_1p+alpha_2p);
@@ -503,16 +514,16 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     w1_n=alpha_1n/(alpha_0n+alpha_1n+alpha_2n);
     w2_n=alpha_2n/(alpha_0n+alpha_1n+alpha_2n);
 
-    u_tpph=w0_p*((2/6)*YP[i-2]-(7/6)*YP[i-1]+(11/6)*YP[i])+w1_p*((-1/6)*YP[i-1]+(5/6)*YP[i]+(2/6)*YP[1])+w2_p*((2/6)*YP[i]+(5/6)*YP[1]-(1/6)*YP[2]);
+    u_tpph=w0_p*((2.0/6.0)*YP[i-2]-(7.0/6.0)*YP[i-1]+(11.0/6.0)*YP[i])+w1_p*((-1.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]+(2.0/6.0)*YP[1])+w2_p*((2.0/6.0)*YP[i]+(5.0/6.0)*YP[1]-(1.0/6.0)*YP[2]);
 
-    u_tnph=w2_n*((-1/6)*YN[i-1]+(5/6)*YN[i]+(2/6)*YN[1])+w1_n*((2/6)*YN[i]+(5/6)*YN[1]-(1/6)*YN[2])+w0_n*((11/6)*YN[1]-(7/6)*YN[2]+(2/6)*YN[3]);
+    u_tnph=w2_n*((-1.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]+(2.0/6.0)*YN[1])+w1_n*((2.0/6.0)*YN[i]+(5.0/6.0)*YN[1]-(1.0/6.0)*YN[2])+w0_n*((11.0/6.0)*YN[1]-(7.0/6.0)*YN[2]+(2.0/6.0)*YN[3]);
 
-    u_tpnh=w0_p*((2/6)*YP[i-3]-(7/6)*YP[i-2]+(11/6)*YP[i-1])+w1_p*((-1/6)*YP[i-2]+(5/6)*YP[i-1]+(2/6)*YP[i])+w2_p*((2/6)*YP[i-1]+(5/6)*YP[i]-(1/6)*YP[1]);
+    u_tpnh=w0_p*((2.0/6.0)*YP[i-3]-(7.0/6.0)*YP[i-2]+(11.0/6.0)*YP[i-1])+w1_p*((-1.0/6.0)*YP[i-2]+(5.0/6.0)*YP[i-1]+(2.0/6.0)*YP[i])+w2_p*((2.0/6.0)*YP[i-1]+(5.0/6.0)*YP[i]-(1.0/6.0)*YP[1]);
 
-    u_tnnh=w2_n*((-1/6)*YN[i-2]+(5/6)*YN[i-1]+(2/6)*YN[i])+w1_n*((2/6)*YN[i-1]+(5/6)*YN[i]-(1/6)*YN[1])+w0_n*((11/6)*YN[i]-(7/6)*YN[1]+(2/6)*YN[2]);
+    u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[1]+(2.0/6.0)*YN[2]);
 
-    Ydot[i]=-(1/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-    printf("\n i is %li",i);
+    Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    //  printf("\n i is %li",i);
  /* Free vectors */
   N_VDestroy_Serial(yp);
   N_VDestroy_Serial(yn);
