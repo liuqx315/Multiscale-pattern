@@ -100,20 +100,9 @@ int main(int argc, const char * argv[])
   /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
-
-  /* Call init_from_file helper routine to read and set solver parameters */
-  //realtype rtol, atol;
-  //flag = init_from_file(arkode_mem, "solve_params.txt", f, NULL, NULL,
-  //                       T0, y, &imex, &dense_order, &rtol, &atol);
-  //if (check_flag(&flag, "init_from_file", 1)) return 1;
-  //if (rtol <= 0.0)  rtol = 1.e-6;
-  //if (atol <= 0.0)  atol = 1.e-10;
-  //rtol = 1.e-3;
-  //atol = 1.e-5;
+  
   realtype reltol = 1.e+12;
   realtype abstol = 1.e+12;
-  //realtype reltol2 = reltol*1.0e-2;
-  //realtype abstol2 = abstol*1.0e-2;
 
   /* Reference solution will be computed with default explicit method */
   flag = ARKodeInit(arkode_mem, f, NULL, T0, y);
