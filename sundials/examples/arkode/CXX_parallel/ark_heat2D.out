@@ -1,14 +1,14 @@
 
 2D Heat PDE test problem:
-   nprocs = 1
+   nprocs = 4
    nx = 60
    ny = 120
    kx = 0.5
    ky = 0.75
    rtol = 1e-05
    atol = 1e-10
-   nxl (proc 0) = 60
-   nyl (proc 0) = 120
+   nxl (proc 0) = 30
+   nyl (proc 0) = 60
 
         t      ||u||_rms
    ----------------------
@@ -37,13 +37,13 @@
 
 Final Solver Statistics:
    Internal solver steps = 57 (attempted = 61)
-   Total RHS evals:  Fe = 0,  Fi = 791
+   Total RHS evals:  Fe = 0,  Fi = 790
    Total linear solver setups = 31
-   Total linear iterations = 4377
-   Total number of Jacobian-vector products = 4377
+   Total linear iterations = 4394
+   Total number of Jacobian-vector products = 4394
    Total number of Preconditioner setups = 9
-   Total number of Preconditioner solves = 4439
-   Total number of linear solver convergence failures = 62
-   Total number of Newton iterations = 502
+   Total number of Preconditioner solves = 4455
+   Total number of linear solver convergence failures = 61
+   Total number of Newton iterations = 501
    Total number of nonlinear solver convergence failures = 4
    Total number of error test failures = 0

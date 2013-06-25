@@ -4,6 +4,10 @@ List of parallel ARKODE C++ examples
 
 Sample results:
 
+  The example output was produced by running with 4 MPI processes:
+  
+      mpiexec -n 4 ./ark_heat2D
+
   SUNDIALS was built with the following options:
 
   ./configure CC=mpicc F77=mpif90 CFLAGS="-O3" FFLAGS="-O3" --enable-examples
