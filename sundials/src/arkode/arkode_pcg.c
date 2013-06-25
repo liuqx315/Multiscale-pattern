@@ -58,7 +58,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKPCG", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKPCG", 
 		    "ARKPcg", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
@@ -67,7 +67,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
   /* Check if N_VDotProd and N_VWrmsNorm is present */
   if ((ark_mem->ark_tempv->ops->nvdotprod == NULL) ||
       (ark_mem->ark_tempv->ops->nvwrmsnorm == NULL)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKPCG", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKPCG", 
 		    "ARKPcg", MSGS_BAD_NVECTOR);
     return(ARKSPILS_ILL_INPUT);
   }
@@ -84,7 +84,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
   arkspils_mem = NULL;
   arkspils_mem = (ARKSpilsMem) malloc(sizeof(struct ARKSpilsMemRec));
   if (arkspils_mem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
 		    "ARKPcg", MSGS_MEM_FAIL);
     return(ARKSPILS_MEM_FAIL);
   }
@@ -115,7 +115,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
       (pretype != PREC_RIGHT) && (pretype != PREC_BOTH)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKPCG", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKPCG", 
 		    "ARKPcg", MSGS_BAD_PRETYPE);
     free(arkspils_mem); arkspils_mem = NULL;
     return(ARKSPILS_ILL_INPUT);
@@ -124,7 +124,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
   /* Allocate memory for ytemp and x */
   arkspils_mem->s_ytemp = N_VClone(ark_mem->ark_tempv);
   if (arkspils_mem->s_ytemp == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
 		    "ARKPcg", MSGS_MEM_FAIL);
     free(arkspils_mem); arkspils_mem = NULL;
     return(ARKSPILS_MEM_FAIL);
@@ -132,7 +132,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
 
   arkspils_mem->s_x = N_VClone(ark_mem->ark_tempv);
   if (arkspils_mem->s_x == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
 		    "ARKPcg", MSGS_MEM_FAIL);
     N_VDestroy(arkspils_mem->s_ytemp);
     free(arkspils_mem); arkspils_mem = NULL;
@@ -148,7 +148,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
   pcg_mem = NULL;
   pcg_mem = PcgMalloc(mxl, ark_mem->ark_tempv);
   if (pcg_mem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
+    arkProcessError(ark_mem, ARKSPILS_MEM_FAIL, "ARKPCG", 
 		    "ARKPcg", MSGS_MEM_FAIL);
     N_VDestroy(arkspils_mem->s_ytemp);
     N_VDestroy(arkspils_mem->s_x);
@@ -189,7 +189,7 @@ static int ARKPcgInit(ARKodeMem ark_mem)
   /* Check for legal combination pretype - psolve */
   if ((arkspils_mem->s_pretype != PREC_NONE) && 
       (arkspils_mem->s_psolve == NULL)) {
-    ARKProcessError(ark_mem, -1, "ARKPCG", 
+    arkProcessError(ark_mem, -1, "ARKPCG", 
 		    "ARKPcgInit", MSGS_PSOLVE_REQ);
     arkspils_mem->s_last_flag = ARKSPILS_ILL_INPUT;
     return(-1);
@@ -255,7 +255,7 @@ static int ARKPcgSetup(ARKodeMem ark_mem, int convfail,
 				arkspils_mem->s_P_data, vtemp1, 
 				vtemp2, vtemp3);
   if (retval < 0) {
-    ARKProcessError(ark_mem, PCG_PSET_FAIL_UNREC, "ARKPCG", 
+    arkProcessError(ark_mem, PCG_PSET_FAIL_UNREC, "ARKPCG", 
 		    "ARKPcgSetup", MSGS_PSET_FAILED);
     arkspils_mem->s_last_flag = PCG_PSET_FAIL_UNREC;
   }
@@ -365,12 +365,12 @@ static int ARKPcgSolve(ARKodeMem ark_mem, N_Vector b,
     return -1;
     break;
   case PCG_ATIMES_FAIL_UNREC:
-    ARKProcessError(ark_mem, PCG_ATIMES_FAIL_UNREC, "ARKPCG", 
+    arkProcessError(ark_mem, PCG_ATIMES_FAIL_UNREC, "ARKPCG", 
 		    "ARKPcgSolve", MSGS_JTIMES_FAILED);    
     return -1;
     break;
   case PCG_PSOLVE_FAIL_UNREC:
-    ARKProcessError(ark_mem, PCG_PSOLVE_FAIL_UNREC, "ARKPCG", 
+    arkProcessError(ark_mem, PCG_PSOLVE_FAIL_UNREC, "ARKPCG", 
 		    "ARKPcgSolve", MSGS_PSOLVE_FAILED);
     return -1;
     break;

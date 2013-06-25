@@ -34,14 +34,14 @@ int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetPrecType", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetPrecType", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -50,7 +50,7 @@ int ARKSpilsSetPrecType(void *arkode_mem, int pretype)
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE)  && (pretype != PREC_LEFT) &&
       (pretype != PREC_RIGHT) && (pretype != PREC_BOTH)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetPrecType", MSGS_BAD_PRETYPE);
     return(ARKSPILS_ILL_INPUT);
   }
@@ -71,28 +71,28 @@ int ARKSpilsSetGSType(void *arkode_mem, int gstype)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetGSType", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetGSType", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   if (arkspils_mem->s_type != SPILS_SPGMR) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetGSType", MSGS_BAD_LSTYPE);
     return(ARKSPILS_ILL_INPUT);
   }
 
   /* Check for legal gstype */
   if ((gstype != MODIFIED_GS) && (gstype != CLASSICAL_GS)) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetGSType", MSGS_BAD_GSTYPE);
     return(ARKSPILS_ILL_INPUT);
   }
@@ -113,21 +113,21 @@ int ARKSpilsSetMaxl(void *arkode_mem, int maxl)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetMaxl", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetMaxl", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   if (arkspils_mem->s_type == SPILS_SPGMR) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetMaxl", MSGS_BAD_LSTYPE);
     return(ARKSPILS_ILL_INPUT);
   }
@@ -149,14 +149,14 @@ int ARKSpilsSetEpsLin(void *arkode_mem, realtype eplifac)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetEpsLin", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetEpsLin", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -164,7 +164,7 @@ int ARKSpilsSetEpsLin(void *arkode_mem, realtype eplifac)
 
   /* Check for legal eplifac */
   if(eplifac < ZERO) {
-    ARKProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetEpsLin", MSGS_BAD_EPLIN);
     return(ARKSPILS_ILL_INPUT);
   }
@@ -186,14 +186,14 @@ int ARKSpilsSetPreconditioner(void *arkode_mem,
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetPreconditioner", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetPreconditioner", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -217,14 +217,14 @@ int ARKSpilsSetJacTimesVecFn(void *arkode_mem,
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetJacTimesVecFn", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsSetJacTimesVecFn", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -253,14 +253,14 @@ int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS,
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetWorkSpace", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetWorkSpace", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -300,14 +300,14 @@ int ARKSpilsGetNumPrecEvals(void *arkode_mem, long int *npevals)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumPrecEvals", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumPrecEvals", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -329,14 +329,14 @@ int ARKSpilsGetNumPrecSolves(void *arkode_mem, long int *npsolves)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumPrecSolves", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumPrecSolves", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -358,14 +358,14 @@ int ARKSpilsGetNumLinIters(void *arkode_mem, long int *nliters)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumLinIters", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumLinIters", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -387,14 +387,14 @@ int ARKSpilsGetNumConvFails(void *arkode_mem, long int *nlcfails)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumConvFails", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumConvFails", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -416,14 +416,14 @@ int ARKSpilsGetNumJtimesEvals(void *arkode_mem, long int *njvevals)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumJtimesEvals", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumJtimesEvals", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -445,14 +445,14 @@ int ARKSpilsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumRhsEvals", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetNumRhsEvals", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }
@@ -474,14 +474,14 @@ int ARKSpilsGetLastFlag(void *arkode_mem, long int *flag)
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
-    ARKProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
+    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetLastFlag", MSGS_ARKMEM_NULL);
     return(ARKSPILS_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   if (ark_mem->ark_lmem == NULL) {
-    ARKProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
+    arkProcessError(ark_mem, ARKSPILS_LMEM_NULL, "ARKSPILS", 
 		    "ARKSpilsGetLastFlag", MSGS_LMEM_NULL);
     return(ARKSPILS_LMEM_NULL);
   }

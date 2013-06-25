@@ -85,25 +85,25 @@ extern "C" {
 ===============================================================*/
 
 /*---------------------------------------------------------------
- Control constants for lower-level functions used by ARKStep:
+ Control constants for lower-level functions used by arkStep:
 -----------------------------------------------------------------
- ARKHin return values:  ARK_SUCCESS, ARK_RHSFUNC_FAIL, or 
+ arkHin return values:  ARK_SUCCESS, ARK_RHSFUNC_FAIL, or 
     ARK_TOO_CLOSE
 
- ARKStep control constants:  SOLVE_SUCCESS or PREDICT_AGAIN
+ arkStep control constants:  SOLVE_SUCCESS or PREDICT_AGAIN
 
- ARKStep return values:  ARK_SUCCESS, ARK_LSETUP_FAIL, 
+ arkStep return values:  ARK_SUCCESS, ARK_LSETUP_FAIL, 
     ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, ARK_RTFUNC_FAIL,
     ARK_CONV_FAILURE, ARK_ERR_FAILURE or ARK_FIRST_RHSFUNC_ERR
 
- ARKNls input nflag values:  FIRST_CALL, PREV_CONV_FAIL or 
+ arkNls input nflag values:  FIRST_CALL, PREV_CONV_FAIL or 
     PREV_ERR_FAIL
     
- ARKNls return values:  ARK_SUCCESS, ARK_LSETUP_FAIL,
+ arkNls return values:  ARK_SUCCESS, ARK_LSETUP_FAIL,
     ARK_LSOLVE_FAIL, ARK_RHSFUNC_FAIL, CONV_FAIL or
     RHSFUNC_RECVR
  
- ARKNewtonIteration return values:  ARK_SUCCESS, ARK_LSOLVE_FAIL,
+ arkNewtonIteration return values:  ARK_SUCCESS, ARK_LSOLVE_FAIL,
     ARK_RHSFUNC_FAIL, CONV_FAIL, RHSFUNC_RECVR or TRY_AGAIN
 ---------------------------------------------------------------*/
 #define SOLVE_SUCCESS    +2
@@ -122,13 +122,13 @@ extern "C" {
 /*---------------------------------------------------------------
  Return values for lower-level rootfinding functions
 -----------------------------------------------------------------
- ARKRootCheck1:  ARK_SUCCESS or ARK_RTFUNC_FAIL
+ arkRootCheck1:  ARK_SUCCESS or ARK_RTFUNC_FAIL
 
- ARKRootCheck2:  ARK_SUCCESS, ARK_RTFUNC_FAIL, CLOSERT or RTFOUND
+ arkRootCheck2:  ARK_SUCCESS, ARK_RTFUNC_FAIL, CLOSERT or RTFOUND
 
- ARKRootCheck3:  ARK_SUCCESS, ARK_RTFUNC_FAIL or RTFOUND
+ arkRootCheck3:  ARK_SUCCESS, ARK_RTFUNC_FAIL or RTFOUND
 
- ARKRootfind:  ARK_SUCCESS, ARK_RTFUNC_FAIL or RTFOUND
+ arkRootfind:  ARK_SUCCESS, ARK_RTFUNC_FAIL or RTFOUND
 ---------------------------------------------------------------*/
 #define RTFOUND          +1
 #define CLOSERT          +3
@@ -137,11 +137,11 @@ extern "C" {
 /*---------------------------------------------------------------
  Algorithmic constants
 -----------------------------------------------------------------
- ARKodeGetDky and ARKStep:  FUZZ_FACTOR
+ ARKodeGetDky and arkStep:  FUZZ_FACTOR
 
- ARKHin:  H0_LBFACTOR, H0_UBFACTOR, H0_BIAS and H0_ITERS
+ arkHin:  H0_LBFACTOR, H0_UBFACTOR, H0_BIAS and H0_ITERS
 
- ARKStep:  
+ arkStep:  
     ETAMX1      maximum step size change on first step
     ETAMXF      step size reduction factor on multiple error 
                 test failures (multiple implies >= SMALL_NEF)
@@ -154,7 +154,7 @@ extern "C" {
     SMALL_NEF   if an error failure occurs and SMALL_NEF <= nef,
                 then reset  eta = MIN(eta, ETAMXF)
 
- ARKNls:
+ arkNls:
     CRDOWN      constant used in the estimation of the 
                 convergence rate (crate) of the iterates for 
                 the nonlinear equation
@@ -551,20 +551,20 @@ typedef struct ARKodeMemRec {
 ===============================================================*/
 
 /* Prototype of internal ewtSet function */
-int ARKEwtSet(N_Vector ycur, N_Vector weight, void *data);
+int arkEwtSet(N_Vector ycur, N_Vector weight, void *data);
 
 /* Prototype of internal errHandler function */
-void ARKErrHandler(int error_code, const char *module, 
+void arkErrHandler(int error_code, const char *module, 
 		   const char *function, char *msg, void *data);
 
 /* Prototype of internal explicit stability estimation function */
-int ARKExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
+int arkExpStab(N_Vector y, realtype t, realtype *hstab, void *user_data);
 
 /*===============================================================
    HIGH LEVEL ERROR HANDLER, USED THROUGHOUT ARKODE
 ===============================================================*/
 
-void ARKProcessError(ARKodeMem ark_mem, int error_code, 
+void arkProcessError(ARKodeMem ark_mem, int error_code, 
 		     const char *module, const char *fname, 
 		     const char *msgfmt, ...);
 
