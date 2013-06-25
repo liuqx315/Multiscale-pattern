@@ -15,11 +15,13 @@
 # Add variable FARKODE_examples with the names of the parallel ARKODE examples
 
 SET(FARKODE_examples
+  fark_heat2D
   )
 
 # Add variable ARKODE_extras with the names of auxiliary files to install
 
 SET(ARKODE_extras
+  plot_heat2D.py
   )
 
 # Check whether we use MPI compiler scripts.
