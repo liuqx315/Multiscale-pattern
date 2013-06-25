@@ -1,7 +1,12 @@
 List of parallel ARKODE F90 examples
 
+  fark_heat2D : 2-D diffusion (PCG with Jacobi preconditioner)
 
 Sample results:
+
+  The example output was produced by running with 2 MPI processes:
+  
+      mpiexec -n 2 ./fark_heat2D
 
   SUNDIALS was built with the following options:
 
