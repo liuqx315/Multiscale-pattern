@@ -1,0 +1,15 @@
+# use glob syntax.
+syntax: glob
+*.mod
+*.o
+*~
+*.pyc
+gmon.out
+*.exe
+*.a
+diags*.txt
+regression_results_*
+build
+install
+examples
+Make.machine
