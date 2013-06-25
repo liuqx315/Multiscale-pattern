@@ -11,5 +11,4 @@ diags*.txt
 regression_results_*
 build
 install
-examples
 Make.machine

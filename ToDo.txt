@@ -191,11 +191,11 @@ Completed components:
 [X] Update documentation system to add f90 "domain" so that Fortran
     routines are properly referenced.
 [X] Add F77 serial/parallel, C parallel examples for ARKode. 
+[X] Add F90 parallel example(s) for ARKode. 
 
 
 
 Remaining components to build:
-[ ] Add F90 parallel example(s) for ARKode. 
 [ ] Update ARKode/FARKODE documentation regarding vector resize
     capabilities. 
 [ ] Test problem resize capabilities.
