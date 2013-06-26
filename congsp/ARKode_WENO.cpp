@@ -1,19 +1,18 @@
+/* Header files */
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <arkode/arkode.h>
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_types.h>
+#include <arkode/arkode.h>           /* prototypes for ARKode fcts., consts. */
+#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
+#include <sundials/sundials_types.h> /* def. of type 'realtype' */
 
 using namespace std;
 
+/* constants */
 #define ONE (RCONST(1.0))
 #define pi RCONST(3.1415926535897932)
-
-//#define idx(i,j,Nx,Ny,k) ((k)*(Nx)*(Ny)+(j)*(Nx)+i)
-//#define idx_v(i,j,Nx) ((j)*(Nx)+i)
 
 /* user data structure */
 typedef struct {  
@@ -24,6 +23,7 @@ typedef struct {
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, const string funcname, int opt);
 
@@ -44,7 +44,6 @@ int main(int argc, const char * argv[])
   void *arkode_mem = NULL;
 
   /* allocate udata structure */
-  //udata = new UserData;
   udata = (UserData) malloc(sizeof(*udata));
   if (check_flag((void *) udata, "malloc", 2)) return 1;
 
@@ -90,21 +89,26 @@ int main(int argc, const char * argv[])
   /* Set initial conditions into y */
   //realtype pi = RCONST(4.0)*atan(ONE);
   for (i=0; i<N; i++) {
-    if (i*udata->dx<0.5||(i*udata->dx<=2&&i*udata->dx>1.5))
-      data[i]=1.0;
-    else
-      data[i]=0.0;
-    //data[i] = sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx);
+    /* discontinuous initial condition */
+    // if (i*udata->dx<0.5||(i*udata->dx<=2&&i*udata->dx>1.5))
+    //  data[i]=1.0;
+    //else
+    //  data[i]=0.0;
+    /* continuous initial condition */
+    data[i] = sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx)*sin(pi*i*udata->dx);
   }
 
   /* Call ARKodeCreate to create the solver memory */
   arkode_mem = ARKodeCreate();
   if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
   
-  realtype reltol = 1.e+12;
-  realtype abstol = 1.e+12;
-
-  /* Reference solution will be computed with default explicit method */
+  /* Set relative tolerance and absolute tolerance  */
+  //realtype reltol = 1.e+12;
+  //realtype abstol = 1.e+12;
+  realtype reltol = 1.e-3;
+  realtype abstol = 1.e-6;
+  
+  /* Solution will be computed with default explicit method */
   flag = ARKodeInit(arkode_mem, f, NULL, T0, y);
   if (check_flag(&flag, "ARKodeInit", 1)) return 1;
 
@@ -116,14 +120,17 @@ int main(int argc, const char * argv[])
   //  flag = ARKodeSetDiagnostics(arkode_mem, DFID);
   //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
 
+  /* Call ARKodeSetInitStep to initialize time step */
   flag = ARKodeSetInitStep(arkode_mem, (udata->delta*udata->dx));
   if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
 
-  flag = ARKodeSetMinStep(arkode_mem, (udata->delta*udata->dx));
-  if (check_flag(&flag, "ARKodeSetMinStep", 1)) return 1;
+  /* Call ARKodeSetMinStep to set min time step */
+  //flag = ARKodeSetMinStep(arkode_mem, (udata->delta*udata->dx));
+  //if (check_flag(&flag, "ARKodeSetMinStep", 1)) return 1;
 
-  flag = ARKodeSetMaxStep(arkode_mem, (udata->delta*udata->dx));
-  if (check_flag(&flag, "ARKodeSetMaxStep", 1)) return 1;
+  /* Call ARKodeSetMaxStep to set max time step */
+  //flag = ARKodeSetMaxStep(arkode_mem, (udata->delta*udata->dx));
+  //if (check_flag(&flag, "ARKodeSetMaxStep", 1)) return 1;
 
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
@@ -140,10 +147,10 @@ int main(int argc, const char * argv[])
   if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
-  // for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
-  //fprintf(UFID,"\n");
+   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+  fprintf(UFID,"\n");
 
-  // add retrun
+
   /* In loop, call ARKode, print results.
      Break out of loop when the final output time has been reached */
   realtype t  = T0;
@@ -152,11 +159,10 @@ int main(int argc, const char * argv[])
   realtype tout = T0+dTout;
   int iout;
   for(iout=0;iout<Nt;iout++){
+
     // stop exactly at this time
-    //flag = ARKodeSetStopTime(arkode_mem, tout);
-    
+    //flag = ARKodeSetStopTime(arkode_mem, tout);   
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    printf("\n iteration is %i",iout);
     if (check_flag(&flag, "ARKode", 1)) break;
     
     if (flag >= 0) {
@@ -165,18 +171,13 @@ int main(int argc, const char * argv[])
     }
   
     if (iout>29990){
-    /* output results to disk */
-      for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+    /* output last nine results to disk */
+     for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
      fprintf(UFID,"\n");
     }
   }
   
   fclose(UFID);
-
-  /* Print some final statistics */
-  // long int nst;
-  //flag = ARKodeGetNumSteps(arkode_mem, &nst);
-  //check_flag(&flag, "ARKodeGetNumSteps", 1);
 
   /* Free vectors */
   N_VDestroy_Serial(y);
@@ -204,6 +205,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   /* clear out ydot (to be careful) */
   N_VConst(0.0, ydot);
   
+  /* declare variables */
   long int i; 
   realtype IS0_p,IS1_p,IS2_p,IS0_n,IS1_n,IS2_n,Epsilon;
   realtype alpha_0p,alpha_1p,alpha_2p,alpha_0n,alpha_1n,alpha_2n;
@@ -212,7 +214,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   /* problem data */
   UserData udata = (UserData) user_data;
   
-  /* y_positive and y_negative */
+  /* create y_positive and y_negative */
   N_Vector yp = NULL;
   N_Vector yn = NULL;
 
@@ -227,6 +229,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   yn = N_VNew_Serial(N);
   if (check_flag((void *) yn, "N_VNew_Serial", 0)) return 1;
 
+  /* set positive y and negative y */
   N_VLinearSum( 0.5, y, 0.5, y, yp );
   N_VLinearSum( 0.5, y, -0.5, y, yn );
 
@@ -240,8 +243,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype *YN = N_VGetArrayPointer(yn);
   if (check_flag((void *) YN, "N_VGetArrayPointer", 0)) return 1;
   
-  // change the 13/12
   /* iterate over domain, computing all equations */
+  /* i=0, i=1, i=2, i=N-3, i=N-2, i=N-1, should be considered particularly */
     i=0;
     IS0_p=(13.0/12.0)*(YP[N-3]-2.0*YP[N-2]+YP[0])*(YP[N-3]-2.0*YP[N-2]+YP[0])+(1.0/4.0)*(YP[N-3]-4.0*YP[N-2]+3.0*YP[0])*(YP[N-3]-4.0*YP[N-2]+3.0*YP[0]);
 
@@ -279,7 +282,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1.0/6.0)*YN[N-3]+(5.0/6.0)*YN[N-2]+(2.0/6.0)*YN[0])+w1_n*((2.0/6.0)*YN[N-2]+(5.0/6.0)*YN[0]-(1.0/6.0)*YN[1])+w0_n*((11.0/6.0)*YN[0]-(7.0/6.0)*YN[1]+(2.0/6.0)*YN[2]);
 
     Ydot[0]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-    //  printf("\n i is %li",i);
+   
     i=1;
     IS0_p=(13.0/12.0)*(YP[N-2]-2.0*YP[i-1]+YP[i])*(YP[N-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[N-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[N-2]-4.0*YP[i-1]+3.0*YP[i]);
 
@@ -317,7 +320,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1.0/6.0)*YN[N-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[i+2]);
 
     Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-    //   printf("\n i is %li",i);
+   
       i=2;
       IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
@@ -396,8 +399,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
   }
     
-    i=N-3;
-  
+    i=N-3;  
     IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
     IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
@@ -435,8 +437,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
     Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
 
-    i=N-2;
-    
+    i=N-2;    
     IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
     IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[i+1])*(YP[i-1]-2.0*YP[i]+YP[i+1])+(1.0/4.0)*(YP[i-1]-YP[i+1])*(YP[i-1]-YP[i+1]);
@@ -475,7 +476,6 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
 
     i=N-1;
-
     IS0_p=(13.0/12.0)*(YP[i-2]-2.0*YP[i-1]+YP[i])*(YP[i-2]-2.0*YP[i-1]+YP[i])+(1.0/4.0)*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i])*(YP[i-2]-4.0*YP[i-1]+3.0*YP[i]);
 
     IS1_p=(13.0/12.0)*(YP[i-1]-2.0*YP[i]+YP[1])*(YP[i-1]-2.0*YP[i]+YP[1])+(1.0/4.0)*(YP[i-1]-YP[1])*(YP[i-1]-YP[1]);
@@ -512,7 +512,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[1]+(2.0/6.0)*YN[2]);
 
     Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
-    //  printf("\n i is %li",i);
+    
  /* Free vectors */
   N_VDestroy_Serial(yp);
   N_VDestroy_Serial(yn);
@@ -531,34 +531,6 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
              flag >= 0
     opt == 2 means function allocates memory so check if returned
              NULL pointer  
-*/
-/*
-static int check_flag(void *flagvalue, string funcname, int opt)
-{
-  int *errflag;
-
-  // Check if SUNDIALS function returned NULL pointer - no memory allocated 
-  if (opt == 0 && flagvalue == NULL) {
-    fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed - returned NULL pointer\n\n",
-            funcname);
-    return 1; }
-
-  // Check if flag < 0 
-  else if (opt == 1) {
-    errflag = (int *) flagvalue;
-    if (*errflag < 0) {
-      fprintf(stderr, "\nSUNDIALS_ERROR: %s() failed with flag = %d\n\n",
-              funcname, *errflag);
-      return 1; }}
-
-  // Check if function returned NULL pointer - no memory allocated 
-  else if (opt == 2 && flagvalue == NULL) {
-    fprintf(stderr, "\nMEMORY_ERROR: %s() failed - returned NULL pointer\n\n",
-            funcname);
-    return 1; }
-
-  return 0;
-}
 */
 
 static int check_flag(void *flagvalue, const string funcname, int opt)

@@ -1,42 +1,45 @@
-
+/* Header files */
 #include <iostream>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <arkode/arkode.h>
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_types.h>
+#include <arkode/arkode.h>           /* prototypes for ARKode fcts., consts. */
+#include <nvector/nvector_serial.h>  /* serial N_Vector types, fcts., macros */
+#include <sundials/sundials_types.h> /* def. of type 'realtype' */
 
+using namespace std;
 
+/* accessor macros between (i,j,Nx,Ny,k) location and 1D NVector array */
 #define idx(i,j,Nx,Ny,k) ((k)*(Nx)*(Ny)+(j)*(Nx)+i)
+/* accessor macros between (i,j,Nx) location and 1D NVector array */
 #define idx_v(i,j,Nx) ((j)*(Nx)+i)
 
+/* constants */
 #define PI RCONST(3.1415926535897932)
 #define ONE RCONST(1.0)
 #define TWO RCONST(2.0)
 
-
 /* user data structure */
 typedef struct {
-    long int Nx;    /* number of intervals     */
-    long int Ny;
-    realtype dx;   /* mesh spacing            */
-    realtype dy;   /* mesh spacing            */
-    realtype Lx;
-    realtype Ly
-    int k;
+    long int Nx;   /* number of x grids        */
+    long int Ny;   /* number of x grids        */
+    realtype dx;   /* x direction mesh spacing */
+    realtype dy;   /* y direction mesh spacing */
+    realtype Lx;   /* max value in x direction */
+    realtype Ly;   /* max value in y direction */
+  //int k;
 } *UserData;
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, const string funcname, int opt);
-/* get value of tao */
+/* Set value of tao in whole domain*/
 static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny);
-/* get value of J */
+/* Set value of J in whole domain*/
 static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny);
 
-// what is the input u exactly? I do it as below, is it ok?
 int main(int argc, const char * argv[])
 {
     /* general problem parameters */
@@ -51,12 +54,12 @@ int main(int argc, const char * argv[])
     /* declare solver parameters */
     int flag;
     
+    /* general problem variables */
     N_Vector y = NULL;
  //   N_Vector rou = NULL;
  //   N_Vector qx = NULL;
  //   N_Vector qy = NULL;
- //   N_Vector E = NULL;
-    
+ //   N_Vector E = NULL;  
     void *arkode_mem = NULL;
     
     /* allocate udata structure */
@@ -80,8 +83,8 @@ int main(int argc, const char * argv[])
     udata->Ly = Ly;
     
     /* open solver diagnostics output file for writing */
-    FILE *DFID;
-    DFID=fopen("diags_ark_WENO2D.txt","w");
+    //FILE *DFID;
+    //DFID=fopen("diags_ark_WENO2D.txt","w");
     
     /* set total allocated vector length */
     NEQ = Nvar*udata->N;
@@ -121,14 +124,11 @@ int main(int argc, const char * argv[])
     arkode_mem = ARKodeCreate();
     if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
     
-    /* Call init_from_file helper routine to read and set solver parameters */
-    realtype rtol, atol;
-    rtol = 1.e-3;
-    atol = 1.e-5;
-    realtype reltol  = rtol;
-    realtype abstol  = atol;
+    /* Set solver parameters */
+    realtype reltol  = 1.e-3;
+    realtype abstol  = 1.e-6;
     
-    /* Reference solution uses default implicit method */
+    /* Solution uses default explicit method */
     flag = ARKodeInit(arkode_mem, f, NULL, T0, y);
     if (check_flag(&flag, "ARKodeInit", 1)) return 1;
     
@@ -137,9 +137,13 @@ int main(int argc, const char * argv[])
     if (check_flag(&flag, "ARKodeSetUserData", 1)) return 1;
     
     /* Call ARKodeSetDiagnostics to set diagnostics output file pointer */
-    flag = ARKodeSetDiagnostics(arkode_mem, DFID);
-    if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
+    //flag = ARKodeSetDiagnostics(arkode_mem, DFID);
+    //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
     
+    /* Call ARKodeSetInitStep to initialize time step */
+    flag = ARKodeSetInitStep(arkode_mem, 0.1);
+    if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
+
     /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
     flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
     if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
@@ -181,11 +185,11 @@ int main(int argc, const char * argv[])
     realtype t  = T0;
     realtype dTout = Tf/Nt;
     realtype tout = T0+dTout;
-    
     int iout;
     for (iout=0; iout<Nt; iout++) {
         
-        flag = ARKodeSetStopTime(arkode_mem, tout);
+        /* stop exactly at this time */
+        //flag = ARKodeSetStopTime(arkode_mem, tout);
         flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
         if (check_flag(&flag, "ARKode", 1)) break;
         if (flag >= 0) {
@@ -218,7 +222,7 @@ int main(int argc, const char * argv[])
     free(udata);
     
     /* close solver diagnostics output file */
-    fclose(DFID);
+    //fclose(DFID);
     
     return 0;
 }
@@ -2014,19 +2018,24 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     return 0;
 }
 
-
+/* Fill in values of tao in the whole domain */
 static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
 {
-    long int k,i,j, NEQ;
+    /* declare parameters */
+    long int i, j, NEQ;
     NEQ = Nx*Ny;
+
+    /* create vectors */
     N_Vector vx = NULL;
     N_Vector vy = NULL;
     
+    /* Create serial vector of length N */
     vx = N_VNew_Serial(NEQ);
     if (check_flag((void *) vx, "N_VNew_Serial", 0)) return 1;
     vy = N_VNew_Serial(NEQ);
     if (check_flag((void *) vy, "N_VNew_Serial", 0)) return 1;
     
+    /* Access data array for new NVector y, tao, vx, vy */
     vx_data = N_VGetArrayPointer(vx);
     if (check_flag((void *) vx_data, "N_VGetArrayPointer", 0)) return 1;
     vy_data = N_VGetArrayPointer(vy);
@@ -2036,24 +2045,21 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
     tao_data = N_VGetArrayPointer(tao);
     if (check_flag((void *) tao_data, "N_VGetArrayPointer", 0)) return 1;
     
+    /* Set values into vx and vy */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
             vx_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 1)]/data[idx(i, j, Nx, Ny, 0)];
             vy_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 2)]/data[idx(i, j, Nx, Ny, 0)];
         }
     }
-    //    for (k=0;k<4;k++){
-    
+   
+    /* Compute the values of tao in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
             tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)];
             tao_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 1)]*vy_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 2)] = data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)];
-            //tao_xx[idx_v(i,j,Nx)]=qx[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)];
-            //tao_xy[idx_v(i,j,Nx)]=qx[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)];
-            //tao_yx[idx_v(i,j,Nx)]=qy[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)];
-            //tao_yy[idx_v(i,j,Nx)]=qy[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)];
         }
     }
     
@@ -2062,22 +2068,26 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
     N_VDestroy_Serial(vy);
     
     return 0;
-    //    }
-
 }
 
+/* Fill in the value of J in the whole domain */
 static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny)
 {
-    long int k,i,j, NEQ;
+    /* declare parameters */
+    long int i, j, NEQ;
     NEQ = Nx*Ny;
+    
+    /* create vectors */
     N_Vector vx = NULL;
     N_Vector vy = NULL;
     
+    /* Create serial vector of length N */
     vx = N_VNew_Serial(NEQ);
     if (check_flag((void *) vx, "N_VNew_Serial", 0)) return 1;
     vy = N_VNew_Serial(NEQ);
     if (check_flag((void *) vy, "N_VNew_Serial", 0)) return 1;
     
+    /* Access data array for new NVector y, Cj, vx, vy */
     vx_data = N_VGetArrayPointer(vx);
     if (check_flag((void *) vx_data, "N_VGetArrayPointer", 0)) return 1;
     vy_data = N_VGetArrayPointer(vy);
@@ -2087,35 +2097,41 @@ static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny)
     Cj_data = N_VGetArrayPointer(Cj);
     if (check_flag((void *) Cj_data, "N_VGetArrayPointer", 0)) return 1;
 
+    /* Set values into vx and vy */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
             vx_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 1)]/data[idx(i, j, Nx, Ny, 0)];
             vy_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 2)]/data[idx(i, j, Nx, Ny, 0)];
         }
-    }    //    for (k=0;k<4;k++){
+    }    
     
+    /* Compute the values of Cj in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
             Cj_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*data[idx(i, j, Nx, Ny, 1)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)];
             Cj_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 2)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*data[idx(i, j, Nx, Ny, 2)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
-            
         }
     }
 
-    //for(j=0;j<Ny;j++){
-      //  for(i=0;i<Nx;i++){
-        //    Cj_x[idx_v(i,j,Nx)]=qx[idx_v(i,j,Nx)]*qx[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)]*qx[idx_v(i,j,Nx)]+qx[idx_v(i,j,Nx)]*qy[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)];
-         //   Cj_y[idx_v(i,j,Nx)]=qy[idx_v(i,j,Nx)]*qy[idx_v(i,j,Nx)]*vy[idx_v(i,j,Nx)]+rou[idx_v(i, j, Nx)]*qy[idx_v(i,j,Nx)]+qx[idx_v(i,j,Nx)]*qy[idx_v(i,j,Nx)]*vx[idx_v(i,j,Nx)];
-       // }
-  //  }
     /* Free vectors */
     N_VDestroy_Serial(vx);
     N_VDestroy_Serial(vy);
     
     return 0;
-    //    }
 }
 
+/*-------------------------------
+ * Private helper functions
+ *-------------------------------*/
+
+/* Check function return value...
+    opt == 0 means SUNDIALS function allocates memory so check if
+             returned NULL pointer
+    opt == 1 means SUNDIALS function returns a flag so check if
+             flag >= 0
+    opt == 2 means function allocates memory so check if returned
+             NULL pointer  
+*/
 
 static int check_flag(void *flagvalue, const string funcname, int opt)
 {
