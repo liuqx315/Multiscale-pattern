@@ -91,6 +91,19 @@ Here, the values of *etamx1* and *growth* may be modified by the user
 in the functions :c:func:`ARKodeSetAdaptivityConstants()` and
 :c:func:`ARKodeSetAdaptivityMethod()`, respectively.
 
+A flowchart detailing how the time steps are modified at each
+iteration to ensure solver convergence and successful steps is given
+in the figure below.  Here, all norms correspond to the WRMS norm, and
+the error adaptivity function ``arkAdapt`` is supplied by one of the
+error control algorithms discussed in the subsections below. 
+
+.. _adaptivity_figure:
+
+.. figure:: figs/time_adaptivity.png
+   :scale: 40 %
+   :align: center
+
+
 For some problems it may be preferrable to avoid small step size
 adjustments.  This can be especially true for problems that construct
 and factor the Newton Jacobian matrix :math:`A` from equation
