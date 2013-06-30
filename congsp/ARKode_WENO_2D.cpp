@@ -28,7 +28,7 @@ typedef struct {
     realtype dy;   /* y direction mesh spacing */
     realtype Lx;   /* max value in x direction */
     realtype Ly;   /* max value in y direction */
-  //int k;
+    realtype gama; /* gas constant             */
 } *UserData;
 
 /* User-supplied Functions Called by the Solver */
@@ -38,10 +38,10 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int check_flag(void *flagvalue, const string funcname, int opt);
 
 /* Set value of tao in whole domain*/
-static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny);
+static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny, realtype gama);
 
 /* Set value of J in whole domain*/
-static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny);
+static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny, realtype gama);
 
 /* Fill in the indicators of smoothness on x direction */
 static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype *IS0_nx, realtype *IS1_nx, realtype *IS2_nx,realtype *ypdata, realtype *yndata, realtype *taopdata, realtype *taondata, realtype *Cjpdata, realtype *Cjndata, long int i, long int j, long int Nx, long int Ny);
@@ -65,8 +65,8 @@ int main(int argc, const char * argv[])
 {
     /* general problem parameters */
     realtype T0 = RCONST(0.0);
-    realtype Tf = RCONST(10.0);
-    int Nt = 10;
+    realtype Tf = RCONST(0.3);
+    int Nt = 6;
     int Nvar = 4;
     UserData udata = NULL;
     realtype *data;
@@ -77,10 +77,6 @@ int main(int argc, const char * argv[])
     
     /* general problem variables */
     N_Vector y = NULL;
- //   N_Vector rou = NULL;
- //   N_Vector qx = NULL;
- //   N_Vector qy = NULL;
- //   N_Vector E = NULL;  
     void *arkode_mem = NULL;
     
     /* allocate udata structure */
@@ -95,6 +91,7 @@ int main(int argc, const char * argv[])
     flag = fscanf(FID," Ny = %li\n", &Ny);
     flag = fscanf(FID," Lx = %lf\n", &Lx);
     flag = fscanf(FID," Ly = %lf\n", &Ly);
+    flag = fscanf(FID," gama = %lf\n", &gama);
     fclose(FID);
     
     /* store the inputs in the UserData structure */
@@ -102,7 +99,8 @@ int main(int argc, const char * argv[])
     udata->Ny = Ny;
     udata->Lx = Lx;
     udata->Ly = Ly;
-    
+    udata->gama = gama;
+
     /* open solver diagnostics output file for writing */
     //FILE *DFID;
     //DFID=fopen("diags_ark_WENO2D.txt","w");
@@ -113,7 +111,7 @@ int main(int argc, const char * argv[])
     /* Initial problem output */
     printf("\n2D gas dynamic test problem:\n");
     printf("    Nx = %li,  Ny = %li, NEQ = %li\n", udata->Nx, udata->Ny, NEQ);
-    printf("    problem parameters:  Lx = %g,  Ly = %g\n", udata->Lx, udata->Ly);
+    printf("    problem parameters:  Lx = %g,  Ly = %g\n, gama = %g\n", udata->Lx, udata->Ly, udata->gama);
     
     /* Create serial vector of length NEQ for initial condition */
     y = N_VNew_Serial(NEQ);
@@ -134,10 +132,30 @@ int main(int argc, const char * argv[])
     
     for(j=0;j<Ny;j++){
         for (i=0; i<Nx; i++) {
-            data[idx(i,j,Nx,Ny,0)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* rou */
-            data[idx(i,j,Nx,Ny,1)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* qx */
-            data[idx(i,j,Nx,Ny,2)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* E */
+	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(i+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.5323;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  0.5323*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.3/((udata->gama-1.0)*0.5323);  /* E */
+	  }
+	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(i+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  1.5;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.5*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.5*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  1.5/((udata->gama-1.0)*1.5);  /* E */
+	  }
+	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(i+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.138;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.138;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.138;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.029/((udata->gama-1.0)*0.138);  /* E */
+	  }
+	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(i+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.5323;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.3/((udata->gama-1.0)*0.5323);  /* E */
+	  }
         }   
     }
     
@@ -162,7 +180,7 @@ int main(int argc, const char * argv[])
     //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
     
     /* Call ARKodeSetInitStep to initialize time step */
-    flag = ARKodeSetInitStep(arkode_mem, 0.1);
+    flag = ARKodeSetInitStep(arkode_mem, 0.05);
     if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
 
     /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
@@ -257,12 +275,13 @@ int main(int argc, const char * argv[])
 
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
-{
+{   
     /* declare variables */
     long int NEQ, NEQS, i, j, k;
+    realtype egv1, egv2, egv3, egvmax, gama;
     int flag;
     realtype Epsilon = 1.e-6;
-    
+
     /* create relative arrays */
     realtype *IS0_px = new realtype [4];
     realtype *IS1_px = new realtype [4];
@@ -325,7 +344,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype dy = udata->dy;
     realtype Lx = udata->Lx;
     realtype Ly = udata->Ly;
-    
+    realtype gama = udata->gama;
+
     /* fill in the value of NEQ and NEQS */
     NEQ = 4*Nx*Ny;
     NEQS = 2*Nx*Ny;
@@ -365,9 +385,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     if (check_flag((void *) Cjn, "N_VNew_Serial", 0)) return 1;
     
     /* fill in the value of tao and J in the whole domain */
-    flag=Gettao(y, tao, Nx, Ny);
+    flag=Gettao(y, tao, Nx, Ny, gama);
     if (flag!=0) printf("error in Gettao function \n");
-    flag=GetCj(y, Cj, Nx, Ny);
+    flag=GetCj(y, Cj, Nx, Ny, gama);
     if (flag!=0) printf("error in GetCj function \n");
     
     /* access data arrays */
@@ -396,6 +416,36 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype *Cjndata = N_VGetArrayPointer(Cjn);
     if (check_flag((void *) Cjndata, "N_VGetArrayPointer", 0)) return 1;
     
+    /* compute max absolue eigenvalue and fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
+    for(j=0; j<Ny; j++){
+        for (i=0; i<Nx; i++){
+            /* get different eigenvalues */
+            egv1 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)]);
+            egv2 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])-(gama*Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+            egv3 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])+(gama*Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+           /* get max absolute eigenvalue */
+           egvmax = (fabs(egv1)>fabs(egv2))? fabs(egv1) : fabs(egv2);
+           egvmax = (egvmax>fabs(egv3))? egvmax : fabs(egv3);
+            /* fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
+            ypdata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            yndata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            ypdata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            yndata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]-egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            taopdata[idx(i, j, Nx, Ny, 0)]=0.5*(taodata[idx(i, j, Nx, Ny, 0)]+egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taondata[idx(i, j, Nx, Ny, 0)]=0.5*(taodata[idx(i, j, Nx, Ny, 0)]-egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taopdata[idx(i, j, Nx, Ny, 1)]=0.5*(taodata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taondata[idx(i, j, Nx, Ny, 1)]=0.5*(taodata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taopdata[idx(i, j, Nx, Ny, 2)]=0.5*(taodata[idx(i, j, Nx, Ny, 2)]+egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taondata[idx(i, j, Nx, Ny, 2)]=0.5*(taodata[idx(i, j, Nx, Ny, 2)]-egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taopdata[idx(i, j, Nx, Ny, 3)]=0.5*(taodata[idx(i, j, Nx, Ny, 3)]+egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taondata[idx(i, j, Nx, Ny, 3)]=0.5*(taodata[idx(i, j, Nx, Ny, 3)]-egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            Cjpdata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]+egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjndata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]-egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjpdata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjndata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+        }
+    }
+
     /* iterate over domain, computing all equations */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
@@ -901,7 +951,7 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
 }
 
 /* Fill in values of tao in the whole domain */
-static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
+static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny, realtype gama)
 {
     /* declare parameters */
     long int i, j, NEQ;
@@ -934,17 +984,17 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
             vy_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 2)]/data[idx(i, j, Nx, Ny, 0)];
         }
     }
-   
+    
     /* Compute the values of tao in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-            tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)];
+            tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)];
             tao_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 1)]*vy_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 2)] = data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
-            tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)];
+            tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)];
         }
     }
-    
+
     /* Free vectors */
     N_VDestroy_Serial(vx);
     N_VDestroy_Serial(vy);
@@ -953,12 +1003,12 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
 }
 
 /* Fill in the value of J in the whole domain */
-static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny)
+static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny, realtype gama)
 {
     /* declare parameters */
     long int i, j, NEQ;
     NEQ = Nx*Ny;
-    
+
     /* create vectors */
     N_Vector vx = NULL;
     N_Vector vy = NULL;
@@ -986,12 +1036,12 @@ static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny)
             vy_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 2)]/data[idx(i, j, Nx, Ny, 0)];
         }
     }    
-    
+
     /* Compute the values of Cj in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-            Cj_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*data[idx(i, j, Nx, Ny, 1)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)];
-            Cj_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 2)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*data[idx(i, j, Nx, Ny, 2)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
+            Cj_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)]*data[idx(i, j, Nx, Ny, 1)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)];
+            Cj_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 2)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)]*data[idx(i, j, Nx, Ny, 2)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
         }
     }
 
