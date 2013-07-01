@@ -196,9 +196,10 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Test problem resize capabilities.
 [ ] Update ARKode/FARKODE documentation regarding vector resize
     capabilities. 
-[ ] Test problem resize capabilities.
+[ ] Add support for fixed-point solver for implicit stage solves.
 [ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
     logic to account for this in step solution & embedding.  Update
     time step solution/embedding routine to now do solves to compute
