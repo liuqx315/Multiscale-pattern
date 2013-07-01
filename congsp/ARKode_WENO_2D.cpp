@@ -28,7 +28,7 @@ typedef struct {
     realtype dy;   /* y direction mesh spacing */
     realtype Lx;   /* max value in x direction */
     realtype Ly;   /* max value in y direction */
-  //int k;
+    realtype gama; /* gas constant             */
 } *UserData;
 
 /* User-supplied Functions Called by the Solver */
@@ -38,10 +38,10 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int check_flag(void *flagvalue, const string funcname, int opt);
 
 /* Set value of tao in whole domain*/
-static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny);
+static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny, realtype gama);
 
 /* Set value of J in whole domain*/
-static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny);
+static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny, realtype gama);
 
 /* Fill in the indicators of smoothness on x direction */
 static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype *IS0_nx, realtype *IS1_nx, realtype *IS2_nx,realtype *ypdata, realtype *yndata, realtype *taopdata, realtype *taondata, realtype *Cjpdata, realtype *Cjndata, long int i, long int j, long int Nx, long int Ny);
@@ -65,22 +65,19 @@ int main(int argc, const char * argv[])
 {
     /* general problem parameters */
     realtype T0 = RCONST(0.0);
-    realtype Tf = RCONST(10.0);
-    int Nt = 10;
+    realtype Tf = RCONST(0.3);
+    int Nt = 6;
     int Nvar = 4;
     UserData udata = NULL;
     realtype *data;
-    long int N, NEQ, i, j;
+    long int Nx, Ny, NEQ, i, j;
+    realtype Lx, Ly, gama;
     
     /* declare solver parameters */
     int flag;
     
     /* general problem variables */
     N_Vector y = NULL;
- //   N_Vector rou = NULL;
- //   N_Vector qx = NULL;
- //   N_Vector qy = NULL;
- //   N_Vector E = NULL;  
     void *arkode_mem = NULL;
     
     /* allocate udata structure */
@@ -90,11 +87,12 @@ int main(int argc, const char * argv[])
     /* read problem parameter and tolerances from input file:*/
     double dx, dy;
     FILE *FID;
-    FID=fopen("input_WENO2D.txt","r");
+    FID = fopen("input_WENO2D.txt","r");
     flag = fscanf(FID," Nx = %li\n", &Nx);
     flag = fscanf(FID," Ny = %li\n", &Ny);
     flag = fscanf(FID," Lx = %lf\n", &Lx);
     flag = fscanf(FID," Ly = %lf\n", &Ly);
+    flag = fscanf(FID," gama = %lf\n", &gama);
     fclose(FID);
     
     /* store the inputs in the UserData structure */
@@ -102,18 +100,19 @@ int main(int argc, const char * argv[])
     udata->Ny = Ny;
     udata->Lx = Lx;
     udata->Ly = Ly;
-    
+    udata->gama = gama;
+
     /* open solver diagnostics output file for writing */
     //FILE *DFID;
     //DFID=fopen("diags_ark_WENO2D.txt","w");
     
     /* set total allocated vector length */
-    NEQ = Nvar*udata->N;
+    NEQ = Nvar*udata->Nx*udata->Ny;
     
     /* Initial problem output */
     printf("\n2D gas dynamic test problem:\n");
     printf("    Nx = %li,  Ny = %li, NEQ = %li\n", udata->Nx, udata->Ny, NEQ);
-    printf("    problem parameters:  Lx = %g,  Ly = %g\n", udata->Lx, udata->Ly);
+    printf("    problem parameters:  Lx = %g,  Ly = %g\n, gama = %g\n", udata->Lx, udata->Ly, udata->gama);
     
     /* Create serial vector of length NEQ for initial condition */
     y = N_VNew_Serial(NEQ);
@@ -123,21 +122,46 @@ int main(int argc, const char * argv[])
     udata->dx = Lx/Nx;
     udata->dy = Ly/Ny;
     
-    /* output mesh to disk */
-    FID=fopen("WENO2D_mesh.txt","w");
-    for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*(i+0.5));
+    /* output x_mesh to disk */
+    FID=fopen("WENO2D_meshx.txt","w");
+    for (i=0; i<Nx; i++)  fprintf(FID,"  %.16e\n", udata->dx*(i+0.5));
     fclose(FID);
     
+    /* output y_mesh to disk */
+    FID=fopen("WENO2D_meshy.txt","w");
+    for (i=0; i<Ny; i++)  fprintf(FID,"  %.16e\n", udata->dy*(i+0.5));
+    fclose(FID);
+
     /* Access data array for new NVector y */
     data = N_VGetArrayPointer(y);
     if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
     
     for(j=0;j<Ny;j++){
         for (i=0; i<Nx; i++) {
-            data[idx(i,j,Nx,Ny,0)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* rou */
-            data[idx(i,j,Nx,Ny,1)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* qx */
-            data[idx(i,j,Nx,Ny,2)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  sin(PI*(i+0.5)*udata->dx)*sin(PI*(j+0.5)*udata->dy);  /* E */
+	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.5323;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  0.5323*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.3/((udata->gama-1.0)*0.5323);  /* E */
+	  }
+	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  1.5;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.5*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.5*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  1.5/((udata->gama-1.0)*1.5);  /* E */
+	  }
+	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.138;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.138;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.138;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.029/((udata->gama-1.0)*0.138);  /* E */
+	  }
+	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.5323;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.3/((udata->gama-1.0)*0.5323);  /* E */
+	  }
         }   
     }
     
@@ -162,7 +186,7 @@ int main(int argc, const char * argv[])
     //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
     
     /* Call ARKodeSetInitStep to initialize time step */
-    flag = ARKodeSetInitStep(arkode_mem, 0.1);
+    flag = ARKodeSetInitStep(arkode_mem, 0.05);
     if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
 
     /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
@@ -197,9 +221,9 @@ int main(int argc, const char * argv[])
     fprintf(EFID,"\n");
     
     /* Write all solver parameters to stdout */
-    printf("\n");
-    flag = ARKodeWriteParameters(arkode_mem, stdout);
-    if (check_flag(&flag, "ARKodeWriteParameters", 1)) return 1;
+    // printf("\n");
+    //flag = ARKodeWriteParameters(arkode_mem, stdout);
+    //if (check_flag(&flag, "ARKodeWriteParameters", 1)) return 1;
     
     /* In loop, call ARKode, print results, and test for error.
      Break out of loop when the final output time has been reached */
@@ -257,12 +281,13 @@ int main(int argc, const char * argv[])
 
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
-{
+{   
     /* declare variables */
     long int NEQ, NEQS, i, j, k;
+    realtype egv1, egv2, egv3, egvmax;
     int flag;
     realtype Epsilon = 1.e-6;
-    
+
     /* create relative arrays */
     realtype *IS0_px = new realtype [4];
     realtype *IS1_px = new realtype [4];
@@ -325,7 +350,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype dy = udata->dy;
     realtype Lx = udata->Lx;
     realtype Ly = udata->Ly;
-    
+    realtype gama = udata->gama;
+
     /* fill in the value of NEQ and NEQS */
     NEQ = 4*Nx*Ny;
     NEQS = 2*Nx*Ny;
@@ -365,9 +391,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     if (check_flag((void *) Cjn, "N_VNew_Serial", 0)) return 1;
     
     /* fill in the value of tao and J in the whole domain */
-    flag=Gettao(y, tao, Nx, Ny);
+    flag=Gettao(y, tao, Nx, Ny, gama);
     if (flag!=0) printf("error in Gettao function \n");
-    flag=GetCj(y, Cj, Nx, Ny);
+    flag=GetCj(y, Cj, Nx, Ny, gama);
     if (flag!=0) printf("error in GetCj function \n");
     
     /* access data arrays */
@@ -396,6 +422,36 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype *Cjndata = N_VGetArrayPointer(Cjn);
     if (check_flag((void *) Cjndata, "N_VGetArrayPointer", 0)) return 1;
     
+    /* compute max absolue eigenvalue and fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
+    for(j=0; j<Ny; j++){
+        for (i=0; i<Nx; i++){
+            /* get different eigenvalues */
+            egv1 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)]);
+            egv2 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])-(gama*Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+            egv3 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])+(gama*Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+           /* get max absolute eigenvalue */
+           egvmax = (fabs(egv1)>fabs(egv2))? fabs(egv1) : fabs(egv2);
+           egvmax = (egvmax>fabs(egv3))? egvmax : fabs(egv3);
+            /* fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
+            ypdata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            yndata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            ypdata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            yndata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]-egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
+            taopdata[idx(i, j, Nx, Ny, 0)]=0.5*(taodata[idx(i, j, Nx, Ny, 0)]+egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taondata[idx(i, j, Nx, Ny, 0)]=0.5*(taodata[idx(i, j, Nx, Ny, 0)]-egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taopdata[idx(i, j, Nx, Ny, 1)]=0.5*(taodata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taondata[idx(i, j, Nx, Ny, 1)]=0.5*(taodata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taopdata[idx(i, j, Nx, Ny, 2)]=0.5*(taodata[idx(i, j, Nx, Ny, 2)]+egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taondata[idx(i, j, Nx, Ny, 2)]=0.5*(taodata[idx(i, j, Nx, Ny, 2)]-egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taopdata[idx(i, j, Nx, Ny, 3)]=0.5*(taodata[idx(i, j, Nx, Ny, 3)]+egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taondata[idx(i, j, Nx, Ny, 3)]=0.5*(taodata[idx(i, j, Nx, Ny, 3)]-egvmax*Ydata[idx(i, j, Nx, Ny, 2)]);
+            Cjpdata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]+egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjndata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]-egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjpdata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjndata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+        }
+    }
+
     /* iterate over domain, computing all equations */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
@@ -503,6 +559,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 /* Fill in the indicators of smoothness on x direction */
 static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype *IS0_nx, realtype *IS1_nx, realtype *IS2_nx,realtype *ypdata, realtype *yndata, realtype *taopdata, realtype *taondata, realtype *Cjpdata, realtype *Cjndata, long int i, long int j, long int Nx, long int Ny)
 {
+  /* declaration */
+  long int idown1, idown2, idown3, iup1, iup2, iup3;
+
     /* consider Nx */
     if (Nx<4){
         cerr << "\nNx should be more than 3!\n";
@@ -510,88 +569,97 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
     }
     else {
       /* consider the situations of different i */  
-    if (i==0){
-        i-1 = Nx-1;
-        i-2 = Nx-2;
-        i-3 = Nx-3;
-    }
+      idown1 = i;
+      idown2 = i;
+      idown3 = i;
+      iup1 = i;
+      iup2 = i;
+      iup3 = i;
+      if (i<3||i>Nx-4){      
+	if (i==0){
+	  idown1 = Nx;
+	  idown2 = Nx;
+	  idown3 = Nx;
+	}
     
-    if (i==1){
-        i-2 = Nx-1;
-        i-3 = Nx-2;
-    }
+	if (i==1){ 
+	  idown2 = Nx+1;
+	  idown3 = Nx+1;
+	}
     
-    if (i==2){
-        i-3 = Nx-1;
-    }
+	if (i==2){
+	  idown3 = Nx+2;
+	}
     
-    if (i==Nx-3){
-        i+3 = 0;
-    }
+	if (i==Nx-3){
+	  iup3 = -3;
+	}
     
-    if (i==Nx-2){
-        i+2 = 0;
-        i+3 = 1;
-    }
+	if (i==Nx-2){
+	  iup2 = -2;
+	  iup3 = -2;
+	}
     
-    if (i==Nx-1){
-        i+1 = 0;
-        i+2 = 1;
-        i+3 = 2;
-    }
-    
+	if (i==Nx-1){
+	  iup1 = -1;
+	  iup2 = -1;
+	  iup3 = -1;
+	}
+      }
+      else {
     /* compute indicators of smoothness of rou, qx, qy, E */ 
-    IS0_px[0]=(13.0/12.0)*(ypdata[idx(i-2, j, Nx, Ny, 1)]-2.0*ypdata[idx(i-1, j, Nx, Ny, 1)]+ypdata[idx(i, j, Nx, Ny, 1)])*(ypdata[idx(i-2, j, Nx, Ny, 1)]-2.0*ypdata[idx(i-1, j, Nx, Ny, 1)]+ypdata[idx(i, j, Nx, Ny, 1)])+(1.0/4.0)*(ypdata[idx(i-2, j, Nx, Ny, 1)]-4.0*ypdata[idx(i-1, j, Nx, Ny, 1)]+3.0*ypdata[idx(i, j, Nx, Ny, 1)])*(ypdata[idx(i-2, j, Nx, Ny, 1)]-4.0*ypdata[idx(i-1, j, Nx, Ny, 1)]+3.0*ypdata[idx(i, j, Nx, Ny, 1)]);
+    IS0_px[0]=(13.0/12.0)*(ypdata[idx(idown2-2, j, Nx, Ny, 1)]-2.0*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+ypdata[idx(i, j, Nx, Ny, 1)])*(ypdata[idx(idown2-2, j, Nx, Ny, 1)]-2.0*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+ypdata[idx(i, j, Nx, Ny, 1)])+(1.0/4.0)*(ypdata[idx(idown2-2, j, Nx, Ny, 1)]-4.0*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+3.0*ypdata[idx(i, j, Nx, Ny, 1)])*(ypdata[idx(idown2-2, j, Nx, Ny, 1)]-4.0*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+3.0*ypdata[idx(i, j, Nx, Ny, 1)]);
     
-    IS1_px[0]=(13.0/12.0)*(ypdata[idx(i-1, j, Nx, Ny, 1)]-2.0*ypdata[idx(i, j, Nx, Ny, 1)]+ypdata[idx(i+1, j, Nx, Ny, 1)])*(ypdata[idx(i-1, j, Nx, Ny, 1)]-2.0*ypdata[idx(i, j, Nx, Ny, 1)]+ypdata[idx(i+1, j, Nx, Ny, 1)])+(1.0/4.0)*(ypdata[idx(i-1, j, Nx, Ny, 1)]-ypdata[idx(i+1, j, Nx, Ny, 1)])*(ypdata[idx(i-1, j, Nx, Ny, 1)]-ypdata[idx(i+1, j, Nx, Ny, 1)]);
+    IS1_px[0]=(13.0/12.0)*(ypdata[idx(idown1-1, j, Nx, Ny, 1)]-2.0*ypdata[idx(i, j, Nx, Ny, 1)]+ypdata[idx(iup1+1, j, Nx, Ny, 1)])*(ypdata[idx(idown1-1, j, Nx, Ny, 1)]-2.0*ypdata[idx(i, j, Nx, Ny, 1)]+ypdata[idx(iup1+1, j, Nx, Ny, 1)])+(1.0/4.0)*(ypdata[idx(idown1-1, j, Nx, Ny, 1)]-ypdata[idx(iup1+1, j, Nx, Ny, 1)])*(ypdata[idx(idown1-1, j, Nx, Ny, 1)]-ypdata[idx(iup1+1, j, Nx, Ny, 1)]);
     
-    IS2_px[0]=(13.0/12.0)*(ypdata[idx(i, j, Nx, Ny, 1)]-2.0*ypdata[idx(i+1, j, Nx, Ny, 1)]+ypdata[idx(i+2, j, Nx, Ny, 1)])*(ypdata[idx(i, j, Nx, Ny, 1)]-2.0*ypdata[idx(i+1, j, Nx, Ny, 1)]+ypdata[idx(i+2, j, Nx, Ny, 1)])+(1.0/4.0)*(3.0*ypdata[idx(i, j, Nx, Ny, 1)]-4.0*ypdata[idx(i+1, j, Nx, Ny, 1)]+ypdata[idx(i+2, j, Nx, Ny, 1)])*(3.0*ypdata[idx(i, j, Nx, Ny, 1)]-4.0*ypdata[idx(i+1, j, Nx, Ny, 1)]+ypdata[idx(i+2, j, Nx, Ny, 1)]);
+    IS2_px[0]=(13.0/12.0)*(ypdata[idx(i, j, Nx, Ny, 1)]-2.0*ypdata[idx(iup1+1, j, Nx, Ny, 1)]+ypdata[idx(iup2+2, j, Nx, Ny, 1)])*(ypdata[idx(i, j, Nx, Ny, 1)]-2.0*ypdata[idx(iup1+1, j, Nx, Ny, 1)]+ypdata[idx(iup2+2, j, Nx, Ny, 1)])+(1.0/4.0)*(3.0*ypdata[idx(i, j, Nx, Ny, 1)]-4.0*ypdata[idx(iup1+1, j, Nx, Ny, 1)]+ypdata[idx(iup2+2, j, Nx, Ny, 1)])*(3.0*ypdata[idx(i, j, Nx, Ny, 1)]-4.0*ypdata[idx(iup1+1, j, Nx, Ny, 1)]+ypdata[idx(iup2+2, j, Nx, Ny, 1)]);
     
-    IS0_nx[0]=(13.0/12.0)*(yndata[idx(i+1, j, Nx, Ny, 1)]-2.0*yndata[idx(i+2, j, Nx, Ny, 1)]+yndata[idx(i+3, j, Nx, Ny, 1)])*(yndata[idx(i+1, j, Nx, Ny, 1)]-2.0*yndata[idx(i+2, j, Nx, Ny, 1)]+yndata[idx(i+3, j, Nx, Ny, 1)])+(1.0/4.0)*(3.0*yndata[idx(i+1, j, Nx, Ny, 1)]-4.0*yndata[idx(i+2, j, Nx, Ny, 1)]+yndata[idx(i+3, j, Nx, Ny, 1)])*(3.0*yndata[idx(i+1, j, Nx, Ny, 1)]-4.0*yndata[idx(i+2, j, Nx, Ny, 1)]+yndata[idx(i+3, j, Nx, Ny, 1)]);
+    IS0_nx[0]=(13.0/12.0)*(yndata[idx(iup1+1, j, Nx, Ny, 1)]-2.0*yndata[idx(iup2+2, j, Nx, Ny, 1)]+yndata[idx(iup3+3, j, Nx, Ny, 1)])*(yndata[idx(iup1+1, j, Nx, Ny, 1)]-2.0*yndata[idx(iup2+2, j, Nx, Ny, 1)]+yndata[idx(iup3+3, j, Nx, Ny, 1)])+(1.0/4.0)*(3.0*yndata[idx(iup1+1, j, Nx, Ny, 1)]-4.0*yndata[idx(iup2+2, j, Nx, Ny, 1)]+yndata[idx(iup3+3, j, Nx, Ny, 1)])*(3.0*yndata[idx(iup1+1, j, Nx, Ny, 1)]-4.0*yndata[idx(iup2+2, j, Nx, Ny, 1)]+yndata[idx(iup3+3, j, Nx, Ny, 1)]);
     
-    IS1_nx[0]=(13.0/12.0)*(yndata[idx(i, j, Nx, Ny, 1)]-2.0*yndata[idx(i+1, j, Nx, Ny, 1)]+yndata[idx(i+2, j, Nx, Ny, 1)])*(yndata[idx(i, j, Nx, Ny, 1)]-2.0*yndata[idx(i+1, j, Nx, Ny, 1)]+yndata[idx(i+2, j, Nx, Ny, 1)])+(1.0/4.0)*(yndata[idx(i, j, Nx, Ny, 1)]-yndata[idx(i+2, j, Nx, Ny, 1)])*(yndata[idx(i, j, Nx, Ny, 1)]-yndata[idx(i+2, j, Nx, Ny, 1)]);
+    IS1_nx[0]=(13.0/12.0)*(yndata[idx(i, j, Nx, Ny, 1)]-2.0*yndata[idx(iup1+1, j, Nx, Ny, 1)]+yndata[idx(iup2+2, j, Nx, Ny, 1)])*(yndata[idx(i, j, Nx, Ny, 1)]-2.0*yndata[idx(iup1+1, j, Nx, Ny, 1)]+yndata[idx(iup2+2, j, Nx, Ny, 1)])+(1.0/4.0)*(yndata[idx(i, j, Nx, Ny, 1)]-yndata[idx(iup2+2, j, Nx, Ny, 1)])*(yndata[idx(i, j, Nx, Ny, 1)]-yndata[idx(iup2+2, j, Nx, Ny, 1)]);
     
-    IS2_nx[0]=(13.0/12.0)*(yndata[idx(i-1, j, Nx, Ny, 1)]-2.0*yndata[idx(i, j, Nx, Ny, 1)]+yndata[idx(i+1, j, Nx, Ny, 1)])*(yndata[idx(i-1, j, Nx, Ny, 1)]-2.0*yndata[idx(i, j, Nx, Ny, 1)]+yndata[idx(i+1, j, Nx, Ny, 1)])+(1.0/4.0)*(yndata[idx(i-1, j, Nx, Ny, 1)]-4.0*yndata[idx(i, j, Nx, Ny, 1)]+3.0*yndata[idx(i+1, j, Nx, Ny, 1)])*(yndata[idx(i-1, j, Nx, Ny, 1)]-4.0*yndata[idx(i, j, Nx, Ny, 1)]+3.0*yndata[idx(i+1, j, Nx, Ny, 1)]);
-    
-    
-    IS0_px[1]=(13.0/12.0)*(taopdata[idx(i-2, j, Nx, Ny, 0)]-2.0*taopdata[idx(i-1, j, Nx, Ny, 0)]+taopdata[idx(i, j, Nx, Ny, 0)])*(taopdata[idx(i-2, j, Nx, Ny, 0)]-2.0*taopdata[idx(i-1, j, Nx, Ny, 0)]+taopdata[idx(i, j, Nx, Ny, 0)])+(1.0/4.0)*(taopdata[idx(i-2, j, Nx, Ny, 0)]-4.0*taopdata[idx(i-1, j, Nx, Ny, 0)]+3.0*taopdata[idx(i, j, Nx, Ny, 0)])*(taopdata[idx(i-2, j, Nx, Ny, 0)]-4.0*taopdata[idx(i-1, j, Nx, Ny, 0)]+3.0*taopdata[idx(i, j, Nx, Ny, 0)]);
-    
-    IS1_px[1]=(13.0/12.0)*(taopdata[idx(i-1, j, Nx, Ny, 0)]-2.0*taopdata[idx(i, j, Nx, Ny, 0)]+taopdata[idx(i+1, j, Nx, Ny, 0)])*(taopdata[idx(i-1, j, Nx, Ny, 0)]-2.0*taopdata[idx(i, j, Nx, Ny, 0)]+taopdata[idx(i+1, j, Nx, Ny, 0)])+(1.0/4.0)*(taopdata[idx(i-1, j, Nx, Ny, 0)]-taopdata[idx(i+1, j, Nx, Ny, 0)])*(taopdata[idx(i-1, j, Nx, Ny, 0)]-taopdata[idx(i+1, j, Nx, Ny, 0)]);
-    
-    IS2_px[1]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 0)]-2.0*taopdata[idx(i+1, j, Nx, Ny, 0)]+taopdata[idx(i+2, j, Nx, Ny, 0)])*(taopdata[idx(i, j, Nx, Ny, 0)]-2.0*taopdata[idx(i+1, j, Nx, Ny, 0)]+taopdata[idx(i+2, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 0)]-4.0*taopdata[idx(i+1, j, Nx, Ny, 0)]+taopdata[idx(i+2, j, Nx, Ny, 0)])*(3.0*taopdata[idx(i, j, Nx, Ny, 0)]-4.0*taopdata[idx(i+1, j, Nx, Ny, 0)]+taopdata[idx(i+2, j, Nx, Ny, 0)]);
-    
-    IS0_nx[1]=(13.0/12.0)*(taondata[idx(i+1, j, Nx, Ny, 0)]-2.0*taondata[idx(i+2, j, Nx, Ny, 0)]+taondata[idx(i+3, j, Nx, Ny, 0)])*(taondata[idx(i+1, j, Nx, Ny, 0)]-2.0*taondata[idx(i+2, j, Nx, Ny, 0)]+taondata[idx(i+3, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*taondata[idx(i+1, j, Nx, Ny, 0)]-4.0*taondata[idx(i+2, j, Nx, Ny, 0)]+taondata[idx(i+3, j, Nx, Ny, 0)])*(3.0*taondata[idx(i+1, j, Nx, Ny, 0)]-4.0*taondata[idx(i+2, j, Nx, Ny, 0)]+taondata[idx(i+3, j, Nx, Ny, 0)]);
-    
-    IS1_nx[1]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 0)]-2.0*taondata[idx(i+1, j, Nx, Ny, 0)]+taondata[idx(i+2, j, Nx, Ny, 0)])*(taondata[idx(i, j, Nx, Ny, 0)]-2.0*taondata[idx(i+1, j, Nx, Ny, 0)]+taondata[idx(i+2, j, Nx, Ny, 0)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 0)]-taondata[idx(i+2, j, Nx, Ny, 0)])*(taondata[idx(i, j, Nx, Ny, 0)]-taondata[idx(i+2, j, Nx, Ny, 0)]);
-    
-    IS2_nx[1]=(13.0/12.0)*(taondata[idx(i-1, j, Nx, Ny, 0)]-2.0*taondata[idx(i, j, Nx, Ny, 0)]+taondata[idx(i+1, j, Nx, Ny, 0)])*(taondata[idx(i-1, j, Nx, Ny, 0)]-2.0*taondata[idx(i, j, Nx, Ny, 0)]+taondata[idx(i+1, j, Nx, Ny, 0)])+(1.0/4.0)*(taondata[idx(i-1, j, Nx, Ny, 0)]-4.0*taondata[idx(i, j, Nx, Ny, 0)]+3.0*taondata[idx(i+1, j, Nx, Ny, 0)])*(taondata[idx(i-1, j, Nx, Ny, 0)]-4.0*taondata[idx(i, j, Nx, Ny, 0)]+3.0*taondata[idx(i+1, j, Nx, Ny, 0)]);
+    IS2_nx[0]=(13.0/12.0)*(yndata[idx(idown1-1, j, Nx, Ny, 1)]-2.0*yndata[idx(i, j, Nx, Ny, 1)]+yndata[idx(iup1+1, j, Nx, Ny, 1)])*(yndata[idx(idown1-1, j, Nx, Ny, 1)]-2.0*yndata[idx(i, j, Nx, Ny, 1)]+yndata[idx(iup1+1, j, Nx, Ny, 1)])+(1.0/4.0)*(yndata[idx(idown1-1, j, Nx, Ny, 1)]-4.0*yndata[idx(i, j, Nx, Ny, 1)]+3.0*yndata[idx(iup1+1, j, Nx, Ny, 1)])*(yndata[idx(idown1-1, j, Nx, Ny, 1)]-4.0*yndata[idx(i, j, Nx, Ny, 1)]+3.0*yndata[idx(iup1+1, j, Nx, Ny, 1)]);
     
     
-    IS0_px[2]=(13.0/12.0)*(taopdata[idx(i-2, j, Nx, Ny, 2)]-2.0*taopdata[idx(i-1, j, Nx, Ny, 2)]+taopdata[idx(i, j, Nx, Ny, 2)])*(taopdata[idx(i-2, j, Nx, Ny, 2)]-2.0*taopdata[idx(i-1, j, Nx, Ny, 2)]+taopdata[idx(i, j, Nx, Ny, 2)])+(1.0/4.0)*(taopdata[idx(i-2, j, Nx, Ny, 2)]-4.0*taopdata[idx(i-1, j, Nx, Ny, 2)]+3.0*taopdata[idx(i, j, Nx, Ny, 2)])*(taopdata[idx(i-2, j, Nx, Ny, 2)]-4.0*taopdata[idx(i-1, j, Nx, Ny, 2)]+3.0*taopdata[idx(i, j, Nx, Ny, 2)]);
+    IS0_px[1]=(13.0/12.0)*(taopdata[idx(idown2-2, j, Nx, Ny, 0)]-2.0*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+taopdata[idx(i, j, Nx, Ny, 0)])*(taopdata[idx(idown2-2, j, Nx, Ny, 0)]-2.0*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+taopdata[idx(i, j, Nx, Ny, 0)])+(1.0/4.0)*(taopdata[idx(idown2-2, j, Nx, Ny, 0)]-4.0*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+3.0*taopdata[idx(i, j, Nx, Ny, 0)])*(taopdata[idx(idown2-2, j, Nx, Ny, 0)]-4.0*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+3.0*taopdata[idx(i, j, Nx, Ny, 0)]);
     
-    IS1_px[2]=(13.0/12.0)*(taopdata[idx(i-1, j, Nx, Ny, 2)]-2.0*taopdata[idx(i, j, Nx, Ny, 2)]+taopdata[idx(i+1, j, Nx, Ny, 2)])*(taopdata[idx(i-1, j, Nx, Ny, 2)]-2.0*taopdata[idx(i, j, Nx, Ny, 2)]+taopdata[idx(i+1, j, Nx, Ny, 2)])+(1.0/4.0)*(taopdata[idx(i-1, j, Nx, Ny, 2)]-taopdata[idx(i+1, j, Nx, Ny, 2)])*(taopdata[idx(i-1, j, Nx, Ny, 2)]-taopdata[idx(i+1, j, Nx, Ny, 2)]);
+    IS1_px[1]=(13.0/12.0)*(taopdata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*taopdata[idx(i, j, Nx, Ny, 0)]+taopdata[idx(iup1+1, j, Nx, Ny, 0)])*(taopdata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*taopdata[idx(i, j, Nx, Ny, 0)]+taopdata[idx(iup1+1, j, Nx, Ny, 0)])+(1.0/4.0)*(taopdata[idx(idown1-1, j, Nx, Ny, 0)]-taopdata[idx(iup1+1, j, Nx, Ny, 0)])*(taopdata[idx(idown1-1, j, Nx, Ny, 0)]-taopdata[idx(iup1+1, j, Nx, Ny, 0)]);
     
-    IS2_px[2]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 2)]-2.0*taopdata[idx(i+1, j, Nx, Ny, 2)]+taopdata[idx(i+2, j, Nx, Ny, 2)])*(taopdata[idx(i, j, Nx, Ny, 2)]-2.0*taopdata[idx(i+1, j, Nx, Ny, 2)]+taopdata[idx(i+2, j, Nx, Ny, 2)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 2)]-4.0*taopdata[idx(i+1, j, Nx, Ny, 2)]+taopdata[idx(i+2, j, Nx, Ny, 2)])*(3.0*taopdata[idx(i, j, Nx, Ny, 2)]-4.0*taopdata[idx(i+1, j, Nx, Ny, 2)]+taopdata[idx(i+2, j, Nx, Ny, 2)]);
+    IS2_px[1]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 0)]-2.0*taopdata[idx(iup1+1, j, Nx, Ny, 0)]+taopdata[idx(iup2+2, j, Nx, Ny, 0)])*(taopdata[idx(i, j, Nx, Ny, 0)]-2.0*taopdata[idx(iup1+1, j, Nx, Ny, 0)]+taopdata[idx(iup2+2, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 0)]-4.0*taopdata[idx(iup1+1, j, Nx, Ny, 0)]+taopdata[idx(iup2+2, j, Nx, Ny, 0)])*(3.0*taopdata[idx(i, j, Nx, Ny, 0)]-4.0*taopdata[idx(iup1+1, j, Nx, Ny, 0)]+taopdata[idx(iup2+2, j, Nx, Ny, 0)]);
     
-    IS0_nx[2]=(13.0/12.0)*(taondata[idx(i+1, j, Nx, Ny, 2)]-2.0*taondata[idx(i+2, j, Nx, Ny, 2)]+taondata[idx(i+3, j, Nx, Ny, 2)])*(taondata[idx(i+1, j, Nx, Ny, 2)]-2.0*taondata[idx(i+2, j, Nx, Ny, 2)]+taondata[idx(i+3, j, Nx, Ny, 2)])+(1.0/4.0)*(3.0*taondata[idx(i+1, j, Nx, Ny, 2)]-4.0*taondata[idx(i+2, j, Nx, Ny, 2)]+taondata[idx(i+3, j, Nx, Ny, 2)])*(3.0*taondata[idx(i+1, j, Nx, Ny, 2)]-4.0*taondata[idx(i+2, j, Nx, Ny, 2)]+taondata[idx(i+3, j, Nx, Ny, 2)]);
+    IS0_nx[1]=(13.0/12.0)*(taondata[idx(iup1+1, j, Nx, Ny, 0)]-2.0*taondata[idx(iup2+2, j, Nx, Ny, 0)]+taondata[idx(iup3+3, j, Nx, Ny, 0)])*(taondata[idx(iup1+1, j, Nx, Ny, 0)]-2.0*taondata[idx(iup2+2, j, Nx, Ny, 0)]+taondata[idx(iup3+3, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*taondata[idx(iup1+1, j, Nx, Ny, 0)]-4.0*taondata[idx(iup2+2, j, Nx, Ny, 0)]+taondata[idx(iup3+3, j, Nx, Ny, 0)])*(3.0*taondata[idx(iup1+1, j, Nx, Ny, 0)]-4.0*taondata[idx(iup2+2, j, Nx, Ny, 0)]+taondata[idx(iup3+3, j, Nx, Ny, 0)]);
     
-    IS1_nx[2]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 2)]-2.0*taondata[idx(i+1, j, Nx, Ny, 2)]+taondata[idx(i+2, j, Nx, Ny, 2)])*(taondata[idx(i, j, Nx, Ny, 2)]-2.0*taondata[idx(i+1, j, Nx, Ny, 2)]+taondata[idx(i+2, j, Nx, Ny, 2)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 2)]-taondata[idx(i+2, j, Nx, Ny, 2)])*(taondata[idx(i, j, Nx, Ny, 2)]-taondata[idx(i+2, j, Nx, Ny, 2)]);
+    IS1_nx[1]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 0)]-2.0*taondata[idx(iup1+1, j, Nx, Ny, 0)]+taondata[idx(iup2+2, j, Nx, Ny, 0)])*(taondata[idx(i, j, Nx, Ny, 0)]-2.0*taondata[idx(iup1+1, j, Nx, Ny, 0)]+taondata[idx(iup2+2, j, Nx, Ny, 0)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 0)]-taondata[idx(iup2+2, j, Nx, Ny, 0)])*(taondata[idx(i, j, Nx, Ny, 0)]-taondata[idx(iup2+2, j, Nx, Ny, 0)]);
     
-    IS2_nx[2]=(13.0/12.0)*(taondata[idx(i-1, j, Nx, Ny, 2)]-2.0*taondata[idx(i, j, Nx, Ny, 2)]+taondata[idx(i+1, j, Nx, Ny, 2)])*(taondata[idx(i-1, j, Nx, Ny, 2)]-2.0*taondata[idx(i, j, Nx, Ny, 2)]+taondata[idx(i+1, j, Nx, Ny, 2)])+(1.0/4.0)*(taondata[idx(i-1, j, Nx, Ny, 2)]-4.0*taondata[idx(i, j, Nx, Ny, 2)]+3.0*taondata[idx(i+1, j, Nx, Ny, 2)])*(taondata[idx(i-1, j, Nx, Ny, 2)]-4.0*taondata[idx(i, j, Nx, Ny, 2)]+3.0*taondata[idx(i+1, j, Nx, Ny, 2)]);
+    IS2_nx[1]=(13.0/12.0)*(taondata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*taondata[idx(i, j, Nx, Ny, 0)]+taondata[idx(iup1+1, j, Nx, Ny, 0)])*(taondata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*taondata[idx(i, j, Nx, Ny, 0)]+taondata[idx(iup1+1, j, Nx, Ny, 0)])+(1.0/4.0)*(taondata[idx(idown1-1, j, Nx, Ny, 0)]-4.0*taondata[idx(i, j, Nx, Ny, 0)]+3.0*taondata[idx(iup1+1, j, Nx, Ny, 0)])*(taondata[idx(idown1-1, j, Nx, Ny, 0)]-4.0*taondata[idx(i, j, Nx, Ny, 0)]+3.0*taondata[idx(iup1+1, j, Nx, Ny, 0)]);
     
     
-    IS0_px[3]=(13.0/12.0)*(Cjpdata[idx(i-2, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+Cjpdata[idx(i, j, Nx, Ny, 0)])*(Cjpdata[idx(i-2, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+Cjpdata[idx(i, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjpdata[idx(i-2, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 0)])*(Cjpdata[idx(i-2, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 0)]);
+    IS0_px[2]=(13.0/12.0)*(taopdata[idx(idown2-2, j, Nx, Ny, 2)]-2.0*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+taopdata[idx(i, j, Nx, Ny, 2)])*(taopdata[idx(idown2-2, j, Nx, Ny, 2)]-2.0*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+taopdata[idx(i, j, Nx, Ny, 2)])+(1.0/4.0)*(taopdata[idx(idown2-2, j, Nx, Ny, 2)]-4.0*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+3.0*taopdata[idx(i, j, Nx, Ny, 2)])*(taopdata[idx(idown2-2, j, Nx, Ny, 2)]-4.0*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+3.0*taopdata[idx(i, j, Nx, Ny, 2)]);
     
-    IS1_px[3]=(13.0/12.0)*(Cjpdata[idx(i-1, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 0)]+Cjpdata[idx(i+1, j, Nx, Ny, 0)])*(Cjpdata[idx(i-1, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 0)]+Cjpdata[idx(i+1, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjpdata[idx(i-1, j, Nx, Ny, 0)]-Cjpdata[idx(i+1, j, Nx, Ny, 0)])*(Cjpdata[idx(i-1, j, Nx, Ny, 0)]-Cjpdata[idx(i+1, j, Nx, Ny, 0)]);
+    IS1_px[2]=(13.0/12.0)*(taopdata[idx(idown1-1, j, Nx, Ny, 2)]-2.0*taopdata[idx(i, j, Nx, Ny, 2)]+taopdata[idx(iup1+1, j, Nx, Ny, 2)])*(taopdata[idx(idown1-1, j, Nx, Ny, 2)]-2.0*taopdata[idx(i, j, Nx, Ny, 2)]+taopdata[idx(iup1+1, j, Nx, Ny, 2)])+(1.0/4.0)*(taopdata[idx(idown1-1, j, Nx, Ny, 2)]-taopdata[idx(iup1+1, j, Nx, Ny, 2)])*(taopdata[idx(idown1-1, j, Nx, Ny, 2)]-taopdata[idx(iup1+1, j, Nx, Ny, 2)]);
     
-    IS2_px[3]=(13.0/12.0)*(Cjpdata[idx(i, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i+1, j, Nx, Ny, 0)]+Cjpdata[idx(i+2, j, Nx, Ny, 0)])*(Cjpdata[idx(i, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i+1, j, Nx, Ny, 0)]+Cjpdata[idx(i+2, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*Cjpdata[idx(i, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(i+1, j, Nx, Ny, 0)]+Cjpdata[idx(i+2, j, Nx, Ny, 0)])*(3.0*Cjpdata[idx(i, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(i+1, j, Nx, Ny, 0)]+Cjpdata[idx(i+2, j, Nx, Ny, 0)]);
+    IS2_px[2]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 2)]-2.0*taopdata[idx(iup1+1, j, Nx, Ny, 2)]+taopdata[idx(iup2+2, j, Nx, Ny, 2)])*(taopdata[idx(i, j, Nx, Ny, 2)]-2.0*taopdata[idx(iup1+1, j, Nx, Ny, 2)]+taopdata[idx(iup2+2, j, Nx, Ny, 2)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 2)]-4.0*taopdata[idx(iup1+1, j, Nx, Ny, 2)]+taopdata[idx(iup2+2, j, Nx, Ny, 2)])*(3.0*taopdata[idx(i, j, Nx, Ny, 2)]-4.0*taopdata[idx(iup1+1, j, Nx, Ny, 2)]+taopdata[idx(iup2+2, j, Nx, Ny, 2)]);
     
-    IS0_nx[3]=(13.0/12.0)*(Cjndata[idx(i+1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i+2, j, Nx, Ny, 0)]+Cjndata[idx(i+3, j, Nx, Ny, 0)])*(Cjndata[idx(i+1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i+2, j, Nx, Ny, 0)]+Cjndata[idx(i+3, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*Cjndata[idx(i+1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(i+2, j, Nx, Ny, 0)]+Cjndata[idx(i+3, j, Nx, Ny, 0)])*(3.0*Cjndata[idx(i+1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(i+2, j, Nx, Ny, 0)]+Cjndata[idx(i+3, j, Nx, Ny, 0)]);
+    IS0_nx[2]=(13.0/12.0)*(taondata[idx(iup1+1, j, Nx, Ny, 2)]-2.0*taondata[idx(iup2+2, j, Nx, Ny, 2)]+taondata[idx(iup3+3, j, Nx, Ny, 2)])*(taondata[idx(iup1+1, j, Nx, Ny, 2)]-2.0*taondata[idx(iup2+2, j, Nx, Ny, 2)]+taondata[idx(iup3+3, j, Nx, Ny, 2)])+(1.0/4.0)*(3.0*taondata[idx(iup1+1, j, Nx, Ny, 2)]-4.0*taondata[idx(iup2+2, j, Nx, Ny, 2)]+taondata[idx(iup3+3, j, Nx, Ny, 2)])*(3.0*taondata[idx(iup1+1, j, Nx, Ny, 2)]-4.0*taondata[idx(iup2+2, j, Nx, Ny, 2)]+taondata[idx(iup3+3, j, Nx, Ny, 2)]);
     
-    IS1_nx[3]=(13.0/12.0)*(Cjndata[idx(i, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i+1, j, Nx, Ny, 0)]+Cjndata[idx(i+2, j, Nx, Ny, 0)])*(Cjndata[idx(i, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i+1, j, Nx, Ny, 0)]+Cjndata[idx(i+2, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjndata[idx(i, j, Nx, Ny, 0)]-Cjndata[idx(i+2, j, Nx, Ny, 0)])*(Cjndata[idx(i, j, Nx, Ny, 0)]-Cjndata[idx(i+2, j, Nx, Ny, 0)]);
+    IS1_nx[2]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 2)]-2.0*taondata[idx(iup1+1, j, Nx, Ny, 2)]+taondata[idx(iup2+2, j, Nx, Ny, 2)])*(taondata[idx(i, j, Nx, Ny, 2)]-2.0*taondata[idx(iup1+1, j, Nx, Ny, 2)]+taondata[idx(iup2+2, j, Nx, Ny, 2)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 2)]-taondata[idx(iup2+2, j, Nx, Ny, 2)])*(taondata[idx(i, j, Nx, Ny, 2)]-taondata[idx(iup2+2, j, Nx, Ny, 2)]);
     
-    IS2_nx[3]=(13.0/12.0)*(Cjndata[idx(i-1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i, j, Nx, Ny, 0)]+Cjndata[idx(i+1, j, Nx, Ny, 0)])*(Cjndata[idx(i-1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i, j, Nx, Ny, 0)]+Cjndata[idx(i+1, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjndata[idx(i-1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(i, j, Nx, Ny, 0)]+3.0*Cjndata[idx(i+1, j, Nx, Ny, 0)])*(Cjndata[idx(i-1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(i, j, Nx, Ny, 0)]+3.0*Cjndata[idx(i+1, j, Nx, Ny, 0)]);
+    IS2_nx[2]=(13.0/12.0)*(taondata[idx(idown1-1, j, Nx, Ny, 2)]-2.0*taondata[idx(i, j, Nx, Ny, 2)]+taondata[idx(iup1+1, j, Nx, Ny, 2)])*(taondata[idx(idown1-1, j, Nx, Ny, 2)]-2.0*taondata[idx(i, j, Nx, Ny, 2)]+taondata[idx(iup1+1, j, Nx, Ny, 2)])+(1.0/4.0)*(taondata[idx(idown1-1, j, Nx, Ny, 2)]-4.0*taondata[idx(i, j, Nx, Ny, 2)]+3.0*taondata[idx(iup1+1, j, Nx, Ny, 2)])*(taondata[idx(idown1-1, j, Nx, Ny, 2)]-4.0*taondata[idx(i, j, Nx, Ny, 2)]+3.0*taondata[idx(iup1+1, j, Nx, Ny, 2)]);
+    
+    
+    IS0_px[3]=(13.0/12.0)*(Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+Cjpdata[idx(i, j, Nx, Ny, 0)])*(Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+Cjpdata[idx(i, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 0)])*(Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 0)]);
+    
+    IS1_px[3]=(13.0/12.0)*(Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 0)]+Cjpdata[idx(iup1+1, j, Nx, Ny, 0)])*(Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 0)]+Cjpdata[idx(iup1+1, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]-Cjpdata[idx(iup1+1, j, Nx, Ny, 0)])*(Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]-Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]);
+    
+    IS2_px[3]=(13.0/12.0)*(Cjpdata[idx(i, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]+Cjpdata[idx(iup2+2, j, Nx, Ny, 0)])*(Cjpdata[idx(i, j, Nx, Ny, 0)]-2.0*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]+Cjpdata[idx(iup2+2, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*Cjpdata[idx(i, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]+Cjpdata[idx(iup2+2, j, Nx, Ny, 0)])*(3.0*Cjpdata[idx(i, j, Nx, Ny, 0)]-4.0*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]+Cjpdata[idx(iup2+2, j, Nx, Ny, 0)]);
+    
+    IS0_nx[3]=(13.0/12.0)*(Cjndata[idx(iup1+1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(iup2+2, j, Nx, Ny, 0)]+Cjndata[idx(iup3+3, j, Nx, Ny, 0)])*(Cjndata[idx(iup1+1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(iup2+2, j, Nx, Ny, 0)]+Cjndata[idx(iup3+3, j, Nx, Ny, 0)])+(1.0/4.0)*(3.0*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(iup2+2, j, Nx, Ny, 0)]+Cjndata[idx(iup3+3, j, Nx, Ny, 0)])*(3.0*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(iup2+2, j, Nx, Ny, 0)]+Cjndata[idx(iup3+3, j, Nx, Ny, 0)]);
+    
+    IS1_nx[3]=(13.0/12.0)*(Cjndata[idx(i, j, Nx, Ny, 0)]-2.0*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]+Cjndata[idx(iup2+2, j, Nx, Ny, 0)])*(Cjndata[idx(i, j, Nx, Ny, 0)]-2.0*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]+Cjndata[idx(iup2+2, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjndata[idx(i, j, Nx, Ny, 0)]-Cjndata[idx(iup2+2, j, Nx, Ny, 0)])*(Cjndata[idx(i, j, Nx, Ny, 0)]-Cjndata[idx(iup2+2, j, Nx, Ny, 0)]);
+    
+    IS2_nx[3]=(13.0/12.0)*(Cjndata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i, j, Nx, Ny, 0)]+Cjndata[idx(iup1+1, j, Nx, Ny, 0)])*(Cjndata[idx(idown1-1, j, Nx, Ny, 0)]-2.0*Cjndata[idx(i, j, Nx, Ny, 0)]+Cjndata[idx(iup1+1, j, Nx, Ny, 0)])+(1.0/4.0)*(Cjndata[idx(idown1-1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(i, j, Nx, Ny, 0)]+3.0*Cjndata[idx(iup1+1, j, Nx, Ny, 0)])*(Cjndata[idx(idown1-1, j, Nx, Ny, 0)]-4.0*Cjndata[idx(i, j, Nx, Ny, 0)]+3.0*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]);
    
+      }
     return 0;
     }
 }
@@ -599,6 +667,9 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
 /* Fill in the indicators of smoothness on y direction */
 static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype *IS0_ny, realtype *IS1_ny, realtype *IS2_ny,realtype *ypdata, realtype *yndata, realtype *taopdata, realtype *taondata, realtype *Cjpdata, realtype *Cjndata, long int i, long int j, long int Nx, long int Ny)
 {
+  /* declaration */
+  long int jdown1, jdown2, jdown3, jup1, jup2, jup3;
+
     /* consider Ny */
     if (Ny<4){
         cerr << "\nNy should be more than 3!\n";
@@ -606,88 +677,97 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
     }
     else {
       /* consider situations of different j */
+      jdown1 = j;
+      jdown2 = j;
+      jdown3 = j;
+      jup1 = j;
+      jup2 = j;
+      jup3 = j;
+      if (j<3||j>Ny-4){
         if (j==0){
-            j-1 = Ny-1;
-            j-2 = Ny-2;
-            j-3 = Ny-3;
+            jdown1 = Ny;
+            jdown2 = Ny;
+            jdown3 = Ny;
         }
         
         if (j==1){
-            j-2 = Ny-1;
-            j-3 = Ny-2;
+            jdown2 = Ny+1;
+            jdown3 = Ny+1;
         }
         
         if (j==2){
-            j-3 = Ny-1;
+            jdown3 = Ny+2;
         }
         
         if (j==Ny-3){
-            j+3 = 0;
+            jup3 = -3;
         }
         
         if (j==Ny-2){
-            j+2 = 0;
-            j+3 = 1;
+            jup2 = -2;
+            jup3 = -2;
         }
         
         if (j==Ny-1){
-            j+1 = 0;
-            j+2 = 1;
-            j+3 = 2;
+            jup1 = -1;
+            jup2 = -1;
+            jup3 = -1;
         }
-
+      }
+      else
+	{
 	/*compute indicators of smoothness of rou, qx, qy, E */
-    IS0_py[0]=(13.0/12.0)*(ypdata[idx(i, j-2, Nx, Ny, 2)]-2.0*ypdata[idx(i, j-1, Nx, Ny, 2)]+ypdata[idx(i, j, Nx, Ny, 2)])*(ypdata[idx(i, j-2, Nx, Ny, 2)]-2.0*ypdata[idx(i, j-1, Nx, Ny, 2)]+ypdata[idx(i, j, Nx, Ny, 2)])+(1.0/4.0)*(ypdata[idx(i, j-2, Nx, Ny, 2)]-4.0*ypdata[idx(i, j-1, Nx, Ny, 2)]+3.0*ypdata[idx(i, j, Nx, Ny, 2)])*(ypdata[idx(i, j-2, Nx, Ny, 2)]-4.0*ypdata[idx(i, j-1, Nx, Ny, 2)]+3.0*ypdata[idx(i, j, Nx, Ny, 2)]);
+    IS0_py[0]=(13.0/12.0)*(ypdata[idx(i, jdown2-2, Nx, Ny, 2)]-2.0*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+ypdata[idx(i, j, Nx, Ny, 2)])*(ypdata[idx(i, jdown2-2, Nx, Ny, 2)]-2.0*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+ypdata[idx(i, j, Nx, Ny, 2)])+(1.0/4.0)*(ypdata[idx(i, jdown2-2, Nx, Ny, 2)]-4.0*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+3.0*ypdata[idx(i, j, Nx, Ny, 2)])*(ypdata[idx(i, jdown2-2, Nx, Ny, 2)]-4.0*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+3.0*ypdata[idx(i, j, Nx, Ny, 2)]);
     
-    IS1_py[0]=(13.0/12.0)*(ypdata[idx(i, j-1, Nx, Ny, 2)]-2.0*ypdata[idx(i, j, Nx, Ny, 2)]+ypdata[idx(i, j+1, Nx, Ny, 2)])*(ypdata[idx(i, j-1, Nx, Ny, 2)]-2.0*ypdata[idx(i, j, Nx, Ny, 2)]+ypdata[idx(i, j+1, Nx, Ny, 2)])+(1.0/4.0)*(ypdata[idx(i, j-1, Nx, Ny, 2)]-ypdata[idx(i, j+1, Nx, Ny, 2)])*(ypdata[idx(i, j-1, Nx, Ny, 2)]-ypdata[idx(i, j+1, Nx, Ny, 2)]);
+    IS1_py[0]=(13.0/12.0)*(ypdata[idx(i, jdown1-1, Nx, Ny, 2)]-2.0*ypdata[idx(i, j, Nx, Ny, 2)]+ypdata[idx(i, jup1+1, Nx, Ny, 2)])*(ypdata[idx(i, jdown1-1, Nx, Ny, 2)]-2.0*ypdata[idx(i, j, Nx, Ny, 2)]+ypdata[idx(i, jup1+1, Nx, Ny, 2)])+(1.0/4.0)*(ypdata[idx(i, jdown1-1, Nx, Ny, 2)]-ypdata[idx(i, jup1+1, Nx, Ny, 2)])*(ypdata[idx(i, jdown1-1, Nx, Ny, 2)]-ypdata[idx(i, jup1+1, Nx, Ny, 2)]);
     
-    IS2_py[0]=(13.0/12.0)*(ypdata[idx(i, j, Nx, Ny, 2)]-2.0*ypdata[idx(i, j+1, Nx, Ny, 2)]+ypdata[idx(i, j+2, Nx, Ny, 2)])*(ypdata[idx(i, j, Nx, Ny, 2)]-2.0*ypdata[idx(i, j+1, Nx, Ny, 2)]+ypdata[idx(i, j+2, Nx, Ny, 2)])+(1.0/4.0)*(3.0*ypdata[idx(i, j, Nx, Ny, 2)]-4.0*ypdata[idx(i, j+1, Nx, Ny, 2)]+ypdata[idx(i, j+2, Nx, Ny, 2)])*(3.0*ypdata[idx(i, j, Nx, Ny, 2)]-4.0*ypdata[idx(i, j+1, Nx, Ny, 2)]+ypdata[idx(i, j+2, Nx, Ny, 2)]);
+    IS2_py[0]=(13.0/12.0)*(ypdata[idx(i, j, Nx, Ny, 2)]-2.0*ypdata[idx(i, jup1+1, Nx, Ny, 2)]+ypdata[idx(i, jup2+2, Nx, Ny, 2)])*(ypdata[idx(i, j, Nx, Ny, 2)]-2.0*ypdata[idx(i, jup1+1, Nx, Ny, 2)]+ypdata[idx(i, jup2+2, Nx, Ny, 2)])+(1.0/4.0)*(3.0*ypdata[idx(i, j, Nx, Ny, 2)]-4.0*ypdata[idx(i, jup1+1, Nx, Ny, 2)]+ypdata[idx(i, jup2+2, Nx, Ny, 2)])*(3.0*ypdata[idx(i, j, Nx, Ny, 2)]-4.0*ypdata[idx(i, jup1+1, Nx, Ny, 2)]+ypdata[idx(i, jup2+2, Nx, Ny, 2)]);
     
-    IS0_ny[0]=(13.0/12.0)*(yndata[idx(i, j+1, Nx, Ny, 2)]-2.0*yndata[idx(i, j+2, Nx, Ny, 2)]+yndata[idx(i, j+3, Nx, Ny, 2)])*(yndata[idx(i, j+1, Nx, Ny, 2)]-2.0*yndata[idx(i, j+2, Nx, Ny, 2)]+yndata[idx(i, j+3, Nx, Ny, 2)])+(1.0/4.0)*(3.0*yndata[idx(i, j+1, Nx, Ny, 2)]-4.0*yndata[idx(i, j+2, Nx, Ny, 2)]+yndata[idx(i, j+3, Nx, Ny, 2)])*(3.0*yndata[idx(i, j+1, Nx, Ny, 2)]-4.0*yndata[idx(i, j+2, Nx, Ny, 2)]+yndata[idx(i, j+3, Nx, Ny, 2)]);
+    IS0_ny[0]=(13.0/12.0)*(yndata[idx(i, jup1+1, Nx, Ny, 2)]-2.0*yndata[idx(i, jup2+2, Nx, Ny, 2)]+yndata[idx(i, jup3+3, Nx, Ny, 2)])*(yndata[idx(i, jup1+1, Nx, Ny, 2)]-2.0*yndata[idx(i, jup2+2, Nx, Ny, 2)]+yndata[idx(i, jup3+3, Nx, Ny, 2)])+(1.0/4.0)*(3.0*yndata[idx(i, jup1+1, Nx, Ny, 2)]-4.0*yndata[idx(i, jup2+2, Nx, Ny, 2)]+yndata[idx(i, jup3+3, Nx, Ny, 2)])*(3.0*yndata[idx(i, jup1+1, Nx, Ny, 2)]-4.0*yndata[idx(i, jup2+2, Nx, Ny, 2)]+yndata[idx(i, jup3+3, Nx, Ny, 2)]);
     
-    IS1_ny[0]=(13.0/12.0)*(yndata[idx(i, j, Nx, Ny, 2)]-2.0*yndata[idx(i, j+1, Nx, Ny, 2)]+yndata[idx(i, j+2, Nx, Ny, 2)])*(yndata[idx(i, j, Nx, Ny, 2)]-2.0*yndata[idx(i, j+1, Nx, Ny, 2)]+yndata[idx(i, j+2, Nx, Ny, 2)])+(1.0/4.0)*(yndata[idx(i, j, Nx, Ny, 2)]-yndata[idx(i, j+2, Nx, Ny, 2)])*(yndata[idx(i, j, Nx, Ny, 2)]-yndata[idx(i, j+2, Nx, Ny, 2)]);
+    IS1_ny[0]=(13.0/12.0)*(yndata[idx(i, j, Nx, Ny, 2)]-2.0*yndata[idx(i, jup1+1, Nx, Ny, 2)]+yndata[idx(i, jup2+2, Nx, Ny, 2)])*(yndata[idx(i, j, Nx, Ny, 2)]-2.0*yndata[idx(i, jup1+1, Nx, Ny, 2)]+yndata[idx(i, jup2+2, Nx, Ny, 2)])+(1.0/4.0)*(yndata[idx(i, j, Nx, Ny, 2)]-yndata[idx(i, jup2+2, Nx, Ny, 2)])*(yndata[idx(i, j, Nx, Ny, 2)]-yndata[idx(i, jup2+2, Nx, Ny, 2)]);
     
-    IS2_ny[0]=(13.0/12.0)*(yndata[idx(i, j-1, Nx, Ny, 2)]-2.0*yndata[idx(i, j, Nx, Ny, 2)]+yndata[idx(i, j+1, Nx, Ny, 2)])*(yndata[idx(i, j-1, Nx, Ny, 2)]-2.0*yndata[idx(i, j, Nx, Ny, 2)]+yndata[idx(i, j+1, Nx, Ny, 2)])+(1.0/4.0)*(yndata[idx(i, j-1, Nx, Ny, 2)]-4.0*yndata[idx(i, j, Nx, Ny, 2)]+3.0*yndata[idx(i, j+1, Nx, Ny, 2)])*(yndata[idx(i, j-1, Nx, Ny, 2)]-4.0*yndata[idx(i, j, Nx, Ny, 2)]+3.0*yndata[idx(i, j+1, Nx, Ny, 2)]);
-    
-    
-    IS0_py[1]=(13.0/12.0)*(taopdata[idx(i, j-2, Nx, Ny, 1)]-2.0*taopdata[idx(i, j-1, Nx, Ny, 1)]+taopdata[idx(i, j, Nx, Ny, 1)])*(taopdata[idx(i, j-2, Nx, Ny, 1)]-2.0*taopdata[idx(i, j-1, Nx, Ny, 1)]+taopdata[idx(i, j, Nx, Ny, 1)])+(1.0/4.0)*(taopdata[idx(i, j-2, Nx, Ny, 1)]-4.0*taopdata[idx(i, j-1, Nx, Ny, 1)]+3.0*taopdata[idx(i, j, Nx, Ny, 1)])*(taopdata[idx(i, j-2, Nx, Ny, 1)]-4.0*taopdata[idx(i, j-1, Nx, Ny, 1)]+3.0*taopdata[idx(i, j, Nx, Ny, 1)]);
-    
-    IS1_py[1]=(13.0/12.0)*(taopdata[idx(i, j-1, Nx, Ny, 1)]-2.0*taopdata[idx(i, j, Nx, Ny, 1)]+taopdata[idx(i, j+1, Nx, Ny, 1)])*(taopdata[idx(i, j-1, Nx, Ny, 1)]-2.0*taopdata[idx(i, j, Nx, Ny, 1)]+taopdata[idx(i, j+1, Nx, Ny, 1)])+(1.0/4.0)*(taopdata[idx(i, j-1, Nx, Ny, 1)]-taopdata[idx(i, j+1, Nx, Ny, 1)])*(taopdata[idx(i, j-1, Nx, Ny, 1)]-taopdata[idx(i, j+1, Nx, Ny, 1)]);
-    
-    IS2_py[1]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 1)]-2.0*taopdata[idx(i, j+1, Nx, Ny, 1)]+taopdata[idx(i, j+2, Nx, Ny, 1)])*(taopdata[idx(i, j, Nx, Ny, 1)]-2.0*taopdata[idx(i, j+1, Nx, Ny, 1)]+taopdata[idx(i, j+2, Nx, Ny, 1)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 1)]-4.0*taopdata[idx(i, j+1, Nx, Ny, 1)]+taopdata[idx(i, j+2, Nx, Ny, 1)])*(3.0*taopdata[idx(i, j, Nx, Ny, 1)]-4.0*taopdata[idx(i, j+1, Nx, Ny, 1)]+taopdata[idx(i, j+2, Nx, Ny, 1)]);
-    
-    IS0_ny[1]=(13.0/12.0)*(taondata[idx(i, j+1, Nx, Ny, 1)]-2.0*taondata[idx(i, j+2, Nx, Ny, 1)]+taondata[idx(i, j+3, Nx, Ny, 1)])*(taondata[idx(i, j+1, Nx, Ny, 1)]-2.0*taondata[idx(i, j+2, Nx, Ny, 1)]+taondata[idx(i, j+3, Nx, Ny, 1)])+(1.0/4.0)*(3.0*taondata[idx(i, j+1, Nx, Ny, 1)]-4.0*taondata[idx(i, j+2, Nx, Ny, 1)]+taondata[idx(i, j+3, Nx, Ny, 1)])*(3.0*taondata[idx(i, j+1, Nx, Ny, 1)]-4.0*taondata[idx(i, j+2, Nx, Ny, 1)]+taondata[idx(i, j+3, Nx, Ny, 1)]);
-    
-    IS1_ny[1]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 1)]-2.0*taondata[idx(i, j+1, Nx, Ny, 1)]+taondata[idx(i, j+2, Nx, Ny, 1)])*(taondata[idx(i, j, Nx, Ny, 1)]-2.0*taondata[idx(i, j+1, Nx, Ny, 1)]+taondata[idx(i, j+2, Nx, Ny, 1)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 1)]-taondata[idx(i, j+2, Nx, Ny, 1)])*(taondata[idx(i, j, Nx, Ny, 1)]-taondata[idx(i, j+2, Nx, Ny, 1)]);
-    
-    IS2_ny[1]=(13.0/12.0)*(taondata[idx(i, j-1, Nx, Ny, 1)]-2.0*taondata[idx(i, j, Nx, Ny, 1)]+taondata[idx(i, j+1, Nx, Ny, 1)])*(taondata[idx(i, j-1, Nx, Ny, 1)]-2.0*taondata[idx(i, j, Nx, Ny, 1)]+taondata[idx(i, j+1, Nx, Ny, 1)])+(1.0/4.0)*(taondata[idx(i, j-1, Nx, Ny, 1)]-4.0*taondata[idx(i, j, Nx, Ny, 1)]+3.0*taondata[idx(i, j+1, Nx, Ny, 1)])*(taondata[idx(i, j-1, Nx, Ny, 1)]-4.0*taondata[idx(i, j, Nx, Ny, 1)]+3.0*taondata[idx(i, j+1, Nx, Ny, 1)]);
+    IS2_ny[0]=(13.0/12.0)*(yndata[idx(i, jdown1-1, Nx, Ny, 2)]-2.0*yndata[idx(i, j, Nx, Ny, 2)]+yndata[idx(i, jup1+1, Nx, Ny, 2)])*(yndata[idx(i, jdown1-1, Nx, Ny, 2)]-2.0*yndata[idx(i, j, Nx, Ny, 2)]+yndata[idx(i, jup1+1, Nx, Ny, 2)])+(1.0/4.0)*(yndata[idx(i, jdown1-1, Nx, Ny, 2)]-4.0*yndata[idx(i, j, Nx, Ny, 2)]+3.0*yndata[idx(i, jup1+1, Nx, Ny, 2)])*(yndata[idx(i, jdown1-1, Nx, Ny, 2)]-4.0*yndata[idx(i, j, Nx, Ny, 2)]+3.0*yndata[idx(i, jup1+1, Nx, Ny, 2)]);
     
     
-    IS0_py[2]=(13.0/12.0)*(taopdata[idx(i, j-2, Nx, Ny, 3)]-2.0*taopdata[idx(i, j-1, Nx, Ny, 3)]+taopdata[idx(i, j, Nx, Ny, 3)])*(taopdata[idx(i, j-2, Nx, Ny, 3)]-2.0*taopdata[idx(i, j-1, Nx, Ny, 3)]+taopdata[idx(i, j, Nx, Ny, 3)])+(1.0/4.0)*(taopdata[idx(i, j-2, Nx, Ny, 3)]-4.0*taopdata[idx(i, j-1, Nx, Ny, 3)]+3.0*taopdata[idx(i, j, Nx, Ny, 3)])*(taopdata[idx(i, j-2, Nx, Ny, 3)]-4.0*taopdata[idx(i, j-1, Nx, Ny, 3)]+3.0*taopdata[idx(i, j, Nx, Ny, 3)]);
+    IS0_py[1]=(13.0/12.0)*(taopdata[idx(i, jdown2-2, Nx, Ny, 1)]-2.0*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+taopdata[idx(i, j, Nx, Ny, 1)])*(taopdata[idx(i, jdown2-2, Nx, Ny, 1)]-2.0*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+taopdata[idx(i, j, Nx, Ny, 1)])+(1.0/4.0)*(taopdata[idx(i, jdown2-2, Nx, Ny, 1)]-4.0*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+3.0*taopdata[idx(i, j, Nx, Ny, 1)])*(taopdata[idx(i, jdown2-2, Nx, Ny, 1)]-4.0*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+3.0*taopdata[idx(i, j, Nx, Ny, 1)]);
     
-    IS1_py[2]=(13.0/12.0)*(taopdata[idx(i, j-1, Nx, Ny, 3)]-2.0*taopdata[idx(i, j, Nx, Ny, 3)]+taopdata[idx(i, j+1, Nx, Ny, 3)])*(taopdata[idx(i, j-1, Nx, Ny, 3)]-2.0*taopdata[idx(i, j, Nx, Ny, 3)]+taopdata[idx(i, j+1, Nx, Ny, 3)])+(1.0/4.0)*(taopdata[idx(i, j-1, Nx, Ny, 3)]-taopdata[idx(i, j+1, Nx, Ny, 3)])*(taopdata[idx(i, j-1, Nx, Ny, 3)]-taopdata[idx(i, j+1, Nx, Ny, 3)]);
+    IS1_py[1]=(13.0/12.0)*(taopdata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*taopdata[idx(i, j, Nx, Ny, 1)]+taopdata[idx(i, jup1+1, Nx, Ny, 1)])*(taopdata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*taopdata[idx(i, j, Nx, Ny, 1)]+taopdata[idx(i, jup1+1, Nx, Ny, 1)])+(1.0/4.0)*(taopdata[idx(i, jdown1-1, Nx, Ny, 1)]-taopdata[idx(i, jup1+1, Nx, Ny, 1)])*(taopdata[idx(i, jdown1-1, Nx, Ny, 1)]-taopdata[idx(i, jup1+1, Nx, Ny, 1)]);
     
-    IS2_py[2]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 3)]-2.0*taopdata[idx(i, j+1, Nx, Ny, 3)]+taopdata[idx(i, j+2, Nx, Ny, 3)])*(taopdata[idx(i, j, Nx, Ny, 3)]-2.0*taopdata[idx(i, j+1, Nx, Ny, 3)]+taopdata[idx(i, j+2, Nx, Ny, 3)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 3)]-4.0*taopdata[idx(i, j+1, Nx, Ny, 3)]+taopdata[idx(i, j+2, Nx, Ny, 3)])*(3.0*taopdata[idx(i, j, Nx, Ny, 3)]-4.0*taopdata[idx(i, j+1, Nx, Ny, 3)]+taopdata[idx(i, j+2, Nx, Ny, 3)]);
+    IS2_py[1]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 1)]-2.0*taopdata[idx(i, jup1+1, Nx, Ny, 1)]+taopdata[idx(i, jup2+2, Nx, Ny, 1)])*(taopdata[idx(i, j, Nx, Ny, 1)]-2.0*taopdata[idx(i, jup1+1, Nx, Ny, 1)]+taopdata[idx(i, jup2+2, Nx, Ny, 1)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 1)]-4.0*taopdata[idx(i, jup1+1, Nx, Ny, 1)]+taopdata[idx(i, jup2+2, Nx, Ny, 1)])*(3.0*taopdata[idx(i, j, Nx, Ny, 1)]-4.0*taopdata[idx(i, jup1+1, Nx, Ny, 1)]+taopdata[idx(i, jup2+2, Nx, Ny, 1)]);
     
-    IS0_ny[2]=(13.0/12.0)*(taondata[idx(i, j+1, Nx, Ny, 3)]-2.0*taondata[idx(i, j+2, Nx, Ny, 3)]+taondata[idx(i, j+3, Nx, Ny, 3)])*(taondata[idx(i, j+1, Nx, Ny, 3)]-2.0*taondata[idx(i, j+2, Nx, Ny, 3)]+taondata[idx(i, j+3, Nx, Ny, 3)])+(1.0/4.0)*(3.0*taondata[idx(i, j+1, Nx, Ny, 3)]-4.0*taondata[idx(i, j+2, Nx, Ny, 3)]+taondata[idx(i, j+3, Nx, Ny, 3)])*(3.0*taondata[idx(i, j+1, Nx, Ny, 3)]-4.0*taondata[idx(i, j+2, Nx, Ny, 3)]+taondata[idx(i, j+3, Nx, Ny, 3)]);
+    IS0_ny[1]=(13.0/12.0)*(taondata[idx(i, jup1+1, Nx, Ny, 1)]-2.0*taondata[idx(i, jup2+2, Nx, Ny, 1)]+taondata[idx(i, jup3+3, Nx, Ny, 1)])*(taondata[idx(i, jup1+1, Nx, Ny, 1)]-2.0*taondata[idx(i, jup2+2, Nx, Ny, 1)]+taondata[idx(i, jup3+3, Nx, Ny, 1)])+(1.0/4.0)*(3.0*taondata[idx(i, jup1+1, Nx, Ny, 1)]-4.0*taondata[idx(i, jup2+2, Nx, Ny, 1)]+taondata[idx(i, jup3+3, Nx, Ny, 1)])*(3.0*taondata[idx(i, jup1+1, Nx, Ny, 1)]-4.0*taondata[idx(i, jup2+2, Nx, Ny, 1)]+taondata[idx(i, jup3+3, Nx, Ny, 1)]);
     
-    IS1_ny[2]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 3)]-2.0*taondata[idx(i, j+1, Nx, Ny, 3)]+taondata[idx(i, j+2, Nx, Ny, 3)])*(taondata[idx(i, j, Nx, Ny, 3)]-2.0*taondata[idx(i, j+1, Nx, Ny, 3)]+taondata[idx(i, j+2, Nx, Ny, 3)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 3)]-taondata[idx(i, j+2, Nx, Ny, 3)])*(taondata[idx(i, j, Nx, Ny, 3)]-taondata[idx(i, j+2, Nx, Ny, 3)]);
+    IS1_ny[1]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 1)]-2.0*taondata[idx(i, jup1+1, Nx, Ny, 1)]+taondata[idx(i, jup2+2, Nx, Ny, 1)])*(taondata[idx(i, j, Nx, Ny, 1)]-2.0*taondata[idx(i, jup1+1, Nx, Ny, 1)]+taondata[idx(i, jup2+2, Nx, Ny, 1)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 1)]-taondata[idx(i, jup2+2, Nx, Ny, 1)])*(taondata[idx(i, j, Nx, Ny, 1)]-taondata[idx(i, jup2+2, Nx, Ny, 1)]);
     
-    IS2_ny[2]=(13.0/12.0)*(taondata[idx(i, j-1, Nx, Ny, 3)]-2.0*taondata[idx(i, j, Nx, Ny, 3)]+taondata[idx(i, j+1, Nx, Ny, 3)])*(taondata[idx(i, j-1, Nx, Ny, 3)]-2.0*taondata[idx(i, j, Nx, Ny, 3)]+taondata[idx(i, j+1, Nx, Ny, 3)])+(1.0/4.0)*(taondata[idx(i, j-1, Nx, Ny, 3)]-4.0*taondata[idx(i, j, Nx, Ny, 3)]+3.0*taondata[idx(i, j+1, Nx, Ny, 3)])*(taondata[idx(i, j-1, Nx, Ny, 3)]-4.0*taondata[idx(i, j, Nx, Ny, 3)]+3.0*taondata[idx(i, j+1, Nx, Ny, 3)]);
+    IS2_ny[1]=(13.0/12.0)*(taondata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*taondata[idx(i, j, Nx, Ny, 1)]+taondata[idx(i, jup1+1, Nx, Ny, 1)])*(taondata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*taondata[idx(i, j, Nx, Ny, 1)]+taondata[idx(i, jup1+1, Nx, Ny, 1)])+(1.0/4.0)*(taondata[idx(i, jdown1-1, Nx, Ny, 1)]-4.0*taondata[idx(i, j, Nx, Ny, 1)]+3.0*taondata[idx(i, jup1+1, Nx, Ny, 1)])*(taondata[idx(i, jdown1-1, Nx, Ny, 1)]-4.0*taondata[idx(i, j, Nx, Ny, 1)]+3.0*taondata[idx(i, jup1+1, Nx, Ny, 1)]);
     
     
-    IS0_py[3]=(13.0/12.0)*(Cjpdata[idx(i, j-2, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+Cjpdata[idx(i, j, Nx, Ny, 1)])*(Cjpdata[idx(i, j-2, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+Cjpdata[idx(i, j, Nx, Ny, 1)])+(1.0/4.0)*(Cjpdata[idx(i, j-2, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 1)])*(Cjpdata[idx(i, j-2, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 1)]);
+    IS0_py[2]=(13.0/12.0)*(taopdata[idx(i, jdown2-2, Nx, Ny, 3)]-2.0*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+taopdata[idx(i, j, Nx, Ny, 3)])*(taopdata[idx(i, jdown2-2, Nx, Ny, 3)]-2.0*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+taopdata[idx(i, j, Nx, Ny, 3)])+(1.0/4.0)*(taopdata[idx(i, jdown2-2, Nx, Ny, 3)]-4.0*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+3.0*taopdata[idx(i, j, Nx, Ny, 3)])*(taopdata[idx(i, jdown2-2, Nx, Ny, 3)]-4.0*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+3.0*taopdata[idx(i, j, Nx, Ny, 3)]);
     
-    IS1_py[3]=(13.0/12.0)*(Cjpdata[idx(i, j-1, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 1)]+Cjpdata[idx(i, j+1, Nx, Ny, 1)])*(Cjpdata[idx(i, j-1, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 1)]+Cjpdata[idx(i, j+1, Nx, Ny, 1)])+(1.0/4.0)*(Cjpdata[idx(i, j-1, Nx, Ny, 1)]-Cjpdata[idx(i, j+1, Nx, Ny, 1)])*(Cjpdata[idx(i, j-1, Nx, Ny, 1)]-Cjpdata[idx(i, j+1, Nx, Ny, 1)]);
+    IS1_py[2]=(13.0/12.0)*(taopdata[idx(i, jdown1-1, Nx, Ny, 3)]-2.0*taopdata[idx(i, j, Nx, Ny, 3)]+taopdata[idx(i, jup1+1, Nx, Ny, 3)])*(taopdata[idx(i, jdown1-1, Nx, Ny, 3)]-2.0*taopdata[idx(i, j, Nx, Ny, 3)]+taopdata[idx(i, jup1+1, Nx, Ny, 3)])+(1.0/4.0)*(taopdata[idx(i, jdown1-1, Nx, Ny, 3)]-taopdata[idx(i, jup1+1, Nx, Ny, 3)])*(taopdata[idx(i, jdown1-1, Nx, Ny, 3)]-taopdata[idx(i, jup1+1, Nx, Ny, 3)]);
     
-    IS2_py[3]=(13.0/12.0)*(Cjpdata[idx(i, j, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j+1, Nx, Ny, 1)]+Cjpdata[idx(i, j+2, Nx, Ny, 1)])*(Cjpdata[idx(i, j, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j+1, Nx, Ny, 1)]+Cjpdata[idx(i, j+2, Nx, Ny, 1)])+(1.0/4.0)*(3.0*Cjpdata[idx(i, j, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, j+1, Nx, Ny, 1)]+Cjpdata[idx(i, j+2, Nx, Ny, 1)])*(3.0*Cjpdata[idx(i, j, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, j+1, Nx, Ny, 1)]+Cjpdata[idx(i, j+2, Nx, Ny, 1)]);
+    IS2_py[2]=(13.0/12.0)*(taopdata[idx(i, j, Nx, Ny, 3)]-2.0*taopdata[idx(i, jup1+1, Nx, Ny, 3)]+taopdata[idx(i, jup2+2, Nx, Ny, 3)])*(taopdata[idx(i, j, Nx, Ny, 3)]-2.0*taopdata[idx(i, jup1+1, Nx, Ny, 3)]+taopdata[idx(i, jup2+2, Nx, Ny, 3)])+(1.0/4.0)*(3.0*taopdata[idx(i, j, Nx, Ny, 3)]-4.0*taopdata[idx(i, jup1+1, Nx, Ny, 3)]+taopdata[idx(i, jup2+2, Nx, Ny, 3)])*(3.0*taopdata[idx(i, j, Nx, Ny, 3)]-4.0*taopdata[idx(i, jup1+1, Nx, Ny, 3)]+taopdata[idx(i, jup2+2, Nx, Ny, 3)]);
     
-    IS0_ny[3]=(13.0/12.0)*(Cjndata[idx(i, j+1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j+2, Nx, Ny, 1)]+Cjndata[idx(i, j+3, Nx, Ny, 1)])*(Cjndata[idx(i, j+1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j+2, Nx, Ny, 1)]+Cjndata[idx(i, j+3, Nx, Ny, 1)])+(1.0/4.0)*(3.0*Cjndata[idx(i, j+1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, j+2, Nx, Ny, 1)]+Cjndata[idx(i, j+3, Nx, Ny, 1)])*(3.0*Cjndata[idx(i, j+1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, j+2, Nx, Ny, 1)]+Cjndata[idx(i, j+3, Nx, Ny, 1)]);
+    IS0_ny[2]=(13.0/12.0)*(taondata[idx(i, jup1+1, Nx, Ny, 3)]-2.0*taondata[idx(i, jup2+2, Nx, Ny, 3)]+taondata[idx(i, jup3+3, Nx, Ny, 3)])*(taondata[idx(i, jup1+1, Nx, Ny, 3)]-2.0*taondata[idx(i, jup2+2, Nx, Ny, 3)]+taondata[idx(i, jup3+3, Nx, Ny, 3)])+(1.0/4.0)*(3.0*taondata[idx(i, jup1+1, Nx, Ny, 3)]-4.0*taondata[idx(i, jup2+2, Nx, Ny, 3)]+taondata[idx(i, jup3+3, Nx, Ny, 3)])*(3.0*taondata[idx(i, jup1+1, Nx, Ny, 3)]-4.0*taondata[idx(i, jup2+2, Nx, Ny, 3)]+taondata[idx(i, jup3+3, Nx, Ny, 3)]);
     
-    IS1_ny[3]=(13.0/12.0)*(Cjndata[idx(i, j, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j+1, Nx, Ny, 1)]+Cjndata[idx(i, j+2, Nx, Ny, 1)])*(Cjndata[idx(i, j, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j+1, Nx, Ny, 1)]+Cjndata[idx(i, j+2, Nx, Ny, 1)])+(1.0/4.0)*(Cjndata[idx(i, j, Nx, Ny, 1)]-Cjndata[idx(i, j+2, Nx, Ny, 1)])*(Cjndata[idx(i, j, Nx, Ny, 1)]-Cjndata[idx(i, j+2, Nx, Ny, 1)]);
+    IS1_ny[2]=(13.0/12.0)*(taondata[idx(i, j, Nx, Ny, 3)]-2.0*taondata[idx(i, jup1+1, Nx, Ny, 3)]+taondata[idx(i, jup2+2, Nx, Ny, 3)])*(taondata[idx(i, j, Nx, Ny, 3)]-2.0*taondata[idx(i, jup1+1, Nx, Ny, 3)]+taondata[idx(i, jup2+2, Nx, Ny, 3)])+(1.0/4.0)*(taondata[idx(i, j, Nx, Ny, 3)]-taondata[idx(i, jup2+2, Nx, Ny, 3)])*(taondata[idx(i, j, Nx, Ny, 3)]-taondata[idx(i, jup2+2, Nx, Ny, 3)]);
     
-    IS2_ny[3]=(13.0/12.0)*(Cjndata[idx(i, j-1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j, Nx, Ny, 1)]+Cjndata[idx(i, j+1, Nx, Ny, 1)])*(Cjndata[idx(i, j-1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j, Nx, Ny, 1)]+Cjndata[idx(i, j+1, Nx, Ny, 1)])+(1.0/4.0)*(Cjndata[idx(i, j-1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, j, Nx, Ny, 1)]+3.0*Cjndata[idx(i, j+1, Nx, Ny, 1)])*(Cjndata[idx(i, j-1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, j, Nx, Ny, 1)]+3.0*Cjndata[idx(i, j+1, Nx, Ny, 1)]);
+    IS2_ny[2]=(13.0/12.0)*(taondata[idx(i, jdown1-1, Nx, Ny, 3)]-2.0*taondata[idx(i, j, Nx, Ny, 3)]+taondata[idx(i, jup1+1, Nx, Ny, 3)])*(taondata[idx(i, jdown1-1, Nx, Ny, 3)]-2.0*taondata[idx(i, j, Nx, Ny, 3)]+taondata[idx(i, jup1+1, Nx, Ny, 3)])+(1.0/4.0)*(taondata[idx(i, jdown1-1, Nx, Ny, 3)]-4.0*taondata[idx(i, j, Nx, Ny, 3)]+3.0*taondata[idx(i, jup1+1, Nx, Ny, 3)])*(taondata[idx(i, jdown1-1, Nx, Ny, 3)]-4.0*taondata[idx(i, j, Nx, Ny, 3)]+3.0*taondata[idx(i, jup1+1, Nx, Ny, 3)]);
     
+    
+    IS0_py[3]=(13.0/12.0)*(Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+Cjpdata[idx(i, j, Nx, Ny, 1)])*(Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+Cjpdata[idx(i, j, Nx, Ny, 1)])+(1.0/4.0)*(Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 1)])*(Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+3.0*Cjpdata[idx(i, j, Nx, Ny, 1)]);
+    
+    IS1_py[3]=(13.0/12.0)*(Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 1)]+Cjpdata[idx(i, jup1+1, Nx, Ny, 1)])*(Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, j, Nx, Ny, 1)]+Cjpdata[idx(i, jup1+1, Nx, Ny, 1)])+(1.0/4.0)*(Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]-Cjpdata[idx(i, jup1+1, Nx, Ny, 1)])*(Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]-Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]);
+    
+    IS2_py[3]=(13.0/12.0)*(Cjpdata[idx(i, j, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]+Cjpdata[idx(i, jup2+2, Nx, Ny, 1)])*(Cjpdata[idx(i, j, Nx, Ny, 1)]-2.0*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]+Cjpdata[idx(i, jup2+2, Nx, Ny, 1)])+(1.0/4.0)*(3.0*Cjpdata[idx(i, j, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]+Cjpdata[idx(i, jup2+2, Nx, Ny, 1)])*(3.0*Cjpdata[idx(i, j, Nx, Ny, 1)]-4.0*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]+Cjpdata[idx(i, jup2+2, Nx, Ny, 1)]);
+    
+    IS0_ny[3]=(13.0/12.0)*(Cjndata[idx(i, jup1+1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, jup2+2, Nx, Ny, 1)]+Cjndata[idx(i, jup3+3, Nx, Ny, 1)])*(Cjndata[idx(i, jup1+1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, jup2+2, Nx, Ny, 1)]+Cjndata[idx(i, jup3+3, Nx, Ny, 1)])+(1.0/4.0)*(3.0*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, jup2+2, Nx, Ny, 1)]+Cjndata[idx(i, jup3+3, Nx, Ny, 1)])*(3.0*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, jup2+2, Nx, Ny, 1)]+Cjndata[idx(i, jup3+3, Nx, Ny, 1)]);
+    
+    IS1_ny[3]=(13.0/12.0)*(Cjndata[idx(i, j, Nx, Ny, 1)]-2.0*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]+Cjndata[idx(i, jup2+2, Nx, Ny, 1)])*(Cjndata[idx(i, j, Nx, Ny, 1)]-2.0*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]+Cjndata[idx(i, jup2+2, Nx, Ny, 1)])+(1.0/4.0)*(Cjndata[idx(i, j, Nx, Ny, 1)]-Cjndata[idx(i, jup2+2, Nx, Ny, 1)])*(Cjndata[idx(i, j, Nx, Ny, 1)]-Cjndata[idx(i, jup2+2, Nx, Ny, 1)]);
+    
+    IS2_ny[3]=(13.0/12.0)*(Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j, Nx, Ny, 1)]+Cjndata[idx(i, jup1+1, Nx, Ny, 1)])*(Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]-2.0*Cjndata[idx(i, j, Nx, Ny, 1)]+Cjndata[idx(i, jup1+1, Nx, Ny, 1)])+(1.0/4.0)*(Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, j, Nx, Ny, 1)]+3.0*Cjndata[idx(i, jup1+1, Nx, Ny, 1)])*(Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]-4.0*Cjndata[idx(i, j, Nx, Ny, 1)]+3.0*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]);
+	}
     return 0;
     }
 }
@@ -743,6 +823,9 @@ static int Setalphawy(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, real
 /* Get the derivative on x direction */
 static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *ypdata, realtype *yndata, realtype *taopdata, realtype *taondata, realtype *Cjpdata, realtype *Cjndata, realtype *u_tpphx, realtype *u_tnphx, realtype *u_tpnhx, realtype *u_tnnhx, long int i, long int j, long int Nx, long int Ny)
 {
+  /* declaration */
+  long int idown1, idown2, idown3, iup1, iup2, iup3;
+
   /* consider Nx */
     if (Nx<4){
         cerr << "\nNx should be more than 3!\n";
@@ -750,72 +833,81 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
     }
     else {
       /* consider situations of different i */
+      idown1 = i;
+      idown2 = i;
+      idown3 = i;
+      iup1 = i;
+      iup2 = i;
+      iup3 = i;
+
+      if(i<3||i>Nx-4){
         if (i==0){
-            i-1 = Nx-1;
-            i-2 = Nx-2;
-            i-3 = Nx-3;
+            idown1 = Nx;
+            idown2 = Nx;
+            idown3 = Nx;
         }
         
         if (i==1){
-            i-2 = Nx-1;
-            i-3 = Nx-2;
+            idown2 = Nx+1;
+            idown3 = Nx+1;
         }
         
         if (i==2){
-            i-3 = Nx-1;
+            idown3 = Nx+2;
         }
         
         if (i==Nx-3){
-            i+3 = 0;
+            iup3 = -3;
         }
         
         if (i==Nx-2){
-            i+2 = 0;
-            i+3 = 1;
+            iup2 = -2;
+            iup3 = -2;
         }
         
         if (i==Nx-1){
-            i+1 = 0;
-            i+2 = 1;
-            i+3 = 2;
+            iup1 = -1;
+            iup2 = -1;
+            iup3 = -1;
         }
-	
+      }
+      else {
 	/* compute positive and negative solutions on the interface */
-    u_tpphx[0]=w0_px[0]*((2.0/6.0)*ypdata[idx(i-2, j, Nx, Ny, 1)]-(7.0/6.0)*ypdata[idx(i-1, j, Nx, Ny, 1)]+(11.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)])+w1_px[0]*((-1.0/6.0)*ypdata[idx(i-1, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*ypdata[idx(i+1, j, Nx, Ny, 1)])+w2_px[0]*((2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(i+1, j, Nx, Ny, 1)]-(1.0/6.0)*ypdata[idx(i+2, j, Nx, Ny, 1)]);
+    u_tpphx[0]=w0_px[0]*((2.0/6.0)*ypdata[idx(idown2-2, j, Nx, Ny, 1)]-(7.0/6.0)*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+(11.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)])+w1_px[0]*((-1.0/6.0)*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*ypdata[idx(iup1+1, j, Nx, Ny, 1)])+w2_px[0]*((2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(iup1+1, j, Nx, Ny, 1)]-(1.0/6.0)*ypdata[idx(iup2+2, j, Nx, Ny, 1)]);
     
-    u_tnphx[0]=w2_nx[0]*((-1.0/6.0)*yndata[idx(i-1, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(i+1, j, Nx, Ny, 1)])+w1_nx[0]*((2.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(i+1, j, Nx, Ny, 1)]-(1.0/6.0)*yndata[idx(i+2, j, Nx, Ny, 1)])+w0_nx[0]*((11.0/6.0)*yndata[idx(i+1, j, Nx, Ny, 1)]-(7.0/6.0)*yndata[idx(i+2, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(i+3, j, Nx, Ny, 1)]);
+    u_tnphx[0]=w2_nx[0]*((-1.0/6.0)*yndata[idx(idown1-1, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(iup1+1, j, Nx, Ny, 1)])+w1_nx[0]*((2.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(iup1+1, j, Nx, Ny, 1)]-(1.0/6.0)*yndata[idx(iup2+2, j, Nx, Ny, 1)])+w0_nx[0]*((11.0/6.0)*yndata[idx(iup1+1, j, Nx, Ny, 1)]-(7.0/6.0)*yndata[idx(iup2+2, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(iup3+3, j, Nx, Ny, 1)]);
     
-    u_tpnhx[0]=w0_px[0]*((2.0/6.0)*ypdata[idx(i-3, j, Nx, Ny, 1)]-(7.0/6.0)*ypdata[idx(i-2, j, Nx, Ny, 1)]+(11.0/6.0)*ypdata[idx(i-1, j, Nx, Ny, 1)])+w1_px[0]*((-1.0/6.0)*ypdata[idx(i-2, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(i-1, j, Nx, Ny, 1)]+(2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)])+w2_px[0]*((2.0/6.0)*ypdata[idx(i-1, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*ypdata[idx(i+1, j, Nx, Ny, 1)]);
+    u_tpnhx[0]=w0_px[0]*((2.0/6.0)*ypdata[idx(idown3-3, j, Nx, Ny, 1)]-(7.0/6.0)*ypdata[idx(idown2-2, j, Nx, Ny, 1)]+(11.0/6.0)*ypdata[idx(idown1-1, j, Nx, Ny, 1)])+w1_px[0]*((-1.0/6.0)*ypdata[idx(idown2-2, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+(2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)])+w2_px[0]*((2.0/6.0)*ypdata[idx(idown1-1, j, Nx, Ny, 1)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*ypdata[idx(iup1+1, j, Nx, Ny, 1)]);
     
-    u_tnnhx[0]=w2_nx[0]*((-1.0/6.0)*yndata[idx(i-2, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(i-1, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)])+w1_nx[0]*((2.0/6.0)*yndata[idx(i-1, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*yndata[idx(i+1, j, Nx, Ny, 1)])+w0_nx[0]*((11.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]-(7.0/6.0)*yndata[idx(i+1, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(i+2, j, Nx, Ny, 1)]);
-    
-    
-    u_tpphx[1]=w0_px[1]*((2.0/6.0)*taopdata[idx(i-2, j, Nx, Ny, 0)]-(7.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 0)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)])+w1_px[1]*((-1.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*taopdata[idx(i+1, j, Nx, Ny, 0)])+w2_px[1]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(i+1, j, Nx, Ny, 0)]-(1.0/6.0)*taopdata[idx(i+2, j, Nx, Ny, 0)]);
-    
-    u_tnphx[1]=w2_nx[1]*((-1.0/6.0)*taondata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 0)])+w1_nx[1]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 0)]-(1.0/6.0)*taondata[idx(i+2, j, Nx, Ny, 0)])+w0_nx[1]*((11.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 0)]-(7.0/6.0)*taondata[idx(i+2, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(i+3, j, Nx, Ny, 0)]);
-    
-    u_tpnhx[1]=w0_px[1]*((2.0/6.0)*taopdata[idx(i-3, j, Nx, Ny, 0)]-(7.0/6.0)*taopdata[idx(i-2, j, Nx, Ny, 0)]+(11.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 0)])+w1_px[1]*((-1.0/6.0)*taopdata[idx(i-2, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 0)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)])+w2_px[1]*((2.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*taopdata[idx(i+1, j, Nx, Ny, 0)]);
-    
-    u_tnnhx[1]=w2_nx[1]*((-1.0/6.0)*taondata[idx(i-2, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(i-1, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)])+w1_nx[1]*((2.0/6.0)*taondata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 0)])+w0_nx[1]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]-(7.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(i+2, j, Nx, Ny, 0)]);
+    u_tnnhx[0]=w2_nx[0]*((-1.0/6.0)*yndata[idx(idown2-2, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(idown1-1, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)])+w1_nx[0]*((2.0/6.0)*yndata[idx(idown1-1, j, Nx, Ny, 1)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*yndata[idx(iup1+1, j, Nx, Ny, 1)])+w0_nx[0]*((11.0/6.0)*yndata[idx(i, j, Nx, Ny, 1)]-(7.0/6.0)*yndata[idx(iup1+1, j, Nx, Ny, 1)]+(2.0/6.0)*yndata[idx(iup2+2, j, Nx, Ny, 1)]);
     
     
-    u_tpphx[2]=w0_px[2]*((2.0/6.0)*taopdata[idx(i-2, j, Nx, Ny, 2)]-(7.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 2)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)])+w1_px[2]*((-1.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*taopdata[idx(i+1, j, Nx, Ny, 2)])+w2_px[2]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(i+1, j, Nx, Ny, 2)]-(1.0/6.0)*taopdata[idx(i+2, j, Nx, Ny, 2)]);
+    u_tpphx[1]=w0_px[1]*((2.0/6.0)*taopdata[idx(idown2-2, j, Nx, Ny, 0)]-(7.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)])+w1_px[1]*((-1.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*taopdata[idx(iup1+1, j, Nx, Ny, 0)])+w2_px[1]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(iup1+1, j, Nx, Ny, 0)]-(1.0/6.0)*taopdata[idx(iup2+2, j, Nx, Ny, 0)]);
     
-    u_tnphx[2]=w2_nx[2]*((-1.0/6.0)*taondata[idx(i-1, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 2)])+w1_nx[2]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 2)]-(1.0/6.0)*taondata[idx(i+2, j, Nx, Ny, 2)])+w0_nx[2]*((11.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 2)]-(7.0/6.0)*taondata[idx(i+2, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(i+3, j, Nx, Ny, 2)]);
+    u_tnphx[1]=w2_nx[1]*((-1.0/6.0)*taondata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 0)])+w1_nx[1]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 0)]-(1.0/6.0)*taondata[idx(iup2+2, j, Nx, Ny, 0)])+w0_nx[1]*((11.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 0)]-(7.0/6.0)*taondata[idx(iup2+2, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(iup3+3, j, Nx, Ny, 0)]);
     
-    u_tpnhx[2]=w0_px[2]*((2.0/6.0)*taopdata[idx(i-3, j, Nx, Ny, 2)]-(7.0/6.0)*taopdata[idx(i-2, j, Nx, Ny, 2)]+(11.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 2)])+w1_px[2]*((-1.0/6.0)*taopdata[idx(i-2, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 2)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)])+w2_px[2]*((2.0/6.0)*taopdata[idx(i-1, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*taopdata[idx(i+1, j, Nx, Ny, 2)]);
+    u_tpnhx[1]=w0_px[1]*((2.0/6.0)*taopdata[idx(idown3-3, j, Nx, Ny, 0)]-(7.0/6.0)*taopdata[idx(idown2-2, j, Nx, Ny, 0)]+(11.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 0)])+w1_px[1]*((-1.0/6.0)*taopdata[idx(idown2-2, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)])+w2_px[1]*((2.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*taopdata[idx(iup1+1, j, Nx, Ny, 0)]);
     
-    u_tnnhx[2]=w2_nx[2]*((-1.0/6.0)*taondata[idx(i-2, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(i-1, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)])+w1_nx[2]*((2.0/6.0)*taondata[idx(i-1, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 2)])+w0_nx[2]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]-(7.0/6.0)*taondata[idx(i+1, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(i+2, j, Nx, Ny, 2)]);
+    u_tnnhx[1]=w2_nx[1]*((-1.0/6.0)*taondata[idx(idown2-2, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(idown1-1, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)])+w1_nx[1]*((2.0/6.0)*taondata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 0)])+w0_nx[1]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 0)]-(7.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 0)]+(2.0/6.0)*taondata[idx(iup2+2, j, Nx, Ny, 0)]);
     
     
-    u_tpphx[3]=w0_px[3]*((2.0/6.0)*Cjpdata[idx(i-2, j, Nx, Ny, 0)]-(7.0/6.0)*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+(11.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)])+w1_px[3]*((-1.0/6.0)*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*Cjpdata[idx(i+1, j, Nx, Ny, 0)])+w2_px[3]*((2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(i+1, j, Nx, Ny, 0)]-(1.0/6.0)*Cjpdata[idx(i+2, j, Nx, Ny, 0)]);
+    u_tpphx[2]=w0_px[2]*((2.0/6.0)*taopdata[idx(idown2-2, j, Nx, Ny, 2)]-(7.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)])+w1_px[2]*((-1.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*taopdata[idx(iup1+1, j, Nx, Ny, 2)])+w2_px[2]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(iup1+1, j, Nx, Ny, 2)]-(1.0/6.0)*taopdata[idx(iup2+2, j, Nx, Ny, 2)]);
     
-    u_tnphx[3]=w2_nx[3]*((-1.0/6.0)*Cjndata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(i+1, j, Nx, Ny, 0)])+w1_nx[3]*((2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(i+1, j, Nx, Ny, 0)]-(1.0/6.0)*Cjndata[idx(i+2, j, Nx, Ny, 0)])+w0_nx[3]*((11.0/6.0)*Cjndata[idx(i+1, j, Nx, Ny, 0)]-(7.0/6.0)*Cjndata[idx(i+2, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(i+3, j, Nx, Ny, 0)]);
+    u_tnphx[2]=w2_nx[2]*((-1.0/6.0)*taondata[idx(idown1-1, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 2)])+w1_nx[2]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 2)]-(1.0/6.0)*taondata[idx(iup2+2, j, Nx, Ny, 2)])+w0_nx[2]*((11.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 2)]-(7.0/6.0)*taondata[idx(iup2+2, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(iup3+3, j, Nx, Ny, 2)]);
     
-    u_tpnhx[3]=w0_px[3]*((2.0/6.0)*Cjpdata[idx(i-3, j, Nx, Ny, 0)]-(7.0/6.0)*Cjpdata[idx(i-2, j, Nx, Ny, 0)]+(11.0/6.0)*Cjpdata[idx(i-1, j, Nx, Ny, 0)])+w1_px[3]*((-1.0/6.0)*Cjpdata[idx(i-2, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+(2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)])+w2_px[3]*((2.0/6.0)*Cjpdata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*Cjpdata[idx(i+1, j, Nx, Ny, 0)]);
+    u_tpnhx[2]=w0_px[2]*((2.0/6.0)*taopdata[idx(idown3-3, j, Nx, Ny, 2)]-(7.0/6.0)*taopdata[idx(idown2-2, j, Nx, Ny, 2)]+(11.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 2)])+w1_px[2]*((-1.0/6.0)*taopdata[idx(idown2-2, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)])+w2_px[2]*((2.0/6.0)*taopdata[idx(idown1-1, j, Nx, Ny, 2)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*taopdata[idx(iup1+1, j, Nx, Ny, 2)]);
     
-    u_tnnhx[3]=w2_nx[3]*((-1.0/6.0)*Cjndata[idx(i-2, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(i-1, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)])+w1_nx[3]*((2.0/6.0)*Cjndata[idx(i-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*Cjndata[idx(i+1, j, Nx, Ny, 0)])+w0_nx[3]*((11.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]-(7.0/6.0)*Cjndata[idx(i+1, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(i+2, j, Nx, Ny, 0)]);
+    u_tnnhx[2]=w2_nx[2]*((-1.0/6.0)*taondata[idx(idown2-2, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(idown1-1, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)])+w1_nx[2]*((2.0/6.0)*taondata[idx(idown1-1, j, Nx, Ny, 2)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 2)])+w0_nx[2]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 2)]-(7.0/6.0)*taondata[idx(iup1+1, j, Nx, Ny, 2)]+(2.0/6.0)*taondata[idx(iup2+2, j, Nx, Ny, 2)]);
     
+    
+    u_tpphx[3]=w0_px[3]*((2.0/6.0)*Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]-(7.0/6.0)*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+(11.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)])+w1_px[3]*((-1.0/6.0)*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)])+w2_px[3]*((2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]-(1.0/6.0)*Cjpdata[idx(iup2+2, j, Nx, Ny, 0)]);
+    
+    u_tnphx[3]=w2_nx[3]*((-1.0/6.0)*Cjndata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(iup1+1, j, Nx, Ny, 0)])+w1_nx[3]*((2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]-(1.0/6.0)*Cjndata[idx(iup2+2, j, Nx, Ny, 0)])+w0_nx[3]*((11.0/6.0)*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]-(7.0/6.0)*Cjndata[idx(iup2+2, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(iup3+3, j, Nx, Ny, 0)]);
+    
+    u_tpnhx[3]=w0_px[3]*((2.0/6.0)*Cjpdata[idx(idown3-3, j, Nx, Ny, 0)]-(7.0/6.0)*Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]+(11.0/6.0)*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)])+w1_px[3]*((-1.0/6.0)*Cjpdata[idx(idown2-2, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+(2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)])+w2_px[3]*((2.0/6.0)*Cjpdata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*Cjpdata[idx(iup1+1, j, Nx, Ny, 0)]);
+    
+    u_tnnhx[3]=w2_nx[3]*((-1.0/6.0)*Cjndata[idx(idown2-2, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(idown1-1, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)])+w1_nx[3]*((2.0/6.0)*Cjndata[idx(idown1-1, j, Nx, Ny, 0)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]-(1.0/6.0)*Cjndata[idx(iup1+1, j, Nx, Ny, 0)])+w0_nx[3]*((11.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 0)]-(7.0/6.0)*Cjndata[idx(iup1+1, j, Nx, Ny, 0)]+(2.0/6.0)*Cjndata[idx(iup2+2, j, Nx, Ny, 0)]);
+      }
     return 0;
     }
 }
@@ -823,88 +915,101 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
 /* Get the derivative on y direction */
 static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *ypdata, realtype *yndata, realtype *taopdata, realtype *taondata, realtype *Cjpdata, realtype *Cjndata, realtype *u_tpphy, realtype *u_tnphy, realtype *u_tpnhy, realtype *u_tnnhy, long int i, long int j, long int Nx, long int Ny)
 {
+  /* declaration */
+  long int jdown1, jdown2, jdown3, jup1, jup2, jup3;
+
   /* consider Ny */
     if (Ny<4){
         cerr << "\nNy should be more than 3!\n";
         return 1;
     }
     else {
+      jdown1 = j;
+      jdown2 = j;
+      jdown3 = j;
+      jup1 = j;
+      jup2 = j;
+      jup3 = j;
+      
+      if (j<3||j>Ny-4){
       /* consider situations of different j */
         if (j==0){
-            j-1 = Ny-1;
-            j-2 = Ny-2;
-            j-3 = Ny-3;
+            jdown1 = Ny;
+            jdown2 = Ny;
+            jdown3 = Ny;
         }
         
         if (j==1){
-            j-2 = Ny-1;
-            j-3 = Ny-2;
+            jdown2 = Ny+1;
+            jdown3 = Ny+1;
         }
         
         if (j==2){
-            j-3 = Ny-1;
+            jdown3 = Ny+2;
         }
         
         if (j==Ny-3){
-            j+3 = 0;
+            jup3 = -3;
         }
         
         if (j==Ny-2){
-            j+2 = 0;
-            j+3 = 1;
+            jup2 = -2;
+            jup3 = -2;
         }
         
         if (j==Ny-1){
-            j+1 = 0;
-            j+2 = 1;
-            j+3 = 2;
+            jup1 = -1;
+            jup2 = -1;
+            jup3 = -1;
         }
-
+      }
+      else {
 	/* compute positive and negative solutions on the interface */
-    u_tpphy[0]=w0_py[0]*((2.0/6.0)*ypdata[idx(i, j-2, Nx, Ny, 2)]-(7.0/6.0)*ypdata[idx(i, j-1, Nx, Ny, 2)]+(11.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)])+w1_py[0]*((-1.0/6.0)*ypdata[idx(i, j-1, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*ypdata[idx(i, j+1, Nx, Ny, 2)])+w2_py[0]*((2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, j+1, Nx, Ny, 2)]-(1.0/6.0)*ypdata[idx(i, j+2, Nx, Ny, 2)]);
+    u_tpphy[0]=w0_py[0]*((2.0/6.0)*ypdata[idx(i, jdown2-2, Nx, Ny, 2)]-(7.0/6.0)*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+(11.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)])+w1_py[0]*((-1.0/6.0)*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*ypdata[idx(i, jup1+1, Nx, Ny, 2)])+w2_py[0]*((2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, jup1+1, Nx, Ny, 2)]-(1.0/6.0)*ypdata[idx(i, jup2+2, Nx, Ny, 2)]);
     
-    u_tnphy[0]=w2_ny[0]*((-1.0/6.0)*yndata[idx(i, j-1, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, j+1, Nx, Ny, 2)])+w1_ny[0]*((2.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, j+1, Nx, Ny, 2)]-(1.0/6.0)*yndata[idx(i, j+2, Nx, Ny, 2)])+w0_ny[0]*((11.0/6.0)*yndata[idx(i, j+1, Nx, Ny, 2)]-(7.0/6.0)*yndata[idx(i, j+2, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, j+3, Nx, Ny, 2)]);
+    u_tnphy[0]=w2_ny[0]*((-1.0/6.0)*yndata[idx(i, jdown1-1, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, jup1+1, Nx, Ny, 2)])+w1_ny[0]*((2.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, jup1+1, Nx, Ny, 2)]-(1.0/6.0)*yndata[idx(i, jup2+2, Nx, Ny, 2)])+w0_ny[0]*((11.0/6.0)*yndata[idx(i, jup1+1, Nx, Ny, 2)]-(7.0/6.0)*yndata[idx(i, jup2+2, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, jup3+3, Nx, Ny, 2)]);
     
-    u_tpnhy[0]=w0_py[0]*((2.0/6.0)*ypdata[idx(i, j-3, Nx, Ny, 2)]-(7.0/6.0)*ypdata[idx(i, j-2, Nx, Ny, 2)]+(11.0/6.0)*ypdata[idx(i, j-1, Nx, Ny, 2)])+w1_py[0]*((-1.0/6.0)*ypdata[idx(i, j-2, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, j-1, Nx, Ny, 2)]+(2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)])+w2_py[0]*((2.0/6.0)*ypdata[idx(i, j-1, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*ypdata[idx(i, j+1, Nx, Ny, 2)]);
+    u_tpnhy[0]=w0_py[0]*((2.0/6.0)*ypdata[idx(i, jdown3-3, Nx, Ny, 2)]-(7.0/6.0)*ypdata[idx(i, jdown2-2, Nx, Ny, 2)]+(11.0/6.0)*ypdata[idx(i, jdown1-1, Nx, Ny, 2)])+w1_py[0]*((-1.0/6.0)*ypdata[idx(i, jdown2-2, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+(2.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)])+w2_py[0]*((2.0/6.0)*ypdata[idx(i, jdown1-1, Nx, Ny, 2)]+(5.0/6.0)*ypdata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*ypdata[idx(i, jup1+1, Nx, Ny, 2)]);
     
-    u_tnnhy[0]=w2_ny[0]*((-1.0/6.0)*yndata[idx(i, j-2, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, j-1, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)])+w1_ny[0]*((2.0/6.0)*yndata[idx(i, j-1, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*yndata[idx(i, j+1, Nx, Ny, 2)])+w0_ny[0]*((11.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]-(7.0/6.0)*yndata[idx(i, j+1, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, j+2, Nx, Ny, 2)]);
-    
-    
-    u_tpphy[1]=w0_py[1]*((2.0/6.0)*taopdata[idx(i, j-2, Nx, Ny, 1)]-(7.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 1)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)])+w1_py[1]*((-1.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*taopdata[idx(i, j+1, Nx, Ny, 1)])+w2_py[1]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, j+1, Nx, Ny, 1)]-(1.0/6.0)*taopdata[idx(i, j+2, Nx, Ny, 1)]);
-    
-    u_tnphy[1]=w2_ny[1]*((-1.0/6.0)*taondata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 1)])+w1_ny[1]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 1)]-(1.0/6.0)*taondata[idx(i, j+2, Nx, Ny, 1)])+w0_ny[1]*((11.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 1)]-(7.0/6.0)*taondata[idx(i, j+2, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, j+3, Nx, Ny, 1)]);
-    
-    u_tpnhy[1]=w0_py[1]*((2.0/6.0)*taopdata[idx(i, j-3, Nx, Ny, 1)]-(7.0/6.0)*taopdata[idx(i, j-2, Nx, Ny, 1)]+(11.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 1)])+w1_py[1]*((-1.0/6.0)*taopdata[idx(i, j-2, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 1)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)])+w2_py[1]*((2.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*taopdata[idx(i, j+1, Nx, Ny, 1)]);
-    
-    u_tnnhy[1]=w2_ny[1]*((-1.0/6.0)*taondata[idx(i, j-2, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, j-1, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)])+w1_ny[1]*((2.0/6.0)*taondata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 1)])+w0_ny[1]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]-(7.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, j+2, Nx, Ny, 1)]);
+    u_tnnhy[0]=w2_ny[0]*((-1.0/6.0)*yndata[idx(i, jdown2-2, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, jdown1-1, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)])+w1_ny[0]*((2.0/6.0)*yndata[idx(i, jdown1-1, Nx, Ny, 2)]+(5.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]-(1.0/6.0)*yndata[idx(i, jup1+1, Nx, Ny, 2)])+w0_ny[0]*((11.0/6.0)*yndata[idx(i, j, Nx, Ny, 2)]-(7.0/6.0)*yndata[idx(i, jup1+1, Nx, Ny, 2)]+(2.0/6.0)*yndata[idx(i, jup2+2, Nx, Ny, 2)]);
     
     
-    u_tpphy[2]=w0_py[2]*((2.0/6.0)*taopdata[idx(i, j-2, Nx, Ny, 3)]-(7.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 3)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)])+w1_py[2]*((-1.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)]+(2.0/6.0)*taopdata[idx(i, j+1, Nx, Ny, 3)])+w2_py[2]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, j+1, Nx, Ny, 3)]-(1.0/6.0)*taopdata[idx(i, j+2, Nx, Ny, 3)]);
+    u_tpphy[1]=w0_py[1]*((2.0/6.0)*taopdata[idx(i, jdown2-2, Nx, Ny, 1)]-(7.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)])+w1_py[1]*((-1.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*taopdata[idx(i, jup1+1, Nx, Ny, 1)])+w2_py[1]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, jup1+1, Nx, Ny, 1)]-(1.0/6.0)*taopdata[idx(i, jup2+2, Nx, Ny, 1)]);
     
-    u_tnphy[2]=w2_ny[2]*((-1.0/6.0)*taondata[idx(i, j-1, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 3)])+w1_ny[2]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 3)]-(1.0/6.0)*taondata[idx(i, j+2, Nx, Ny, 3)])+w0_ny[2]*((11.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 3)]-(7.0/6.0)*taondata[idx(i, j+2, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, j+3, Nx, Ny, 3)]);
+    u_tnphy[1]=w2_ny[1]*((-1.0/6.0)*taondata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 1)])+w1_ny[1]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 1)]-(1.0/6.0)*taondata[idx(i, jup2+2, Nx, Ny, 1)])+w0_ny[1]*((11.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 1)]-(7.0/6.0)*taondata[idx(i, jup2+2, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, jup3+3, Nx, Ny, 1)]);
     
-    u_tpnhy[2]=w0_py[2]*((2.0/6.0)*taopdata[idx(i, j-3, Nx, Ny, 3)]-(7.0/6.0)*taopdata[idx(i, j-2, Nx, Ny, 3)]+(11.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 3)])+w1_py[2]*((-1.0/6.0)*taopdata[idx(i, j-2, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 3)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)])+w2_py[2]*((2.0/6.0)*taopdata[idx(i, j-1, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)]-(1.0/6.0)*taopdata[idx(i, j+1, Nx, Ny, 3)]);
+    u_tpnhy[1]=w0_py[1]*((2.0/6.0)*taopdata[idx(i, jdown3-3, Nx, Ny, 1)]-(7.0/6.0)*taopdata[idx(i, jdown2-2, Nx, Ny, 1)]+(11.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 1)])+w1_py[1]*((-1.0/6.0)*taopdata[idx(i, jdown2-2, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)])+w2_py[1]*((2.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*taopdata[idx(i, jup1+1, Nx, Ny, 1)]);
     
-    u_tnnhy[2]=w2_ny[2]*((-1.0/6.0)*taondata[idx(i, j-2, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, j-1, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)])+w1_ny[2]*((2.0/6.0)*taondata[idx(i, j-1, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]-(1.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 3)])+w0_ny[2]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]-(7.0/6.0)*taondata[idx(i, j+1, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, j+2, Nx, Ny, 3)]);
+    u_tnnhy[1]=w2_ny[1]*((-1.0/6.0)*taondata[idx(i, jdown2-2, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, jdown1-1, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)])+w1_ny[1]*((2.0/6.0)*taondata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 1)])+w0_ny[1]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 1)]-(7.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 1)]+(2.0/6.0)*taondata[idx(i, jup2+2, Nx, Ny, 1)]);
     
     
-    u_tpphy[3]=w0_py[3]*((2.0/6.0)*Cjpdata[idx(i, j-2, Nx, Ny, 1)]-(7.0/6.0)*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+(11.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)])+w1_py[3]*((-1.0/6.0)*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*Cjpdata[idx(i, j+1, Nx, Ny, 1)])+w2_py[3]*((2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, j+1, Nx, Ny, 1)]-(1.0/6.0)*Cjpdata[idx(i, j+2, Nx, Ny, 1)]);
+    u_tpphy[2]=w0_py[2]*((2.0/6.0)*taopdata[idx(i, jdown2-2, Nx, Ny, 3)]-(7.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+(11.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)])+w1_py[2]*((-1.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)]+(2.0/6.0)*taopdata[idx(i, jup1+1, Nx, Ny, 3)])+w2_py[2]*((2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, jup1+1, Nx, Ny, 3)]-(1.0/6.0)*taopdata[idx(i, jup2+2, Nx, Ny, 3)]);
     
-    u_tnphy[3]=w2_ny[3]*((-1.0/6.0)*Cjndata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, j+1, Nx, Ny, 1)])+w1_ny[3]*((2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, j+1, Nx, Ny, 1)]-(1.0/6.0)*Cjndata[idx(i, j+2, Nx, Ny, 1)])+w0_ny[3]*((11.0/6.0)*Cjndata[idx(i, j+1, Nx, Ny, 1)]-(7.0/6.0)*Cjndata[idx(i, j+2, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, j+3, Nx, Ny, 1)]);
+    u_tnphy[2]=w2_ny[2]*((-1.0/6.0)*taondata[idx(i, jdown1-1, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 3)])+w1_ny[2]*((2.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 3)]-(1.0/6.0)*taondata[idx(i, jup2+2, Nx, Ny, 3)])+w0_ny[2]*((11.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 3)]-(7.0/6.0)*taondata[idx(i, jup2+2, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, jup3+3, Nx, Ny, 3)]);
     
-    u_tpnhy[3]=w0_py[3]*((2.0/6.0)*Cjpdata[idx(i, j-3, Nx, Ny, 1)]-(7.0/6.0)*Cjpdata[idx(i, j-2, Nx, Ny, 1)]+(11.0/6.0)*Cjpdata[idx(i, j-1, Nx, Ny, 1)])+w1_py[3]*((-1.0/6.0)*Cjpdata[idx(i, j-2, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+(2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)])+w2_py[3]*((2.0/6.0)*Cjpdata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*Cjpdata[idx(i, j+1, Nx, Ny, 1)]);
+    u_tpnhy[2]=w0_py[2]*((2.0/6.0)*taopdata[idx(i, jdown3-3, Nx, Ny, 3)]-(7.0/6.0)*taopdata[idx(i, jdown2-2, Nx, Ny, 3)]+(11.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 3)])+w1_py[2]*((-1.0/6.0)*taopdata[idx(i, jdown2-2, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+(2.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)])+w2_py[2]*((2.0/6.0)*taopdata[idx(i, jdown1-1, Nx, Ny, 3)]+(5.0/6.0)*taopdata[idx(i, j, Nx, Ny, 3)]-(1.0/6.0)*taopdata[idx(i, jup1+1, Nx, Ny, 3)]);
     
-    u_tnnhy[3]=w2_ny[3]*((-1.0/6.0)*Cjndata[idx(i, j-2, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, j-1, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)])+w1_ny[3]*((2.0/6.0)*Cjndata[idx(i, j-1, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*Cjndata[idx(i, j+1, Nx, Ny, 1)])+w0_ny[3]*((11.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]-(7.0/6.0)*Cjndata[idx(i, j+1, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, j+2, Nx, Ny, 1)]);
+    u_tnnhy[2]=w2_ny[2]*((-1.0/6.0)*taondata[idx(i, jdown2-2, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, jdown1-1, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)])+w1_ny[2]*((2.0/6.0)*taondata[idx(i, jdown1-1, Nx, Ny, 3)]+(5.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]-(1.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 3)])+w0_ny[2]*((11.0/6.0)*taondata[idx(i, j, Nx, Ny, 3)]-(7.0/6.0)*taondata[idx(i, jup1+1, Nx, Ny, 3)]+(2.0/6.0)*taondata[idx(i, jup2+2, Nx, Ny, 3)]);
     
+    
+    u_tpphy[3]=w0_py[3]*((2.0/6.0)*Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]-(7.0/6.0)*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+(11.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)])+w1_py[3]*((-1.0/6.0)*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)])+w2_py[3]*((2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]-(1.0/6.0)*Cjpdata[idx(i, jup2+2, Nx, Ny, 1)]);
+    
+    u_tnphy[3]=w2_ny[3]*((-1.0/6.0)*Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, jup1+1, Nx, Ny, 1)])+w1_ny[3]*((2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]-(1.0/6.0)*Cjndata[idx(i, jup2+2, Nx, Ny, 1)])+w0_ny[3]*((11.0/6.0)*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]-(7.0/6.0)*Cjndata[idx(i, jup2+2, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, jup3+3, Nx, Ny, 1)]);
+    
+    u_tpnhy[3]=w0_py[3]*((2.0/6.0)*Cjpdata[idx(i, jdown3-3, Nx, Ny, 1)]-(7.0/6.0)*Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]+(11.0/6.0)*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)])+w1_py[3]*((-1.0/6.0)*Cjpdata[idx(i, jdown2-2, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+(2.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)])+w2_py[3]*((2.0/6.0)*Cjpdata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*Cjpdata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*Cjpdata[idx(i, jup1+1, Nx, Ny, 1)]);
+    
+    u_tnnhy[3]=w2_ny[3]*((-1.0/6.0)*Cjndata[idx(i, jdown2-2, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)])+w1_ny[3]*((2.0/6.0)*Cjndata[idx(i, jdown1-1, Nx, Ny, 1)]+(5.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]-(1.0/6.0)*Cjndata[idx(i, jup1+1, Nx, Ny, 1)])+w0_ny[3]*((11.0/6.0)*Cjndata[idx(i, j, Nx, Ny, 1)]-(7.0/6.0)*Cjndata[idx(i, jup1+1, Nx, Ny, 1)]+(2.0/6.0)*Cjndata[idx(i, jup2+2, Nx, Ny, 1)]);
+      }
     return 0;
     }
 }
 
 /* Fill in values of tao in the whole domain */
-static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
+static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny, realtype gama)
 {
     /* declare parameters */
     long int i, j, NEQ;
+    realtype *vx_data, *vy_data, *data, *tao_data;
     NEQ = Nx*Ny;
 
     /* create vectors */
@@ -934,17 +1039,17 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
             vy_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 2)]/data[idx(i, j, Nx, Ny, 0)];
         }
     }
-   
+    
     /* Compute the values of tao in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-            tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)];
+            tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)];
             tao_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 1)]*vy_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 2)] = data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
-            tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)];
+            tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)];
         }
     }
-    
+
     /* Free vectors */
     N_VDestroy_Serial(vx);
     N_VDestroy_Serial(vy);
@@ -953,12 +1058,13 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny)
 }
 
 /* Fill in the value of J in the whole domain */
-static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny)
+static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny, realtype gama)
 {
     /* declare parameters */
     long int i, j, NEQ;
+    realtype *vx_data, *vy_data, *data, *Cj_data;
     NEQ = Nx*Ny;
-    
+
     /* create vectors */
     N_Vector vx = NULL;
     N_Vector vy = NULL;
@@ -986,12 +1092,12 @@ static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny)
             vy_data[idx_v(i,j,Nx)]=data[idx(i, j, Nx, Ny, 2)]/data[idx(i, j, Nx, Ny, 0)];
         }
     }    
-    
+
     /* Compute the values of Cj in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-            Cj_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*data[idx(i, j, Nx, Ny, 1)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)];
-            Cj_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 2)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*data[idx(i, j, Nx, Ny, 2)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
+            Cj_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)]*data[idx(i, j, Nx, Ny, 1)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)];
+            Cj_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 2)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)]*data[idx(i, j, Nx, Ny, 2)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
         }
     }
 
