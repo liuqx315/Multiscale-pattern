@@ -27,6 +27,7 @@ SET(FCVODE_examples_BL
 # Add variable ARKODE_extras with the names of auxiliary files to install
 
 SET(ARKODE_extras
+  plot_sol.py
   )
 
 # Specify libraries to link against (through the target that was used to 

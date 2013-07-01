@@ -62,7 +62,7 @@ EXAMPLES = ark_bruss
 
 EXAMPLES_BL = 
 
-EXTRAFILES = # none yet
+EXTRAFILES = plot_sol.py
 
 OBJECTS = ${EXAMPLES:=${OBJ_EXT}}
 OBJECTS_BL = ${EXAMPLES_BL:=${OBJ_EXT}}
