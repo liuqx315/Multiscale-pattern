@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.15 $
- * $Date: 2012-09-28 17:22:58 $
+ * $Revision: 1.13 $
+ * $Date: 2012/09/12 22:35:42 $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -182,8 +182,7 @@ static int  KINPicardAA(KINMem kin_mem, realtype *fnormp,
 			realtype *f1normp, int iter, realtype *R, 
 			realtype *gamma, realtype *fmax, 
 			booleantype *maxStepTaken);
-static int  KINFP(KINMem kin_mem, realtype *fnormp, 
-		  realtype *f1normp, int iter, realtype *R, 
+static int  KINFP(KINMem kin_mem, long int *iter, realtype *R, 
 		  realtype *gamma, realtype *fmax);
 
 static int  KINLinSolDrv(KINMem kinmem);
@@ -250,6 +249,8 @@ void *KINCreate(void)
   kin_mem->kin_dg_aa            = NULL;
   kin_mem->kin_q_aa             = NULL;
   kin_mem->kin_qtmp_aa          = NULL;
+  kin_mem->kin_gamma_aa         = NULL;
+  kin_mem->kin_R_aa             = NULL;
   kin_mem->kin_m_aa             = ZERO;
   kin_mem->kin_aamem_aa         = 0;
   kin_mem->kin_setstop_aa       = 0;
@@ -494,7 +495,6 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
            N_Vector u_scale, N_Vector f_scale)
 {
   realtype fnormp, f1normp, epsmin, fmax;
-  realtype *R, *gamma;
   KINMem kin_mem;
   int ret, sflag;
   booleantype maxStepTaken;
@@ -528,11 +528,33 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
   fscale = f_scale;
   strategy = strategy_in;
 
-  /* initialize solver */
+  if ( strategy == KIN_FP ) {
+    if (uu == NULL) {
+      KINProcessError(kin_mem, KIN_ILL_INPUT, "KINSOL", "KINSol", MSG_UU_NULL);
+      return(KIN_ILL_INPUT);
+    }
+    if (printfl > 0)
+      KINPrintInfo(kin_mem, PRNT_TOL, "KINSOL", "KINSol", INFO_TOL, scsteptol, fnormtol);
 
+    nfe = nnilset = nnilset_sub = nni = nbcf = nbktrk = 0;
+    ret = KINFP(kin_mem, &nni, kin_mem->kin_R_aa, kin_mem->kin_gamma_aa, &fmax);
+
+    switch(ret) {
+    case KIN_SYSFUNC_FAIL:
+      KINProcessError(kin_mem, KIN_SYSFUNC_FAIL, "KINSOL", "KINSol", MSG_SYSFUNC_FAILED);
+      break;
+    case KIN_MAXITER_REACHED:
+      KINProcessError(kin_mem, KIN_MAXITER_REACHED, "KINSOL", "KINSol", MSG_MAXITER_REACHED);
+      break;
+    }
+
+    return(ret);
+  }
+
+  /* initialize solver */
   ret = KINSolInit(kin_mem);
   if (ret != KIN_SUCCESS) return(ret);
-  
+
   ncscmx = 0;
 
   /* Note: The following logic allows the choice of whether or not
@@ -553,18 +575,6 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
   if (omega == ZERO) eval_omega = TRUE;
   else               eval_omega = FALSE;
  
-  if ( ((strategy == KIN_PICARD) || (strategy == KIN_FP)) && maa > 0 ) {
-    R = (realtype *) malloc((maa*maa) * sizeof(realtype));
-    if (R == NULL) {
-      KINProcessError(kin_mem, 0, "KINSOL", "KINSol", MSG_MEM_FAIL);
-      return(KIN_MEM_FAIL);
-    }
-    gamma = (realtype *)malloc(maa * sizeof(realtype));
-    if (gamma == NULL) {
-      KINProcessError(kin_mem, 0, "KINSOL", "KINSol", MSG_MEM_FAIL);
-      return(KIN_MEM_FAIL);
-    }
-  } 
 
   loop{
 
@@ -635,8 +645,8 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
       sflag = 0;
       
       /* Add Picard Step to uu (current iterate) */
-      sflag = KINPicardAA(kin_mem, &fnormp, &f1normp, nni, R, gamma, 
-			  &fmax, &maxStepTaken); 
+      sflag = KINPicardAA(kin_mem, &fnormp, &f1normp, nni, kin_mem->kin_R_aa, 
+			  kin_mem->kin_gamma_aa, &fmax, &maxStepTaken); 
         
       /* if sysfunc failed unrecoverably, stop */
       if ((sflag == KIN_SYSFUNC_FAIL) || (sflag == KIN_REPTD_SYSFUNC_ERR)) {
@@ -646,17 +656,17 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
 
     }  /* End strategy == KIN_PICARD section */
    
-    else if (strategy == KIN_FP) {
+    //    else if (strategy == KIN_FP) {
        
       /* Full Fixed Point Step*/
-      sflag = KINFP(kin_mem, &fnormp, &f1normp, nni, R, gamma, &fmax);
+    //      sflag = KINFP(kin_mem, &fnormp, &f1normp, nni, R, gamma, &fmax);
        
       /* if sysfunc failed unrecoverably, stop */
-      if (sflag == KIN_SYSFUNC_FAIL) {
-	ret = sflag;
-	break;
-      }
-    } /* End KIN_FP section */
+      // if (sflag == KIN_SYSFUNC_FAIL) {
+    //ret = sflag;
+    //	break;
+    // }
+    // } /* End KIN_FP section */
     
 
     if ( (strategy != KIN_PICARD) && (strategy != KIN_FP) ) {
@@ -682,7 +692,6 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
     }
 
     /* update uu after the iteration */
-
     N_VScale(ONE, unew, uu);
 
     f1norm = f1normp;
@@ -698,10 +707,6 @@ int KINSol(void *kinmem, N_Vector u, int strategy_in,
     
   }  /* end of loop; return */
 
-  if ( ((strategy == KIN_PICARD) || (strategy == KIN_FP)) && (maa > 0) ) {
-    free(R);
-    free(gamma);
-  }
 
 
   if (printfl > 0)
@@ -862,6 +867,19 @@ static booleantype KINAllocVectors(KINMem kin_mem, N_Vector tmpl)
   lrw += 5*lrw1;
 
   if (maa) {
+    kin_mem->kin_R_aa = (realtype *) malloc((maa*maa) * sizeof(realtype));
+    if (kin_mem->kin_R_aa == NULL) {
+      KINProcessError(kin_mem, 0, "KINSOL", "KINAllocVectors", MSG_MEM_FAIL);
+      return(KIN_MEM_FAIL);
+    }
+    kin_mem->kin_gamma_aa = (realtype *)malloc(maa * sizeof(realtype));
+    if (kin_mem->kin_gamma_aa == NULL) {
+      KINProcessError(kin_mem, 0, "KINSOL", "KINAllocVectors", MSG_MEM_FAIL);
+      return(KIN_MEM_FAIL);
+    }
+  } 
+
+  if (maa) {
     fold = N_VClone(tmpl);
     if (fold == NULL) {
       N_VDestroy(unew);
@@ -959,6 +977,11 @@ static void KINFreeVectors(KINMem kin_mem)
   if (vtemp1 != NULL) N_VDestroy(vtemp1);
   if (vtemp2 != NULL) N_VDestroy(vtemp2);
 
+  if ( ((strategy == KIN_PICARD) || (strategy == KIN_FP)) && (maa > 0) ) {
+    free(kin_mem->kin_R_aa);
+    free(kin_mem->kin_gamma_aa);
+  }
+
   if (maa)
   {
      if (fold != NULL) N_VDestroy(fold);
@@ -1006,7 +1029,7 @@ static void KINFreeVectors(KINMem kin_mem)
  * The possible return values for KINSolInit are:
  *   KIN_SUCCESS : indicates a normal initialization
  *
- *   KINS_ILL_INPUT : indicates that an input error has been found
+ *   KIN_ILL_INPUT : indicates that an input error has been found
  *
  *   KIN_INITIAL_GUESS_OK : indicates that the guess uu
  *                          satisfied the system func(uu) = 0
@@ -1116,16 +1139,15 @@ static int KINSolInit(KINMem kin_mem)
 
   nfe = nnilset = nnilset_sub = nni = nbcf = nbktrk = 0;
 
-  /* see if the initial guess uu satisfies teh nonlinear system */
-
-  if ( (strategy == KIN_PICARD) || (strategy == KIN_FP) ) {
+  /* see if the initial guess uu satisfies the nonlinear system */
+  if ( strategy == KIN_PICARD ) {
     N_VScale(ONE, uu, vtemp1);
     retval = func(vtemp1, fval, user_data); nfe++;
   }
   else {
     retval = func(uu, fval, user_data); nfe++;
   }
-    
+
   if (retval < 0) {
     KINProcessError(kin_mem, KIN_SYSFUNC_FAIL, "KINSOL", "KINSolInit", 
 		    MSG_SYSFUNC_FAILED);
@@ -1136,19 +1158,15 @@ static int KINSolInit(KINMem kin_mem)
     return(KIN_FIRST_SYSFUNC_ERR);
   }
 
-  if (strategy == KIN_FP) {
-    N_VLinearSum(ONE, fval, -ONE, uu, vtemp1);
-    fmax = KINScFNorm(kin_mem, vtemp1, fscale);
+  fmax = KINScFNorm(kin_mem, fval, fscale);
+  if (fmax <= (POINT01 * fnormtol)) {
+    kin_mem->kin_fnorm = N_VWL2Norm(fval, fscale);
+    return(KIN_INITIAL_GUESS_OK);
   }
-  else
-    fmax = KINScFNorm(kin_mem, fval, fscale);
 
   if (printfl > 1)
     KINPrintInfo(kin_mem, PRNT_FMAX, "KINSOL", "KINSolInit", INFO_FMAX, fmax);
-
-  if (fmax <= (POINT01 * fnormtol)) return(KIN_INITIAL_GUESS_OK);
-
-
+  
   /* initialize the linear solver if linit != NULL */
 
   if (linit != NULL) {
@@ -1161,12 +1179,9 @@ static int KINSolInit(KINMem kin_mem)
 
   /* initialize the L2 (Euclidean) norms of f for the linear iteration steps */
 
-  if (strategy != KIN_FP) {
-    fnorm = N_VWL2Norm(fval, fscale);
-    f1norm = HALF * fnorm * fnorm;
-    fnorm_sub = fnorm;
-  }
-  else { fnorm = fmax; }
+  fnorm = N_VWL2Norm(fval, fscale);
+  f1norm = HALF * fnorm * fnorm;
+  fnorm_sub = fnorm;
 
   if (printfl > 0)
     KINPrintInfo(kin_mem, PRNT_NNI, "KINSOL", "KINSolInit", 
@@ -2068,13 +2083,13 @@ void KINInfoHandler(const char *module, const char *function,
  * =================================================================
  */
 
-/*
+/* 
  * KINProcessError 
  *
- * KINProcessError is a high level error handling function.
- * - If cv_mem==NULL it prints the error message to stderr.
- * - Otherwise, it sets up and calls the error handling function 
- *   pointed to by cv_ehfun.
+ * Thi is a high level error handling function
+ * - if cv_mem==NULL it prints the error message to stderr
+ * - otherwise, it sets-up and calls the error hadling function 
+ *   pointed to by cv_ehfun
  */
 
 #define ehfun    (kin_mem->kin_ehfun)
@@ -2092,24 +2107,32 @@ void KINProcessError(KINMem kin_mem,
 
   va_start(ap, msgfmt);
 
-  /* Compose the message */
-
-  vsprintf(msg, msgfmt, ap);
-
   if (kin_mem == NULL) {    /* We write to stderr */
+
 #ifndef NO_FPRINTF_OUTPUT
     fprintf(stderr, "\n[%s ERROR]  %s\n  ", module, fname);
-    fprintf(stderr, "%s\n\n", msg);
+    /* CSW   fprintf(stderr, msgfmt);*/
+    fprintf(stderr, "\n\n");
 #endif
 
   } else {                 /* We can call ehfun */
+
+    /* Compose the message */
+
+    vsprintf(msg, msgfmt, ap);
+
+    /* Call ehfun */
+
     ehfun(error_code, module, fname, msg, eh_data);
+
   }
 
   /* Finalize argument processing */
+  
   va_end(ap);
 
   return;
+
 }
 
 /* 
@@ -2293,46 +2316,80 @@ static int KINPicardAA(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
  * Anderson Acceleration.
  */
 
-static int KINFP(KINMem kin_mem, realtype *fnormp, realtype *f1normp, 
-		 int iter, realtype *R, realtype *gamma, realtype *fmaxptr)
+static int KINFP(KINMem kin_mem, long int *iterp, realtype *R, realtype *gamma, 
+		 realtype *fmaxptr)
 {
   booleantype fOK;
-  int ircvr, retval;
+  int retval, ret; 
+  long int iter;
   realtype fmax;
-  realtype* utmp, *vtmp;
   N_Vector delta;
-  N_Vector x, b;
   
-  fOK = FALSE;
-  
-  /*  fnorm = 1.0; */
-  
-  N_VScale(ONE, uu, unew);
+  delta = kin_mem->kin_vtemp1;
+  ret = CONTINUE_ITERATIONS;
+  fOK = TRUE;
+  fmax = fnormtol + ONE;
+  iter = 0;
 
-  /* Compute unew using acceleration if desired */
-  if (maa == 0) { 
-    N_VScale(ONE, fval, unew);
-  }
-  else {  /* use Anderson, if desired */
-    AndersenAcc(kin_mem, fval, pp, unew, uu, iter-1, R, gamma);
-  }
+  while (ret == CONTINUE_ITERATIONS) {
 
-  /* evaluate func(unew) and its norm, and return if failed */
-  retval = func(unew, fval, user_data); nfe++;
+    iter++;
 
-  if (retval==0) {fOK = TRUE;}
-  else if (retval < 0) return(KIN_SYSFUNC_FAIL);
+    /* evaluate func(uu) and return if failed */
+    retval = func(uu, fval, user_data); nfe++;
 
-  delta = pp;
-  N_VLinearSum(ONE, fval, -ONE, unew, delta);
-  fmax = KINScFNorm(kin_mem, delta, fscale); /* measure  || g(x)-x || */
-  fnorm = fmax;
-      
-  *fmaxptr = fmax;
-  
-  N_VScale(ONE, unew, uu);
+    if (retval < 0) {
+      fOK = FALSE;
+      ret = KIN_SYSFUNC_FAIL;
+      break;
+    }
 
-  return(KIN_SUCCESS); 
+    if (maa == 0) { 
+      N_VScale(ONE, fval, unew);
+    }
+    else {  /* use Anderson, if desired */
+      N_VScale(ONE, uu, unew);
+      AndersenAcc(kin_mem, fval, delta, unew, uu, (int)(iter-1), R, gamma);
+    }
+
+    N_VLinearSum(ONE, unew, -ONE, uu, delta);
+    fmax = KINScFNorm(kin_mem, delta, fscale); /* measure  || g(x)-x || */
+    
+    if (printfl > 1) 
+      KINPrintInfo(kin_mem, PRNT_FMAX, "KINSOL", "KINFP", INFO_FMAX, fmax);
+    
+    fnorm = fmax;
+    *fmaxptr = fmax;
+
+    /* print the current iter, fnorm, and nfe values if printfl > 0 */
+    if (printfl>0)
+      KINPrintInfo(kin_mem, PRNT_NNI, "KINSOL", "KINFP", INFO_NNI, iter, nfe, fnorm);
+
+    /* Check if the maximum number of iterations is reached */
+    if (iter >= mxiter) {
+      ret = KIN_MAXITER_REACHED;
+    }
+    if (fmax <= fnormtol) { 
+      ret = KIN_SUCCESS;
+    }
+    
+    if (ret == CONTINUE_ITERATIONS) { 
+      /* Only update solution if taking a next iteration.  */
+      /* CSW  Should put in a conditional to send back the newest iterate or
+	 the one consistent with the fval */
+      N_VScale(ONE, unew, uu);
+    }
+
+    fflush(errfp);
+    
+  }  /* end of loop; return */
+
+  *iterp = iter;
+
+  if (printfl > 0)
+    KINPrintInfo(kin_mem, PRNT_RETVAL, "KINSOL", "KINFP", INFO_RETVAL, ret);
+
+  return(ret); 
 } 
 
 
@@ -2354,8 +2411,8 @@ static int KINFP(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
 static int PicardStop(KINMem kin_mem, booleantype maxStepTaken, 
 		      int sflag, realtype fmax)
 {
-  realtype rlength, *fv, *fs;
-  N_Vector delta;
+  // CSW realtype rlength, *fv, *fs;
+  // CSW N_Vector delta;
     
 
   /* Check tolerance on scaled function norm at the current iterate */
