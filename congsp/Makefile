@@ -32,8 +32,7 @@ INCS = -I../install/include/
 LIBS = -L../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
 
 # listing of all test routines
-TESTS = ARKode_WENO.exe \
-	ARKode_WENO2D.exe
+TESTS = ARKode_WENO.exe ARKode_WENO2D.exe
 
 # target to build all test executables
 #all : ${TESTS}
