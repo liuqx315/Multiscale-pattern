@@ -12,12 +12,9 @@
  * for t in the interval [0.0, 10.0], with initial condition: y=0. 
  * 
  * The stiffness of the problem is directly proportional to the 
- * value of "lamda", which is specified through an input file, along 
- * with the desired relative and absolute tolerances.  The value of
- * lamda should be negative to result in a well-posed ODE; for values
- * with magnitude larger than 100 the problem becomes quite stiff.
- *
- * In this example, we choose lamda = -100.
+ * value of "lamda".  The value of lamda should be negative to
+ * result in a well-posed ODE; for values with magnitude larger 
+ * than 100 the problem becomes quite stiff.
  * 
  * This program solves the problem with the DIRK method,
  * Newton iteration with the ARKDENSE dense linear solver, and a
