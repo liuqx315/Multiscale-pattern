@@ -19,9 +19,6 @@
  While integrating the system, we use the rootfinding feature 
  to find the times at which either u=1e-4 or w=1e-2.
  
- In the input file, input_robertson.txt, we allow specification 
- of the desired relative and absolute tolerances.
- 
  This program solves the problem with one of the solvers, ERK, 
  DIRK or ARK.  For DIRK and ARK, implicit subsystems are solved 
  using a Newton iteration with the ARKDENSE dense linear solver, 
