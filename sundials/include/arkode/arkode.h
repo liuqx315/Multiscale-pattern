@@ -456,6 +456,39 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | which the solution is not to proceed.
                           | [infinity]
                           |
+ ARKodeSetCFLFraction     | safety factor to use for explicitly 
+                          ! stable steps
+                          | [0.5]
+                          |
+ ARKodeSetSafetyFactor    | safety factor to use for error-based 
+                          ! step adaptivity
+                          | [0.96]
+                          |
+ ARKodeSetErrorBias       | error bias factor to use in error-based
+                          ! step adaptivity
+                          | [1.5]
+                          |
+ ARKodeSetMaxGrowth       | maximum growth factor for successive 
+                          ! time steps (not including the first step).
+                          | [20.0]
+                          |
+ ARKodeSetMaxFirstGrowth  | maximum growth factor for first step.
+                          | [10000.0]
+                          |
+ ARKodeSetMaxEFailGrowth  | maximum growth factor after an error failure.
+                          | [0.3]
+                          |
+ ARKodeSetSmallNumEFails  | maximum number of error failures before 
+                          ! MaxFailGrowth factor is used.
+                          | [2]
+                          |
+ ARKodeSetMaxCFailGrowth  | maximum growth factor after a convergence failure.
+                          | [0.25]
+                          |
+ ARKodeSetFixedStepBounds | step growth interval to force retention of 
+                          ! the same step size
+                          | [1.0 1.5]
+                          |
  ARKodeSetAdaptivityMethod | Method to use for time step adaptivity
                           | [0]
                           |
@@ -463,17 +496,20 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | function.
                           | [internal]
                           |
- ARKodeSetAdaptivityConstants | user-provided time step adaptivity 
-                          | constants.
-                          | [internal]
+ ARKodeSetNewtonCRDown    | user-provided nonlinear convergence
+                          | rate constant.
+                          | [0.3]
                           |
- ARKodeSetNewtonConstants | user-provided nonlinear convergence
-                          | constants.
-                          | [internal]
+ ARKodeSetNewtonRDiv      | user-provided nonlinear divergence ratio.
+                          | [2.3]
                           |
- ARKodeSetLSetupConstants | user-provided linear setup decision
-                          | constants.
-                          | [internal]
+ ARKodeSetDeltaGammaMax   | user-provided linear setup decision
+                          | constant.
+                          | [0.2]
+                          |
+ ARKodeSetMaxStepsBetweenLSet | user-provided linear setup decision
+                          | constant.
+                          | [20]
                           |
  ARKodeSetPredictorMethod | Method to use for predicting implicit 
                           | solutions.
@@ -558,23 +594,39 @@ SUNDIALS_EXPORT int ARKodeSetMaxStep(void *arkode_mem,
 				     realtype hmax);
 SUNDIALS_EXPORT int ARKodeSetStopTime(void *arkode_mem, 
 				      realtype tstop);
+SUNDIALS_EXPORT int ARKodeSetCFLFraction(void *arkode_mem, 
+					 realtype cfl_frac);
+SUNDIALS_EXPORT int ARKodeSetSafetyFactor(void *arkode_mem, 
+					  realtype safety);
+SUNDIALS_EXPORT int ARKodeSetErrorBias(void *arkode_mem, 
+				       realtype bias);
+SUNDIALS_EXPORT int ARKodeSetMaxGrowth(void *arkode_mem, 
+				       realtype mx_growth);
+SUNDIALS_EXPORT int ARKodeSetFixedStepBounds(void *arkode_mem, 
+					     realtype lb, realtype ub);
 SUNDIALS_EXPORT int ARKodeSetAdaptivityMethod(void *arkode_mem, 
 					      int imethod, 
+					      int idefault, int pq, 
 					      realtype *adapt_params);
 SUNDIALS_EXPORT int ARKodeSetAdaptivityFn(void *arkode_mem, 
 					  ARKAdaptFn hfun, 
 					  void *h_data);
-SUNDIALS_EXPORT int ARKodeSetAdaptivityConstants(void *arkode_mem, 
-						 realtype etamx1,
-						 realtype etamxf, 
-						 realtype etacf,
-						 int small_nef);
-SUNDIALS_EXPORT int ARKodeSetNewtonConstants(void *arkode_mem, 
-					     realtype crdown,
-					     realtype rdiv);
-SUNDIALS_EXPORT int ARKodeSetLSetupConstants(void *arkode_mem, 
-					     realtype dgmax,
-					     int msbp);
+SUNDIALS_EXPORT int ARKodeSetMaxFirstGrowth(void *arkode_mem, 
+					    realtype etamx1);
+SUNDIALS_EXPORT int ARKodeSetMaxEFailGrowth(void *arkode_mem, 
+					    realtype etamxf);
+SUNDIALS_EXPORT int ARKodeSetSmallNumEFails(void *arkode_mem, 
+					    int small_nef);
+SUNDIALS_EXPORT int ARKodeSetMaxCFailGrowth(void *arkode_mem, 
+					    realtype etacf);
+SUNDIALS_EXPORT int ARKodeSetNewtonCRDown(void *arkode_mem, 
+					  realtype crdown);
+SUNDIALS_EXPORT int ARKodeSetNewtonRDiv(void *arkode_mem, 
+					realtype rdiv);
+SUNDIALS_EXPORT int ARKodeSetDeltaGammaMax(void *arkode_mem, 
+					   realtype dgmax);
+SUNDIALS_EXPORT int ARKodeSetMaxStepsBetweenLSet(void *arkode_mem, 
+						 int msbp);
 SUNDIALS_EXPORT int ARKodeSetPredictorMethod(void *arkode_mem, 
 					     int method);
 SUNDIALS_EXPORT int ARKodeSetStabilityFn(void *arkode_mem, 

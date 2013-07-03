@@ -307,6 +307,7 @@ typedef struct ARKodeMemRec {
   realtype   ark_hadapt_growth;    /* maximum step growth safety factor      */
   realtype   ark_hadapt_lbound;    /* eta lower bound to leave h unchanged   */
   realtype   ark_hadapt_ubound;    /* eta upper bound to leave h unchanged   */
+  booleantype ark_hadapt_pq;       /* choice of using p (0) vs q (1)         */
   realtype   ark_hadapt_k1;
   realtype   ark_hadapt_k2;        /* method-specific adaptivity parameters  */
   realtype   ark_hadapt_k3;
