@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <arkode/arkode.h>
 #include <sundials/sundials_types.h>
 
@@ -204,33 +205,104 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
     return 1;
   }
 
-  /* set time step adaptivity method & parameters */
-  realtype adapt_params[] = {cflfac, safety, bias, growth, 
-			     hfixed_lb, hfixed_ub, k1, k2, k3};
-  ret = ARKodeSetAdaptivityMethod(ark_mem, adapt_method, adapt_params);
+  /* set cfl stability fraction */
+  ret = ARKodeSetCFLFraction(ark_mem, cflfac);
   if (ret != 0) {
-    fprintf(stderr,"set_from_file error in ARKodeSetAdaptMethod = %i\n",ret);
+    fprintf(stderr,"set_from_file error in ARKodeSetCFLFraction = %i\n",ret);
     return 1;
   }
 
-  /* set additional time step adaptivity constants */
-  ret = ARKodeSetAdaptivityConstants(ark_mem, etamx1, etamxf, etacf, small_nef);
+  /* set safety factor */
+  ret = ARKodeSetSafetyFactor(ark_mem, safety);
   if (ret != 0) {
-    fprintf(stderr,"set_from_file error in ARKodeSetAdaptConstants = %i\n",ret);
+    fprintf(stderr,"set_from_file error in ARKodeSetSafetyFactor = %i\n",ret);
     return 1;
   }
 
-  /* set Newton method constants */
-  ret = ARKodeSetNewtonConstants(ark_mem, crdown, rdiv);
+  /* set error bias */
+  ret = ARKodeSetErrorBias(ark_mem, bias);
   if (ret != 0) {
-    fprintf(stderr,"set_from_file error in ARKodeSetNewtonConstants = %i\n",ret);
+    fprintf(stderr,"set_from_file error in ARKodeSetErrorBias = %i\n",ret);
+    return 1;
+  }
+
+  /* set step growth factor */
+  ret = ARKodeSetMaxGrowth(ark_mem, growth);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetMaxGrowth = %i\n",ret);
+    return 1;
+  }
+
+  /* set fixed step size bounds */
+  ret = ARKodeSetFixedStepBounds(ark_mem, hfixed_lb, hfixed_ub);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetFixedStepBounds = %i\n",ret);
+    return 1;
+  }
+
+  /* set time step adaptivity method */
+  realtype adapt_params[] = {k1, k2, k3};
+  int idefault = 1;
+  if (fabs(k1)+fabs(k2)+fabs(k3) > 0.0)  idefault=0;
+  ret = ARKodeSetAdaptivityMethod(ark_mem, adapt_method, idefault, 0, adapt_params);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetAdaptivityMethod = %i\n",ret);
+    return 1;
+  }
+
+  /* set first step growth factor */
+  ret = ARKodeSetMaxFirstGrowth(ark_mem, etamx1);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetMaxFirstGrowth = %i\n",ret);
+    return 1;
+  }
+
+  /* set error failure growth factor */
+  ret = ARKodeSetMaxEFailGrowth(ark_mem, etamxf);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetMaxEFailGrowth = %i\n",ret);
+    return 1;
+  }
+
+  /* set number of fails before using above threshold */
+  ret = ARKodeSetSmallNumEFails(ark_mem, small_nef);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetSmallNumEFails = %i\n",ret);
+    return 1;
+  }
+
+  /* set convergence failure growth factor */
+  ret = ARKodeSetMaxCFailGrowth(ark_mem, etacf);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetMaxCFailGrowth = %i\n",ret);
+    return 1;
+  }
+
+  /* set Newton method convergence rate constant */
+  ret = ARKodeSetNewtonCRDown(ark_mem, crdown);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetNewtonCRDown = %i\n",ret);
+    return 1;
+  }
+
+  /* set Newton method divergence constant */
+  ret = ARKodeSetNewtonRDiv(ark_mem, rdiv);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetNewtonRDiv = %i\n",ret);
     return 1;
   }
 
   /* set linear solver setup constants */
-  ret = ARKodeSetLSetupConstants(ark_mem, dgmax, msbp);
+  ret = ARKodeSetDeltaGammaMax(ark_mem, dgmax);
   if (ret != 0) {
-    fprintf(stderr,"set_from_file error in ARKodeSetLSetupConstants = %i\n",ret);
+    fprintf(stderr,"set_from_file error in ARKodeSetDeltaGammaMax = %i\n",ret);
+    return 1;
+  }
+
+  /* set linear solver setup constants */
+  ret = ARKodeSetMaxStepsBetweenLSet(ark_mem, msbp);
+  if (ret != 0) {
+    fprintf(stderr,"set_from_file error in ARKodeSetMaxStepsBetweenLSet = %i\n",ret);
     return 1;
   }
 

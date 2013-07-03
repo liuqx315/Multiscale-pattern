@@ -53,6 +53,7 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_hadapt_lbound    = HFIXED_LB;
   ark_mem->ark_hadapt_ubound    = HFIXED_UB;
   ark_mem->ark_hadapt_imethod   = 0;
+  ark_mem->ark_hadapt_pq        = FALSE;
   ark_mem->ark_hadapt_k1        = AD0_K1;
   ark_mem->ark_hadapt_k2        = AD0_K2;
   ark_mem->ark_hadapt_k3        = AD0_K3;
@@ -1137,125 +1138,231 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
 
 
 /*---------------------------------------------------------------
+ ARKodeSetCFLFraction:
+
+ Specifies the safety factor to use on the maximum explicitly-
+ stable step size.  Allowable values must be within the open 
+ interval (0,1).  A non-positive input implies a reset to
+ the default value.
+---------------------------------------------------------------*/
+int ARKodeSetCFLFraction(void *arkode_mem, realtype cfl_frac)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetCFLFraction", MSGARK_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check for allowable parameters */
+  if (cfl_frac >= 1.0) {
+    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetCFLFraction", "Illegal CFL fraction");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set positive-valued parameters into ark_mem, 
+     otherwise set default */
+  if (cfl_frac <= ZERO) {
+    ark_mem->ark_hadapt_cfl = CFLFAC;
+  } else {
+    ark_mem->ark_hadapt_cfl = cfl_frac;
+  }
+    
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetSafetyFactor:
+
+ Specifies the safety factor to use on the error-based predicted 
+ time step size.  Allowable values must be within the open 
+ interval (0,1).  A non-positive input implies a reset to the 
+ default value.
+---------------------------------------------------------------*/
+int ARKodeSetSafetyFactor(void *arkode_mem, realtype safety)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetSafetyFactoy", MSGARK_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* check for allowable parameters */
+  if (safety >= 1.0) {
+    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeSetSafetyFactor", "Illegal safety factor");
+    return(ARK_ILL_INPUT);
+  }
+
+  /* set positive-valued parameters into ark_mem, 
+     otherwise set default */
+  if (safety <= ZERO) {
+    ark_mem->ark_hadapt_safety = SAFETY;
+  } else {
+    ark_mem->ark_hadapt_safety = safety;
+  }
+    
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetErrorBias:
+
+ Specifies the error bias to use when performing adaptive-step
+ error control.  Allowable values must be >= 1.0.  Any illegal
+ value implies a reset to the default value.
+---------------------------------------------------------------*/
+int ARKodeSetErrorBias(void *arkode_mem, realtype bias)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetErrorBias", MSGARK_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* set allowed value into ark_mem, otherwise set default */
+  if (bias < 1.0) {
+    ark_mem->ark_hadapt_bias = BIAS;
+  } else {
+    ark_mem->ark_hadapt_bias = bias;
+  }
+    
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetMaxGrowth:
+
+ Specifies the maximum step size growth factor to be allowed
+ between successive integration steps.  Note: the first step uses 
+ a separate maximum growth factor.  Allowable values must be 
+ > 1.0.  Any illegal value implies a reset to the default.
+---------------------------------------------------------------*/
+int ARKodeSetMaxGrowth(void *arkode_mem, realtype mx_growth)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetMaxGrowth", MSGARK_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* set allowed value into ark_mem, otherwise set default */
+  if (mx_growth == ZERO) {
+    ark_mem->ark_hadapt_growth = GROWTH;
+  } else {
+    ark_mem->ark_hadapt_growth = mx_growth;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetFixedStepBounds:
+
+ Specifies the step size growth interval within which the step 
+ size will remain unchanged.  Allowable values must enclose the 
+ value 1.0.  Any illegal interval implies a reset to the default.
+---------------------------------------------------------------*/
+int ARKodeSetFixedStepBounds(void *arkode_mem, realtype lb, realtype ub)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetFixedStepBounds", MSGARK_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* set allowable interval into ark_mem, otherwise set defaults */
+  if ((lb <= 1.0) && (ub >= 1.0)) {
+    ark_mem->ark_hadapt_lbound = lb;
+    ark_mem->ark_hadapt_ubound = ub;
+  } else {
+    ark_mem->ark_hadapt_lbound = HFIXED_LB;
+    ark_mem->ark_hadapt_ubound = HFIXED_UB;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKodeSetAdaptivityMethod:
 
  Specifies the built-in time step adaptivity algorithm (and 
- associated parameters) to use.  Any zero-valued parameter will 
- imply a reset to the default value.  Any negative parameter will 
- be left unchanged from the previous value.
+ optionally, its associated parameters) to use.  All parameters 
+ will be checked for validity when used by the solver.
 ---------------------------------------------------------------*/
 int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod, 
+			      int idefault, int pq, 
 			      realtype *adapt_params)
 {
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetStopTime", MSGARK_NO_MEM);
+		    "ARKodeSetAdaptivityMethod", MSGARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* check for allowable parameters */
-  if (imethod > 5) {
+  if ((imethod > 5) || (imethod < 0)) {
     arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetAdaptivityMethod", "Illegal imethod");
     return(ARK_ILL_INPUT);
   }
 
-  if (adapt_params == NULL) {
-    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetAdaptivityMethod", "Illegal adapt_params");
-    return(ARK_ILL_INPUT);
-  }
+  /* set adaptivity method */
+  ark_mem->ark_hadapt_imethod = imethod;
 
-  /* set method if change requested */
-  if (imethod >= 0)
-    ark_mem->ark_hadapt_imethod = imethod;
+  /* set flag whether to use p or q */
+  ark_mem->ark_hadapt_pq = (pq != 0);
 
-  /* set positive-valued paramters into ark_mem, 
-     otherwise set defaults for the chosen method */
-  if (adapt_params[0] == ZERO) {
-    ark_mem->ark_hadapt_cfl = CFLFAC;
-  } else if (adapt_params[0] > ZERO) {
-    ark_mem->ark_hadapt_cfl = adapt_params[0];
-  }
-    
-  if (adapt_params[1] == ZERO) {
-    ark_mem->ark_hadapt_safety = SAFETY;
-  } else if (adapt_params[1] > ZERO) {
-    ark_mem->ark_hadapt_safety = adapt_params[1];
-  }
-
-  if (adapt_params[2] == ZERO) {
-    ark_mem->ark_hadapt_bias = BIAS;
-  } else if (adapt_params[2] > ZERO) {
-    ark_mem->ark_hadapt_bias = adapt_params[2];
-  }
-
-  if (adapt_params[3] == ZERO) {
-    ark_mem->ark_hadapt_growth = GROWTH;
-  } else if (adapt_params[3] > ZERO) {
-    ark_mem->ark_hadapt_growth = adapt_params[3];
-  }
-
-  if (adapt_params[4] == ZERO) {
-    ark_mem->ark_hadapt_lbound = HFIXED_LB;
-  } else if (adapt_params[4] > ZERO) {
-    ark_mem->ark_hadapt_lbound = adapt_params[4];
-  }
-
-  if (adapt_params[5] == ZERO) {
-    ark_mem->ark_hadapt_ubound = HFIXED_UB;
-  } else if (adapt_params[5] > ZERO) {
-    ark_mem->ark_hadapt_ubound = adapt_params[5];
-  }
-
-  if (adapt_params[6] == ZERO) {
+  /* set method parameters */
+  if (idefault == 1) {
     switch (ark_mem->ark_hadapt_imethod) {
     case (0):
-      ark_mem->ark_hadapt_k1 = AD0_K1; break;
+      ark_mem->ark_hadapt_k1 = AD0_K1; 
+      ark_mem->ark_hadapt_k2 = AD0_K2;
+      ark_mem->ark_hadapt_k3 = AD0_K3; break;
     case (1):
-      ark_mem->ark_hadapt_k1 = AD1_K1; break;
+      ark_mem->ark_hadapt_k1 = AD1_K1;
+      ark_mem->ark_hadapt_k2 = AD1_K2; break;
     case (2):
       ark_mem->ark_hadapt_k1 = AD2_K1; break;
     case (3):
-      ark_mem->ark_hadapt_k1 = AD3_K1; break;
-    case (4):
-      ark_mem->ark_hadapt_k1 = AD4_K1; break;
-    case (5):
-      ark_mem->ark_hadapt_k1 = AD5_K1; break;
-    }
-  } else if (adapt_params[6] > ZERO) {
-    ark_mem->ark_hadapt_k1 = adapt_params[6];
-  }
-
-  if (adapt_params[7] == ZERO) {
-    switch (ark_mem->ark_hadapt_imethod) {
-    case (0):
-      ark_mem->ark_hadapt_k2 = AD0_K2; break;
-    case (1):
-      ark_mem->ark_hadapt_k2 = AD1_K2; break;
-    case (3):
+      ark_mem->ark_hadapt_k1 = AD3_K1;
       ark_mem->ark_hadapt_k2 = AD3_K2; break;
     case (4):
+      ark_mem->ark_hadapt_k1 = AD4_K1;
       ark_mem->ark_hadapt_k2 = AD4_K2; break;
     case (5):
-      ark_mem->ark_hadapt_k2 = AD5_K2; break;
-    }
-  } else if (adapt_params[7] > ZERO) {
-    ark_mem->ark_hadapt_k2 = adapt_params[7];
-  }
-
-  if (adapt_params[8] == ZERO) {
-    switch (ark_mem->ark_hadapt_imethod) {
-    case (0):
-      ark_mem->ark_hadapt_k3 = AD0_K3; break;
-    case (5):
+      ark_mem->ark_hadapt_k1 = AD5_K1;
+      ark_mem->ark_hadapt_k2 = AD5_K2; 
       ark_mem->ark_hadapt_k3 = AD5_K3; break;
     }
-  } else if (adapt_params[8] > ZERO) {
-    ark_mem->ark_hadapt_k3 = adapt_params[8];
+  } else {
+    ark_mem->ark_hadapt_k1 = adapt_params[0];
+    ark_mem->ark_hadapt_k2 = adapt_params[1];
+    ark_mem->ark_hadapt_k3 = adapt_params[2];
   }
 
   return(ARK_SUCCESS);
@@ -1295,45 +1402,85 @@ int ARKodeSetAdaptivityFn(void *arkode_mem, ARKAdaptFn hfun,
 
 
 /*---------------------------------------------------------------
- ARKodeSetAdaptivityConstants:
+ ARKodeSetMaxFirstGrowth:
 
- Specifies the user-provided time step adaptivity constants
- etamx1, etamxf, etacf and small_nef.  Zero valued inputs imply 
- a reset to the default value.  Negative values leave the 
- existing value unchanged. 
+ Specifies the user-provided time step adaptivity constant 
+ etamx1.  Legal values are greater than 1.0.  Illegal values 
+ imply a reset to the default value. 
 ---------------------------------------------------------------*/
-int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
-				 realtype etamxf, realtype etacf,
-				 int small_nef)
+int ARKodeSetMaxFirstGrowth(void *arkode_mem, realtype etamx1)
 {
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+		    "ARKodeSetMaxFirstGrowth", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* 0 or 0.0 argument sets default, otherwise set inputs */
-  if (etamx1 == ZERO) {
+  /* if argument legal set it, otherwise set default */
+  if (etamx1 <= ONE) {
     ark_mem->ark_etamx1 = ETAMX1;
-  } else if (etamx1 > ZERO) {
+  } else {
     ark_mem->ark_etamx1 = etamx1;
   }
-  if (etamxf == ZERO) {
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetMaxEFailGrowth:
+
+ Specifies the user-provided time step adaptivity constant 
+ etamxf. Legal values are in the interval (0,1].  Illegal values 
+ imply a reset to the default value. 
+---------------------------------------------------------------*/
+int ARKodeSetMaxEFailGrowth(void *arkode_mem, realtype etamxf)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetMaxEFailGrowth", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* if argument legal set it, otherwise set default */
+  if ((etamxf <= ZERO) || (etamxf > ONE)) {
     ark_mem->ark_etamxf = ETAMXF;
-  } else if (etamxf > ZERO) {
+  } else {
     ark_mem->ark_etamxf = etamxf;
   }
-  if (etacf == ZERO) {
-    ark_mem->ark_etacf = ETACF;
-  } else if (etacf > ZERO) {
-    ark_mem->ark_etacf = etacf;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetSmallNumEFails:
+
+ Specifies the user-provided time step adaptivity constant
+ small_nef.  Legal values are > 0.  Illegal values 
+ imply a reset to the default value. 
+---------------------------------------------------------------*/
+int ARKodeSetSmallNumEFails(void *arkode_mem, int small_nef)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetSmallNumEFails", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
   }
-  if (small_nef == 0) {
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* if argument legal set it, otherwise set default */
+  if (small_nef <= 0) {
     ark_mem->ark_small_nef = SMALL_NEF;
-  } else if (small_nef > 0) {
+  } else {
     ark_mem->ark_small_nef = small_nef;
   }
 
@@ -1342,34 +1489,85 @@ int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1,
 
 
 /*---------------------------------------------------------------
- ARKodeSetNewtonConstants:
+ ARKodeSetMaxCFailGrowth:
 
- Specifies the user-provided nonlinear convergence constants
- crdown and rdiv.  Zero-valued inputs imply a reset to the 
- default value.  Negative values leave the existing value 
- unchanged. 
+ Specifies the user-provided time step adaptivity constant
+ etacf. Legal values are in the interval (0,1].  Illegal values 
+ imply a reset to the default value. 
 ---------------------------------------------------------------*/
-int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown,
-			     realtype rdiv)
+int ARKodeSetMaxCFailGrowth(void *arkode_mem, realtype etacf)
 {
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+		    "ARKodeSetMaxCFailGrowth", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* 0.0 argument sets default, otherwise set inputs */
-  if (crdown == ZERO) {
+  /* if argument legal set it, otherwise set default */
+  if ((etacf <= ZERO) || (etacf > ONE)) {
+    ark_mem->ark_etacf = ETACF;
+  } else {
+    ark_mem->ark_etacf = etacf;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetNewtonCRDown:
+
+ Specifies the user-provided nonlinear convergence constants
+ crdown.  Legal values are strictly positive; illegal values 
+ imply a reset to the default.
+---------------------------------------------------------------*/
+int ARKodeSetNewtonCRDown(void *arkode_mem, realtype crdown)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetNewtonCRDown", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* if argument legal set it, otherwise set default */
+  if (crdown <= ZERO) {
     ark_mem->ark_crdown = CRDOWN;
-  } else if (crdown > ZERO) {
+  } else {
     ark_mem->ark_crdown = crdown;
   }
-  if (rdiv == ZERO) {
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetNewtonRDiv:
+
+ Specifies the user-provided nonlinear convergence constant
+ rdiv.  Legal values are strictly positive; illegal values 
+ imply a reset to the default.
+---------------------------------------------------------------*/
+int ARKodeSetNewtonRDiv(void *arkode_mem, realtype rdiv)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetNewtonRDiv", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* if argument legal set it, otherwise set default */
+  if (rdiv <= ZERO) {
     ark_mem->ark_rdiv = RDIV;
-  } else if (rdiv > ZERO) {
+  } else {
     ark_mem->ark_rdiv = rdiv;
   }
 
@@ -1378,34 +1576,56 @@ int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown,
 
 
 /*---------------------------------------------------------------
- ARKodeSetLSetupConstants:
+ ARKodeSetDeltaGammaMax:
 
- Specifies the user-provided linear setup decision constants
- dgmax and msbp.  Zero-valued inputs imply a reset to the 
- default value. Negative values leave the existing value 
- unchanged. 
+ Specifies the user-provided linear setup decision constant
+ dgmax.  Legal values are strictly positive; illegal values imply 
+ a reset to the default. 
 ---------------------------------------------------------------*/
-int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax,
-			     int msbp)
+int ARKodeSetDeltaGammaMax(void *arkode_mem, realtype dgmax)
 {
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetAdaptivityFn", MSGARK_NO_MEM);
+		    "ARKodeSetDeltaGammaMax", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* 0 or 0.0 argument sets default, otherwise set inputs */
-  if (dgmax == ZERO) {
+  /* if argument legal set it, otherwise set default */
+  if (dgmax <= ZERO) {
     ark_mem->ark_dgmax = DGMAX;
-  } else if (dgmax > ZERO) {
+  } else {
     ark_mem->ark_dgmax = dgmax;
   }
-  if (msbp == 0) {
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetMaxStepsBetweenLSet:
+
+ Specifies the user-provided linear setup decision constant
+ msbp.  Legal values are strictly positive; illegal values imply 
+ a reset to the default. 
+---------------------------------------------------------------*/
+int ARKodeSetMaxStepsBetweenLSet(void *arkode_mem, int msbp)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetMaxStepsBetweenLSet", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  /* if argument legal set it, otherwise set default */
+  if (msbp <= 0) {
     ark_mem->ark_msbp = MSBP;
-  } else if (msbp > 0) {
+  } else {
     ark_mem->ark_msbp = msbp;
   }
 
@@ -1440,7 +1660,8 @@ int ARKodeSetPredictorMethod(void *arkode_mem, int pred_method)
  ARKodeSetStabilityFn:
 
  Specifies the user-provided explicit time step stability 
- function to use.
+ function to use.  A NULL input function implies a reset to
+ the default function (empty).
 ---------------------------------------------------------------*/
 int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab,
 			 void *estab_data)
@@ -1471,7 +1692,8 @@ int ARKodeSetStabilityFn(void *arkode_mem, ARKExpStabFn EStab,
  ARKodeSetMaxErrTestFails:
 
  Specifies the maximum number of error test failures during one
- step try.
+ step try.  A non-positive input implies a reset to
+ the default value.
 ---------------------------------------------------------------*/
 int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef)
 {
@@ -1499,7 +1721,8 @@ int ARKodeSetMaxErrTestFails(void *arkode_mem, int maxnef)
  ARKodeSetMaxConvFails:
 
  Specifies the maximum number of nonlinear convergence failures 
- during one step try.
+ during one step try.  A non-positive input implies a reset to
+ the default value.
 ---------------------------------------------------------------*/
 int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf)
 {
@@ -1527,7 +1750,7 @@ int ARKodeSetMaxConvFails(void *arkode_mem, int maxncf)
  ARKodeSetMaxNonlinIters:
 
  Specifies the maximum number of nonlinear iterations during
- one solve.  Zero-valued input implies a reset to the 
+ one solve.  A non-positive input implies a reset to the 
  default value.
 ---------------------------------------------------------------*/
 int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
@@ -1556,7 +1779,7 @@ int ARKodeSetMaxNonlinIters(void *arkode_mem, int maxcor)
  ARKodeSetNonlinConvCoef:
 
  Specifies the coefficient in the nonlinear solver convergence
- test.  Zero-valued input implies a reset to the default value.
+ test.  A non-positive input implies a reset to the default value.
 ---------------------------------------------------------------*/
 int ARKodeSetNonlinConvCoef(void *arkode_mem, realtype nlscoef)
 {

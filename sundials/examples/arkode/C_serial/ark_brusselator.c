@@ -83,7 +83,7 @@ int main()
   N_Vector y = NULL;             /* empty vector for storing solution */
   void *arkode_mem = NULL;       /* empty ARKode memory structure */
 
-  /* set up the test problem according to the desired input */
+  /* set up the test problem according to the desired test */
   if (test == 1) {
     u0 = RCONST(3.9);
     v0 = RCONST(1.1);

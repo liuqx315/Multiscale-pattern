@@ -247,11 +247,10 @@ MAX_NSTEPS         :c:func:`ARKodeSetMaxNumSteps()`
 HNIL_WARNS         :c:func:`ARKodeSetMaxHnilWarns()`
 PREDICT_METHOD     :c:func:`ARKodeSetPredictorMethod()`
 MAX_ERRFAIL        :c:func:`ARKodeSetMaxErrTestFails()`
-MAX_NITERS         :c:func:`ARKodeSetMaxNonlinIters()`
 MAX_CONVFAIL       :c:func:`ARKodeSetMaxConvFails()`
-ADAPT_METHOD       :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_SMALL_NEF    :c:func:`ARKodeSetAdaptivityConstants()`
-LSETUP_MSBP        :c:func:`ARKodeSetLSetupConstants()`
+MAX_NITERS         :c:func:`ARKodeSetMaxNonlinIters()`
+ADAPT_SMALL_NEF    :c:func:`ARKodeSetSmallNumEFails()`
+LSETUP_MSBP        :c:func:`ARKodeSetMaxStepsBetweenLSet()`
 =================  =========================================
 
 `*` When setting ARK_TABLE_NUM, pass in IVAL as an array of
@@ -286,21 +285,17 @@ MAX_STEP      :c:func:`ARKodeSetMaxStep()`
 MIN_STEP      :c:func:`ARKodeSetMinStep()`
 STOP_TIME     :c:func:`ARKodeSetStopTime()`
 NLCONV_COEF   :c:func:`ARKodeSetNonlinConvCoef()`
-ADAPT_CFL     :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_SAFETY  :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_BIAS    :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_GROWTH  :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_LB      :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_UB      :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_K1      :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_K2      :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_K3      :c:func:`ARKodeSetAdaptivityMethod()`
-ADAPT_ETAMX1  :c:func:`ARKodeSetAdaptivityConstants()`
-ADAPT_ETAMXF  :c:func:`ARKodeSetAdaptivityConstants()`
-ADAPT_ETACF   :c:func:`ARKodeSetAdaptivityConstants()`
-NEWT_CRDOWN   :c:func:`ARKodeSetNewtonConstants()`
-NEWT_RDIV     :c:func:`ARKodeSetNewtonConstants()`
-LSETUP_DGMAX  :c:func:`ARKodeSetLSetupConstants()`
+ADAPT_CFL     :c:func:`ARKodeSetCFLFraction()`
+ADAPT_SAFETY  :c:func:`ARKodeSetSafetyFactor()`
+ADAPT_BIAS    :c:func:`ARKodeSetErrorBias()`
+ADAPT_GROWTH  :c:func:`ARKodeSetMaxGrowth()`
+ADAPT_ETAMX1  :c:func:`ARKodeSetMaxFirstGrowth()`
+ADAPT_BOUNDS  :c:func:`ARKodeSetFixedStepBounds()`
+ADAPT_ETAMXF  :c:func:`ARKodeSetMaxEFailGrowth()`
+ADAPT_ETACF   :c:func:`ARKodeSetMaxCFailGrowth()`
+NEWT_CRDOWN   :c:func:`ARKodeSetNewtonCRDown()`
+NEWT_RDIV     :c:func:`ARKodeSetNewtonRDiv()`
+LSETUP_DGMAX  :c:func:`ARKodeSetDeltaGammaMax()`
 ============  =========================================
 
 
@@ -375,6 +370,30 @@ complete information.
         coefficients 
       * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
    
+
+Additionally, a user may set the accuracy-based step size adaptivity
+strategy (and it's associated parameters) through a call to
+:f:func:`FARKSETADAPTIVITYMETHOD()`, as described below. 
+
+
+.. f:subroutine:: FARKSETADAPTIVITYMETHOD(IMETHOD, IDEFAULT, IPQ, PARAMS, IER)
+   
+   Specification routine to set the step size adaptivity strategy and
+   parameters within the :f:func:`FARKODE()` solver.  Interfaces with
+   the C routine :c:func:`ARKodeSetAdaptivityMethod()`.
+      
+   **Arguments:** 
+      * IMETHOD (``int``, input) -- choice of adaptivity method
+      * IDEFAULT (``int``, input) -- flag denoting whether to use
+	default parameters (1) or that customized parameters will be
+	supplied (1)
+      * IPQ (``int``, input) -- flag denoting whether to use
+	the embedding order of accuracy (0) or the method order of
+	accuracy (1) within step adaptivity algorithm.
+      * PARAMS (``realtype``, input) -- array of 3 parameters to be
+	used within the adaptivity strategy.
+      * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
+
 
 Lastly, the user may provide functions to aid/replace those within
 ARKode for handling adaptive error control and explicit stability.

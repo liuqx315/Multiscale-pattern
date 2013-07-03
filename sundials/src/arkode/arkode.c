@@ -583,21 +583,6 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     ark_mem->ark_lrw += lrw_diff;
     ark_mem->ark_liw += liw_diff;
   }
-  /*     y */
-  if (ark_mem->ark_y != NULL) {
-    if (resize == NULL) {
-      N_VDestroy(ark_mem->ark_y);
-      ark_mem->ark_y = N_VClone(y0);
-    } else {
-      if (resize(ark_mem->ark_y, y0, resize_data)) {
-	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-			"ARKodeResize", MSGARK_RESIZE_FAIL);
-	return(ARK_ILL_INPUT);
-      }
-    }
-    ark_mem->ark_lrw += lrw_diff;
-    ark_mem->ark_liw += liw_diff;
-  }
   /*     ycur */
   if (ark_mem->ark_ycur != NULL) {
     if (resize == NULL) {
@@ -752,15 +737,9 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     return(ARK_ILL_INPUT);
   }
 
-  /* Update the linear solver (retain routine names, but 
-     update their internal data structures).
-     NOTE: consider adding ark_lresize function (and implement 
-     for my solvers) that will grow the linear solver memory 
-     instead of deleting/reallocating as well. */
+  /* Re-initialize the linear solver (assumes that solver 
+     memory has already been resized appropriately) */
   if (!ark_mem->ark_explicit) {
-    if (ark_mem->ark_lfree != NULL) {
-      ark_mem->ark_lfree(ark_mem);
-    }
     if (ark_mem->ark_linit != NULL) {
       ier = ark_mem->ark_linit(ark_mem);
       if (ier != 0) {
@@ -4026,12 +4005,13 @@ static int arkAdapt(ARKodeMem ark_mem)
 ---------------------------------------------------------------*/
 static int arkAdaptPID(ARKodeMem ark_mem, realtype *hnew)
 {
-  realtype k1, k2, k3, e1, e2, e3, hcur, h_acc;
+  realtype k, k1, k2, k3, e1, e2, e3, hcur, h_acc;
 
   /* set usable time-step adaptivity parameters */
-  k1 = -ark_mem->ark_hadapt_k1 / ark_mem->ark_p;
-  k2 =  ark_mem->ark_hadapt_k2 / ark_mem->ark_p;
-  k3 = -ark_mem->ark_hadapt_k3 / ark_mem->ark_p;
+  k = (ark_mem->ark_hadapt_pq) ? ark_mem->ark_q : ark_mem->ark_p;
+  k1 = -ark_mem->ark_hadapt_k1 / k;
+  k2 =  ark_mem->ark_hadapt_k2 / k;
+  k3 = -ark_mem->ark_hadapt_k3 / k;
   e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
   e2 = MAX(ark_mem->ark_hadapt_ehist[1], TINY);
   e3 = MAX(ark_mem->ark_hadapt_ehist[2], TINY);
@@ -4050,11 +4030,12 @@ static int arkAdaptPID(ARKodeMem ark_mem, realtype *hnew)
 ---------------------------------------------------------------*/
 static int arkAdaptPI(ARKodeMem ark_mem, realtype *hnew)
 {
-  realtype k1, k2, e1, e2, hcur, h_acc;
+  realtype k, k1, k2, e1, e2, hcur, h_acc;
 
   /* set usable time-step adaptivity parameters */
-  k1 = -ark_mem->ark_hadapt_k1 / ark_mem->ark_p;
-  k2 =  ark_mem->ark_hadapt_k2 / ark_mem->ark_p;
+  k = (ark_mem->ark_hadapt_pq) ? ark_mem->ark_q : ark_mem->ark_p;
+  k1 = -ark_mem->ark_hadapt_k1 / k;
+  k2 =  ark_mem->ark_hadapt_k2 / k;
   e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
   e2 = MAX(ark_mem->ark_hadapt_ehist[1], TINY);
   hcur = ark_mem->ark_h;
@@ -4072,10 +4053,11 @@ static int arkAdaptPI(ARKodeMem ark_mem, realtype *hnew)
 ---------------------------------------------------------------*/
 static int arkAdaptI(ARKodeMem ark_mem, realtype *hnew)
 {
-  realtype k1, e1, hcur, h_acc;
+  realtype k, k1, e1, hcur, h_acc;
 
   /* set usable time-step adaptivity parameters */
-  k1 = -ark_mem->ark_hadapt_k1 / ark_mem->ark_p;
+  k = (ark_mem->ark_hadapt_pq) ? ark_mem->ark_q : ark_mem->ark_p;
+  k1 = -ark_mem->ark_hadapt_k1 / k;
   e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
   hcur = ark_mem->ark_h;
   
@@ -4093,12 +4075,13 @@ static int arkAdaptI(ARKodeMem ark_mem, realtype *hnew)
 ---------------------------------------------------------------*/
 static int arkAdaptExpGus(ARKodeMem ark_mem, realtype *hnew)
 {
-  realtype k1, k2, e1, e2, hcur, h_acc;
+  realtype k, k1, k2, e1, e2, hcur, h_acc;
+  k = (ark_mem->ark_hadapt_pq) ? ark_mem->ark_q : ark_mem->ark_p;
 
   /* modified method for first step */
   if (ark_mem->ark_nst < 2) {
 
-    k1 = -ONE / ark_mem->ark_p;
+    k1 = -ONE / k;
     hcur = ark_mem->ark_h;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     h_acc = hcur * RPowerR(e1,k1);
@@ -4106,8 +4089,8 @@ static int arkAdaptExpGus(ARKodeMem ark_mem, realtype *hnew)
   /* general estimate */
   } else {
 
-    k1 = -ark_mem->ark_hadapt_k1 / ark_mem->ark_p;
-    k2 = -ark_mem->ark_hadapt_k2 / ark_mem->ark_p;
+    k1 = -ark_mem->ark_hadapt_k1 / k;
+    k2 = -ark_mem->ark_hadapt_k2 / k;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
     hcur = ark_mem->ark_h;
@@ -4126,12 +4109,13 @@ static int arkAdaptExpGus(ARKodeMem ark_mem, realtype *hnew)
 ---------------------------------------------------------------*/
 static int arkAdaptImpGus(ARKodeMem ark_mem, realtype *hnew)
 {
-  realtype k1, k2, e1, e2, hcur, hrat, h_acc;
+  realtype k, k1, k2, e1, e2, hcur, hrat, h_acc;
+  k = (ark_mem->ark_hadapt_pq) ? ark_mem->ark_q : ark_mem->ark_p;
 
   /* modified method for first step */
   if (ark_mem->ark_nst < 2) {
 
-    k1 = -ONE / ark_mem->ark_p;
+    k1 = -ONE / k;
     hcur = ark_mem->ark_h;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     h_acc = hcur * RPowerR(e1,k1);
@@ -4139,12 +4123,10 @@ static int arkAdaptImpGus(ARKodeMem ark_mem, realtype *hnew)
   /* general estimate */
   } else {
 
-    k1 = -ark_mem->ark_hadapt_k1 / ark_mem->ark_p;
-    k2 = -ark_mem->ark_hadapt_k2 / ark_mem->ark_p;
+    k1 = -ark_mem->ark_hadapt_k1 / k;
+    k2 = -ark_mem->ark_hadapt_k2 / k;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
-    /* hcur = ark_mem->ark_h; */
-    /* hrat = hcur / ark_mem->ark_hold; */
     hcur = ark_mem->ark_hadapt_hhist[0];
     hrat = hcur / ark_mem->ark_hadapt_hhist[1];
     h_acc = hcur * hrat * RPowerR(e1,k1) * RPowerR(e2,k2);
@@ -4162,12 +4144,13 @@ static int arkAdaptImpGus(ARKodeMem ark_mem, realtype *hnew)
 ---------------------------------------------------------------*/
 static int arkAdaptImExGus(ARKodeMem ark_mem, realtype *hnew)
 {
-  realtype k1, k2, k3, e1, e2, hcur, hrat, h_acc;
+  realtype k, k1, k2, k3, e1, e2, hcur, hrat, h_acc;
+  k = (ark_mem->ark_hadapt_pq) ? ark_mem->ark_q : ark_mem->ark_p;
 
   /* modified method for first step */
   if (ark_mem->ark_nst < 2) {
 
-    k1 = -ONE / ark_mem->ark_p;
+    k1 = -ONE / k;
     hcur = ark_mem->ark_h;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     h_acc = hcur * RPowerR(e1,k1);
@@ -4175,13 +4158,11 @@ static int arkAdaptImExGus(ARKodeMem ark_mem, realtype *hnew)
   /* general estimate */
   } else {
 
-    k1 = -ark_mem->ark_hadapt_k1 / ark_mem->ark_p;
-    k2 = -ark_mem->ark_hadapt_k2 / ark_mem->ark_p;
-    k3 = -ark_mem->ark_hadapt_k3 / ark_mem->ark_p;
+    k1 = -ark_mem->ark_hadapt_k1 / k;
+    k2 = -ark_mem->ark_hadapt_k2 / k;
+    k3 = -ark_mem->ark_hadapt_k3 / k;
     e1 = MAX(ark_mem->ark_hadapt_ehist[0], TINY);
     e2 = e1 / MAX(ark_mem->ark_hadapt_ehist[1], TINY);
-    /* hcur = ark_mem->ark_h; */
-    /* hrat = hcur / ark_mem->ark_hold; */
     hcur = ark_mem->ark_hadapt_hhist[0];
     hrat = hcur / ark_mem->ark_hadapt_hhist[1];
     /* implicit estimate */
