@@ -53,11 +53,9 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
             N_Vector fy, void *user_data, N_Vector tmp);
 
 /* Private function to check function return values */
-static int adapt_mesh(N_Vector y, long int *Nnew, realtype *xnew, 
-		      UserData udata);
+realtype * adapt_mesh(N_Vector y, long int *Nnew, UserData udata);
 static int project(long int Nold, realtype *xold, N_Vector yold, 
-		   long int Nnew, realtype *xnew, N_Vector ynew, 
-		   void *user_data);
+		   long int Nnew, realtype *xnew, N_Vector ynew);
 static int check_flag(void *flagvalue, char *funcname, int opt);
 
 /* Main Program */
@@ -71,6 +69,7 @@ int main() {
   realtype atol = 1.e-10;      /* absolute tolerance */
   realtype refine  = 1.e-3;    /* adaptivity refinement tolerance */
   realtype coarsen = 1.e-6;    /* adaptivity coarsening tolerance */
+  realtype hscale = 1.0;       /* time step change factor on resizes */
   UserData udata = NULL;
   realtype *data;
   long int N = 21;             /* initial spatial mesh size */
@@ -80,7 +79,9 @@ int main() {
 
   /* general problem variables */
   int flag;                    /* reusable error-checking flag */
-  N_Vector y = NULL;           /* empty vector for storing solution */
+  N_Vector y  = NULL;          /* empty vector for storing solution */
+  N_Vector y2 = NULL;          /* empty vector for storing solution */
+  N_Vector yt = NULL;          /* empty vector for swapping */
   void *arkode_mem = NULL;     /* empty ARKode memory structure */
 
   /* allocate and fill initial udata structure */
@@ -90,7 +91,7 @@ int main() {
   udata->refine_tol = refine;
   udata->coarse_tol = coarsen;
   udata->x = malloc(N * sizeof(realtype));
-  for (i=0; i<N; i++)  (udata[x])[i] = dx*i;
+  for (i=0; i<N; i++)  udata->x[i] = dx*i;
 
   /* Initial problem output */
   printf("\n1D adaptive Heat PDE test problem:\n");
@@ -126,16 +127,19 @@ int main() {
   if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
   /* output mesh to disk */
-  FILE *FID=fopen("heat_mesh.txt","w");
-  for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
-  fclose(FID);
+  FILE *XFID=fopen("heat_mesh.txt","w");
+
+  /* output initial mesh to disk */
+  for (i=0; i<udata->N; i++)  fprintf(XFID," %.16e", udata->x[i]);
+  fprintf(XFID,"\n");
+
 
   /* Open output stream for results, access data array */
   FILE *UFID=fopen("heat1D.txt","w");
   data = N_VGetArrayPointer(y);
 
   /* output initial condition to disk */
-  for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+  for (i=0; i<udata->N; i++)  fprintf(UFID," %.16e", data[i]);
   fprintf(UFID,"\n");
 
   /* Main time-stepping loop: calls ARKode to perform the integration, then
@@ -145,13 +149,15 @@ int main() {
   realtype tout = T0+dTout;
   printf("        t      ||u||_rms\n");
   printf("   -------------------------\n");
-  printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/N));
+  printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/udata->N));
   int iout;
+  realtype *xnew=NULL;
+  long int Nnew;
   for (iout=0; iout<Nt; iout++) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         /* call integrator */
     if (check_flag(&flag, "ARKode", 1)) break;
-    printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/N));   /* print solution stats */
+    printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/udata->N));   /* print solution stats */
     if (flag >= 0) {                                            /* successful solve: update output time */
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
@@ -160,12 +166,52 @@ int main() {
       break;
     }
 
-    /* output results to disk */
-    for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
+    /* output results and current mesh to disk */
+    for (i=0; i<udata->N; i++)  fprintf(UFID," %.16e", data[i]);
     fprintf(UFID,"\n");
+    for (i=0; i<udata->N; i++)  fprintf(XFID," %.16e", udata->x[i]);
+    fprintf(XFID,"\n");
+
+    /* adapt the spatial mesh */
+    xnew = adapt_mesh(y, &Nnew, udata);
+    if (check_flag(xnew, "ark_adapt", 0)) break;
+
+    /* create N_Vector of new length */
+    y2 = N_VNew_Serial(Nnew);
+    if (check_flag((void *) y2, "N_VNew_Serial", 0)) break;
+    
+    /* project solution onto new mesh */
+    flag = project(udata->N, udata->x, y, Nnew, xnew, y2);
+    if (check_flag(&flag, "project", 1)) break;
+
+    /* delete old vector, old mesh */
+    N_VDestroy_Serial(y);
+    free(udata->x);
+    
+    /* swap x and xnew so that new mesh is stored in udata structure */
+    udata->x = xnew;
+    xnew = NULL;
+    udata->N = Nnew;   /* store size of new mesh */
+    
+    /* swap y and y2 so that y holds new solution */
+    yt = y;
+    y  = y2;
+    y2 = yt;
+
+    /* destroy and re-allocate linear solver memory */
+    flag = ARKPcg(arkode_mem, 0, udata->N);
+    if (check_flag(&flag, "ARKPcg", 1)) break;
+    flag = ARKSpilsSetJacTimesVecFn(arkode_mem, Jac);
+    if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) break;
+
+    /* call ARKodeResize to notify integrator of change in mesh */
+    flag = ARKodeResize(arkode_mem, y, hscale, tout, NULL, NULL);
+    if (check_flag(&flag, "ARKodeResize", 1)) break;
+
   }
   printf("   -------------------------\n");
   fclose(UFID);
+  fclose(XFID);
 
   /* Print some final statistics */
   long int nst, nst_a, nfe, nfi, nsetups, nli, nJv, nlcf, nni, ncfn, netf;
@@ -220,22 +266,33 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   UserData udata = (UserData) user_data;    /* access problem data */
   long int N  = udata->N;                   /* set variable shortcuts */
   realtype k  = udata->k;
-  realtype dx = udata->dx;
+  realtype *x = udata->x;
   realtype *Y = N_VGetArrayPointer(y);      /* access data arrays */
   if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
   realtype *Ydot = N_VGetArrayPointer(ydot);
   if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all equations */
-  realtype c1 = k/dx/dx;
-  realtype c2 = -RCONST(2.0)*k/dx/dx;
+  realtype dxL, dxR;
   long int i;
-  long int isource = N/2;
   Ydot[0] = 0.0;                 /* left boundary condition */
-  for (i=1; i<N-1; i++)
-    Ydot[i] = c1*Y[i-1] + c2*Y[i] + c1*Y[i+1];
+  for (i=1; i<N-1; i++) {        /* interior */
+    dxL = x[i]-x[i-1];
+    dxR = x[i+1]-x[i];
+    Ydot[i] = Y[i-1]*k*2.0/(dxL*(dxL+dxR)) 
+            - Y[i]*k*2.0/(dxL*dxR)
+            + Y[i+1]*k*2.0/(dxR*(dxL+dxR));
+  }
   Ydot[N-1] = 0.0;               /* right boundary condition */
-  Ydot[isource] += 1.0;          /* source term */
+
+  /* source term */
+  realtype xsource = 0.5;
+  for (i=0; i<N-1; i++) {
+    if ((x[i] <= xsource) && (xsource <= x[i+1])) {
+      Ydot[i] += 1.0;
+      break;
+    }
+  }
 
   return 0;                      /* Return with success */
 }
@@ -248,19 +305,23 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
   UserData udata = (UserData) user_data;     /* variable shortcuts */
   long int N  = udata->N;
   realtype k  = udata->k;
-  realtype dx = udata->dx;
+  realtype *x = udata->x;
   realtype *V = N_VGetArrayPointer(v);       /* access data arrays */
   if (check_flag((void *) V, "N_VGetArrayPointer", 0)) return 1;
   realtype *JV = N_VGetArrayPointer(Jv);
   if (check_flag((void *) JV, "N_VGetArrayPointer", 0)) return 1;
 
   /* iterate over domain, computing all Jacobian-vector products */
-  realtype c1 = k/dx/dx;
-  realtype c2 = -RCONST(2.0)*k/dx/dx;
+  realtype dxL, dxR;
   long int i;
   JV[0] = 0.0;
-  for (i=1; i<N-1; i++)
-    JV[i] = c1*V[i-1] + c2*V[i] + c1*V[i+1];
+  for (i=1; i<N-1; i++) {
+    dxL = x[i]-x[i-1];
+    dxR = x[i+1]-x[i];
+    JV[i] = V[i-1]*k*2.0/(dxL*(dxL+dxR)) 
+          - V[i]*k*2.0/(dxL*dxR)
+          + V[i+1]*k*2.0/(dxR*(dxL+dxR));
+  }
   JV[N-1] = 0.0;
 
   return 0;                                  /* Return with success */
@@ -277,16 +338,15 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
    after adaptivity:
       y [input] -- the current solution vector
       Nnew [output] -- the size of the new mesh
-      xnew [output] -- the new mesh vector (allocated within adapt_mesh)
-      user_data [input] -- the current system information */
-static int adapt_mesh(N_Vector y, long int *Nnew, 
-		      realtype *xnew, UserData udata)
+      udata [input] -- the current system information 
+   The return for this function is a pointer to the new mesh. */
+realtype * adapt_mesh(N_Vector y, long int *Nnew, UserData udata)
 {
   int i, j, k;
 
   /* Access current solution and mesh arrays */
   realtype *Y = N_VGetArrayPointer(y);
-  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
+  if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return NULL;
   realtype *xold = udata->x;
 
   /* create marking array */
@@ -318,47 +378,62 @@ static int adapt_mesh(N_Vector y, long int *Nnew,
   }
 
   /* allocate new mesh */
-  long int Num_refines = 0;
-  long int Num_coarsen = 0;
-  for (i=0; i<(udata->N-1); i++) {
-    if (marks[i] == 1)   num_refines++;
-    if (marks[i] == -1)  num_coarsen++;
+  long int num_refine = 0;
+  long int num_coarse = 0;
+  long int num_cpatch = 0;
+  for (i=0; i<udata->N-1; i++) {
+    if (marks[i] == 1)   num_refine++;
+    if (marks[i] == -1)  num_coarse++;
   }
-  long int N_new = udata->N + Num_refines - Num_coarsen;   /* FIX THIS!! */
+  for (i=0; i<udata->N-2; i++) 
+    if (marks[i] == -1 && marks[i+1] != -1)  num_cpatch++;
+  if (marks[udata->N-1] == -1)  num_cpatch++;
+  long int N_new = udata->N + num_refine - num_coarse + num_cpatch;
   *Nnew = N_new;            /* Store new array length */
-  xnew = malloc( (N_new) * sizeof(realtype));
-
+  realtype *xnew = malloc((N_new) * sizeof(realtype));
+  
 
   /* fill new mesh */
   xnew[0] = udata->x[0];    /* store endpoints */
   xnew[N_new] = udata->x[udata->N];
-  realtype dx;
   j=1;
   /* iterate over old intervals */
   for (i=0; i<udata->N-1; i++) {
     /* if mark is 0, reuse old interval */ 
-    if (mark[i] == 0) {
+    if (marks[i] == 0) {
       xnew[j++] = xold[i+1];
       continue;
     }
     
     /* if mark is 1, refine old interval */
-    if (mark[i] == 1) {
-      dx = xold[i+1]-xold[i];
-      xnew[j++] = xold[i]+0.5*dx;
+    if (marks[i] == 1) {
+      xnew[j++] = 0.5*(xold[i]+xold[i+1]);
       xnew[j++] = xold[i+1];
       continue;
     }
     
-    /* if we've made it here, then the interval is marked for coarsening */
-    /* find first following non-coarsened interval */
-    for (k=i; k<udata->N-1; k++)  if (mark[k+1] >= 0)  break;      /* FIX THIS!! */
-    /* set interval upper bound as lower end point of next non-coarsened interval */
-    xnew[j++] = xold[k];
+    /* If we've made it here, then the interval is marked for
+       coarsening.  Only set next entry in xnew if the following 
+       old subinterval is not marked to be coarsened */
+    if (i<udata->N-2)
+      if (marks[i+1] != -1)
+	xnew[j++] = xold[i+1];
+
+    /* no need to specially handle coarsening the last old 
+       subinterval, since its right end is already stored */ 
+  }
+
+  /* verify that new mesh is legal */
+  for (i=0; i<N_new-1; i++) {
+    if (xnew[i+1] <= xnew[i]) {
+      fprintf(stderr,"adapt_mesh error: illegal mesh created\n");
+      free(xnew);
+      return NULL;
+    }
   }
 
   free(marks);              /* Delete marking array */
-  return 0;                 /* Return with success */
+  return xnew;              /* Return with success */
 }
 
 
@@ -369,11 +444,9 @@ static int adapt_mesh(N_Vector y, long int *Nnew,
       Nnew [input] -- the size of the new mesh
       xnew [input] -- the new mesh
       ynew [output] -- the vector defined over the new mesh
-                       (allocated prior to calling project)
-      user_data [input] -- the current system information */
+                       (allocated prior to calling project) */
 static int project(long int Nold, realtype *xold, N_Vector yold, 
-		   long int Nnew, realtype *xnew, N_Vector ynew, 
-		   void *user_data)
+		   long int Nnew, realtype *xnew, N_Vector ynew)
 {
   /* Access data arrays */
   realtype *Yold = N_VGetArrayPointer(yold);    /* access data arrays */
