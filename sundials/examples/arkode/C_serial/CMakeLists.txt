@@ -19,6 +19,7 @@ SET(ARKODE_examples
   ark_brusselator
   ark_brusselator1D
   ark_heat1D
+  ark_heat1D_adapt
   ark_KrylovDemo_prec
   ark_robertson
   ark_robertson_root
@@ -35,6 +36,7 @@ SET(ARKODE_examples_BL
 SET(ARKODE_extras
   plot_brusselator1D.py
   plot_heat1D.py
+  plot_heat1D_adapt.py
   plot_sol.py
   plot_sol_log.py
   )
