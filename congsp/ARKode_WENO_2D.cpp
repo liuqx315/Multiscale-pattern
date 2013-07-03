@@ -142,25 +142,25 @@ int main(int argc, const char * argv[])
             data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
             data[idx(i,j,Nx,Ny,1)] =  1.206*0.5323;  /* qx */
             data[idx(i,j,Nx,Ny,2)] =  0.5323*0.0;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  0.3/((udata->gama-1.0)*0.5323);  /* E */
+            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
 	  }
 	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)>0.5){
             data[idx(i,j,Nx,Ny,0)] =  1.5;  /* rou */
             data[idx(i,j,Nx,Ny,1)] =  1.5*0.0;  /* qx */
             data[idx(i,j,Nx,Ny,2)] =  1.5*0.0;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  1.5/((udata->gama-1.0)*1.5);  /* E */
+            data[idx(i,j,Nx,Ny,3)] =  1.5*(1.5/((udata->gama-1.0)*1.5));  /* E */
 	  }
 	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)<0.5){
             data[idx(i,j,Nx,Ny,0)] =  0.138;  /* rou */
             data[idx(i,j,Nx,Ny,1)] =  1.206*0.138;  /* qx */
             data[idx(i,j,Nx,Ny,2)] =  1.206*0.138;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  0.029/((udata->gama-1.0)*0.138);  /* E */
+            data[idx(i,j,Nx,Ny,3)] =  0.138*(0.029/((udata->gama-1.0)*0.138)+0.5*(2*1.206*1.206));  /* E */
 	  }
 	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)<0.5){
             data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
             data[idx(i,j,Nx,Ny,1)] =  1.206*0.0;  /* qx */
             data[idx(i,j,Nx,Ny,2)] =  1.206*0.5323;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  0.3/((udata->gama-1.0)*0.5323);  /* E */
+            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
 	  }
         }   
     }
@@ -284,7 +284,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {   
     /* declare variables */
     long int NEQ, NEQS, i, j, k;
-    realtype egv1, egv2, egv3, egvmax;
+    realtype egv1, egv2, egv3, egvmaxtemp, egvmax, p;
     int flag;
     realtype Epsilon = 1.e-6;
 
@@ -425,13 +425,15 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     /* compute max absolue eigenvalue and fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
+	    /* get the pressure */
+	    p = Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)]-0.5*((Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])));
             /* get different eigenvalues */
-            egv1 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)]);
-            egv2 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])-(gama*Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
-            egv3 = Lx*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Ly*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])+(gama*Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+            egv1 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)]);
+            egv2 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])-sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+            egv3 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])+sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
            /* get max absolute eigenvalue */
-           egvmax = (fabs(egv1)>fabs(egv2))? fabs(egv1) : fabs(egv2);
-           egvmax = (egvmax>fabs(egv3))? egvmax : fabs(egv3);
+           egvmaxtemp = (fabs(egv1)>fabs(egv2))? fabs(egv1) : fabs(egv2);
+           egvmax = (egvmaxtemp>fabs(egv3))? egvmaxtemp : fabs(egv3);
             /* fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
             ypdata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
             yndata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
@@ -577,33 +579,33 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
       iup3 = i;
       if (i<3||i>Nx-4){      
 	if (i==0){
-	  idown1 = Nx;
-	  idown2 = Nx;
-	  idown3 = Nx;
+	  idown1 = 1;
+	  idown2 = 3;
+	  idown3 = 5;
 	}
     
 	if (i==1){ 
-	  idown2 = Nx+1;
-	  idown3 = Nx+1;
+	  idown2 = 2;
+	  idown3 = 4;
 	}
     
 	if (i==2){
-	  idown3 = Nx+2;
+	  idown3 = 3;
 	}
     
 	if (i==Nx-3){
-	  iup3 = -3;
+	  iup3 = Nx-4;
 	}
     
 	if (i==Nx-2){
-	  iup2 = -2;
-	  iup3 = -2;
+	  iup2 = Nx-3;
+	  iup3 = Nx-5;
 	}
     
 	if (i==Nx-1){
-	  iup1 = -1;
-	  iup2 = -1;
-	  iup3 = -1;
+	  iup1 = Nx-2;
+	  iup2 = Nx-4;
+	  iup3 = Nx-6;
 	}
       }
       else {
@@ -685,33 +687,33 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
       jup3 = j;
       if (j<3||j>Ny-4){
         if (j==0){
-            jdown1 = Ny;
-            jdown2 = Ny;
-            jdown3 = Ny;
+            jdown1 = 1;
+            jdown2 = 3;
+            jdown3 = 5;
         }
         
         if (j==1){
-            jdown2 = Ny+1;
-            jdown3 = Ny+1;
+            jdown2 = 2;
+            jdown3 = 4;
         }
         
         if (j==2){
-            jdown3 = Ny+2;
+            jdown3 = 3;
         }
         
         if (j==Ny-3){
-            jup3 = -3;
+            jup3 = Ny-4;
         }
         
         if (j==Ny-2){
-            jup2 = -2;
-            jup3 = -2;
+            jup2 = Ny-3;
+            jup3 = Ny-5;
         }
         
         if (j==Ny-1){
-            jup1 = -1;
-            jup2 = -1;
-            jup3 = -1;
+            jup1 = Ny-2;
+            jup2 = Ny-4;
+            jup3 = Ny-6;
         }
       }
       else
@@ -842,33 +844,33 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
 
       if(i<3||i>Nx-4){
         if (i==0){
-            idown1 = Nx;
-            idown2 = Nx;
-            idown3 = Nx;
+            idown1 = 1;
+            idown2 = 3;
+            idown3 = 5;
         }
         
         if (i==1){
-            idown2 = Nx+1;
-            idown3 = Nx+1;
+            idown2 = 2;
+            idown3 = 4;
         }
         
         if (i==2){
-            idown3 = Nx+2;
+            idown3 = 3;
         }
         
         if (i==Nx-3){
-            iup3 = -3;
+            iup3 = Nx-4;
         }
         
         if (i==Nx-2){
-            iup2 = -2;
-            iup3 = -2;
+            iup2 = Nx-3;
+            iup3 = Nx-5;
         }
         
         if (i==Nx-1){
-            iup1 = -1;
-            iup2 = -1;
-            iup3 = -1;
+            iup1 = Nx-2;
+            iup2 = Nx-4;
+            iup3 = Nx-6;
         }
       }
       else {
@@ -934,33 +936,33 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
       if (j<3||j>Ny-4){
       /* consider situations of different j */
         if (j==0){
-            jdown1 = Ny;
-            jdown2 = Ny;
-            jdown3 = Ny;
+            jdown1 = 1;
+            jdown2 = 3;
+            jdown3 = 5;
         }
         
         if (j==1){
-            jdown2 = Ny+1;
-            jdown3 = Ny+1;
+            jdown2 = 2;
+            jdown3 = 4;
         }
         
         if (j==2){
-            jdown3 = Ny+2;
+            jdown3 = 3;
         }
         
         if (j==Ny-3){
-            jup3 = -3;
+            jup3 = Ny-4;
         }
         
         if (j==Ny-2){
-            jup2 = -2;
-            jup3 = -2;
+            jup2 = Ny-3;
+            jup3 = Ny-5;
         }
         
         if (j==Ny-1){
-            jup1 = -1;
-            jup2 = -1;
-            jup3 = -1;
+            jup1 = Ny-2;
+            jup2 = Ny-4;
+            jup3 = Ny-6;
         }
       }
       else {
@@ -1043,10 +1045,10 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny, realtype g
     /* Compute the values of tao in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-            tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)];
+	  tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)]));
             tao_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 1)]*vy_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 2)] = data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
-            tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)];
+            tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)]));
         }
     }
 
@@ -1096,8 +1098,8 @@ static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny, realtype gam
     /* Compute the values of Cj in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-            Cj_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)]*data[idx(i, j, Nx, Ny, 1)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)];
-            Cj_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 2)]*data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*data[idx(i, j, Nx, Ny, 3)]*data[idx(i, j, Nx, Ny, 2)]+data[idx(i, j, Nx, Ny, 1)]*data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
+	  Cj_data[idx(i, j, Nx, Ny, 0)] = vx_data[idx_v(i,j,Nx)]*(data[idx(i, j, Nx, Ny, 3)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)])));
+            Cj_data[idx(i, j, Nx, Ny, 1)] = vy_data[idx_v(i,j,Nx)]*(data[idx(i, j, Nx, Ny, 3)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)])));
         }
     }
 
