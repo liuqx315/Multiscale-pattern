@@ -400,16 +400,65 @@ int main() {
   flag = ARKodeSetDefaults(arkode_mem);
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
-  /* adaptivity method */
-  realtype params[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-  flag = ARKodeSetAdaptivityMethod(arkode_mem, 2, params);
+  /* adaptivity parameters */
+  flag = ARKodeSetCFLFraction(arkode_mem, 0.2);
+  if (check_flag(&flag, "ARKodeSetCFLFraction", 1)) return 1;
+  if (ark_mem->ark_hadapt_cfl != 0.2) {
+    printf("Error in ARKodeSetCFLFraction: did not set cfl fraction\n");
+    return 1;
+  }
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetSafetyFactor(arkode_mem, 0.25);
+  if (check_flag(&flag, "ARKodeSetSafetyFactor", 1)) return 1;
+  if (ark_mem->ark_hadapt_safety != 0.25) {
+    printf("Error in ARKodeSetSafetyFactor: did not set correctly\n");
+    return 1;
+  }
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetErrorBias(arkode_mem, 12.5);
+  if (check_flag(&flag, "ARKodeSetErrorBias", 1)) return 1;
+  if (ark_mem->ark_hadapt_bias != 12.5) {
+    printf("Error in ARKodeSetErrorBias: did not set correctly\n");
+    return 1;
+  }
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetMaxGrowth(arkode_mem, 20.5);
+  if (check_flag(&flag, "ARKodeSetMaxGrowth", 1)) return 1;
+  if (ark_mem->ark_hadapt_growth != 20.5) {
+    printf("Error in ARKodeSetMaxGrowth: did not set correctly\n");
+    return 1;
+  }
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetFixedStepBounds(arkode_mem, 0.5, 2.5);
+  if (check_flag(&flag, "ARKodeSetFixedStepBounds", 1)) return 1;
+  if (ark_mem->ark_hadapt_lbound != 0.5) {
+    printf("Error in ARKodeSetFixedStepBounds: did not set lb correctly\n");
+    return 1;
+  }
+  if (ark_mem->ark_hadapt_ubound != 2.5) {
+    printf("Error in ARKodeSetFixedStepBounds: did not set ub correctly\n");
+    return 1;
+  }
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  /* adaptivity method itself */
+  flag = ARKodeSetAdaptivityMethod(arkode_mem, 2, 1, 1, NULL);
   if (check_flag(&flag, "ARKodeSetAdaptivityMethod", 1)) return 1;
   if (ark_mem->ark_hadapt_imethod != 2) {
     printf("Error in ARKodeSetAdaptivityMethod: did not set method\n");
     return 1;
   }
-  if (ark_mem->ark_hadapt_lbound != 0.5) {
-    printf("Error in ARKodeSetAdaptivityMethod: did not set params\n");
+  if (!ark_mem->ark_hadapt_pq) {
+    printf("Error in ARKodeSetAdaptivityMethod: did not set pq flag\n");
     return 1;
   }
   flag = ARKodeSetDefaults(arkode_mem);
@@ -430,54 +479,75 @@ int main() {
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
   /* adaptivity constants */
-  realtype etamx1=0.1, etamxf=0.2, etacf=0.3;
-  flag = ARKodeSetAdaptivityConstants(arkode_mem, etamx1, etamxf, etacf, 4);
-  if (check_flag(&flag, "ARKodeSetAdaptivityConstants", 1)) return 1;
-  if (ark_mem->ark_etamx1 != etamx1) {
-    printf("Error in ARKodeSetAdaptivityConstants: did not set etamx1\n");
+  flag = ARKodeSetMaxFirstGrowth(arkode_mem, 15.0);
+  if (check_flag(&flag, "ARKodeSetMaxFirstGrowth", 1)) return 1;
+  if (ark_mem->ark_etamx1 != 15.0) {
+    printf("Error in ARKodeSetMaxFirstGrowth: did not set etamx1\n");
     return 1;
   }
-  if (ark_mem->ark_etamxf != etamxf) {
-    printf("Error in ARKodeSetAdaptivityConstants: did not set etamxf\n");
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetMaxEFailGrowth(arkode_mem, 0.2);
+  if (check_flag(&flag, "ARKodeSetMaxEFailGrowth", 1)) return 1;
+  if (ark_mem->ark_etamxf != 0.2) {
+    printf("Error in ARKodeSetMaxEFailGrowth: did not set etamxf\n");
     return 1;
   }
-  if (ark_mem->ark_etacf != etacf) {
-    printf("Error in ARKodeSetAdaptivityConstants: did not set etacf\n");
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetMaxCFailGrowth(arkode_mem, 0.3);
+  if (check_flag(&flag, "ARKodeSetMaxCFailGrowth", 1)) return 1;
+  if (ark_mem->ark_etacf != 0.3) {
+    printf("Error in ARKodeSetMaxCFailGrowth: did not set etacf\n");
     return 1;
   }
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetSmallNumEFails(arkode_mem, 4);
+  if (check_flag(&flag, "ARKodeSetSmallNumEFails", 1)) return 1;
   if (ark_mem->ark_small_nef != 4) {
-    printf("Error in ARKodeSetAdaptivityConstants: did not set small_nef\n");
+    printf("Error in ARKodeSetSmallNumEFails: did not set small_nef\n");
     return 1;
   }
   flag = ARKodeSetDefaults(arkode_mem);
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
   /* Newton constants */
-  realtype crdown=0.1, rdiv=0.2;
-  flag = ARKodeSetNewtonConstants(arkode_mem, crdown, rdiv);
-  if (check_flag(&flag, "ARKodeSetNewtonConstants", 1)) return 1;
-  if (ark_mem->ark_crdown != crdown) {
-    printf("Error in ARKodeSetNewtonConstants: did not set crdown\n");
+  flag = ARKodeSetNewtonCRDown(arkode_mem, 0.1);
+  if (check_flag(&flag, "ARKodeSetNewtonCRDown", 1)) return 1;
+  if (ark_mem->ark_crdown != 0.1) {
+    printf("Error in ARKodeSetNewtonCRDown: did not set crdown\n");
     return 1;
   }
-  if (ark_mem->ark_rdiv != rdiv) {
-    printf("Error in ARKodeSetNewtonConstants: did not set rdiv\n");
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetNewtonRDiv(arkode_mem, 0.2);
+  if (check_flag(&flag, "ARKodeSetNewtonRDiv", 1)) return 1;
+  if (ark_mem->ark_rdiv != 0.2) {
+    printf("Error in ARKodeSetNewtonRDiv: did not set rdiv\n");
     return 1;
   }
   flag = ARKodeSetDefaults(arkode_mem);
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
   /* LSetup constants */
-  realtype dgmax=0.1;
-  int msbp=13;
-  flag = ARKodeSetLSetupConstants(arkode_mem, dgmax, msbp);
-  if (check_flag(&flag, "ARKodeSetLSetupConstants", 1)) return 1;
-  if (ark_mem->ark_dgmax != dgmax) {
-    printf("Error in ARKodeSetLSetupConstants: did not set dgmax\n");
+  flag = ARKodeSetDeltaGammaMax(arkode_mem, 0.1);
+  if (check_flag(&flag, "ARKodeSetDeltaGammaMax", 1)) return 1;
+  if (ark_mem->ark_dgmax != 0.1) {
+    printf("Error in ARKodeSetDeltaGammaMax: did not set dgmax\n");
     return 1;
   }
-  if (ark_mem->ark_msbp != msbp) {
-    printf("Error in ARKodeSetLSetupConstants: did not set msbp\n");
+  flag = ARKodeSetDefaults(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  flag = ARKodeSetMaxStepsBetweenLSet(arkode_mem, 13);
+  if (check_flag(&flag, "ARKodeSetMaxStepsBetweenLSet", 1)) return 1;
+  if (ark_mem->ark_msbp != 13) {
+    printf("Error in ARKodeSetMaxStepsBetweenLSet: did not set msbp\n");
     return 1;
   }
   flag = ARKodeSetDefaults(arkode_mem);

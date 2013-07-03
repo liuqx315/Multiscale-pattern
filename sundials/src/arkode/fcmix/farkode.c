@@ -301,15 +301,10 @@ void FARK_SETIIN(char key_name[], long int *ival, int *ier)
     *ier = ARKodeSetMaxConvFails(ARK_arkodemem, (int) *ival);
   else if (!strncmp(key_name, "MAX_NITERS", 10)) 
     *ier = ARKodeSetMaxNonlinIters(ARK_arkodemem, (int) *ival);
-  else if (!strncmp(key_name, "ADAPT_METHOD", 12)) {
-    double params[9] = {-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0};
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, (int) *ival, params);
-  } 
   else if (!strncmp(key_name, "ADAPT_SMALL_NEF", 15))
-    *ier = ARKodeSetAdaptivityConstants(ARK_arkodemem, -1.0, 
-					-1.0, -1.0, (int) *ival);
+    *ier = ARKodeSetSmallNumEFails(ARK_arkodemem, (int) *ival);
   else if (!strncmp(key_name, "LSETUP_MSBP", 11))
-    *ier = ARKodeSetLSetupConstants(ARK_arkodemem, -1.0, (int) *ival);
+    *ier = ARKodeSetMaxStepsBetweenLSet(ARK_arkodemem, (int) *ival);
   else {
     *ier = -99;
     printf("FARKSETIIN: Unrecognized key.\n\n");
@@ -323,7 +318,6 @@ void FARK_SETIIN(char key_name[], long int *ival, int *ier)
    arguments; see farkode.h for further details */
 void FARK_SETRIN(char key_name[], realtype *rval, int *ier)
 {
-  double params[9] = {-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0};
   if (!strncmp(key_name, "INIT_STEP", 9)) 
     *ier = ARKodeSetInitStep(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "MAX_STEP", 8)) 
@@ -334,61 +328,45 @@ void FARK_SETRIN(char key_name[], realtype *rval, int *ier)
     *ier = ARKodeSetStopTime(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "NLCONV_COEF", 11)) 
     *ier = ARKodeSetNonlinConvCoef(ARK_arkodemem, *rval);
-  else if (!strncmp(key_name, "ADAPT_CFL", 9)) {
-    params[0] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_SAFETY", 12)) {
-    params[1] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_BIAS", 10)) {
-    params[2] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_GROWTH", 12)) {
-    params[3] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_LB", 8)) {
-    params[4] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_UB", 8)) {
-    params[5] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_K1", 8)) {
-    params[6] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_K2", 8)) {
-    params[7] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
-  else if (!strncmp(key_name, "ADAPT_K3", 8)) {
-    params[8] = *rval;
-    *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, -1, params);
-  }
+  else if (!strncmp(key_name, "ADAPT_CFL", 9))
+    *ier = ARKodeSetCFLFraction(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "ADAPT_SAFETY", 12)) 
+    *ier = ARKodeSetSafetyFactor(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "ADAPT_BIAS", 10))
+    *ier = ARKodeSetErrorBias(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "ADAPT_GROWTH", 12)) 
+    *ier = ARKodeSetMaxGrowth(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "ADAPT_BOUNDS", 12))
+    *ier = ARKodeSetFixedStepBounds(ARK_arkodemem, rval[0], rval[1]);
   else if (!strncmp(key_name, "ADAPT_ETAMX1", 12))
-    *ier = ARKodeSetAdaptivityConstants(ARK_arkodemem, *rval, 
-					-1.0, -1.0, -1);
+    *ier = ARKodeSetMaxFirstGrowth(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "ADAPT_ETAMXF", 12))
-    *ier = ARKodeSetAdaptivityConstants(ARK_arkodemem, -1.0,
-					*rval, -1.0, -1);
+    *ier = ARKodeSetMaxEFailGrowth(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "ADAPT_ETACF", 11))
-    *ier = ARKodeSetAdaptivityConstants(ARK_arkodemem, -1.0,
-					-1.0, *rval, -1);
+    *ier = ARKodeSetMaxCFailGrowth(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "NEWTON_CRDOWN", 11))
-    *ier = ARKodeSetNewtonConstants(ARK_arkodemem, *rval, -1.0);
+    *ier = ARKodeSetNewtonCRDown(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "NEWTON_RDIV", 9))
-    *ier = ARKodeSetNewtonConstants(ARK_arkodemem, -1.0, *rval);
+    *ier = ARKodeSetNewtonRDiv(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "LSETUP_DGMAX", 12))
-    *ier = ARKodeSetLSetupConstants(ARK_arkodemem, *rval, -1);
+    *ier = ARKodeSetDeltaGammaMax(ARK_arkodemem, *rval);
   else {
     *ier = -99;
     printf("FARKSETRIN: Unrecognized key: %s\n\n",key_name);
   }
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKodeSetAdaptivityMethod; 
+   see farkode.h for further details */
+void FARK_SETADAPTMETHOD(int *imethod, int *idefault, int *ipq, 
+			 realtype *params, int *ier)
+{
+
+  *ier = ARKodeSetAdaptivityMethod(ARK_arkodemem, *imethod, 
+				   *idefault, *ipq, params);
   return;
 }
 
