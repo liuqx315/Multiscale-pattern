@@ -717,11 +717,21 @@ Initial step size                                :c:func:`ARKodeSetInitStep()`  
 Minimum absolute step size                       :c:func:`ARKodeSetMinStep()`              0.0
 Maximum absolute step size                       :c:func:`ARKodeSetMaxStep()`              :math:`\infty`
 Value of :math:`t_{stop}`                        :c:func:`ARKodeSetStopTime()`             :math:`\infty`
+Explicit stability safety factor                 :c:func:`ARKodeSetCFLFraction()`          0.5
+Time step safety factor                          :c:func:`ARKodeSetSafetyFactor()`         0.96
+Time step error bias factor                      :c:func:`ARKodeSetErrorBias()`            1.5
+Maximum step growth factor                       :c:func:`ARKodeSetMaxGrowth()`            20.0
+Maximum first step growth factor                 :c:func:`ARKodeSetMaxFirstGrowth()`       10000.0
+Maximum step growth factor on error test fail    :c:func:`ARKodeSetMaxEFailGrowth()`       0.3
+Error fails before MaxEFailGrowth takes effect   :c:func:`ARKodeSetSmallNumEFails()`       2
+Maximum step growth factor on convergence fail   :c:func:`ARKodeSetMaxCFailGrowth()`       0.25
+Bounds determining no change in step size        :c:func:`ARKodeSetFixedStepBounds()`      1.0  1.5
 Time step adaptivity method                      :c:func:`ARKodeSetAdaptivityMethod()`     0
 Time step adaptivity function                    :c:func:`ARKodeSetAdaptivityFn()`         internal
-Time step adaptivity constants                   :c:func:`ARKodeSetAdaptivityConstants()`  internal
-Newton convergence constants                     :c:func:`ARKodeSetNewtonConstants()`      internal
-Linear solver setup decision constants           :c:func:`ARKodeSetLSetupConstants()`      internal
+Newton convergence rate constant                 :c:func:`ARKodeSetNewtonCRDown()`         0.3
+Newton residual divergence ratio                 :c:func:`ARKodeSetNewtonRDiv()`           2.3
+Max change in step signaling new :math:`J`       :c:func:`ARKodeSetDeltaGammaMax()`        0.2
+Max steps between calls to new :math:`J`         :c:func:`ARKodeSetMaxStepsBetweenLSet()`  20
 Implicit predictor method                        :c:func:`ARKodeSetPredictorMethod()`      3
 Explicit stability function                      :c:func:`ARKodeSetStabilityFn()`          internal
 Maximum no. of error test failures               :c:func:`ARKodeSetMaxErrTestFails()`      7
@@ -1294,10 +1304,105 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
 
 
 
-.. c:function:: int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod, realtype *adapt_params)
+.. c:function:: int ARKodeSetCFLFraction(void *arkode_mem, realtype cfl_frac)
 
-   Specifies the method (and associated parameters) used
-   for time step adaptivity.
+   Specifies the fraction of the estimated explicitly stable
+   step to use.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `cfl_frac` -- maximum allowed fraction of explicitly stable step (default is 0.5)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any non-positive parameter will imply a reset to the default
+   value.  
+   
+
+      
+.. c:function:: int ARKodeSetSafetyFactor(void *arkode_mem, realtype safety)
+
+   Specifies the safety factor to be applied to the accuracy-based
+   estimated step.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `safety` -- safety factor applied to accuracy-based time step (default is 0.96)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any non-positive parameter will imply a reset to the default
+   value.  
+   
+
+      
+.. c:function:: int ARKodeSetErrorBias(void *arkode_mem, realtype bias)
+
+   Specifies the bias to be applied to the error estimates within
+   accuracy-based adaptivity strategies.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `bias` -- bias applied to error in accuracy-based time
+        step estimation (default is 1.5)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any value below 1.0 will imply a reset to the default
+   value.  
+
+
+      
+.. c:function:: int ARKodeSetMaxGrowth(void *arkode_mem, realtype mx_growth)
+
+   Specifies the maximum growth of the step size between consecutive
+   steps in the integration process.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `growth` -- maximum allowed growth factor between consecutive time steps (default is 20.0)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any value :math:`\le 1.0` will imply a reset to the default
+   value.  
+
+
+      
+.. c:function:: int ARKodeSetFixedStepBounds(void *arkode_mem, realtype lb, realtype ub)
+
+   Specifies the step growth interval in which the step size will
+   remain unchanged.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `lb` -- lower bound on window to leave step size fixed (default is 1.0)
+      * `ub` -- upper bound on window to leave step size fixed (default is 1.5)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any interval *not* containing 1.0 will imply a reset to the default value.  
+   
+
+      
+.. c:function:: int ARKodeSetAdaptivityMethod(void *arkode_mem, int imethod, int idefault, int pq, realtype *adapt_params)
+
+   Specifies the method (and associated parameters) used for time step adaptivity.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
@@ -1305,29 +1410,25 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
         (0 :math:`\le` `imethod` :math:`\le` 5): 
         0 is PID, 1 is PI, 2 is I, 3 is explicit Gustafsson, 4 is
         implicit Gustafsson, and 5 is the ImEx Gustafsson.
-      * `adapt_params[0]` -- (*cfl*) fraction of the estimated explicitly stable
-        step to use (default is 0.5)
-      * `adapt_params[1]` -- (*safety*) safety factor applied to accuracy-based time
-        step (default is 0.96)
-      * `adapt_params[2]` -- (*bias*) bias applied to error in accuracy-based time
-        step estimation (default is 1.5)
-      * `adapt_params[3]` -- (*growth*) maximum allowed growth factor between
-        consecutive time steps (default is 20.0)
-      * `adapt_params[4]` -- (*lb*) lower bound on window to leave step size fixed (default is 1.0)
-      * `adapt_params[5]` -- (*ub*) upper bound on window to leave step size fixed (default is 1.5)
-      * `adapt_params[6]` -- :math:`k_1` parameter within accuracy-based adaptivity algorithms.
-      * `adapt_params[7]` -- :math:`k_2` parameter within accuracy-based adaptivity algorithms.
-      * `adapt_params[8]` -- :math:`k_3` parameter within accuracy-based adaptivity algorithms.
+      * `idefault` -- flag denoting whether to use default adaptivity
+	parameters (1), or that they will be supplied in the
+	*adapt_params* argument (0).
+      * `pq` -- flag denoting whether to use the embedding order of
+	accuracy `p` (0) or the method order of accuracy `q` (1)
+	within the adaptivity algorithm.
+      * `adapt_params[0]` -- :math:`k_1` parameter within accuracy-based adaptivity algorithms.
+      * `adapt_params[1]` -- :math:`k_2` parameter within accuracy-based adaptivity algorithms.
+      * `adapt_params[2]` -- :math:`k_3` parameter within accuracy-based adaptivity algorithms.
    
    **Return value:** 
       * ARK_SUCCESS if successful
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** Any zero-valued parameter will imply a reset to the default
-   value.  
-   
-   Any negative parameter will be left unchanged from the previous value.
+   **Notes:** If custom parameters are supplied, they will be checked
+   for validity against published stability intervals.  If other
+   parameter values are desired, it is recommended to use the
+   following function, :c:func:`ARKodeSetAdaptivityFn()`.
 
 
       
@@ -1352,17 +1453,51 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
 
 
       
-.. c:function:: int ARKodeSetAdaptivityConstants(void *arkode_mem, realtype etamx1, realtype etamxf, realtype etacf, int small_nef)
+.. c:function:: int ARKodeSetMaxFirstGrowth(void *arkode_mem, realtype etamx1)
 
-   Specifies additional parameters used in time step adaptivity.
+   Specifies the maximum allowed step size change following the very
+   first integration step.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
       * `etamx1` -- maximum allowed growth factor after the first time
         step (default is 10000.0)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any value :math:`\le 1.0` will imply a reset to the default value.
+
+
+
+.. c:function:: int ARKodeSetMaxEFailGrowth(void *arkode_mem, realtype etamxf)
+
+   Specifies the maximum step size growth factor upon multiple successive
+   accuracy-based error failures in the solver.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
       * `etamxf` -- time step reduction factor on multiple error fails (default is 0.3)
-      * `etacf` -- time step reduction factor on a nonlinear solver
-        convergence failure (default is 0.25)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any value outside the interval (0,1] will imply a reset to the default value.
+
+
+
+.. c:function:: int ARKodeSetSmallNumEFails(void *arkode_mem, realtype etamx1, realtype etamxf, realtype etacf, int small_nef)
+
+   Specifies the threshold for "multiple" successive error failures
+   before the `etamxf` parameter from
+   :c:func:`ARKodeSetMaxEFailGrowth()` is applied.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
       * `small_nef` -- bound to determine `multiple` for `etamxf` (default is 2)
    
    **Return value:** 
@@ -1370,45 +1505,87 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** This function is designed only for advanced ARKode
-   usage.
-
-   Any zero-valued parameter will imply a reset to the default value.
-
-   Any negative parameter will be left unchanged from the previous state.
+   **Notes:** Any non-positive parameter will imply a reset to the default value.
 
 
+.. c:function:: int ARKodeSetMaxCFailGrowth(void *arkode_mem, realtype etacf)
 
-.. c:function:: int ARKodeSetNewtonConstants(void *arkode_mem, realtype crdown, realtype rdiv)
-
-   Specifies nonlinear convergence constants.
+   Specifies the maximum step size growth factor upon a convergence
+   failure on a stage solve within a step.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
-      * `crdown` -- nonlinear convergence rate estimation constant (default is 0.3)
-      * `rdiv` -- Tolerance on Newton correction size ratio to declare divergence (default is 2.3)
+      * `etacf` -- time step reduction factor on a nonlinear solver
+        convergence failure (default is 0.25)
    
    **Return value:** 
       * ARK_SUCCESS if successful
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** This function is designed only for advanced ARKode usage.
-
-   Any zero-valued parameter will imply a reset to the default value.
-
-   Any negative parameter will be left unchanged from the previous state.
+   **Notes:** Any value outside the interval (0,1] will imply a reset to the default value.
 
 
 
-.. c:function:: int ARKodeSetLSetupConstants(void *arkode_mem, realtype dgmax, int msbp)
+.. c:function:: int ARKodeSetNewtonCRDown(void *arkode_mem, realtype crdown)
 
-   Specifies linear setup decision constants.
+   Specifies the constant used in estimating the nonlinear convergence rate.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `crdown` -- nonlinear convergence rate estimation constant (default is 0.3)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any non-positive parameter will imply a reset to the default value.
+
+
+
+.. c:function:: int ARKodeSetNewtonRDiv(void *arkode_mem, realtype rdiv)
+
+   Specifies the Newton correction threshold beyond which the iteration will be
+   declared divergent.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `rdiv` -- tolerance on Newton correction size ratio to declare divergence (default is 2.3)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Any non-positive parameter will imply a reset to the default value.
+
+
+.. c:function:: int ARKodeSetDeltaGammaMax(void *arkode_mem, realtype dgmax)
+
+   Specifies a scaled step size ratio tolerance beyond which the
+   linear solver setup routine will be signaled.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
       * `dgmax` -- tolerance on step size ratio change before calling
         linear solver setup routine (default is 0.2)
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:**  Any non-positive parameter will imply a reset to the default value.
+
+
+.. c:function:: int ARKodeSetMaxStepsBetweenLSet(void *arkode_mem, int msbp)
+
+   Specifies the maximum number of steps allowed between calls to the
+   linear solver setup routine.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
       * `msbp` -- maximum no. of time steps between linear solver setup calls (default is 20)
    
    **Return value:** 
@@ -1416,11 +1593,7 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** This function is designed only for advanced ARKode usage.
-
-   Any zero-valued parameter will imply a reset to the default value.
-
-   Any negative parameter will be left unchanged from the previous state.
+   **Notes:**  Any non-positive parameter will imply a reset to the default value.
 
 
 

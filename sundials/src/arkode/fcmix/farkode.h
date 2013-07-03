@@ -34,6 +34,7 @@
    FARKREINIT                 ARKReInit
    FARKSETIIN                 ARKodeSet* (integer arguments)
    FARKSETRIN                 ARKodeSet* (real arguments)
+   FARKSETADAPTIVITYMETHOD    ARKodeSetAdaptivityMethod
    FARKEWTSET                 ARKodeWFtolerances
    FARKADAPTSET               ARKodeSetAdaptivityFn
    FARKEXPSTABSET             ARKodeSetStabilityFn
@@ -483,9 +484,9 @@
      to set the integer value VAL to the optional input specified by the 
      quoted character string KEY. KEY must be one of the following: 
      ORDER, DENSE_ORDER, LINEAR, NONLINEAR, EXPLICIT, IMPLICIT, IMEX, 
-     IRK_TABLE_NUM, ERK_TABLE_NUM, MAX_NSTEPS, HNIL_WARNS, PREDICT_METHOD, 
-     ARK_TABLE_NUM (pass in an int array of length 2, implicit method first), 
-     MAX_ERRFAIL, MAX_NITERS or MAX_CONVFAIL.
+     IRK_TABLE_NUM, ERK_TABLE_NUM, ARK_TABLE_NUM (pass in an int array of 
+     length 2, implicit method first), MAX_NSTEPS, HNIL_WARNS, PREDICT_METHOD, 
+     MAX_ERRFAIL, MAX_CONVFAIL, MAX_NITERS, ADAPT_SMALL_NEF or LSETUP_MSBP.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
      To set various real optional inputs, make the following call:
@@ -494,7 +495,25 @@
 
      to set the realtype value VAL to the optional input specified by the 
      quoted character string KEY.  KEY must one of the following: 
-     INIT_STEP, MAX_STEP, MIN_STEP, STOP_TIME or NLCONV_COEF.
+     INIT_STEP, MAX_STEP, MIN_STEP, STOP_TIME, NLCONV_COEF, ADAPT_CFL, 
+     ADAPT_SAFETY, ADAPT_BIAS, ADAPT_GROWTH, ADAPT_BOUNDS (pass in a 
+     realtype array of length 2), ADAPT_ETAMX1, ADAPT_ETAMXF, ADAPT_ETACF, 
+     NEWTON_CRDOWN, NEWTON_RDIV, or LSETUP_DGMAX.
+
+     To set the time step adaptivity method (and its associated parameters), 
+     make the following call: 
+
+       CALL FARKSETADAPTIVITYMETHOD(IMETHOD, IDEFAULT, IPQ, PARAMS, IER)
+       
+     The arguments are:
+       IMETHOD  = the adaptivity method to use
+       IDEFAULT = flag to use (1) or not (0) the default adaptivity parameters
+       IPQ      = flag to use the embedding order p (0) or the method order 
+                  q (1) for error-based step adaptivity
+       PARAMS   = if IDEFAULT=0, this should be a realtype array of length 2 
+                  containing the custom adaptivity parameters to use in the 
+		  method.
+       IMETHOD  = integer error flag (0 = success, 1 = failure)
 
      To reset all optional inputs to their default values, make the following 
      call:
@@ -1064,6 +1083,7 @@ extern "C" {
 #define FARK_ADAPTSET            SUNDIALS_F77_FUNC(farkadaptset,            FARKADAPTSET)
 #define FARK_EXPSTAB             SUNDIALS_F77_FUNC(farkexpstab,             FARKEXPSTAB)
 #define FARK_EXPSTABSET          SUNDIALS_F77_FUNC(farkexpstabset,          FARKEXPSTABSET)
+#define FARK_SETADAPTMETHOD      SUNDIALS_F77_FUNC(farksetadaptivitymethod, FARKSETADAPTIVITYMETHOD)
 
 #else
 
@@ -1112,6 +1132,7 @@ extern "C" {
 #define FARK_ADAPTSET            farkadaptset_
 #define FARK_EXPSTAB             farkexpstab_
 #define FARK_EXPSTABSET          farkexpstabset_
+#define FARK_SETADAPTMETHOD      farksetadaptivitymethod_
 
 #endif
 
@@ -1181,6 +1202,9 @@ extern "C" {
   void FARK_FREE(void);
 
   void FARK_WRITEPARAMETERS(int *ier);
+
+  void FARK_SETADAPTMETHOD(int *imethod, int *idefault, int *ipq, 
+			   realtype *params, int *ier);
 
   /* Prototypes: Functions Called by the ARKODE Solver */
   int FARKfi(realtype t, N_Vector y, N_Vector ydot, void *user_data);
