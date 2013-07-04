@@ -220,7 +220,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   for (i=1; i<N-1; i++)
     Ydot[i] = c1*Y[i-1] + c2*Y[i] + c1*Y[i+1];
   Ydot[N-1] = 0.0;               /* right boundary condition */
-  Ydot[isource] += 1.0;          /* source term */
+  Ydot[isource] += 0.01/dx;      /* source term */
 
   return 0;                      /* Return with success */
 }
