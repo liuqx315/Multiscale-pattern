@@ -44,7 +44,6 @@ typedef struct {
   realtype *x;          /* current mesh */
   realtype k;           /* diffusion coefficient */
   realtype refine_tol;  /* adaptivity tolerance */
-  realtype coarse_tol;  /* adaptivity tolerance */
 } *UserData;
 
 /* User-supplied Functions Called by the Solver */
@@ -64,18 +63,16 @@ int main() {
   /* general problem parameters */
   realtype T0 = RCONST(0.0);   /* initial time */
   realtype Tf = RCONST(1.0);   /* final time */
-  int Nt = 100;                /* total number of output times */
-  realtype rtol = 1.e-6;       /* relative tolerance */
+  int Nt = 50;                 /* total number of output times */
+  realtype rtol = 1.e-3;       /* relative tolerance */
   realtype atol = 1.e-10;      /* absolute tolerance */
-  realtype refine  = 1.e-3;    /* adaptivity refinement tolerance */
-  realtype coarsen = 1.e-6;    /* adaptivity coarsening tolerance */
   realtype hscale = 1.0;       /* time step change factor on resizes */
   UserData udata = NULL;
   realtype *data;
   long int N = 21;             /* initial spatial mesh size */
-  realtype dx = 1.0/(N-1);     /* initial mesh spacing */
+  realtype refine = 3.e-3;     /* adaptivity refinement tolerance */
   realtype k = 0.5;            /* heat conductivity */
-  long int i;
+  long int i, nst, nst_cur=0, nli, nli_tot=0;
 
   /* general problem variables */
   int flag;                    /* reusable error-checking flag */
@@ -89,9 +86,8 @@ int main() {
   udata->N = N;
   udata->k = k;
   udata->refine_tol = refine;
-  udata->coarse_tol = coarsen;
   udata->x = malloc(N * sizeof(realtype));
-  for (i=0; i<N; i++)  udata->x[i] = dx*i;
+  for (i=0; i<N; i++)  udata->x[i] = 1.0*i/(N-1);
 
   /* Initial problem output */
   printf("\n1D adaptive Heat PDE test problem:\n");
@@ -136,9 +132,9 @@ int main() {
 
   /* Open output stream for results, access data array */
   FILE *UFID=fopen("heat1D.txt","w");
-  data = N_VGetArrayPointer(y);
 
   /* output initial condition to disk */
+  data = N_VGetArrayPointer(y);
   for (i=0; i<udata->N; i++)  fprintf(UFID," %.16e", data[i]);
   fprintf(UFID,"\n");
 
@@ -146,31 +142,42 @@ int main() {
      prints results.  Stops when the final time has been reached */
   realtype t = T0;
   realtype dTout = (Tf-T0)/Nt;
-  realtype tout = T0+dTout;
-  printf("        t      ||u||_rms\n");
-  printf("   -------------------------\n");
-  printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/udata->N));
+  realtype tout = T0;
+  printf("        t      ||u||_rms    N    steps\n");
+  printf("   ------------------------------------\n");
+  printf("  %10.6f  %10.6f    %i     %i\n", 
+	 t, sqrt(N_VDotProd(y,y)/udata->N), udata->N, 0);
   int iout;
   realtype *xnew=NULL;
   long int Nnew;
   for (iout=0; iout<Nt; iout++) {
 
+    tout += dTout;                                              /* set next output time*/
+    tout = (tout > Tf) ? Tf : tout;
+
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         /* call integrator */
     if (check_flag(&flag, "ARKode", 1)) break;
-    printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/udata->N));   /* print solution stats */
-    if (flag >= 0) {                                            /* successful solve: update output time */
-      tout += dTout;
-      tout = (tout > Tf) ? Tf : tout;
-    } else {                                                    /* unsuccessful solve: break */
+    flag = ARKodeGetNumSteps(arkode_mem, &nst);
+    check_flag(&flag, "ARKodeGetNumSteps", 1);
+    printf("  %10.6f  %10.6f    %i     %i\n",                   /* print solution stats */
+	   t, sqrt(N_VDotProd(y,y)/udata->N), udata->N, nst-nst_cur);
+    nst_cur = nst;
+    if (flag < 0) {                                             /* unsuccessful solve: break */
       fprintf(stderr,"Solver failure, stopping integration\n");
       break;
     }
 
     /* output results and current mesh to disk */
+    data = N_VGetArrayPointer(y);
     for (i=0; i<udata->N; i++)  fprintf(UFID," %.16e", data[i]);
     fprintf(UFID,"\n");
     for (i=0; i<udata->N; i++)  fprintf(XFID," %.16e", udata->x[i]);
     fprintf(XFID,"\n");
+
+    /* accumulate total linear iterations for this step */
+    flag = ARKSpilsGetNumLinIters(arkode_mem, &nli);
+    check_flag(&flag, "ARKSpilsGetNumLinIters", 1);
+    nli_tot += nli;
 
     /* adapt the spatial mesh */
     xnew = adapt_mesh(y, &Nnew, udata);
@@ -198,23 +205,23 @@ int main() {
     y  = y2;
     y2 = yt;
 
+    /* call ARKodeResize to notify integrator of change in mesh */
+    flag = ARKodeResize(arkode_mem, y, hscale, tout, NULL, NULL);
+    if (check_flag(&flag, "ARKodeResize", 1)) break;
+
     /* destroy and re-allocate linear solver memory */
     flag = ARKPcg(arkode_mem, 0, udata->N);
     if (check_flag(&flag, "ARKPcg", 1)) break;
     flag = ARKSpilsSetJacTimesVecFn(arkode_mem, Jac);
     if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) break;
 
-    /* call ARKodeResize to notify integrator of change in mesh */
-    flag = ARKodeResize(arkode_mem, y, hscale, tout, NULL, NULL);
-    if (check_flag(&flag, "ARKodeResize", 1)) break;
-
   }
-  printf("   -------------------------\n");
+  printf("   ------------------------------------\n");
   fclose(UFID);
   fclose(XFID);
 
   /* Print some final statistics */
-  long int nst, nst_a, nfe, nfi, nsetups, nli, nJv, nlcf, nni, ncfn, netf;
+  long int nst_a, nfe, nfi, nsetups, nJv, nlcf, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
@@ -229,8 +236,6 @@ int main() {
   check_flag(&flag, "ARKodeGetNumNonlinSolvIters", 1);
   flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
   check_flag(&flag, "ARKodeGetNumNonlinSolvConvFails", 1);
-  flag = ARKSpilsGetNumLinIters(arkode_mem, &nli);
-  check_flag(&flag, "ARKSpilsGetNumLinIters", 1);
   flag = ARKSpilsGetNumJtimesEvals(arkode_mem, &nJv);
   check_flag(&flag, "ARKSpilsGetNumJtimesEvals", 1);
   flag = ARKSpilsGetNumConvFails(arkode_mem, &nlcf);
@@ -286,12 +291,11 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   Ydot[N-1] = 0.0;               /* right boundary condition */
 
   /* source term */
-  realtype xsource = 0.5;
   for (i=0; i<N-1; i++) {
-    if ((x[i] <= xsource) && (xsource <= x[i+1])) {
-      Ydot[i] += 1.0;
-      break;
-    }
+    Ydot[i] += 2.0*exp(-200.0*(x[i]-0.25)*(x[i]-0.25))
+                 - exp(-400.0*(x[i]-0.7)*(x[i]-0.7))
+                 + exp(-500.0*(x[i]-0.4)*(x[i]-0.4))
+             - 2.0*exp(-600.0*(x[i]-0.55)*(x[i]-0.55));
   }
 
   return 0;                      /* Return with success */
@@ -332,10 +336,9 @@ static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
  *-------------------------------*/
 
 /* Adapts the current mesh, using a simple adaptivity strategy of 
-   refining when difference of interval is too large, and coarsening 
-   when it is too small.  We only do this in one sweep, so no attempt 
-   is made to ensure the resulting mesh meets these same criteria 
-   after adaptivity:
+   refining when an approximation of the scaled second-derivative is 
+   too large.  We only do this in one sweep, so no attempt is made to 
+   ensure the resulting mesh meets these same criteria after adaptivity:
       y [input] -- the current solution vector
       Nnew [output] -- the size of the new mesh
       udata [input] -- the current system information 
@@ -352,50 +355,48 @@ realtype * adapt_mesh(N_Vector y, long int *Nnew, UserData udata)
   /* create marking array */
   int *marks = calloc(udata->N-1, sizeof(int));
 
-  /* set initial marking strategy: 
+  /* /\* perform marking:  */
+  /*     0 -> leave alone */
+  /*     1 -> refine */
+  /* realtype ymax, ymin; */
+  /* for (i=0; i<(udata->N-1); i++) { */
+
+  /*   /\* check for refinement *\/ */
+  /*   if (fabs(Y[i+1] - Y[i]) > udata->refine_tol) { */
+  /*     marks[i] = 1; */
+  /*     continue; */
+  /*   } */
+  /* } */
+
+  /* perform marking: 
       0 -> leave alone
-      1 -> refine
-     -1 -> coarsen  */
-  realtype ymax, ymin;
-  for (i=0; i<(udata->N-1); i++) {
+      1 -> refine */
+  realtype ydd;
+  for (i=1; i<udata->N-1; i++) {
+
+    /* approximate scaled second-derivative */
+    ydd = Y[i-1] - 2.0*Y[i] + Y[i+1];
 
     /* check for refinement */
-    if (fabs(Y[i+1] - Y[i]) > udata->refine_tol) {
+    if (fabs(ydd) > udata->refine_tol) {
+      marks[i-1] = 1;
       marks[i] = 1;
-      continue;
     }
     
-    /* check for coarsening (skip first interval) */
-    if (i==0)  continue;
-    ymax = (Y[i] > Y[i-1]) ? Y[i] : Y[i-1];
-    ymax = (ymax > Y[i+1]) ? ymax : Y[i+1];
-    ymin = (Y[i] < Y[i-1]) ? Y[i] : Y[i-1];
-    ymin = (ymin < Y[i+1]) ? ymin : Y[i+1];
-    if (ymax-ymin < udata->coarse_tol) {
-      marks[i] = -1;
-      marks[i-1] = -1;
-    }
   }
 
   /* allocate new mesh */
   long int num_refine = 0;
-  long int num_coarse = 0;
-  long int num_cpatch = 0;
-  for (i=0; i<udata->N-1; i++) {
+  for (i=0; i<udata->N-1; i++) 
     if (marks[i] == 1)   num_refine++;
-    if (marks[i] == -1)  num_coarse++;
-  }
-  for (i=0; i<udata->N-2; i++) 
-    if (marks[i] == -1 && marks[i+1] != -1)  num_cpatch++;
-  if (marks[udata->N-1] == -1)  num_cpatch++;
-  long int N_new = udata->N + num_refine - num_coarse + num_cpatch;
+  long int N_new = udata->N + num_refine;
   *Nnew = N_new;            /* Store new array length */
   realtype *xnew = malloc((N_new) * sizeof(realtype));
   
 
   /* fill new mesh */
   xnew[0] = udata->x[0];    /* store endpoints */
-  xnew[N_new] = udata->x[udata->N];
+  xnew[N_new-1] = udata->x[udata->N-1];
   j=1;
   /* iterate over old intervals */
   for (i=0; i<udata->N-1; i++) {
@@ -411,16 +412,6 @@ realtype * adapt_mesh(N_Vector y, long int *Nnew, UserData udata)
       xnew[j++] = xold[i+1];
       continue;
     }
-    
-    /* If we've made it here, then the interval is marked for
-       coarsening.  Only set next entry in xnew if the following 
-       old subinterval is not marked to be coarsened */
-    if (i<udata->N-2)
-      if (marks[i+1] != -1)
-	xnew[j++] = xold[i+1];
-
-    /* no need to specially handle coarsening the last old 
-       subinterval, since its right end is already stored */ 
   }
 
   /* verify that new mesh is legal */
