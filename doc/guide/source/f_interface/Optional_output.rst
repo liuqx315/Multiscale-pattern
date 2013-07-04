@@ -29,7 +29,7 @@ optional output.  Similarly,
 entries associated with the main ARKDENSE and ARKBAND direct
 linear solvers, and :ref:`FInterface.SpilsIOUTTable`
 lists the IOUT entries associated with the main ARKSPGMR,
-ARKSPBCG, ARKSPTFQMR and ARKPCG iterative linear solvers.
+ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG iterative linear solvers.
 
 For more details on the optional inputs and outputs to ARKode, see
 the sections :ref:`CInterface.OptionalInputs` and
@@ -105,8 +105,8 @@ IOUT Index      Optional output  ARKode function
 
 .. _FInterface.SpilsIOUTTable:
 
-Table: Optional ARKSPGMR, ARKSPBCG, ARKSPTFQMR and ARKPCG outputs 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Table: Optional ARKSPGMR, ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. cssclass:: table-bordered
 

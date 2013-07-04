@@ -104,6 +104,8 @@ NVECTOR_SERIAL.
 
    ``ier = ARKSptfqmr(...);``
 
+   ``ier = ARKSpfgmr(...);``
+
    ``ier = ARKPcg(...);``
 
 9. Set linear solver optional inputs 

@@ -54,9 +54,9 @@ unchanged from the main program described in the section
 
    First, specify one of the ARKSPILS iterative linear solvers, by
    calling one of :f:func:`FARKSPGMR()`, :f:func:`FARKSPBCG()`, 
-   :f:func:`FARKSPTFQMR()`, or :f:func:`FARKPCG()`. 
+   :f:func:`FARKSPTFQMR()`, :f:func:`FARKSPFGMR()` or :f:func:`FARKPCG()`. 
 
-   Optionally, to specify that SPGMR, SPBCG, SPTFQMR, or PCG
+   Optionally, to specify that SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG
    should use the supplied :f:func:`FARKJTIMES()` routine, the user
    should call :f:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
    as described in the section :ref:`FInterface.SpilsUserSupplied`.
@@ -86,7 +86,7 @@ unchanged from the main program described in the section
 
 7. ARKBANDPRE optional outputs 
 
-   Optional outputs specific to the SPGMR, SPBCG, SPTFQMR or PCG
+   Optional outputs specific to the SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG
    solver are listed in :ref:`FInterface.SpilsIOUTTable`.  To obtain
    the optional outputs associated with the ARKBANDPRE module, the
    user should call the :f:func:`FARKBPOPT()`, as specified below: 
@@ -183,9 +183,9 @@ unchanged from the main program described in the section
 
    First, specify one of the ARKSPILS iterative linear solvers, by
    calling one of :f:func:`FARKSPGMR()`, :f:func:`FARKSPBCG()`, 
-   :f:func:`FARKSPTFQMR()`, or :f:func:`FARKPCG()`.  
+   :f:func:`FARKSPTFQMR()`, :f:func:`FARKSPFGMR()` or :f:func:`FARKPCG()`.  
 
-   Optionally, to specify that SPGMR, SPBCG, SPTFQMR, or PCG
+   Optionally, to specify that SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG
    should use the supplied :f:func:`FARKJTIMES()` routine, the user
    should call :f:func:`FARKSPILSSETJAC()` with FLAG :math:`\ne 0`,
    as described in the section :ref:`FInterface.SpilsUserSupplied`.
@@ -224,10 +224,10 @@ unchanged from the main program described in the section
 
 7. ARKBBDPRE optional outputs
 
-   Optional outputs specific to the SPGMR, SPBCG, SPTFQMR or PCG solver
-   are listed in :ref:`FInterface.SpilsIOUTTable`.  To obtain the
-   optional outputs associated with the ARKBBDPRE module, the user
-   should call the :f:func:`FARKBBDOPT()`, as specified below:
+   Optional outputs specific to the SPGMR, SPBCG, SPTFQMR, SPFGMR or
+   PCG solver are listed in :ref:`FInterface.SpilsIOUTTable`.  To
+   obtain the optional outputs associated with the ARKBBDPRE module,
+   the user should call the :f:func:`FARKBBDOPT()`, as specified below:
 
 
 
@@ -249,17 +249,17 @@ unchanged from the main program described in the section
 8. Problem reinitialization
 
    If a sequence of problems of the same size is being solved using
-   the same linear solver (SPGMR, SPBCG, SPTFQMR or PCG) in combination
-   with the ARKBBDPRE preconditioner, then the ARKode package can be
-   re-initialized for the second and subsequent problems by calling
-   :f:func:`FARKREINIT()`, following which a call to
-   :f:func:`FARKBBDREINIT()` may or may not be needed. If the input
+   the same linear solver (SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG) in
+   combination with the ARKBBDPRE preconditioner, then the ARKode
+   package can be re-initialized for the second and subsequent
+   problems by calling :f:func:`FARKREINIT()`, following which a call
+   to :f:func:`FARKBBDREINIT()` may or may not be needed. If the input
    arguments are the same, no :f:func:`FARKBBDREINIT()` call is
    needed.
 
    If there is a change in input arguments other than MU or
    ML, then the user program should call :f:func:`FARKBBDREINIT()` as
-   specified beloe: 
+   specified below: 
 
 
 
@@ -278,15 +278,51 @@ unchanged from the main program described in the section
    :f:func:`FARKBBDINIT()` must be made instead. 
 
    Finally, if there is a change in any of the linear solver inputs,
-   then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR or FARKPCG must
-   also be made; in this case the linear solver memory is reallocated. 
+   then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR, FARKSPFGMR or
+   FARKPCG must also be made; in this case the linear solver memory is
+   reallocated.  
 
-9. `Memory deallocation` 
+
+
+9. Problem resizing
+
+   If a sequence of problems of different sizes (but with similar
+   dyanamical time scales) is being solved using the same linear
+   solver (SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG) in combination with
+   the ARKBBDPRE preconditioner, then the ARKode package can be
+   re-initialized for the second and subsequent problems by calling
+   :f:func:`FARKRESIZE()`, following which a call to
+   :f:func:`FARKBBDINIT()` is required to delete and re-allocate the 
+   preconditioner memory of the correct size.
+
+
+
+
+   .. f:subroutine:: FARKBBDREINIT(NLOCAL, MUDQ, MLDQ, DQRELY, IER)
+      
+      Interfaces with the
+      :c:func:`ARKBBDPrecReInit()` function to reinitialize the
+      ARKBBDPRE module.
+         
+      **Arguments:**  The arguments of the same names have the same
+      meanings as in :f:func:`FARKBBDINIT()`.
+
+
+
+   However, if the value of MU or ML is being changed, then a call to
+   :f:func:`FARKBBDINIT()` must be made instead. 
+
+   Finally, if there is a change in any of the linear solver inputs,
+   then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR, FARKSPFGMR or
+   FARKPCG must also be made; in this case the linear solver memory is
+   reallocated.  
+
+10. `Memory deallocation` 
 
    (The memory allocated for the FARKBBD module is deallocated
    automatically by :f:func:`FARKFREE()`) 
 
-10. User-supplied routines 
+11. User-supplied routines 
 
     The following two routines must be supplied for use with the
     ARKBBDPRE module:

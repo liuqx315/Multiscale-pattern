@@ -136,6 +136,8 @@ linear solvers availble for use with ARKode are:
   Bi-CGStab Krylov linear solver SPBCG;
 - ``arkode_sptfqmr.h``, which is used with the scaled, preconditioned
   TFQMR Krylov solver SPTFQMR.
+- ``arkode_spfgmr.h``, which is used with the scaled, preconditioned
+  Flexible GMRES Krylov linear solver SPFGMR;
 - ``arkode_pcg.h``, which is used with the preconditioned
   conjugate gradient linear solver PCG;
 
@@ -150,7 +152,7 @@ The header files for the Krylov iterative solvers each include
 ``arkode_spils.h`` which defines common functions and which in turn
 includes a header file (``sundials_iterative.h``) which enumerates the
 preconditioning type and the choices for the Gram-Schmidt process (for
-the SPGMR solver). 
+the SPGMR and SPFGMR solvers). 
 
 Other headers may be needed, according to the choice of
 preconditioner, etc.  For example, if preconditioning for an iterative

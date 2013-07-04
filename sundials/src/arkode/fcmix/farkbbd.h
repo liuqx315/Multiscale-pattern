@@ -20,9 +20,9 @@
  of the implicit portions of the ODE system
        dy/dt = fe(t,y) + fi(t,y)  
  using a Krylov iterative linear solver (SPGMR, SPTFQMR, SPBCG, 
- PCG), and with a preconditioner that is block-diagonal with 
- banded blocks.  While ARKODE and ARKBBDPRE are written in C, it 
- is assumed here that the user's calling program and user-
+ SPFGMR or PCG), and with a preconditioner that is block-diagonal 
+ with banded blocks.  While ARKODE and ARKBBDPRE are written in C, 
+ it is assumed here that the user's calling program and user-
  supplied problem-defining routines are written in Fortran.
  
  The user-callable functions in this package, with the 
@@ -356,7 +356,41 @@
 
      The arguments have the same meanings as for FARKSPTFQMR.
 
- (4.3D) To specify the PCG (Preconditioned Conjugate Gradient) 
+ (4.3D) To specify the SPFGMR (Scaled Preconditioned Flexible GMRES) 
+     linear solver make the following call:
+
+       CALL FARKSPFGMR(IPRETYPE, IGSTYPE, MAXL, DELT, IER)
+
+     The arguments are:
+        IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = left only
+              2 = right only
+              3 = both sides
+	IGSTYPE = Gram-schmidt process type [int, input]: 
+              1 = modified G-S
+              2 = classical G-S.
+	MAXL = maximum Krylov subspace dimension [int; input]; 
+	      0 = default
+	DELT = convergence tolerance factor [realtype, input]; 
+	      0.0 = default.
+	IER = error return flag [int, output]: 
+	       0 = success; 
+	      <0 = an error occured
+ 
+     If a sequence of problems of the same size is being solved 
+     using the SPFGMR linear solver, then following the call to 
+     FARKREINIT, a call to the FARKSPFGMRREINIT routine is needed
+     if any of IPRETYPE, IGSTYPE, DELT is being changed.  In that
+     case, call FARKSPFGMRREINIT as follows:
+
+       CALL FARKSPFGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)
+
+     The arguments have the same meanings as for FARKSPFGMR.  If 
+     MAXL is being changed, then the user should call FARKSPFGMR 
+     instead.
+ 
+ (4.3E) To specify the PCG (Preconditioned Conjugate Gradient) 
      linear solver make the following call:
 
        CALL FARKPCG(IPRETYPE, MAXL, DELT, IER)              
@@ -442,9 +476,9 @@
      system solution method may or may not be needed.
 
      If there is a change in any of the linear solver arguments,
-     then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR or FARKPCG
-     must also be made; in this case the linear solver memory is 
-     reallocated. 
+     then a call to FARKSPGMR, FARKSPBCG, FARKSPTFQMR, FARKSPFGMR
+     or FARKPCG must also be made; in this case the linear solver 
+     memory is reallocated. 
 
      Following the call to FARKREINIT, a call to FARKBBDINIT may
      or may not be needed.  If the input arguments are the same,

@@ -332,6 +332,60 @@ ARKSPTFQMR generic linear solver module
      failed unrecoverably.
 
 
+ARKSPFGMR generic linear solver module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  :index:`SPFGMR_SUCCESS`  (0): 
+     Converged.
+
+  :index:`SPFGMR_RES_REDUCED`  (1): 
+     No convergence, but the residual norm was
+     reduced. 
+
+  :index:`SPFGMR_CONV_FAIL`  (2): 
+     Failure to converge.
+
+  :index:`SPFGMR_QRFACT_FAIL`  (3): 
+     A singular matrix was found during the 
+     QR factorization.
+
+  :index:`SPFGMR_PSOLVE_FAIL_REC`  (4): 
+     The preconditioner solve function 
+     failed recoverably.
+
+  :index:`SPFGMR_ATIMES_FAIL_REC`  (5): 
+     The Jacobian-times-vector function 
+     failed recoverably.
+
+  :index:`SPFGMR_PSET_FAIL_REC`  (6): 
+     The preconditioner setup function failed 
+     recoverably.
+
+  :index:`SPFGMR_MEM_NULL`  (-1): 
+     The SPFGMR memory is ``NULL``
+
+  :index:`SPFGMR_ATIMES_FAIL_UNREC`  (-2): 
+     The Jacobian-times-vector function
+     failed unrecoverably.
+
+  :index:`SPFGMR_PSOLVE_FAIL_UNREC`  (-3): 
+     The preconditioner solve function 
+     failed unrecoverably.
+
+  :index:`SPFGMR_GS_FAIL`  (-4): 
+     Failure in the Gram-Schmidt procedure.
+
+  :index:`SPFGMR_QRSOL_FAIL`  (-5): 
+     The matrix :MATH:`R` was found to be
+     singular during the QR solve phase.
+
+  :index:`SPFGMR_PSET_FAIL_UNREC`  (-6): 
+     The preconditioner setup function 
+     failed unrecoverably.
+
+
+
 ARKPCG generic linear solver module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -131,16 +131,18 @@ are as follows:
   Stable method) solver,
 * SPTFQMR, a scaled, preconditioned TFQMR (Transpose-free
   Quasi-Minimal Residual method) solver, or
+* SPFGMR, a scaled, preconditioned Flexible GMRES (Generalized Minimal
+  Residual method) solver without restarts,
 * PCG, a preconditioned conjugate gradient solver for symmetric linear
   systems.
 
 For large stiff systems where direct methods are infeasible, the
 combination of an implicit Runge-Kutta integrator and a preconditioned
-Krylov method (SPGMR, SPBCG, SPTFQMR or PCG) can yield a powerful tool
-because it combines established methods for stiff integration,
-nonlinear solver iteration, and Krylov (linear) iteration with a
-problem-specific treatment of the dominant sources of stiffness, in
-the form of a user-supplied preconditioner matrix
+Krylov method (SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG) can yield a
+powerful tool because it combines established methods for stiff
+integration, nonlinear solver iteration, and Krylov (linear) iteration
+with a problem-specific treatment of the dominant sources of
+stiffness, in the form of a user-supplied preconditioner matrix
 [BH1989]_.  We note that the direct linear solvers
 provided by SUNDIALS (dense and band) can only be used with the serial
 vector representations.

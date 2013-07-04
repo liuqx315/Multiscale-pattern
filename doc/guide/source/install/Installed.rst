@@ -69,6 +69,7 @@ Table: SUNDIALS libraries and header files
 |                                | sundials/sundials_spgmr.h,      |
 |                                | sundials/sundials_spbcgs.h,     |
 |                                | sundials/sundials_sptfqmr.h     |
+|                                | sundials/sundials_spfgmr.h,     |
 |                                | sundials/sundials_pcg.h,        |
 +--------------------------------+---------------------------------+
 | Serial NVECTOR    Libraries    | libsundials_nvecserial.LIB,     |
@@ -94,6 +95,7 @@ Table: SUNDIALS libraries and header files
 |                                | arkode/arkode_spgmr.h,          |
 |                                | arkode/arkode_spbcgs.h,         |
 |                                | arkode/arkode_sptfqmr.h,        |
+|                                | arkode/arkode_spfgmr.h,         |
 |                                | arkode/arkode_pcg.h,            |
 |                                | arkode/arkode_bandpre.h,        |
 |                                | arkode/arkode_bbdpre.h          |
