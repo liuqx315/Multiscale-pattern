@@ -737,27 +737,27 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     return(ARK_ILL_INPUT);
   }
 
-  /* Re-initialize the linear solver (assumes that solver 
-     memory has already been resized appropriately) */
-  if (!ark_mem->ark_explicit) {
-    if (ark_mem->ark_linit != NULL) {
-      ier = ark_mem->ark_linit(ark_mem);
-      if (ier != 0) {
-	arkProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", 
-			"ARKodeResize", MSGARK_LINIT_FAIL);
-	return(ARK_LINIT_FAIL);
-      }
-    }
-  }
+  /* /\* Re-initialize the linear solver (assumes that solver  */
+  /*    memory has already been resized appropriately) *\/ */
+  /* if (!ark_mem->ark_explicit) { */
+  /*   if (ark_mem->ark_linit != NULL) { */
+  /*     ier = ark_mem->ark_linit(ark_mem); */
+  /*     if (ier != 0) { */
+  /* 	arkProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE",  */
+  /* 			"ARKodeResize", MSGARK_LINIT_FAIL); */
+  /* 	return(ARK_LINIT_FAIL); */
+  /*     } */
+  /*   } */
+  /* } */
 
-  /* Fill initial ynew and fnew arrays */
-  N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_ynew);
-  ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
-		   ark_mem->ark_ftemp, ark_mem->ark_fnew);
+  /* /\* Fill initial ynew and fnew arrays *\/ */
+  /* N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_ynew); */
+  /* ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur, */
+  /* 		   ark_mem->ark_ftemp, ark_mem->ark_fnew); */
 
-  /* Copy f(t0,y0) into ark_fold */
-  /* if (!ark_mem->ark_explicit) */
-  N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
+  /* /\* Copy f(t0,y0) into ark_fold *\/ */
+  /* /\* if (!ark_mem->ark_explicit) *\/ */
+  /* N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold); */
 
   /* Indicate that problem size is new */
   ark_mem->ark_resized = TRUE;
@@ -1049,6 +1049,62 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     }
 
   } /* end of first call block */
+
+
+  /*----------------------------------------
+    2b. Initializations performed only in 
+        the first step after the problem has
+        been resized:
+       - re-initialize the linear solver
+       - fills ynew, fnew and fold arrays
+       - checks for approach to tstop
+       - checks for root near t0
+  ----------------------------------------*/
+  if (ark_mem->ark_nst > 0 && ark_mem->ark_resized) {
+
+    /* Re-initialize the linear solver (assumes that solver 
+       memory has already been resized appropriately) */
+    if (!ark_mem->ark_explicit) {
+      if (ark_mem->ark_linit != NULL) {
+	ier = ark_mem->ark_linit(ark_mem);
+	if (ier != 0) {
+	  arkProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", 
+			  "ARKodeResize", MSGARK_LINIT_FAIL);
+	  return(ARK_LINIT_FAIL);
+	}
+      }
+    }
+
+    /* Fill initial ynew and fnew arrays */
+    N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_ynew);
+    ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
+		     ark_mem->ark_ftemp, ark_mem->ark_fnew);
+
+    /* Copy f(t0,y0) into ark_fold */
+    /* if (!ark_mem->ark_explicit) */
+    N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
+
+    /* Check for legal tstop (correct direction of integration) */
+    if (ark_mem->ark_tstopset) {
+      if ( (ark_mem->ark_tstop - ark_mem->ark_tn)*ark_mem->ark_h < ZERO ) {
+        arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			MSGARK_BAD_TSTOP, ark_mem->ark_tstop, ark_mem->ark_tn);
+        return(ARK_ILL_INPUT);
+      }
+    }
+
+    /* Check for zeros of root function g at and near t0. */
+    if (ark_mem->ark_nrtfn > 0) {
+      retval = arkRootCheck1(ark_mem);
+
+      if (retval == ARK_RTFUNC_FAIL) {
+        arkProcessError(ark_mem, ARK_RTFUNC_FAIL, "ARKODE", "arkRootCheck1", 
+			MSGARK_RTFUNC_FAILED, ark_mem->ark_tn);
+        return(ARK_RTFUNC_FAIL);
+      }
+    }
+
+  } /* end of first-step-after-resize call block */
 
 
   /*------------------------------------------------------
