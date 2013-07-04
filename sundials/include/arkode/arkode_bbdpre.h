@@ -7,8 +7,8 @@
  This is the header file for the ARKBBDPRE module, for a
  band-block-diagonal preconditioner, i.e. a block-diagonal
  matrix with banded blocks, for use with ARKSPGMR, ARKSPBCG, 
- ARKSPTFQMR, ARKPCG, and the parallel implementation of the 
- NVECTOR module.
+ ARKSPTFQMR, ARKSPFGMR or ARKPCG, and the parallel implementation 
+ of the NVECTOR module.
 
  Summary:
 
@@ -41,6 +41,8 @@
    flag = ARKSpbcg(arkode_mem, pretype, maxl);
       -or-
    flag = ARKSptfqmr(arkode_mem, pretype, maxl);
+      -or-
+   flag = ARKSpfgmr(arkode_mem, pretype, maxl);
       -or-
    flag = ARKPcg(arkode_mem, pretype, maxl);
    ...
@@ -91,8 +93,8 @@
     associated with this module also include nsetups banded LU
     factorizations, nlinsetups cfn calls, and npsolves banded
     backsolve calls, where nlinsetups and npsolves are
-    integrator/ARKSPGMR/ARKSPBCG/ARKSPTFQMR/ARKPCG optional 
-    outputs.
+    integrator/ARKSPGMR/ARKSPBCG/ARKSPTFQMR/ARKSPFGMR/ARKPCG 
+    optional outputs.
 ---------------------------------------------------------------*/
 
 #ifndef _ARKBBDPRE_H
@@ -212,11 +214,11 @@ SUNDIALS_EXPORT int ARKBBDPrecInit(void *arkode_mem, long int Nlocal,
 
  ARKBBDPrecReInit re-initializes the BBDPRE module when solving a
  sequence of problems of the same size with ARKSPGMR/ARKBBDPRE or
- ARKSPBCG/ARKBBDPRE or ARKSPTFQMR/ARKBBDPRE or ARKPCG/ARKBBDPRE 
- provided there is no change in Nlocal, mukeep, or mlkeep. After 
- solving one problem, and after calling ARKodeReInit to 
- re-initialize the integrator for a subsequent problem, call 
- ARKBBDPrecReInit.
+ ARKSPBCG/ARKBBDPRE or ARKSPTFQMR/ARKBBDPRE or ARKSPFGMR/ARKBBDPRE
+ or ARKPCG/ARKBBDPRE provided there is no change in Nlocal, 
+ mukeep, or mlkeep. After solving one problem, and after calling 
+ ARKodeReInit to re-initialize the integrator for a subsequent 
+ problem, call ARKBBDPrecReInit.
 
  All arguments have the same names and meanings as those
  of ARKBBDPrecInit.

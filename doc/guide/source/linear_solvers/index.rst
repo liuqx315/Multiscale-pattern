@@ -39,6 +39,8 @@ generic linear solvers:
   method. 
 * The SPTFQMR package, a solver for the scaled preconditioned TFQMR
   method. 
+* The SPFGMR package, a solver for the scaled preconditioned Flexible
+  GMRES method. 
 * The PCG package, a solver for the preconditioned conjugate gradient
   method. 
 
@@ -49,8 +51,8 @@ completely independently of SUNDIALS.
 
 For the sake of space, the functions for the DENSE and BAND modules
 that work with a matrix type and the functions in the SPGMR, SPBCG,
-SPTFQMR and PCG modules are only summarized briefly, since they are less
-likely to be of direct use in connection with a SUNDIALS
+SPTFQMR, SPFGMR and PCG modules are only summarized briefly, since
+they are less likely to be of direct use in connection with a SUNDIALS
 solver. However, the functions for dense matrices treated as simple
 arrays are fully described, because we anticipate that they will be 
 useful in the implementation of preconditioners used with the

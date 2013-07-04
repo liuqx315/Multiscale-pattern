@@ -62,7 +62,9 @@ skeleton program presented in :ref:`CInterface.Skeleton` are
 
    (c) ``flag = ARKSptfqmr(arkode_mem, pretype, maxl);``
 
-   (d) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
+   (d) ``flag = ARKSpfgmr(arkode_mem, pretype, maxl);`` 
+
+   (e) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
 
 7. Initialize the ARKBANDPRE preconditioner module 
 
@@ -382,7 +384,9 @@ that are unchanged from the skeleton program presented in
 
    (c) ``flag = ARKSptfqmr(arkode_mem, pretype, maxl);``
 
-   (d) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
+   (d) ``flag = ARKSpfgmr(arkode_mem, pretype, maxl);``
+
+   (e) ``flag = ARKPcg(arkode_mem, pretype, maxl);``
 
 8. Initialize the ARKBBDPRE preconditioner module 
 
@@ -487,9 +491,9 @@ to change any of the following: the half-bandwidths `mudq` and
 relative increment `dqrely`, or one of the user-supplied functions
 `gloc` and `cfn`. If there is a change in any of the linear solver
 inputs, an additional call to :c:func:`ARKSpgmr()`,
-:c:func:`ARKSpbcg()`, :c:func:`ARKSptfqmr()`, or :c:func:`ARKPcg()`,
-and/or one or more of the corresponding ARKSpils*Set* functions, must
-also be made (in the proper order).
+:c:func:`ARKSpbcg()`, :c:func:`ARKSptfqmr()`, :c:func:`ARKSpfgmr()`,
+or :c:func:`ARKPcg()`, and/or one or more of the corresponding
+ARKSpils*Set* functions, must also be made (in the proper order).
 
 
 

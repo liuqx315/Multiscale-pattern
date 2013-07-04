@@ -3,8 +3,8 @@
 
 .. _LinearSolvers.SPILS:
 
-The SPILS modules: SPGMR, SPBCG, SPTFQMR and PCG
-========================================================
+The SPILS modules: SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG
+==========================================================
 
 Due to their reliance on general vector operations, the iterative
 linear solvers in the SPILS family can only be used in conjunction
@@ -139,6 +139,28 @@ The following functions are available in the SPTFQMR package:
 * ``SptfqmrMalloc``: allocation of memory for ``SptfqmrSolve``;
 * ``SptfqmrSolve``: solution of :math:`Ax = b` by the SPTFQMR method;
 * ``SptfqmrFree``: free memory allocated by ``SptfqmrMalloc``.
+
+
+
+The SPFGMR module
+-----------------------------------------
+
+The SPFGMR package, in the files ``sundials_spfgmr.h`` and
+``sundials_spfgmr.c``, includes an implementation of the scaled
+preconditioned Flexible Generalized Minimum Residual method. For full
+details, including usage instructions, see the file
+``sundials_spfgmr.h``. 
+
+The files needed to use the SPFGMR module by itself are the same as for
+the SPGMR module, but with ``sundials_spfgmr.h`` and
+``sundials_spfgmr.c`` in place of ``sundials_spgmr.h`` and
+``sundials_spgmr.c``. 
+
+The following functions are available in the SPFGMR package:
+
+* ``SpfgmrMalloc``: allocation of memory for ``SpfgmrSolve``;
+* ``SpfgmrSolve``: solution of :math:`Ax = b` by the SPFGMR method;
+* ``SpfgmrFree``: free memory allocated by ``SpfgmrMalloc``.
 
 
 

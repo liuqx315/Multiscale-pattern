@@ -87,6 +87,12 @@ with the corresponding ARKODE functions, are as follows:
   - :f:func:`FARKSPTFQMRREINIT()` interfaces to the SPTFQMR optional input
     functions.
 
+  - :f:func:`FARKSPFGMR()` interfaces to :c:func:`ARKSpfgmr()` and the SPFGMR optional input
+    functions (see :ref:`CInterface.ARKSpilsInputTable`).
+
+  - :f:func:`FARKSPFGMRREINIT()` interfaces to the SPFGMR optional input
+    functions (see :ref:`CInterface.ARKSpilsInputTable`).
+
   - :f:func:`FARKPCG()` interfaces to :c:func:`ARKPcg()` and the PCG optional input
     functions (see :ref:`CInterface.ARKSpilsInputTable`).
 

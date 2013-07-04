@@ -61,6 +61,9 @@
    FARKSPTFQMR                ARKSptfqmr and ARKSpilsSet*
    FARKSPTFQMRREINIT          ARKSpilsSet*
 
+   FARKSPFGMR                 ARKSpfgmr and ARKSpilsSet*
+   FARKSPFGMRREINIT           ARKSpilsSet*
+
    FARKPCG                    ARKPcg and ARKSpilsSet*
    FARKPCGREINIT              ARKSpilsSet*
 
@@ -865,7 +868,56 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKSPTFQMR 
      must be called again. 
 
- (9.8) PCG treatment of the linear systems.
+ (9.8) SPFGMR treatment of the linear systems.
+
+     For the Scaled Preconditioned Flexible GMRES solution of the linear 
+     systems, the user must make the following call:
+
+       CALL FARKSPFGMR(IPRETYPE, IGSTYPE, MAXL, DELT, IER)              
+
+     The arguments are:
+        IPRETYPE = preconditioner type [int, input]: 
+              0 = none 
+              1 = left only
+              2 = right only
+              3 = both sides
+	IGSTYPE = Gram-schmidt process type [int, input]: 
+              1 = modified G-S
+              2 = classical G-S.
+	MAXL = maximum Krylov subspace dimension [int; input]; 
+	      0 = default
+	DELT = linear convergence tolerance factor [realtype, input]; 
+	      0.0 = default.
+	IER = error return flag [int, output]: 
+	       0 = success; 
+	      <0 = an error occured
+ 
+     Optional outputs specific to the SPFGMR case are:
+        LENRWLS = IOUT(14) from ARKSpilsGetWorkSpace
+        LENIWLS = IOUT(15) from ARKSpilsGetWorkSpace
+        LSTF    = IOUT(16) from ARKSpilsGetLastFlag
+        NFELS   = IOUT(17) from ARKSpilsGetNumRhsEvals
+        NJTV    = IOUT(18) from ARKSpilsGetNumJtimesEvals
+        NPE     = IOUT(19) from ARKSpilsGetNumPrecEvals
+        NPS     = IOUT(20) from ARKSpilsGetNumPrecSolves
+        NLI     = IOUT(21) from ARKSpilsGetNumLinIters
+        NCFL    = IOUT(22) from ARKSpilsGetNumConvFails
+     See the ARKODE manual for descriptions.
+ 
+     If a sequence of problems of the same size is being solved using the
+     SPFGMR linear solver, then following the call to FARKREINIT, a call to 
+     the FARKSPFGMRREINIT routine is needed if any of IPRETYPE, IGSTYPE, DELT 
+     is being changed.  In that case, call FARKSPFGMRREINIT as follows:
+
+       CALL FARKSPFGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)
+
+     The arguments have the same meanings as for FARKSPFGMR.  If MAXL is being
+     changed, then the user should call FARKSPFGMR instead.  
+
+     Note: if the problem has been resized using FARKRESIZE, then FARKSPFGMR 
+     must be called again. 
+ 
+ (9.9) PCG treatment of the linear systems.
 
      For the Preconditioned Conjugate Gradient solution of the linear systems,
      the user must make the following call:
@@ -909,7 +961,7 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKPCG
      must be called again. 
 
- (9.9) Usage of user-supplied routines for the Krylov solvers
+ (9.10) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
      the Jacobian vector product, then after specifying the linear solver 
@@ -1113,6 +1165,8 @@ extern "C" {
 #define FARK_SPBCGREINIT         SUNDIALS_F77_FUNC(farkspbcgreinit,         FARKSPBCGREINIT)
 #define FARK_SPGMR               SUNDIALS_F77_FUNC(farkspgmr,               FARKSPGMR)
 #define FARK_SPGMRREINIT         SUNDIALS_F77_FUNC(farkspgmrreinit,         FARKSPGMRREINIT)
+#define FARK_SPFGMR              SUNDIALS_F77_FUNC(farkspfgmr,              FARKSPFGMR)
+#define FARK_SPFGMRREINIT        SUNDIALS_F77_FUNC(farkspfgmrreinit,        FARKSPFGMRREINIT)
 #define FARK_PCG                 SUNDIALS_F77_FUNC(farkpcg,                 FARKPCG)
 #define FARK_PCGREINIT           SUNDIALS_F77_FUNC(farkpcgreinit,           FARKPCGREINIT)
 #define FARK_SPILSSETJAC         SUNDIALS_F77_FUNC(farkspilssetjac,         FARKSPILSSETJAC)
@@ -1163,6 +1217,8 @@ extern "C" {
 #define FARK_SPBCGREINIT         farkspbcgreinit_
 #define FARK_SPGMR               farkspgmr_
 #define FARK_SPGMRREINIT         farkspgmrreinit_
+#define FARK_SPFGMR              farkspfgmr_
+#define FARK_SPFGMRREINIT        farkspfgmrreinit_
 #define FARK_PCG                 farkpcg_
 #define FARK_PCGREINIT           farkpcgreinit_
 #define FARK_SPILSSETJAC         farkspilssetjac_
@@ -1236,6 +1292,9 @@ extern "C" {
 
   void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier);
   void FARK_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier);
+
+  void FARK_SPFGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier);
+  void FARK_SPFGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier);
 
   void FARK_SPBCG(int *pretype, int *maxl, realtype *delt, int *ier);
   void FARK_SPBCGREINIT(int *pretype, int *maxl, realtype *delt, int *ier);
@@ -1315,7 +1374,8 @@ extern "C" {
 	 ARK_LS_SPGMR       = 5, 
 	 ARK_LS_SPBCG       = 6, 
 	 ARK_LS_SPTFQMR     = 7, 
-	 ARK_LS_PCG         = 8 };
+	 ARK_LS_SPFGMR      = 8, 
+	 ARK_LS_PCG         = 9 };
 
 #ifdef __cplusplus
 }

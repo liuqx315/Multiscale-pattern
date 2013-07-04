@@ -775,6 +775,30 @@ For descriptions of the optional user-supplied routines for use with
 
 
 
+[**S**][**P**] SPFGMR treatment of the linear systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the Scaled Preconditioned Flexible Generalized Minimum Residual
+solution of the linear systems, the user must call the FARKSPFGMR routine.
+
+
+.. f:subroutine:: FARKSPFGMR(IPRETYPE, IGSTYPE, MAXL, DELT, IER)
+   
+   Interfaces with the :c:func:`ARKSpfgmr()` and
+   ARKSpilsSet* routines to specify use of the SPFGMR iterative
+   linear solver.
+      
+   **Arguments:**  The arguments are the same as those for
+   :f:func:`FARKSPGMR()`.
+
+
+For descriptions of the optional user-supplied routines for use with
+:f:func:`FARKSPFGMR()` see the section :ref:`FInterface.SpilsUserSupplied`.
+
+
+
+
+
 [**S**][**P**] PCG treatment of the linear systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -801,15 +825,15 @@ For descriptions of the optional user-supplied routines for use with
 
 .. _FInterface.SpilsUserSupplied:
 
-[**S**][**P**] User-supplied routines for SPGMR/SPBCG/SPTFQMR/PCG
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[**S**][**P**] User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With treatment of the linear systems by any of the Krylov iterative
 solvers, there are three optional user-supplied routines --
 :f:func:`FARKJTIMES()`, :f:func:`FARKPSET()` and :f:func:`FARKPSOL()`.
 The specifications of these functions are given below.
 
-As an option when using the SPGMR, SPBCG, SPTFQMR or PCG linear
+As an option when using the SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG linear
 solvers, the user may supply a routine that computes the product of
 the system Jacobian :math:`J = \frac{\partial f_I}{\partial y}` and a
 given vector :math:`v`.  If supplied, it must have the following form:
@@ -845,9 +869,10 @@ given vector :math:`v`.  If supplied, it must have the following form:
 
 If this routine has been supplied by the user, then, following the
 call to :f:func:`FARKSPGMR()`, :f:func:`FARKSPBCG()`,
-:f:func:`FARKSPTFQMR()` or :f:func:`FARKPCG()`, the user must call the
-routine FARKSPILSSETJAC with FLAG :math:`\ne 0` to specify use of the
-user-supplied Jacobian-times-vector function.
+:f:func:`FARKSPTFQMR()`, :f:func:`FARKSPFGMR()` or
+:f:func:`FARKPCG()`, the user must call the routine FARKSPILSSETJAC
+with FLAG :math:`\ne 0` to specify use of the user-supplied
+Jacobian-times-vector function. 
 
 
 .. f:subroutine:: FARKSPILSSETJAC(FLAG, IER)
@@ -1133,6 +1158,23 @@ reinitialize SPTFQMR without reallocating its memory by calling
       
    **Arguments:**  The arguments have the same names and meanings as those of
    :f:func:`FARKSPTFQMR()`.
+
+
+In the case of SPFGMR, for a change of inputs other than MAXL,
+the user may call the routine :f:func:`FARKSPFGMRREINIT()` to
+reinitialize SPFGMR without reallocating its memory, as follows: 
+
+
+.. f:subroutine:: FARKSPFGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)
+   
+   Re-initializes the Fortran interface to the SPFGMR
+   linear solver.
+      
+   **Arguments:**  The arguments have the same names and meanings as those of
+   :f:func:`FARKSPFGMR()`.
+   
+However, if MAXL is being changed, then the user should call
+:f:func:`FARKSPFGMR()` instead.
 
 
 In the case of PCG, for a change in any inputs, the user can

@@ -22,6 +22,7 @@
 #include <arkode/arkode_spgmr.h>
 #include <arkode/arkode_spbcgs.h>
 #include <arkode/arkode_sptfqmr.h>
+#include <arkode/arkode_spfgmr.h>
 #include <arkode/arkode_pcg.h>
 
 /*=============================================================*/
@@ -568,6 +569,25 @@ void FARK_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier)
 
 /*=============================================================*/
 
+/* Fortran interface to C routine ARKSpfgmr and it's associated 
+   "set" routines; see farkode.h for further details */
+void FARK_SPFGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier)
+{
+  *ier = ARKSpfgmr(ARK_arkodemem, *pretype, *maxl);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetGSType(ARK_arkodemem, *gstype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPFGMR;
+  return;
+}
+
+/*=============================================================*/
+
 /* Fortran interface to C routine ARKPcg and it's associated 
    "set" routines; see farkode.h for further details */
 void FARK_PCG(int *pretype, int *maxl, realtype *delt, int *ier)
@@ -639,6 +659,26 @@ void FARK_SPTFQMRREINIT(int *pretype, int *maxl,
   if (*ier != ARKSPILS_SUCCESS) return;
 
   ARK_ls = ARK_LS_SPTFQMR;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C "set" routines for the ARKSpfgmr solver; 
+   see farkode.h for further details */
+void FARK_SPFGMRREINIT(int *pretype, int *gstype, 
+		       realtype *delt, int *ier)
+{
+  *ier = ARKSpilsSetPrecType(ARK_arkodemem, *pretype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetGSType(ARK_arkodemem, *gstype);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  *ier = ARKSpilsSetEpsLin(ARK_arkodemem, *delt);
+  if (*ier != ARKSPILS_SUCCESS) return;
+
+  ARK_ls = ARK_LS_SPFGMR;
   return;
 }
 
@@ -719,6 +759,7 @@ void FARK_ARKODE(realtype *tout, realtype *t, realtype *y,
   case ARK_LS_SPGMR:
   case ARK_LS_SPBCG:
   case ARK_LS_SPTFQMR:
+  case ARK_LS_SPFGMR:
   case ARK_LS_PCG:
     ARKSpilsGetWorkSpace(ARK_arkodemem, &ARK_iout[13], &ARK_iout[14]); /* LENRWLS, LENIWLS */
     ARKSpilsGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                 /* LSTF  */

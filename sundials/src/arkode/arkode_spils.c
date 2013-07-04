@@ -84,7 +84,8 @@ int ARKSpilsSetGSType(void *arkode_mem, int gstype)
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  if (arkspils_mem->s_type != SPILS_SPGMR) {
+  if ((arkspils_mem->s_type != SPILS_SPGMR) ||
+      (arkspils_mem->s_type != SPILS_SPFGMR)) {
     arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetGSType", MSGS_BAD_LSTYPE);
     return(ARKSPILS_ILL_INPUT);
@@ -126,7 +127,8 @@ int ARKSpilsSetMaxl(void *arkode_mem, int maxl)
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  if (arkspils_mem->s_type == SPILS_SPGMR) {
+  if ((arkspils_mem->s_type == SPILS_SPGMR) ||
+      (arkspils_mem->s_type == SPILS_SPFGMR)) {
     arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetMaxl", MSGS_BAD_LSTYPE);
     return(ARKSPILS_ILL_INPUT);
@@ -283,6 +285,11 @@ int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS,
   case SPILS_PCG:
     *lenrwLS = ark_mem->ark_lrw1 * 4;
     *leniwLS = ark_mem->ark_liw1 * 4 + 1;
+    break;
+  case SPILS_SPFGMR:
+    maxl = arkspils_mem->s_maxl;
+    *lenrwLS = ark_mem->ark_lrw1*(2*maxl + 4) + maxl*(maxl + 4) + 1;
+    *leniwLS = ark_mem->ark_liw1*(2*maxl + 4);
     break;
   }
 
@@ -568,8 +575,8 @@ int ARKSpilsAtimes(void *arkode_mem, N_Vector v, N_Vector z)
  ARKSpilsPSolve:
 
  This routine interfaces between the generic Sp***Solve routine
- (within the SPGMR, SPBCG, SPTFQMR, or PCG solver) and the user's 
- psolve routine.  It passes to psolve all required state 
+ (within the SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG solver) and the 
+ user's psolve routine.  It passes to psolve all required state 
  information from arkode_mem.  Its return value is the same as 
  that returned by psolve. Note that the generic SP*** solver 
  guarantees that ARKSpilsPSolve will not be called in the case 

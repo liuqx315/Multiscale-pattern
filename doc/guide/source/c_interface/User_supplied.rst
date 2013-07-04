@@ -436,8 +436,8 @@ Jacobian information (matrix-vector product)
 --------------------------------------------------------------
 
 If one of the Krylov iterative linear solvers SPGMR, SPBCG, 
-SPTFQMR, or PCG is selected (i.e. ARKSp* is called in step 8 of the
-section :ref:`CInterface.Skeleton`), the user may provide a function
+SPTFQMR, SPFGMR or PCG is selected (i.e. ARKSp* is called in step 8 of
+the section :ref:`CInterface.Skeleton`), the user may provide a function
 of type :c:func:`ARKSpilsJacTimesVecFn()` in the following form, to compute
 matrix-vector products :math:`J*v`. If such a function is not
 supplied, the default is a difference quotient approximation to these
@@ -485,11 +485,12 @@ Preconditioning (linear system solution)^
 --------------------------------------------------------------
 
 If one of the Krylov iterative linear solvers SPGMR, SPBCG,
-SPTFQMR, or PCG is selected, and preconditioning is used, then the user
-must provide a function of type :c:func:`ARKSpilsPrecSolveFn()` to solve the
-linear system :math:`Pz=r`, where :math:`P` may be either a left or
-right preconditioning matrix.  Here :math:`P` should approximate (at
-least crudely) the Newton matrix :math:`A=M-\gamma J`, where :math:`M`
+SPTFQMR, SPFGMR or PCG is selected, and preconditioning is used, then
+the user must provide a function of type
+:c:func:`ARKSpilsPrecSolveFn()` to solve the linear system
+:math:`Pz=r`, where :math:`P` may be either a left or right
+preconditioning matrix.  Here :math:`P` should approximate (at least
+crudely) the Newton matrix :math:`A=M-\gamma J`, where :math:`M` 
 is the mass matrix (typically :math:`M=I` unless working in a
 finite-element setting) and :math:`J = \frac{\partial f_I}{\partial
 y}`  If preconditioning is done on both sides, the product of the two
