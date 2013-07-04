@@ -341,7 +341,7 @@ static int ARKSptfqmrSolve(ARKodeMem ark_mem, N_Vector b,
   arkspils_mem->s_nps += nps_inc;
   if (retval != SPTFQMR_SUCCESS) arkspils_mem->s_ncfl++;
 
-  /* Interpret return value from SpgmrSolve */
+  /* Interpret return value from SptfqmrSolve */
   arkspils_mem->s_last_flag = retval;
 
   switch(retval) {
