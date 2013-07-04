@@ -3055,5 +3055,106 @@ in the section :ref:`CInterface.LinearSolvers`.
       * ARK_MEM_FAIL  if a memory allocation failed
       * ARK_ILL_INPUT if an argument has an illegal value.
    
-   **Notes:** If an error occurred, ARKodeReInit also sends an error
+   **Notes:** If an error occurred, :c:func:`ARKodeReInit()` also
+   sends an error message to the error handler function.
+
+
+
+
+.. _CInterface.Resizing:
+
+ARKode system resize function
+-------------------------------------
+
+For simulations involving changes to the number of equations and
+unknowns in the ODE system (e.g. when using spatially-adaptive finite
+elements), the ARKode integrator may be "resized" between integration
+steps, through calls to the :c:func:`ARKodeResize()` function.
+This function modifies ARKode's internal memory structures to
+use the new problem size, without destruction of the temporal
+adaptivity heuristics.  It is assumed that the dynamical time scales
+before and after the vector resize will be comparable, so that all
+time-stepping heuristics prior to calling :c:func:`ARKodeResize()`
+remain valid after the call.  If instead the dynamics should be
+re-calibrated, the ARKode memory structure should be deleted with a
+call to :c:func:`ARKodeFree()`, and re-created with calls to
+:c:func:`ARKodeCreate()` and :c:func:`ARKodeInit()`. 
+
+To aid in the vector-resize operation, the user can supply a vector
+resize function that will take as input a vector with the previous
+size, and transform it in-place to return a corresponding vector of
+the new size.  If this function (of type :c:func:`ARKVecResizeFn()`)
+is not supplied (i.e. is set to ``NULL``), then all existing vectors
+internal to ARKode will be destroyed and re-cloned from the input
+vector. 
+
+In the case that the dynamical time scale should be modified slightly
+from the previous time scale, an input `hscale` is allowed, that will
+re-scale the upcoming time step by the specified factor.  If a value
+:math:`hscale \le 0` is specified, the default of 1.0 will be used.
+
+
+
+.. c:function:: int ARKodeResize(void *arkode_mem, N_Vector ynew, realtype hscale, realtype t0, ARKVecResizeFn resize, void *resize_data)
+
+   Re-initializes ARKode with a different state vector but with
+   comparable dynamical time scale.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+      * `ynew` -- the newly-sized solution vector, holding the current
+	dependent variable values :math:`y(t_0)`. 
+      * `hscale` -- the desired scaling factor for the dynamical time
+	scale (i.e. the next step will be of size :math:`h*hscale`)
+      * `t0` -- the current value of the independent variable
+	:math:`t_0` (this must be consistent with `ynew`.
+      * `resize` -- the user-supplied vector resize function (of type
+	:c:func:`ARKVecResizeFn()`.
+      * `resize_data` -- the user-supplied data structure to be passed
+	to `resize` when modifying internal ARKode vectors.
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL  if the ARKode memory was ``NULL``
+      * ARK_NO_MALLOC if `arkode_mem` was not allocated.
+      * ARK_ILL_INPUT if an argument has an illegal value.
+   
+   **Notes:** If an error occurred, :c:func:`ARKodeResize()` also sends an error
    message to the error handler function.
+
+
+Resizing the linear solver
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using any of the built-in linear solver modules, the linear
+solver memory structures must also be resized.  At present, none of
+these include a solver-specific 'resize' function, so the linear
+solver memory must be destroyed and re-allocated **following** each
+call to :c:func:`ARKodeResize()`.  For each of the built-in ARKDLS and
+ARKSPILS linear solvers, the specification call itself
+(e.g. :c:func:`ARKDense()` or :c:func:`ARKSpgmr()`) will internally
+destroy the solver-specific memory prior to re-allocation.   
+
+If any user-supplied routines are provided to aid the linear solver
+(e.g. Jacobian construction, Jacobian-vector product,
+preconditioning), then the corresponding "Set" routines must be called
+again **following** the solver re-specification. 
+
+
+Resizing the absolute tolerance array
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If using array-valued absolute tolerances, the absolute tolerance
+vector will be invalid after the call to :c:func:`ARKodeResize()`, so
+the new absolute tolerance vector should be re-set **following** each
+call to :c:func:`ARKodeResize()` through a new call to
+:c:func:`ARKodeSVtolerances()`.   
+
+If scalar-valued tolerances or a tolerance function was specified
+through either :c:func:`ARKodeSStolerances()` or
+:c:func:`ARKodeWFtolerances()`, then these will remain valid so no
+further action is necessary. 
+
+
+.. note:: For an example of :c:func:`ARKodeResize()` usage, see the
+	  supplied serial C example problem, ``ark_heat1D_adapt.c``.

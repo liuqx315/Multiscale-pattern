@@ -602,3 +602,48 @@ a user-supplied function of type :c:func:`ARKSpilsPrecSetupFn()`.
    listed in :ref:`CInterface.ARKodeOutputTable`. The unit roundoff
    can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
    ``sundials_types.h``. 
+
+
+
+.. _CInterface.VecResizeFn:
+
+Vector resize function
+--------------------------------------
+
+For simulations involving changes to the number of equations and
+unknowns in the ODE system (e.g. when using spatially-adaptive finite
+elements), the ARKode integrator may be "resized" between integration
+steps, through calls to the :c:func:`ARKodeResize()` function.
+Typically, when performing adaptive simulations the solution is
+stored in a customized user-supplied data structure, to enable
+adaptivity without repeated allocation/deallocation of memory.  In
+these scenarios, it is recommended that the user supply a customized
+vector kernel to interface between SUNDIALS and their problem-specific
+data structure.  If this vector kernel includes a function to resize a
+given vector, then this function may be supplied to
+:c:func:`ARKodeResize()` so that all internal ARKode vectors may be
+resized, instead of deleting and re-creating them at each call.  This
+resize function should have the following form:
+
+
+.. c:function:: typedef int (*ARKVecResizeFn)(N_Vector y, N_Vector ytemplate, void *user_data)
+
+   This function resizes the vector `y` to match the dimensions of the
+   supplied vector, `ytemplate`.
+   
+   **Arguments:**
+      * `y` -- the vector to resize.
+      * `ytemplate` -- a vector of the desired size.
+      * `user_data` -- a pointer to user data, the same as the
+        `resize_data` parameter that was passed to :c:func:`ARKodeResize()`.
+   
+   **Return value:** 
+   An ARKVecResizeFn function should return 0 if it successfully
+   resizes the vector `y`, and a non-zero value otherwise.
+   
+   **Notes:**  If this function is not supplied, then ARKode will
+   instead destroy the vector `y` and clone a new vector `y` off of
+   `ytemplate`. 
+
+
+

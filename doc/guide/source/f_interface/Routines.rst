@@ -25,6 +25,8 @@ with the corresponding ARKODE functions, are as follows:
 
   - :f:func:`FARKREINIT()` interfaces to :c:func:`ARKodeReInit()`.
 
+  - :f:func:`FARKRESIZE()` interfaces to :c:func:`ARKodeResize()`.
+
   - :f:func:`FARKSETIIN()` and :f:func:`FARKSETRIN()` interface to the
     ARKodeSet* functions (see :ref:`CInterface.OptionalInputs`).
 

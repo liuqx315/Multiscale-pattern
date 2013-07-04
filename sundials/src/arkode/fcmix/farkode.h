@@ -32,6 +32,7 @@
    FARKMALLOC                 ARKodeCreate, ARKodeSetUserData, 
                                  and ARKodeInit
    FARKREINIT                 ARKReInit
+   FARKRESIZE                 ARKResize
    FARKSETIIN                 ARKodeSet* (integer arguments)
    FARKSETRIN                 ARKodeSet* (real arguments)
    FARKSETADAPTIVITYMETHOD    ARKodeSetAdaptivityMethod
@@ -349,10 +350,9 @@
                   0 if successful, 
                   nonzero if an error.
 
-
  -----------------------------------------------------------------------------
 
- (8) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT
+ (8) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT, FARKRESIZE
  
  (8.1s) To initialize the serial vector specification, the user must make the
      following call:
@@ -477,7 +477,38 @@
      the previous FARKMALLOC call.  The subsequent call to specify the linear 
      system solution method may or may not be needed; see paragraph (9) below.
  
- (8.4) To set various integer optional inputs, make the folowing call:
+ (8.4) To re-initialize the ARKODE solver for the solution of a new problem
+     of a different size as one already solved, but with the same dynamical 
+     time scale and method choice, make the following call:
+
+       CALL FARKRESIZE(T0, Y0, HSCALE, ITOL, RTOL, ATOL, IER)
+
+     The arguments are:
+        T0 = initial value of t [realtype, input]
+	Y0 = array of initial conditions [realtype, input]
+	HSCALE = desired step size scale factor [realtype, input]
+	          1.0 is the default
+		  any value <= 0.0 results in the default.
+        ITOL = flag denoting that a new relative tolerance and vector of 
+	   absolute tolerances are supplied in the RTOL and ATOL arguments
+	   [int, input]: 
+                  0 = retain the current relative tolerance and current 
+		      scalar-valued or user-supplied function
+                  1 = RTOL contains the new scalar-valued relative tolerance 
+                      and ATOL contains a new array of absolute tolerances
+	RTOL = scalar-valued relative tolerance [realtype, input]
+	ATOL = array of absolute tolerances [realtype, input]
+	IER  = return completion flag [int, output]:
+                  0 = SUCCESS,
+                 -1 = failure (see printed message for failure details).
+
+     FARKRESIZE performs the opposite set of of operations as FARKREINIT: it 
+     does not reinitialize any of the time-step heuristics, but it does 
+     perform memory reallocation.  The subsequent call to specify the linear 
+     system solution method is required, since its internal memory 
+     structures will no longer be the correct size.; see paragraph (9) below.
+ 
+ (8.5) To set various integer optional inputs, make the folowing call:
 
        CALL FARKSETIIN(KEY, VALUE, IER)
 
@@ -571,7 +602,7 @@
        B2 = array of length S containing the embedding coefficients
            [realtype, input]
 
- (8.5) To set a solver diagnostics output file, make the folowing call:
+ (8.6) To set a solver diagnostics output file, make the folowing call:
 
        CALL FARKSETDIAGNOSTICS(FNAME, FLEN, IER)
 
@@ -580,7 +611,7 @@
      the length (in characters) of FNAME (for portability).  The int return 
      flag IER is 0 if successful (able to open file), and nonzero otherwise.
 
- (8.6) To close the solver diagnostics output file, make the folowing call:
+ (8.7) To close the solver diagnostics output file, make the folowing call:
 
        CALL FARKSTOPDIAGNOSTICS(IER)
 
@@ -597,8 +628,10 @@
      to the Jacobian J = dfi(t,y)/dy of the implicit portion of the ODE 
      system. ARKode presently includes seven choices for the treatment of
      these systems, and the user of FARKODE must call a routine with a
-     specific name to make the desired choice. 
- 
+     specific name to make the desired choice.  Following any call to
+     FARKMALLOC or FARKRESIZE, one of these solver specification routines 
+     must be called.
+
  (9.1s) DENSE treatment of the linear system.
 
      The user must make the call
@@ -612,7 +645,8 @@
 		 negative = error.
  
      If the user program includes the FARKDJAC routine for the evaluation of 
-     the dense approximation to the Jacobian, the following call must be made
+     the dense approximation to the Jacobian, then after the call to 
+     FARKDENSE, the following call must be made 
 
        CALL FARKDENSESETJAC(FLAG, IER)
 
@@ -642,7 +676,8 @@
         IER = return flag [int, output]; 0 if successful, nonzero otherwise.
  
      If the user program includes the FARKBJAC routine for the evaluation of 
-     the band approximation to the Jacobian, the following call must be made
+     the band approximation to the Jacobian, then following the call to 
+     FARKBAND, the following call must be made 
 
        CALL FARKBANDSETJAC(FLAG, IER)
 
@@ -667,7 +702,7 @@
      The arguments match those for FARKDENSE, except that NEQ is now a 
      normal int (and not a long int).
 
-     The user may optionally call
+     Following the call to FARKLAPACKDENSE, the user may optionally call
 
        CALL FARKDENSESETJAC(FLAG, IER)
        
@@ -685,7 +720,7 @@
      The arguments match those for FARKBAND, except that now all arguments 
      have type 'int'.
 
-     The user may optionally call
+     Following the call to FARKLAPACKBAND, the user may optionally call
 
        CALL FARKBANDSETJAC(FLAG, IER)
 
@@ -737,7 +772,10 @@
        CALL FARKSPGMRREINIT(IPRETYPE, IGSTYPE, DELT, IER)
 
      The arguments have the same meanings as for FARKSPGMR.  If MAXL is being
-     changed, then the user should call FARKSPGMR instead.
+     changed, then the user should call FARKSPGMR instead.  
+
+     Note: if the problem has been resized using FARKRESIZE, then FARKSPGMR 
+     must be called again. 
  
  (9.6) SPBCG treatment of the linear systems.
 
@@ -780,6 +818,9 @@
 
      The arguments have the same meanings as for FARKSPBCG.
 
+     Note: if the problem has been resized using FARKRESIZE, then FARKSPBCG 
+     must be called again. 
+
  (9.7) SPTFQMR treatment of the linear systems.
 
      For the Scaled Preconditioned TFQMR solution of the linear systems, the
@@ -820,6 +861,9 @@
        CALL FARKSPTFQMRREINIT(IPRETYPE, MAXL, DELT, IER)              
 
      The arguments have the same meanings as for FARKSPTFQMR.
+
+     Note: if the problem has been resized using FARKRESIZE, then FARKSPTFQMR 
+     must be called again. 
 
  (9.8) PCG treatment of the linear systems.
 
@@ -862,10 +906,14 @@
 
      The arguments have the same meanings as for FARKPCG.
 
+     Note: if the problem has been resized using FARKRESIZE, then FARKPCG
+     must be called again. 
+
  (9.9) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
-     the Jacobian vector product, the following call must be made
+     the Jacobian vector product, then after specifying the linear solver 
+     choice (e.g. FARKSPGMR), the following call must be made
 
        CALL FARKSPILSSETJAC(FLAG, IER)
 
@@ -874,12 +922,16 @@
      product).  The int return flag IER=0 if successful, and nonzero otherwise.
  
      Usage of the user-supplied routines FARKPSOL and FARKPSET for solution of
-     the preconditioner linear system requires the following call:
+     the preconditioner linear system similarly requires the following call after 
+     specifying the linear solver module:
 
        CALL FARKSPILSSETPREC(FLAG, IER)
 
      with the int FLAG=1. The return flag IER=0 if successful, nonzero 
      otherwise.
+
+     NOTE: following any call to FARKRESIZE, either of the above routines must 
+     again be called following re-specification of the linear solver module.
 
      The user-supplied routine FARKPSET must have the form:
 
@@ -1040,6 +1092,7 @@ extern "C" {
 
 #define FARK_MALLOC              SUNDIALS_F77_FUNC(farkmalloc,              FARKMALLOC)
 #define FARK_REINIT              SUNDIALS_F77_FUNC(farkreinit,              FARKREINIT)
+#define FARK_RESIZE              SUNDIALS_F77_FUNC(farkresize,              FARKRESIZE)
 #define FARK_SETDEFAULTS         SUNDIALS_F77_FUNC(farksetdefaults,         FARKSETDEFAULTS)
 #define FARK_SETIIN              SUNDIALS_F77_FUNC(farksetiin,              FARKSETIIN)
 #define FARK_SETRIN              SUNDIALS_F77_FUNC(farksetrin,              FARKSETRIN)
@@ -1089,6 +1142,7 @@ extern "C" {
 
 #define FARK_MALLOC              farkmalloc_
 #define FARK_REINIT              farkreinit_
+#define FARK_RESIZE              farkresize_
 #define FARK_SETDEFAULTS         farksetdefaults_
 #define FARK_SETIIN              farksetiin_
 #define FARK_SETRIN              farksetrin_
@@ -1151,6 +1205,9 @@ extern "C" {
   void FARK_REINIT(realtype *t0, realtype *y0, int *imex,
 		   int *iatol, realtype *rtol, realtype *atol,
 		   int *ier);
+
+  void FARK_RESIZE(realtype *t0, realtype *y0, realtype *hscale, 
+		   int *itol, realtype *rtol, realtype *atol, int *ier);
 
   void FARK_SETIIN(char key_name[], long int *ival, int *ier);
   void FARK_SETRIN(char key_name[], realtype *rval, int *ier);

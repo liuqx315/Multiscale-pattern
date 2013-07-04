@@ -737,28 +737,6 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     return(ARK_ILL_INPUT);
   }
 
-  /* /\* Re-initialize the linear solver (assumes that solver  */
-  /*    memory has already been resized appropriately) *\/ */
-  /* if (!ark_mem->ark_explicit) { */
-  /*   if (ark_mem->ark_linit != NULL) { */
-  /*     ier = ark_mem->ark_linit(ark_mem); */
-  /*     if (ier != 0) { */
-  /* 	arkProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE",  */
-  /* 			"ARKodeResize", MSGARK_LINIT_FAIL); */
-  /* 	return(ARK_LINIT_FAIL); */
-  /*     } */
-  /*   } */
-  /* } */
-
-  /* /\* Fill initial ynew and fnew arrays *\/ */
-  /* N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_ynew); */
-  /* ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur, */
-  /* 		   ark_mem->ark_ftemp, ark_mem->ark_fnew); */
-
-  /* /\* Copy f(t0,y0) into ark_fold *\/ */
-  /* /\* if (!ark_mem->ark_explicit) *\/ */
-  /* N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold); */
-
   /* Indicate that problem size is new */
   ark_mem->ark_resized = TRUE;
   ark_mem->ark_firststage = TRUE;
