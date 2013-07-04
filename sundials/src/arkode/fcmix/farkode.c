@@ -8,8 +8,8 @@
   the ARKODE package.  See farkode.h for usage.
   NOTE: some routines are necessarily stored elsewhere to avoid
   linking problems.  Therefore, see also farkpreco.c, farkpsol.c,
-  farkjtimes.c, farkadapt.c, farkexpstab.c and farkvecresize.c 
-  for all the available options.
+  farkjtimes.c, farkadapt.c and farkexpstab.c for all the 
+  available options.
  --------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -248,6 +248,51 @@ void FARK_REINIT(realtype *t0, realtype *y0, int *imex,
   if (*ier != ARK_SUCCESS) {
     *ier = -1;
     return;
+  }
+
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface routine to re-initialize ARKode memory 
+   structure for a problem with a new size but similar time 
+   scale; functions as an all-in-one interface to the C 
+   routines ARKodeResize (and potentially ARKodeSVtolerances); 
+   see farkode.h for further details */
+void FARK_RESIZE(realtype *t0, realtype *y0, realtype *hscale,
+		 int *itol, realtype *rtol, realtype *atol, int *ier)
+{
+  *ier = 0;
+
+  /* Set data in F2C_ARKODE_vec to y0 */
+  N_VSetArrayPointer(y0, F2C_ARKODE_vec);
+  
+  /* Call ARKodeResize (currently does not allow Fortran 
+     user-supplied vector resize function) */
+  *ier = ARKodeResize(ARK_arkodemem, F2C_ARKODE_vec, *hscale,
+		      *t0, NULL, NULL);
+
+  /* Reset data pointer */
+  N_VSetArrayPointer(NULL, F2C_ARKODE_vec);
+
+  /* On failure, exit */
+  if (*ier != ARK_SUCCESS) {
+    *ier = -1;
+    return;
+  }
+
+  /* Set tolerances, based on itol argument */
+  if (*itol) {
+    N_Vector Vatol = NULL;
+    Vatol = N_VCloneEmpty(F2C_ARKODE_vec);
+    if (Vatol == NULL) {
+      *ier = -1;
+      return;
+    }
+    N_VSetArrayPointer(atol, Vatol);
+    *ier = ARKodeSVtolerances(ARK_arkodemem, *rtol, Vatol);
+    N_VDestroy(Vatol);
   }
 
   return;

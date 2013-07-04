@@ -1152,6 +1152,82 @@ reinitialize PCG without reallocating its memory by calling
 
 
 
+.. _FInterface.Resize:
+
+Resizing the ODE system
+-----------------------------
+
+For simulations involving changes to the number of equations and
+unknowns in the ODE system (e.g. when using spatially-adaptive finite
+elements), the :f:func:`FARKODE()` integrator may be "resized" between
+integration steps, through calls to the :f:func:`FARKRESIZE()`
+function, that interfaces with the C routine
+:c:func:`ARKodeResize()`.  This function modifies ARKode's internal
+memory structures to use the new problem size, without destruction of
+the temporal adaptivity heuristics.  It is assumed that the dynamical
+time scales before and after the vector resize will be comparable, so
+that all time-stepping heuristics prior to calling :c:func:`FARKRESIZE`
+remain valid after the call.  If instead the dynamics should be
+re-calibrated, the FARKODE memory structure should be deleted with a
+call to :f:func:`FARKFREE()`, and re-created with a call to
+:f:func:`FARKMALLOC()`. 
+
+
+.. f:subroutine:: FARKRESIZE(T0, Y0, HSCALE, ITOL, RTOL, ATOL, IER)
+   
+   Re-initializes the Fortran interface to the ARKode solver for a
+   differently-sized ODE system.
+      
+   **Arguments:** 
+      * T0 (``realtype``, input) -- initial value of the independent
+	variable :math:`t`  
+
+      * Y0 (``realtype``, input) -- array of dependent-variable
+	initial conditions  
+
+      * HSCALE (``realtype``, input) -- desired step size scale factor:
+
+        * 1.0 is the default
+
+        * any value <= 0.0 results in the default.
+
+      * ITOL (``int``, input) -- flag denoting that a new relative
+	tolerance and vector of absolute tolerances are supplied in
+	the RTOL and ATOL arguments: 
+
+        * 0 = retain the current scalar-valued relative and absolute
+	  tolerances, or the user-supplied error weight function,
+	  :f:func:`FARKEWT()`. 
+
+        * 1 = RTOL contains the new scalar-valued relative tolerance 
+          and ATOL contains a new array of absolute tolerances
+
+      * RTOL (``realtype``, input) -- scalar relative tolerance 
+
+      * ATOL (``realtype``, input) -- array of absolute tolerances 
+
+      * IER (``int``, output) -- return flag (0 success, :math:`\ne 0` failure) 
+      
+   **Notes:**
+   This routine performs the opposite set of of operations as
+   :f:func:`FARKREINIT()`: it does not reinitialize any of the
+   time-step heuristics, but it does perform memory reallocation.  
+
+
+Following a call to :f:func:`FARKRESIZE()`, a call to specify the
+linear system solver must be made **after** the call to
+:f:func:`FARKRESIZE()`, since the internal data structures for the
+linear solver will also be the incorrect size.  
+
+If any user-supplied linear solver helper routines were used (Jacobian 
+evaluation, Jacobian-vector product, preconditioning, etc.), then the
+relevant "set" routines to specify their usage must be called again
+**following** the re-specification of the linear solver module.
+
+
+
+
+
 .. _FInterface.Deallocation:
 
 Memory deallocation

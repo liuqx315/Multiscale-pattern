@@ -745,10 +745,6 @@ SUNDIALS_EXPORT int ARKodeReInit(void *arkode_mem, ARKRhsFn fe,
    ARK_ILL_INPUT    indicating an input argument was illegal
                     (including an error from the supplied 
 		    resize function).
-   ARK_LINIT_FAIL   indicating the linear solver initialization 
-                    routine failed.
-   ARK_LFREE_FAIL   indicating the linear solver free routine 
-                    failed.
  In case of an error return, an error message is also printed.
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKodeResize(void *arkode_mem, N_Vector ynew, 
