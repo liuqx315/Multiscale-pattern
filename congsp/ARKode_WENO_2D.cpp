@@ -65,13 +65,13 @@ int main(int argc, const char * argv[])
 {
     /* general problem parameters */
     realtype T0 = RCONST(0.0);
-    realtype Tf = RCONST(0.3);
-    int Nt = 6;
+    realtype Tf = RCONST(8.5);
+    int Nt = 17;
     int Nvar = 4;
     UserData udata = NULL;
     realtype *data;
     long int Nx, Ny, NEQ, i, j;
-    realtype Lx, Ly, gama;
+    realtype Lx, Ly, gama, p;
     
     /* declare solver parameters */
     int flag;
@@ -138,30 +138,18 @@ int main(int argc, const char * argv[])
     
     for(j=0;j<Ny;j++){
         for (i=0; i<Nx; i++) {
-	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)>0.5){
-            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
-            data[idx(i,j,Nx,Ny,1)] =  1.206*0.5323;  /* qx */
-            data[idx(i,j,Nx,Ny,2)] =  0.5323*0.0;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
+	  data[idx(i,j,Nx,Ny,1)] = 0.0;
+	  data[idx(i,j,Nx,Ny,2)] = 0.0;
+	  if (udata->dy*(j+0.5)>(0.5+0.01*cos(6.0*PI*udata->dx*(i+0.5)))){
+	    data[idx(i,j,Nx,Ny,0)] = 2.0;
+	    p = data[idx(i,j,Nx,Ny,0)]*0.1*(1.0-udata->dy*(j+0.5));
+	    data[idx(i,j,Nx,Ny,3)] = data[idx(i,j,Nx,Ny,0)]*(p/(data[idx(i,j,Nx,Ny,0)]*(gama-1.0)));
 	  }
-	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)>0.5){
-            data[idx(i,j,Nx,Ny,0)] =  1.5;  /* rou */
-            data[idx(i,j,Nx,Ny,1)] =  1.5*0.0;  /* qx */
-            data[idx(i,j,Nx,Ny,2)] =  1.5*0.0;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  1.5*(1.5/((udata->gama-1.0)*1.5));  /* E */
-	  }
-	  if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)<0.5){
-            data[idx(i,j,Nx,Ny,0)] =  0.138;  /* rou */
-            data[idx(i,j,Nx,Ny,1)] =  1.206*0.138;  /* qx */
-            data[idx(i,j,Nx,Ny,2)] =  1.206*0.138;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  0.138*(0.029/((udata->gama-1.0)*0.138)+0.5*(2*1.206*1.206));  /* E */
-	  }
-	  if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)<0.5){
-            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
-            data[idx(i,j,Nx,Ny,1)] =  1.206*0.0;  /* qx */
-            data[idx(i,j,Nx,Ny,2)] =  1.206*0.5323;  /* qy */
-            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
-	  }
+	  else{
+	    data[idx(i,j,Nx,Ny,0)] = 1.0;
+	    p = 2.0*0.1*(1.0-(0.5+0.01*cos(6.0*PI*udata->dx*(i+0.5))))+0.1*((0.5+0.01*cos(6.0*PI*udata->dx*(i+0.5)))-udata->dy*(j+0.5));
+	    data[idx(i,j,Nx,Ny,3)] = data[idx(i,j,Nx,Ny,0)]*(p/(data[idx(i,j,Nx,Ny,0)]*(gama-1.0)));
+	  } 
         }   
     }
     
@@ -170,6 +158,8 @@ int main(int argc, const char * argv[])
     if (check_flag((void *) arkode_mem, "ARKodeCreate", 0)) return 1;
     
     /* Set solver parameters */
+    //realtype reltol = 1.e+12;
+    //realtype abstol = 1.e+12;
     realtype reltol  = 1.e-3;
     realtype abstol  = 1.e-6;
     
@@ -186,8 +176,16 @@ int main(int argc, const char * argv[])
     //if (check_flag(&flag, "ARKodeSetDiagnostics", 1)) return 1;
     
     /* Call ARKodeSetInitStep to initialize time step */
-    flag = ARKodeSetInitStep(arkode_mem, 0.05);
+    flag = ARKodeSetInitStep(arkode_mem, 0.5);
     if (check_flag(&flag, "ARKodeSetInitStep", 1)) return 1;
+
+    /* Call ARKodeSetMinStep to set min time step */
+    //flag = ARKodeSetMinStep(arkode_mem, 0.05);
+    //if (check_flag(&flag, "ARKodeSetMinStep", 1)) return 1;
+
+    /* Call ARKodeSetMaxStep to set max time step */
+    //flag = ARKodeSetMaxStep(arkode_mem, 0.05);
+    //if (check_flag(&flag, "ARKodeSetMaxStep", 1)) return 1;
 
     /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
     flag = ARKodeSetMaxNumSteps(arkode_mem, 100000);
@@ -284,9 +282,12 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {   
     /* declare variables */
     long int NEQ, NEQS, i, j, k;
-    realtype egv1, egv2, egv3, egvmaxtemp, egvmax, p;
+    realtype egv1x, egv2x, egv3x, egvmaxtempx, egvmaxx;
+    realtype egv1y, egv2y, egv3y, egvmaxtempy, egvmaxy;
+    realtype egv1, egv2, egv3, egvmaxtemp, egvmax;
     int flag;
-    realtype Epsilon = 1.e-6;
+    realtype p, Epsilon;
+    Epsilon = 1.e-6;
 
     /* create relative arrays */
     realtype *IS0_px = new realtype [4];
@@ -427,14 +428,47 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         for (i=0; i<Nx; i++){
 	    /* get the pressure */
 	    p = Ydata[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(Ydata[idx(i, j, Nx, Ny, 3)]/Ydata[idx(i, j, Nx, Ny, 0)]-0.5*((Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])));
-            /* get different eigenvalues */
-            egv1 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)]);
-            egv2 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])-sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
-            egv3 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])+sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
-           /* get max absolute eigenvalue */
-           egvmaxtemp = (fabs(egv1)>fabs(egv2))? fabs(egv1) : fabs(egv2);
-           egvmax = (egvmaxtemp>fabs(egv3))? egvmaxtemp : fabs(egv3);
+	    
+	    egv1x = Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)];
+	    egv2x = Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)] - sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)]);
+	    egv3x = Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)] + sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)]);
+	    egv1y = Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)];
+	    egv2y = Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)] - sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)]);
+	    egv3y = Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)] + sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)]);
+
+	    egvmaxtempx = (fabs(egv1x)>fabs(egv2x))? fabs(egv1x) : fabs(egv2x);
+            egvmaxx = (egvmaxtempx>fabs(egv3x))? egvmaxtempx : fabs(egv3x);
+	    egvmaxtempy = (fabs(egv1y)>fabs(egv2y))? fabs(egv1y) : fabs(egv2y);
+            egvmaxy = (egvmaxtempy>fabs(egv3y))? egvmaxtempy : fabs(egv3y);
+
+	    ypdata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]+egvmaxx*Ydata[idx(i, j, Nx, Ny, 0)]);
+            yndata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]-egvmaxx*Ydata[idx(i, j, Nx, Ny, 0)]);
+            ypdata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]+egvmaxy*Ydata[idx(i, j, Nx, Ny, 0)]);
+            yndata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]-egvmaxy*Ydata[idx(i, j, Nx, Ny, 0)]);
+            taopdata[idx(i, j, Nx, Ny, 0)]=0.5*(taodata[idx(i, j, Nx, Ny, 0)]+egvmaxx*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taondata[idx(i, j, Nx, Ny, 0)]=0.5*(taodata[idx(i, j, Nx, Ny, 0)]-egvmaxx*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taopdata[idx(i, j, Nx, Ny, 1)]=0.5*(taodata[idx(i, j, Nx, Ny, 1)]+egvmaxy*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taondata[idx(i, j, Nx, Ny, 1)]=0.5*(taodata[idx(i, j, Nx, Ny, 1)]-egvmaxy*Ydata[idx(i, j, Nx, Ny, 1)]);
+            taopdata[idx(i, j, Nx, Ny, 2)]=0.5*(taodata[idx(i, j, Nx, Ny, 2)]+egvmaxx*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taondata[idx(i, j, Nx, Ny, 2)]=0.5*(taodata[idx(i, j, Nx, Ny, 2)]-egvmaxx*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taopdata[idx(i, j, Nx, Ny, 3)]=0.5*(taodata[idx(i, j, Nx, Ny, 3)]+egvmaxy*Ydata[idx(i, j, Nx, Ny, 2)]);
+            taondata[idx(i, j, Nx, Ny, 3)]=0.5*(taodata[idx(i, j, Nx, Ny, 3)]-egvmaxy*Ydata[idx(i, j, Nx, Ny, 2)]);
+            Cjpdata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]+egvmaxx*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjndata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]-egvmaxx*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjpdata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]+egvmaxy*Ydata[idx(i, j, Nx, Ny, 3)]);
+            Cjndata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]-egvmaxy*Ydata[idx(i, j, Nx, Ny, 3)]);
+	    
+
             /* fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
+            /* get different eigenvalues */
+            //egv1 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)]);
+            //egv2 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])-sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+	    //egv3 = Ly*(Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)])+Lx*(Ydata[idx(i, j, Nx, Ny, 2)]/Ydata[idx(i, j, Nx, Ny, 0)])+sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)])*sqrt(Lx*Lx+Ly*Ly);
+           /* get max absolute eigenvalue */
+	    //egvmaxtemp = (fabs(egv1)>fabs(egv2))? fabs(egv1) : fabs(egv2);
+            //egvmax = (egvmaxtemp>fabs(egv3))? egvmaxtemp : fabs(egv3);
+            /* fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
+	    /*
             ypdata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
             yndata[idx(i, j, Nx, Ny, 1)]=0.5*(Ydata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
             ypdata[idx(i, j, Nx, Ny, 2)]=0.5*(Ydata[idx(i, j, Nx, Ny, 2)]+egvmax*Ydata[idx(i, j, Nx, Ny, 0)]);
@@ -451,6 +485,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             Cjndata[idx(i, j, Nx, Ny, 0)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 0)]-egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
             Cjpdata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]+egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
             Cjndata[idx(i, j, Nx, Ny, 1)]=0.5*(Cjdata[idx(i, j, Nx, Ny, 1)]-egvmax*Ydata[idx(i, j, Nx, Ny, 3)]);
+	    */
         }
     }
 
@@ -469,7 +504,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             if (flag!=0) printf("error in SetUx function \n");
             
             for(k=0;k<4;k++){
-                yxdata[idx(i, j, Nx, Ny, k)]=-(1/dx)*((u_tpphx[k]-u_tpnhx[k])+(u_tnphx[k]-u_tnnhx[k]));
+                yxdata[idx(i, j, Nx, Ny, k)]=-(1.0/dx)*((u_tpphx[k]-u_tpnhx[k])+(u_tnphx[k]-u_tnnhx[k]));
             }
             
             
@@ -484,7 +519,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             if (flag!=0) printf("error in SetUy function \n");
             
             for(k=0;k<4;k++){
-                yydata[idx(i, j, Nx, Ny, k)]=-(1/dy)*((u_tpphy[k]-u_tpnhy[k])+(u_tnphy[k]-u_tnnhy[k]));
+                yydata[idx(i, j, Nx, Ny, k)]=-(1.0/dy)*((u_tpphy[k]-u_tpnhy[k])+(u_tnphy[k]-u_tnnhy[k]));
             }
     
             /* get derivative both on x and y direction */
@@ -564,6 +599,23 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
   /* declaration */
   long int idown1, idown2, idown3, iup1, iup2, iup3;
 
+  realtype *yp = new realtype [7];
+  realtype *ypup = new realtype [3];
+  realtype *taopdownx = new realtype [3];
+  realtype *taopupx = new realtype [3];
+  realtype *taopdowny = new realtype [3];
+  realtype *taopupy = new realtype [3];
+  realtype *Cjpdownx = new realtype [3];
+  realtype *Cjpupx = new realtype [3];
+  realtype *yndown = new realtype [3];
+  realtype *ynup = new realtype [3];
+  realtype *taondownx = new realtype [3];
+  realtype *taonupx = new realtype [3];
+  realtype *taondowny = new realtype [3];
+  realtype *taonupy = new realtype [3];
+  realtype *Cjndownx = new realtype [3];
+  realtype *Cjnupx = new realtype [3];
+
     /* consider Nx */
     if (Nx<4){
         cerr << "\nNx should be more than 3!\n";
@@ -571,17 +623,44 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
     }
     else {
       /* consider the situations of different i */  
-      idown1 = i;
-      idown2 = i;
-      idown3 = i;
-      iup1 = i;
-      iup2 = i;
-      iup3 = i;
+      if (i>2&&i<Nx-3){
+	for (k=0;k<7;k++){
+	  yp[k] = ypdata[idx(i-3+k,j,Nx,Ny,1)];
+	  yn[k] = yndata[idx(i-3+k,j,Nx,Ny,1)];
+	  taopx[k] = taopdata[idx(i-3+k,j,Nx,Ny,0)];
+	  taonx[k] = taondata[idx(i-3+k,j,Nx,Ny,0)];
+	  taopy[k] = taopdata[idx(i-3+k,j,Nx,Ny,2)];
+	  taony[k] = taondata[idx(i-3+k,j,Nx,Ny,2)];
+	  Cjp[k] = Cjpdata[idx(i-3+k,j,Nx,Ny,0)];
+	  Cjn[k] = Cjndata[idx(i-3+k,j,Nx,Ny,0)];
+	  /*
+	yp[3] = ypdata[idx(i,j,Nx,Ny,1)];
+	yp[2] = ypdata[idx(i-1,j,Nx,Ny,1)];
+	yp[1] = ypdata[idx(i-2,j,Nx,Ny,1)];
+	yp[0] = ypdata[idx(i-3,j,Nx,Ny,1)];
+	yp[4] = ypdata[idx(i+1,j,Nx,Ny,1)];
+	yp[5] = ypdata[idx(i+2,j,Nx,Ny,1)];
+	yp[6] = ypdata[idx(i+3,j,Nx,Ny,1)];
+	  */
+	}
+      }
       if (i<3||i>Nx-4){      
 	if (i==0){
-	  idown1 = 1;
-	  idown2 = 3;
-	  idown3 = 5;
+	yp[3] = ypdata[idx(i,j,Nx,Ny,1)];
+	yp[2] = -yndata[idx(i,j,Nx,Ny,1)];
+	yp[1] = -yndata[idx(i+1,j,Nx,Ny,1)];
+	yp[0] = -yndata[idx(i+2,j,Nx,Ny,1)];
+	yp[4] = ypdata[idx(i+1,j,Nx,Ny,1)];
+	yp[5] = ypdata[idx(i+2,j,Nx,Ny,1)];
+	yp[6] = ypdata[idx(i+3,j,Nx,Ny,1)]; 
+
+	yn[3] = ypdata[idx(i,j,Nx,Ny,1)];
+	yn[2] = -yndata[idx(i,j,Nx,Ny,1)];
+	yn[1] = -yndata[idx(i+1,j,Nx,Ny,1)];
+	yn[0] = -yndata[idx(i+2,j,Nx,Ny,1)];
+	yn[4] = ypdata[idx(i+1,j,Nx,Ny,1)];
+	yn[5] = ypdata[idx(i+2,j,Nx,Ny,1)];
+	yn[6] = ypdata[idx(i+3,j,Nx,Ny,1)];   
 	}
     
 	if (i==1){ 
@@ -1045,7 +1124,7 @@ static int Gettao(N_Vector y, N_Vector tao, long int Nx, long int Ny, realtype g
     /* Compute the values of tao in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-	  tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)]));
+	    tao_data[idx(i, j, Nx, Ny, 0)] = data[idx(i, j, Nx, Ny, 1)]*vx_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)]));
             tao_data[idx(i, j, Nx, Ny, 1)] = data[idx(i, j, Nx, Ny, 1)]*vy_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 2)] = data[idx(i, j, Nx, Ny, 2)]*vx_data[idx_v(i,j,Nx)];
             tao_data[idx(i, j, Nx, Ny, 3)] = data[idx(i, j, Nx, Ny, 2)]*vy_data[idx_v(i,j,Nx)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)]));
@@ -1098,7 +1177,7 @@ static int GetCj(N_Vector y, N_Vector Cj, long int Nx, long int Ny, realtype gam
     /* Compute the values of Cj in the whole domain */
     for(j=0;j<Ny;j++){
         for(i=0;i<Nx;i++){
-	  Cj_data[idx(i, j, Nx, Ny, 0)] = vx_data[idx_v(i,j,Nx)]*(data[idx(i, j, Nx, Ny, 3)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)])));
+	    Cj_data[idx(i, j, Nx, Ny, 0)] = vx_data[idx_v(i,j,Nx)]*(data[idx(i, j, Nx, Ny, 3)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)])));
             Cj_data[idx(i, j, Nx, Ny, 1)] = vy_data[idx_v(i,j,Nx)]*(data[idx(i, j, Nx, Ny, 3)]+data[idx(i, j, Nx, Ny, 0)]*(gama-1.0)*(data[idx(i, j, Nx, Ny, 3)]/data[idx(i, j, Nx, Ny, 0)]-0.5*(vx_data[idx_v(i,j,Nx)]*vx_data[idx_v(i,j,Nx)]+vy_data[idx_v(i,j,Nx)]*vy_data[idx_v(i,j,Nx)])));
         }
     }
