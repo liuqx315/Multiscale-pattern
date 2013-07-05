@@ -363,6 +363,17 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | a previous call to ARKodeSetLinear.
                           | [TRUE]
                           |
+ ARKodeSetFixedPoint      | specifies that the implicit portion of 
+                          | the problem should use the accelerated 
+                          | fixed-point solver.
+                          | [FALSE]
+                          |
+ ARKodeSetNewton          | specifies that the implicit portion of 
+                          | the problem should use the modified Newton 
+                          | solver.  Used to undo a previous call to
+                          | ARKodeSetFixedPoint.
+                          | [TRUE]
+                          |
  ARKodeSetExplicit        | specifies that implicit portion of 
                           | problem is disabled, and to use an 
                           | explicit RK method.
@@ -496,11 +507,11 @@ SUNDIALS_EXPORT void *ARKodeCreate();
                           | function.
                           | [internal]
                           |
- ARKodeSetNewtonCRDown    | user-provided nonlinear convergence
+ ARKodeSetNonlinCRDown    | user-provided nonlinear convergence
                           | rate constant.
                           | [0.3]
                           |
- ARKodeSetNewtonRDiv      | user-provided nonlinear divergence ratio.
+ ARKodeSetNonlinRDiv      | user-provided nonlinear divergence ratio.
                           | [2.3]
                           |
  ARKodeSetDeltaGammaMax   | user-provided linear setup decision
@@ -563,6 +574,8 @@ SUNDIALS_EXPORT int ARKodeSetOrder(void *arkode_mem, int maxord);
 SUNDIALS_EXPORT int ARKodeSetDenseOrder(void *arkode_mem, int dord);
 SUNDIALS_EXPORT int ARKodeSetLinear(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetNonlinear(void *arkode_mem);
+SUNDIALS_EXPORT int ARKodeSetFixedPoint(void *arkode_mem, long int fp_m);
+SUNDIALS_EXPORT int ARKodeSetNewton(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetExplicit(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetImplicit(void *arkode_mem);
 SUNDIALS_EXPORT int ARKodeSetImEx(void *arkode_mem);
@@ -619,9 +632,9 @@ SUNDIALS_EXPORT int ARKodeSetSmallNumEFails(void *arkode_mem,
 					    int small_nef);
 SUNDIALS_EXPORT int ARKodeSetMaxCFailGrowth(void *arkode_mem, 
 					    realtype etacf);
-SUNDIALS_EXPORT int ARKodeSetNewtonCRDown(void *arkode_mem, 
+SUNDIALS_EXPORT int ARKodeSetNonlinCRDown(void *arkode_mem, 
 					  realtype crdown);
-SUNDIALS_EXPORT int ARKodeSetNewtonRDiv(void *arkode_mem, 
+SUNDIALS_EXPORT int ARKodeSetNonlinRDiv(void *arkode_mem, 
 					realtype rdiv);
 SUNDIALS_EXPORT int ARKodeSetDeltaGammaMax(void *arkode_mem, 
 					   realtype dgmax);

@@ -234,7 +234,7 @@ int main()
   cout << "   Total linear solver setups = " << nsetups << "\n";
   cout << "   Total RHS evals for setting up the linear system = " << nfeLS << "\n";
   cout << "   Total number of Jacobian evaluations = " << nje << "\n";
-  cout << "   Total number of Newton iterations = " << nni << "\n";
+  cout << "   Total number of nonlinear iterations = " << nni << "\n";
   cout << "   Total number of linear solver convergence failures = " << ncfn << "\n";
   cout << "   Total number of error test failures = " << netf << "\n\n";
   cout << "   Error: max = " << errI << ", rms = " << err2 << "\n";

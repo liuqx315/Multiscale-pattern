@@ -247,7 +247,7 @@ int main()
   printf("   Total linear solver setups = %li\n", nsetups);
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
-  printf("   Total number of Newton iterations = %li\n", nni);
+  printf("   Total number of nonlinear iterations = %li\n", nni);
   printf("   Total root-function g evals = %li\n", nge);
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);

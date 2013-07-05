@@ -145,7 +145,7 @@ int main() {
   realtype tout = T0;
   printf("        t      ||u||_rms    N    steps\n");
   printf("   ------------------------------------\n");
-  printf("  %10.6f  %10.6f    %i     %i\n", 
+  printf("  %10.6f  %10.6f    %li     %i\n", 
 	 t, sqrt(N_VDotProd(y,y)/udata->N), udata->N, 0);
   int iout;
   realtype *xnew=NULL;
@@ -159,7 +159,7 @@ int main() {
     if (check_flag(&flag, "ARKode", 1)) break;
     flag = ARKodeGetNumSteps(arkode_mem, &nst);
     check_flag(&flag, "ARKodeGetNumSteps", 1);
-    printf("  %10.6f  %10.6f    %i     %i\n",                   /* print solution stats */
+    printf("  %10.6f  %10.6f    %li     %li\n",                   /* print solution stats */
 	   t, sqrt(N_VDotProd(y,y)/udata->N), udata->N, nst-nst_cur);
     nst_cur = nst;
     if (flag < 0) {                                             /* unsuccessful solve: break */

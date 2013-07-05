@@ -293,8 +293,8 @@ ADAPT_ETAMX1  :c:func:`ARKodeSetMaxFirstGrowth()`
 ADAPT_BOUNDS  :c:func:`ARKodeSetFixedStepBounds()`
 ADAPT_ETAMXF  :c:func:`ARKodeSetMaxEFailGrowth()`
 ADAPT_ETACF   :c:func:`ARKodeSetMaxCFailGrowth()`
-NEWT_CRDOWN   :c:func:`ARKodeSetNewtonCRDown()`
-NEWT_RDIV     :c:func:`ARKodeSetNewtonRDiv()`
+NEWT_CRDOWN   :c:func:`ARKodeSetNonlinCRDown()`
+NEWT_RDIV     :c:func:`ARKodeSetNonlinRDiv()`
 LSETUP_DGMAX  :c:func:`ARKodeSetDeltaGammaMax()`
 ============  =========================================
 

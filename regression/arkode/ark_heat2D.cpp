@@ -380,7 +380,7 @@ int main(int argc, char* argv[]) {
     cout << "   Total number of Preconditioner setups = " << npe << "\n";
     cout << "   Total number of Preconditioner solves = " << nps << "\n";
     cout << "   Total number of linear solver convergence failures = " << nlcf << "\n";
-    cout << "   Total number of Newton iterations = " << nni << "\n";
+    cout << "   Total number of Nonlinear iterations = " << nni << "\n";
     cout << "   Total number of nonlinear solver convergence failures = " << ncfn << "\n";
     cout << "   Total number of error test failures = " << netf << "\n";
     cout << "   Error: max = " << errI << ", rms = " << err2 << "\n";

@@ -278,17 +278,17 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
     return 1;
   }
 
-  /* set Newton method convergence rate constant */
-  ret = ARKodeSetNewtonCRDown(ark_mem, crdown);
+  /* set nonlinear method convergence rate constant */
+  ret = ARKodeSetNonlinCRDown(ark_mem, crdown);
   if (ret != 0) {
-    fprintf(stderr,"set_from_file error in ARKodeSetNewtonCRDown = %i\n",ret);
+    fprintf(stderr,"set_from_file error in ARKodeSetNonlinCRDown = %i\n",ret);
     return 1;
   }
 
-  /* set Newton method divergence constant */
-  ret = ARKodeSetNewtonRDiv(ark_mem, rdiv);
+  /* set nonlinear method divergence constant */
+  ret = ARKodeSetNonlinRDiv(ark_mem, rdiv);
   if (ret != 0) {
-    fprintf(stderr,"set_from_file error in ARKodeSetNewtonRDiv = %i\n",ret);
+    fprintf(stderr,"set_from_file error in ARKodeSetNonlinRDiv = %i\n",ret);
     return 1;
   }
 
@@ -313,14 +313,14 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
     return 1;
   }
 
-  /* set maximum Newton iterations */
+  /* set maximum nonlinear iterations */
   ret = ARKodeSetMaxNonlinIters(ark_mem, maxcor);
   if (ret != 0) {
     fprintf(stderr,"set_from_file error in ARKodeSetMaxNonlinIters = %i\n",ret);
     return 1;
   }
 
-  /* set Newton solver tolerance coefficient */
+  /* set nonlinear solver tolerance coefficient */
   ret = ARKodeSetNonlinConvCoef(ark_mem, nlscoef);
   if (ret != 0) {
     fprintf(stderr,"set_from_file error in ARKodeSetMaxNonlinIters = %i\n",ret);

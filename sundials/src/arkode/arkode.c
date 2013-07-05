@@ -34,6 +34,14 @@ static booleantype arkAllocVectors(ARKodeMem ark_mem,
 static int arkAllocRKVectors(ARKodeMem ark_mem);
 static void arkFreeVectors(ARKodeMem ark_mem);
 
+static int arkAllocFPData(ARKodeMem ark_mem);
+static int arkResizeFPData(ARKodeMem ark_mem, 
+			   ARKVecResizeFn resize,
+			   void *resize_data,
+			   long int lrw_diff,
+			   long int liw_diff);
+static void arkFreeFPData(ARKodeMem ark_mem);
+
 static int arkInitialSetup(ARKodeMem ark_mem);
 static int arkHin(ARKodeMem ark_mem, realtype tout);
 static realtype arkUpperBoundH0(ARKodeMem ark_mem, 
@@ -57,6 +65,10 @@ static int arkNls(ARKodeMem ark_mem, int nflag);
 static int arkNlsResid(ARKodeMem ark_mem, N_Vector y, 
 			N_Vector fy, N_Vector r);
 static int arkNlsNewton(ARKodeMem ark_mem, int nflag);
+static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag);
+static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval, 
+			  N_Vector fv, N_Vector x, N_Vector xold, 
+			  int iter, realtype *R, realtype *gamma);
 static int arkLs(ARKodeMem ark_mem, int nflag);
 static int arkHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, 
 			  realtype saved_t, int *ncfPtr);
@@ -98,7 +110,7 @@ static int arkRootfind(ARKodeMem ark_mem);
  ARKodeCreate:
 
  ARKodeCreate creates an internal memory block for a problem to 
- be solved by ARKODE. If successful, ARKodeCreate returns a 
+ be solved by ARKODE.  If successful, ARKodeCreate returns a 
  pointer to the problem memory. This pointer should be passed to
  ARKodeInit. If an initialization error occurs, ARKodeCreate 
  prints an error message to standard err and returns NULL. 
@@ -156,6 +168,19 @@ void *ARKodeCreate()
   ark_mem->ark_nrtfn   = 0;
   ark_mem->ark_gactive = NULL;
   ark_mem->ark_mxgnull = 1;
+
+  /* Set default nonlinear solver choice to Newton,
+     initialize fixed-point solver variables */
+  ark_mem->ark_use_fp   = FALSE;
+  ark_mem->ark_fp_R     = NULL;
+  ark_mem->ark_fp_gamma = NULL;
+  ark_mem->ark_fp_df    = NULL;
+  ark_mem->ark_fp_dg    = NULL;
+  ark_mem->ark_fp_q     = NULL;
+  ark_mem->ark_fp_qtmp  = NULL;
+  ark_mem->ark_fp_fval  = NULL;
+  ark_mem->ark_fp_fold  = NULL;
+  ark_mem->ark_fp_gold  = NULL;
 
   /* Initialize diagnostics reporting variables */
   ark_mem->ark_report  = FALSE;
@@ -1920,34 +1945,6 @@ static int arkAllocRKVectors(ARKodeMem ark_mem)
     }
   }
 
-  /* /\* Allocate fa if needed *\/ */
-  /* if (ark_mem->ark_dense_q > 3) { */
-  /*   if (ark_mem->ark_fa == NULL) { */
-  /*     ark_mem->ark_fa = N_VClone(ark_mem->ark_ewt); */
-  /*     if (ark_mem->ark_fa == NULL) { */
-  /* 	arkFreeVectors(ark_mem); */
-  /* 	return(FALSE); */
-  /*     } else { */
-  /* 	ark_mem->ark_lrw += ark_mem->ark_lrw1; */
-  /* 	ark_mem->ark_liw += ark_mem->ark_liw1; */
-  /*     } */
-  /*   } */
-  /* } */
-
-  /* /\* Allocate fb if needed *\/ */
-  /* if (ark_mem->ark_dense_q == 5) { */
-  /*   if (ark_mem->ark_fb == NULL) { */
-  /*     ark_mem->ark_fb = N_VClone(ark_mem->ark_ewt); */
-  /*     if (ark_mem->ark_fb == NULL) { */
-  /* 	arkFreeVectors(ark_mem); */
-  /* 	return(FALSE); */
-  /*     } else { */
-  /* 	ark_mem->ark_lrw += ark_mem->ark_lrw1; */
-  /* 	ark_mem->ark_liw += ark_mem->ark_liw1; */
-  /*     } */
-  /*   } */
-  /* } */
-
   return(ARK_SUCCESS);
 }
 
@@ -2052,6 +2049,360 @@ static void arkFreeVectors(ARKodeMem ark_mem)
     ark_mem->ark_Vabstol = NULL;
     ark_mem->ark_lrw -= ark_mem->ark_lrw1;
     ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+}
+
+
+/*---------------------------------------------------------------
+ arkAllocFPData
+
+ This routine allocates all required memory for performing the 
+ accelerated fixed-point solver.
+---------------------------------------------------------------*/
+static int arkAllocFPData(ARKodeMem ark_mem)
+{
+  long int m = ark_mem->ark_fp_m;
+
+  /* Allocate ark_fp_fval if needed */
+  if (ark_mem->ark_fp_fval == NULL) {
+    ark_mem->ark_fp_fval = N_VClone(ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_fval == NULL) {
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_fold if needed */
+  if (ark_mem->ark_fp_fold == NULL) {
+    ark_mem->ark_fp_fold = N_VClone(ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_fold == NULL) {
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_gold if needed */
+  if (ark_mem->ark_fp_gold == NULL) {
+    ark_mem->ark_fp_gold = N_VClone(ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_gold == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += ark_mem->ark_lrw1;
+      ark_mem->ark_liw += ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_df if needed */
+  if ((ark_mem->ark_fp_df == NULL) && (m > 0)) {
+    ark_mem->ark_fp_df = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_df == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_dg if needed */
+  if ((ark_mem->ark_fp_dg == NULL) && (m > 0)) {
+    ark_mem->ark_fp_dg = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_dg == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_q if needed */
+  if ((ark_mem->ark_fp_q == NULL) && (m > 0)) {
+    ark_mem->ark_fp_q = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_q == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_qtmp if needed */
+  if ((ark_mem->ark_fp_qtmp == NULL) && (m > 0)) {
+    ark_mem->ark_fp_qtmp = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+    if (ark_mem->ark_fp_qtmp == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+    }
+  }
+
+  /* Allocate ark_fp_R if needed */
+  if ((ark_mem->ark_fp_R == NULL) && (m > 0)) {
+    ark_mem->ark_fp_R = (realtype *) malloc((m*m) * sizeof(realtype));
+    if (ark_mem->ark_fp_R == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += m*m;
+    }
+  }
+
+  /* Allocate ark_fp_gamma if needed */
+  if ((ark_mem->ark_fp_gamma == NULL) && (m > 0)) {
+    ark_mem->ark_fp_gamma = (realtype *) malloc(m * sizeof(realtype));
+    if (ark_mem->ark_fp_gamma == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_lrw += m;
+    }
+  }
+
+  /* Allocate ark_fp_imap if needed */
+  if ((ark_mem->ark_fp_imap == NULL) && (m > 0)) {
+    ark_mem->ark_fp_imap = (long int *) malloc(m * sizeof(long int));
+    if (ark_mem->ark_fp_imap == NULL) {
+      arkFreeFPData(ark_mem);
+      return(ARK_MEM_FAIL);
+    } else {
+      ark_mem->ark_liw += m;
+    }
+  }
+
+  return(ARK_SUCCESS);
+}
+
+/*---------------------------------------------------------------
+ arkResizeFPData
+
+ This routine resizes all required memory for the accelerated
+ fixed-point solver (called from ARKodeResize()).
+---------------------------------------------------------------*/
+static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
+			   void *resize_data, long int lrw_diff, 
+			   long int liw_diff)
+{
+  long int i;
+  long int m = ark_mem->ark_fp_m;
+
+  /* Resize ark_fp_fval if needed */
+  if (ark_mem->ark_fp_fval == NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_fp_fval);
+      ark_mem->ark_fp_fval = N_VClone(ark_mem->ark_ewt);
+    } else {
+      if (resize(ark_mem->ark_fp_fval, ark_mem->ark_ewt, resize_data)) {
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkResizeFPData", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+
+  /* Resize ark_fp_fold if needed */
+  if (ark_mem->ark_fp_fold == NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_fp_fold);
+      ark_mem->ark_fp_fold = N_VClone(ark_mem->ark_ewt);
+    } else {
+      if (resize(ark_mem->ark_fp_fold, ark_mem->ark_ewt, resize_data)) {
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkResizeFPData", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+
+  /* Resize ark_fp_gold if needed */
+  if (ark_mem->ark_fp_gold == NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_fp_gold);
+      ark_mem->ark_fp_gold = N_VClone(ark_mem->ark_ewt);
+    } else {
+      if (resize(ark_mem->ark_fp_gold, ark_mem->ark_ewt, resize_data)) {
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkResizeFPData", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
+
+  /* Resize ark_fp_df if needed */
+  if ((ark_mem->ark_fp_df == NULL) && (m > 0)) {
+    for (i=0; i<m; i++) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_fp_df[i]);
+	ark_mem->ark_fp_df[i] = N_VClone(ark_mem->ark_ewt);
+      } else {
+	if (resize(ark_mem->ark_fp_df[i], ark_mem->ark_ewt, resize_data)) {
+	  arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "arkResizeFPData", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+    }
+    ark_mem->ark_lrw += m*lrw_diff;
+    ark_mem->ark_liw += m*liw_diff;
+  }
+
+  /* Resize ark_fp_dg if needed */
+  if ((ark_mem->ark_fp_dg == NULL) && (m > 0)) {
+    for (i=0; i<m; i++) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_fp_dg[i]);
+	ark_mem->ark_fp_dg[i] = N_VClone(ark_mem->ark_ewt);
+      } else {
+	if (resize(ark_mem->ark_fp_dg[i], ark_mem->ark_ewt, resize_data)) {
+	  arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "arkResizeFPData", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+    }
+    ark_mem->ark_lrw += m*lrw_diff;
+    ark_mem->ark_liw += m*liw_diff;
+  }
+
+  /* Resize ark_fp_q if needed */
+  if ((ark_mem->ark_fp_q == NULL) && (m > 0)) {
+    for (i=0; i<m; i++) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_fp_q[i]);
+	ark_mem->ark_fp_q[i] = N_VClone(ark_mem->ark_ewt);
+      } else {
+	if (resize(ark_mem->ark_fp_q[i], ark_mem->ark_ewt, resize_data)) {
+	  arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "arkResizeFPData", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+    }
+    ark_mem->ark_lrw += m*lrw_diff;
+    ark_mem->ark_liw += m*liw_diff;
+  }
+
+  /* Resize ark_fp_qtmp if needed */
+  if ((ark_mem->ark_fp_qtmp == NULL) && (m > 0)) {
+    for (i=0; i<m; i++) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_fp_qtmp[i]);
+	ark_mem->ark_fp_qtmp[i] = N_VClone(ark_mem->ark_ewt);
+      } else {
+	if (resize(ark_mem->ark_fp_qtmp[i], ark_mem->ark_ewt, resize_data)) {
+	  arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "arkResizeFPData", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+    }
+    ark_mem->ark_lrw += m*lrw_diff;
+    ark_mem->ark_liw += m*liw_diff;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ arkFreeFPData
+
+ This routine frees all memory allocated by arkAllocFPData.
+---------------------------------------------------------------*/
+static void arkFreeFPData(ARKodeMem ark_mem)
+{
+  long int i;
+  long int m = ark_mem->ark_fp_m;
+
+  /* free ark_fp_fval if needed */
+  if (ark_mem->ark_fp_fval != NULL) {
+    N_VDestroy(ark_mem->ark_fp_fval);
+    ark_mem->ark_fp_fval = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_fold if needed */
+  if (ark_mem->ark_fp_fold != NULL) {
+    N_VDestroy(ark_mem->ark_fp_fold);
+    ark_mem->ark_fp_fold = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_gold if needed */
+  if (ark_mem->ark_fp_gold != NULL) {
+    N_VDestroy(ark_mem->ark_fp_gold);
+    ark_mem->ark_fp_gold = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_df if needed */
+  if ((ark_mem->ark_fp_df != NULL) && (m>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_df, m);
+    ark_mem->ark_fp_df = NULL;
+    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_dg if needed */
+  if ((ark_mem->ark_fp_dg != NULL) && (m>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_dg, m);
+    ark_mem->ark_fp_dg = NULL;
+    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_q if needed */
+  if ((ark_mem->ark_fp_q != NULL) && (m>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_q, m);
+    ark_mem->ark_fp_q = NULL;
+    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_qtmp if needed */
+  if ((ark_mem->ark_fp_qtmp != NULL) && (m>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_qtmp, m);
+    ark_mem->ark_fp_qtmp = NULL;
+    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+  }
+
+  /* free ark_fp_R if needed */
+  if (ark_mem->ark_fp_R != NULL) {
+    free(ark_mem->ark_fp_R);
+    ark_mem->ark_fp_R = NULL;
+    ark_mem->ark_lrw -= m*m;
+  }
+
+  /* free ark_fp_gamma if needed */
+  if (ark_mem->ark_fp_gamma != NULL) {
+    free(ark_mem->ark_fp_gamma);
+    ark_mem->ark_fp_gamma = NULL;
+    ark_mem->ark_lrw -= m;
+  }
+
+  /* free ark_fp_imap if needed */
+  if (ark_mem->ark_fp_imap != NULL) {
+    free(ark_mem->ark_fp_imap);
+    ark_mem->ark_fp_imap = NULL;
+    ark_mem->ark_liw -= m;
   }
 }
 
@@ -3077,14 +3428,11 @@ static int arkDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
  arkCompleteStep
 
  This routine performs various update operations when the step 
- solution has passed the local error test. We increment the step 
- counter nst, record the values hold, tnew and qold, update the 
- yold and fold arrays, fill in the ynew and fnew arrays, update 
- the tau array, and apply the corrections to the zn array.  The 
- tau[i] are the last q values of h, with tau[1] the most recent.
- The counter qwait is decremented, and if 
- qwait == 1 (and q < qmax) we save acor and tq[5] for a 
- possible order increase. 
+ solution has passed the local error test.  We update the current
+ time, increment the step counter nst, record the values hold and
+ tnew, reset the resized flag, update the error and time step 
+ history arrays, update ycur to hold the current solution, and 
+ update the yold, ynew, fold and fnew arrays.
 ---------------------------------------------------------------*/
 static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
 {
@@ -3194,13 +3542,17 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
 
  This routine attempts to solve the nonlinear system associated
  with a single implicit step of the linear multistep method.
- It calls arkNlsNewton to do the work.
+ It calls either arkNlsAccelFP or arkNlsNewton to do the work.
 
  Upon a successful solve, the solution is held in ark_mem->ark_y.
 ---------------------------------------------------------------*/
 static int arkNls(ARKodeMem ark_mem, int nflag)
 {
-  return(arkNlsNewton(ark_mem, nflag));
+  if (ark_mem->ark_use_fp) {
+    return(arkNlsAccelFP(ark_mem, nflag));
+  } else {
+    return(arkNlsNewton(ark_mem, nflag));
+  }
 }
 
 
@@ -3238,10 +3590,11 @@ static int arkNlsResid(ARKodeMem ark_mem, N_Vector y,
 /*---------------------------------------------------------------
  arkNlsNewton
 
- This routine handles the Newton iteration for the BDF method. It 
- calls lsetup if indicated, performs a modified Newton iteration 
- (using a fixed Jacobian / precond), and retries a failed attempt 
- at Newton iteration if that is indicated. 
+ This routine handles the Newton iteration for implicit portions 
+ of the ARK and DIRK methods. It calls lsetup if indicated, 
+ performs a modified Newton iteration (using a fixed 
+ Jacobian / precond), and retries a failed attempt at Newton 
+ iteration if that is indicated. 
 
  Upon entry, the predicted solution is held in ark_mem->ark_ycur; 
  this array is never changed throughout this routine.  If an 
@@ -3350,7 +3703,7 @@ static int arkNlsNewton(ARKodeMem ark_mem, int nflag)
 
       /* Evaluate the nonlinear system residual, put result into b */
       retval = arkNlsResid(ark_mem, ark_mem->ark_acor, 
-			    ark_mem->ark_ftemp, b);
+			   ark_mem->ark_ftemp, b);
       if (retval != ARK_SUCCESS) {
 	ier = ARK_RHSFUNC_FAIL;
 	break;
@@ -3457,6 +3810,235 @@ static int arkNlsNewton(ARKodeMem ark_mem, int nflag)
 
 
 /*---------------------------------------------------------------
+ arkNlsAccelFP
+
+ This routine handles the Andersen-accelerated fixed-point 
+ iteration for implicit portions of the ARK and DIRK methods. It 
+ performs an accelerated fixed-point iteration (without need for 
+ a Jacobian or preconditioner. 
+
+ Upon entry, the predicted solution is held in ark_mem->ark_ycur; 
+ this array is never changed throughout this routine.  If an 
+ initial attempt at solving the nonlinear system fail, this 
+ allows for new attempts that first revert ark_mem->ark_y back 
+ to this initial guess before trying again. 
+
+ Upon a successful solve, the solution is held in ark_mem->ark_y.
+
+ Possible return values:
+
+   ARK_SUCCESS       ---> continue with error test
+
+   ARK_RHSFUNC_FAIL  ---> halt the integration 
+
+   CONV_FAIL         -+
+   RHSFUNC_RECVR     -+-> predict again or stop if too many
+---------------------------------------------------------------*/
+static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
+{
+  /* local variables */
+  int retval;
+  realtype del, delp, dcon;
+
+  /* local shortcut variables */
+  realtype tn     = ark_mem->ark_tn;
+  realtype *R     = ark_mem->ark_fp_R;
+  realtype *gamma = ark_mem->ark_fp_gamma;
+  long int m      = ark_mem->ark_fp_m;
+  void *udata     = ark_mem->ark_user_data;
+  N_Vector ypred  = ark_mem->ark_acor;
+  N_Vector y      = ark_mem->ark_y;
+  N_Vector ycur   = ark_mem->ark_ycur;
+  N_Vector ftemp  = ark_mem->ark_ftemp;
+  N_Vector fval   = ark_mem->ark_fp_fval;
+  N_Vector tempv  = ark_mem->ark_tempv;
+
+  /* Initialize temporary variables for use in iteration */
+  del = delp = ZERO;
+
+  /* Initialize iteration counter */
+  ark_mem->ark_mnewt = 0;
+
+  /* Load prediction into y vector, ypred */
+  N_VScale(ONE, ycur, y);
+  N_VScale(ONE, ycur, ypred);
+
+  /* Looping point for attempts at solution of the nonlinear system:
+       Evaluate f at predicted y, store result in ark_mem->ark_ftemp.
+       Performs the accelerated fixed-point iteration.
+       Repeat process if a recoverable failure occurred (convergence
+	  failure with stale Jacobian). */
+  for(;;) {
+
+    /* evaluate implicit ODE RHS function, store in ftemp */
+    if (!ark_mem->ark_explicit) {
+      retval = ark_mem->ark_fi(tn, y, ftemp, udata);
+      ark_mem->ark_nfi++;
+      if (retval < 0) return(ARK_RHSFUNC_FAIL);
+      if (retval > 0) return(RHSFUNC_RECVR);
+    }
+
+    /* store difference between current guess and prediction in tempv */
+    N_VLinearSum(ONE, y, -ONE, ypred, tempv);
+
+    /* evaluate nonlinear residual, store in fval */
+    retval = arkNlsResid(ark_mem, tempv, ftemp, fval);
+    if (retval != ARK_SUCCESS) return (ARK_RHSFUNC_FAIL);
+
+    /* perform fixed point update */
+    if (m == 0) {
+      /* plain fixed-point solver, copy residual into y */
+      N_VScale(ONE, fval, y);
+    } else {
+      /* Andersen-accelerated solver */
+      N_VScale(ONE, ycur, y);   /* update guess */
+      retval = arkAndersenAcc(ark_mem, fval, tempv, y,  /* accelerate guess */
+			      ycur, (int)(ark_mem->ark_mnewt-1), R, gamma);
+    }
+
+    /* measure convergence. If ark_mem->ark_mnewt > 0, an estimate of the convergence
+       rate constant is stored in crate, and used in the test */
+    N_VLinearSum(ONE, y, -ONE, ycur, tempv);
+    del = N_VWrmsNorm(tempv, ark_mem->ark_ewt);
+    if (ark_mem->ark_mnewt > 0)
+      ark_mem->ark_crate = MAX(ark_mem->ark_crdown*ark_mem->ark_crate, del/delp);
+    if (ark_mem->ark_crate < ONE)
+      ark_mem->ark_eLTE = ark_mem->ark_nlscoef * (ONE - ark_mem->ark_crate);
+    else
+      ark_mem->ark_eLTE = ark_mem->ark_nlscoef * RCONST(0.1);
+    dcon = del * MIN(ONE, ark_mem->ark_crate) / ark_mem->ark_eLTE;
+
+#ifdef DEBUG_OUTPUT
+ printf("FP iter %i,  del = %19.16g,  crate = %19.16g\n", ark_mem->ark_mnewt, del, ark_mem->ark_crate);
+ printf("   eLTE = %19.16g,  dcon = %19.16g\n", ark_mem->ark_eLTE, dcon);
+ printf("Fixed-point correction:\n");
+ N_VPrint_Serial(tempv);
+#endif
+
+    /* Solver diagnostics reporting */
+    if (ark_mem->ark_report)
+      fprintf(ark_mem->ark_diagfp, "    fp  %i  %19.16g  %19.16g\n", ark_mem->ark_mnewt, del, dcon);
+    
+    if (dcon <= ONE)  return(ARK_SUCCESS);
+
+    /* update iteration counter */
+    ark_mem->ark_mnewt++;
+
+    /* Stop at maxcor iterations or if iteration seems to be diverging */
+    if ((ark_mem->ark_mnewt == ark_mem->ark_maxcor) ||
+	((ark_mem->ark_mnewt >= 2) && (del > ark_mem->ark_rdiv*delp))) 
+      return(CONV_FAIL);
+    
+    /* Save norm of correction and loop again */
+    delp = del;
+
+  }
+}
+
+
+/*---------------------------------------------------------------
+ arkAndersenAcc
+
+ This routine computes the Andersen-accelerated fixed point 
+ iterate itself, as used by the nonlinear solver arkNlsAccelFP().  
+
+ Upon entry, the predicted solution is held in xold;
+ this array is never changed throughout this routine.  
+
+ The result of the routine is held in x.  
+
+ Possible return values:
+   ARK_SUCCESS   ---> successful completion
+
+---------------------------------------------------------------*/
+static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval, 
+			  N_Vector fv, N_Vector x, N_Vector xold, 
+			  int iter, realtype *R, realtype *gamma)
+{
+  /* local variables */
+  long int i_pt, i, j, lAA, imap, jmap;
+  realtype alfa;
+
+  /* local shortcut variables */
+  long int *ipt_map = ark_mem->ark_fp_imap;
+  long int m = ark_mem->ark_fp_m;
+  N_Vector gold = ark_mem->ark_fp_gold;
+  N_Vector fold = ark_mem->ark_fp_fold;
+  N_Vector *df = ark_mem->ark_fp_df;
+  N_Vector *dg = ark_mem->ark_fp_dg;
+  N_Vector *q = ark_mem->ark_fp_q;
+  N_Vector *qtmp = ark_mem->ark_fp_qtmp;
+  
+  i_pt = iter-1 - ((iter-1)/m)*m;
+  N_VLinearSum(ONE, gval, -ONE, xold, fv);
+  if (iter > 0) {
+    /* compute dg_new = gval -gval_old*/
+    N_VLinearSum(ONE, gval, -ONE, gold, dg[i_pt]);
+    /* compute df_new = fval - fval_old */
+    N_VLinearSum(ONE, fv, -ONE, fold, df[i_pt]);
+  }
+    
+  N_VScale(ONE, gval, gold);
+  N_VScale(ONE, fv, fold);
+  
+  if (iter == 0) {
+    N_VScale(ONE, gval, x);
+  } else {
+    if (iter == 1) {
+      N_VScale(ONE, df[i_pt], qtmp[i_pt]);
+      R[0] = RSqrt(N_VDotProd(df[i_pt], df[i_pt])); 
+      alfa = ONE/R[0];
+      N_VScale(alfa, df[i_pt], q[i_pt]);
+      ipt_map[0] = 0;
+    } else if (iter < m) {
+      N_VScale(ONE, df[i_pt], qtmp[i_pt]);
+      for (j=0; j<(iter-1); j++) {
+	ipt_map[j] = j;
+	R[(iter-1)*m+j] = N_VDotProd(q[j], qtmp[i_pt]);
+	N_VLinearSum(ONE, qtmp[i_pt], -R[(iter-1)*m+j], q[j], qtmp[i_pt]);
+      }
+      R[(iter-1)*m+iter-1] = RSqrt(N_VDotProd(qtmp[i_pt], qtmp[i_pt])); 
+      N_VScale((ONE/R[(iter-1)*m+iter-1]), qtmp[i_pt], q[i_pt]);
+      ipt_map[iter-1] = iter-1;
+    } else {
+      j = 0;
+      for (i=i_pt+1; i<m; i++)
+	ipt_map[j++] = i;
+      for (i=0; i<(i_pt+1); i++)
+	ipt_map[j++] = i;
+      
+      for (i=0; i<m; i++)
+	N_VScale(ONE, df[i], qtmp[i]);
+      for (i=0; i<m; i++) {
+	imap = ipt_map[i];
+	R[i*m+i] = RSqrt(N_VDotProd(qtmp[imap], qtmp[imap]));
+	N_VScale((ONE/R[i*m+i]), qtmp[imap], q[imap]);
+	for (j=i+1; j<m; j++) {
+	  jmap = ipt_map[j];
+	  R[j*m+i] = N_VDotProd(qtmp[jmap], q[imap]);
+	  N_VLinearSum(ONE, qtmp[jmap], -R[j*m+i], q[imap], qtmp[jmap]);
+	}            
+      }
+    }
+
+    /* Solve least squares problem and update solution */
+    lAA = iter;
+    if (m < iter)  lAA = m;
+    N_VScale(ONE, gval, x);
+    for (i=0; i<lAA; i++)
+      gamma[i] = N_VDotProd(fv, q[ipt_map[i]]);
+    for (i=lAA-1; i>-1; i--) {
+      for (j=i+1; j<lAA; j++) 
+	gamma[i] = gamma[i]-R[j*m+i]*gamma[j]; 
+      gamma[i] = gamma[i]/R[i*m+i];
+      N_VLinearSum(ONE, x, -gamma[i], dg[ipt_map[i]], x);
+    }
+  }
+
+  return 0;
+}
+
+/*---------------------------------------------------------------
  arkLs
 
  This routine attempts to solve the linear system associated
@@ -3485,81 +4067,6 @@ static int arkNlsNewton(ARKodeMem ark_mem, int nflag)
 ---------------------------------------------------------------*/
 static int arkLs(ARKodeMem ark_mem, int nflag)
 {
-  N_Vector vtemp1, vtemp2, vtemp3, b;
-  int convfail, retval, ier;
-  booleantype callSetup;
-  
-  vtemp1 = ark_mem->ark_acor;  /* rename acor as vtemp1 for readability  */
-  vtemp2 = ark_mem->ark_y;     /* rename y as vtemp2 for readability     */
-  vtemp3 = ark_mem->ark_tempv; /* rename tempv as vtemp3 for readability */
-  b      = ark_mem->ark_tempv; /* also rename tempv as b for readability */
-
-  /* Set flag convfail, input to lsetup for its evaluation decision */
-  convfail = ((nflag == FIRST_CALL) || (nflag == PREV_ERR_FAIL)) ?
-    ARK_NO_FAILURES : ARK_FAIL_OTHER;
-
-  /* Decide whether or not to call setup routine (if one exists) */
-  if (ark_mem->ark_setupNonNull) {      
-    callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
-      (ark_mem->ark_firststage) || 
-      (ABS(ark_mem->ark_gamrat-ONE) > TINY);
-  } else {  
-    ark_mem->ark_crate = ONE;
-    callSetup = FALSE;
-  }
-  
-  /* Evaluate fi at predicted y, store result in ark_mem->ark_ftemp, and 
-     call lsetup if indicated, setting statistics and gamma factors. */
-  if (!ark_mem->ark_explicit) {
-    retval = ark_mem->ark_fi(ark_mem->ark_tn, ark_mem->ark_ycur, 
-			     ark_mem->ark_ftemp, ark_mem->ark_user_data);
-    ark_mem->ark_nfi++; 
-    if (retval < 0) return(ARK_RHSFUNC_FAIL);
-    if (retval > 0) return(RHSFUNC_RECVR);
-  }
-
-  if (callSetup) {
-    ier = ark_mem->ark_lsetup(ark_mem, convfail, ark_mem->ark_ycur, 
-			      ark_mem->ark_ftemp, &ark_mem->ark_jcur, 
-			      vtemp1, vtemp2, vtemp3);
-    ark_mem->ark_nsetups++;
-    callSetup = FALSE;
-    ark_mem->ark_firststage = FALSE;
-    ark_mem->ark_gamrat = ark_mem->ark_crate = ONE; 
-    ark_mem->ark_gammap = ark_mem->ark_gamma;
-    ark_mem->ark_nstlp  = ark_mem->ark_nst;
-    
-    /* Return if lsetup failed */
-    if (ier < 0) return(ARK_LSETUP_FAIL);
-    if (ier > 0) return(CONV_FAIL);
-  }
-
-  /* Set acor to zero and load prediction into y vector */
-  N_VConst(ZERO, ark_mem->ark_acor);
-  N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_y);
-
-
-  /* Initialize temporary variable for communication with linear solvers */
-  ark_mem->ark_mnewt = 0;
-  
-  /* Evaluate the linear system residual, put result into b */
-  retval = arkNlsResid(ark_mem, ark_mem->ark_acor, 
-			ark_mem->ark_ftemp, b);
-  if (retval != ARK_SUCCESS)  return(ARK_RHSFUNC_FAIL);
-
-
-  /* Tighten the linear solver tolerance since we only do it once */   /* to be updated */
-
-  
-  /* Call the lsolve function */
-  retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
-			       ark_mem->ark_y, ark_mem->ark_ftemp); 
-  ark_mem->ark_nni++;
-  if (retval < 0)  return(ARK_LSOLVE_FAIL);
-  
-  /* Add correction to acor and y */
-  N_VLinearSum(ONE, ark_mem->ark_acor, ONE, b, ark_mem->ark_acor);
-  N_VLinearSum(ONE, ark_mem->ark_ycur, ONE, ark_mem->ark_acor, ark_mem->ark_y);
   return(ARK_SUCCESS);
 }
 

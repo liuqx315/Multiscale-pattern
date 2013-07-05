@@ -209,7 +209,7 @@ failure.  More generally, the decision is made to reevaluate :math:`J`
 
 
 
-The stopping test for the Newton iteration is related to the
+The stopping test for the nonlinear solver is related to the
 subsequent local error test, with the goal of keeping the nonlinear
 iteration errors from interfering with local error control.  As
 described below, the final computed value of each stage solution
@@ -221,17 +221,17 @@ described below, the final computed value of each stage solution
 specifically that it is less than :math:`0.2\epsilon` (the safety
 factor 0.2 may be changed by the user via the
 :c:func:`ARKodeSetNonlinConvCoef()` function).  For this, we also
-estimate the linear convergence rate :math:`R_i` of the modified Newton
+estimate the linear convergence rate :math:`R_i` of the nonlinear
 iteration as follows.  We first initialize :math:`R_i` to 1, and reset
 :math:`R_i=1` when either :math:`A` or :math:`P` are updated.  After
-computing a Newton correction :math:`\delta^{(m)} = z_i^{(m)} -
+computing a nonlinear correction :math:`\delta^{(m)} = z_i^{(m)} -
 z_i^{(m-1)}`, we update :math:`R_i` if :math:`m>1` as
 
 .. math:: 
    R_i \leftarrow \max\{ 0.3 R_i, \left\|\delta^{(m)}\right\| / \left\|\delta^{(m-1)}\right\| \}.
 
 where the factor 0.3 is user-modifiable as the ``crdown`` input to the
-the function :c:func:`ARKodeSetNewtonConstants()`.  Denoting the
+the function :c:func:`ARKodeSetNonlinConstants()`.  Denoting the
 combined time step solution from the true stage solutions :math:`z_i`
 as :math:`y_n`, and the combined time step solution from the computed
 stage solutions :math:`z_i^{(m)}` as :math:`\tilde{y}_n` we use the
@@ -243,21 +243,21 @@ estimate
    \max_i R_i \left\| z_i^{(m)} - z_i^{(m-1)} \right\| =
    \max_i R_i \left\| \delta^{(m)} \right\|.
 
-Therefore the convergence (stopping) test for the modified Newton
-iteration for each stage is
+Therefore the convergence (stopping) test for the nonlinear iteration
+for each stage is 
 
 .. math::
    R_i \left\|\delta^{(m)} \right\| < 0.2\epsilon.
 
 We allow at most 3 Newton iterations (this may be modified through the
 function :c:func:`ARKodeSetMaxNonlinIters()`).  We also declare the
-Newton iteration to be divergent if any of the ratios
+nonlinear iteration to be divergent if any of the ratios
 :math:`\|\delta^{(m)}\| / \|\delta^{(m-1)}\| > 2.3` with :math:`m>1`
 (the value 2.3 may be modified as the ``rdiv`` input to the function 
-:c:func:`ARKodeSetNewtonConstants()`).  If convergence fails with
+:c:func:`ARKodeSetNonlinRDiv()`).  If convergence fails with
 :math:`J` or :math:`A` current, we must then reduce the step size by a
 factor of 0.25 (modifiable via the ``etacf`` input to the
-:c:func:`ARKodeSetAdaptivityConstants()` function).  The integration
+:c:func:`ARKodeSetMaxCFailGrowth()` function).  The integration
 is halted after 10 convergence failures (modifiable via the
 :c:func:`ARKodeSetMaxConvFails()` function).
 

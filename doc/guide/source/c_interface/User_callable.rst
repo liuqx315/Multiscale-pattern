@@ -757,8 +757,8 @@ Maximum step growth factor on convergence fail   :c:func:`ARKodeSetMaxCFailGrowt
 Bounds determining no change in step size        :c:func:`ARKodeSetFixedStepBounds()`      1.0  1.5
 Time step adaptivity method                      :c:func:`ARKodeSetAdaptivityMethod()`     0
 Time step adaptivity function                    :c:func:`ARKodeSetAdaptivityFn()`         internal
-Newton convergence rate constant                 :c:func:`ARKodeSetNewtonCRDown()`         0.3
-Newton residual divergence ratio                 :c:func:`ARKodeSetNewtonRDiv()`           2.3
+Nonlinear convergence rate constant              :c:func:`ARKodeSetNonlinCRDown()`         0.3
+Nonlinear residual divergence ratio              :c:func:`ARKodeSetNonlinRDiv()`           2.3
 Max change in step signaling new :math:`J`       :c:func:`ARKodeSetDeltaGammaMax()`        0.2
 Max steps between calls to new :math:`J`         :c:func:`ARKodeSetMaxStepsBetweenLSet()`  20
 Implicit predictor method                        :c:func:`ARKodeSetPredictorMethod()`      3
@@ -965,7 +965,8 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
       * ARK_ILL_INPUT if an argument has an illegal value
    
    **Notes:** Tightens the linear solver tolerances and takes only a single
-   Newton iteration.
+   Newton iteration.  Only useful when used in combination with the
+   modified Newton iteration (not the fixed-point solver).
 
 
 
@@ -984,6 +985,47 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
    **Notes:** This is the default behavior of ARKode, so the function
    ARKodeSetNonlinear is primarily useful to undo a previous call
    to :c:func:`ARKodeSetLinear()`. 
+
+
+
+.. c:function:: int ARKodeSetFixedPoint(void *arkode_mem)
+
+   Specifies that the implicit portion of the problem should be solved
+   using the accelerated fixed-point solver instead of the modified
+   Newton iteration.
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** Since the accelerated fixed-point solver has a slower
+   rate of convergence than the Newton iteration (but each iteration
+   is typically much more efficient), it is recommended that the
+   maximum nonlinear correction iterations be increased through a call
+   to :c:func:`ARKodeSetMaxNonlinIters()`. 
+
+
+
+.. c:function:: int ARKodeSetNewton(void *arkode_mem)
+
+   Specifies that the implicit portion of the problem should be solved
+   using the modified Newton solver.  
+   
+   **Arguments:**
+      * `arkode_mem` -- pointer to the ARKode memory block.
+   
+   **Return value:** 
+      * ARK_SUCCESS if successful
+      * ARK_MEM_NULL if the ARKode memory is ``NULL``
+      * ARK_ILL_INPUT if an argument has an illegal value
+   
+   **Notes:** This is the default behavior of ARKode, so the function
+   ARKodeSetNewton is primarily useful to undo a previous call
+   to :c:func:`ARKodeSetFixedPoint()`. 
 
 
 
@@ -1556,7 +1598,7 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
 
 
 
-.. c:function:: int ARKodeSetNewtonCRDown(void *arkode_mem, realtype crdown)
+.. c:function:: int ARKodeSetNonlinCRDown(void *arkode_mem, realtype crdown)
 
    Specifies the constant used in estimating the nonlinear convergence rate.
    
@@ -1573,14 +1615,15 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
 
 
 
-.. c:function:: int ARKodeSetNewtonRDiv(void *arkode_mem, realtype rdiv)
+.. c:function:: int ARKodeSetNonlinRDiv(void *arkode_mem, realtype rdiv)
 
-   Specifies the Newton correction threshold beyond which the iteration will be
-   declared divergent.
+   Specifies the nonlinear correction threshold beyond which the
+   iteration will be declared divergent.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
-      * `rdiv` -- tolerance on Newton correction size ratio to declare divergence (default is 2.3)
+      * `rdiv` -- tolerance on nonlinear correction size ratio to
+	declare divergence (default is 2.3) 
    
    **Return value:** 
       * ARK_SUCCESS if successful
@@ -2190,8 +2233,8 @@ is in doing its job.  For example, the counters `nsteps`,
 `nfe_evals` and `nfi_evals` provide a rough measure of the overall
 cost of a given run, and can be compared among runs with differing
 input options to suggest which set of options is most efficient.  The
-ratio `nniters`/`nsteps` measures the performance of the modified
-Newton iteration in solving the nonlinear systems at each stage;
+ratio `nniters`/`nsteps` measures the performance of the nonlinear
+iteration in solving the nonlinear systems at each stage; 
 typical values for this range from 1.1 to 1.8.  The ratio
 `njevals`/`nniters` (in the case of a direct linear solver), and
 the ratio `npevals`/`nniters` (in the case of an iterative linear

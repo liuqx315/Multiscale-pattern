@@ -121,10 +121,11 @@ Note that both these files in turn include the header file
 type.
 
 Finally, if the user includes a non-trivial implicit component to their
-ODE system (and hence requires a Newton solver for the resulting
-nonlinear systems of equations), then a linear solver module header
-file will be required. The header files corresponding to the various
-linear solvers availble for use with ARKode are: 
+ODE system (and hence requires a nonlinear solver for the resulting
+systems of equations), then if a Newton method is used for these
+implicit systems a linear solver module header file will be
+required. The header files corresponding to the various linear solvers
+availble for use with ARKode are:  
 
 - ``arkode_dense.h``, which is used with the dense direct linear solver; 
 - ``arkode_band.h``, which is used with the band direct linear solver;
