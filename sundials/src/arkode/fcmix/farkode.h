@@ -515,24 +515,27 @@
 
        CALL FARKSETIIN(KEY, VALUE, IER)
 
-     to set the integer value VAL to the optional input specified by the 
-     quoted character string KEY. KEY must be one of the following: 
-     ORDER, DENSE_ORDER, LINEAR, NONLINEAR, EXPLICIT, IMPLICIT, IMEX, 
-     IRK_TABLE_NUM, ERK_TABLE_NUM, ARK_TABLE_NUM (pass in an int array of 
-     length 2, implicit method first), MAX_NSTEPS, HNIL_WARNS, PREDICT_METHOD, 
-     MAX_ERRFAIL, MAX_CONVFAIL, MAX_NITERS, ADAPT_SMALL_NEF or LSETUP_MSBP.
-     The int return flag IER is 0 if successful, and nonzero otherwise.
+     to set the integer value VALUE to the optional input specified by the 
+     quoted character string KEY. VALUE must be a Fortran integer of size 
+     commensurate with a C "long int".  KEY must be one of the following: 
+     ORDER, DENSE_ORDER, LINEAR, NONLINEAR, FIXEDPOINT, NEWTON, EXPLICIT, 
+     IMPLICIT, IMEX, IRK_TABLE_NUM, ERK_TABLE_NUM, ARK_TABLE_NUM (pass in an 
+     int array of length 2, implicit method first), MAX_NSTEPS, HNIL_WARNS, 
+     PREDICT_METHOD, MAX_ERRFAIL, MAX_CONVFAIL, MAX_NITERS, ADAPT_SMALL_NEF 
+     or LSETUP_MSBP.  The int return flag IER is 0 if successful, and nonzero 
+     otherwise.
 
      To set various real optional inputs, make the following call:
 
        CALL FARKSETRIN(KEY, VALUE, IER)
 
-     to set the realtype value VAL to the optional input specified by the 
-     quoted character string KEY.  KEY must one of the following: 
-     INIT_STEP, MAX_STEP, MIN_STEP, STOP_TIME, NLCONV_COEF, ADAPT_CFL, 
-     ADAPT_SAFETY, ADAPT_BIAS, ADAPT_GROWTH, ADAPT_BOUNDS (pass in a 
-     realtype array of length 2), ADAPT_ETAMX1, ADAPT_ETAMXF, ADAPT_ETACF, 
-     NEWTON_CRDOWN, NEWTON_RDIV, or LSETUP_DGMAX.
+     to set the realtype value VALUE to the optional input specified by the 
+     quoted character string KEY.  VALUE must be a Fortran real-valued number
+     of size commensurate with the SUNDIALS "realtype".  KEY must one of the 
+     following: INIT_STEP, MAX_STEP, MIN_STEP, STOP_TIME, NLCONV_COEF, 
+     ADAPT_CFL, ADAPT_SAFETY, ADAPT_BIAS, ADAPT_GROWTH, ADAPT_BOUNDS (pass in 
+     a realtype array of length 2), ADAPT_ETAMX1, ADAPT_ETAMXF, ADAPT_ETACF, 
+     NONLIN_CRDOWN, NONLIN_RDIV, or LSETUP_DGMAX.
 
      To set the time step adaptivity method (and its associated parameters), 
      make the following call: 
@@ -626,14 +629,15 @@
 
  (9) Specification of linear system solution method.
 
-     In the case of using either an implicit or ImEx method, the solution of 
-     each Runge-Kutta stage may involve the solution of linear systems related 
-     to the Jacobian J = dfi(t,y)/dy of the implicit portion of the ODE 
-     system. ARKode presently includes seven choices for the treatment of
-     these systems, and the user of FARKODE must call a routine with a
-     specific name to make the desired choice.  Following any call to
-     FARKMALLOC or FARKRESIZE, one of these solver specification routines 
-     must be called.
+     In the case of using either an implicit or ImEx method and a Newton 
+     iteration, the solution of each Runge-Kutta stage may involve the 
+     solution of linear systems related to the Jacobian J = dfi(t,y)/dy of the 
+     implicit portion of the ODE system. ARKode presently includes a variety 
+     of choices for the treatment of these systems, and the user of FARKODE 
+     must call a routine with a specific name to make the desired choice.  
+     Following any call to FARKMALLOC or FARKRESIZE, one of these solver 
+     specification routines must be called again to set up the linear solver
+     memory.
 
  (9.1s) DENSE treatment of the linear system.
 

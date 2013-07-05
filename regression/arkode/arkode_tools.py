@@ -101,7 +101,7 @@ def run_test(testname,keep_output):
             lsetups = int(txt[5]);
         elif ("Jacobian" in txt):
             nJe = int(txt[6]);
-        elif (("Newton" in txt) and ("iterations" in txt)):
+        elif (("nonlinear" in txt) and ("iterations" in txt)):
             nnewt = int(txt[6]);
         elif (("convergence" in txt) and ("Total" in txt)):
             ncf = int(txt[8]);

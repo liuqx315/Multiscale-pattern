@@ -289,7 +289,7 @@ int main() {
   printf("   Total linear iterations = %li\n", nli);
   printf("   Total number of Jacobian-vector products = %li\n", nJv);
   printf("   Total number of linear solver convergence failures = %li\n", nlcf);
-  printf("   Total number of Newton iterations = %li\n", nni);
+  printf("   Total number of nonlinear iterations = %li\n", nni);
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
   printf("   Error: max = %g, rms = %g\n", errI, err2);

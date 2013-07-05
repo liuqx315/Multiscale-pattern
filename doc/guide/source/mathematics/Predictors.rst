@@ -9,7 +9,7 @@ Implicit predictors
 As mentioned in the previous section, :ref:`Mathematics.IVP`, for
 problems with implicit components, ARKode will employ a prediction
 algorithm for constructing the initial guesses for each Runge-Kutta
-stage, :math:`z_i^{(0)}`.  As is well-known with Newton-like methods,
+stage, :math:`z_i^{(0)}`.  As is well-known with nonlinear solvers,
 the selection of an initial guess can have dramatic effects on both
 the speed and robustness of the nonlinear solve, enabling the
 difference between divergence and quadratic convergence of the

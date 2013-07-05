@@ -323,6 +323,10 @@ void FARK_SETIIN(char key_name[], long int *ival, int *ier)
     *ier = ARKodeSetLinear(ARK_arkodemem);
   else if (!strncmp(key_name, "NONLINEAR", 9)) 
     *ier = ARKodeSetNonlinear(ARK_arkodemem);
+  else if (!strncmp(key_name, "FIXEDPOINT", 10)) 
+    *ier = ARKodeSetFixedPoint(ARK_arkodemem, (long int) *ival);
+  else if (!strncmp(key_name, "NEWTON", 6)) 
+    *ier = ARKodeSetNewton(ARK_arkodemem);
   else if (!strncmp(key_name, "EXPLICIT", 8)) 
     *ier = ARKodeSetExplicit(ARK_arkodemem);
   else if (!strncmp(key_name, "IMPLICIT", 8)) 
@@ -390,10 +394,10 @@ void FARK_SETRIN(char key_name[], realtype *rval, int *ier)
     *ier = ARKodeSetMaxEFailGrowth(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "ADAPT_ETACF", 11))
     *ier = ARKodeSetMaxCFailGrowth(ARK_arkodemem, *rval);
-  else if (!strncmp(key_name, "NEWTON_CRDOWN", 11))
-    *ier = ARKodeSetNewtonCRDown(ARK_arkodemem, *rval);
-  else if (!strncmp(key_name, "NEWTON_RDIV", 9))
-    *ier = ARKodeSetNewtonRDiv(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "NONLIN_CRDOWN", 11))
+    *ier = ARKodeSetNonlinCRDown(ARK_arkodemem, *rval);
+  else if (!strncmp(key_name, "NONLIN_RDIV", 9))
+    *ier = ARKodeSetNonlinRDiv(ARK_arkodemem, *rval);
   else if (!strncmp(key_name, "LSETUP_DGMAX", 12))
     *ier = ARKodeSetDeltaGammaMax(ARK_arkodemem, *rval);
   else {

@@ -515,24 +515,39 @@ int main() {
   flag = ARKodeSetDefaults(arkode_mem);
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
-  /* Newton constants */
-  flag = ARKodeSetNewtonCRDown(arkode_mem, 0.1);
-  if (check_flag(&flag, "ARKodeSetNewtonCRDown", 1)) return 1;
+  /* nonlinear solver constants */
+  flag = ARKodeSetNonlinCRDown(arkode_mem, 0.1);
+  if (check_flag(&flag, "ARKodeSetNonlinCRDown", 1)) return 1;
   if (ark_mem->ark_crdown != 0.1) {
-    printf("Error in ARKodeSetNewtonCRDown: did not set crdown\n");
+    printf("Error in ARKodeSetNonlinCRDown: did not set crdown\n");
     return 1;
   }
   flag = ARKodeSetDefaults(arkode_mem);
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
-  flag = ARKodeSetNewtonRDiv(arkode_mem, 0.2);
-  if (check_flag(&flag, "ARKodeSetNewtonRDiv", 1)) return 1;
+  flag = ARKodeSetNonlinRDiv(arkode_mem, 0.2);
+  if (check_flag(&flag, "ARKodeSetNonlinRDiv", 1)) return 1;
   if (ark_mem->ark_rdiv != 0.2) {
-    printf("Error in ARKodeSetNewtonRDiv: did not set rdiv\n");
+    printf("Error in ARKodeSetNonlinRDiv: did not set rdiv\n");
     return 1;
   }
   flag = ARKodeSetDefaults(arkode_mem);
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
+
+  /* nonlinear solver choice */
+  flag = ARKodeSetFixedPoint(arkode_mem, -1);
+  if (check_flag(&flag, "ARKodeSetFixedPoint", 1)) return 1;
+  if (ark_mem->ark_use_fp != TRUE) {
+    printf("Error in ARKodeSetFixedPoint: did not enable\n");
+    return 1;
+  }
+
+  flag = ARKodeSetNewton(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetNewton", 1)) return 1;
+  if (ark_mem->ark_use_fp != FALSE) {
+    printf("Error in ARKodeSetNewton: did not enable\n");
+    return 1;
+  }
 
   /* LSetup constants */
   flag = ARKodeSetDeltaGammaMax(arkode_mem, 0.1);

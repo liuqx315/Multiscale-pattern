@@ -31,6 +31,7 @@ extern "C" {
 #define MAXNCF           10      /* maxncf default value */
 #define MXHNIL           10      /* mxhnil default value */
 #define MAXCOR           3       /* maxcor default value */
+#define FP_ACCEL_M       3       /* fp_m default value */
 
 /* Numeric constants */
 #define ZERO   RCONST(0.0)      /* real 0.0     */
@@ -233,11 +234,10 @@ typedef struct ARKodeMemRec {
 			   where the vector is named yout.                   */
   N_Vector ark_ycur;    /* ycur always holds the solver's current version of 
                            the solution */
-  N_Vector ark_acor;    /* In the context of the solution of the nonlinear
-			   equation, acor = y_n(m) - y_n(0). On return, 
-			   this vector is scaled to give the est. local err. */
   N_Vector ark_sdata;   /* Storage for old stage data in computing residual. */
   N_Vector ark_tempv;   /* temporary storage vector                          */
+  N_Vector ark_acor;    /* temporary storage vector; Between steps this  
+			   holds the estimaged local error                   */
   N_Vector ark_ftemp;   /* temporary storage vector                          */
   N_Vector ark_fold;    /* f(t,y) at beginning of last successful step       */
   N_Vector ark_fnew;    /* f(t,y) at end of last successful step             */
@@ -282,7 +282,7 @@ typedef struct ARKodeMemRec {
   realtype ark_crate;           /* estimated corrector convergence rate     */
   realtype ark_eLTE;            /* estimated local truncation error, used in
 				   nonlinear and linear solver tolerances   */
-  realtype ark_nlscoef;         /* coeficient in nonlinear convergence test */
+  realtype ark_nlscoef;         /* coefficient in nonlin. convergence test  */
   int      ark_mnewt;           /* Newton iteration counter                 */
 
 
@@ -360,13 +360,30 @@ typedef struct ARKodeMemRec {
   booleantype ark_report;   /* flag to enable/disable diagnostic output    */
   FILE       *ark_diagfp;   /* diagnostic outputs are sent to ark_diagfp   */
 
-  /*----------------------------
+  /*-----------------------------
     Space requirements for ARKODE 
-    ----------------------------*/
+    -----------------------------*/
   long int ark_lrw1;        /* no. of realtype words in 1 N_Vector          */ 
   long int ark_liw1;        /* no. of integer words in 1 N_Vector           */ 
   long int ark_lrw;         /* no. of realtype words in ARKODE work vectors */
   long int ark_liw;         /* no. of integer words in ARKODE work vectors  */
+
+
+  /*-----------------------
+    Fixed-point Solver Data 
+    -----------------------*/
+  booleantype ark_use_fp;     /* flag to enable fixed-point solver vs Newton */
+  long int    ark_fp_m;       /* number of vectors to use in acceleration    */
+  long int    *ark_fp_imap;   /* array of length m          */
+  realtype    *ark_fp_R;      /* array of length m*m        */
+  realtype    *ark_fp_gamma;  /* array of length m          */
+  N_Vector    *ark_fp_df;     /* vector array of length m   */
+  N_Vector    *ark_fp_dg;     /* vector array of length m   */
+  N_Vector    *ark_fp_q;      /* vector array of length m   */
+  N_Vector    *ark_fp_qtmp;   /* vector array of length m   */
+  N_Vector     ark_fp_fval;   /* temporary N_Vectors        */
+  N_Vector     ark_fp_fold;
+  N_Vector     ark_fp_gold;
 
   /*------------------
     Linear Solver Data 

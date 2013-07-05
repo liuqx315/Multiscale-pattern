@@ -95,6 +95,8 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_stages           = 0;
   ark_mem->ark_istage           = 0;
   ark_mem->ark_p                = 0;
+  ark_mem->ark_use_fp           = FALSE;
+  ark_mem->ark_fp_m             = FP_ACCEL_M;
   for (i=0; i<ARK_S_MAX; i++) {
     for (j=0; j<ARK_S_MAX; j++) {
       ARK_A(ark_mem->ark_Ae,i,j) = ZERO;
@@ -428,7 +430,7 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
   /* set user-provided value, or default, depending on argument */
   /* if ((dord < 0) || (dord > 5)) { */
   if ((dord < 0) || (dord > 3)) {
-    ark_mem->ark_dense_q = 3;
+    ark_mem->ark_dense_q = QDENSE_DEF;
   } else {
     ark_mem->ark_dense_q = dord;
   }
@@ -442,7 +444,8 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
 
  Specifies that the implicit portion of the problem is linear, 
  and to tighten the linear solver tolerances while taking only 
- one Newton iteration.
+ one Newton iteration.  Not useful when used in combination with
+ the fixed-point solver.
 ---------------------------------------------------------------*/
 int ARKodeSetLinear(void *arkode_mem)
 {
@@ -477,6 +480,59 @@ int ARKodeSetNonlinear(void *arkode_mem)
 
   ark_mem = (ARKodeMem) arkode_mem;
   ark_mem->ark_linear = FALSE;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetFixedPoint:
+
+ Specifies that the implicit portion of the problem should be 
+ solved using the accelerated fixed-point solver instead of the 
+ Newton iteration.  Allowed values for the dimension of the 
+ acceleration space, fp_m, must be non-negative.  Illegal 
+ values imply to use the default.
+---------------------------------------------------------------*/
+int ARKodeSetFixedPoint(void *arkode_mem, long int fp_m)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetFixedPoint", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  ark_mem = (ARKodeMem) arkode_mem;
+  ark_mem->ark_use_fp = TRUE;
+  if (fp_m < 0) {
+    ark_mem->ark_fp_m = FP_ACCEL_M;
+  } else {
+    ark_mem->ark_fp_m = fp_m;
+  }
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeSetNewton:
+
+ Specifies that the implicit portion of the problem should be 
+ solved using the modified Newton solver.  Used to undo a 
+ previous call to ARKodeSetFixedPoint.
+---------------------------------------------------------------*/
+int ARKodeSetNewton(void *arkode_mem)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetFixedPoint", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+
+  ark_mem = (ARKodeMem) arkode_mem;
+  ark_mem->ark_use_fp = FALSE;
 
   return(ARK_SUCCESS);
 }
@@ -1518,19 +1574,19 @@ int ARKodeSetMaxCFailGrowth(void *arkode_mem, realtype etacf)
 
 
 /*---------------------------------------------------------------
- ARKodeSetNewtonCRDown:
+ ARKodeSetNonlinCRDown:
 
- Specifies the user-provided nonlinear convergence constants
+ Specifies the user-provided nonlinear convergence constant
  crdown.  Legal values are strictly positive; illegal values 
  imply a reset to the default.
 ---------------------------------------------------------------*/
-int ARKodeSetNewtonCRDown(void *arkode_mem, realtype crdown)
+int ARKodeSetNonlinCRDown(void *arkode_mem, realtype crdown)
 {
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetNewtonCRDown", MSGARK_NO_MEM);
+		    "ARKodeSetNonlinCRDown", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -1547,19 +1603,19 @@ int ARKodeSetNewtonCRDown(void *arkode_mem, realtype crdown)
 
 
 /*---------------------------------------------------------------
- ARKodeSetNewtonRDiv:
+ ARKodeSetNonlinRDiv:
 
  Specifies the user-provided nonlinear convergence constant
  rdiv.  Legal values are strictly positive; illegal values 
  imply a reset to the default.
 ---------------------------------------------------------------*/
-int ARKodeSetNewtonRDiv(void *arkode_mem, realtype rdiv)
+int ARKodeSetNonlinRDiv(void *arkode_mem, realtype rdiv)
 {
   ARKodeMem ark_mem;
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetNewtonRDiv", MSGARK_NO_MEM);
+		    "ARKodeSetNonlinRDiv", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -2519,7 +2575,7 @@ int ARKodeWriteParameters(void *arkode_mem, FILE *fp)
   fprintf(fp, "  Maximum step increase (first step) = %g\n",ark_mem->ark_etamx1);
   fprintf(fp, "  Step reduction factor on multiple error fails = %g\n",ark_mem->ark_etamxf);
   fprintf(fp, "  Minimum error fails before above factor is used = %i\n",ark_mem->ark_small_nef);
-  fprintf(fp, "  Step reduction factor on Newton convergence failure = %g\n",ark_mem->ark_etacf);
+  fprintf(fp, "  Step reduction factor on nonlinear convergence failure = %g\n",ark_mem->ark_etacf);
 
   if (!ark_mem->ark_implicit) {
     if (ark_mem->ark_expstab == arkExpStab) {
@@ -2530,9 +2586,9 @@ int ARKodeWriteParameters(void *arkode_mem, FILE *fp)
     fprintf(fp, "  Explicit safety factor = %g\n",ark_mem->ark_hadapt_cfl);
   }
   if (!ark_mem->ark_explicit) {
-    fprintf(fp, "  Newton predictor method = %i\n",ark_mem->ark_predictor);
-    fprintf(fp, "  Newton solver tolerance coefficient = %g\n",ark_mem->ark_nlscoef);
-    fprintf(fp, "  Maximum number of Newton corrections = %i\n",ark_mem->ark_maxcor);
+    fprintf(fp, "  Implicit predictor method = %i\n",ark_mem->ark_predictor);
+    fprintf(fp, "  Implicit solver tolerance coefficient = %g\n",ark_mem->ark_nlscoef);
+    fprintf(fp, "  Maximum number of nonlinear corrections = %i\n",ark_mem->ark_maxcor);
     fprintf(fp, "  Nonlinear convergence rate constant = %g\n",ark_mem->ark_crdown);
     fprintf(fp, "  Nonlinear divergence tolerance = %g\n",ark_mem->ark_rdiv);
     fprintf(fp, "  Gamma factor LSetup tolerance = %g\n",ark_mem->ark_dgmax);

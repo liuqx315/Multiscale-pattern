@@ -41,9 +41,11 @@ methods of order 2-6, adaptive implicit methods of orders 3-5, and
 adaptive IMEX methods of orders 3-5. 
 
 For implicit and IMEX methods, the resulting nonlinear system is
-solved approximately at each integration step, using modified or
-inexact Newton methods. When used with the serial NVECTOR module
-in SUNDIALS, ARKode provides both direct (dense and band) and
-preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR, FGMRES, PCG) linear
-solvers. When used with the parallel NVECTOR module or a user-provided
-vector data structure, only the Krylov solvers are available.
+solved approximately at each integration step, using a modified Newton
+method, an Inexact Newton method, or an accelerated fixed-point
+solver. For implicit problems using a Newton-based solver and the
+serial NVECTOR module in SUNDIALS, ARKode provides both direct (dense
+and band) and preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR,
+FGMRES, PCG) linear solvers. When used with the parallel NVECTOR
+module or a user-provided vector data structure, only the Krylov
+solvers are available.
