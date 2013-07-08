@@ -196,11 +196,15 @@ Completed components:
 [X] Update ARKode/FARKODE documentation regarding vector resize
     capabilities. 
 [X] Add FGMRES solver to ARKode/FARKODE routines and documentation.
+[X] Add support for fixed-point solver for implicit stage solves.
 
 
 
 Remaining components to build:
-[ ] Add support for fixed-point solver for implicit stage solves.
+[ ] Organize User_callable.rst file to group optional inputs so that
+    they aren't so haphazard (and so numerous in one place).  Within
+    each group, alphebetize based on name of "set" routine.
+[ ] Optimize fixed-point solver (currently results in too much ODE error).
 [ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
     logic to account for this in step solution & embedding.  Update
     time step solution/embedding routine to now do solves to compute
