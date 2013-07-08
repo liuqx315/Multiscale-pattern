@@ -123,7 +123,7 @@ int ARKodeSetOptimalParams(void *arkode_mem)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetDefaults", MSGARK_NO_MEM);
+		    "ARKodeSetOptimalParams", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -370,7 +370,7 @@ int ARKodeSetOrder(void *arkode_mem, int ord)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetMaxOrd", MSGARK_NO_MEM);
+		    "ARKodeSetOrder", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -413,7 +413,7 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetMaxOrd", MSGARK_NO_MEM);
+		    "ARKodeSetDenseOrder", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -421,7 +421,7 @@ int ARKodeSetDenseOrder(void *arkode_mem, int dord)
   /* check input */
   if (dord > 5) {
     arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-		    "ARKodeSetMaxOrd", "Dense output order must be <= 5");
+		    "ARKodeSetDenseOrder", "Dense output order must be <= 5");
     return(ARK_ILL_INPUT);
   }
   /* NOTE: we check that dord < q internally, to allow for subsequent 
@@ -527,7 +527,7 @@ int ARKodeSetNewton(void *arkode_mem)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetFixedPoint", MSGARK_NO_MEM);
+		    "ARKodeSetNewton", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
 
@@ -901,7 +901,7 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetImplicit", MSGARK_NO_MEM);
+		    "ARKodeSetIRKTableNum", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -1702,7 +1702,7 @@ int ARKodeSetPredictorMethod(void *arkode_mem, int pred_method)
 
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetStopTime", MSGARK_NO_MEM);
+		    "ARKodeSetPredictorMethod", MSGARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -1948,7 +1948,7 @@ int ARKodeGetNumExpSteps(void *arkode_mem, long int *nsteps)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
+		    "ARKodeGetNumExpSteps", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -1969,7 +1969,7 @@ int ARKodeGetNumAccSteps(void *arkode_mem, long int *nsteps)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
+		    "ARKodeGetNumAccSteps", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -1990,7 +1990,7 @@ int ARKodeGetNumStepAttempts(void *arkode_mem, long int *nsteps)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetNumSteps", MSGARK_NO_MEM);
+		    "ARKodeGetNumStepAttempts", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -2170,7 +2170,7 @@ int ARKodeGetCurrentButcherTables(void *arkode_mem,
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeGetCurrentTime", MSGARK_NO_MEM);
+		    "ARKodeGetCurrentButcherTables", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -2524,7 +2524,7 @@ int ARKodeWriteParameters(void *arkode_mem, FILE *fp)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetDefaults", MSGARK_NO_MEM);
+		    "ARKodeWriteParameters", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
@@ -2611,7 +2611,7 @@ int ARKodeWriteButcher(void *arkode_mem, FILE *fp)
   ARKodeMem ark_mem;
   if (arkode_mem==NULL) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
-		    "ARKodeSetDefaults", MSGARK_NO_MEM);
+		    "ARKodeWriteButcher", MSGARK_NO_MEM);
     return(ARK_MEM_NULL);
   }
   ark_mem = (ARKodeMem) arkode_mem;
