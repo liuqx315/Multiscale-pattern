@@ -70,10 +70,10 @@ def sort_params(param_list):
 
 ##########
 def parameter_search(order, dense_order, imex, adapt_method, cflfac, 
-                     safety, bias, growth, hfixed_lb, hfixed_ub, k1, 
+                     safety, bias, growth, hfixed_lb, hfixed_ub, pq, k1, 
                      k2, k3, etamx1, etamxf, etacf, small_nef, 
-                     crdown, rdiv, dgmax, predictor, msbp, maxcor, 
-                     nlscoef, nsaved, tests, CM, rtol, atol):
+                     crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, 
+                     maxcor, nlscoef, nsaved, tests, CM, rtol, atol):
     """ This routine iterates over all possible combinations of  """
     """ solver parameters, storing 'nsaved' of them to return to """
     """ the calling routine.                                     """
@@ -89,6 +89,7 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
     # print '  len(safety): ', len(safety)
     # print '  len(bias): ',len(bias)
     # print '  len(growth): ',len(growth)
+    # print '  len(pq): ',len(pq)
     # print '  len(k1): ',len(k1)
     # print '  len(k2): ',len(k2)
     # print '  len(k3): ',len(k3)
@@ -101,12 +102,14 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
     # print '  len(dgmax): ',len(dgmax)
     # print '  len(predictor): ',len(predictor)
     # print '  len(msbp): ',len(msbp)
+    # print '  len(fixedpt): ',len(fixedpt)
+    # print '  len(m_aa): ',len(m_aa)
     # print '  len(maxcor): ',len(maxcor)
     # print '  len(nlscoef): ',len(nlscoef)
 
     # create parameter file of all defaults, set baseline cost
-    p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, 
+    p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, 
                        rtol, atol);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);
@@ -119,38 +122,38 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
 
     # loop over all possible parameters combinations
     ntested = 0;
-    for i1 in range(len(dense_order)):
-     for i2 in range(len(adapt_method)):
-      for i3 in range(len(safety)):
-       for i4 in range(len(bias)):
-        for i5 in range(len(growth)):
-         for i6 in range(len(k1)):
-          for i7 in range(len(k2)):
-           for i8 in range(len(k3)):
-            for i9 in range(len(etamx1)):
-             for i10 in range(len(etamxf)):
-              for i11 in range(len(etacf)):
-               for i12 in range(len(small_nef)):
-                for i13 in range(len(crdown)):
-                 for i14 in range(len(rdiv)):
-                  for i15 in range(len(dgmax)):
-                   for i16 in range(len(predictor)):
-                    for i17 in range(len(msbp)):
+    for i2 in range(len(adapt_method)):
+     for i4 in range(len(bias)):
+      for i5 in range(len(growth)):
+       for i55 in range(len(pq)):
+        for i6 in range(len(k1)):
+         for i7 in range(len(k2)):
+          for i8 in range(len(k3)):
+           for i9 in range(len(etamx1)):
+            for i10 in range(len(etamxf)):
+             for i11 in range(len(etacf)):
+              for i12 in range(len(small_nef)):
+               for i13 in range(len(crdown)):
+                for i14 in range(len(rdiv)):
+                 for i15 in range(len(dgmax)):
+                  for i16 in range(len(predictor)):
+                   for i17 in range(len(msbp)):
+                    for i185 in range(len(fixedpt)):
                      for i18 in range(len(maxcor)):
                       for i19 in range(len(nlscoef)):
 
                        # create parameter object
-                       p = ark.SolParams(-1.0, order, dense_order[i1], 
+                       p = ark.SolParams(-1.0, order, dense_order, 
                                           imex, adapt_method[i2], cflfac,
-                                          safety[i3], bias[i4], 
+                                          safety, bias[i4], 
                                           growth[i5], hfixed_lb, 
-                                          hfixed_ub, k1[i6], k2[i7],
-                                          k3[i8], etamx1[i9], 
+                                          hfixed_ub, pq[i55], k1[i6], 
+                                          k2[i7], k3[i8], etamx1[i9], 
                                           etamxf[i10], etacf[i11], 
                                           small_nef[i12], crdown[i13], 
                                           rdiv[i14], dgmax[i15], 
-                                          predictor[i16], msbp[i17], 
-                                          maxcor[i18], nlscoef[i19], 
+                                          predictor[i16], msbp[i17], fixedpt[i85],
+                                          m_aa, maxcor[i18], nlscoef[i19], 
                                           rtol, atol);
                          
                        # create parameter file 
@@ -199,10 +202,10 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
                            
 ##########
 def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac, 
-                          safety, biases, growth, hfixed_lb, hfixed_ub, k1vals, 
-                          k2vals, k3vals, etamx1, etamxf, etacf, small_nef, 
-                          crdown, rdiv, dgmax, predictor, msbpvals, maxcor, 
-                          nlscoef, nsaved, tests, CM, rtol, atol, ntries):
+                          safety, biases, growth, hfixed_lb, hfixed_ub, pqvals, 
+                          k1vals, k2vals, k3vals, etamx1, etamxf, etacf, small_nef, 
+                          crdown, rdiv, dgmax, predictor, msbpvals, fixedpt, m_aa, 
+                          maxcor, nlscoef, nsaved, tests, CM, rtol, atol, ntries):
     """ This routine performs a stochastic optimization over the """
     """ set of possible solver parameters.  Each input should be """ 
     """ an array of length 2, storing the bounds of allowed      """
@@ -211,8 +214,8 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
     """ integer) and CM (a single cost model).                   """
 
     # create parameter file of all defaults, set baseline cost
-    p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
+    p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);
     p.cost = 1.0
@@ -232,6 +235,9 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
     snef_l = small_nef[0];      snef_r = small_nef[1];
     pred_l = predictor[0];      pred_r = predictor[1];
     msbp_l = msbpvals[0];       msbp_r = msbpvals[1];
+    pq_l = pqvals[0];           pq_r = pqvals[1];
+    fxpt_l = fixedpt[0];        fxpt_r = fixedpt[1];
+    maa_l = m_aa[0];            maa_r = m_aa[1];
     mxcr_l = maxcor[0];         mxcr_r = maxcor[1];
     cfl_l = cflfac[0];          cfl_r = cflfac[1];
     safe_l = safety[0];         safe_r = safety[1];
@@ -262,6 +268,9 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
         snef  = np.random.random_integers(snef_l,  snef_r);
         pred  = np.random.random_integers(pred_l,  pred_r);
         msbp  = np.random.random_integers(msbp_l,  msbp_r);
+        pq    = np.random.random_integers(pq_l,    pq_r);
+        fxpt  = np.random.random_integers(fxpt_l,  fxpt_r);
+        maa   = np.random.random_integers(maa_l,   maa_r);
         mxcr  = np.random.random_integers(mxcr_l,  mxcr_r);
         cfl   = cfl_l   + np.random.random_sample()*(cfl_r   - cfl_l);
         safe  = safe_l  + np.random.random_sample()*(safe_r  - safe_l);
@@ -282,8 +291,8 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
 
         # create parameter object
         p = ark.SolParams(-1.0, order, dord, imex, hmeth, cfl, safe, bias, grow, 
-                           hf_lb, hf_ub, k1, k2, k3, emx1, emxf, ecf, snef, crd, 
-                           rdv, dgmx, pred, msbp, mxcr, nlsc, rtol, atol);
+                           hf_lb, hf_ub, pq, k1, k2, k3, emx1, emxf, ecf, snef, crd, 
+                           rdv, dgmx, pred, msbp, fxpt, maa, mxcr, nlsc, rtol, atol);
                          
         # create parameter file 
         ark.write_parameter_file(p);
@@ -350,11 +359,11 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
         if (iupdate >= nupdate):
             iupdate = 0;
             oldbounds = ((dord_l, dord_r), (hmeth_l, hmeth_r), (snef_l, snef_r), 
-                         (pred_l, pred_r), (msbp_l, msbp_r), (mxcr_l, mxcr_r), 
-                         (cfl_l, cfl_r), (safe_l, safe_r), (bias_l, bias_r), 
-                         (grow_l, grow_r), (hf_lb_l, hf_lb_r), (hf_ub_l, hf_ub_r), 
-                         (k1_l, k1_r), (k2_l, k2_r), (k3_l, k3_r), (emx1_l, emx1_r), 
-                         (emxf_l, emxf_r), (ecf_l, ecf_r), (crd_l, crd_r), 
+                         (pred_l, pred_r), (msbp_l, msbp_r), (pq_l, pq_r), (fxpt_l, fxpt_r), 
+                         (maa_l, maa_r), (mxcr_l, mxcr_r), (cfl_l, cfl_r), (safe_l, safe_r), 
+                         (bias_l, bias_r), (grow_l, grow_r), (hf_lb_l, hf_lb_r), 
+                         (hf_ub_l, hf_ub_r), (k1_l, k1_r), (k2_l, k2_r), (k3_l, k3_r), 
+                         (emx1_l, emx1_r), (emxf_l, emxf_r), (ecf_l, ecf_r), (crd_l, crd_r), 
                          (rdv_l, rdv_r), (dgmx_l, dgmx_r), (nlsc_l, nlsc_r));
             newbounds = update_param_bounds(optimal, oldbounds);
             dord_l = newbounds[0][0];  dord_r = newbounds[0][1];
@@ -362,23 +371,26 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
             snef_l = newbounds[2][0];   snef_r = newbounds[2][1];
             pred_l = newbounds[3][0];   pred_r = newbounds[3][1];
             msbp_l = newbounds[4][0];   msbp_r = newbounds[4][1];
-            mxcr_l = newbounds[5][0];   mxcr_r = newbounds[5][1];
-            cfl_l = newbounds[6][0];    cfl_r = newbounds[6][1];
-            safe_l = newbounds[7][0];   safe_r = newbounds[7][1];
-            bias_l = newbounds[8][0];   bias_r = newbounds[8][1];
-            grow_l = newbounds[9][0];   grow_r = newbounds[9][1];
-            hf_lb_l = newbounds[10][0];  hf_lb_r = newbounds[10][1];
-            hf_ub_l = newbounds[11][0];  hf_ub_r = newbounds[11][1];
-            k1_l = newbounds[12][0];     k1_r = newbounds[12][1];
-            k2_l = newbounds[13][0];     k2_r = newbounds[13][1];
-            k3_l = newbounds[14][0];     k3_r = newbounds[14][1];
-            emx1_l = newbounds[15][0];   emx1_r = newbounds[15][1];
-            emxf_l = newbounds[16][0];   emxf_r = newbounds[16][1];
-            ecf_l = newbounds[17][0];    ecf_r = newbounds[17][1];
-            crd_l = newbounds[18][0];    crd_r = newbounds[18][1];
-            rdv_l = newbounds[19][0];    rdv_r = newbounds[19][1];
-            dgmx_l = newbounds[20][0];   dgmx_r = newbounds[20][1];
-            nlsc_l = newbounds[21][0];   nlsc_r = newbounds[21][1];
+            pq_l = newbounds[5][0];     pq_r = newbounds[5][1];
+            fxpt_l = newbounds[6][0];   fxpt_r = newbounds[6][1];
+            maa_l = newbounds[7][0];    maa_r = newbounds[7][1];
+            mxcr_l = newbounds[8][0];   mxcr_r = newbounds[8][1];
+            cfl_l = newbounds[9][0];    cfl_r = newbounds[9][1];
+            safe_l = newbounds[10][0];   safe_r = newbounds[10][1];
+            bias_l = newbounds[11][0];   bias_r = newbounds[11][1];
+            grow_l = newbounds[12][0];   grow_r = newbounds[12][1];
+            hf_lb_l = newbounds[13][0];  hf_lb_r = newbounds[13][1];
+            hf_ub_l = newbounds[14][0];  hf_ub_r = newbounds[14][1];
+            k1_l = newbounds[15][0];     k1_r = newbounds[15][1];
+            k2_l = newbounds[16][0];     k2_r = newbounds[16][1];
+            k3_l = newbounds[17][0];     k3_r = newbounds[17][1];
+            emx1_l = newbounds[18][0];   emx1_r = newbounds[18][1];
+            emxf_l = newbounds[19][0];   emxf_r = newbounds[19][1];
+            ecf_l = newbounds[20][0];    ecf_r = newbounds[20][1];
+            crd_l = newbounds[21][0];    crd_r = newbounds[21][1];
+            rdv_l = newbounds[22][0];    rdv_r = newbounds[22][1];
+            dgmx_l = newbounds[23][0];   dgmx_r = newbounds[23][1];
+            nlsc_l = newbounds[24][0];   nlsc_r = newbounds[24][1];
             
     # output final parameter bounds to screen
     newbounds = update_param_bounds(optimal, oldbounds);
@@ -388,23 +400,26 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
     sys.stdout.write("   small_nef = [%i, %i]\n" % (newbounds[2][0],newbounds[2][1]))
     sys.stdout.write("   predictor = [%i, %i]\n" % (newbounds[3][0],newbounds[3][1]))
     sys.stdout.write("   msbp = [%i, %i]\n" % (newbounds[4][0],newbounds[4][1]))
-    sys.stdout.write("   maxcor = [%i, %i]\n" % (newbounds[5][0],newbounds[5][1]))
-    sys.stdout.write("   cflfac = [%g, %g]\n" % (newbounds[6][0],newbounds[6][1]))
-    sys.stdout.write("   safety = [%g, %g]\n" % (newbounds[7][0],newbounds[7][1]))
-    sys.stdout.write("   bias = [%g, %g]\n" % (newbounds[8][0],newbounds[8][1]))
-    sys.stdout.write("   growth = [%g, %g]\n" % (newbounds[9][0],newbounds[9][1]))
-    sys.stdout.write("   hfixed_lb = [%g, %g]\n" % (newbounds[10][0],newbounds[10][1]))
-    sys.stdout.write("   hfixed_ub = [%g, %g]\n" % (newbounds[11][0],newbounds[11][1]))
-    sys.stdout.write("   k1 = [%g, %g]\n" % (newbounds[12][0],newbounds[12][1]))
-    sys.stdout.write("   k2 = [%g, %g]\n" % (newbounds[13][0],newbounds[13][1]))
-    sys.stdout.write("   k3 = [%g, %g]\n" % (newbounds[14][0],newbounds[14][1]))
-    sys.stdout.write("   etamx1 = [%g, %g]\n" % (newbounds[15][0],newbounds[15][1]))
-    sys.stdout.write("   etamxf = [%g, %g]\n" % (newbounds[16][0],newbounds[16][1]))
-    sys.stdout.write("   etacf = [%g, %g]\n" % (newbounds[17][0],newbounds[17][1]))
-    sys.stdout.write("   crdown = [%g, %g]\n" % (newbounds[18][0],newbounds[18][1]))
-    sys.stdout.write("   rdiv = [%g, %g]\n" % (newbounds[19][0],newbounds[19][1]))
-    sys.stdout.write("   dgmax = [%g, %g]\n" % (newbounds[20][0],newbounds[20][1]))
-    sys.stdout.write("   nlscoef = [%g, %g]\n" % (newbounds[21][0],newbounds[21][1]))
+    sys.stdout.write("   pq = [%i, %i]\n" % (newbounds[5][0],newbounds[5][1]))
+    sys.stdout.write("   fxpt = [%i, %i]\n" % (newbounds[6][0],newbounds[6][1]))
+    sys.stdout.write("   maa = [%i, %i]\n" % (newbounds[7][0],newbounds[7][1]))
+    sys.stdout.write("   maxcor = [%i, %i]\n" % (newbounds[8][0],newbounds[8][1]))
+    sys.stdout.write("   cflfac = [%g, %g]\n" % (newbounds[9][0],newbounds[9][1]))
+    sys.stdout.write("   safety = [%g, %g]\n" % (newbounds[10][0],newbounds[10][1]))
+    sys.stdout.write("   bias = [%g, %g]\n" % (newbounds[11][0],newbounds[11][1]))
+    sys.stdout.write("   growth = [%g, %g]\n" % (newbounds[12][0],newbounds[12][1]))
+    sys.stdout.write("   hfixed_lb = [%g, %g]\n" % (newbounds[13][0],newbounds[13][1]))
+    sys.stdout.write("   hfixed_ub = [%g, %g]\n" % (newbounds[14][0],newbounds[14][1]))
+    sys.stdout.write("   k1 = [%g, %g]\n" % (newbounds[15][0],newbounds[15][1]))
+    sys.stdout.write("   k2 = [%g, %g]\n" % (newbounds[16][0],newbounds[16][1]))
+    sys.stdout.write("   k3 = [%g, %g]\n" % (newbounds[17][0],newbounds[17][1]))
+    sys.stdout.write("   etamx1 = [%g, %g]\n" % (newbounds[18][0],newbounds[18][1]))
+    sys.stdout.write("   etamxf = [%g, %g]\n" % (newbounds[19][0],newbounds[19][1]))
+    sys.stdout.write("   etacf = [%g, %g]\n" % (newbounds[20][0],newbounds[20][1]))
+    sys.stdout.write("   crdown = [%g, %g]\n" % (newbounds[21][0],newbounds[21][1]))
+    sys.stdout.write("   rdiv = [%g, %g]\n" % (newbounds[22][0],newbounds[22][1]))
+    sys.stdout.write("   dgmax = [%g, %g]\n" % (newbounds[23][0],newbounds[23][1]))
+    sys.stdout.write("   nlscoef = [%g, %g]\n" % (newbounds[24][0],newbounds[24][1]))
     sys.stdout.write("\n")
     return optimal;
                            
@@ -423,6 +438,7 @@ def update_param_bounds(parameters, oldbounds):
     grow_l = 10000;   grow_r = -10000;
     hflb_l = 10000;   hflb_r = -10000;
     hfub_l = 10000;   hfub_r = -10000;
+    pq_l = 10000;     pq_r = -10000;
     k1_l = 10000;     k1_r = -10000;
     k2_l = 10000;     k2_r = -10000;
     k3_l = 10000;     k3_r = -10000;
@@ -435,6 +451,8 @@ def update_param_bounds(parameters, oldbounds):
     dgm_l = 10000;    dgm_r = -10000;
     prd_l = 10000;    prd_r = -10000;
     msb_l = 10000;    msb_r = -10000;
+    fxpt_l = 100000;  fxpt_r = -10000;
+    maa_l = 100000;   maa_r = -10000;
     mxc_l = 100000;   mxc_r = -10000;
     nls_l = 100000;   nls_r = -10000;
 
@@ -448,70 +466,10 @@ def update_param_bounds(parameters, oldbounds):
             (parameters[i].adapt_method <= oldbounds[1][1])):
             hmeth_l = min(hmeth_l, parameters[i].adapt_method)
             hmeth_r = max(hmeth_r, parameters[i].adapt_method)
-        if ((parameters[i].cflfac >= oldbounds[6][0]) and 
-            (parameters[i].cflfac <= oldbounds[6][1])):
-            cfl_l = min(cfl_l, parameters[i].cflfac)
-            cfl_r = max(cfl_r, parameters[i].cflfac)
-        if ((parameters[i].safety >= oldbounds[7][0]) and 
-            (parameters[i].safety <= oldbounds[7][1])):
-            safe_l = min(safe_l, parameters[i].safety)
-            safe_r = max(safe_r, parameters[i].safety)
-        if ((parameters[i].bias >= oldbounds[8][0]) and 
-            (parameters[i].bias <= oldbounds[8][1])):
-            bias_l = min(bias_l, parameters[i].bias)
-            bias_r = max(bias_r, parameters[i].bias)
-        if ((parameters[i].growth >= oldbounds[9][0]) and 
-            (parameters[i].growth <= oldbounds[9][1])):
-            grow_l = min(grow_l, parameters[i].growth)
-            grow_r = max(grow_r, parameters[i].growth)
-        if ((parameters[i].hfixed_lb >= oldbounds[10][0]) and 
-            (parameters[i].hfixed_lb <= oldbounds[10][1])):
-            hflb_l = min(hflb_l, parameters[i].hfixed_lb)
-            hflb_r = max(hflb_r, parameters[i].hfixed_lb)
-        if ((parameters[i].hfixed_ub >= oldbounds[11][0]) and 
-            (parameters[i].hfixed_ub <= oldbounds[11][1])):
-            hfub_l = min(hfub_l, parameters[i].hfixed_ub)
-            hfub_r = max(hfub_r, parameters[i].hfixed_ub)
-        if ((parameters[i].k1 >= oldbounds[12][0]) and 
-            (parameters[i].k1 <= oldbounds[12][1])):
-            k1_l = min(k1_l, parameters[i].k1)
-            k1_r = max(k1_r, parameters[i].k1)
-        if ((parameters[i].k2 >= oldbounds[13][0]) and 
-            (parameters[i].k2 <= oldbounds[13][1])):
-            k2_l = min(k2_l, parameters[i].k2)
-            k2_r = max(k2_r, parameters[i].k2)
-        if ((parameters[i].k3 >= oldbounds[14][0]) and 
-            (parameters[i].k3 <= oldbounds[14][1])):
-            k3_l = min(k3_l, parameters[i].k3)
-            k3_r = max(k3_r, parameters[i].k3)
-        if ((parameters[i].etamx1 >= oldbounds[15][0]) and 
-            (parameters[i].etamx1 <= oldbounds[15][1])):
-            em1_l = min(em1_l, parameters[i].etamx1)
-            em1_r = max(em1_r, parameters[i].etamx1)
-        if ((parameters[i].etamxf >= oldbounds[16][0]) and 
-            (parameters[i].etamxf <= oldbounds[16][1])):
-            emf_l = min(emf_l, parameters[i].etamxf)
-            emf_r = max(emf_r, parameters[i].etamxf)
-        if ((parameters[i].etacf >= oldbounds[17][0]) and 
-            (parameters[i].etacf <= oldbounds[17][1])):
-            ecf_l = min(ecf_l, parameters[i].etacf)
-            ecf_r = max(ecf_r, parameters[i].etacf)
         if ((parameters[i].small_nef >= oldbounds[2][0]) and 
             (parameters[i].small_nef <= oldbounds[2][1])):
             snf_l = min(snf_l, parameters[i].small_nef)
             snf_r = max(snf_r, parameters[i].small_nef)
-        if ((parameters[i].crdown >= oldbounds[18][0]) and 
-            (parameters[i].crdown <= oldbounds[18][1])):
-            crd_l = min(crd_l, parameters[i].crdown)
-            crd_r = max(crd_r, parameters[i].crdown)
-        if ((parameters[i].rdiv >= oldbounds[19][0]) and 
-            (parameters[i].rdiv <= oldbounds[19][1])):
-            rdv_l = min(rdv_l, parameters[i].rdiv)
-            rdv_r = max(rdv_r, parameters[i].rdiv)
-        if ((parameters[i].dgmax >= oldbounds[20][0]) and 
-            (parameters[i].dgmax <= oldbounds[20][1])):
-            dgm_l = min(dgm_l, parameters[i].dgmax)
-            dgm_r = max(dgm_r, parameters[i].dgmax)
         if ((parameters[i].predictor >= oldbounds[3][0]) and 
             (parameters[i].predictor <= oldbounds[3][1])):
             prd_l = min(prd_l, parameters[i].predictor)
@@ -520,12 +478,84 @@ def update_param_bounds(parameters, oldbounds):
             (parameters[i].msbp <= oldbounds[4][1])):
             msb_l = min(msb_l, parameters[i].msbp)
             msb_r = max(msb_r, parameters[i].msbp)
-        if ((parameters[i].maxcor >= oldbounds[5][0]) and 
-            (parameters[i].maxcor <= oldbounds[5][1])):
+        if ((parameters[i].pq >= oldbounds[5][0]) and 
+            (parameters[i].pq <= oldbounds[5][1])):
+            pq_l = min(pq_l, parameters[i].pq)
+            pq_r = max(pq_r, parameters[i].pq)
+        if ((parameters[i].fixedpt >= oldbounds[6][0]) and 
+            (parameters[i].fixedpt <= oldbounds[6][1])):
+            fxpt_l = min(fxpt_l, parameters[i].fixedpt)
+            fxpt_r = max(fxpt_r, parameters[i].fixedpt)
+        if ((parameters[i].m_aa >= oldbounds[7][0]) and 
+            (parameters[i].m_aa <= oldbounds[7][1])):
+            maa_l = min(maa_l, parameters[i].m_aa)
+            maa_r = max(maa_r, parameters[i].m_aa)
+        if ((parameters[i].maxcor >= oldbounds[8][0]) and 
+            (parameters[i].maxcor <= oldbounds[8][1])):
             mxc_l = min(mxc_l, parameters[i].maxcor)
             mxc_r = max(mxc_r, parameters[i].maxcor)
-        if ((parameters[i].nlscoef >= oldbounds[21][0]) and 
-            (parameters[i].nlscoef <= oldbounds[21][1])):
+        if ((parameters[i].cflfac >= oldbounds[9][0]) and 
+            (parameters[i].cflfac <= oldbounds[9][1])):
+            cfl_l = min(cfl_l, parameters[i].cflfac)
+            cfl_r = max(cfl_r, parameters[i].cflfac)
+        if ((parameters[i].safety >= oldbounds[10][0]) and 
+            (parameters[i].safety <= oldbounds[10][1])):
+            safe_l = min(safe_l, parameters[i].safety)
+            safe_r = max(safe_r, parameters[i].safety)
+        if ((parameters[i].bias >= oldbounds[11][0]) and 
+            (parameters[i].bias <= oldbounds[11][1])):
+            bias_l = min(bias_l, parameters[i].bias)
+            bias_r = max(bias_r, parameters[i].bias)
+        if ((parameters[i].growth >= oldbounds[12][0]) and 
+            (parameters[i].growth <= oldbounds[12][1])):
+            grow_l = min(grow_l, parameters[i].growth)
+            grow_r = max(grow_r, parameters[i].growth)
+        if ((parameters[i].hfixed_lb >= oldbounds[13][0]) and 
+            (parameters[i].hfixed_lb <= oldbounds[13][1])):
+            hflb_l = min(hflb_l, parameters[i].hfixed_lb)
+            hflb_r = max(hflb_r, parameters[i].hfixed_lb)
+        if ((parameters[i].hfixed_ub >= oldbounds[14][0]) and 
+            (parameters[i].hfixed_ub <= oldbounds[14][1])):
+            hfub_l = min(hfub_l, parameters[i].hfixed_ub)
+            hfub_r = max(hfub_r, parameters[i].hfixed_ub)
+        if ((parameters[i].k1 >= oldbounds[15][0]) and 
+            (parameters[i].k1 <= oldbounds[15][1])):
+            k1_l = min(k1_l, parameters[i].k1)
+            k1_r = max(k1_r, parameters[i].k1)
+        if ((parameters[i].k2 >= oldbounds[16][0]) and 
+            (parameters[i].k2 <= oldbounds[16][1])):
+            k2_l = min(k2_l, parameters[i].k2)
+            k2_r = max(k2_r, parameters[i].k2)
+        if ((parameters[i].k3 >= oldbounds[17][0]) and 
+            (parameters[i].k3 <= oldbounds[17][1])):
+            k3_l = min(k3_l, parameters[i].k3)
+            k3_r = max(k3_r, parameters[i].k3)
+        if ((parameters[i].etamx1 >= oldbounds[18][0]) and 
+            (parameters[i].etamx1 <= oldbounds[18][1])):
+            em1_l = min(em1_l, parameters[i].etamx1)
+            em1_r = max(em1_r, parameters[i].etamx1)
+        if ((parameters[i].etamxf >= oldbounds[19][0]) and 
+            (parameters[i].etamxf <= oldbounds[19][1])):
+            emf_l = min(emf_l, parameters[i].etamxf)
+            emf_r = max(emf_r, parameters[i].etamxf)
+        if ((parameters[i].etacf >= oldbounds[20][0]) and 
+            (parameters[i].etacf <= oldbounds[20][1])):
+            ecf_l = min(ecf_l, parameters[i].etacf)
+            ecf_r = max(ecf_r, parameters[i].etacf)
+        if ((parameters[i].crdown >= oldbounds[21][0]) and 
+            (parameters[i].crdown <= oldbounds[21][1])):
+            crd_l = min(crd_l, parameters[i].crdown)
+            crd_r = max(crd_r, parameters[i].crdown)
+        if ((parameters[i].rdiv >= oldbounds[22][0]) and 
+            (parameters[i].rdiv <= oldbounds[22][1])):
+            rdv_l = min(rdv_l, parameters[i].rdiv)
+            rdv_r = max(rdv_r, parameters[i].rdiv)
+        if ((parameters[i].dgmax >= oldbounds[23][0]) and 
+            (parameters[i].dgmax <= oldbounds[23][1])):
+            dgm_l = min(dgm_l, parameters[i].dgmax)
+            dgm_r = max(dgm_r, parameters[i].dgmax)
+        if ((parameters[i].nlscoef >= oldbounds[24][0]) and 
+            (parameters[i].nlscoef <= oldbounds[24][1])):
             nls_l = min(nls_l, parameters[i].nlscoef)
             nls_r = max(nls_r, parameters[i].nlscoef)
         
@@ -534,48 +564,55 @@ def update_param_bounds(parameters, oldbounds):
         dord_l = oldbounds[0][0];  dord_r = oldbounds[0][1];
     if (hmeth_l > hmeth_r):
         hmeth_l = oldbounds[1][0];  hmeth_r = oldbounds[1][1];
-    if (cfl_l > cfl_r):
-        cfl_l = oldbounds[6][0];  cfl_r = oldbounds[6][1];
-    if (safe_l > safe_r):
-        safe_l = oldbounds[7][0]; safe_r = oldbounds[7][1];
-    if (bias_l > bias_r):
-        bias_l = oldbounds[8][0]; bias_r = oldbounds[8][1];
-    if (grow_l > grow_r):
-        grow_l = oldbounds[9][0]; grow_r = oldbounds[9][1];
-    if (hflb_l > hflb_r):
-        hflb_l = oldbounds[10][0]; hflb_r = oldbounds[10][1];
-    if (hfub_l > hfub_r):
-        hfub_l = oldbounds[11][0]; hfub_r = oldbounds[11][1];
-    if (k1_l > k1_r):
-        k1_l = oldbounds[12][0]; k1_r = oldbounds[12][1];
-    if (k2_l > k2_r):
-        k2_l = oldbounds[13][0]; k2_r = oldbounds[13][1];
-    if (k3_l > k3_r):
-        k3_l = oldbounds[14][0]; k3_r = oldbounds[14][1];
-    if (em1_l > em1_r):
-        em1_l = oldbounds[15][0]; em1_r = oldbounds[15][1];
-    if (emf_l > emf_r):
-        emf_l = oldbounds[16][0]; emf_r = oldbounds[16][1];
-    if (ecf_l > ecf_r):
-        ecf_l = oldbounds[17][0]; ecf_r = oldbounds[17][1];
     if (snf_l > snf_r):
         snf_l = oldbounds[2][0]; snf_r = oldbounds[2][1];
-    if (crd_l > crd_r):
-        crd_l = oldbounds[18][0]; crd_r = oldbounds[18][1];
-    if (rdv_l > rdv_r):
-        rdv_l = oldbounds[19][0]; rdv_r = oldbounds[19][1];
-    if (dgm_l > dgm_r):
-        dgm_l = oldbounds[20][0]; dgm_r = oldbounds[20][1];
     if (prd_l > prd_r):
         prd_l = oldbounds[3][0]; prd_r = oldbounds[3][1];
     if (msb_l > msb_r):
         msb_l = oldbounds[4][0]; msb_r = oldbounds[4][1];
+    if (pq_l > pq_r):
+        pq_l = oldbounds[5][0]; pq_r = oldbounds[5][1];
+    if (fxpt_l > fxpt_r):
+        fxpt_l = oldbounds[6][0]; fxpt_r = oldbounds[6][1];
+    if (maa_l > maa_r):
+        maa_l = oldbounds[7][0]; maa_r = oldbounds[7][1];
     if (mxc_l > mxc_r):
-        mxc_l = oldbounds[5][0]; mxc_r = oldbounds[5][1];
+        mxc_l = oldbounds[8][0]; mxc_r = oldbounds[8][1];
+    if (cfl_l > cfl_r):
+        cfl_l = oldbounds[9][0];  cfl_r = oldbounds[9][1];
+    if (safe_l > safe_r):
+        safe_l = oldbounds[10][0]; safe_r = oldbounds[10][1];
+    if (bias_l > bias_r):
+        bias_l = oldbounds[11][0]; bias_r = oldbounds[11][1];
+    if (grow_l > grow_r):
+        grow_l = oldbounds[12][0]; grow_r = oldbounds[12][1];
+    if (hflb_l > hflb_r):
+        hflb_l = oldbounds[13][0]; hflb_r = oldbounds[13][1];
+    if (hfub_l > hfub_r):
+        hfub_l = oldbounds[14][0]; hfub_r = oldbounds[14][1];
+    if (k1_l > k1_r):
+        k1_l = oldbounds[15][0]; k1_r = oldbounds[15][1];
+    if (k2_l > k2_r):
+        k2_l = oldbounds[16][0]; k2_r = oldbounds[16][1];
+    if (k3_l > k3_r):
+        k3_l = oldbounds[17][0]; k3_r = oldbounds[17][1];
+    if (em1_l > em1_r):
+        em1_l = oldbounds[18][0]; em1_r = oldbounds[18][1];
+    if (emf_l > emf_r):
+        emf_l = oldbounds[19][0]; emf_r = oldbounds[19][1];
+    if (ecf_l > ecf_r):
+        ecf_l = oldbounds[20][0]; ecf_r = oldbounds[20][1];
+    if (crd_l > crd_r):
+        crd_l = oldbounds[21][0]; crd_r = oldbounds[21][1];
+    if (rdv_l > rdv_r):
+        rdv_l = oldbounds[22][0]; rdv_r = oldbounds[22][1];
+    if (dgm_l > dgm_r):
+        dgm_l = oldbounds[23][0]; dgm_r = oldbounds[23][1];
     if (nls_l > nls_r):
-        nls_l = oldbounds[21][0]; nls_r = oldbounds[21][1];
+        nls_l = oldbounds[24][0]; nls_r = oldbounds[24][1];
     newbounds = ((dord_l, dord_r), (hmeth_l, hmeth_r), (snf_l, snf_r), 
-                 (prd_l, prd_r), (msb_l, msb_r), (mxc_l, mxc_r), 
+                 (prd_l, prd_r), (msb_l, msb_r), (pq_l, pq_r), 
+                 (fxpt_l, fxpt_r), (maa_l, maa_r), (mxc_l, mxc_r), 
                  (cfl_l, cfl_r), (safe_l, safe_r), (bias_l, bias_r), 
                  (grow_l, grow_r), (hflb_l, hflb_r), (hfub_l, hfub_r), 
                  (k1_l, k1_r), (k2_l, k2_r), (k3_l, k3_r), (em1_l, em1_r), 

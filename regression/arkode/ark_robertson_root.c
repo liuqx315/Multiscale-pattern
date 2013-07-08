@@ -61,7 +61,7 @@ static int check_flag(void *flagvalue, char *funcname, int opt);
 int init_from_file(void *ark_mem, char *fname, ARKRhsFn f, 
 		   ARKRhsFn fe, ARKRhsFn fi, realtype T0, 
 		   N_Vector y0, int *ImEx, int *dorder, 
-		   realtype *RTol, realtype *ATol);
+		   int *fxpt, realtype *RTol, realtype *ATol);
 
 
 /* Main Program */
@@ -79,7 +79,7 @@ int main()
   long int nje, nfeLS, nni, ncfn, netf, nge;
   
   /* declare solver parameters */
-  int flag, rtflag, dense_order, imex;
+  int flag, rtflag, dense_order, imex, fixedpt;
 
   /* general problem variables */
   int idense;
@@ -117,8 +117,8 @@ int main()
   
   /* Call init_from_file helper routine to read and set solver parameters */
   realtype rtol, atol;
-  flag = init_from_file(arkode_mem, "solve_params.txt", f, fe, fi,
-			T0, y, &imex, &dense_order, &rtol, &atol);
+  flag = init_from_file(arkode_mem, "solve_params.txt", f, fe, fi, T0,
+			y, &imex, &dense_order, &fixedpt, &rtol, &atol);
   if (check_flag(&flag, "init_from_file", 1)) return 1;
 
   /* Update tolerances */

@@ -30,9 +30,9 @@ program driver
   implicit none
 
   ! general problem variables
-  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2)
-  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, ind(1), btable2(2)
-  integer*8 :: NEQ, iout(22)
+  real*8    :: T0, Tf, dTout, Tout, Tcur, rtol, rout(6), t(2), apar(3)
+  integer   :: it, Nt, ier, neqn, ndisc, mlmas, mumas, ind(1), idef
+  integer*8 :: NEQ, iout(22), btable2(2)
   real*8, allocatable :: y(:), ytrue(:), rtols(:), atols(:)
   logical   :: numjac, nummas, consis, tolvec, denseout
   character :: fullnm*17, problm*5, type*3
@@ -44,15 +44,15 @@ program driver
   real*8  :: rpar(1)
 
   ! solver parameters
-  integer :: order, dense_order, imex, btable, adapt_method, &
-       small_nef, predictor, msbp, maxcor
+  integer*8 :: order, dense_order, imex, btable, adapt_method, &
+       small_nef, predictor, msbp, maxcor, pq, fixedpt, m_aa
   real*8 :: cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, &
        k1, k2, k3, etamx1, etamxf, etacf, crdown, rdiv, dgmax, nlscoef
 
   namelist /inputs/ order, dense_order, imex, btable, adapt_method, &
-       cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, k1, k2,  &
-       k3, etamx1, etamxf, etacf, small_nef, crdown, rdiv, dgmax,   &
-       predictor, msbp, maxcor, nlscoef
+       cflfac, safety, bias, growth, hfixed_lb, hfixed_ub, pq, k1,  &
+       k2, k3, etamx1, etamxf, etacf, small_nef, crdown, rdiv,      &
+       dgmax, predictor, msbp, fixedpt, m_aa, maxcor, nlscoef
 
   !-----------------------
   ! read solver inputs
@@ -113,9 +113,9 @@ program driver
      else if (imex == 1) then
         call FARKSetIin('ERK_TABLE_NUM', btable, ier)
      else 
-        if (btable == 3)   btable2 = (/ btable, 16 /)
-        if (btable == 6)   btable2 = (/ btable, 22 /)
-        if (btable == 11)  btable2 = (/ btable, 26 /)
+        if (btable == 3)   btable2 = (/ btable, 16_8 /)
+        if (btable == 6)   btable2 = (/ btable, 22_8 /)
+        if (btable == 11)  btable2 = (/ btable, 26_8 /)
         call FARKSetIin('ARK_TABLE_NUM', btable2, ier)
      end if
   end if
@@ -127,16 +127,19 @@ program driver
   else
      call FARKSetIin('IMEX', 1, ier)
   end if
-  call FARKSetIin('ADAPT_METHOD',    adapt_method, ier)
+  apar = (/ k1, k2, k3 /)
+  if (sum(abs(apar)) > 0.d0) then
+     idef = 0
+  else
+     idef = 1
+  endif
+  call FARKSetAdaptivityMethod(adapt_method, idef, pq, apar, ier)
   call FARKSetRin('ADAPT_CFL',       cflfac, ier)
   call FARKSetRin('ADAPT_SAFETY',    safety, ier)
   call FARKSetRin('ADAPT_BIAS',      bias, ier)
   call FARKSetRin('ADAPT_GROWTH',    growth, ier)
-  call FARKSetRin('ADAPT_LB',        hfixed_lb, ier)
-  call FARKSetRin('ADAPT_UB',        hfixed_ub, ier)
-  call FARKSetRin('ADAPT_K1',        k1, ier)
-  call FARKSetRin('ADAPT_K2',        k2, ier)
-  call FARKSetRin('ADAPT_K3',        k3, ier)
+  apar = (/ hfixed_lb, hfixed_ub, 0.d0 /)
+  call FARKSetRin('ADAPT_BOUNDS',    apar, ier)
   call FARKSetRin('ADAPT_ETAMX1',    etamx1, ier)
   call FARKSetRin('ADAPT_ETAMXF',    etamxf, ier)
   call FARKSetRin('ADAPT_ETACF',     etacf, ier)
@@ -146,9 +149,12 @@ program driver
   call FARKSetRin('LSETUP_DGMAX',    dgmax, ier)
   call FARKSetIin('LSETUP_MSBP',     msbp, ier)
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
-  call FARKSetIin('MAX_NITERS',      maxcor, ier)
-  call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
+  if (fixedpt > 0)  &
+       call FARKSetIin('FIXEDPOINT', m_aa, ier)
+
+  ! the following seem necessary for this problem
   call FARKSetIin('MAX_NSTEPS',      10000, ier)
+  call FARKSetRin('NLCONV_COEF',     1.d-4, ier)
   
   ! output solver parameters to screen
   call FARKWriteParameters(ier)
@@ -187,28 +193,29 @@ program driver
   ! output solver statistics
   print *, '  '
   print *, 'Final Solver Statistics:'
-  print '(2(A,i7),A)', '   Internal solver steps =', iout(3), &
-       ' (attempted =', iout(6), ')'
-  print '(2(A,i7))', '   Total RHS evals:  Fe =', iout(7), &
-       ',  Fi =', iout(8)
-  print '(A,i7)', '   Total linear solver setups =', iout(9)
-  print '(A,i7)', '   Total RHS evals for setting up the linear system =', iout(17)
-  print '(A,i7)', '   Total number of Jacobian evaluations =', iout(18)
-  print '(A,i7)', '   Total number of nonlinear iterations =', iout(11)
-  print '(A,i7)', '   Total number of nonlinear solver convergence failures =', &
+  print *, '   Internal solver steps = ', iout(3), &
+       ' (attempted = ', iout(6), ')'
+  print *, '   Total RHS evals:  Fe = ', iout(7), &
+       '  Fi = ', iout(8)
+  print *, '   Total linear solver setups = ', iout(9)
+  print *, '   Total RHS evals for setting up the linear system = ', iout(17)
+  print *, '   Total number of Jacobian evaluations = ', iout(18)
+  print *, '   Total number of nonlinear iterations = ', iout(11)
+  print *, '   Total number of nonlinear solver convergence failures = ', &
        iout(12)
-  print '(A,i7)', '   Total number of error test failures =', iout(10)
-  print '(A,es12.5)', '   First step =', rout(1)
-  print '(A,es12.5)', '   Last step =', rout(2)
-  print '(A,es12.5)', '   Current step =', rout(3)
+  print *, '   Total number of error test failures = ', iout(10)
+  print *, '   First step = ', rout(1)
+  print *, '   Last step = ', rout(2)
+  print *, '   Current step = ', rout(3)
   print *, '  '
 
   ! check final solution against reference values for problem
   call solut(neqn, Tf, ytrue)
-  print *, '     y(Tf) =', y
-  print *, '  yref(Tf) =', ytrue
-  print *, '     error =', ytrue-y
-  print *, ' Oversolve =', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-20)
+  print *, '     y(Tf) = ', y
+  print *, '  yref(Tf) = ', ytrue
+  print *, 'Error: max = ', maxval(abs(ytrue-y)), &
+       '  rms = ', sqrt(sum((ytrue-y)**2)/NEQ)
+  print *, ' Oversolve = ', rtol/sqrt(sum((ytrue-y)**2)/NEQ+1.d-20)
   print *, '  '
 
   ! clean up

@@ -23,7 +23,7 @@
 int init_from_file(void *ark_mem, char *fname, ARKRhsFn f, 
 		   ARKRhsFn fe, ARKRhsFn fi, realtype T0, 
 		   N_Vector y0, int *ImEx, int *dorder, 
-		   realtype *RTol, realtype *ATol) {
+		   int *fxpt, realtype *RTol, realtype *ATol) {
 
   /* declare available solver parameters (with default values) */
   int order = 0; 
@@ -39,6 +39,9 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
   int mxsteps = 0;
   int dense_order = -1;
   int btable = -1;
+  int pq = 0;
+  int fixedpt = 0;
+  int m_aa = -1;
   double cflfac = 0.0;
   double safety = 0.0;
   double bias = 0.0;
@@ -93,6 +96,7 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
     ret += sscanf(line,"growth = %lf", &growth);
     ret += sscanf(line,"hfixed_lb = %lf", &hfixed_lb);
     ret += sscanf(line,"hfixed_ub = %lf", &hfixed_ub);
+    ret += sscanf(line,"pq = %i", &pq);
     ret += sscanf(line,"k1 = %lf", &k1);
     ret += sscanf(line,"k2 = %lf", &k2);
     ret += sscanf(line,"k3 = %lf", &k3);
@@ -105,6 +109,8 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
     ret += sscanf(line,"dgmax = %lf", &dgmax);
     ret += sscanf(line,"predictor = %i", &predictor);
     ret += sscanf(line,"msbp = %i", &msbp);
+    ret += sscanf(line,"fixedpt = %i", &fixedpt);
+    ret += sscanf(line,"m_aa = %i", &m_aa);
     ret += sscanf(line,"maxcor = %i", &maxcor);
     ret += sscanf(line,"nlscoef = %lf", &nlscoef);
     ret += sscanf(line,"h0 = %lf", &h0);
@@ -146,7 +152,7 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
   *dorder = dense_order;
   *RTol = rtol;
   *ATol = atol;
-
+  *fxpt = fixedpt;
 
 
   /*** Call ARKode routines to initialize integrator and set options ***/
@@ -244,7 +250,7 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
   realtype adapt_params[] = {k1, k2, k3};
   int idefault = 1;
   if (fabs(k1)+fabs(k2)+fabs(k3) > 0.0)  idefault=0;
-  ret = ARKodeSetAdaptivityMethod(ark_mem, adapt_method, idefault, 0, adapt_params);
+  ret = ARKodeSetAdaptivityMethod(ark_mem, adapt_method, idefault, pq, adapt_params);
   if (ret != 0) {
     fprintf(stderr,"set_from_file error in ARKodeSetAdaptivityMethod = %i\n",ret);
     return 1;
@@ -276,6 +282,21 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
   if (ret != 0) {
     fprintf(stderr,"set_from_file error in ARKodeSetMaxCFailGrowth = %i\n",ret);
     return 1;
+  }
+
+  /* set nonlinear solver method */
+  if (fixedpt) {
+    ret = ARKodeSetFixedPoint(ark_mem, m_aa);
+    if (ret != 0) {
+      fprintf(stderr,"set_from_file error in ARKodeSetFixedPoint = %i\n",ret);
+      return 1;
+    }
+  } else {
+    ret = ARKodeSetNewton(ark_mem);
+    if (ret != 0) {
+      fprintf(stderr,"set_from_file error in ARKodeSetNewton = %i\n",ret);
+      return 1;
+    }
   }
 
   /* set nonlinear method convergence rate constant */

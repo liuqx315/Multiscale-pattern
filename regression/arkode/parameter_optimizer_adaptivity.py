@@ -52,13 +52,16 @@ predictor = (3, 3);
 msbp = (0, 0);
 maxcor = (0, 0);
 nlscoef = (0.3, 0.3);
+pq = (0, 0);
+fixedpt = (0, 0);
+m_aa = (-1, -1);
 
 
 # run parameter search for cost model 1
 opt_params13 = po.parameter_rand_search(3, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM1, ntries);
 # output saved parameters and costs
 print '\nOrder 3, cost model 1, the ',nsaved,' best sets of solver parameters are:'
@@ -70,8 +73,8 @@ for i in range(min(nsaved,len(opt_params13))):
 # run parameter search for cost model 2, order 3
 opt_params23 = po.parameter_rand_search(3, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM2, ntries);
 # output saved parameters and costs
 print '\nOrder 3, cost model 2, the ',nsaved,' best sets of solver parameters are:'
@@ -83,8 +86,8 @@ for i in range(min(nsaved,len(opt_params23))):
 # run parameter search for cost model 3, order 3
 opt_params33 = po.parameter_rand_search(3, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM3, ntries);
 # output saved parameters and costs
 print '\nOrder 3, cost model 3, the ',nsaved,' best sets of solver parameters are:'
@@ -121,13 +124,16 @@ predictor = (3, 3);
 msbp = (0, 0);
 maxcor = (0, 0);
 nlscoef = (0.3, 0.3);
+pq = (0, 0);
+fixedpt = (0, 0);
+m_aa = (-1, -1);
 
 
 # run parameter search for cost model 1
 opt_params14 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM1, ntries);
 # output saved parameters and costs
 print '\nOrder 4, cost model 1, the ',nsaved,' best sets of solver parameters are:'
@@ -139,8 +145,8 @@ for i in range(min(nsaved,len(opt_params14))):
 # run parameter search for cost model 2, order 4
 opt_params24 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM2, ntries);
 # output saved parameters and costs
 print '\nOrder 4, cost model 2, the ',nsaved,' best sets of solver parameters are:'
@@ -152,8 +158,8 @@ for i in range(min(nsaved,len(opt_params24))):
 # run parameter search for cost model 3, order 4
 opt_params34 = po.parameter_rand_search(4, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM3, ntries);
 # output saved parameters and costs
 print '\nOrder 4, cost model 3, the ',nsaved,' best sets of solver parameters are:'
@@ -190,13 +196,16 @@ predictor = (3, 3);
 msbp = (0, 0);
 maxcor = (0, 0);
 nlscoef = (0.3, 0.3);
+pq = (0, 0);
+fixedpt = (0, 0);
+m_aa = (-1, -1);
 
 
 # run parameter search for cost model 1, order 5
 opt_params15 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM1, ntries);
 # output saved parameters and costs
 print '\nOrder 5, cost model 1, the ',nsaved,' best sets of solver parameters are:'
@@ -208,8 +217,8 @@ for i in range(min(nsaved,len(opt_params15))):
 # run parameter search for cost model 2, order 5
 opt_params25 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM2, ntries);
 # output saved parameters and costs
 print '\nOrder 5, cost model 2, the ',nsaved,' best sets of solver parameters are:'
@@ -221,8 +230,8 @@ for i in range(min(nsaved,len(opt_params25))):
 # run parameter search for cost model 1, order 5
 opt_params35 = po.parameter_rand_search(5, dense_order, imex, adapt_method, cflfac, 
                                         safety, bias, growth, hfixed_lb, hfixed_ub, 
-                                        k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
-                                        crdown, rdiv, dgmax, predictor, msbp, maxcor, 
+                                        pq, k1, k2, k3, etamx1, etamxf, etacf, small_nef, 
+                                        crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
                                         nlscoef, nsaved, tests, rtol, atol, CM3, ntries);
 # output saved parameters and costs
 print '\nOrder 5, cost model 3, the ',nsaved,' best sets of solver parameters are:'

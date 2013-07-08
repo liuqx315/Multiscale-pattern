@@ -52,9 +52,9 @@ class AdaptH:
         print '  AdaptH: errhist =',self.eh0,self.eh1,self.eh2,', stephist =',self.hh0,self.hh1,self.hh2,', ha0 =',self.h_accuracy0,', hs0 =',self.h_stability0,', ha1 =',self.h_accuracy1,', hs1 =',self.h_stability1,', stabrestrict =',self.stabrestrict,', eta =',self.eta
 
 ##########
-class NewtonStep:
-    """ Each Newton step holds the step iteration, the WRMS norm of """
-    """ the Newton update (delta), and the convergence test (dcon). """
+class NonlinStep:
+    """ Each nonlinear step holds the step iteration, the WRMS norm of """
+    """ the nonlinear update (delta), and the convergence test (dcon). """
     def __init__(self, iter, delta, dcon):
         self.iter = iter;
         self.delta = delta;
@@ -63,18 +63,18 @@ class NewtonStep:
         print '      Nstep: iter =',self.iter,', delta =',self.delta,', dcon =',self.dcon
 
 ##########
-class NewtonSolve:
-    """ Each Newton solve holds the total number of Newton steps taken """
-    """ (iters), an array of the Newton steps themselves (steps, of    """
-    """ type NewtonStep), and a flag denoting whether the solve failed """
+class NonlinSolve:
+    """ Each nonlinear solve holds the total number of steps taken     """
+    """ (iters), an array of the nonlinear steps themselves (steps, of """
+    """ type NonlinStep), and a flag denoting whether the solve failed """
     """ (nonconv).                                                     """
     def __init__(self):
-        self.steps   = [];    # container for NewtonStep objects
+        self.steps   = [];    # container for NonlinStep objects
         self.iters   = -1;    # post-processing statistics
         self.nonconv = -1;
         self.dcon    = 0.0;
-    def AddStep(self, NewtStep):
-        self.steps.append(NewtStep);
+    def AddStep(self, NonlinStep):
+        self.steps.append(NonlinStep);
     def Cleanup(self):
         self.iters = 0;
         for i in range(len(self.steps)):
@@ -93,39 +93,40 @@ class NewtonSolve:
 class StageStep:
     """ For every RK stage of every time step, we keep track of the time  """
     """ step index (step), the time step size (h), the stage index        """
-    """ (stage), the stage time (tn), each Newton solve used for          """
-    """ calculation of the stage solution (NewtSolves -- we can have more """
-    """ than one if the first fails and lsetup is called), the total      """
-    """ number of Newton iterations required for convergence (NewtIters), """
-    """ and the number of lsetups that occured within the step (lsetups). """
+    """ (stage), the stage time (tn), each nonlinear solve used for       """
+    """ calculation of the stage solution (NonlinSolves -- we can have    """
+    """ more than one if the first fails and lsetup is called), the total """
+    """ number of nonlinear iterations required for convergence,          """
+    """ (NonlinIters), and the number of lsetups that occured within the  """
+    """ step (lsetups). """
     def __init__(self, step, h, stage, tn):
         self.step  = step;
         self.h     = h;
         self.stage = stage;
         self.tn    = tn;
-        self.NewtSolves = [];
-        self.NewtIters = 0;
-        self.NewtDcon = 0.0;
+        self.NonlinSolves = [];
+        self.NonlinIters = 0;
+        self.NonlinDcon = 0.0;
         self.lsetups = 0;
         self.conv_fails = 0;
     def AddLSetup(self):
         self.lsetups += 1;
-    def AddNewton(self, NStep):
+    def AddNonlin(self, NStep):
         if (NStep.iter == 0):    # create empty solve object
-            self.NewtSolves.append(NewtonSolve());
-        self.NewtSolves[-1].AddStep(NStep);
+            self.NonlinSolves.append(NonlinSolve());
+        self.NonlinSolves[-1].AddStep(NStep);
     def Cleanup(self):
-        self.NewtIters  = 0;
+        self.NonlinIters  = 0;
         self.conv_fails = 0;
-        for i in range(len(self.NewtSolves)):
-            self.NewtSolves[i].Cleanup();
-            self.NewtIters  += self.NewtSolves[i].iters;
-            self.NewtDcon    = self.NewtSolves[i].dcon;
-            self.conv_fails += self.NewtSolves[i].nonconv;
+        for i in range(len(self.NonlinSolves)):
+            self.NonlinSolves[i].Cleanup();
+            self.NonlinIters  += self.NonlinSolves[i].iters;
+            self.NonlinDcon    = self.NonlinSolves[i].dcon;
+            self.conv_fails += self.NonlinSolves[i].nonconv;
     def Write(self):
-        print '  StageStep: step =',self.step,', h =',self.h,', stage =',self.stage,', tn =',self.tn,', conv_fails =',self.conv_fails,', lsetups =',self.lsetups,', NewtDcon =',self.NewtDcon,', NewtIters =',self.NewtIters
-        for i in range(len(self.NewtSolves)):
-            self.NewtSolves[i].Write();
+        print '  StageStep: step =',self.step,', h =',self.h,', stage =',self.stage,', tn =',self.tn,', conv_fails =',self.conv_fails,', lsetups =',self.lsetups,', NonlinDcon =',self.NonlinDcon,', NonlinIters =',self.NonlinIters
+        for i in range(len(self.NonlinSolves)):
+            self.NonlinSolves[i].Write();
 
 ##########
 class TimeStep:
@@ -135,15 +136,15 @@ class TimeStep:
     """ occur), the final successful time step size (h_final), and we      """
     """ store all StageSteps that comprised the time step.                 """
     def __init__(self):
-        self.StageSteps = [];
-        self.h_attempts = [];
-        self.step       = -1;
-        self.tn         = -1.0;
-        self.h_final    = -1.0;
-        self.NewtIters  = -1;
-        self.lsetups    = -1;
-        self.err_fails  =  0;
-        self.conv_fails = -1;
+        self.StageSteps  = [];
+        self.h_attempts  = [];
+        self.step        = -1;
+        self.tn          = -1.0;
+        self.h_final     = -1.0;
+        self.NonlinIters = -1;
+        self.lsetups     = -1;
+        self.err_fails   =  0;
+        self.conv_fails  = -1;
     def AddStage(self, Stage):
         self.step = Stage.step
         if (self.h_final != Stage.h):
@@ -158,19 +159,19 @@ class TimeStep:
         self.HAdapt = HAdapt;
     def AddLSetup(self, stage):
         self.StageSteps[stage].AddLSetup();
-    def AddNewton(self, stage, NStep):
-        self.StageSteps[stage].AddNewton(NStep);
+    def AddNonlin(self, stage, NStep):
+        self.StageSteps[stage].AddNonlin(NStep);
     def Cleanup(self):
-        self.NewtIters  = 0;
-        self.lsetups    = 0;
-        self.conv_fails = 0;
+        self.NonlinIters = 0;
+        self.lsetups     = 0;
+        self.conv_fails  = 0;
         for i in range(len(self.StageSteps)):
             self.StageSteps[i].Cleanup();
-            self.NewtIters += self.StageSteps[i].NewtIters;
+            self.NonlinIters += self.StageSteps[i].NonlinIters;
             self.lsetups += self.StageSteps[i].lsetups;
             self.conv_fails += self.StageSteps[i].conv_fails;
     def Write(self):
-        print 'TimeStep: step =',self.step,', tn =',self.tn,', h_attempts =',self.h_attempts,', h_final =',self.h_final,', NewtIters =',self.NewtIters,', lsetups =',self.lsetups,', err_fails =',self.err_fails,', conv_fails =',self.conv_fails
+        print 'TimeStep: step =',self.step,', tn =',self.tn,', h_attempts =',self.h_attempts,', h_final =',self.h_final,', NonlinIters =',self.NonlinIters,', lsetups =',self.lsetups,', err_fails =',self.err_fails,', conv_fails =',self.conv_fails
         for i in range(len(self.StageSteps)):
             self.StageSteps[i].Write();
 
@@ -179,7 +180,7 @@ class TimeStep:
 def load_line(line):
     """ This routine parses a line of the diagnostics output file to  """
     """ determine what type of data it contains (an RK stage step, an """
-    """ lsetup, a Newton iteration, an error test, or a time step     """
+    """ lsetup, a nonlinear iteration, an error test, or a time step  """
     """ adaptivity calculation), and creates the relevant object for  """
     """ that data line.  Each of these output types are indexed by a  """
     """ specific linetype for use by the calling routine.             """
@@ -197,12 +198,12 @@ def load_line(line):
     elif ("lsetup" in txt):
         linetype = 1;
         entry = 0;
-    elif ("newt" in txt):
+    elif (("newt" in txt) or ("fp" in txt)):
         linetype = 2;
         iter  = int(txt[1]);
         delta = float(txt[2]);
         dcon  = float(txt[3]);
-        entry = NewtonStep(iter, delta, dcon);
+        entry = NonlinStep(iter, delta, dcon);
     elif ("etest" in txt):
         linetype = 3;
         step  = int(txt[1]);
@@ -247,8 +248,8 @@ def load_diags(fname):
             stage = entry.stage;
         elif (linetype == 1):   # lsetup
             TimeSteps[step].AddLSetup(stage);
-        elif (linetype == 2):   # newton step
-            TimeSteps[step].AddNewton(stage,entry)
+        elif (linetype == 2):   # nonlinear step
+            TimeSteps[step].AddNonlin(stage,entry)
         elif (linetype == 3):   # error test
             TimeSteps[step].AddErrorTest(entry);
         elif (linetype == 4):   # h adaptivity
@@ -273,8 +274,8 @@ def plot_h_vs_t(TimeSteps,fname):
     """ load_diags), and plots the time step sizes h as a function   """
     """ of the simulation time t.  Failed time steps are marked on   """
     """ the plot with either a red X or green O, where X corresponds """
-    """ to an error test failure, and an O corresponds to a Newton   """
-    """ solver convergence failure.                                  """
+    """ to an error test failure, and an O corresponds to a          """
+    """ nonlinear solver convergence failure.                        """
     """                                                              """
     """ The resulting plot is stored in the file <fname>, that       """
     """ should include an extension appropriate for the matplotlib   """
@@ -329,7 +330,7 @@ def plot_h_vs_iter(TimeSteps,fname):
     """ of the time step iteration index.  Failed time steps are     """
     """ marked on the plot with either a red X or green O, where X   """
     """ corresponds to an error test failure, and an O corresponds   """
-    """ to a Newton solver convergence failure.                      """
+    """ to a nonlinear solver convergence failure.                   """
     """                                                              """
     """ The resulting plot is stored in the file <fname>, that       """
     """ should include an extension appropriate for the matplotlib   """
@@ -380,11 +381,11 @@ def plot_h_vs_iter(TimeSteps,fname):
 ##########
 def plot_work_vs_t(TimeSteps,fname):
     """ This routine takes in the array of TimeSteps (returned from  """
-    """ load_diags), and plots the total number of Newton iterations """
-    """ as a function of the simulation time t.  Solves that failed  """
-    """ the nonlinear convergence test are marked on the plot with   """
-    """ a red X, and lsetup calls are marked on the plot with a      """
-    """ green O.                                                     """
+    """ load_diags), and plots the total number of nonlinear         """
+    """ iterations as a function of the simulation time t.  Solves   """
+    """ that failed the nonlinear convergence test are marked on the """
+    """ plot with a red X, and lsetup calls are marked on the plot   """
+    """ with a green O.                                              """
     """                                                              """
     """ The resulting plot is stored in the file <fname>, that       """
     """ should include an extension appropriate for the matplotlib   """
@@ -399,16 +400,16 @@ def plot_work_vs_t(TimeSteps,fname):
     CfailT  = [];
     for istep in range(len(TimeSteps)):
         
-        # store Newton iterations and time
-        Nvals.append(TimeSteps[istep].NewtIters);
+        # store nonlinear iterations and time
+        Nvals.append(TimeSteps[istep].NonlinIters);
         tvals.append(TimeSteps[istep].tn);
 
         # account for convergence failures and lsetups
         if (TimeSteps[istep].conv_fails > 0):
-            CfailN.append(TimeSteps[istep].NewtIters);
+            CfailN.append(TimeSteps[istep].NonlinIters);
             CfailT.append(TimeSteps[istep].tn);
         if (TimeSteps[istep].lsetups > 0):
-            LsetupN.append(TimeSteps[istep].NewtIters);
+            LsetupN.append(TimeSteps[istep].NonlinIters);
             LsetupT.append(TimeSteps[istep].tn);
 
     # convert data to numpy arrays
@@ -423,11 +424,15 @@ def plot_work_vs_t(TimeSteps,fname):
     plt.figure()
     plt.plot(t,N,'b-')
     plt.plot(ct,cN,'rx')
-    plt.plot(lt,lN,'go')
+    if (len(lN) > 0):
+        plt.plot(lt,lN,'go')
     plt.xlabel('time')
-    plt.ylabel('Newton iters')
-    plt.title('Newton iterations versus time')
-    plt.legend(('successful','conv. fails','lsetups'), loc='upper left', shadow=True)
+    plt.ylabel('Nonlinear iters')
+    plt.title('Nonlinear iterations per step versus time')
+    if (len(lN) > 0):
+        plt.legend(('successful','conv. fails','lsetups'), loc='upper left', shadow=True)
+    else:
+        plt.legend(('successful','conv. fails'), loc='upper left', shadow=True)
     plt.grid()
     plt.savefig(fname)
 
@@ -435,10 +440,11 @@ def plot_work_vs_t(TimeSteps,fname):
 ##########
 def plot_work_vs_h(TimeSteps,fname):
     """ This routine takes in the array of TimeSteps (returned from  """
-    """ load_diags), and plots the total number of Newton iterations """
-    """ as a function of the time step size h.  Solves that failed   """
-    """ the nonlinear convergence test are marked on the plot with   """
-    """ a red X, whereas all other data is plotted with a blue dot.  """
+    """ load_diags), and plots the total number of nonlinear         """
+    """ iterations as a function of the time step size h.  Solves    """
+    """ that failed the nonlinear convergence test are marked on the """
+    """ plot with a red X, whereas all other data is plotted with a  """
+    """ blue dot.                                                    """
     """                                                              """
     """ The resulting plot is stored in the file <fname>, that       """
     """ should include an extension appropriate for the matplotlib   """
@@ -453,14 +459,14 @@ def plot_work_vs_h(TimeSteps,fname):
     CfailH  = [];
     for istep in range(len(TimeSteps)):
         
-        # store Newton iterations and time
-        Nvals.append(TimeSteps[istep].NewtIters);
+        # store nonlinear iterations and time
+        Nvals.append(TimeSteps[istep].NonlinIters);
         hvals.append(TimeSteps[istep].h_final);
 
         # account for convergence failures
         if (TimeSteps[istep].conv_fails > 0):
             CfailH.append(TimeSteps[istep].h_attempts[0]);
-            CfailN.append(TimeSteps[istep].NewtIters);
+            CfailN.append(TimeSteps[istep].NonlinIters);
 
     # convert data to numpy arrays
     N = np.array(Nvals);
@@ -473,8 +479,8 @@ def plot_work_vs_h(TimeSteps,fname):
     plt.semilogx(h,N,'b.')
     plt.semilogx(ch,cN,'rx')
     plt.xlabel('step size')
-    plt.ylabel('Newton iters')
-    plt.title('Newton iterations versus step size')
+    plt.ylabel('Nonlinear iters')
+    plt.title('Nonlinear iterations per step versus step size')
     plt.legend(('successful','conv. fails'), loc='upper left', shadow=True)
     plt.grid()
     plt.savefig(fname)
@@ -601,33 +607,33 @@ def solver_stats(TimeSteps,fptr):
     """ The resulting data is appended to the stream corresponding   """
     """ to fptr (either the result of 'open' or sys.stdout).         """
     import numpy as np
-    newtits = 0;
+    nonlinits = 0;
     stages  = 0;
-    newtfails = 0;
+    nonlinfails = 0;
     lsetups = 0;
     dcon_final = [];
     for istep in range(len(TimeSteps)):
-        newtits += TimeSteps[istep].NewtIters;
+        nonlinits += TimeSteps[istep].NonlinIters;
         stages += len(TimeSteps[istep].StageSteps);
-        newtfails += TimeSteps[istep].conv_fails;
+        nonlinfails += TimeSteps[istep].conv_fails;
         lsetups += TimeSteps[istep].lsetups;
         for istage in range(len(TimeSteps[istep].StageSteps)):
-            dcon_final.append(TimeSteps[istep].StageSteps[istage].NewtDcon);
+            dcon_final.append(TimeSteps[istep].StageSteps[istage].NonlinDcon);
 
     # generate means and percentages
     dcon = np.array(dcon_final);
     if (lsetups == 0):
-        newt_per_lsetup = 0;
+        nonlin_per_lsetup = 0;
     else:
-        newt_per_lsetup = (1.0*newtits/lsetups)
+        nonlin_per_lsetup = (1.0*nonlinits/lsetups)
 
     fptr.write("\n")
     fptr.write("Simulation took %i steps with %i stages\n" % (len(TimeSteps),stages))
-    fptr.write("    Avg Newton / step  = %g\n" % (1.0*newtits/len(TimeSteps)))
-    fptr.write("    Avg Newton / stage = %g\n" % (1.0*newtits/stages))
-    fptr.write("    Total Newton failures = %i\n" % (newtfails))
-    fptr.write("    Average Newton / lsetup = %g\n" % (newt_per_lsetup))
-    fptr.write("  Newton convergence tests (dcon):\n")
+    fptr.write("    Avg Nonlinear / step  = %g\n" % (1.0*nonlinits/len(TimeSteps)))
+    fptr.write("    Avg Nonlinear / stage = %g\n" % (1.0*nonlinits/stages))
+    fptr.write("    Total Nonlinear failures = %i\n" % (nonlinfails))
+    fptr.write("    Average Nonlinear / lsetup = %g\n" % (nonlin_per_lsetup))
+    fptr.write("  Nonlinear convergence tests (dcon):\n")
     fptr.write("       min = %g\n" % (np.min(dcon)))
     fptr.write("       max = %g\n" % (np.max(dcon)))
     fptr.write("       avg = %g\n" % (np.mean(dcon)))

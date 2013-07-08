@@ -113,7 +113,7 @@ static int FreeUserData(UserData *udata);
 int init_from_file(void *ark_mem, char *fname, ARKRhsFn f, 
 		   ARKRhsFn fe, ARKRhsFn fi, realtype T0, 
 		   N_Vector y0, int *ImEx, int *dorder, 
-		   realtype *RTol, realtype *ATol);
+		   int *fxpt, realtype *RTol, realtype *ATol);
 
 
 // Main Program 
@@ -132,6 +132,7 @@ int main(int argc, char* argv[]) {
   int dense_order;               // dense output order of accuracy
   int idense;                    // flag denoting integration type (dense output vs tstop)
   int imex;                      // flag denoting class of method to use
+  int fixedpt;                   // flag denoting use of fixed-point nonlinear solver
   int myid;                      // MPI process ID
   N_Vector y = NULL;             // empty vector for storing solution 
   N_Vector ytrue = NULL;         // empty vector for storing reference solution
@@ -227,8 +228,8 @@ int main(int argc, char* argv[]) {
 
   // Call init_from_file helper routine to read and set solver parameters
   realtype rtol, atol;
-  flag = init_from_file(arkode_mem, "solve_params.txt", f, NULL, NULL,
-			T0, y, &imex, &dense_order, &rtol, &atol);
+  flag = init_from_file(arkode_mem, "solve_params.txt", f, NULL, NULL, T0,
+			y, &imex, &dense_order, &fixedpt, &rtol, &atol);
   if (check_flag(&flag, "init_from_file", 1)) return 1;
   if (rtol <= 0.0)  rtol = 1.e-6;
   if (atol <= 0.0)  atol = 1.e-10;

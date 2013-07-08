@@ -29,9 +29,9 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
-FLIBS = -L../../install/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
+INCS = -I../../install_dbg/include/
+LIBS = -L../../install_dbg/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
+FLIBS = -L../../install_dbg/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
@@ -46,7 +46,6 @@ TESTS = ark_analytic.exe \
         ark_robertson_root.exe \
         ark_set_check.exe \
         ark_bruss.exe \
-	ark_emep.exe \
         ark_hires.exe \
         ark_medakzo.exe \
         ark_orego.exe \
@@ -66,9 +65,6 @@ all : ${TESTS}
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 ark_bruss.exe : ark_bruss.f90
-	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
-
-ark_emep.exe : ark_emep.f90 emep.f
 	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 ark_hires.exe : ark_hires.f90 hires.f
