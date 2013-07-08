@@ -745,6 +745,18 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
   }
 
 
+  /* Resize fixed-point solver memory */
+  if (ark_mem->ark_use_fp) {
+    ier = arkResizeFPData(ark_mem, resize, resize_data, 
+			  lrw_diff, liw_diff);
+    if (ier != ARK_SUCCESS) {
+      arkProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", 
+		      "ARKodeResize", MSGARK_MEM_FAIL);
+      return(ARK_MEM_FAIL);
+    }
+  }
+
+
   /* Copy y0 into ark_ycur to set the current solution */
   N_VScale(ONE, y0, ark_mem->ark_ycur);
 
@@ -1468,6 +1480,8 @@ void ARKodeFree(void **arkode_mem)
   ark_mem = (ARKodeMem) (*arkode_mem);
   
   arkFreeVectors(ark_mem);
+
+  arkFreeFPData(ark_mem);
 
   if (ark_mem->ark_lfree != NULL) 
     ark_mem->ark_lfree(ark_mem);
@@ -2466,7 +2480,7 @@ static int arkInitialSetup(ARKodeMem ark_mem)
   }
 
   /* Check if lsolve function exists and call linit (if it exists) */
-  if (!ark_mem->ark_explicit) {
+  if (!ark_mem->ark_explicit && !ark_mem->ark_use_fp) {
     if (ark_mem->ark_lsolve == NULL) {
       arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		      "arkInitialSetup", MSGARK_LSOLVE_NULL);
@@ -2479,6 +2493,16 @@ static int arkInitialSetup(ARKodeMem ark_mem)
 			"arkInitialSetup", MSGARK_LINIT_FAIL);
 	return(ARK_LINIT_FAIL);
       }
+    }
+  }
+
+  /* Allocate fixed-point solver memory */
+  if (ark_mem->ark_use_fp) {
+    ier = arkAllocFPData(ark_mem);
+    if (ier != ARK_SUCCESS) {
+      arkProcessError(ark_mem, ARK_MEM_FAIL, "ARKODE", 
+		      "arkInitialSetup", MSGARK_MEM_FAIL);
+      return(ARK_MEM_FAIL);
     }
   }
 
@@ -3855,6 +3879,7 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
 
   /* Initialize temporary variables for use in iteration */
   del = delp = ZERO;
+  ark_mem->ark_crate = ONE;
 
   /* Initialize iteration counter */
   ark_mem->ark_mnewt = 0;
@@ -3883,7 +3908,7 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
 
     /* evaluate nonlinear residual, store in fval */
     retval = arkNlsResid(ark_mem, tempv, ftemp, fval);
-    if (retval != ARK_SUCCESS) return (ARK_RHSFUNC_FAIL);
+    if (retval != ARK_SUCCESS) return(ARK_RHSFUNC_FAIL);
 
     /* perform fixed point update */
     if (m == 0) {
@@ -3893,8 +3918,9 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
       /* Andersen-accelerated solver */
       N_VScale(ONE, ycur, y);   /* update guess */
       retval = arkAndersenAcc(ark_mem, fval, tempv, y,  /* accelerate guess */
-			      ycur, (int)(ark_mem->ark_mnewt-1), R, gamma);
+			      ycur, (int)(ark_mem->ark_mnewt), R, gamma);
     }
+    ark_mem->ark_nni++;
 
     /* measure convergence. If ark_mem->ark_mnewt > 0, an estimate of the convergence
        rate constant is stored in crate, and used in the test */
@@ -3918,11 +3944,11 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
     /* Solver diagnostics reporting */
     if (ark_mem->ark_report)
       fprintf(ark_mem->ark_diagfp, "    fp  %i  %19.16g  %19.16g\n", ark_mem->ark_mnewt, del, dcon);
-    
-    if (dcon <= ONE)  return(ARK_SUCCESS);
 
     /* update iteration counter */
     ark_mem->ark_mnewt++;
+
+    if (dcon <= ONE)  return(ARK_SUCCESS);
 
     /* Stop at maxcor iterations or if iteration seems to be diverging */
     if ((ark_mem->ark_mnewt == ark_mem->ark_maxcor) ||
