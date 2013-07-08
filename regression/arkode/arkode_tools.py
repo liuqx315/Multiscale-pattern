@@ -11,8 +11,9 @@ import time
 class SolParams:
     """ Holds a set of solver parameters and its associated cost. """
     def __init__(self, cost, order, dense_order, imex, adapt_method, cflfac, safety, bias, 
-                 growth, hfixed_lb, hfixed_ub, k1, k2, k3, etamx1, etamxf, etacf, 
-                 small_nef, crdown, rdiv, dgmax, predictor, msbp, maxcor, nlscoef, rtol, atol):
+                 growth, hfixed_lb, hfixed_ub, pq, k1, k2, k3, etamx1, etamxf, etacf, 
+                 small_nef, crdown, rdiv, dgmax, predictor, msbp, fixedpt, m_aa, maxcor, 
+                 nlscoef, rtol, atol):
         self.cost = cost;
         self.order = order;
         self.dense_order = dense_order;
@@ -24,6 +25,7 @@ class SolParams:
         self.growth = growth;
         self.hfixed_lb = hfixed_lb;
         self.hfixed_ub = hfixed_ub;
+        self.pq = pq;
         self.k1 = k1;
         self.k2 = k2;
         self.k3 = k3;
@@ -36,20 +38,22 @@ class SolParams:
         self.dgmax = dgmax;
         self.predictor = predictor;
         self.msbp = msbp;
+        self.fixedpt = fixedpt;
+        self.m_aa = m_aa;
         self.maxcor = maxcor;
         self.nlscoef = nlscoef;
         self.rtol = rtol;
         self.atol = atol;
     def WriteHeader(self):
-        print '   cost    q  dq  imx  adp  cfl   safe  bias  grow  h0l  h0b    k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  mxcr   nlsc   rtol   atol'
+        print '   cost    q  dq  imx  adp  cfl   safe  bias  grow  h0l  h0b    pq    k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  fxpt  m_aa  mxcr   nlsc   rtol   atol'
     def Write(self):
-        sys.stdout.write(" %f %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %.1e  %3.1f  %3.1f\n" % 
-                         (self.cost, self.order, self.dense_order, self.imex, self.adapt_method, self.cflfac, 
-                          self.safety, self.bias, self.growth, self.hfixed_lb, self.hfixed_ub, 
-                          self.k1, self.k2, self.k3, self.etamx1, self.etamxf, self.etacf, 
-                          self.small_nef, self.crdown, self.rdiv, self.dgmax, self.predictor,
-                          self.msbp, self.maxcor, self.nlscoef, self.rtol, self.atol))
-        #print ' ',self.cost,' ',self.order,' ',self.dense_order,' ',self.imex,' ',self.adapt_method,' ',self.cflfac,' ',self.safety,' ',self.bias,' ',self.growth,' ',self.hfixed_lb,' ',self.hfixed_ub,' ',self.k1,' ',self.k2,' ',self.k3,' ',self.etamx1,' ',self.etamxf,' ',self.etacf,' ',self.small_nef,' ',self.crdown,' ',self.rdiv,' ',self.dgmax,' ',self.predictor,' ',self.msbp,' ',self.maxcor,' ',self.nlscoef
+        sys.stdout.write(" %f %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %2i  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %3i   %3i   %.1e  %3.1f  %3.1f\n" % 
+                         (self.cost, self.order, self.dense_order, self.imex, self.adapt_method, 
+                          self.cflfac, self.safety, self.bias, self.growth, self.hfixed_lb, 
+                          self.hfixed_ub,  self.pq, self.k1, self.k2, self.k3, self.etamx1, 
+                          self.etamxf, self.etacf, self.small_nef, self.crdown, self.rdiv, 
+                          self.dgmax, self.predictor, self.msbp, self.fixedpt, self.m_aa, 
+                          self.maxcor, self.nlscoef, self.rtol, self.atol))
 
 
 #### Utility functions ####
@@ -134,6 +138,7 @@ def write_parameter_file(params):
     f.write("growth = %f\n" % (params.growth)) 
     f.write("hfixed_lb = %f\n" % (params.hfixed_lb)) 
     f.write("hfixed_ub = %f\n" % (params.hfixed_ub)) 
+    f.write("pq = %i\n" % (params.pq)) 
     f.write("k1 = %f\n" % (params.k1)) 
     f.write("k2 = %f\n" % (params.k2)) 
     f.write("k3 = %f\n" % (params.k3))
@@ -146,10 +151,45 @@ def write_parameter_file(params):
     f.write("dgmax = %f\n" % (params.dgmax)) 
     f.write("predictor = %i\n" % (params.predictor)) 
     f.write("msbp = %i\n" % (params.msbp)) 
+    f.write("fixedpt = %i\n" % (params.fixedpt)) 
+    f.write("m_aa = %i\n" % (params.m_aa)) 
     f.write("maxcor = %i\n" % (params.maxcor)) 
     f.write("nlscoef = %f\n" % (params.nlscoef)) 
     f.write("rtol = %f\n" % (params.rtol)) 
     f.write("atol = %f\n" % (params.atol)) 
+    f.close()
+
+    f = open('fsolve_params.txt', 'w')
+    f.write("&inputs\n")
+    f.write("  order = %i,\n" % (params.order)) 
+    f.write("  dense_order = %i,\n" % (params.dense_order)) 
+    f.write("  imex = %i,\n" % (params.imex)) 
+    f.write("  btable = -1,\n") 
+    f.write("  adapt_method = %i,\n" % (params.adapt_method)) 
+    f.write("  cflfac = %f,\n" % (params.cflfac)) 
+    f.write("  safety = %f,\n" % (params.safety)) 
+    f.write("  bias = %f,\n" % (params.bias)) 
+    f.write("  growth = %f,\n" % (params.growth)) 
+    f.write("  hfixed_lb = %f,\n" % (params.hfixed_lb)) 
+    f.write("  hfixed_ub = %f,\n" % (params.hfixed_ub)) 
+    f.write("  pq = %i,\n" % (params.pq)) 
+    f.write("  k1 = %f,\n" % (params.k1)) 
+    f.write("  k2 = %f,\n" % (params.k2)) 
+    f.write("  k3 = %f,\n" % (params.k3))
+    f.write("  etamx1 = %f,\n" % (params.etamx1)) 
+    f.write("  etamxf = %f,\n" % (params.etamxf)) 
+    f.write("  etacf = %f,\n" % (params.etacf)) 
+    f.write("  small_nef = %i,\n" % (params.small_nef)) 
+    f.write("  crdown = %f,\n" % (params.crdown)) 
+    f.write("  rdiv = %f,\n" % (params.rdiv)) 
+    f.write("  dgmax = %f,\n" % (params.dgmax)) 
+    f.write("  predictor = %i,\n" % (params.predictor)) 
+    f.write("  msbp = %i,\n" % (params.msbp)) 
+    f.write("  fixedpt = %i,\n" % (params.fixedpt)) 
+    f.write("  m_aa = %i,\n" % (params.m_aa)) 
+    f.write("  maxcor = %i,\n" % (params.maxcor)) 
+    f.write("  nlscoef = %f,\n" % (params.nlscoef)) 
+    f.write("&end\n")
     f.close()
     
 

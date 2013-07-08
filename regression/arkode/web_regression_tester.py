@@ -106,12 +106,35 @@ def random_hash():
 
 
 # set up a list of executable names to use in tests
-tests = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe');
-tests2 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe');
+testsI3 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe',
+           'ark_medakzo.exe', 'ark_rober.exe' )
+testsI4 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe', 
+           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_orego.exe',
+           'ark_pollu.exe', 'ark_ringmod.exe', 'ark_rober.exe', 'ark_vdpol.exe',
+           'ark_vdpolm.exe' )
+testsI5 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe', 
+           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_orego.exe',
+           'ark_pollu.exe', 'ark_rober.exe', 'ark_vdpol.exe' )
+testsI = (testsI3, testsI4, testsI5)
+testsE = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+          'ark_analytic_sys.exe', 'ark_brusselator.exe' )
+testsA3 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
+           'ark_brusselator1D.exe', 'ark_medakzo.exe', 'ark_pollu.exe', 'ark_vdpol.exe', 
+           'ark_vdpolm.exe' )
+testsA4 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
+           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_pollu.exe',
+           'ark_vdpol.exe' )
+testsA5 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
+           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_pollu.exe',
+           'ark_vdpol.exe', 'ark_vdpolm.exe' )
+testsA = (testsA3, testsA4, testsA5)
 nsttol = 10;
-ovtol  = 0.05;
-rtol = 1.e-6;
-atol = 1.e-10;
+ovtol  = 0.01;
+rtol = (1.e-3, 1.e-6);
+atol = (1.e-11, 1.e-11);
 
 # open test results file
 now = datetime.today()
@@ -128,78 +151,83 @@ f.write("<br><a href=\"regression_results_old.shtml\">Previous regression test r
 
 
 # run tests with base set of parameters to ensure everything runs
-test_string = "Base tests (defaults):"
-p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
+test_string = "Base tests (defaults, with rtol = %g, atol = %g):" % (rtol[0], atol[0])
+p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
+                   0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[0], atol[0]);
 ark.write_parameter_file(p);
 pfile = outdir + "/solve_params-" + random_hash() + ".txt"
 shutil.copy("./solve_params.txt", pfile)
 f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-iret = run_tests(outdir,f,tests,nsttol,ovtol);
+iret = run_tests(outdir,f,testsI[1],nsttol,ovtol);
 
 # check ERK method orders {2,3,4,5,6}
 ords = (2,3,4,5,6);
-for i in range(len(ords)):
-    test_string = "ERK order %i tests:" % (ords[i])
-    p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    test_string = "ERK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
+    p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,tests,nsttol,ovtol);
+    iret = run_tests(outdir,f,testsE,nsttol,ovtol);
 
 # check DIRK method orders {3,4,5}
 ords = (3,4,5);
-for i in range(len(ords)):
-    test_string = "DIRK order %i tests:" % (ords[i])
-    p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    test_string = "DIRK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
+    p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,tests,nsttol,ovtol);
+    iret = run_tests(outdir,f,testsI[i],nsttol,ovtol);
 
 # check ARK method orders {3,4,5}
 ords = (3,4,5);
-for i in range(len(ords)):
-    test_string = "ARK order %i tests:" % (ords[i])
-    p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    test_string = "ARK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
+    p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,tests2,nsttol,ovtol);
+    iret = run_tests(outdir,f,testsA[i],nsttol,ovtol);
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
-algs = (0,1,2,3,4,5);
-for i in range(len(algs)):
-    test_string = "H-adaptivity method %i tests:" % (algs[i])
-    p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0, rtol, atol);
+algs = (0,2,3);
+for j in range(len(rtol)):
+  for i in range(len(algs)):
+    test_string = "H-adaptivity method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
+    p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,tests,nsttol,ovtol);
+    iret = run_tests(outdir,f,testsI[1],nsttol,ovtol);
 
 # check predictor methods {0,1,2,3} (DIRK only)
-algs = (0,1,2,3);
-for i in range(len(algs)):
-    test_string = "Predictor method %i tests:" % (algs[i])
-    p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0.0, rtol, atol);
+algs = (0,2);
+for j in range(len(rtol)):
+  for i in range(len(algs)):
+    test_string = "Predictor method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
+    p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,tests,nsttol,ovtol);
+    iret = run_tests(outdir,f,testsI[1],nsttol,ovtol);
 
 # write footer to page
 f.write("Note: step tolerance = %i; oversolve tolerance = %g\n" % (nsttol, ovtol))
-f.write("[\"oversolve\" is defined as tolerance/error (ideally over 1.0)\n")
+f.write("[\"oversolve\" is defined as tolerance/error (ideally greater than 1.0)\n")
 
 
 # close output file

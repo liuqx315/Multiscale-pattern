@@ -10,6 +10,7 @@
   growth = 0.0,
   hfixed_lb = 0.0,
   hfixed_ub = 0.0,
+  pq = 0,
   k1 = 0.0,
   k2 = 0.0,
   k3 = 0.0,
@@ -22,6 +23,8 @@
   dgmax = 0.0,
   predictor = 0,
   msbp = 0,
+  fixedpt = 0,
+  m_aa = 0,
   maxcor = 8,
   nlscoef = 0.0000001,
 &end
