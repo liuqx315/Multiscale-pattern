@@ -2075,7 +2075,7 @@ static void arkFreeVectors(ARKodeMem ark_mem)
 ---------------------------------------------------------------*/
 static int arkAllocFPData(ARKodeMem ark_mem)
 {
-  long int m = ark_mem->ark_fp_m;
+  long int maa = ark_mem->ark_fp_m;
 
   /* Allocate ark_fp_fval if needed */
   if (ark_mem->ark_fp_fval == NULL) {
@@ -2112,83 +2112,83 @@ static int arkAllocFPData(ARKodeMem ark_mem)
   }
 
   /* Allocate ark_fp_df if needed */
-  if ((ark_mem->ark_fp_df == NULL) && (m > 0)) {
-    ark_mem->ark_fp_df = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+  if ((ark_mem->ark_fp_df == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_df = N_VCloneVectorArray(maa, ark_mem->ark_ewt);
     if (ark_mem->ark_fp_df == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
-      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+      ark_mem->ark_lrw += maa*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += maa*ark_mem->ark_liw1;
     }
   }
 
   /* Allocate ark_fp_dg if needed */
-  if ((ark_mem->ark_fp_dg == NULL) && (m > 0)) {
-    ark_mem->ark_fp_dg = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+  if ((ark_mem->ark_fp_dg == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_dg = N_VCloneVectorArray(maa, ark_mem->ark_ewt);
     if (ark_mem->ark_fp_dg == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
-      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+      ark_mem->ark_lrw += maa*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += maa*ark_mem->ark_liw1;
     }
   }
 
   /* Allocate ark_fp_q if needed */
-  if ((ark_mem->ark_fp_q == NULL) && (m > 0)) {
-    ark_mem->ark_fp_q = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+  if ((ark_mem->ark_fp_q == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_q = N_VCloneVectorArray(maa, ark_mem->ark_ewt);
     if (ark_mem->ark_fp_q == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
-      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+      ark_mem->ark_lrw += maa*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += maa*ark_mem->ark_liw1;
     }
   }
 
   /* Allocate ark_fp_qtmp if needed */
-  if ((ark_mem->ark_fp_qtmp == NULL) && (m > 0)) {
-    ark_mem->ark_fp_qtmp = N_VCloneVectorArray(m, ark_mem->ark_ewt);
+  if ((ark_mem->ark_fp_qtmp == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_qtmp = N_VCloneVectorArray(maa, ark_mem->ark_ewt);
     if (ark_mem->ark_fp_qtmp == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_lrw += m*ark_mem->ark_lrw1;
-      ark_mem->ark_liw += m*ark_mem->ark_liw1;
+      ark_mem->ark_lrw += maa*ark_mem->ark_lrw1;
+      ark_mem->ark_liw += maa*ark_mem->ark_liw1;
     }
   }
 
   /* Allocate ark_fp_R if needed */
-  if ((ark_mem->ark_fp_R == NULL) && (m > 0)) {
-    ark_mem->ark_fp_R = (realtype *) malloc((m*m) * sizeof(realtype));
+  if ((ark_mem->ark_fp_R == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_R = (realtype *) malloc((maa*maa) * sizeof(realtype));
     if (ark_mem->ark_fp_R == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_lrw += m*m;
+      ark_mem->ark_lrw += maa*maa;
     }
   }
 
   /* Allocate ark_fp_gamma if needed */
-  if ((ark_mem->ark_fp_gamma == NULL) && (m > 0)) {
-    ark_mem->ark_fp_gamma = (realtype *) malloc(m * sizeof(realtype));
+  if ((ark_mem->ark_fp_gamma == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_gamma = (realtype *) malloc(maa * sizeof(realtype));
     if (ark_mem->ark_fp_gamma == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_lrw += m;
+      ark_mem->ark_lrw += maa;
     }
   }
 
   /* Allocate ark_fp_imap if needed */
-  if ((ark_mem->ark_fp_imap == NULL) && (m > 0)) {
-    ark_mem->ark_fp_imap = (long int *) malloc(m * sizeof(long int));
+  if ((ark_mem->ark_fp_imap == NULL) && (maa > 0)) {
+    ark_mem->ark_fp_imap = (long int *) malloc(maa * sizeof(long int));
     if (ark_mem->ark_fp_imap == NULL) {
       arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
-      ark_mem->ark_liw += m;
+      ark_mem->ark_liw += maa;
     }
   }
 
@@ -2206,7 +2206,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 			   long int liw_diff)
 {
   long int i;
-  long int m = ark_mem->ark_fp_m;
+  long int maa = ark_mem->ark_fp_m;
 
   /* Resize ark_fp_fval if needed */
   if (ark_mem->ark_fp_fval == NULL) {
@@ -2257,8 +2257,8 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_df if needed */
-  if ((ark_mem->ark_fp_df == NULL) && (m > 0)) {
-    for (i=0; i<m; i++) {
+  if ((ark_mem->ark_fp_df == NULL) && (maa > 0)) {
+    for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_df[i]);
 	ark_mem->ark_fp_df[i] = N_VClone(ark_mem->ark_ewt);
@@ -2270,13 +2270,13 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 	}
       }
     }
-    ark_mem->ark_lrw += m*lrw_diff;
-    ark_mem->ark_liw += m*liw_diff;
+    ark_mem->ark_lrw += maa*lrw_diff;
+    ark_mem->ark_liw += maa*liw_diff;
   }
 
   /* Resize ark_fp_dg if needed */
-  if ((ark_mem->ark_fp_dg == NULL) && (m > 0)) {
-    for (i=0; i<m; i++) {
+  if ((ark_mem->ark_fp_dg == NULL) && (maa > 0)) {
+    for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_dg[i]);
 	ark_mem->ark_fp_dg[i] = N_VClone(ark_mem->ark_ewt);
@@ -2288,13 +2288,13 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 	}
       }
     }
-    ark_mem->ark_lrw += m*lrw_diff;
-    ark_mem->ark_liw += m*liw_diff;
+    ark_mem->ark_lrw += maa*lrw_diff;
+    ark_mem->ark_liw += maa*liw_diff;
   }
 
   /* Resize ark_fp_q if needed */
-  if ((ark_mem->ark_fp_q == NULL) && (m > 0)) {
-    for (i=0; i<m; i++) {
+  if ((ark_mem->ark_fp_q == NULL) && (maa > 0)) {
+    for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_q[i]);
 	ark_mem->ark_fp_q[i] = N_VClone(ark_mem->ark_ewt);
@@ -2306,13 +2306,13 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 	}
       }
     }
-    ark_mem->ark_lrw += m*lrw_diff;
-    ark_mem->ark_liw += m*liw_diff;
+    ark_mem->ark_lrw += maa*lrw_diff;
+    ark_mem->ark_liw += maa*liw_diff;
   }
 
   /* Resize ark_fp_qtmp if needed */
-  if ((ark_mem->ark_fp_qtmp == NULL) && (m > 0)) {
-    for (i=0; i<m; i++) {
+  if ((ark_mem->ark_fp_qtmp == NULL) && (maa > 0)) {
+    for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_qtmp[i]);
 	ark_mem->ark_fp_qtmp[i] = N_VClone(ark_mem->ark_ewt);
@@ -2324,8 +2324,8 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 	}
       }
     }
-    ark_mem->ark_lrw += m*lrw_diff;
-    ark_mem->ark_liw += m*liw_diff;
+    ark_mem->ark_lrw += maa*lrw_diff;
+    ark_mem->ark_liw += maa*liw_diff;
   }
 
   return(ARK_SUCCESS);
@@ -2340,7 +2340,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 static void arkFreeFPData(ARKodeMem ark_mem)
 {
   long int i;
-  long int m = ark_mem->ark_fp_m;
+  long int maa = ark_mem->ark_fp_m;
 
   /* free ark_fp_fval if needed */
   if (ark_mem->ark_fp_fval != NULL) {
@@ -2367,56 +2367,56 @@ static void arkFreeFPData(ARKodeMem ark_mem)
   }
 
   /* free ark_fp_df if needed */
-  if ((ark_mem->ark_fp_df != NULL) && (m>0)) {
-    N_VDestroyVectorArray(ark_mem->ark_fp_df, m);
+  if ((ark_mem->ark_fp_df != NULL) && (maa>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_df, maa);
     ark_mem->ark_fp_df = NULL;
-    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
-    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+    ark_mem->ark_lrw -= maa*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= maa*ark_mem->ark_liw1;
   }
 
   /* free ark_fp_dg if needed */
-  if ((ark_mem->ark_fp_dg != NULL) && (m>0)) {
-    N_VDestroyVectorArray(ark_mem->ark_fp_dg, m);
+  if ((ark_mem->ark_fp_dg != NULL) && (maa>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_dg, maa);
     ark_mem->ark_fp_dg = NULL;
-    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
-    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+    ark_mem->ark_lrw -= maa*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= maa*ark_mem->ark_liw1;
   }
 
   /* free ark_fp_q if needed */
-  if ((ark_mem->ark_fp_q != NULL) && (m>0)) {
-    N_VDestroyVectorArray(ark_mem->ark_fp_q, m);
+  if ((ark_mem->ark_fp_q != NULL) && (maa>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_q, maa);
     ark_mem->ark_fp_q = NULL;
-    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
-    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+    ark_mem->ark_lrw -= maa*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= maa*ark_mem->ark_liw1;
   }
 
   /* free ark_fp_qtmp if needed */
-  if ((ark_mem->ark_fp_qtmp != NULL) && (m>0)) {
-    N_VDestroyVectorArray(ark_mem->ark_fp_qtmp, m);
+  if ((ark_mem->ark_fp_qtmp != NULL) && (maa>0)) {
+    N_VDestroyVectorArray(ark_mem->ark_fp_qtmp, maa);
     ark_mem->ark_fp_qtmp = NULL;
-    ark_mem->ark_lrw -= m*ark_mem->ark_lrw1;
-    ark_mem->ark_liw -= m*ark_mem->ark_liw1;
+    ark_mem->ark_lrw -= maa*ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= maa*ark_mem->ark_liw1;
   }
 
   /* free ark_fp_R if needed */
   if (ark_mem->ark_fp_R != NULL) {
     free(ark_mem->ark_fp_R);
     ark_mem->ark_fp_R = NULL;
-    ark_mem->ark_lrw -= m*m;
+    ark_mem->ark_lrw -= maa*maa;
   }
 
   /* free ark_fp_gamma if needed */
   if (ark_mem->ark_fp_gamma != NULL) {
     free(ark_mem->ark_fp_gamma);
     ark_mem->ark_fp_gamma = NULL;
-    ark_mem->ark_lrw -= m;
+    ark_mem->ark_lrw -= maa;
   }
 
   /* free ark_fp_imap if needed */
   if (ark_mem->ark_fp_imap != NULL) {
     free(ark_mem->ark_fp_imap);
     ark_mem->ark_fp_imap = NULL;
-    ark_mem->ark_liw -= m;
+    ark_mem->ark_liw -= maa;
   }
 }
 
@@ -3910,6 +3910,9 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
     retval = arkNlsResid(ark_mem, tempv, ftemp, fval);
     if (retval != ARK_SUCCESS) return(ARK_RHSFUNC_FAIL);
 
+    /* convert nonlinear residual result to a fixed-point function result */
+    N_VLinearSum(ONE, y, ONE, fval, fval);
+
     /* perform fixed point update */
     if (m == 0) {
       /* plain fixed-point solver, copy residual into y */
@@ -3954,6 +3957,9 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
     if ((ark_mem->ark_mnewt == ark_mem->ark_maxcor) ||
 	((ark_mem->ark_mnewt >= 2) && (del > ark_mem->ark_rdiv*delp))) 
       return(CONV_FAIL);
+
+    /* Update current solution guess */
+    N_VScale(ONE, y, ycur);
     
     /* Save norm of correction and loop again */
     delp = del;
@@ -3987,18 +3993,19 @@ static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval,
 
   /* local shortcut variables */
   long int *ipt_map = ark_mem->ark_fp_imap;
-  long int m = ark_mem->ark_fp_m;
+  long int maa = ark_mem->ark_fp_m;
   N_Vector gold = ark_mem->ark_fp_gold;
   N_Vector fold = ark_mem->ark_fp_fold;
   N_Vector *df = ark_mem->ark_fp_df;
   N_Vector *dg = ark_mem->ark_fp_dg;
-  N_Vector *q = ark_mem->ark_fp_q;
+  N_Vector *Q = ark_mem->ark_fp_q;
   N_Vector *qtmp = ark_mem->ark_fp_qtmp;
   
-  i_pt = iter-1 - ((iter-1)/m)*m;
+  for (i=0; i<maa; i++)  ipt_map[i]=0;
+  i_pt = iter-1 - ((iter-1)/maa)*maa;
   N_VLinearSum(ONE, gval, -ONE, xold, fv);
   if (iter > 0) {
-    /* compute dg_new = gval -gval_old*/
+    /* compute dg_new = gval - gval_old*/
     N_VLinearSum(ONE, gval, -ONE, gold, dg[i_pt]);
     /* compute df_new = fval - fval_old */
     N_VLinearSum(ONE, fv, -ONE, fold, df[i_pt]);
@@ -4014,49 +4021,61 @@ static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval,
       N_VScale(ONE, df[i_pt], qtmp[i_pt]);
       R[0] = RSqrt(N_VDotProd(df[i_pt], df[i_pt])); 
       alfa = ONE/R[0];
-      N_VScale(alfa, df[i_pt], q[i_pt]);
+      N_VScale(alfa, df[i_pt], Q[i_pt]);
       ipt_map[0] = 0;
-    } else if (iter < m) {
+    } else if (iter < maa) {
       N_VScale(ONE, df[i_pt], qtmp[i_pt]);
       for (j=0; j<(iter-1); j++) {
 	ipt_map[j] = j;
-	R[(iter-1)*m+j] = N_VDotProd(q[j], qtmp[i_pt]);
-	N_VLinearSum(ONE, qtmp[i_pt], -R[(iter-1)*m+j], q[j], qtmp[i_pt]);
+	R[(iter-1)*maa+j] = N_VDotProd(Q[j], qtmp[i_pt]);
+	N_VLinearSum(ONE, qtmp[i_pt], -R[(iter-1)*maa+j], Q[j], qtmp[i_pt]);
       }
-      R[(iter-1)*m+iter-1] = RSqrt(N_VDotProd(qtmp[i_pt], qtmp[i_pt])); 
-      N_VScale((ONE/R[(iter-1)*m+iter-1]), qtmp[i_pt], q[i_pt]);
+      R[(iter-1)*maa+iter-1] = RSqrt(N_VDotProd(qtmp[i_pt], qtmp[i_pt])); 
+      if (R[(iter-1)*maa+iter-1] == ZERO) {
+	N_VScale(ZERO, qtmp[i_pt], Q[i_pt]);
+      } else {
+	N_VScale((ONE/R[(iter-1)*maa+iter-1]), qtmp[i_pt], Q[i_pt]);
+      }
       ipt_map[iter-1] = iter-1;
     } else {
       j = 0;
-      for (i=i_pt+1; i<m; i++)
+      for (i=i_pt+1; i<maa; i++)
 	ipt_map[j++] = i;
       for (i=0; i<(i_pt+1); i++)
 	ipt_map[j++] = i;
       
-      for (i=0; i<m; i++)
+      for (i=0; i<maa; i++)
 	N_VScale(ONE, df[i], qtmp[i]);
-      for (i=0; i<m; i++) {
+      for (i=0; i<maa; i++) {
 	imap = ipt_map[i];
-	R[i*m+i] = RSqrt(N_VDotProd(qtmp[imap], qtmp[imap]));
-	N_VScale((ONE/R[i*m+i]), qtmp[imap], q[imap]);
-	for (j=i+1; j<m; j++) {
+	R[i*maa+i] = RSqrt(N_VDotProd(qtmp[imap], qtmp[imap]));
+	if (R[i*maa+i] == ZERO) {
+	  N_VScale(ZERO, qtmp[imap], Q[imap]);
+	} else {
+	  N_VScale((ONE/R[i*maa+i]), qtmp[imap], Q[imap]);
+	}
+	for (j=i+1; j<maa; j++) {
 	  jmap = ipt_map[j];
-	  R[j*m+i] = N_VDotProd(qtmp[jmap], q[imap]);
-	  N_VLinearSum(ONE, qtmp[jmap], -R[j*m+i], q[imap], qtmp[jmap]);
+	  R[j*maa+i] = N_VDotProd(qtmp[jmap], Q[imap]);
+	  N_VLinearSum(ONE, qtmp[jmap], -R[j*maa+i], Q[imap], qtmp[jmap]);
 	}            
       }
     }
 
     /* Solve least squares problem and update solution */
     lAA = iter;
-    if (m < iter)  lAA = m;
+    if (maa < iter)  lAA = maa;
     N_VScale(ONE, gval, x);
     for (i=0; i<lAA; i++)
-      gamma[i] = N_VDotProd(fv, q[ipt_map[i]]);
+      gamma[i] = N_VDotProd(fv, Q[ipt_map[i]]);
     for (i=lAA-1; i>-1; i--) {
       for (j=i+1; j<lAA; j++) 
-	gamma[i] = gamma[i]-R[j*m+i]*gamma[j]; 
-      gamma[i] = gamma[i]/R[i*m+i];
+	gamma[i] = gamma[i] - R[j*maa+i]*gamma[j]; 
+      if (gamma[i] == ZERO) {
+	gamma[i] = ZERO;
+      } else {
+	gamma[i] = gamma[i]/R[i*maa+i];
+      }
       N_VLinearSum(ONE, x, -gamma[i], dg[ipt_map[i]], x);
     }
   }
