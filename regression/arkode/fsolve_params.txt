@@ -1,5 +1,5 @@
 &inputs
-  order = 0,
+  order = 3,
   dense_order = -1,
   imex = 0,
   btable = -1,
@@ -21,10 +21,10 @@
   crdown = 0.000000,
   rdiv = 0.000000,
   dgmax = 0.000000,
-  predictor = 2,
+  predictor = 0,
   msbp = 0,
-  fixedpt = 0,
-  m_aa = 0,
-  maxcor = 0,
+  fixedpt = 1,
+  m_aa = 10,
+  maxcor = 50,
   nlscoef = 0.000000,
 &end
