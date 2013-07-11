@@ -27,16 +27,18 @@ def check_tests(testlist,nsttol,ovtol):
         # check for nst >= nsttol (in case something fails at initialization)
         if (nst < nsttol):
             tret = 1;
-            sys.stdout.write("\n  %30s \033[91m failure (too few steps: %i < %i) \033[94m [%.2g s]\033[0m" % (testlist[i], nst, nsttol, rt))
+            sys.stdout.write("\n  %30s \033[91m failure (too few steps: %i < %i)\033[0m" 
+                             % (testlist[i], nst, nsttol))
         # check for oversolve >= ovtol (fits within allowable error)
         if ((ov < ovtol) or (ov != ov)):
             tret = 1;
-            sys.stdout.write("\n  %30s \033[91m failure (too much error: %g < %g)\033[94m [%.2g s]\033[0m" % (testlist[i], ov, ovtol, rt))
+            sys.stdout.write("\n  %30s \033[91m failure (too much error: %g < %g)\033[0m" 
+                             % (testlist[i], ov, ovtol))
         if (tret == 0):
-            sys.stdout.write("\n  %30s: \033[92m %7i steps;  %.2e oversolve; \033[94m %.2g sec\033[0m" % (testlist[i], nst, ov, rt))
+            sys.stdout.write("\n  %30s: \033[92m %7i nst;  %8i nni;  %.2e ov; \033[94m %.2g sec\033[0m" 
+                             % (testlist[i], nst, nnewt, ov, rt))
         iret += tret;
     if (iret == 0):
-#        sys.stdout.write("  pass\n")
         sys.stdout.write("\n")
     else:
         sys.stdout.write("\n")
@@ -48,29 +50,20 @@ def check_tests(testlist,nsttol,ovtol):
 # set up a list of executable names to use in tests
 testsI3 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
-           './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', './ark_vdpol.exe',
-           './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
 testsI4 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
-           './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', './ark_vdpol.exe',
-           './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
 testsI5 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
-           './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', './ark_vdpol.exe',
-           './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
 testsI = (testsI3, testsI4, testsI5)
 testsA3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
-           './ark_vdpol.exe', './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_vdpolm.exe' )
 testsA4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
-           './ark_vdpol.exe', './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_vdpolm.exe' )
 testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
-           './ark_vdpol.exe', './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_vdpolm.exe' )
 testsA = (testsA3, testsA4, testsA5)
 nsttol = 10;
 ovtol  = 0.01;
@@ -81,8 +74,7 @@ ovtol  = 0.01;
 rtol = (1.e-3, 1.e-6);
 atol = (1.e-11, 1.e-11);
 ords = (3, 4, 5);
-#maas = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-maas = (10, 9);
+maas = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 for k in range(len(maas)):
   for j in range(len(rtol)):
     for i in range(len(ords)):
