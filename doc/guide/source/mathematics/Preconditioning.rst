@@ -7,13 +7,14 @@
 Preconditioning
 ===================
 
-When using a Newton method to solve the nonlinear system
+When using an inexact Newton method to solve the nonlinear system
 :eq:`Residual`, ARKode makes repeated use of a linear solver to solve
 linear systems of the form :math:`Ax = b`, where :math:`x` is a
 correction vector and :math:`b` is a residual vector.  If this linear
 system solve is done with one of the scaled preconditioned iterative
-linear solvers, these solvers are rarely efficient if used without
-preconditioning. A system :math:`Ax=b` can be preconditioned as one of:
+linear solvers, the efficiency of such solvers may benefit
+tremendously from preconditioning. A system :math:`Ax=b` can be
+preconditioned as one of: 
 
 .. math::
    (P^{-1}A)x = P^{-1}b & \qquad\text{[left preconditioning]}, \\

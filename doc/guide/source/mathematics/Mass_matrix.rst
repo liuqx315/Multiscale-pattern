@@ -45,7 +45,8 @@ must compute the derivative information
 Of course, for problems in which :math:`M=I` these solves are not
 required; however for problems with non-identity :math:`M`, ARKode may
 use either an iterative linear solver or a dense linear solver, in the
-same manner as described above for solving the linear Newton systems.
+same manner as described in section :ref:`Mathematics.IVP` for solving
+the linear Newton systems.
 
 
 **[Continue with documentation here]**

@@ -14,9 +14,9 @@ vector, (optionally) a function that handles adaptive time step error
 control, (optionally) a function that handles explicit time step
 stability, (optionally) a function that defines the root-finding
 problem(s) to solve, (optionally) a function that provides
-Jacobian-related information for the linear solver (if Newton
-iteration is chosen), and (optionally) one or two functions that
-define the preconditioner for use in any of the Krylov iterative
+Jacobian-related information for the linear solver (if a Newton-based
+nonlinear iteration is chosen), and (optionally) one or two functions
+that define the preconditioner for use in any of the Krylov iterative
 algorithms.
 
 
@@ -54,7 +54,7 @@ specify the explicit and/or implicit portions of the ODE system:
    variable :math:`y` that is "illegal" in some way (e.g., negative
    where only a nonnegative value is physically meaningful).  If such
    a return is made, ARKode will attempt to recover (possibly
-   repeating the Newton iteration, or reducing the step size) in order
+   repeating the nonlinear iteration, or reducing the step size) in order
    to avoid this recoverable error return.  There are some situations
    in which recovery is not possible even if the right-hand side
    function returns a recoverable error flag.  One is when this occurs

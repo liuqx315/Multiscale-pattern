@@ -83,43 +83,75 @@ for the ARK methods, or
    a_i \equiv M y_{n-1} + h_n \sum_{j=0}^{i-1} 
       A^I_{i,j} f_I(t_{n-1} + c_j h_n, z_j)
    
-for the DIRK methods.  For these nonlinear systems, ARKode uses a
-type of :index:`Newton iteration`, 
+for the DIRK methods.  For these nonlinear systems, ARKode can use a
+type of :index:`Newton iteration`,
 
 .. math::
    z_i^{(m+1)} = z_i^{(m)} + \delta^{(m+1)},
    :label: Newton_iteration
 
-where :math:`m` is the Newton iteration index.  Here, the 
-update :math:`\delta^{(m+1)}` in turn requires the solution of linear 
-:index:`Newton systems`
+where :math:`m` is the Newton iteration index, and the :index:`Newton
+update` :math:`\delta^{(m+1)}` in turn requires the solution of the
+linear :index:`Newton system` 
 
 .. math::
    A\left(z_i^{(m)}\right) \delta^{(m+1)} = -G\left(z_i^{(m)}\right), 
    :label: Newton_system
 
-where
+in which
 
 .. math::
    A \approx M - \gamma J, \quad J = \frac{\partial f_I}{\partial y},
    \quad\text{and}\quad \gamma = h_n A^I_{i,i}.
    :label: NewtonMatrix
 
-The initial guess for the iteration is a predicted value
-:math:`z_i^{(0)}` that is computed explicitly from the
-previously-computed data (e.g. :math:`y_{n-2}`, :math:`y_{n-1}`,
-and :math:`z_j` where :math:`j<i`).  For further information on the
-predictor algorithms implemented in ARKode, see the section
-:ref:`Mathematics.Predictors`.
+Alternately, ARKode may solver for each stage :math:`z_i,
+i=1,\ldots,s` using an :index:`Anderson-accelerated fixed point
+iteration`
 
-For the solution of the linear systems within the Newton
-iteration, ARKode provides several choices, including the option of a
-user-supplied linear solver module.  The linear solver modules
-distributed with SUNDIALS are organized into two families: a *direct*
-family comprising direct linear solvers for dense or banded matrices,
-and a *spils* family comprising scaled, preconditioned, iterative
-(Krylov) linear solvers.  The methods offered through these modules
-are as follows:
+.. math::
+   z_i^{(m+1)} = g(z_i^{(m)}).
+   :label: AAFP_iteration
+
+For details on how this iteration is performed, we refer the reader to
+the reference [WN2011]_.
+
+Unlike Newton-based methods, these fixed-point solvers do not require
+the solution of any linear systems.  As a result, they may converge
+somewhat more slowly than Newton-like methods, but each iteration can
+be much less expensive.  Moreover, these solvers do allow for user
+specification of the Anderson-accelerates subspace size, :math:`m_k`.
+While the required amount of solver memory grows proportionately to
+:math:`m_k n` where :math:`n` is the size of the ODE system, larger
+values of :math:`m_k` may result in faster convergence.  In our
+experience, this improvement may be significant even for "small"
+values, e.g. :math:`1\le m_k\le 5`, and that convergence may even
+deteriorate for larger values of :math:`m_k`.
+
+While ARKode uses the Newton iteration as its default solver due to
+its increased robustness on very stiff problems, it is highly
+recommended that users also consider the fixed-point solver for their
+when attempting a new problem.
+
+
+It is well-known that both the efficiency and robustness of any
+nonlinear solver algorithm intimately depends on the choice of a good
+initial guess.  In ARKode, the initial guess for either nonlinear
+solution method is a predicted value :math:`z_i^{(0)}` that is
+computed explicitly from the previously-computed data
+(e.g. :math:`y_{n-2}`, :math:`y_{n-1}`, and :math:`z_j` where
+:math:`j<i`).  For further information on the predictor algorithms
+implemented in ARKode, see the section :ref:`Mathematics.Predictors`.
+
+When a Newton-based method is chosen for solving each nonlinear
+system, a linear system of equations must be solved at each nonlinear
+iteration.  For this solve ARKode provides several choices, including
+the option of a user-supplied linear solver module.  The linear solver
+modules distributed with SUNDIALS are organized into two families: a
+*direct* family comprising direct linear solvers for dense or banded
+matrices, and a *spils* family comprising scaled, preconditioned,
+iterative (Krylov) linear solvers.  The methods offered through these
+modules are as follows:
 
 * dense direct solvers, using either an internal implementation or a
   BLAS/LAPACK implementation (serial version only),
@@ -170,33 +202,61 @@ Since :math:`1/w_i` represents a tolerance in the component
 For brevity, we will typically drop the subscript WRMS on norms in the
 remainder of this section.
 
-In the case of a direct solver (dense or band), the iteration is a
-modified Newton iteration, in that the matrix :math:`A` is fixed
-throughout the nonlinear iterations for a given stage :math:`z_i`.
-However, for any of the Krylov methods, it is an Inexact Newton
-iteration, in which :math:`A` is applied in a matrix-free manner, with
-matrix-vector products :math:`Jv` obtained by either difference
-quotients or a user-supplied routine.  The matrix :math:`A` (direct
-cases) or a preconditioner matrix :math:`P` (Krylov cases) is obtained
-as infrequently as possible to balance the high costs of matrix
-operations against other costs.  Specifically, this matrix update
-occurs when:
+In the case of a direct solver (dense or band), ARKode utilizes a
+variant on the Newton method called a *modified Newton iteration*. In
+such methods, the matrix :math:`A` is held fixed, i.e. each Newton
+iteration is computed from the modified equation
 
-* starting the problem,
-* more than 20 steps have been taken since the last update (this may
-  be changed via the ``msbp`` argument to
+.. math::
+   \tilde{A}\left(z_i^{(m)}\right) \delta^{(m+1)} = -G\left(z_i^{(m)}\right), 
+   :label: modified_Newton_system
+
+in which
+
+.. math::
+   \tilde{A} \approx M - \tilde{\gamma} \tilde{J}, \quad \tilde{J} =
+   \frac{\partial f_I}{\partial y}(\tilde y), \quad\text{and}\quad
+   \tilde{\gamma} = \tilde{h} A^I_{i,i}. 
+   :label: modified_NewtonMatrix
+
+Here, the solution :math:`\tilde{y}` and step size :math:`\tilde{h}`
+upon which the modified Jacobian rely, are merely values of the
+solution and step size from a previous iteration.  In other words, the
+matrix :math:`\tilde{A}` is only computed rarely, and reused for
+repeated stage solves.  
+
+In the case that a Krylov linear solver is chosen, ARKode utilizes a
+Newton method variant called an *Inexact Newton iteration*.  Here, the
+matrix :math:`A` is not itself required since the algorithms only
+require the product of this matrix with a given vector.  Additionally,
+each Newton system :eq:`Newton_system` is not solved completely, since
+the Krylov solvers are iterative (hence the "inexact" in the name).
+Resultingly. for these linear solvers :math:`A` is applied in a
+matrix-free manner, with matrix-vector products :math:`Jv` obtained by
+either difference quotients or a user-supplied routine.  As with the
+direct linear solver scenario, in which :math:`A` was reused between
+solves, ARKode's inexact Newton iteration also recomputes the
+preconditioner matrix :math:`P` as infrequently as possible to balance
+the high costs of matrix operations against other costs.  
+
+Specifically, we update the Newton matrix :math:`\tilde{A}` or
+preconditioner matrix :math:`P` only in the following circumstances:
+
+* when starting the problem,
+* when more than 20 steps have been taken since the last update (this
+  value may be changed via the ``msbp`` argument to
   :c:func:`ARKodeSetLSetupConstants()`), 
-* the value :math:`\bar{\gamma}` of :math:`\gamma` at the last update
-  satisfies :math:`\left|\gamma/\bar{\gamma} - 1\right| > 0.2` (this
-  tolerance may be changed via the ``dgmax`` argument to 
+* when the value :math:`\bar{\gamma}` of :math:`\gamma` at the last
+  update satisfies :math:`\left|\gamma/\bar{\gamma} - 1\right| > 0.2`
+  (this tolerance may be changed via the ``dgmax`` argument to 
   :c:func:`ARKodeSetLSetupConstants()`), 
-* a non-fatal convergence failure just occurred, or
-* an error test failure just occurred.
+* when a non-fatal convergence failure just occurred, or
+* when an error test failure just occurred.
 
 When an update is forced due to a convergence failure, an update of
-:math:`A` or :math:`P` may or may not involve a reevaluation of
-:math:`J` (in :math:`A`) or of Jacobian data (in :math:`P`), depending
-on whether errors in the Jacobian were the likely cause of the
+:math:`\tilde{A}` or :math:`P` may or may not involve a reevaluation of
+:math:`J` (in :math:`\tilde{A}`) or of Jacobian data (in :math:`P`),
+depending on whether errors in the Jacobian were the likely cause of the
 failure.  More generally, the decision is made to reevaluate :math:`J`
 (or instruct the user to reevaluate Jacobian data in :math:`P`) when:
 
@@ -209,11 +269,11 @@ failure.  More generally, the decision is made to reevaluate :math:`J`
 
 
 
-The stopping test for the nonlinear solver is related to the
-subsequent local error test, with the goal of keeping the nonlinear
-iteration errors from interfering with local error control.  As
-described below, the final computed value of each stage solution
-:math:`z_i^{(m)}` will have to satisfy a local error test
+The stopping test for all of ARKode's nonlinear solvers is related to
+the subsequent local error test, with the goal of keeping the
+nonlinear iteration errors from interfering with local error control.
+As described below, the final computed value of each stage solution
+:math:`z_i^{(m)}` must satisfy a local error test
 :math:`\|z_i^{(m)} - z_i^{(0)}\| \le \epsilon`.  Letting
 :math:`z_i` denote the true solution to the nonlinear problem
 :eq:`Residual`, we want to ensure that the iteration error

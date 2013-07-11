@@ -56,3 +56,7 @@
 	   control and signal processing. *Appl. Numer. Math.*,
 	   56:488-502, 2006.  
 
+.. [WN2011] H.F. Walker and P. Ni. Anderson acceleration for
+            fixed-point iterations. *SIAM J. Numer. Anal.*,
+            49:1715-1735, 2011.
+
