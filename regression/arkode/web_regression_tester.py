@@ -227,7 +227,7 @@ for j in range(len(rtol)):
 
 # write footer to page
 f.write("Note: step tolerance = %i; oversolve tolerance = %g\n" % (nsttol, ovtol))
-f.write("[\"oversolve\" is defined as tolerance/error (ideally greater than 1.0)\n")
+f.write("[\"oversolve\" is defined as tolerance/error (ideally greater than 1.0)]\n")
 
 
 # close output file

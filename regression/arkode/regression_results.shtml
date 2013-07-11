@@ -3,6 +3,10 @@
 <head>
   <title>ARKode Regression Test Results</title>
   <link href="default.css" rel="stylesheet" type="text/css">
+  <style type='text/css'>
+  th{font-family:Arial; font-size:10pt;}
+  td{font-family:Arial; font-size:10pt;}
+  </style>
 </head>
 
 <body>
