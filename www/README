@@ -1,0 +1,17 @@
+ARKode Webpage README
+
+In this directory and below are the sources for the ARKode web
+page. They are written using the ReST [1] formatting, which is parsed
+into final formats using the Sphinx formatting engine [2].
+
+To build the site, you must first have Sphinx [2] installed (version
+1.1 or newer), as well as Python [3] (version 2.5 or newer).
+
+To build the web site, use the command:
+  $ make clean html
+If that is successful, the ARKode web site will be located inside the
+subdirectory build/html/ (relative to this directory).
+
+[1] http://docutils.sourceforge.net/rst.html
+[2] http://sphinx.pocoo.org/
+[3] http://www.python.org/
