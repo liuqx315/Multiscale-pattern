@@ -3868,7 +3868,7 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
   realtype tn     = ark_mem->ark_tn;
   realtype *R     = ark_mem->ark_fp_R;
   realtype *gamma = ark_mem->ark_fp_gamma;
-  long int m      = ark_mem->ark_fp_m;
+  long int maa    = ark_mem->ark_fp_m;
   void *udata     = ark_mem->ark_user_data;
   N_Vector ypred  = ark_mem->ark_acor;
   N_Vector y      = ark_mem->ark_y;
@@ -3914,7 +3914,7 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag)
     N_VLinearSum(ONE, y, ONE, fval, fval);
 
     /* perform fixed point update */
-    if (m == 0) {
+    if (maa == 0) {
       /* plain fixed-point solver, copy residual into y */
       N_VScale(ONE, fval, y);
     } else {
