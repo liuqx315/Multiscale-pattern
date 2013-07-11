@@ -114,9 +114,10 @@ int ARKodeSetDefaults(void *arkode_mem)
  ARKodeSetOptimalParams:
 
  Sets all adaptivity and solver parameters to our 'best guess' 
- values, for a given integration method (ERK, DIRK, ARK) and a 
- given method order.  Should only be called after the method
- order and integration method have been set.
+ values, for a given integration method (ERK, DIRK, ARK), a 
+ given method order, and a given nonlinear solver type.  Should
+ only be called after the method order, solver, and integration
+ method have been set.
 ---------------------------------------------------------------*/
 int ARKodeSetOptimalParams(void *arkode_mem)
 {
@@ -193,6 +194,9 @@ int ARKodeSetOptimalParams(void *arkode_mem)
       break;
     }
 
+    /* newton vs fixed-point */
+    if (ark_mem->ark_use_fp)  ark_mem->ark_maxcor = 10;
+
   /*    imex */
   } else {
     switch (ark_mem->ark_q) {
@@ -247,6 +251,10 @@ int ARKodeSetOptimalParams(void *arkode_mem)
       ark_mem->ark_etacf            = ETACF;
       break;
     }
+
+    /* newton vs fixed-point */
+    if (ark_mem->ark_use_fp)  ark_mem->ark_maxcor = 10;
+
   }
   return(ARK_SUCCESS);
 }
