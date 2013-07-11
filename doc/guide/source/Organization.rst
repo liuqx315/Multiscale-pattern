@@ -45,16 +45,16 @@ central integration module, implemented in the files ``arkode.h``,
 integration stages, the nonlinear solver (if :math:`f_I(t,y)` is
 nonzero), estimation of the local truncation error, selection of step
 size, and interpolation to user output points, among other issues.
-ARKode currently supports both modified Newton and accelerated
-fixed-point solvers for these implicit problems.  However, when using
-the modified Newton iteration, ARKode has flexibility in the choice of
-method used to solve the linear sub-systems that arise.  Therefore,
-for any user problem invoking the modified Newton iteration, one of
+ARKode currently supports modified Newton, inexact Newton, and
+accelerated fixed-point solvers for these implicit problems.  However,
+when using the Newton-based iterations, ARKode has flexibility in the
+choice of method used to solve the linear sub-systems that arise.
+Therefore, for any user problem invoking the Newton solvers, one of
 the linear system solver modules should be specified by the user,
 which is then invoked as needed during the integration process. 
 
-At present, the package includes the following ARKode linear
-algebra modules, organized into two families.  The *direct* family of
+For Newton-basedp problems, ARKode presently includes the following
+linear algebra modules, organized into two families.  The *direct* family of
 linear solvers provides methods for the direct solution of linear
 systems with dense or banded matrices and includes:
 

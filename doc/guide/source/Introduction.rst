@@ -48,4 +48,5 @@ serial NVECTOR module in SUNDIALS, ARKode provides both direct (dense
 and band) and preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR,
 FGMRES, PCG) linear solvers. When used with the parallel NVECTOR
 module or a user-provided vector data structure, only the Krylov
-solvers are available.
+solvers are available, although a user may supply their own linear
+solver for any data structures if desired.

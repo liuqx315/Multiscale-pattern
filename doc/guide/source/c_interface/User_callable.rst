@@ -988,14 +988,17 @@ Coefficient in the nonlinear convergence test    :c:func:`ARKodeSetNonlinConvCoe
 
 
 
-.. c:function:: int ARKodeSetFixedPoint(void *arkode_mem)
+.. c:function:: int ARKodeSetFixedPoint(void *arkode_mem, long int fp_m)
 
    Specifies that the implicit portion of the problem should be solved
    using the accelerated fixed-point solver instead of the modified
-   Newton iteration.
+   Newton iteration, and provides the maximum dimension of the
+   acceleration subspace.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
+      * `fp_m` -- number of vectors to store within the Anderson
+        acceleration subspace.
    
    **Return value:** 
       * ARK_SUCCESS if successful
