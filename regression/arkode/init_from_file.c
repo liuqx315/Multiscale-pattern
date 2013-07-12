@@ -193,9 +193,9 @@ int init_from_file(void *ark_mem, char *fname, ARKRhsFn f,
       }
     } else if (imex == 2) {  
       int btable2;
-      if (btable == 3)   btable2 = 16;
-      if (btable == 6)   btable2 = 22;
-      if (btable == 11)  btable2 = 26;
+      if (btable == 3)   btable2 = 17;
+      if (btable == 6)   btable2 = 23;
+      if (btable == 11)  btable2 = 27;
       ret = ARKodeSetARKTableNum(ark_mem, btable2, btable);
       if (ret != 0) {
 	fprintf(stderr,"set_from_file error in ARKodeSetARKTableNum = %i\n",ret);
