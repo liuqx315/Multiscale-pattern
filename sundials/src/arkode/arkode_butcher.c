@@ -1066,24 +1066,6 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[7] = RCONST(1.0);
     break;
 
-  case(28):
-    *s = 2;
-    *q = 2;
-    *p = 1;
-      
-    ARK_A(A,0,0) = RCONST(1.0);
-    ARK_A(A,1,0) = RCONST(0.25);
-    ARK_A(A,1,1) = RCONST(0.25);
-
-    b[0] = RCONST(0.0);
-    b[1] = RCONST(1.0);
-
-    b2[0] = RCONST(1.0);
-
-    c[0] = RCONST(1.0);
-    c[1] = RCONST(0.5);
-    break;
-
   default:
 
     arkProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
