@@ -144,6 +144,20 @@ int ARKodeSetOptimalParams(void *arkode_mem)
   /*    implicit */
   } else if (ark_mem->ark_implicit) {
     switch (ark_mem->ark_q) {
+    case 2:   /* just use standard defaults since better ones unknown */
+      ark_mem->ark_hadapt_imethod   = 0;
+      ark_mem->ark_hadapt_safety    = SAFETY;
+      ark_mem->ark_hadapt_bias      = BIAS;
+      ark_mem->ark_hadapt_growth    = GROWTH;
+      ark_mem->ark_etamxf           = ETAMXF;
+      ark_mem->ark_nlscoef          = NLSCOEF;
+      ark_mem->ark_crdown           = CRDOWN;
+      ark_mem->ark_rdiv             = RDIV;
+      ark_mem->ark_dgmax            = DGMAX;
+      ark_mem->ark_msbp             = MSBP;
+      ark_mem->ark_small_nef        = SMALL_NEF;
+      ark_mem->ark_etacf            = ETACF;
+      break;
     case 3:
       ark_mem->ark_hadapt_imethod   = 2;
       ark_mem->ark_hadapt_safety    = RCONST(0.957);
@@ -868,6 +882,14 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
+  /* check that argument specifies an explicit table (0-12) */
+  if (itable<0 || itable>12) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetERKTableNum", 
+		    "Illegal ERK table number");
+    return(ARK_ILL_INPUT);
+  }
+
   /* fill in table based on argument */
   iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
 				 &ark_mem->ark_q, 
@@ -876,11 +898,10 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
 				 ark_mem->ark_b, 
 				 ark_mem->ark_c, 
 				 ark_mem->ark_b2);
-  /* check that requested table is legal */
   if (iflag != ARK_SUCCESS) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetERKTableNum", 
-		    "Illegal ERK table number");
+		    "Error setting table with that index");
     return(ARK_ILL_INPUT);
   }
 
@@ -914,6 +935,14 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
+  /* check that argument specifies an implicit table (13-27) */
+  if (itable<13) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeSetIRKTableNum", 
+		    "Illegal IRK table number");
+    return(ARK_ILL_INPUT);
+  }
+
   /* fill in table based on argument */
   iflag = ARKodeLoadButcherTable(itable, &ark_mem->ark_stages, 
 				 &ark_mem->ark_q, 
@@ -922,11 +951,10 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
 				 ark_mem->ark_b, 
 				 ark_mem->ark_c, 
 				 ark_mem->ark_b2);
-  /* check that requested table is legal */
   if (iflag != ARK_SUCCESS) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTableNum", 
-		    "Illegal IRK table number");
+		    "Error setting table with that index");
     return(ARK_ILL_INPUT);
   }
 
@@ -961,9 +989,9 @@ int ARKodeSetARKTableNum(void *arkode_mem, int itable, int etable)
 
   /* ensure that tables match */
   iflag = 1;
-  if ((etable == 3)  && (itable == 16))  iflag = 0;
-  if ((etable == 6)  && (itable == 22))  iflag = 0;
-  if ((etable == 11) && (itable == 26))  iflag = 0;
+  if ((etable == 3)  && (itable == 17))  iflag = 0;
+  if ((etable == 6)  && (itable == 23))  iflag = 0;
+  if ((etable == 11) && (itable == 27))  iflag = 0;
   if (iflag) {
     arkProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetARKTableNum", 
