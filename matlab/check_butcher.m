@@ -157,11 +157,13 @@ end
 
 % estimate A stability
 i = sqrt(-1);
-ztests = [-eps+1000*i, -1000+i, -1000-1000*i, -10000+2+i, -100000];
+
+ztests = -eps*ones(1000,1) - 1000*rand(1000,1) + i*10*rand(1000,1);
 As = 1;
 e = ones(s,1);
 I = eye(s);
-for eta = ztests
+for j = 1:length(ztests)
+   eta = ztests(j);
    Reta = 1 + eta*b'*((I-eta*A)\e);
    if (abs(Reta)>1)
       As = 0;
@@ -171,7 +173,7 @@ end
 
 
 % estimate L stability
-ztests = -logspace(0,8,9);
+ztests = -logspace(0,8,20);
 vals = zeros(size(ztests));
 for i = 1:length(ztests); 
    eta = ztests(i);
@@ -179,7 +181,9 @@ for i = 1:length(ztests);
    vals(i) = abs(Reta);
 end
 Ls = 1;
-for i=2:length(ztests)
+N = length(ztests);
+Nhalf = floor(N/2);
+for i=Nhalf:N
    if (vals(i) > vals(i-1))
       Ls = 0;
       break;
