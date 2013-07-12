@@ -2761,7 +2761,7 @@ if test "X${ARKODE_ENABLED}" = "Xyes"; then
        SOLVER="ARKODE"
        SOLVER_LIB="sundials_arkode"
        SOLVER_FLIB=""
-       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_brusselator ark_brusselator1D ark_heat1D ark_heat1D_adapt ark_robertson ark_robertson_root"
+       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_brusselator ark_brusselator_fp ark_brusselator1D ark_heat1D ark_heat1D_adapt ark_robertson ark_robertson_root"
        EXAMPLES_BL=""
        ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
        ])
@@ -2772,7 +2772,7 @@ if test "X${ARKODE_ENABLED}" = "Xyes"; then
        SOLVER="ARKODE"
        SOLVER_LIB="sundials_arkode"
        SOLVER_FLIB=""
-       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_brusselator ark_brusselator1D ark_heat1D ark_heat1D_adapt ark_robertson ark_robertson_root"
+       EXAMPLES="ark_KrylovDemo_prec ark_analytic ark_analytic_nonlin ark_brusselator ark_brusselator_fp ark_brusselator1D ark_heat1D ark_heat1D_adapt ark_robertson ark_robertson_root"
        EXAMPLES_BL=""
        ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
        ])
