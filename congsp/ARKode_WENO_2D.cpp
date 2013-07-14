@@ -77,8 +77,8 @@ int main(int argc, const char * argv[])
 {
     /* general problem parameters */
     realtype T0 = RCONST(0.0);
-    realtype Tf = RCONST(3.0);
-    int Nt = 30;
+    realtype Tf = RCONST(0.1);
+    int Nt = 1;
     int Nvar = 4;
     UserData udata = NULL;
     realtype *data;
@@ -150,10 +150,31 @@ int main(int argc, const char * argv[])
     
     for(j=0;j<Ny;j++){
         for (i=0; i<Nx; i++) {
-            data[idx(i,j,Nx,Ny,0)] = sin(2.0*PI*udata->dx*(i+0.5));
-            data[idx(i,j,Nx,Ny,1)] = sin(2.0*PI*udata->dx*(i+0.5));
-            data[idx(i,j,Nx,Ny,2)] = 0.0;
-            data[idx(i,j,Nx,Ny,3)] = 1.0/(gama-1.0)+0.5*data[idx(i,j,Nx,Ny,0)]*1.0;
+             if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.5323;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  0.5323*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
+ }
+ if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  1.5;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.5*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.5*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  1.5*(1.5/((udata->gama-1.0)*1.5));  /* E */
+ }
+ if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.138;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.138;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.138;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.138*(0.029/((udata->gama-1.0)*0.138)+0.5*(2*1.206*1.206));  /* E */
+ }
+ if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.5323;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
+ }
+
         }
     }
     
@@ -286,11 +307,11 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
     /* declare variables */
     long int NEQ, NEQS, i, j, k;
-    realtype egv1x, egv2x, egv3x, egv4x, egvmaxtempx, egvmaxx;
-    realtype egv1y, egv2y, egv3y, egv4y, egvmaxtempy, egvmaxy;
+    realtype egv1x, egv2x, egv3x, egv4x, egvmaxtempx, egvmaxx, egv1xtmx, egv3xtmx;
+    realtype egv1y, egv2y, egv3y, egv4y, egvmaxtempy, egvmaxy, egv1ytmy, egv3ytmy;
     int flag;
     realtype p, Epsilon;
-    Epsilon = 1.e-6;
+    Epsilon = 0.000001;
     
     /* create relative arrays */
     realtype *IS0_px = new realtype [4];
@@ -489,15 +510,35 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     /* compute max absolue eigenvalue and fill in ypdata, yndata, taopdata, taondata, Cjpdata, Cjpdata */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
-            flag = Setlfxegm(Ydata, lfxegm, i, j, Nx, Ny, gama, egv1x, egv2x, egv3x, egv4x, 0);
+	  printf(" maxeigenxxxxxxxxxxxxxx : i = %li, j = %li, egv1 = %f, egv2 = %f, egv3 = %f, egv4 = %f, egvmaxx = %f\n", i, j, egv1x, egv2x, egv3x, egv4x, egvmaxx);
+            flag = Setlfxegm(Ydata, lfxegm, i, j, Nx, Ny, gama, egv1x, egv2x, egv3x, egv4x, 2);
             if (flag!=0) printf("error in Setlfxegm function \n");
+	     egvmaxx = egv1x;
+	     printf(" maxeigenccccccccccccccc : i = %li, j = %li, egv1 = %f, egv2 = %f, egv3 = %f, egv4 = %f, egvmaxx = %f\n", i, j, egv1x, egv2x, egv3x, egv4x, egvmaxx);
             for (k=0;k<4;k++){
+	      //printf("y : i = %li, j = %li, Y[0] = %g, Y[1] = %g, Y[2] = %g, Y[3] = %g\n", i, j, Ydata[idx(i,j,Nx,Ny,0)], Ydata[idx(i,j,Nx,Ny,1)], Ydata[idx(i,j,Nx,Ny,2)], Ydata[idx(i,j,Nx,Ny,3)]);
+	      //printf("   yxnew parameters: k = %li, i = %li, j = %li, lfxegm[k][0]*Ydata[idx(i, j, Nx, Ny, 0)] = %g, lfxegm[k][1]*Ydata[idx(i, j, Nx, Ny, 1)] = %g, lfxegm[k][2]*Ydata[idx(i, j, Nx, Ny, 2)] = %g,  lfxegm[k][3]*Ydata[idx(i, j, Nx, Ny, 3)] = %g\n", k, i, j, lfxegm[k][0]*Ydata[idx(i, j, Nx, Ny, 0)], lfxegm[k][1]*Ydata[idx(i, j, Nx, Ny, 1)], lfxegm[k][2]*Ydata[idx(i, j, Nx, Ny, 2)], lfxegm[k][3]*Ydata[idx(i, j, Nx, Ny, 3)]);
                 yxnewdata[idx(i, j, Nx, Ny, k)] = lfxegm[k][0]*Ydata[idx(i, j, Nx, Ny, 0)]+lfxegm[k][1]*Ydata[idx(i, j, Nx, Ny, 1)]+lfxegm[k][2]*Ydata[idx(i, j, Nx, Ny, 2)]+lfxegm[k][3]*Ydata[idx(i, j, Nx, Ny, 3)];
             }
-            printf("   yxnew problem parameters: i = %li, j = %li, yxnew0 = %g,  yxnew1 = %g, yxnew2 = %g,  yxnew3 = %g\n", i, j, yxnewdata[idx(i, j, Nx, Ny, 0)], yxnewdata[idx(i, j, Nx, Ny, 1)], yxnewdata[idx(i, j, Nx, Ny, 2)], yxnewdata[idx(i, j, Nx, Ny, 3)]);
-            egvmaxtempx = (fabs(egv1x)>fabs(egv2x))? fabs(egv1x) : fabs(egv2x);
-            egvmaxx = (egvmaxtempx>fabs(egv3x))? egvmaxtempx : fabs(egv3x);
-            
+            //printf("   yxnew problem parameters: i = %li, j = %li, yxnew0 = %g,  yxnew1 = %g, yxnew2 = %g,  yxnew3 = %g\n", i, j, yxnewdata[idx(i, j, Nx, Ny, 0)], yxnewdata[idx(i, j, Nx, Ny, 1)], yxnewdata[idx(i, j, Nx, Ny, 2)], yxnewdata[idx(i, j, Nx, Ny, 3)]);
+            //egvmaxtempx = (fabs(egv1x)>fabs(egv2x))? fabs(egv1x) : fabs(egv2x);
+            //egvmaxx = (egvmaxtempx>fabs(egv3x))? egvmaxtempx : fabs(egv3x);
+            if (egv1x<0)
+	      egv1xtmx = -1.0*egv1x;
+	    else
+	      egv1xtmx = egv1x;
+
+	    if (egv3x<0)
+	      egv3xtmx = -egv3x;
+	    else
+	      egv3xtmx = egv3x;
+
+	    //if (egv1xtmx<egv3xtmx)
+	    //egvmaxx = egv3xtmx;
+	    //else
+	      egvmaxx = egv1x;
+	
+	    printf(" maxeigen : i = %li, j = %li, egv1 = %f, egv2 = %f, egv3 = %f, egv4 = %f, egvmaxx = %f\n", i, j, egv1x, egv2x, egv3x, egv4x, egvmaxx);
             yxpdata[idx(i, j, Nx, Ny, 0)]=0.5*(egv1x*yxnewdata[idx(i, j, Nx, Ny, 0)]+egvmaxx*yxnewdata[idx(i, j, Nx, Ny, 0)]);
             yxndata[idx(i, j, Nx, Ny, 0)]=0.5*(egv1x*yxnewdata[idx(i, j, Nx, Ny, 0)]-egvmaxx*yxnewdata[idx(i, j, Nx, Ny, 0)]);
             yxpdata[idx(i, j, Nx, Ny, 1)]=0.5*(egv2x*yxnewdata[idx(i, j, Nx, Ny, 1)]+egvmaxx*yxnewdata[idx(i, j, Nx, Ny, 1)]);
@@ -512,7 +553,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
-            flag = Setlfyegm(Ydata, lfyegm, i, j, Nx, Ny, gama, egv1y, egv2y, egv3y, egv4y, 0);
+            flag = Setlfyegm(Ydata, lfyegm, i, j, Nx, Ny, gama, egv1y, egv2y, egv3y, egv4y, 2);
             if (flag!=0) printf("error in Setlfyegm function \n");
             for (k=0;k<4;k++){
                 yynewdata[idx(i, j, Nx, Ny, k)] = lfyegm[k][0]*Ydata[idx(i, j, Nx, Ny, 0)]+lfyegm[k][1]*Ydata[idx(i, j, Nx, Ny, 1)]+lfyegm[k][2]*Ydata[idx(i, j, Nx, Ny, 2)]+lfyegm[k][3]*Ydata[idx(i, j, Nx, Ny, 3)];
@@ -538,13 +579,13 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         for (i=0; i<Nx; i++){
             
             /* get derivative on x direction */
-            flag = SetISX(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, yxpdata, yxndata, i, j, Nx, Ny, 0);
+            flag = SetISX(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, yxpdata, yxndata, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetISX function \n");
             
             flag = Setalphawx(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, alpha_0px, alpha_1px, alpha_2px, alpha_0nx, alpha_1nx, alpha_2nx, w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, Epsilon);
             if (flag!=0) printf("error in Setalphawx function \n");
             
-            flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, u_tpnhx, u_tnnhx, i, j, Nx, Ny, 0);
+            flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, u_tpnhx, u_tnnhx, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetUx function \n");
             
             for(k=0;k<4;k++){
@@ -559,13 +600,13 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         for(j=0;j<Ny;j++){
             
             /* get derivative on y direction */
-            flag = SetISY(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, yypdata, yyndata, i, j, Nx, Ny, 0);
+            flag = SetISY(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, yypdata, yyndata, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetISY function \n");
             
             flag = Setalphawy(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, alpha_0py, alpha_1py, alpha_2py, alpha_0ny, alpha_1ny, alpha_2ny, w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, Epsilon);
             if (flag!=0) printf("error in Setalphawy function \n");
             
-            flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, u_tpnhy, u_tnnhy, i, j, Nx, Ny, 0);
+            flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, u_tpnhy, u_tnnhy, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetUy function \n");
             
             for(k=0;k<4;k++){
@@ -578,7 +619,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
-            flag = Setrhxegm(Ydata, rhxegm, i, j, Nx, Ny, gama, 0);
+            flag = Setrhxegm(Ydata, rhxegm, i, j, Nx, Ny, gama, 2);
             if (flag!=0) printf("error in Setrhxegm function \n");
             for (k=0;k<4;k++){
                 yxupbackdata[idx(i, j, Nx, Ny, k)] = rhxegm[k][0]*yxupdata[idx(i, j, Nx, Ny, 0)]+rhxegm[k][1]*yxupdata[idx(i, j, Nx, Ny, 1)]+rhxegm[k][2]*yxupdata[idx(i, j, Nx, Ny, 2)]+rhxegm[k][3]*yxupdata[idx(i, j, Nx, Ny, 3)];
@@ -589,7 +630,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
-            flag = Setrhyegm(Ydata, rhyegm, i, j, Nx, Ny, gama, 0);
+            flag = Setrhyegm(Ydata, rhyegm, i, j, Nx, Ny, gama, 2);
             if (flag!=0) printf("error in Setrhyegm function \n");
             for (k=0;k<4;k++){
                 yyupbackdata[idx(i, j, Nx, Ny, k)] = rhyegm[k][0]*yyupdata[idx(i, j, Nx, Ny, 0)]+rhyegm[k][1]*yyupdata[idx(i, j, Nx, Ny, 1)]+rhyegm[k][2]*yyupdata[idx(i, j, Nx, Ny, 2)]+rhyegm[k][3]*yyupdata[idx(i, j, Nx, Ny, 3)];
