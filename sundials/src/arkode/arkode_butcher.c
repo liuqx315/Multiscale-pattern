@@ -47,20 +47,21 @@
     10    Dormand-Prince      ERK   7   5   4   -   - 
     11*   ARK5(4)8L[2]SA      ERK   8   5   4   -   - 
     12    Verner-6-5          ERK   8   6   5   -   -
-    13    Billington        SDIRK   3   3   2   -   - 
-    14    TRBDF2           ESDIRK   3   3   2   -   - 
-    15    Kvaerno(4,2,3)   ESDIRK   4   3   2   X   X 
-    16*   ARK3(2)4L[2]SA   ESDIRK   4   3   2   X   X 
-    17    TRX2             ESDIRK   3   4   2   -   - 
-    18    Cash(5,2,4)       SDIRK   5   4   2   X   X 
-    19    Cash(5,3,4)       SDIRK   5   4   3   X   X 
-    20    SDIRK-5-4         SDIRK   5   4   3   X   X 
-    21    Kvaerno(5,3,4)   ESDIRK   5   4   3   X   - 
-    22*   ARK4(3)6L[2]SA   ESDIRK   6   4   3   X   X 
-    23*   Sayfy-Aburub-4-3  EDIRK   6   4   3   X   -   **not very accurate 
-    24    Ismail(7,4,5)    ESDIRK   7   5   4   -   -   **not at all accurate
-    25    Kvaerno(7,4,5)   ESDIRK   7   5   4   X   X
-    26*   ARK5(4)8L[2]SA   ESDIRK   8   5   4   X   - 
+    13    SDIRK-2-1         SDIRK   2   2   1   X   - 
+    14    Billington        SDIRK   3   3   2   -   - 
+    15    TRBDF2           ESDIRK   3   3   2   -   - 
+    16    Kvaerno(4,2,3)   ESDIRK   4   3   2   X   X 
+    17*   ARK3(2)4L[2]SA   ESDIRK   4   3   2   X   X 
+    18    TRX2             ESDIRK   3   4   2   -   - 
+    19    Cash(5,2,4)       SDIRK   5   4   2   X   X 
+    20    Cash(5,3,4)       SDIRK   5   4   3   X   X 
+    21    SDIRK-5-4         SDIRK   5   4   3   X   X 
+    22    Kvaerno(5,3,4)   ESDIRK   5   4   3   X   - 
+    23*   ARK4(3)6L[2]SA   ESDIRK   6   4   3   X   X 
+    24*   Sayfy-Aburub-4-3  EDIRK   6   4   3   X   -   **not very accurate 
+    25    Ismail(7,4,5)    ESDIRK   7   5   4   -   -   **not at all accurate
+    26    Kvaerno(7,4,5)   ESDIRK   7   5   4   X   X
+    27*   ARK5(4)8L[2]SA   ESDIRK   8   5   4   X   - 
   ----------------------------------------------------
 
 ---------------------------------------------------------------*/
@@ -523,7 +524,25 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[7] = RCONST(1.0);
     break;
 
-  case(13):    /* Billington-SDIRK */
+  case(13):   /* SDIRK-2-1 (A,B stable) */
+    *s = 2;
+    *q = 2;
+    *p = 1;
+      
+    ARK_A(A,0,0) = RCONST(1.0);
+    ARK_A(A,1,0) = RCONST(-1.0);
+    ARK_A(A,1,1) = RCONST(1.0);
+
+    b[0] = RCONST(0.5);
+    b[1] = RCONST(0.5);
+
+    b2[0] = RCONST(1.0);
+
+    c[0] = RCONST(1.0);
+    c[1] = RCONST(0.0);
+    break;
+
+  case(14):    /* Billington-SDIRK */
     *s = 3;
     *q = 3;
     *p = 2;
@@ -547,7 +566,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[2] = RCONST(1.292893218813);
     break;
 
-  case(14):    /* TRBDF2-ESDIRK */
+  case(15):    /* TRBDF2-ESDIRK */
     *s = 3;
     *q = 3;
     *p = 2;
@@ -576,7 +595,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[2] = one;
     break;
 
-  case(15):    /* Kvaerno(4,2,3)-ESDIRK */
+  case(16):    /* Kvaerno(4,2,3)-ESDIRK */
     *s = 4;
     *q = 3;
     *p = 2;
@@ -604,7 +623,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[3] = RCONST(1.0);
     break;
 
-  case(16):    /* ARK3(2)4L[2]SA-ESDIRK */
+  case(17):    /* ARK3(2)4L[2]SA-ESDIRK */
     *s = 4;
     *q = 3;
     *p = 2;
@@ -633,7 +652,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[3] = RCONST(1.0);
     break;
 
-  case(17):    /* TRX2-ESDIRK */
+  case(18):    /* TRX2-ESDIRK */
     *s = 3;
     *q = 4;
     *p = 2;
@@ -656,7 +675,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[2] = RCONST(1.0);
     break;
 
-  case(18):    /* Cash(5,2,4)-SDIRK */
+  case(19):    /* Cash(5,2,4)-SDIRK */
     *s = 5;
     *q = 4;
     *p = 2;
@@ -692,7 +711,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[4] = RCONST(1.0);
     break;
 
-  case(19):    /* Cash(5,3,4)-SDIRK */
+  case(20):    /* Cash(5,3,4)-SDIRK */
     *s = 5;
     *q = 4;
     *p = 3;
@@ -730,7 +749,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[4] = RCONST(1.0);
     break;
 
-  case(20):    /* SDIRK-5-4 */
+  case(21):    /* SDIRK-5-4 */
     *s = 5;
     *q = 4;
     *p = 3;
@@ -768,7 +787,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[4] = RCONST(1.0);
     break;
 
-  case(21):    /* Kvaerno(5,3,4)-ESDIRK */
+  case(22):    /* Kvaerno(5,3,4)-ESDIRK */
     *s = 5;
     *q = 4;
     *p = 3;
@@ -804,7 +823,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[4] = RCONST(1.0);
     break;
 
-  case(22):    /* ARK4(3)6L[2]SA-ESDIRK */
+  case(23):    /* ARK4(3)6L[2]SA-ESDIRK */
     *s = 6;
     *q = 4;
     *p = 3;
@@ -847,7 +866,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     b2[5] = RCONST(61727.0)/RCONST(225920.0);
     break;
 
-  case(23):    /* Sayfy-Aburub-4-3-EDIRK */
+  case(24):    /* Sayfy-Aburub-4-3-EDIRK */
     *s = 6;
     *q = 4;
     *p = 3;
@@ -886,7 +905,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[5] = RCONST(1.0);
     break;
 
-  case(24):    /* Ismail(7,4,5)-ESDIRK */
+  case(25):    /* Ismail(7,4,5)-ESDIRK */
     *s = 7;
     *q = 5;
     *p = 4;
@@ -939,7 +958,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[6] = RCONST(1);
     break;
 
-  case(25):    /* Kvaerno(7,4,5)-ESDIRK */
+  case(26):    /* Kvaerno(7,4,5)-ESDIRK */
     *s = 7;
     *q = 5;
     *p = 4;
@@ -990,7 +1009,7 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[6] = RCONST(1.0);
     break;
 
-  case(26):    /* ARK5(4)8L[2]SA-ESDIRK */
+  case(27):    /* ARK5(4)8L[2]SA-ESDIRK */
     *s = 8;
     *q = 5;
     *p = 4;
@@ -1045,6 +1064,24 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[5] = RCONST(24.0)/RCONST(100.0);
     c[6] = RCONST(3.0)/RCONST(5.0);
     c[7] = RCONST(1.0);
+    break;
+
+  case(28):
+    *s = 2;
+    *q = 2;
+    *p = 1;
+      
+    ARK_A(A,0,0) = RCONST(1.0);
+    ARK_A(A,1,0) = RCONST(0.25);
+    ARK_A(A,1,1) = RCONST(0.25);
+
+    b[0] = RCONST(0.0);
+    b[1] = RCONST(1.0);
+
+    b2[0] = RCONST(1.0);
+
+    c[0] = RCONST(1.0);
+    c[1] = RCONST(0.5);
     break;
 
   default:

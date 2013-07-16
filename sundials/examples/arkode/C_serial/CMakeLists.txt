@@ -17,6 +17,7 @@ SET(ARKODE_examples
   ark_analytic
   ark_analytic_nonlin
   ark_brusselator
+  ark_brusselator_fp
   ark_brusselator1D
   ark_heat1D
   ark_heat1D_adapt
