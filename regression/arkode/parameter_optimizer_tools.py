@@ -108,7 +108,7 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
     # print '  len(nlscoef): ',len(nlscoef)
 
     # create parameter file of all defaults, set baseline cost
-    p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, 
                        rtol, atol);
     ark.write_parameter_file(p);
@@ -143,7 +143,7 @@ def parameter_search(order, dense_order, imex, adapt_method, cflfac,
                       for i19 in range(len(nlscoef)):
 
                        # create parameter object
-                       p = ark.SolParams(-1.0, order, dense_order, 
+                       p = ark.SolParams(-1.0, -1, order, dense_order, 
                                           imex, adapt_method[i2], cflfac,
                                           safety, bias[i4], 
                                           growth[i5], hfixed_lb, 
@@ -214,7 +214,7 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
     """ integer) and CM (a single cost model).                   """
 
     # create parameter file of all defaults, set baseline cost
-    p = ark.SolParams(-1.0, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
     ark.write_parameter_file(p);
     base = set_baseline(tests, CM);
@@ -290,7 +290,7 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
         nlsc  = nlsc_l  + np.random.random_sample()*(nlsc_r  - nlsc_l);
 
         # create parameter object
-        p = ark.SolParams(-1.0, order, dord, imex, hmeth, cfl, safe, bias, grow, 
+        p = ark.SolParams(-1.0, -1, order, dord, imex, hmeth, cfl, safe, bias, grow, 
                            hf_lb, hf_ub, pq, k1, k2, k3, emx1, emxf, ecf, snef, crd, 
                            rdv, dgmx, pred, msbp, fxpt, maa, mxcr, nlsc, rtol, atol);
                          

@@ -152,7 +152,7 @@ f.write("<br><a href=\"regression_results_old.shtml\">Previous regression test r
 
 # run tests with base set of parameters to ensure everything runs
 test_string = "Base tests (defaults, with rtol = %g, atol = %g):" % (rtol[0], atol[0])
-p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
+p = ark.SolParams(-1.0, -1, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
                    0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[0], atol[0]);
 ark.write_parameter_file(p);
 pfile = outdir + "/solve_params-" + random_hash() + ".txt"
@@ -165,7 +165,7 @@ ords = (2,3,4,5,6);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     test_string = "ERK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
-    p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
@@ -178,7 +178,7 @@ ords = (3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     test_string = "DIRK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
-    p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
@@ -191,7 +191,7 @@ ords = (3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     test_string = "ARK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
-    p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
@@ -204,7 +204,7 @@ algs = (0,2,3);
 for j in range(len(rtol)):
   for i in range(len(algs)):
     test_string = "H-adaptivity method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
-    p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
@@ -217,7 +217,7 @@ algs = (0,2);
 for j in range(len(rtol)):
   for i in range(len(algs)):
     test_string = "Predictor method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
-    p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
+    p = ark.SolParams(-1.0, -1, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
