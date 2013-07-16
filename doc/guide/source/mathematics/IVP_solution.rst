@@ -28,7 +28,10 @@ The coefficients :math:`A^E \in \Re^{s\times s}`, :math:`A^I \in
 correspond with the explicit and implicit Butcher tables (that must
 share :math:`b` and :math:`c`) in an ARK pair.  The user of ARKode
 must choose appropriately between one of three classes of methods:
-*multi-rate*, *nonstiff* and *stiff*.
+*multi-rate*, *nonstiff* and *stiff*.  All of the Butcher tables
+encoding the coefficients :math:`c`, :math:`A`, :math:`b` and
+:math:`\tilde{b}` are further described in the section
+:ref:`Mathematics.Butcher`. 
 
 For multi-rate problems, a user must provide both of the functions
 :math:`f_E` and :math:`f_I`.  On such problems, ARKode implements the
