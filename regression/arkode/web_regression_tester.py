@@ -15,16 +15,14 @@ import shutil as shutil
 
 #### Utility functions ####
 
-def run_tests(outdir,fptr,testlist,nsttol,ovtol):
+def run_tests(outdir,fptr,testlist,ovtol):
     """ This routine takes in a string containing the test      """
     """ category name, a file pointer to write output in, a     """
-    """ string containing a set of executable names, a          """
-    """ tolerance on the minimum number of steps that must be   """
-    """ run to consider the test 'completed' and a tolerance on """
-    """ the allowable oversolve (larger==better).  It then runs """
-    """ the desired tests, and checks whether the tests pass,   """
-    """ placing the results into an html table within the       """
-    """ designated file.                                        """
+    """ string containing a set of executable names and a       """
+    """ tolerance on the allowable oversolve (larger==better).  """
+    """ It then runs the desired tests, and checks whether the  """
+    """ tests pass, placing the results into an html table      """
+    """ within the designated file.                             """
     import shlex
     import subprocess
     iret = 0;
@@ -54,32 +52,29 @@ def run_tests(outdir,fptr,testlist,nsttol,ovtol):
         fptr.write("<tr>\n")
         fptr.write("  <td style=\"vertical-align: top;\">\n")
         fptr.write("    %s \n" % (testlist[i]) )
-        [nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],1);
+        [fail,nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],1);
         ofile = outdir + "/output-" + random_hash() + ".txt"
         shutil.copy("output.txt", ofile)
         f.write("&nbsp; (<a href=\"" + ofile + "\">output</a>)\n")
         fptr.write("  </td>")
-        fail_steps = 0
+        fail_integration = 0;
         fail_error = 0
-        # check for nst >= nsttol (in case something fails at initialization)
-        if (nst < nsttol):
-            fail_steps = 1;
+        # check for integration failure
+        if (fail == 1):
+            fail_integration = 1;
         # check for oversolve >= ovtol (fits within allowable error)
         if ((ov < ovtol) or (ov != ov)):
             fail_error = 1;
         # report on the pass/fail of the test
         fptr.write("  <td style=\"vertical-align: top;\">\n")
-        if (fail_steps + fail_error == 0):
+        if (fail_integration + fail_error == 0):
             fptr.write("    <span style=\"color:#298A08\">Pass</span>\n")
         else:
             fptr.write("    <span style=\"color:#B40404\">Fail</span>\n")
         fptr.write("  </td>")
         # report the number of steps
         fptr.write("  <td style=\"vertical-align: top;\">\n")
-        if (fail_steps == 0):
-            fptr.write("    <span style=\"color:#298A08\">%i</span>\n" % (nst))
-        else:
-            fptr.write("    <span style=\"color:#B40404\">%i</span>\n" % (nst))
+        fptr.write("    %i\n" % (nst))
         fptr.write("  </td>")
         # report the oversolve
         fptr.write("  <td style=\"vertical-align: top;\">\n")
@@ -131,7 +126,6 @@ testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.ex
            './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
            './ark_vdpol.exe', './ark_vdpolm.exe' )
 testsA = (testsA3, testsA4, testsA5)
-nsttol = 10;
 ovtol  = 0.01;
 rtol = (1.e-3, 1.e-6);
 atol = (1.e-11, 1.e-11);
@@ -158,7 +152,7 @@ ark.write_parameter_file(p);
 pfile = outdir + "/solve_params-" + random_hash() + ".txt"
 shutil.copy("./solve_params.txt", pfile)
 f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-iret = run_tests(outdir,f,testsI[1],nsttol,ovtol);
+iret = run_tests(outdir,f,testsI[1],ovtol);
 
 # check ERK method orders {2,3,4,5,6}
 ords = (2,3,4,5,6);
@@ -171,7 +165,7 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsE,nsttol,ovtol);
+    iret = run_tests(outdir,f,testsE,ovtol);
 
 # check DIRK method orders {3,4,5}
 ords = (3,4,5);
@@ -184,7 +178,7 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsI[i],nsttol,ovtol);
+    iret = run_tests(outdir,f,testsI[i],ovtol);
 
 # check ARK method orders {3,4,5}
 ords = (3,4,5);
@@ -197,7 +191,7 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsA[i],nsttol,ovtol);
+    iret = run_tests(outdir,f,testsA[i],ovtol);
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
 algs = (0,2,3);
@@ -210,7 +204,7 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsI[1],nsttol,ovtol);
+    iret = run_tests(outdir,f,testsI[1],ovtol);
 
 # check predictor methods {0,1,2,3} (DIRK only)
 algs = (0,2);
@@ -223,10 +217,10 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsI[1],nsttol,ovtol);
+    iret = run_tests(outdir,f,testsI[1],ovtol);
 
 # write footer to page
-f.write("Note: step tolerance = %i; oversolve tolerance = %g\n" % (nsttol, ovtol))
+f.write("Note: oversolve tolerance = %g\n" % (ovtol))
 f.write("[\"oversolve\" is defined as tolerance/error (ideally greater than 1.0)]\n")
 
 

@@ -9,13 +9,13 @@ import parameter_optimizer_tools as po
 
 
 # set up a list of executable names to use in tests
-tests = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe');
+tests = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe');
 
 # set up a few cost models: order of entries are the weight factors per:
-#     nstep,  nfe, nfi,  lset, nJe, nnewt, oversolve, undersolve
-CM1 = (0.0,   1.0, 1.0,   1.0, 2.0,  10.0,    0.0,    100000.0);  # matrix-free
-CM2 = (0.0,   1.0, 1.0, 100.0, 5.0,  10.0,    0.0,    100000.0);  # dense Jacobian
-CM3 = (0.0, 100.0, 1.0,   1.0, 1.0,  10.0,    0.0,    100000.0);  # imex, costly fe, matrix-free
+#     nstep,  nfe, nfi,  lset, nJe, nnewt, oversol, undersol, failure
+CM1 = (0.0,   1.0, 1.0,   1.0, 2.0,  10.0,    0.0,    10.0,    3.0);  # matrix-free
+CM2 = (0.0,   1.0, 1.0, 100.0, 5.0,  10.0,    0.0,    10.0,    3.0);  # dense Jacobian
+CM3 = (0.0, 100.0, 1.0,   1.0, 1.0,  10.0,    0.0,    10.0,    3.0);  # imex, costly fe, matrix-free
 
 # set type of integrator to optimize, and number of trials to take, number of params to store
 imex = 0;           # scalar: 0=>implicit, 1=>explicit, 2=>imex

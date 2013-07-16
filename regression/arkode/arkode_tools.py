@@ -46,10 +46,10 @@ class SolParams:
         self.rtol = rtol;
         self.atol = atol;
     def WriteHeader(self):
-        print '   cost    tab  q  dq  imx  adp  cfl   safe  bias  grow  h0l  h0b    pq    k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  fxpt  m_aa  mxcr   nlsc   rtol   atol'
+        print '   cost  tab q  dq  imx  adp  cfl   safe  bias  grow  h0l h0b  pq     k1     k2     k3     emx1     emxf    ecf  smf  crdn   rdiv  dgmx  prd  msbp  fxpt  m_aa  mxcr  nlsc    rtol  atol'
     def Write(self):
-        sys.stdout.write(" %f %2i %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %2i  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %3i   %3i   %.1e  %3.1f  %3.1f\n" % 
-                         (self.cost, self.table, self.order, self.dense_order, self.imex, 
+        sys.stdout.write(" %7.5f %2i %2i %3i  %2i  %3i   %3.1f  %5.3f  %4.2f  %4.1f  %2i  %3.1f  %3.1f  %5.3f  %5.3f  %5.3f  %6f  %5.2f  %5.2f %3i   %4.2f  %5.3f  %4.2f %3i  %3i   %3i   %3i   %3i   %.1e  %3.1f  %3.1f\n" % 
+                         (self.cost, self.btable, self.order, self.dense_order, self.imex, 
                           self.adapt_method, self.cflfac, self.safety, self.bias, self.growth, 
                           self.hfixed_lb, self.hfixed_ub,  self.pq, self.k1, self.k2, self.k3, 
                           self.etamx1, self.etamxf, self.etacf, self.small_nef, self.crdown, 
@@ -100,11 +100,15 @@ def run_test(testname,keep_output):
     maxerr=1.0e5
     rmserr=1.0e5
     oversolve=1.0e-5
+    errfail=0
     #  parse output
     f = open('output.txt','r')
     for line in f:
         txt = shlex.split(line)
-        if ("Internal" in txt):
+        if ("stopping" in txt): 
+            errfail = 1
+            break
+        elif ("Internal" in txt):
             nsteps = int(txt[4]);
             asteps = int(txt[7].replace(')',''));
         elif ("system" in txt):
@@ -130,7 +134,7 @@ def run_test(testname,keep_output):
     f.close()
     if (keep_output==0):
         os.remove('output.txt')
-    return [nsteps, asteps, nfe, nfi, lsetups, nfi_lsetup, nJe, nnewt, ncf, nef, maxerr, rmserr, oversolve, runtime]
+    return [errfail, nsteps, asteps, nfe, nfi, lsetups, nfi_lsetup, nJe, nnewt, ncf, nef, maxerr, rmserr, oversolve, runtime]
     
 ##########
 def write_parameter_file(params):
@@ -147,34 +151,34 @@ def write_parameter_file(params):
     f.write("maxncf = 0\n") 
     f.write("mxhnil = 0\n") 
     f.write("mxsteps = 0\n") 
-    f.write("cflfac = %f\n" % (params.cflfac)) 
-    f.write("safety = %f\n" % (params.safety)) 
-    f.write("bias = %f\n" % (params.bias)) 
-    f.write("growth = %f\n" % (params.growth)) 
-    f.write("hfixed_lb = %f\n" % (params.hfixed_lb)) 
-    f.write("hfixed_ub = %f\n" % (params.hfixed_ub)) 
+    f.write("cflfac = %g\n" % (params.cflfac)) 
+    f.write("safety = %g\n" % (params.safety)) 
+    f.write("bias = %g\n" % (params.bias)) 
+    f.write("growth = %g\n" % (params.growth)) 
+    f.write("hfixed_lb = %g\n" % (params.hfixed_lb)) 
+    f.write("hfixed_ub = %g\n" % (params.hfixed_ub)) 
     f.write("pq = %i\n" % (params.pq)) 
-    f.write("k1 = %f\n" % (params.k1)) 
-    f.write("k2 = %f\n" % (params.k2)) 
-    f.write("k3 = %f\n" % (params.k3))
-    f.write("etamx1 = %f\n" % (params.etamx1)) 
-    f.write("etamxf = %f\n" % (params.etamxf)) 
-    f.write("etacf = %f\n" % (params.etacf)) 
+    f.write("k1 = %g\n" % (params.k1)) 
+    f.write("k2 = %g\n" % (params.k2)) 
+    f.write("k3 = %g\n" % (params.k3))
+    f.write("etamx1 = %g\n" % (params.etamx1)) 
+    f.write("etamxf = %g\n" % (params.etamxf)) 
+    f.write("etacf = %g\n" % (params.etacf)) 
     f.write("small_nef = %i\n" % (params.small_nef)) 
-    f.write("crdown = %f\n" % (params.crdown)) 
-    f.write("rdiv = %f\n" % (params.rdiv)) 
-    f.write("dgmax = %f\n" % (params.dgmax)) 
+    f.write("crdown = %g\n" % (params.crdown)) 
+    f.write("rdiv = %g\n" % (params.rdiv)) 
+    f.write("dgmax = %g\n" % (params.dgmax)) 
     f.write("predictor = %i\n" % (params.predictor)) 
     f.write("msbp = %i\n" % (params.msbp)) 
     f.write("fixedpt = %i\n" % (params.fixedpt)) 
     f.write("m_aa = %i\n" % (params.m_aa)) 
     f.write("maxcor = %i\n" % (params.maxcor)) 
-    f.write("nlscoef = %f\n" % (params.nlscoef)) 
+    f.write("nlscoef = %g\n" % (params.nlscoef)) 
     f.write("h0 = 0.0\n") 
     f.write("hmin = 0.0\n") 
     f.write("hmax = 0.0\n") 
-    f.write("rtol = %f\n" % (params.rtol)) 
-    f.write("atol = %f\n" % (params.atol)) 
+    f.write("rtol = %g\n" % (params.rtol)) 
+    f.write("atol = %g\n" % (params.atol)) 
     f.close()
 
     f = open('fsolve_params.txt', 'w')
@@ -184,29 +188,29 @@ def write_parameter_file(params):
     f.write("  imex = %i,\n" % (params.imex)) 
     f.write("  btable = %i,\n" % (params.btable))
     f.write("  adapt_method = %i,\n" % (params.adapt_method)) 
-    f.write("  cflfac = %f,\n" % (params.cflfac)) 
-    f.write("  safety = %f,\n" % (params.safety)) 
-    f.write("  bias = %f,\n" % (params.bias)) 
-    f.write("  growth = %f,\n" % (params.growth)) 
-    f.write("  hfixed_lb = %f,\n" % (params.hfixed_lb)) 
-    f.write("  hfixed_ub = %f,\n" % (params.hfixed_ub)) 
+    f.write("  cflfac = %g,\n" % (params.cflfac)) 
+    f.write("  safety = %g,\n" % (params.safety)) 
+    f.write("  bias = %g,\n" % (params.bias)) 
+    f.write("  growth = %g,\n" % (params.growth)) 
+    f.write("  hfixed_lb = %g,\n" % (params.hfixed_lb)) 
+    f.write("  hfixed_ub = %g,\n" % (params.hfixed_ub)) 
     f.write("  pq = %i,\n" % (params.pq)) 
-    f.write("  k1 = %f,\n" % (params.k1)) 
-    f.write("  k2 = %f,\n" % (params.k2)) 
-    f.write("  k3 = %f,\n" % (params.k3))
-    f.write("  etamx1 = %f,\n" % (params.etamx1)) 
-    f.write("  etamxf = %f,\n" % (params.etamxf)) 
-    f.write("  etacf = %f,\n" % (params.etacf)) 
+    f.write("  k1 = %g,\n" % (params.k1)) 
+    f.write("  k2 = %g,\n" % (params.k2)) 
+    f.write("  k3 = %g,\n" % (params.k3))
+    f.write("  etamx1 = %g,\n" % (params.etamx1)) 
+    f.write("  etamxf = %g,\n" % (params.etamxf)) 
+    f.write("  etacf = %g,\n" % (params.etacf)) 
     f.write("  small_nef = %i,\n" % (params.small_nef)) 
-    f.write("  crdown = %f,\n" % (params.crdown)) 
-    f.write("  rdiv = %f,\n" % (params.rdiv)) 
-    f.write("  dgmax = %f,\n" % (params.dgmax)) 
+    f.write("  crdown = %g,\n" % (params.crdown)) 
+    f.write("  rdiv = %g,\n" % (params.rdiv)) 
+    f.write("  dgmax = %g,\n" % (params.dgmax)) 
     f.write("  predictor = %i,\n" % (params.predictor)) 
     f.write("  msbp = %i,\n" % (params.msbp)) 
     f.write("  fixedpt = %i,\n" % (params.fixedpt)) 
     f.write("  m_aa = %i,\n" % (params.m_aa)) 
     f.write("  maxcor = %i,\n" % (params.maxcor)) 
-    f.write("  nlscoef = %f,\n" % (params.nlscoef)) 
+    f.write("  nlscoef = %g,\n" % (params.nlscoef)) 
     f.write("&end\n")
     f.close()
     
