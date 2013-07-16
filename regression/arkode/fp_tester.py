@@ -79,13 +79,13 @@ for k in range(len(maas)):
   for j in range(len(rtol)):
     for i in range(len(ords)):
       sys.stdout.write("DIRK tests, order = %i, rtol = %g, maa = %i:" % (ords[i], rtol[j], maas[k]))
-      p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+      p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                          0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, maas[k], 50, 0.0, rtol[j], atol[j]);
       ark.write_parameter_file(p);
       iret = check_tests(testsI[i],nsttol,ovtol);
 
       sys.stdout.write("ARK tests, order = %i, rtol = %g, maa = %i:" % (ords[i], rtol[j], maas[k]))
-      p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+      p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                          0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, maas[k], 50, 0.0, rtol[j], atol[j]);
       ark.write_parameter_file(p);
       iret = check_tests(testsA[i],nsttol,ovtol);

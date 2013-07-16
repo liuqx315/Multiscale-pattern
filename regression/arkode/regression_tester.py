@@ -46,6 +46,9 @@ def check_tests(testlist,nsttol,ovtol):
 
 
 # set up a list of executable names to use in tests
+testsI2 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe', 
+           'ark_pollu.exe' )
 testsI3 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
            'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe',
            'ark_medakzo.exe' )
@@ -58,11 +61,24 @@ testsI5 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_b
            'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe', 
            'ark_brusselator1D.exe', 'ark_medakzo.exe', 'ark_orego.exe',
            'ark_pollu.exe', 'ark_rober.exe', 'ark_vdpol.exe' )
-testsI = (testsI3, testsI4, testsI5)
-testsIFP = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
-            'ark_analytic_sys.exe', 'ark_brusselator.exe' )
+testsI = (testsI2, testsI3, testsI4, testsI5)
+
+testsIF2 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+            'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe' )
+testsIF3 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+            'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe',
+            'ark_medakzo.exe' )
+testsIF4 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+            'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe', 
+            'ark_medakzo.exe', 'ark_ringmod.exe' )
+testsIF5 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
+            'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe', 
+            'ark_brusselator1D.exe', 'ark_medakzo.exe' )
+testsIF = (testsIF2, testsIF3, testsIF4, testsIF5)
+
 testsE = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
           'ark_analytic_sys.exe', 'ark_brusselator.exe' )
+
 testsA3 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
            'ark_brusselator1D.exe', 'ark_medakzo.exe', 'ark_pollu.exe', 'ark_vdpol.exe', 
            'ark_vdpolm.exe' )
@@ -73,6 +89,15 @@ testsA5 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'a
            'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_pollu.exe',
            'ark_vdpol.exe', 'ark_vdpolm.exe' )
 testsA = (testsA3, testsA4, testsA5)
+
+testsAF3 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
+            'ark_brusselator1D.exe', 'ark_medakzo.exe', 'ark_vdpolm.exe' )
+testsAF4 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
+            'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe' )
+testsAF5 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
+            'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_vdpolm.exe' )
+testsAF = (testsAF3, testsAF4, testsAF5)
+
 nsttol = 10;
 ovtol  = 0.01;
 rtol = (1.e-3, 1.e-6);
@@ -83,19 +108,19 @@ ierr = 0
 
 # run tests with base set of parameters to ensure everything runs
 sys.stdout.write("Base tests (rtol = %g, atol = %g):" % (rtol[0], atol[0]))
-p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
+p = ark.SolParams(-1.0, -1, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
                    0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[0], atol[0]);
 ark.write_parameter_file(p);
-iret = check_tests(testsI[1],nsttol,ovtol);
+iret = check_tests(testsI[2],nsttol,ovtol);
 ierr += iret
-itot += len(testsI[1])
+itot += len(testsI[2])
 
 # check ERK method orders {2,3,4,5,6}
 ords = (2,3,4,5,6);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     sys.stdout.write("ERK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j]))
-    p = ark.SolParams(-1.0, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 1, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     iret = check_tests(testsE,nsttol,ovtol);
@@ -103,42 +128,55 @@ for j in range(len(rtol)):
     itot += len(testsE)
 
 
-# check DIRK method orders {3,4,5}
-ords = (3,4,5);
+# check DIRK method orders {2,3,4,5}
+ords = (2,3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     sys.stdout.write("DIRK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j]))
-    p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     iret = check_tests(testsI[i],nsttol,ovtol);
     ierr += iret
     itot += len(testsI[i])
 
-# # check DIRK (fixed-point solver) method orders {3,4,5}
-# ords = (3,4,5);
-# for j in range(len(rtol)):
-#   for i in range(len(ords)):
-#     sys.stdout.write("DIRK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
-#                      % (ords[i], rtol[j], atol[j]))
-#     p = ark.SolParams(-1.0, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
-#                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 10, 50, 0.0, rtol[j], atol[j]);
-#     ark.write_parameter_file(p);
-#     iret = check_tests(testsIFP,nsttol,ovtol);
-#     ierr += iret
-#     itot += len(testsIFP)
+# check DIRK (fixed-point solver) method orders {2,3,4,5}
+ords = (2,3,4,5);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    sys.stdout.write("DIRK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
+                     % (ords[i], rtol[j], atol[j]))
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
+    ark.write_parameter_file(p);
+    iret = check_tests(testsIF[i],nsttol,ovtol);
+    ierr += iret
+    itot += len(testsIF[i])
 
 # check ARK method orders {3,4,5}
 ords = (3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     sys.stdout.write("ARK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j]))
-    p = ark.SolParams(-1.0, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     iret = check_tests(testsA[i],nsttol,ovtol);
     ierr += iret
     itot += len(testsA[i])
+
+# check ARK (fixed-point solver) method orders {3,4,5}
+ords = (3,4,5);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    sys.stdout.write("ARK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
+                     % (ords[i], rtol[j], atol[j]))
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
+    ark.write_parameter_file(p);
+    iret = check_tests(testsAF[i],nsttol,ovtol);
+    ierr += iret
+    itot += len(testsAF[i])
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
 algs = (0,2,3);
@@ -146,12 +184,12 @@ for j in range(len(rtol)):
   for i in range(len(algs)):
     sys.stdout.write("H-adaptivity method %i tests (rtol = %g, atol = %g):" 
                      % (algs[i], rtol[j], atol[j]))
-    p = ark.SolParams(-1.0, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+    p = ark.SolParams(-1.0, -1, 0, -1, 0, algs[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
-    iret = check_tests(testsI[1],nsttol,ovtol);
+    iret = check_tests(testsI[2],nsttol,ovtol);
     ierr += iret
-    itot += len(testsI[1])
+    itot += len(testsI[2])
 
 # check predictor methods {0,1,2,3} (DIRK only)
 algs = (0,2);
@@ -159,12 +197,12 @@ for j in range(len(rtol)):
   for i in range(len(algs)):
     sys.stdout.write("Predictor method %i tests (rtol = %g, atol = %g):" 
                      % (algs[i], rtol[j], atol[j]))
-    p = ark.SolParams(-1.0, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
+    p = ark.SolParams(-1.0, -1, 0, -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, algs[i], 0, 0, 0, 0, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
-    iret = check_tests(testsI[1],nsttol,ovtol);
+    iret = check_tests(testsI[2],nsttol,ovtol);
     ierr += iret
-    itot += len(testsI[1])
+    itot += len(testsI[2])
 
 
 if (ierr == 0):
