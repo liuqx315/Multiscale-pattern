@@ -106,30 +106,30 @@ def random_hash():
 
 
 # set up a list of executable names to use in tests
-testsI3 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
-           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_brusselator1D.exe',
-           'ark_medakzo.exe', 'ark_rober.exe' )
-testsI4 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
-           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe', 
-           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_orego.exe',
-           'ark_pollu.exe', 'ark_ringmod.exe', 'ark_rober.exe', 'ark_vdpol.exe',
-           'ark_vdpolm.exe' )
-testsI5 = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
-           'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe', 
-           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_orego.exe',
-           'ark_pollu.exe', 'ark_rober.exe', 'ark_vdpol.exe' )
+testsI3 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+           './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe',
+           './ark_medakzo.exe', './ark_rober.exe' )
+testsI4 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+           './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
+           './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', './ark_vdpol.exe',
+           './ark_vdpolm.exe' )
+testsI5 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+           './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
+           './ark_pollu.exe', './ark_rober.exe', './ark_vdpol.exe' )
 testsI = (testsI3, testsI4, testsI5)
-testsE = ('ark_analytic.exe', 'ark_analytic_nonlin.exe', 'ark_analytic_nonlin_back.exe', 
-          'ark_analytic_sys.exe', 'ark_brusselator.exe' )
-testsA3 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
-           'ark_brusselator1D.exe', 'ark_medakzo.exe', 'ark_pollu.exe', 'ark_vdpol.exe', 
-           'ark_vdpolm.exe' )
-testsA4 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
-           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_pollu.exe',
-           'ark_vdpol.exe' )
-testsA5 = ('ark_analytic.exe', 'ark_analytic_sys.exe', 'ark_brusselator.exe', 'ark_bruss.exe',
-           'ark_brusselator1D.exe', 'ark_hires.exe', 'ark_medakzo.exe', 'ark_pollu.exe',
-           'ark_vdpol.exe', 'ark_vdpolm.exe' )
+testsE = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+          './ark_analytic_sys.exe', './ark_brusselator.exe' )
+testsA3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
+           './ark_brusselator1D.exe', './ark_medakzo.exe', './ark_pollu.exe', './ark_vdpol.exe', 
+           './ark_vdpolm.exe' )
+testsA4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
+           './ark_vdpol.exe' )
+testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
+           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
+           './ark_vdpol.exe', './ark_vdpolm.exe' )
 testsA = (testsA3, testsA4, testsA5)
 nsttol = 10;
 ovtol  = 0.01;
@@ -227,7 +227,7 @@ for j in range(len(rtol)):
 
 # write footer to page
 f.write("Note: step tolerance = %i; oversolve tolerance = %g\n" % (nsttol, ovtol))
-f.write("[\"oversolve\" is defined as tolerance/error (ideally greater than 1.0)\n")
+f.write("[\"oversolve\" is defined as tolerance/error (ideally greater than 1.0)]\n")
 
 
 # close output file
