@@ -137,10 +137,12 @@ int main()
     if (!idense) 
       flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    if (check_flag(&flag, "ARKode", 1)) break;
     if (flag >= 0) {
       tout += dTout;
       tout = (tout < Tf) ? Tf : tout;
+    } else {
+      fprintf(stderr,"Solver failure, stopping integration\n");
+      return(1);
     }
     u = NV_Ith_S(y,0);
     uerr = fabs(u - log(exp(3.0)+t+t*t*t/3.0));

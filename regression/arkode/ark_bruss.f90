@@ -188,8 +188,8 @@ program driver
      ! call solver
      call FARKode(Tout, Tcur, y, 1, ier)
      if (ier < 0) then
-        print *, 'Error at step ',it,', FARKode return flag =',ier
-        exit
+        write(0,*) 'Solver failure, stopping integration'
+        stop
      end if
 
      ! output current solution information

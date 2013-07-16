@@ -378,10 +378,12 @@ int main()
     if (!idense)
       flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);
-    if (check_flag(&flag, "ARKode", 1)) break;
     if (flag >= 0) {
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
+    } else {
+      fprintf(stderr,"Solver failure, stopping integration\n");
+      return(1);
     }
     u = N_VWL2Norm(y,umask);
     u = sqrt(u*u/N);

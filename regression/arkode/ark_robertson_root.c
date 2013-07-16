@@ -207,10 +207,14 @@ int main()
 	     rootsfound[0], rootsfound[1]);
     }
 
-    if (check_flag(&flag, "ARKode", 1)) break;
     if (flag == ARK_SUCCESS) {
       iout++;
       tout *= TMult;
+    }
+
+    if (flag < 0) {
+      fprintf(stderr,"Solver failure, stopping integration\n");
+      return(1);
     }
 
     if (iout == Nt) break;

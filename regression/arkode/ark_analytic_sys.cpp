@@ -179,6 +179,13 @@ int main()
     if (!idense)
       flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);   // call integrator
+    if (flag >= 0) {                                      // successful solve: update time
+      tout += dTout;
+      tout = (tout > Tf) ? Tf : tout;
+    } else {                                              // unsuccessful solve: break
+      cerr << "Solver failure, stopping integration\n";
+      return 1;
+    }
     if (check_flag(&flag, "ARKode", 1)) break;
     y0 = NV_Ith_S(y,0);                                   // access/print solution & error
     y1 = NV_Ith_S(y,1);
@@ -197,13 +204,6 @@ int main()
     Nt++;
     printf("  %8.4f  %8.5f  %8.5f  %8.5f  %10.3e  %10.3e  %10.3e\n", 
 	   t, y0, y1, y2, y0err, y1err, y2err);
-    if (flag >= 0) {                                      // successful solve: update time
-      tout += dTout;
-      tout = (tout > Tf) ? Tf : tout;
-    } else {                                              // unsuccessful solve: break
-      cerr << "Solver failure, stopping integration\n";
-      break;
-    }
   }
   err2 = sqrt(err2 / 3.0 / Nt);
   printf("   --------------------------------------------------------------------------\n");

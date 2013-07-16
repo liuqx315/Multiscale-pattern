@@ -320,21 +320,20 @@ int main(int argc, char* argv[]) {
     if (!idense)
       flag = ARKodeSetStopTime(arkode_mem, tout);
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         // call integrator 
-    if (check_flag(&flag, "ARKode", 1)) break;
-    urms = sqrt(N_VDotProd(y,y)/nx/ny);
-    N_VLinearSum( 1.0, ytrue, -1.0, y, yerr );
-    uerr = N_VDotProd(yerr,yerr);
-    errI = (errI > N_VMaxNorm(yerr)) ? errI : N_VMaxNorm(yerr);
-    err2 += uerr;                                               // print solution stats 
-    if (outproc) printf("  %10.6f  %10.6f  %12.5e\n", t, urms, sqrt(uerr/nx/ny));
     if (flag >= 0) {                                            // successful solve: update output time
       tout += dTout;
       tout = (tout > Tf) ? Tf : tout;
     } else {                                                    // unsuccessful solve: break 
       if (outproc)  
 	cerr << "Solver failure, stopping integration\n";
-      break;
+      return 1;
     }
+    urms = sqrt(N_VDotProd(y,y)/nx/ny);
+    N_VLinearSum( 1.0, ytrue, -1.0, y, yerr );
+    uerr = N_VDotProd(yerr,yerr);
+    errI = (errI > N_VMaxNorm(yerr)) ? errI : N_VMaxNorm(yerr);
+    err2 += uerr;                                               // print solution stats 
+    if (outproc) printf("  %10.6f  %10.6f  %12.5e\n", t, urms, sqrt(uerr/nx/ny));
 
     // output results to disk 
     for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[i]);
