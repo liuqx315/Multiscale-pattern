@@ -10,25 +10,22 @@ import arkode_tools as ark
 
 #### Utility functions ####
 
-def check_tests(testlist,nsttol,ovtol):
+def check_tests(testlist,ovtol):
     """ This routine takes in a string containing a set of      """
-    """ executable names, a tolerance on the minimum number of  """
-    """ steps that must be run to consider the test 'completed' """
-    """ and a tolerance on the allowable oversolve (larger is   """
-    """ better).  It then runs the desired tests, and checks    """
-    """ whether the tests pass.                                 """
+    """ executable names and a tolerance on the allowable       """
+    """ oversolve (larger is better).  It then runs the desired """
+    """ tests, and checks whether the tests pass.               """
     import shlex
     import os
     import subprocess
     iret = 0;
     for i in range(len(testlist)):
         tret = 0
-        [nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],0);
-        # check for nst >= nsttol (in case something fails at initialization)
-        if (nst < nsttol):
+        [fail,nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],0);
+        # check for test failure
+        if (fail == 1):
             tret = 1;
-            sys.stdout.write("\n  %30s \033[91m failure (too few steps: %i < %i)\033[0m" 
-                             % (testlist[i], nst, nsttol))
+            sys.stdout.write("\n  %30s \033[91m integration failure\033[0m" % (testlist[i]))
         # check for oversolve >= ovtol (fits within allowable error)
         if ((ov < ovtol) or (ov != ov)):
             tret = 1;
@@ -65,7 +62,6 @@ testsA4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.ex
 testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
            './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_vdpolm.exe' )
 testsA = (testsA3, testsA4, testsA5)
-nsttol = 10;
 ovtol  = 0.01;
 
 
@@ -82,13 +78,13 @@ for k in range(len(maas)):
       p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                          0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, maas[k], 50, 0.0, rtol[j], atol[j]);
       ark.write_parameter_file(p);
-      iret = check_tests(testsI[i],nsttol,ovtol);
+      iret = check_tests(testsI[i],ovtol);
 
       sys.stdout.write("ARK tests, order = %i, rtol = %g, maa = %i:" % (ords[i], rtol[j], maas[k]))
       p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                          0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, maas[k], 50, 0.0, rtol[j], atol[j]);
       ark.write_parameter_file(p);
-      iret = check_tests(testsA[i],nsttol,ovtol);
+      iret = check_tests(testsA[i],ovtol);
 
 
 

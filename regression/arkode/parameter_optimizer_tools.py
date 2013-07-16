@@ -8,21 +8,37 @@ import arkode_tools as ark
 import time as time
 
 ##########
-def run_cost(testname,CM):
-    """ This routine takes in a string containing an executable name  """
-    """ and a cost model array, runs that test sending all output to  """
-    """ a temporary file, processes that file to determine the        """
-    """ overall run statistics, and assesses a total run 'cost'.      """
+def run_cost(testname,baseline,CM):
+    """ This routine takes in a string containing an executable name, """
+    """ a baseline cost for that cost model, and a cost model array.  """
+    """ In then runs that test, sending all output to a temporary     """
+    """ file, processes that file to determine the overall run        """
+    """ statistics, and assesses a total run 'cost'.                  """
+    """                                                               """
+    """ Entries in the cost model array, CM:                          """
+    """    CM[0] -- cost per attempted step                           """
+    """    CM[1] -- cost per explicit function evaluation             """
+    """    CM[2] -- cost per implicit function evaluation             """
+    """    CM[3] -- cost per linear solver setup                      """
+    """    CM[4] -- cost per Jacobian evaluation routine              """
+    """    CM[5] -- cost per nonlinear solver iteration               """
+    """    CM[6] -- cost for over-solving the problem                 """
+    """    CM[7] -- cost for under-solving the problem                """
+    """    CM[8] -- cost for an integration failure                   """
     # run test and get statistics
-    [nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testname,0)
-    # generate total cost
-    cost = 1.0 + CM[0]*ast + CM[1]*nfe + CM[2]*(nfi+nfi_lset) + CM[4]*nJe
-    cost += CM[3]*lset + CM[5]*nnewt
-    if (ov < 1.0):   # undersolve
-        cost += CM[7]/ov
-    else:            # oversolve
-        cost += CM[6]*ov
-    return cost
+    [fail,nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testname,0)
+    # if the test failed, compute cost as a factor multiplied by the baseline
+    if (fail == 1):
+        cost = CM[8] * baseline
+    # otherwise, generate total cost from run statistics
+    else:
+        cost = 1.0 + CM[0]*ast + CM[1]*nfe + CM[2]*(nfi+nfi_lset) + CM[4]*nJe
+        cost += CM[3]*lset + CM[5]*nnewt
+        if (ov < 1.0):   # undersolve
+            cost += CM[7]/ov
+        else:            # oversolve
+            cost += CM[6]*ov
+    return cost / baseline
 
 ##########
 def set_baseline(tests,CM):
@@ -32,7 +48,7 @@ def set_baseline(tests,CM):
     """ returns an array containing the baseline costs of each test.    """
     baseline = [];
     for i in range(len(tests)):
-        baseline.append(run_cost(tests[i],CM));
+        baseline.append(run_cost(tests[i],1.0,CM));
     return baseline
 
 ##########
@@ -45,8 +61,8 @@ def calc_cost(tests,baseline,CM):
     totalcost = 0.0
     ntests = len(tests);
     for i in range(len(tests)):
-        cost = run_cost(tests[i],CM);
-        totalcost += cost/baseline[i]/ntests;
+        cost = run_cost(tests[i],baseline[i],CM);
+        totalcost += cost/ntests;
     return totalcost
 
 ##########
