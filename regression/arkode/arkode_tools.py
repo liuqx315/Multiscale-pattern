@@ -72,7 +72,17 @@ def run_test(testname,keep_output):
     out = open('output.txt','w')
     null = open(os.devnull, 'w')
     tstart = time()
-    subprocess.call(testname, stdout=out, stderr=null)
+    try:
+        subprocess.call(testname, stdout=out, stderr=null)
+    except OSError:
+        print 'run_test error running executable ', testname
+        print '   '
+        print 'os.stat() on the requested executable:'
+        os.stat(testname)
+        print '   '
+        print 'directory contents:'
+        os.listdir('.')
+        print '   '
     runtime = (time() - tstart)
     null.close()
     out.close()
