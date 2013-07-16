@@ -51,5 +51,5 @@ methods that comprise the ARKode solvers:
    Stability
    Mass_matrix
    Rootfinding
-
+   Butcher
 
