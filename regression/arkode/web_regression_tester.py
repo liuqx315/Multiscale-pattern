@@ -217,7 +217,7 @@ for j in range(len(rtol)):
     p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
-    iret = check_tests(testsIF[i],ovtol);
+    iret = run_tests(outdir,f,testsIF[i],ovtol);
 
 # check ARK method orders {3,4,5}
 ords = (3,4,5);
@@ -241,7 +241,7 @@ for j in range(len(rtol)):
     p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
-    iret = check_tests(testsAF[i],ovtol);
+    iret = run_tests(outdir,f,testsAF[i],ovtol);
     ierr += iret
     itot += len(testsAF[i])
 
