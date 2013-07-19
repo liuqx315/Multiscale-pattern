@@ -212,8 +212,8 @@ for j in range(len(rtol)):
 ords = (2,3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
-    sys.stdout.write("DIRK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
-                     % (ords[i], rtol[j], atol[j]))
+    test_string = "DIRK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
+                     % (ords[i], rtol[j], atol[j])
     p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
@@ -236,8 +236,8 @@ for j in range(len(rtol)):
 ords = (3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
-    sys.stdout.write("ARK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
-                     % (ords[i], rtol[j], atol[j]))
+    test_string = "ARK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
+                     % (ords[i], rtol[j], atol[j])
     p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
