@@ -101,31 +101,59 @@ def random_hash():
 
 
 # set up a list of executable names to use in tests
+testsI2 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+           './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe', 
+           './ark_heat1D.exe', './ark_pollu.exe' )
 testsI3 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe',
-           './ark_medakzo.exe', './ark_rober.exe' )
+           './ark_bruss.exe', './ark_heat1D.exe', './ark_medakzo.exe', './ark_pollu.exe', 
+           './ark_rober.exe', './ark_vdpol.exe' )
 testsI4 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
-           './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', './ark_vdpol.exe',
-           './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
+           './ark_orego.exe', './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', 
+           './ark_vdpol.exe', './ark_vdpolm.exe' )
 testsI5 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_orego.exe',
-           './ark_pollu.exe', './ark_rober.exe', './ark_vdpol.exe' )
-testsI = (testsI3, testsI4, testsI5)
-testsE = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
-          './ark_analytic_sys.exe', './ark_brusselator.exe' )
-testsA3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
-           './ark_brusselator1D.exe', './ark_medakzo.exe', './ark_pollu.exe', './ark_vdpol.exe', 
-           './ark_vdpolm.exe' )
-testsA4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
-           './ark_vdpol.exe' )
-testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe',
-           './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', './ark_pollu.exe',
-           './ark_vdpol.exe', './ark_vdpolm.exe' )
+           './ark_brusselator1D.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
+           './ark_pollu.exe', './ark_rober.exe', './ark_vdpol.exe', './ark_vdpolm.exe' )
+testsI = (testsI2, testsI3, testsI4, testsI5)
+
+testsIF2 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_heat1D.exe' )
+testsIF3 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
+            './ark_heat1D.exe', './ark_medakzo.exe' )
+testsIF4 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_heat1D.exe', 
+            './ark_medakzo.exe', './ark_ringmod.exe' )
+testsIF5 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
+            './ark_brusselator1D.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+testsIF = (testsIF2, testsIF3, testsIF4, testsIF5)
+
+testsA3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
+           './ark_bruss.exe', './ark_brusselator1D.exe', './ark_medakzo.exe', 
+           './ark_pollu.exe', './ark_vdpol.exe' )
+testsA4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
+           './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
+           './ark_pollu.exe', './ark_vdpol.exe' )
+testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
+           './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
+           './ark_pollu.exe', './ark_vdpol.exe' )
 testsA = (testsA3, testsA4, testsA5)
+
+testsAF3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_medakzo.exe' )
+testsAF4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+testsAF5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+testsAF = (testsAF3, testsAF4, testsAF5)
+
+testsE = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
+          './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_heat1D.exe' )
+
 ovtol  = 0.01;
 rtol = (1.e-3, 1.e-6);
 atol = (1.e-11, 1.e-11);
@@ -152,7 +180,7 @@ ark.write_parameter_file(p);
 pfile = outdir + "/solve_params-" + random_hash() + ".txt"
 shutil.copy("./solve_params.txt", pfile)
 f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-iret = run_tests(outdir,f,testsI[1],ovtol);
+iret = run_tests(outdir,f,testsI[2],ovtol);
 
 # check ERK method orders {2,3,4,5,6}
 ords = (2,3,4,5,6);
@@ -167,8 +195,8 @@ for j in range(len(rtol)):
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,testsE,ovtol);
 
-# check DIRK method orders {3,4,5}
-ords = (3,4,5);
+# check DIRK method orders {2,3,4,5}
+ords = (2,3,4,5);
 for j in range(len(rtol)):
   for i in range(len(ords)):
     test_string = "DIRK order %i tests (rtol = %g, atol = %g):" % (ords[i], rtol[j], atol[j])
@@ -179,6 +207,17 @@ for j in range(len(rtol)):
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,testsI[i],ovtol);
+
+# check DIRK (fixed-point solver) method orders {2,3,4,5}
+ords = (2,3,4,5);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    sys.stdout.write("DIRK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
+                     % (ords[i], rtol[j], atol[j]))
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
+    ark.write_parameter_file(p);
+    iret = check_tests(testsIF[i],ovtol);
 
 # check ARK method orders {3,4,5}
 ords = (3,4,5);
@@ -193,8 +232,21 @@ for j in range(len(rtol)):
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,testsA[i],ovtol);
 
+# check ARK (fixed-point solver) method orders {3,4,5}
+ords = (3,4,5);
+for j in range(len(rtol)):
+  for i in range(len(ords)):
+    sys.stdout.write("ARK order %i (fixed point solver) tests (rtol = %g, atol = %g):" 
+                     % (ords[i], rtol[j], atol[j]))
+    p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
+    ark.write_parameter_file(p);
+    iret = check_tests(testsAF[i],ovtol);
+    ierr += iret
+    itot += len(testsAF[i])
+
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
-algs = (0,2,3);
+algs = (0,1,2,3,4,5);
 for j in range(len(rtol)):
   for i in range(len(algs)):
     test_string = "H-adaptivity method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
@@ -204,10 +256,10 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsI[1],ovtol);
+    iret = run_tests(outdir,f,testsI[2],ovtol);
 
 # check predictor methods {0,1,2,3} (DIRK only)
-algs = (0,2);
+algs = (0,1,2,3);
 for j in range(len(rtol)):
   for i in range(len(algs)):
     test_string = "Predictor method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
@@ -217,7 +269,7 @@ for j in range(len(rtol)):
     pfile = outdir + "/solve_params-" + random_hash() + ".txt"
     shutil.copy("./solve_params.txt", pfile)
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
-    iret = run_tests(outdir,f,testsI[1],ovtol);
+    iret = run_tests(outdir,f,testsI[2],ovtol);
 
 # write footer to page
 f.write("Note: oversolve tolerance = %g\n" % (ovtol))
