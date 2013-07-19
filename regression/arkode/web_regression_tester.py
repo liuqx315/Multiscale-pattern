@@ -242,8 +242,6 @@ for j in range(len(rtol)):
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
     iret = run_tests(outdir,f,testsAF[i],ovtol);
-    ierr += iret
-    itot += len(testsAF[i])
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
 algs = (0,1,2,3,4,5);
