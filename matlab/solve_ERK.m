@@ -103,7 +103,7 @@ h = hmin;
 ewt = 1.0./(rtol*Ynew + atol);
 
 % reset time step controller
-h_estimate(0, 0, 0, 0, 0, hmethod, 1);
+h_estimate(0, 0, 0, 0, hmethod, 1);
 
 % initialize work counter
 nsteps = 0;
@@ -179,7 +179,7 @@ for tstep = 2:length(tvals)
 	 % for embedded methods, estimate error and update time step,
 	 % assuming that method local truncation error order equals number of stages
 	 if (embedded) 
-	    h = h_estimate(Ynew, Y2, h, ewt, q_method, hmethod, 0);
+	    h = h_estimate(Ynew-Y2, h, ewt, q_method, hmethod, 0);
 	 else
 	    h = hmin;
 	 end
