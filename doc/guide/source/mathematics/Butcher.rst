@@ -305,6 +305,10 @@ Implicit Butcher tables
 ---------------------------
 
 
+In the category of diagonally implicit Runge-Kutta methods, ARKode
+includes methods that have orders 2 through 5, with embeddings that are of
+orders 1 through 4.
+
 
 .. _Mathematics.Butcher.SDIRK-2-1:
 
@@ -591,8 +595,10 @@ default 5th order additive method.
 Additive Butcher tables
 ---------------------------
 
-The pairs of Butcher tables allowed within ARKode for performing
-an additive Runge-Kutta solve are:
+In the category of additive Runge-Kutta methods for split implicit and
+explicit calculations, ARKode includes methods that have orders 3
+through 5, with embeddings that are of orders 2 through 4.  These
+Butcher table pairs are as follows:
 
 * 3rd-order pair:  :ref:`Mathematics.Butcher.ARK_3_2_E` with
   :ref:`Mathematics.Butcher.ARK_3_2_I`, corresponding to Butcher

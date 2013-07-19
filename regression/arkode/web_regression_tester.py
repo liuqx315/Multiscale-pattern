@@ -216,6 +216,9 @@ for j in range(len(rtol)):
     p = ark.SolParams(-1.0, -1, ords[i], -1, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
+    pfile = outdir + "/solve_params-" + random_hash() + ".txt"
+    shutil.copy("./solve_params.txt", pfile)
+    f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,testsIF[i],ovtol);
 
 # check ARK method orders {3,4,5}
@@ -239,6 +242,9 @@ for j in range(len(rtol)):
     p = ark.SolParams(-1.0, -1, ords[i], -1, 2, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
                        0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 1, 3, 50, 0.0, rtol[j], atol[j]);
     ark.write_parameter_file(p);
+    pfile = outdir + "/solve_params-" + random_hash() + ".txt"
+    shutil.copy("./solve_params.txt", pfile)
+    f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,testsAF[i],ovtol);
 
 # check time step adaptivity methods {0,1,2,3,4,5} (DIRK only)
