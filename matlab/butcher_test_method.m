@@ -63,14 +63,25 @@ end
 
 % output results for method
 fprintf('\n  Results for %s:\n',mname);
-fprintf('      h           errI        err2\n');
-fprintf('  --------------------------------------\n')
+fprintf('      h           errI        err2        rate    cum. rate\n');
+fprintf('  -----------------------------------------------------------\n')
 for ih = 1:length(hvals)
    errI(ih) = m(ih,1);
    err2(ih) = m(ih,2);
-   fprintf('  %10.2e  %10.2e  %10.2e\n',hvals(ih),errI(ih),err2(ih))
+   if (ih == 1)
+      fprintf('  %10.2e  %10.2e  %10.2e\n',hvals(ih),errI(ih),err2(ih))
+   else
+      rate1 = log(errI(ih)/errI(ih-1)) / log(hvals(ih)/hvals(ih-1));
+      rate2 = log(err2(ih)/err2(ih-1)) / log(hvals(ih)/hvals(ih-1));
+      rate = (rate1+rate2)/2;
+      p1 = polyfit(log(hvals(1:ih)),log(errI(1:ih)),1);
+      p2 = polyfit(log(hvals(1:ih)),log(err2(1:ih)),1);
+      crate = (p1(1)+p2(1))/2;
+      fprintf('  %10.2e  %10.2e  %10.2e    %g    %g\n', ...
+              hvals(ih), errI(ih), err2(ih), rate, crate)
+   end
 end
-fprintf('  --------------------------------------\n')
+fprintf('  -----------------------------------------------------------\n')
 p1 = polyfit(log(hvals(2:end-2)),log(errI(2:end-2)),1);
 p2 = polyfit(log(hvals(2:end-2)),log(err2(2:end-2)),1);
 p = (p1(1)+p2(1))/2;
