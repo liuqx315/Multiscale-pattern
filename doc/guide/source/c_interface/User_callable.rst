@@ -1070,8 +1070,7 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 .. c:function:: int ARKodeSetOrder(void *arkode_mem, int ord)
 
-   Specifies the order of accuracy for the linear
-   multistep method.
+   Specifies the order of accuracy for the RK method.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
