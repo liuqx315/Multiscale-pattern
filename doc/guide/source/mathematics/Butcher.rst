@@ -89,7 +89,8 @@ the default 3rd order explicit method.
 ARK3(2)4L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 2 for :func:`ARKodeSetERKTableNum()`.
+Butcher table number 2 for :func:`ARKodeSetERKTableNum()`.  This is
+the explicit portion of the default 3rd order additive method.
 
 .. math::
 
@@ -131,7 +132,8 @@ the default 4th order explicit method.
 ARK4(3)6L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 4 for :func:`ARKodeSetERKTableNum()`.
+Butcher table number 4 for :func:`ARKodeSetERKTableNum()`.  This is
+the explicit portion of the default 4th order additive method.
 
 .. math::
 
@@ -189,8 +191,8 @@ the default 5th order explicit method.
      1 & -11/54 & 5/2 & -70/27 & 35/27 & 0 & 0 \\
      7/8 & 1631/55296 & 175/512 & 575/13824 & 44275/110592 & 253/4096 & 0 \\
      \hline
-     5 & 37/348 & 0 & 250/621 & 125/594 & 0 & 512/1771 \\
-     4 & 2825/27648 & 0 & 18575/48384 & 13525/55296 & 277/14336 & 1/4
+     5 & 2825/27648 & 0 & 18575/48384 & 13525/55296 & 277/14336 & 1/4 \\
+     4 & 37/348 & 0 & 250/621 & 125/594 & 0 & 512/1771
    \end{array}
 
 
@@ -213,8 +215,8 @@ Butcher table number 7 for :func:`ARKodeSetERKTableNum()`.
      1 & 439/216 & -8 & 3680/513 & -845/4104 & 0 & 0 \\
      1/2 & -8/27 & 2 & -3544/2565 & 1859/4104 & -11/40 & 0 \\
      \hline
-     5 & 25/216 & 0 & 1408/2565 & 2197/4104 & -1/5 & 0 \\
-     4 & 16/135 & 0 & 6656/12825 & 28561/56430 & -9/50 & 2/55
+     5 & 16/135 & 0 & 6656/12825 & 28561/56430 & -9/50 & 2/55 \\
+     4 & 25/216 & 0 & 1408/2565 & 2197/4104 & -1/5 & 0
    \end{array}
 
 
@@ -248,7 +250,8 @@ Butcher table number 8 for :func:`ARKodeSetERKTableNum()`.
 ARK5(4)8L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 9 for :func:`ARKodeSetERKTableNum()`.
+Butcher table number 9 for :func:`ARKodeSetERKTableNum()`.  This is
+the explicit portion of the default 5th order additive method.
 
 .. math::
 
@@ -392,7 +395,8 @@ the default 3rd order implicit method.
 ARK3(2)4L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 15 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 15 for :func:`ARKodeSetIRKTableNum()`.  This is
+the implicit portion of the default 3rd order additive method.
 
 .. math::
 
@@ -507,7 +511,8 @@ Butcher table number 19 for :func:`ARKodeSetIRKTableNum()`.
 ARK4(3)6L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 20 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 20 for :func:`ARKodeSetIRKTableNum()`.  This is
+the implicit portion of the default 4th order additive method.
 
 .. math::
 
@@ -557,7 +562,8 @@ ARK5(4)8L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Butcher table number 22 for :func:`ARKodeSetIRKTableNum()`.  This is
-the default 5th order implicit method.
+the default 5th order implicit method, and the implicit portion of the
+default 5th order additive method. 
 
 .. math::
 
