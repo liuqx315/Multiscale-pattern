@@ -2748,7 +2748,7 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(3):    /* Bogacki-Shampine: q=3, p=2, s=4 */
-      ARKodeLoadButcherTable(2, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(1, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -2758,7 +2758,7 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(4):    /* Zonneveld: q=4, p=3, s=5 */
-      ARKodeLoadButcherTable(5, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(3, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -2768,7 +2768,7 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(5):    /* Cash-Karp: q=5, p=4, s=6 */
-      ARKodeLoadButcherTable(8, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(6, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -2778,7 +2778,7 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(6):    /* Verner: q=6, p=5, s=8 */
-      ARKodeLoadButcherTable(12, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(10, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
@@ -2807,7 +2807,7 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
     switch (ark_mem->ark_q) {
 
     case(2):    /* SDIRK-2-1: q=2, p=1, s=2 */
-      ARKodeLoadButcherTable(13, &ark_mem->ark_stages,
+      ARKodeLoadButcherTable(11, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
     			     ark_mem->ark_Ai,
@@ -2816,7 +2816,15 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
     			     ark_mem->ark_b2);
       break;
 
-    case(3):    /* Billington: q=3, p=2, s=3 */
+    /* case(3):    /\* Billington: q=3, p=2, s=3 *\/ */
+    /*   ARKodeLoadButcherTable(12, &ark_mem->ark_stages, */
+    /* 			     &q, */
+    /* 			     &ark_mem->ark_p, */
+    /* 			     ark_mem->ark_Ai, */
+    /* 			     ark_mem->ark_b, */
+    /* 			     ark_mem->ark_c, */
+    /* 			     ark_mem->ark_b2); */
+    case(3):    /* Kvaerno(4,2,3): q=3, p=2, s=4 */
       ARKodeLoadButcherTable(14, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
@@ -2827,7 +2835,7 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(4):    /* SDIRK-5-4: q=4, p=3, s=5, A/L stable */
-      ARKodeLoadButcherTable(21, &ark_mem->ark_stages,
+      ARKodeLoadButcherTable(18, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
     			     ark_mem->ark_Ai,
@@ -2836,8 +2844,16 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
     			     ark_mem->ark_b2);
       break;
 
-    case(5):    /* Kvaerno(7,4,5): q=5, p=4, s=7, A/L stable */
-      ARKodeLoadButcherTable(26, &ark_mem->ark_stages,
+    /* case(5):    /\* Kvaerno(7,4,5): q=5, p=4, s=7, A/L stable *\/ */
+    /*   ARKodeLoadButcherTable(21, &ark_mem->ark_stages, */
+    /* 			     &q, */
+    /* 			     &ark_mem->ark_p, */
+    /* 			     ark_mem->ark_Ai, */
+    /* 			     ark_mem->ark_b, */
+    /* 			     ark_mem->ark_c, */
+    /* 			     ark_mem->ark_b2); */
+    case(5):    /* ARK5(4)8L[2]SA: q=5, p=4, s=8, A stable */
+      ARKodeLoadButcherTable(22, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
     			     ark_mem->ark_Ai,
@@ -2867,14 +2883,14 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
 
     case(2):
     case(3):    /* ARK3(2)4L[2]SA: q=3, p=2, s=4, DIRK is A/L stable */
-      ARKodeLoadButcherTable(3, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(2, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
 			     ark_mem->ark_b2);
-      ARKodeLoadButcherTable(17, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(15, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
@@ -2884,14 +2900,14 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(4):    /* ARK4(3)6L[2]SA: q=4, p=3, s=6, DIRK is A/L stable */
-      ARKodeLoadButcherTable(6, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(4, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
 			     ark_mem->ark_b2);
-      ARKodeLoadButcherTable(23, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(20, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 
@@ -2901,14 +2917,14 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
       break;
 
     case(5):    /* ARK5(4)8L[2]SA: q=5, p=4, s=8, DIRK is A stable */
-      ARKodeLoadButcherTable(11, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(9, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ae, 
 			     ark_mem->ark_b, 
 			     ark_mem->ark_c, 
 			     ark_mem->ark_b2);
-      ARKodeLoadButcherTable(27, &ark_mem->ark_stages, 
+      ARKodeLoadButcherTable(22, &ark_mem->ark_stages, 
 			     &q, 
 			     &ark_mem->ark_p, 
 			     ark_mem->ark_Ai, 

@@ -48,6 +48,9 @@ orders 1 through 5.
 Heun-Euler
 ^^^^^^^^^^^^
 
+Butcher table number 0 for :func:`ARKodeSetERKTableNum()`.  This is
+the default 2nd order explicit method.
+
 .. math::
 
    \begin{array}{r|cc}
@@ -60,28 +63,13 @@ Heun-Euler
 
 
 
-.. _Mathematics.Butcher.ERK3_2:
-
-ERK-3-2
-^^^^^^^^^^^^
-
-.. math::
-
-   \begin{array}{r|ccc}
-     0   & 0 & 0 & 0 \\
-     1/2 & 1/2 & 0 & 0 \\
-     1   & -1 & 2 & 0 \\
-     \hline
-     3 & 1/6 & 2/3 & 1/6 \\
-     2 & 0 & 1 & 0
-   \end{array}
-
-
-
 .. _Mathematics.Butcher.Bogacki_Shampine:
 
 Bogacki-Shampine
 ^^^^^^^^^^^^^^^^^^
+
+Butcher table number 1 for :func:`ARKodeSetERKTableNum()`.  This is
+the default 3rd order explicit method.
 
 .. math::
 
@@ -101,6 +89,8 @@ Bogacki-Shampine
 ARK3(2)4L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 2 for :func:`ARKodeSetERKTableNum()`.
+
 .. math::
 
    \begin{array}{r|cccc}
@@ -114,29 +104,13 @@ ARK3(2)4L[2]SA (explicit)
    \end{array}
 
 
-.. _Mathematics.Butcher.Merson:
-
-Merson
-^^^^^^^^^^^^
-
-.. math::
-
-   \begin{array}{r|ccccc}
-       0 & 0 & 0 & 0 & 0 & 0 \\
-     1/3 & 1/3 & 0 & 0 & 0 & 0 \\
-     1/3 & 1/6 & 1/6 & 0 & 0 & 0 \\
-     1/2 & 1/8 & 0 & 3/8 & 0 & 0 \\
-       1 & 5 & 0 & -3/2 & 2 & 0 \\
-     \hline
-     4 & 1/6 & 0 & 0 & 2/3 & 1/6 \\
-     3 & 1/10 & 0 & 3/10 & 2/5 & 1/5
-   \end{array}
-
-
 .. _Mathematics.Butcher.Zonneveld:
 
 Zonneveld
 ^^^^^^^^^^^^
+
+Butcher table number 3 for :func:`ARKodeSetERKTableNum()`.  This is
+the default 4th order explicit method.
 
 .. math::
 
@@ -157,6 +131,8 @@ Zonneveld
 ARK4(3)6L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 4 for :func:`ARKodeSetERKTableNum()`.
+
 .. math::
 
    \begin{array}{r|cccccc}
@@ -172,10 +148,12 @@ ARK4(3)6L[2]SA (explicit)
    \end{array}
 
 
-.. _Mathematics.Butcher.Sayfy_Aburub_E:
+.. _Mathematics.Butcher.Sayfy_Aburub:
 
-Sayfy-Aburub-4-3 (explicit)
+Sayfy-Aburub-4-3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 5 for :func:`ARKodeSetERKTableNum()`.
 
 .. math::
 
@@ -197,6 +175,9 @@ Sayfy-Aburub-4-3 (explicit)
 
 Cash-Karp
 ^^^^^^^^^^^^
+
+Butcher table number 6 for :func:`ARKodeSetERKTableNum()`.  This is
+the default 5th order explicit method.
 
 .. math::
 
@@ -220,6 +201,8 @@ Cash-Karp
 Fehlberg
 ^^^^^^^^^^^^
 
+Butcher table number 7 for :func:`ARKodeSetERKTableNum()`.
+
 .. math::
 
    \begin{array}{r|cccccc}
@@ -240,6 +223,8 @@ Fehlberg
 
 Dormand-Prince
 ^^^^^^^^^^^^^^^^^
+
+Butcher table number 8 for :func:`ARKodeSetERKTableNum()`.
 
 .. math::
 
@@ -262,6 +247,8 @@ Dormand-Prince
 
 ARK5(4)8L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 9 for :func:`ARKodeSetERKTableNum()`.
 
 .. math::
 
@@ -286,6 +273,9 @@ ARK5(4)8L[2]SA (explicit)
 
 Verner-6-5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 10 for :func:`ARKodeSetERKTableNum()`.  This is
+the default 6th order explicit method.
 
 .. math::
 
@@ -315,8 +305,11 @@ Implicit Butcher tables
 
 .. _Mathematics.Butcher.SDIRK-2-1:
 
-SDIRK-2-1
+SDIRK 2(1)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 11 for :func:`ARKodeSetIRKTableNum()`.  This is
+the default 2nd order implicit method.
 
 .. math::
 
@@ -334,6 +327,8 @@ SDIRK-2-1
 
 Billington
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 12 for :func:`ARKodeSetIRKTableNum()`.
 
 .. math::
 
@@ -354,6 +349,8 @@ Billington
 TRBDF2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.
+
 .. math::
 
    \begin{array}{r|ccc}
@@ -368,28 +365,13 @@ TRBDF2
 
 
 
-.. _Mathematics.Butcher.TRX2:
-
-TRX2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. math::
-
-   \begin{array}{r|ccc}
-     0 & 0 & 0 & 0 \\
-     1/2 & 1/4 & 1/4 & 0 \\
-     1 & 1/4 & 1/2 & 1/4 \\
-     \hline
-     3 & 1/6 & 2/3 & 1/6 \\
-     2 & 1/4 & 1/2 & 1/4
-   \end{array}
-
-
-
 .. _Mathematics.Butcher.Kvaerno_4_2_3:
 
 Kvaerno(4,2,3)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.  This is
+the default 3rd order implicit method.
 
 .. math::
 
@@ -410,6 +392,8 @@ Kvaerno(4,2,3)
 ARK3(2)4L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 15 for :func:`ARKodeSetIRKTableNum()`.
+
 .. math::
 
    \begin{array}{r|cccc}
@@ -429,6 +413,8 @@ ARK3(2)4L[2]SA (implicit)
 
 Cash(5,2,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.
 
 .. math::
 
@@ -451,6 +437,8 @@ Cash(5,2,4)
 Cash(5,3,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 17 for :func:`ARKodeSetIRKTableNum()`.
+
 .. math::
 
    \begin{array}{r|ccccc}
@@ -468,8 +456,11 @@ Cash(5,3,4)
 
 .. _Mathematics.Butcher.SDIRK-5-4:
 
-SDIRK-5-4
+SDIRK 5(4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 18 for :func:`ARKodeSetIRKTableNum()`.  This is
+the default 4th order implicit method.
 
 .. math::
 
@@ -493,6 +484,8 @@ SDIRK-5-4
 Kvaerno(5,3,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 19 for :func:`ARKodeSetIRKTableNum()`.
+
 .. math::
 
    \begin{array}{r|ccccc}
@@ -514,6 +507,8 @@ Kvaerno(5,3,4)
 ARK4(3)6L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Butcher table number 20 for :func:`ARKodeSetIRKTableNum()`.
+
 .. math::
 
    \begin{array}{r|cccccc}
@@ -531,55 +526,12 @@ ARK4(3)6L[2]SA (implicit)
 
 
 
-.. _Mathematics.Butcher.Sayfy_Aburub_I:
-
-Sayfy-Aburub-4-3 (implicit)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. math::
-
-   \begin{array}{r|cccccc}
-     0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-     1/2 & 1 & 0.788675134594813 & 0 & 0 & 0 & 0 \\
-     1 & 2.943375672974064 & -2.732050807568877 & 0.788675134594813 & 0 & 0 & 0 \\
-     1 & 1/6 & 2/3 & 1/6 & 0 & 0 & 0 \\
-     1/2 & -0.423883252702594 & 0.20464164 & 0.719241612702594 & 0 & 1.9318 & 0 \\
-     1 & 2.695533010810374 & -5.391066021620748 & 1.695533010810374 & 0 & 2 & 1.9318 \\
-     \hline
-     4 & 1/6 & 1/3 & 1/12 & 0 & 1/3 & 1/12 \\
-     3 & 1/6 & 2/3 & 1/6 & 0 & 0 & 0
-   \end{array}
-
-
-
-
-.. _Mathematics.Butcher.Ismail_7_4_5:
-
-Ismail(7,4,5)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. math::
-
-   \begin{array}{r|ccccccc}
-     0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-     0.57178 & 0.28589  & 0.28589  & 0 & 0 & 0 & 0 & 0 \\
-     1.352846005375866 & 0.142945000375866  & 0.924011005  & 0.28589  & 0 & 0 & 0 & 0 \\
-     0.4 & 0.168035986  & -0.04941651  & -0.004509476  & 0.28589  & 0 & 0 & 0 \\
-     0.75 & 0.182315003  & -0.112951603  & -0.027793233  & 0.422539833  & 0.28589  & 0 & 0 \\
-     0.9 & 0.247563917  & -0.425378071  & -0.107036282  & 0.395700134  & 0.503260302  & 0.28589  & 0 \\
-     1 & 0.130018035 & 0 & -0.019290177 & 0.535386266 & 0.234313169 & -0.166317293 & 0.28589 \\
-     \hline
-     5 & 0.130018035 & 0 & -0.019290177 & 0.535386266 & 0.234313169 & -0.166317293 & 0.28589 \\
-     4 & -0.094388662 & 0 & -0.039782614 & 0.745608552 & -0.505129807 & 0.704915206 & 0.28589
-   \end{array}
-
-
-
-
 .. _Mathematics.Butcher.Kvaerno_7_4_5:
 
 Kvaerno(7,4,5)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 21 for :func:`ARKodeSetIRKTableNum()`.
 
 .. math::
 
@@ -603,6 +555,9 @@ Kvaerno(7,4,5)
 
 ARK5(4)8L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Butcher table number 22 for :func:`ARKodeSetIRKTableNum()`.  This is
+the default 5th order implicit method.
 
 .. math::
 
@@ -633,9 +588,15 @@ Additive Butcher tables
 The pairs of Butcher tables allowed within ARKode for performing
 an additive Runge-Kutta solve are:
 
-* :ref:`Mathematics.Butcher.ARK_3_2_E` with :ref:`Mathematics.Butcher.ARK_3_2_I`
+* 3rd-order pair:  :ref:`Mathematics.Butcher.ARK_3_2_E` with
+  :ref:`Mathematics.Butcher.ARK_3_2_I`, corresponding to Butcher
+  tables 2 and 15 for :func:`ARKodeSetARKTableNum()`.
 
-* :ref:`Mathematics.Butcher.ARK_4_3_E` with  :ref:`Mathematics.Butcher.ARK_4_3_I`, and
+* 4th-order pair:  :ref:`Mathematics.Butcher.ARK_4_3_E` with
+  :ref:`Mathematics.Butcher.ARK_4_3_I`, corresponding to Butcher 
+  tables 4 and 20 for :func:`ARKodeSetARKTableNum()`. 
 
-* :ref:`Mathematics.Butcher.ARK_5_4_E` with :ref:`Mathematics.Butcher.ARK_5_4_I`
+* 5th-order pair:  :ref:`Mathematics.Butcher.ARK_5_4_E` with
+  :ref:`Mathematics.Butcher.ARK_5_4_I`, corresponding to Butcher
+  tables 9 and 22 for :func:`ARKodeSetARKTableNum()`
 

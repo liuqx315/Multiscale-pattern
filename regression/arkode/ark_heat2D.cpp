@@ -377,8 +377,8 @@ int main(int argc, char* argv[]) {
     cout << "   Total linear solver setups = " << nsetups << "\n";
     cout << "   Total linear iterations = " << nli << "\n";
     cout << "   Total number of Jacobian-vector products = " << nJv << "\n";
-    cout << "   Total number of Preconditioner setups = " << npe << "\n";
-    cout << "   Total number of Preconditioner solves = " << nps << "\n";
+    cout << "   Total number of preconditioner setup = " << npe << "\n";
+    cout << "   Total number of preconditioner solve = " << nps << "\n";
     cout << "   Total number of linear solver convergence failures = " << nlcf << "\n";
     cout << "   Total number of Nonlinear iterations = " << nni << "\n";
     cout << "   Total number of nonlinear solver convergence failures = " << ncfn << "\n";

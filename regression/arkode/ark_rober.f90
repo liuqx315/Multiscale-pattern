@@ -120,9 +120,9 @@ program driver
      else if (imex == 1) then
         call FARKSetIin('ERK_TABLE_NUM', btable, ier)
      else 
-        if (btable == 3)   btable2 = (/ btable, 16_8 /)
-        if (btable == 6)   btable2 = (/ btable, 22_8 /)
-        if (btable == 11)  btable2 = (/ btable, 26_8 /)
+        if (btable == 2)  btable2 = (/ btable, 15_8 /)
+        if (btable == 4)  btable2 = (/ btable, 20_8 /)
+        if (btable == 9)  btable2 = (/ btable, 22_8 /)
         call FARKSetIin('ARK_TABLE_NUM', btable2, ier)
      end if
   end if
