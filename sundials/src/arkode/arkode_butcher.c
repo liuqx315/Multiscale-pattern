@@ -45,6 +45,7 @@
      8    Dormand-Prince      ERK   7   5   4   -   - 
      9*   ARK5(4)8L[2]SA      ERK   8   5   4   -   - 
     10    Verner-6-5          ERK   8   6   5   -   - 
+          Fehlberg-8-7        ERK   13  8   7   -   - 
     11    SDIRK-2-1         SDIRK   2   2   1   X   - 
     12    Billington        SDIRK   3   3   2   -   - *not recommended
     13    TRBDF2           ESDIRK   3   3   2   -   - *not recommended
@@ -56,7 +57,7 @@
     19    Kvaerno(5,3,4)   ESDIRK   5   4   3   X   - 
     20*   ARK4(3)6L[2]SA   ESDIRK   6   4   3   X   X 
     21    Kvaerno(7,4,5)   ESDIRK   7   5   4   X   X 
-    22*   ARK5(4)8L[2]SA   ESDIRK   8   5   4   X   - 
+    22*   ARK5(4)8L[2]SA   ESDIRK   8   5   4   X   X 
   -----------------------------------------------------------------
 
 ---------------------------------------------------------------*/
@@ -267,16 +268,16 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     ARK_A(A,5,3) = RCONST(44275.0)/RCONST(110592.0);
     ARK_A(A,5,4) = RCONST(253.0)/RCONST(4096.0);
 
-    b[0] = RCONST(37.0)/RCONST(378.0);
-    b[2] = RCONST(250.0)/RCONST(621.0);
-    b[3] = RCONST(125.0)/RCONST(594.0);
-    b[5] = RCONST(512.0)/RCONST(1771.0);
+    b[0] = RCONST(2825.0)/RCONST(27648.0);
+    b[2] = RCONST(18575.0)/RCONST(48384.0);
+    b[3] = RCONST(13525.0)/RCONST(55296.0);
+    b[4] = RCONST(277.0)/RCONST(14336.0);
+    b[5] = RCONST(1.0)/RCONST(4.0);
 
-    b2[0] = RCONST(2825.0)/RCONST(27648.0);
-    b2[2] = RCONST(18575.0)/RCONST(48384.0);
-    b2[3] = RCONST(13525.0)/RCONST(55296.0);
-    b2[4] = RCONST(277.0)/RCONST(14336.0);
-    b2[5] = RCONST(1.0)/RCONST(4.0);
+    b2[0] = RCONST(37.0)/RCONST(378.0);
+    b2[2] = RCONST(250.0)/RCONST(621.0);
+    b2[3] = RCONST(125.0)/RCONST(594.0);
+    b2[5] = RCONST(512.0)/RCONST(1771.0);
 
     c[1] = RCONST(1.0)/RCONST(5.0);
     c[2] = RCONST(3.0)/RCONST(10.0);
@@ -305,17 +306,17 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     ARK_A(A,5,3) = RCONST(1859.0)/RCONST(4104.0);
     ARK_A(A,5,4) = RCONST(-11.0)/RCONST(40.0);
 
-    b[0] = RCONST(25.0)/RCONST(216.0);
-    b[2] = RCONST(1408.0)/RCONST(2565.0);
-    b[3] = RCONST(2197.0)/RCONST(4104.0);
-    b[4] = RCONST(-1.0)/RCONST(5.0);
-      
-    b2[0] = RCONST(16.0)/RCONST(135.0);
-    b2[2] = RCONST(6656.0)/RCONST(12825.0);
-    b2[3] = RCONST(28561.0)/RCONST(56430.0);
-    b2[4] = RCONST(-9.0)/RCONST(50.0);
-    b2[5] = RCONST(2.0)/RCONST(55.0);
+    b[0] = RCONST(16.0)/RCONST(135.0);
+    b[2] = RCONST(6656.0)/RCONST(12825.0);
+    b[3] = RCONST(28561.0)/RCONST(56430.0);
+    b[4] = RCONST(-9.0)/RCONST(50.0);
+    b[5] = RCONST(2.0)/RCONST(55.0);
 
+    b2[0] = RCONST(25.0)/RCONST(216.0);
+    b2[2] = RCONST(1408.0)/RCONST(2565.0);
+    b2[3] = RCONST(2197.0)/RCONST(4104.0);
+    b2[4] = RCONST(-1.0)/RCONST(5.0);
+      
     c[1] = RCONST(1.0)/RCONST(4.0);
     c[2] = RCONST(3.0)/RCONST(8.0);
     c[3] = RCONST(12.0)/RCONST(13.0);
@@ -473,6 +474,95 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     c[6] = RCONST(1.0)/RCONST(15.0);
     c[7] = RCONST(1.0);
     break;
+
+  /* case(??):    /\* Fehlberg-8-7 *\/ */
+  /*   *s = 13; */
+  /*   *q = 8; */
+  /*   *p = 7; */
+  /*   ARK_A(A,1,0) = RCONST(2.0)/RCONST(27.0); */
+  /*   ARK_A(A,2,0) = RCONST(1.0)/RCONST(36.0); */
+  /*   ARK_A(A,2,1) = RCONST(1.0)/RCONST(12.0); */
+  /*   ARK_A(A,3,0) = RCONST(1.0)/RCONST(24.0); */
+  /*   ARK_A(A,3,2) = RCONST(1.0)/RCONST(8.0); */
+  /*   ARK_A(A,4,0) = RCONST(5.0)/RCONST(12.0); */
+  /*   ARK_A(A,4,2) = RCONST(-25.0)/RCONST(16.0); */
+  /*   ARK_A(A,4,3) = RCONST(25.0)/RCONST(16.0); */
+  /*   ARK_A(A,5,0) = RCONST(1.0)/RCONST(20.0); */
+  /*   ARK_A(A,5,3) = RCONST(1.0)/RCONST(4.0); */
+  /*   ARK_A(A,5,4) = RCONST(1.0)/RCONST(5.0); */
+  /*   ARK_A(A,6,0) = RCONST(-25.0)/RCONST(108.0); */
+  /*   ARK_A(A,6,3) = RCONST(125.0)/RCONST(108.0); */
+  /*   ARK_A(A,6,4) = RCONST(-65.0)/RCONST(27.0); */
+  /*   ARK_A(A,6,5) = RCONST(125.0)/RCONST(54.0); */
+  /*   ARK_A(A,7,0) = RCONST(31.0)/RCONST(300.0); */
+  /*   ARK_A(A,7,4) = RCONST(61.0)/RCONST(225.0); */
+  /*   ARK_A(A,7,5) = RCONST(-2.0)/RCONST(9.0); */
+  /*   ARK_A(A,7,6) = RCONST(13.0)/RCONST(900.0); */
+  /*   ARK_A(A,8,0) = RCONST(2.0); */
+  /*   ARK_A(A,8,3) = RCONST(-53.0)/RCONST(6.0); */
+  /*   ARK_A(A,8,4) = RCONST(704.0)/RCONST(45.0); */
+  /*   ARK_A(A,8,5) = RCONST(-107.0)/RCONST(9.0); */
+  /*   ARK_A(A,8,6) = RCONST(67.0)/RCONST(90.0); */
+  /*   ARK_A(A,8,7) = RCONST(3.0); */
+  /*   ARK_A(A,9,0) = RCONST(-91.0)/RCONST(108.0); */
+  /*   ARK_A(A,9,3) = RCONST(23.0)/RCONST(108.0); */
+  /*   ARK_A(A,9,4) = RCONST(-976.0)/RCONST(135.0); */
+  /*   ARK_A(A,9,5) = RCONST(311.0)/RCONST(54.0); */
+  /*   ARK_A(A,9,6) = RCONST(-19.0)/RCONST(60.0); */
+  /*   ARK_A(A,9,7) = RCONST(17.0)/RCONST(6.0); */
+  /*   ARK_A(A,9,8) = RCONST(-1.0)/RCONST(12.0); */
+  /*   ARK_A(A,10,0) = RCONST(2383.0)/RCONST(4100.0); */
+  /*   ARK_A(A,10,3) = RCONST(-341.0)/RCONST(164.0); */
+  /*   ARK_A(A,10,4) = RCONST(4496.0)/RCONST(1025.0); */
+  /*   ARK_A(A,10,5) = RCONST(-301.0)/RCONST(82.0); */
+  /*   ARK_A(A,10,6) = RCONST(2133.0)/RCONST(4100.0); */
+  /*   ARK_A(A,10,7) = RCONST(45.0)/RCONST(82.0); */
+  /*   ARK_A(A,10,8) = RCONST(45.0)/RCONST(164.0); */
+  /*   ARK_A(A,10,9) = RCONST(18.0)/RCONST(41.0); */
+  /*   ARK_A(A,11,0) = RCONST(3.0)/RCONST(205.0); */
+  /*   ARK_A(A,11,5) = RCONST(-6.0)/RCONST(41.0); */
+  /*   ARK_A(A,11,6) = RCONST(-3.0)/RCONST(205.0); */
+  /*   ARK_A(A,11,7) = RCONST(-3.0)/RCONST(41.0); */
+  /*   ARK_A(A,11,8) = RCONST(3.0)/RCONST(41.0); */
+  /*   ARK_A(A,11,9) = RCONST(6.0)/RCONST(41.0); */
+  /*   ARK_A(A,12,0) = RCONST(-1777.0)/RCONST(4100.0); */
+  /*   ARK_A(A,12,3) = RCONST(-341.0)/RCONST(164.0); */
+  /*   ARK_A(A,12,4) = RCONST(4496.0)/RCONST(1025.0); */
+  /*   ARK_A(A,12,5) = RCONST(-289.0)/RCONST(82.0); */
+  /*   ARK_A(A,12,6) = RCONST(2193.0)/RCONST(4100.0); */
+  /*   ARK_A(A,12,7) = RCONST(51.0)/RCONST(82.0); */
+  /*   ARK_A(A,12,8) = RCONST(33.0)/RCONST(164.0); */
+  /*   ARK_A(A,12,9) = RCONST(12.0)/RCONST(41.0); */
+  /*   ARK_A(A,12,11) = RCONST(1.0); */
+
+  /*   b[5]  = RCONST(34.0)/RCONST(105.0); */
+  /*   b[6]  = RCONST(9.0)/RCONST(35.0); */
+  /*   b[7]  = RCONST(9.0)/RCONST(35.0); */
+  /*   b[8]  = RCONST(9.0)/RCONST(280.0); */
+  /*   b[9]  = RCONST(9.0)/RCONST(280.0); */
+  /*   b[11] = RCONST(41.0)/RCONST(840.0); */
+  /*   b[12] = RCONST(41.0)/RCONST(840.0); */
+
+  /*   b2[0]  = RCONST(41.0)/RCONST(840.0); */
+  /*   b2[5]  = RCONST(34.0)/RCONST(105.0); */
+  /*   b2[6]  = RCONST(9.0)/RCONST(35.0); */
+  /*   b2[7]  = RCONST(9.0)/RCONST(35.0); */
+  /*   b2[8]  = RCONST(9.0)/RCONST(280.0); */
+  /*   b2[9]  = RCONST(9.0)/RCONST(280.0); */
+  /*   b2[10] = RCONST(41.0)/RCONST(840.0); */
+
+  /*   c[1]  = RCONST(2.0)/RCONST(27.0);  */
+  /*   c[2]  = RCONST(1.0)/RCONST(9.0); */
+  /*   c[3]  = RCONST(1.0)/RCONST(6.0); */
+  /*   c[4]  = RCONST(5.0)/RCONST(12.0); */
+  /*   c[5]  = RCONST(1.0)/RCONST(2.0); */
+  /*   c[6]  = RCONST(5.0)/RCONST(6.0); */
+  /*   c[7]  = RCONST(1.0)/RCONST(6.0); */
+  /*   c[8]  = RCONST(2.0)/RCONST(3.0); */
+  /*   c[9]  = RCONST(1.0)/RCONST(3.0); */
+  /*   c[10] = RCONST(1.0); */
+  /*   c[12] = RCONST(1.0); */
+  /*   break; */
 
   case(11):   /* SDIRK-2-1 (A,B stable) */
     *s = 2;
