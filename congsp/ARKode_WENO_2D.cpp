@@ -595,8 +595,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	    //if (i==0&j==0){
             for(k=0;k<4;k++){
                // yxdata[idx(i, j, Nx, Ny, k)]=-(1.0/dx)*((u_tpphx[k]-u_tpnhx[k])+(u_tnphx[k]-u_tnnhx[k]));
-	      yxdata[idx(i+1, j, Nx, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
-	      yxdata[idx(i, j, Nx, Ny, k)]=(u_tpnhx[k]+u_tnnhx[k]);
+	      yxdata[idx(i+1, j, Nx+1, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
+	      yxdata[idx(i, j, Nx+1, Ny, k)]=(u_tpnhx[k]+u_tnnhx[k]);
 	      //printf("yx: i=%li, j=%li, k=%li, u_tpphx[k]=%f, u_tnphx[k]=%f,u_tpnhx[k]=%f,u_tnnhx[k]=%f\n",i,j, k,u_tpphx[k], u_tnphx[k], u_tpnhx[k],u_tnnhx[k]);
             }
 	       
@@ -619,8 +619,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             
             for(k=0;k<4;k++){
                 //yydata[idx(i, j, Nx, Ny, k)]=-(1.0/dy)*((u_tpphy[k]-u_tpnhy[k])+(u_tnphy[k]-u_tnnhy[k]));
-                yydata[idx(i+1, j, Nx, Ny, k)]=u_tpphy[k]+u_tnphy[k];
-                yydata[idx(i, j, Nx, Ny, k)]=u_tpnhy[k]+u_tnnhy[k];
+                yydata[idx(i, j+1, Nx, Ny+1, k)]=u_tpphy[k]+u_tnphy[k];
+                yydata[idx(i, j, Nx, Ny+1, k)]=u_tpnhy[k]+u_tnnhy[k];
 		//printf("yy: i=%li, j=%li, k=%li, u_tpphy[k]=%f, u_tnphy[k]=%f,u_tpnhy[k]=%f,u_tnnhy[k]=%f\n",i,j, k,u_tpphy[k], u_tnphy[k], u_tpnhy[k],u_tnnhy[k]);
             }
         }
@@ -634,7 +634,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	      //if (i==0&&j==0){
 	      //printf(" rhxegm : i = %li, j = %li, rhxegm[k][0] = %f, rhxegm[k][1] = %f, rhxegm[k][2] = %f, rhxegm[k][3] = %f\n", i, j, rhxegm[k][0], rhxegm[k][1],rhxegm[k][2],rhxegm[k][3]);
 	      //}
-                yxbackdata[idx(i, j, Nx, Ny, k)] = rhxegm[k][0]*yxdata[idx(i, j, Nx, Ny, 0)]+rhxegm[k][1]*yxdata[idx(i, j, Nx, Ny, 1)]+rhxegm[k][2]*yxdata[idx(i, j, Nx, Ny, 2)]+rhxegm[k][3]*yxdata[idx(i, j, Nx, Ny, 3)];
+                yxbackdata[idx(i, j, Nx+1, Ny, k)] = rhxegm[k][0]*yxdata[idx(i, j, Nx+1, Ny, 0)]+rhxegm[k][1]*yxdata[idx(i, j, Nx+1, Ny, 1)]+rhxegm[k][2]*yxdata[idx(i, j, Nx+1, Ny, 2)]+rhxegm[k][3]*yxdata[idx(i, j, Nx+1, Ny, 3)];
                 //yxdownbackdata[idx(i, j, Nx, Ny, k)] = rhxegm[k][0]*yxdowndata[idx(i, j, Nx, Ny, 0)]+rhxegm[k][1]*yxdowndata[idx(i, j, Nx, Ny, 1)]+rhxegm[k][2]*yxdowndata[idx(i, j, Nx, Ny, 2)]+rhxegm[k][3]*yxdowndata[idx(i, j, Nx, Ny, 3)];
             }
        
@@ -650,7 +650,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	      //  if (i==0&&j==0){
 	      //printf(" rhyegm : i = %li, j = %li, rhyegm[k][0] = %f, rhyegm[k][1] = %f, rhyegm[k][2] = %f, rhyegm[k][3] = %f\n", i, j, rhyegm[k][0], rhyegm[k][1],rhyegm[k][2],rhyegm[k][3]);
 	      //  }
-                yybackdata[idx(i, j, Nx, Ny, k)] = rhyegm[k][0]*yydata[idx(i, j, Nx, Ny, 0)]+rhyegm[k][1]*yydata[idx(i, j, Nx, Ny, 1)]+rhyegm[k][2]*yydata[idx(i, j, Nx, Ny, 2)]+rhyegm[k][3]*yydata[idx(i, j, Nx, Ny, 3)];
+                yybackdata[idx(i, j, Nx, Ny+1, k)] = rhyegm[k][0]*yydata[idx(i, j, Nx, Ny+1, 0)]+rhyegm[k][1]*yydata[idx(i, j, Nx, Ny+1, 1)]+rhyegm[k][2]*yydata[idx(i, j, Nx, Ny+1, 2)]+rhyegm[k][3]*yydata[idx(i, j, Nx, Ny+1, 3)];
                 //yydownbackdata[idx(i, j, Nx, Ny, k)] = rhyegm[k][0]*yydowndata[idx(i, j, Nx, Ny, 0)]+rhyegm[k][1]*yydowndata[idx(i, j, Nx, Ny, 1)]+rhyegm[k][2]*yydowndata[idx(i, j, Nx, Ny, 2)]+rhyegm[k][3]*yydowndata[idx(i, j, Nx, Ny, 3)];
             }
 	    
@@ -966,11 +966,11 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
     if (i==0){
     if (flag == 0)
     {
-      vx = (Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(0, j, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(0, j, Nx, Ny, 0)]);
-      vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(0, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(0, j, Nx, Ny, 0)]);
-      p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(0, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(0, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
-      h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(0, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(0, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(0, j, Nx, Ny, 0)]);
+      vx = (Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(Nx-1, j, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]);
+      vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(Nx-1, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]);
+      p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(Nx-1, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
+      h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(Nx-1, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]));
+            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]);
     }
     /* reflecting boundary condition */
     if (flag == 1)
@@ -1147,11 +1147,11 @@ static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j,
     if (j==0){
     if (flag == 0)
     {
-      vx = (Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(i, 0, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]);
-      vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, 0, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]);
-      p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, 0, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
-      h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, 0, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]);
+      vx = (Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(i, Ny-1, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]);
+      vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, Ny-1, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]);
+      p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, Ny-1, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
+      h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, Ny-1, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]));
+            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]);
     }
     /* reflecting boundary condition */
     if (flag == 1)
