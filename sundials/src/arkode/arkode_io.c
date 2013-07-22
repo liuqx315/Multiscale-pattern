@@ -150,7 +150,8 @@ int ARKodeSetOptimalParams(void *arkode_mem)
       ark_mem->ark_hadapt_bias      = BIAS;
       ark_mem->ark_hadapt_growth    = GROWTH;
       ark_mem->ark_etamxf           = ETAMXF;
-      ark_mem->ark_nlscoef          = NLSCOEF;
+      ark_mem->ark_nlscoef          = RCONST(0.001);
+      ark_mem->ark_maxcor           = 5;
       ark_mem->ark_crdown           = CRDOWN;
       ark_mem->ark_rdiv             = RDIV;
       ark_mem->ark_dgmax            = DGMAX;
@@ -883,7 +884,7 @@ int ARKodeSetERKTableNum(void *arkode_mem, int itable)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* check that argument specifies an explicit table (0-12) */
-  if (itable<0 || itable>12) {
+  if (itable<0 || itable>10) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetERKTableNum", 
 		    "Illegal ERK table number");
@@ -936,7 +937,7 @@ int ARKodeSetIRKTableNum(void *arkode_mem, int itable)
   ark_mem = (ARKodeMem) arkode_mem;
 
   /* check that argument specifies an implicit table (13-27) */
-  if (itable<13) {
+  if (itable<11) {
     arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
 		    "ARKodeSetIRKTableNum", 
 		    "Illegal IRK table number");
@@ -989,9 +990,9 @@ int ARKodeSetARKTableNum(void *arkode_mem, int itable, int etable)
 
   /* ensure that tables match */
   iflag = 1;
-  if ((etable == 3)  && (itable == 17))  iflag = 0;
-  if ((etable == 6)  && (itable == 23))  iflag = 0;
-  if ((etable == 11) && (itable == 27))  iflag = 0;
+  if ((etable == 2) && (itable == 15))  iflag = 0;
+  if ((etable == 4) && (itable == 20))  iflag = 0;
+  if ((etable == 9) && (itable == 22))  iflag = 0;
   if (iflag) {
     arkProcessError(NULL, ARK_ILL_INPUT, "ARKODE", 
 		    "ARKodeSetARKTableNum", 
