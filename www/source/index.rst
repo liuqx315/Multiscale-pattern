@@ -34,11 +34,11 @@ ARKode is written in C, with C++ and Fortran interfaces.
 News:
 -------
 
-:23 January 2013: 
+:18 June 2013: 
    ARKode is still in development. An official release as part of the
-   SUNDIALS suite is planned for summer 2013, but early access to the
-   development repository will be opened up much sooner.  Both events
-   will be posted to this page when they occur. 
+   SUNDIALS suite is planned for sometime in the next few months.
+   Early access to the development repository is possible -- email
+   with requests.
 
 Contact
 ----------

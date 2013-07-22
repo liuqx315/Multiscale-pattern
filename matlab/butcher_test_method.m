@@ -30,12 +30,16 @@ opts = odeset('RelTol',1e-12, 'AbsTol',1e-14,'InitialStep',1e-12, 'MaxStep',1e-3
 [Brows,Bcols] = size(B);
 dirk = 0;
 irk = 0;
-for i = 1:Bcols
-   if (abs(B(i,i)) > 1e-10)
+s = Bcols-1;
+A = B(1:s,2:Bcols);
+for i = 1:s
+   if (abs(A(i,i)) > 1e-10)
       dirk = 1;
    end
-   if (sum(abs(B(i,i+1:Bcols))) > 1e-10)
-      irk = 1;
+   if (i < s)
+      if (sum(abs(A(i,i+1:s))) > 1e-10)
+         irk = 1;
+      end
    end
 end
 
@@ -46,11 +50,11 @@ m = zeros(length(hvals),2);
 for i = 1:length(hvals)
    h = hvals(i);
    if (irk == 1) 
-      [t,Y,ns] = solve_IRK('f_test','J_test',tout,Y0,B,1e-2,1e-2,h,h,1);
+      [t,Y,ns] = solve_IRK('f_test','J_test',tout,Y0,B,1e2,1e2,h,h,1);
    elseif (dirk == 1) 
-      [t,Y,ns] = solve_DIRK('f_test','J_test',tout,Y0,B,1e-2,1e-2,h,h,1);
+      [t,Y,ns] = solve_DIRK('f_test','J_test',tout,Y0,B,1e2,1e2,h,h,1);
    else
-      [t,Y,ns] = solve_ERK('f_test','EStab_test',tout,Y0,B,1e-2,1e-2,h,h,1);
+      [t,Y,ns] = solve_ERK('f_test','EStab_test',tout,Y0,B,1e2,1e2,h,h,1);
    end
    [ir,ic] = size(Y);  [jr,jc] = size(Ytrue);
    diff = (Y(:,ic)' - Ytrue(jr,:))./Ytrue(jr,:);
@@ -59,14 +63,25 @@ end
 
 % output results for method
 fprintf('\n  Results for %s:\n',mname);
-fprintf('      h           errI        err2\n');
-fprintf('  --------------------------------------\n')
+fprintf('      h           errI        err2        rate    cum. rate\n');
+fprintf('  -----------------------------------------------------------\n')
 for ih = 1:length(hvals)
    errI(ih) = m(ih,1);
    err2(ih) = m(ih,2);
-   fprintf('  %10.2e  %10.2e  %10.2e\n',hvals(ih),errI(ih),err2(ih))
+   if (ih == 1)
+      fprintf('  %10.2e  %10.2e  %10.2e\n',hvals(ih),errI(ih),err2(ih))
+   else
+      rate1 = log(errI(ih)/errI(ih-1)) / log(hvals(ih)/hvals(ih-1));
+      rate2 = log(err2(ih)/err2(ih-1)) / log(hvals(ih)/hvals(ih-1));
+      rate = (rate1+rate2)/2;
+      p1 = polyfit(log(hvals(1:ih)),log(errI(1:ih)),1);
+      p2 = polyfit(log(hvals(1:ih)),log(err2(1:ih)),1);
+      crate = (p1(1)+p2(1))/2;
+      fprintf('  %10.2e  %10.2e  %10.2e    %g    %g\n', ...
+              hvals(ih), errI(ih), err2(ih), rate, crate)
+   end
 end
-fprintf('  --------------------------------------\n')
+fprintf('  -----------------------------------------------------------\n')
 p1 = polyfit(log(hvals(2:end-2)),log(errI(2:end-2)),1);
 p2 = polyfit(log(hvals(2:end-2)),log(err2(2:end-2)),1);
 p = (p1(1)+p2(1))/2;
