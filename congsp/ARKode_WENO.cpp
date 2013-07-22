@@ -397,6 +397,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     u_tnnh=w2_n*((-1.0/6.0)*YN[i-2]+(5.0/6.0)*YN[i-1]+(2.0/6.0)*YN[i])+w1_n*((2.0/6.0)*YN[i-1]+(5.0/6.0)*YN[i]-(1.0/6.0)*YN[i+1])+w0_n*((11.0/6.0)*YN[i]-(7.0/6.0)*YN[i+1]+(2.0/6.0)*YN[i+2]);
 
     Ydot[i]=-(1.0/udata->dx)*((u_tpph-u_tpnh)+(u_tnph-u_tnnh));
+    //printf("i=%li, u_tpph=%g,u_tnph=%g,u_tpnh=%g,u_tnnh=%g\n", i, u_tpph, u_tnph, u_tpnh, u_tnnh);
   }
     
     i=N-3;  
