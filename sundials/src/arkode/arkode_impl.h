@@ -73,7 +73,8 @@ extern "C" {
 
 /* Default solver tolerance factor */
 /* #define NLSCOEF   RCONST(0.003);   /\* Hairer & Wanner constant *\/ */
-#define NLSCOEF   RCONST(0.2);
+/* #define NLSCOEF   RCONST(0.2);     /\* CVODE constant *\/ */
+#define NLSCOEF   RCONST(0.1);
 
 /* Control constants for tolerances */
 #define ARK_SS  0
