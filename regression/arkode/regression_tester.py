@@ -87,11 +87,11 @@ testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.ex
 testsA = (testsA3, testsA4, testsA5)
 
 testsAF3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
-            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_medakzo.exe' )
+            './ark_bruss.exe', './ark_brusselator1D.exe' )
 testsAF4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
-            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe' )
 testsAF5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
-            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe' )
 testsAF = (testsAF3, testsAF4, testsAF5)
 
 testsE = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
