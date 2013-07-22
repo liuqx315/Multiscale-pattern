@@ -47,7 +47,7 @@
     10    Verner-6-5          ERK   8   6   5   -   - 
           Fehlberg-8-7        ERK   13  8   7   -   - 
     11    SDIRK-2-1         SDIRK   2   2   1   X   - 
-    12    Billington        SDIRK   3   3   2   -   - *not recommended
+    12    Billington        SDIRK   3   3   2   -   -
     13    TRBDF2           ESDIRK   3   3   2   -   - *not recommended
     14    Kvaerno(4,2,3)   ESDIRK   4   3   2   X   X 
     15*   ARK3(2)4L[2]SA   ESDIRK   4   3   2   X   X 
