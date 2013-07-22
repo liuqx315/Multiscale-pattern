@@ -1,8 +1,11 @@
+.. _index:
+
+
 The ARKode Solver 
 ===================
 
-ARKode is a solver for stiff and nonstiff systems of ordinary
-differential equations (ODEs) given in explicit form,
+ARKode is a solver for stiff, nonstiff and multi-rate systems of
+ordinary differential equations (ODEs) given in explicit form,
 
 .. math::
    M \dot{y} = f_E(t,y) + f_I(t,y).
@@ -34,11 +37,13 @@ ARKode is written in C, with C++ and Fortran interfaces.
 News:
 -------
 
-:18 June 2013: 
-   ARKode is still in development. An official release as part of the
-   SUNDIALS suite is planned for sometime in the next few months.
-   Early access to the development repository is possible -- email
-   with requests.
+:7/23/2013:
+   ARKode is currently in beta-testing, undergoing optimization
+   enhancements, documentation upgrades, and development of new
+   features. An official release as part of the SUNDIALS suite is
+   planned for Fall 2013, but the public source code repository is now
+   open (see the :ref:`Downloads` page).
+
 
 Contact
 ----------
