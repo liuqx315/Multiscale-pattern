@@ -64,7 +64,7 @@ the Butcher table :math:`A^E=0` in :eq:`ARK`, and the ARK methods
 reduce to classical :index:`diagonally-implicit Runge-Kutta methods` 
 (DIRK).  For these classes of methods, ARKode allows orders of
 accuracy :math:`q = \{3,4,5\}`, that default to the SDIRK 2(1),
-Kvaerno(4,2,3), SDIRK 5(4) and ARK5(4)8L[2]SA methods, respectively.
+ARK3(2)4L[2]SA, SDIRK 5(4) and ARK5(4)8L[2]SA methods, respectively.
 
 For both the DIRK and ARK methods corresponding to :eq:`IVP` and
 :eq:`IVP_implicit`, a nonlinear system
@@ -310,17 +310,20 @@ Therefore the convergence (stopping) test for the nonlinear iteration
 for each stage is 
 
 .. math::
-   R_i \left\|\delta^{(m)} \right\| < 0.2\epsilon.
+   R_i \left\|\delta^{(m)} \right\| < 0.2\epsilon,
 
-We allow at most 3 Newton iterations (this may be modified through the
-function :c:func:`ARKodeSetMaxNonlinIters()`).  We also declare the
+where the factor 0.2 is user-modifiable as the ``nlscoef`` input to the
+the function :c:func:`ARKodeSetNonlinConvCoef()`.  We allow at most 3
+nonlinear iterations (this may be modified through the function
+:c:func:`ARKodeSetMaxNonlinIters()`).  We also declare the 
 nonlinear iteration to be divergent if any of the ratios
 :math:`\|\delta^{(m)}\| / \|\delta^{(m-1)}\| > 2.3` with :math:`m>1`
 (the value 2.3 may be modified as the ``rdiv`` input to the function 
-:c:func:`ARKodeSetNonlinRDiv()`).  If convergence fails with
-:math:`J` or :math:`A` current, we must then reduce the step size by a
-factor of 0.25 (modifiable via the ``etacf`` input to the
-:c:func:`ARKodeSetMaxCFailGrowth()` function).  The integration
+:c:func:`ARKodeSetNonlinRDiv()`).  If convergence fails in the fixed
+point iteration, or in the Newton iteration with :math:`J` or
+:math:`A` current, we must then reduce the step size by a factor of
+0.25 (modifiable via the ``etacf`` input to the
+:c:func:`ARKodeSetMaxCFailGrowth()` function).  The integration 
 is halted after 10 convergence failures (modifiable via the
 :c:func:`ARKodeSetMaxConvFails()` function).
 

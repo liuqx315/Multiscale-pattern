@@ -377,8 +377,7 @@ Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.
 Kvaerno(4,2,3)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.  This is
-the default 3rd order implicit method.
+Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.
 
 .. math::
 
@@ -400,7 +399,8 @@ ARK3(2)4L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Butcher table number 15 for :func:`ARKodeSetIRKTableNum()`.  This is
-the implicit portion of the default 3rd order additive method.
+the default 3rd order implicit method, and the implicit portion of the
+default 3rd order additive method. 
 
 .. math::
 
