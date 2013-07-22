@@ -1,6 +1,9 @@
+.. _Regression:
+
+
 Regression Testing
 ====================
 
-Regular regression test results are available at `this site
+Automated nightly regression test results of the private development
+repository are available at `this site
 <http://runge.math.smu.edu/arkode_tests.html>`_.
-

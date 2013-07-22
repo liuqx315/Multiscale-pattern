@@ -1,3 +1,6 @@
+.. _Downloads:
+
+
 Downloads
 =============
 
@@ -6,7 +9,8 @@ The ARKode source code uses the `Mercurial
 and is housed on `Bitbucket <https://bitbucket.org>`_; the SUNDIALS
 library source code is also linked below:
 
-.. * `Public repository (releases) 
+* `Public repository (releases, currently contains the beta-testing
+  release) 
   <https://bitbucket.org/drreynolds/arkode_pub>`_
 
 * `Private development repository 
