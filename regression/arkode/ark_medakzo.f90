@@ -154,6 +154,9 @@ program driver
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
   if (fixedpt > 0)  &
        call FARKSetIin('FIXEDPOINT', m_aa, ier)
+
+  maxcor = max(8,maxcor)
+  nlscoef = 1.d-3
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
   call FARKSetIin('MAX_NSTEPS',      5000, ier)
