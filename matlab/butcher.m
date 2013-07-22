@@ -728,6 +728,16 @@ elseif (strcmp(method_name,'SDIRK-2-2'))
    q = 2;
    B = [c, A; q, b];
 
+elseif (strcmp(method_name,'SDIRK-2-1'))
+   
+   A = [1, 0; -1, 1];
+   b = [ 1/2, 1/2];
+   b2 = [ 1, 0];
+   c = [ 1; 0];
+   q = 2;
+   p = 1;
+   B = [c, A; q, b; p, b2];
+
 elseif (strcmp(method_name,'IRK-1-1'))
    
    c = [1];
