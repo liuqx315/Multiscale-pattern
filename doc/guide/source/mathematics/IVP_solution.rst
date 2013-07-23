@@ -63,7 +63,7 @@ so the equation :eq:`IVP` reduces to the non-split IVP
 the Butcher table :math:`A^E=0` in :eq:`ARK`, and the ARK methods
 reduce to classical :index:`diagonally-implicit Runge-Kutta methods` 
 (DIRK).  For these classes of methods, ARKode allows orders of
-accuracy :math:`q = \{3,4,5\}`, that default to the SDIRK 2(1),
+accuracy :math:`q = \{2,3,4,5\}`, that default to the SDIRK 2(1),
 ARK3(2)4L[2]SA, SDIRK 5(4) and ARK5(4)8L[2]SA methods, respectively.
 
 For both the DIRK and ARK methods corresponding to :eq:`IVP` and
