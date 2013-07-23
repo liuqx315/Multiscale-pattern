@@ -240,7 +240,7 @@ Using the notation of our earlier controllers, it has the form
    \end{cases}
    :label: expGus
 
-The default values of :math:`k_1` and :math:`k_2` are 0.4 and 0.33,
+The default values of :math:`k_1` and :math:`k_2` are 0.367 and 0.268,
 respectively, which may be changed via the function
 :c:func:`ARKodeSetAdaptivityMethod()`.
 
@@ -277,7 +277,7 @@ ARKode.  This approach computes the estimates :math:`h'_1` arising from
 equation :eq:`expGus` and the estimate :math:`h'_2` arising from
 equation :eq:`impGus`, and selects :math:`h' = \frac{h}{|h|}\min\left\{|h'_1|,
 |h'_2|\right\}`.  Here, equation :eq:`expGus` uses :math:`k_1` and
-:math:`k_2` with default values of 0.4 and 0.25, while equation
+:math:`k_2` with default values of 0.367 and 0.268, while equation
 :eq:`impGus` sets both parameters to the input :math:`k_3` that
 defaults to 0.95.  All three of these parameters may be modified with
 the function :c:func:`ARKodeSetAdaptivityMethod()`. 
@@ -292,6 +292,6 @@ Finally, ARKode allows the user to define their own time step
 adaptivity function,
 
 .. math::
-   h' = g(y, t, h_n, h_{n-1}, h_{n-2}, \varepsilon_n, \varepsilon_{n-1}, \varepsilon_{n-2}, q, p),
+   h' = H(y, t, h_n, h_{n-1}, h_{n-2}, \varepsilon_n, \varepsilon_{n-1}, \varepsilon_{n-2}, q, p),
 
 via a call to :c:func:`ARKodeSetAdaptivityFn()`.
