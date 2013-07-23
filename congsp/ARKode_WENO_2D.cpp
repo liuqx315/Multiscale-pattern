@@ -68,10 +68,12 @@ static int Setalphawx(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, real
 static int Setalphawy(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype *IS0_ny, realtype *IS1_ny, realtype *IS2_ny, realtype *alpha_0py, realtype *alpha_1py, realtype *alpha_2py, realtype *alpha_0ny, realtype *alpha_1ny, realtype *alpha_2ny, realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype Epsilon);
 
 /* Get the derivative on x direction */
-static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, realtype *u_tpnhx, realtype *u_tnnhx, long int i, long int j, long int Nx, long int Ny, int flag);
+//static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, realtype *u_tpnhx, realtype *u_tnnhx, long int i, long int j, long int Nx, long int Ny, int flag);
+static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, long int i, long int j, long int Nx, long int Ny, int flag);
 
 /* Get the derivative on y direction */
-static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, realtype *u_tpnhy, realtype *u_tnnhy, long int i, long int j, long int Nx, long int Ny, int flag);
+//static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, realtype *u_tpnhy, realtype *u_tnnhy, long int i, long int j, long int Nx, long int Ny, int flag);
+static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, long int i, long int j, long int Nx, long int Ny, int flag);
 
 int main(int argc, const char * argv[])
 {
@@ -150,10 +152,30 @@ int main(int argc, const char * argv[])
     
     for(j=0;j<Ny;j++){
         for (i=0; i<Nx; i++) {
-            data[idx(i,j,Nx,Ny,0)] = sin(2.0*PI*udata->dx*(i+0.5));
-            data[idx(i,j,Nx,Ny,1)] = sin(2.0*PI*udata->dx*(i+0.5));
-            data[idx(i,j,Nx,Ny,2)] = 0.0;
-            data[idx(i,j,Nx,Ny,3)] = 1.0/(gama-1.0)+0.5*data[idx(i,j,Nx,Ny,0)]*1.0;
+             if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.5323;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  0.5323*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
+ }
+ if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)>0.5){
+            data[idx(i,j,Nx,Ny,0)] =  1.5;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.5*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.5*0.0;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  1.5*(1.5/((udata->gama-1.0)*1.5));  /* E */
+ }
+ if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.138;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.138;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.138;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.138*(0.029/((udata->gama-1.0)*0.138)+0.5*(2*1.206*1.206));  /* E */
+ }
+ if (udata->dx*(i+0.5)>0.5&&udata->dy*(j+0.5)<0.5){
+            data[idx(i,j,Nx,Ny,0)] =  0.5323;  /* rou */
+            data[idx(i,j,Nx,Ny,1)] =  1.206*0.0;  /* qx */
+            data[idx(i,j,Nx,Ny,2)] =  1.206*0.5323;  /* qy */
+            data[idx(i,j,Nx,Ny,3)] =  0.5323*(0.3/((udata->gama-1.0)*0.5323)+0.5*(1.206*1.206));  /* E */
+ }
         }
     }
     
@@ -428,7 +450,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	    //}
             yxpdata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 0)]);
             yxndata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 0)]);
-	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 0)] = %g, yxndata[idx(i, j, Nx, Ny, 0)] = %g", i,j,yxpdata[idx(i, j, Nx, Ny, 0)], yxndata[idx(i, j, Nx, Ny, 0)]);
+	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 0)] = %g, yxndata[idx(i, j, Nx, Ny, 0)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 0)], yxndata[idx(i, j, Nx, Ny, 0)]);
             yxpdata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 1)]);
             yxndata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 1)]);
             yxpdata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 2)]);
@@ -463,7 +485,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     
     /* iterate over domain, computing all equations */
     for(j=0; j<Ny; j++){
-        for (i=0; i<Nx; i++){
+      for (i=0; i<(Nx+1); i++){
             
             /* get derivative on x direction */
             flag = SetISX(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, yxpdata, yxndata, i, j, Nx, Ny, 0);
@@ -472,18 +494,16 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             flag = Setalphawx(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, alpha_0px, alpha_1px, alpha_2px, alpha_0nx, alpha_1nx, alpha_2nx, w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, Epsilon);
             if (flag!=0) printf("error in Setalphawx function \n");
             
-            flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, u_tpnhx, u_tnnhx, i, j, Nx, Ny, 0);
+            flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, i, j, Nx, Ny, 0);
             if (flag!=0) printf("error in SetUx function \n");
             
 	    //if (i==0&j==0){
             for(k=0;k<4;k++){
-	      if (i==0){
-	      yxdata[idx(i+1, j, Nx+1, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
-	      yxdata[idx(i, j, Nx+1, Ny, k)]=(u_tpnhx[k]+u_tnnhx[k]);
-	      }
-	      else
-	      yxdata[idx(i+1, j, Nx+1, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
-	      //printf("yx: i=%li, j=%li, k=%li, u_tpphx[k]=%f, u_tnphx[k]=%f,u_tpnhx[k]=%f,u_tnnhx[k]=%f\n",i,j, k,u_tpphx[k], u_tnphx[k], u_tpnhx[k],u_tnnhx[k]);
+	  
+	      yxdata[idx(i, j, Nx+1, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
+	      //yxdata[idx(i, j, Nx+1, Ny, k)]=(u_tpnhx[k]+u_tnnhx[k]);
+	 
+	      //printf("yx: i=%li, j=%li, k=%li, u_tpphx[k]=%f, u_tnphx[k]=%f\n",i,j, k,u_tpphx[k], u_tnphx[k]);
             }
 	       
 	    //	    }
@@ -491,7 +511,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     }
     
     for (i=0;i<Nx;i++){
-        for(j=0;j<Ny;j++){
+      for(j=0;j<(Ny+1);j++){
             
             /* get derivative on y direction */
             flag = SetISY(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, yypdata, yyndata, i, j, Nx, Ny, 0);
@@ -500,12 +520,12 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             flag = Setalphawy(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, alpha_0py, alpha_1py, alpha_2py, alpha_0ny, alpha_1ny, alpha_2ny, w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, Epsilon);
             if (flag!=0) printf("error in Setalphawy function \n");
             
-            flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, u_tpnhy, u_tnnhy, i, j, Nx, Ny, 0);
+            flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, i, j, Nx, Ny, 0);
             if (flag!=0) printf("error in SetUy function \n");
             
             for(k=0;k<4;k++){
-                yydata[idx(i, j+1, Nx, Ny+1, k)]=u_tpphy[k]+u_tnphy[k];
-                yydata[idx(i, j, Nx, Ny+1, k)]=u_tpnhy[k]+u_tnnhy[k];
+                yydata[idx(i, j, Nx, Ny+1, k)]=u_tpphy[k]+u_tnphy[k];
+                //yydata[idx(i, j, Nx, Ny+1, k)]=u_tpnhy[k]+u_tnnhy[k];
 		//printf("yy: i=%li, j=%li, k=%li, u_tpphy[k]=%f, u_tnphy[k]=%f,u_tpnhy[k]=%f,u_tnnhy[k]=%f\n",i,j, k,u_tpphy[k], u_tnphy[k], u_tpnhy[k],u_tnnhy[k]);
             }
         }
@@ -522,6 +542,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 yxbackdata[idx(i, j, Nx+1, Ny, k)] = rhxegm[k][0]*yxdata[idx(i, j, Nx+1, Ny, 0)]+rhxegm[k][1]*yxdata[idx(i, j, Nx+1, Ny, 1)]+rhxegm[k][2]*yxdata[idx(i, j, Nx+1, Ny, 2)]+rhxegm[k][3]*yxdata[idx(i, j, Nx+1, Ny, 3)];
             }
 	    //printf(" yxdata : i = %li, j = %li, yxdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxdata[idx(i, j, Nx+1, Ny, 3)]=%f\n",i,j,yxdata[idx(i, j, Nx+1, Ny, 0)],yxdata[idx(i, j, Nx+1, Ny, 1)],yxdata[idx(i, j, Nx+1, Ny, 2)],yxdata[idx(i, j, Nx+1, Ny, 3)]);
+	    //printf("yxbackdata : i = %li, j = %li, yxbackdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 3)]=%f\n",i,j,yxbackdata[idx(i, j, Nx+1, Ny, 0)],yxbackdata[idx(i, j, Nx+1, Ny, 1)],yxbackdata[idx(i, j, Nx+1, Ny, 2)],yxbackdata[idx(i, j, Nx+1, Ny, 3)]);
         }
     }
     
@@ -558,13 +579,12 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 	      //if (i==0&&j==0){
 	      //printf(" dYdata0 : i = %li, j = %li, yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)] = %f, yxbackdata[idx(i, j, (Nx+1), Ny, 1)] = %f, yybackdata[idx(i, j+1, Nx, (Ny+1), 2)] = %f, yybackdata[idx(i, j, Nx, (Ny+1), 2)] = %f\n", i, j, yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)], yxbackdata[idx(i, j, (Nx+1), Ny, 1)], yybackdata[idx(i, j+1, Nx, (Ny+1), 2)],yybackdata[idx(i, j, Nx, (Ny+1), 2)]);
 	      //printf(" dYdata1 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)] = %f, tao[idx_v(i,j,Nx+1)] = %f, tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)], tao[idx_v(i,j,Nx+1)], tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)]);
-	      //printf(" dYdata2 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i+1,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i+1,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]);
-	      //printf(" dYdata3 : i = %li, j = %li, Cj[idx_v(i+1,j,Nx+1)] = %f, Cj[idx_v(i,j,Nx+1)] = %f, Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny] = %f, Cj[idx_v(i,j,Nx)+(Nx+1)*Ny] = %f\n", i, j, Cj[idx_v(i+1,j,Nx+1)], Cj[idx_v(i,j,Nx+1)], Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny], Cj[idx_v(i,j,Nx)+(Nx+1)*Ny]);
-	      //printf(" taodata1 : i = %li, j = %li, taoupdata[idx(i, j, Nx, Ny, 0)] = %f, taodowndata[idx(i, j, Nx, Ny, 0)] = %f, taoupdata[idx(i, j, Nx, Ny, 1)] = %f, taodowndata[idx(i, j, Nx, Ny, 1)] = %f\n", i, j, taoupdata[idx(i, j, Nx, Ny, 0)], taodowndata[idx(i, j, Nx, Ny, 0)], taoupdata[idx(i, j, Nx, Ny, 1)], taodowndata[idx(i, j, Nx, Ny, 1)]);
+	      //printf(" dYdata2 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]);
+	      //xprintf(" dYdata3 : i = %li, j = %li, Cj[idx_v(i+1,j,Nx+1)] = %f, Cj[idx_v(i,j,Nx+1)] = %f, Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny] = %f, Cj[idx_v(i,j,Nx)+(Nx+1)*Ny] = %f\n", i, j, Cj[idx_v(i+1,j,Nx+1)], Cj[idx_v(i,j,Nx+1)], Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny], Cj[idx_v(i,j,Nx)+(Nx+1)*Ny]);
 	      //}
 	dYdata[idx(i, j, Nx, Ny, 0)]=(-1.0/dx)*(yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)]-yxbackdata[idx(i, j, (Nx+1), Ny, 1)])+(-1.0/dy)*(yybackdata[idx(i, j+1, Nx, (Ny+1), 2)]-yybackdata[idx(i, j, Nx, (Ny+1), 2)]);
 	dYdata[idx(i, j, Nx, Ny, 1)]=(-1.0/dx)*(tao[idx_v(i+1,j,Nx+1)]-tao[idx_v(i,j,Nx+1)])+(-1.0/dy)*(tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)]-tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)]);
-	dYdata[idx(i, j, Nx, Ny, 2)]=(-1.0/dx)*(tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny]-tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny])+(-1.0/dy)*(tao[idx_v(i+1,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]-tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]);
+	dYdata[idx(i, j, Nx, Ny, 2)]=(-1.0/dx)*(tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny]-tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny])+(-1.0/dy)*(tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]-tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]);
         dYdata[idx(i, j, Nx, Ny, 3)]=(-1.0/dx)*(Cj[idx_v(i+1,j,Nx+1)]-Cj[idx_v(i,j,Nx+1)])+(-1.0/dy)*(Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny]-Cj[idx_v(i,j,Nx)+(Nx+1)*Ny]);
 		//if (i==0&&j==0){
 		//printf(" dYdata : i = %li, j = %li, dYdata[idx(i, j, Nx, Ny, 0)] = %f, dYdata[idx(i, j, Nx, Ny, 1)] = %f, dYdata[idx(i, j, Nx, Ny, 2)] = %f, dYdata[idx(i, j, Nx, Ny, 3)] = %f\n", i, j, dYdata[idx(i, j, Nx, Ny, 0)], dYdata[idx(i, j, Nx, Ny, 1)],dYdata[idx(i, j, Nx, Ny, 2)],dYdata[idx(i, j, Nx, Ny, 3)]);
@@ -927,81 +947,100 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
         realtype *yp = new realtype [28];
         realtype *yn = new realtype [28];
         
-        if (i>2&&i<Nx-3){
+        if (i>3&&i<Nx-2){
             for (n=0;n<4;n++){
                 for (k=0;k<7;k++){
-                    yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                    yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                    yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                 }
             }
         }
         
         if (flag == 0){
-            if (i<3){
+            if (i<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
                 if (i==0){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(Nx-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(Nx-3,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(Nx-4,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(Nx-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(Nx-3,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(Nx-4,j,Nx,Ny,n)];
+                    }
+                }
+                
+                if (i==1){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
                         yp[2+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(Nx-2,j,Nx,Ny,n)];
                         yp[0+n*7] = yxpdata[idx(Nx-3,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                         yn[2+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(Nx-2,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(Nx-3,j,Nx,Ny,n)];
                     }
                 }
                 
-                if (i==1){
+                if (i==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
                         yp[0+n*7] = yxpdata[idx(Nx-2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(Nx-2,j,Nx,Ny,n)];
                     }
                 }
-                
-                if (i==2){
+
+		if (i==3){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
                         yp[0+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(i>Nx-4){
+            if(i>Nx-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
-                    }
-                }
-                
-                if (i==Nx-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
                 if (i==Nx-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
+                    }
+                }
+                
+                if (i==Nx-1){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
                         yn[5+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
                         yp[6+n*7] = yxpdata[idx(1,j,Nx,Ny,n)];
@@ -1009,7 +1048,7 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
                     }
                 }
                 
-                if (i==Nx-1){
+                if (i==Nx){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
                         yn[4+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
@@ -1025,21 +1064,23 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
         
         if (flag == 1){
             /* consider the situations of different i */
-            if (i<3){
+            if (i<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 if (i==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+3,j,Nx,Ny,n)];
+                        yn[3+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+			yn[2+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+3,j,Nx,Ny,n)];
                     }
 		    //        yp[2+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
 		    // yp[1+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
@@ -1050,12 +1091,14 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
                 }
                 if (i==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
                         yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                         yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
                     //yp[1+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
@@ -1066,12 +1109,32 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
                 }
                 if (i==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                    }
+                    //yp[2+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
+                    //yp[1+3*7] = -yxpdata[idx(i-2,j,Nx,Ny,3)];
+                    //yp[0+3*7] = -yxpdata[idx(i-2,j,Nx,Ny,3)];
+                    //yn[2+3*7] = -yxndata[idx(i-1,j,Nx,Ny,3)];
+                    //yn[1+3*7] = -yxndata[idx(i-2,j,Nx,Ny,3)];
+                    //yn[0+3*7] = -yxndata[idx(i-2,j,Nx,Ny,3)];
+                }
+		if (i==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
                     //yp[1+3*7] = -yxpdata[idx(i-2,j,Nx,Ny,3)];
@@ -1082,22 +1145,22 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
                 }
             }
             
-            if(i>Nx-4){
+            if(i>Nx-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
-                if (i==Nx-3){
+                if (i==Nx-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
                     //yp[5+3*7] = -yxpdata[idx(i+2,j,Nx,Ny,3)];
@@ -1106,14 +1169,14 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
                     //yn[5+3*7] = -yxndata[idx(i+2,j,Nx,Ny,3)];
                     //yn[6+3*7] = -yxndata[idx(i+2,j,Nx,Ny,3)];
                 }
-                if (i==Nx-2){
+                if (i==Nx-1){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
                     //yn[4+3*7] = -yxndata[idx(i+1,j,Nx,Ny,3)];
@@ -1122,14 +1185,14 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
                     //yp[6+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
                     //yn[6+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
                 }
-                if (i==Nx-1){
+                if (i==Nx){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
                     //yn[4+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
@@ -1143,86 +1206,100 @@ static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype
         
         
         if (flag == 2){
-            if (i<3){
+            
+            if (i<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+3,j,Nx,Ny,n)];
+                        yn[3+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+			yn[2+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+3,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
                         yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                         yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                    }
+                }
+		if (i==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(i>Nx-4){
+            if(i>Nx-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
-                    }
-                }
-                
-                if (i==Nx-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
                 if (i==Nx-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
                         yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==Nx-1){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
                         yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                    }
+                }
+                if (i==Nx){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                 }
             }
@@ -1266,81 +1343,100 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
         realtype *yp = new realtype [28];
         realtype *yn = new realtype [28];
         
-        if (j>2&&j<Ny-3){
+        if (j>3&&j<Ny-2){
             for (n=0;n<4;n++){
                 for (k=0;k<7;k++){
-                    yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                    yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                    yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                 }
             }
         }
         
         if (flag == 0){
-            if (j<3){
+            if (j<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
                 if (j==0){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,Ny-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,Ny-3,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,Ny-4,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,Ny-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,Ny-3,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,Ny-4,Nx,Ny,n)];
+                    }
+                }
+                
+                if (j==1){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
                         yp[2+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,Ny-2,Nx,Ny,n)];
                         yp[0+n*7] = yypdata[idx(i,Ny-3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                         yn[2+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,Ny-2,Nx,Ny,n)];
                         yn[0+n*7] = yyndata[idx(i,Ny-3,Nx,Ny,n)];
                     }
                 }
                 
-                if (j==1){
+                if (j==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
                         yp[0+n*7] = yypdata[idx(i,Ny-2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
                         yn[0+n*7] = yyndata[idx(i,Ny-2,Nx,Ny,n)];
                     }
                 }
-                
-                if (j==2){
+
+		if (j==3){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
                         yp[0+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                         yn[0+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(j>Ny-4){
+            if(j>Ny-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
-                    }
-                }
-                
-                if (j==Ny-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
                 if (j==Ny-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
+                    }
+                }
+                
+                if (j==Ny-1){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
                         yn[5+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
                         yp[6+n*7] = yypdata[idx(i,1,Nx,Ny,n)];
@@ -1348,7 +1444,7 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
                     }
                 }
                 
-                if (j==Ny-1){
+                if (j==Ny){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
                         yn[4+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
@@ -1364,21 +1460,23 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
         
         if (flag == 1){
             /* consider the situations of different i */
-            if (j<3){
+            if (j<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 if (j==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+3,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yypdata[idx(i,j,Nx,Ny,3)];
                     //yp[1+3*7] = -yypdata[idx(i,j+1,Nx,Ny,3)];
@@ -1389,12 +1487,14 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
                 }
                 if (j==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
                         yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                         yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
                     //yp[1+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
@@ -1405,12 +1505,32 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
                 }
                 if (j==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                    }
+                    //yp[2+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
+                    //yp[1+3*7] = -yypdata[idx(i,j-2,Nx,Ny,3)];
+                    //yp[0+3*7] = -yypdata[idx(i,j-2,Nx,Ny,3)];
+                    //yn[2+3*7] = -yyndata[idx(i,j-1,Nx,Ny,3)];
+                    //yn[1+3*7] = -yyndata[idx(i,j-2,Nx,Ny,3)];
+                    //yn[0+3*7] = -yyndata[idx(i,j-2,Nx,Ny,3)];
+                }
+		if (j==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
                     //yp[1+3*7] = -yypdata[idx(i,j-2,Nx,Ny,3)];
@@ -1421,22 +1541,22 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
                 }
             }
             
-            if(j>Ny-4){
+            if(j>Ny-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
-                if (j==Ny-3){
+                if (j==Ny-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yypdata[idx(i,j+1,Nx,Ny,3)];
                     //yp[5+3*7] = -yypdata[idx(i,j+2,Nx,Ny,3)];
@@ -1445,14 +1565,14 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
                     //yn[5+3*7] = -yyndata[idx(i,j+2,Nx,Ny,3)];
                     //yn[6+3*7] = -yyndata[idx(i,j+2,Nx,Ny,3)];
                 }
-                if (j==Ny-2){
+                if (j==Ny-1){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yypdata[idx(i,j+1,Nx,Ny,3)];
                     //yn[4+3*7] = -yyndata[idx(i,j+1,Nx,Ny,3)];
@@ -1461,14 +1581,14 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
                     //yp[6+3*7] = -yypdata[idx(i,j,Nx,Ny,3)];
                     //yn[6+3*7] = -yyndata[idx(i,j,Nx,Ny,3)];
                 }
-                if (j==Ny-1){
+                if (j==Ny){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yypdata[idx(i,j,Nx,Ny,3)];
                     //yn[4+3*7] = -yyndata[idx(i,j,Nx,Ny,3)];
@@ -1482,86 +1602,100 @@ static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype
         
         
         if (flag == 2){
-            if (j<3){
+            /* consider the situations of different i */
+            if (j<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+3,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
                         yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                         yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                    }
+                }
+		if (j==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(j>Ny-4){
+            if(j>Ny-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
-                    }
-                }
-                
-                if (j==Ny-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
                 if (j==Ny-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
                         yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==Ny-1){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
                         yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                    }
+                }
+                if (j==Ny){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                 }
             }
@@ -1638,7 +1772,8 @@ static int Setalphawy(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, real
 }
 
 /* Get the derivative on x direction */
-static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, realtype *u_tpnhx, realtype *u_tnnhx, long int i, long int j, long int Nx, long int Ny, int flag)
+//static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, realtype *u_tpnhx, realtype *u_tnnhx, long int i, long int j, long int Nx, long int Ny, int flag)
+static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, long int i, long int j, long int Nx, long int Ny, int flag)
 {
     /* consider Nx */
     if (Nx<4){
@@ -1651,81 +1786,100 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
         realtype *yp = new realtype [28];
         realtype *yn = new realtype [28];
         
-        if (i>2&&i<Nx-3){
+        if (i>3&&i<Nx-2){
             for (n=0;n<4;n++){
                 for (k=0;k<7;k++){
-                    yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                    yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                    yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                 }
             }
         }
         
         if (flag == 0){
-            if (i<3){
+            if (i<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
                 if (i==0){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(Nx-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(Nx-3,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(Nx-4,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(Nx-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(Nx-3,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(Nx-4,j,Nx,Ny,n)];
+                    }
+                }
+                
+                if (i==1){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
                         yp[2+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(Nx-2,j,Nx,Ny,n)];
                         yp[0+n*7] = yxpdata[idx(Nx-3,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                         yn[2+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(Nx-2,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(Nx-3,j,Nx,Ny,n)];
                     }
                 }
                 
-                if (i==1){
+                if (i==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
                         yp[0+n*7] = yxpdata[idx(Nx-2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(Nx-2,j,Nx,Ny,n)];
                     }
                 }
-                
-                if (i==2){
+
+		if (i==3){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
                         yp[0+n*7] = yxpdata[idx(Nx-1,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(Nx-1,j,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(i>Nx-4){
+            if(i>Nx-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
-                    }
-                }
-                
-                if (i==Nx-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
                 if (i==Nx-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
+                    }
+                }
+                
+                if (i==Nx-1){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
                         yn[5+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
                         yp[6+n*7] = yxpdata[idx(1,j,Nx,Ny,n)];
@@ -1733,7 +1887,7 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
                     }
                 }
                 
-                if (i==Nx-1){
+                if (i==Nx){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yxpdata[idx(0,j,Nx,Ny,n)];
                         yn[4+n*7] = yxndata[idx(0,j,Nx,Ny,n)];
@@ -1749,24 +1903,26 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
         
         if (flag == 1){
             /* consider the situations of different i */
-            if (i<3){
+            if (i<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 if (i==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+3,j,Nx,Ny,n)];
+                        yn[3+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+			yn[2+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+3,j,Nx,Ny,n)];
                     }
-                    //yp[2+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
-                    //yp[1+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
+		    //        yp[2+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
+		    // yp[1+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
                     //yp[0+3*7] = -yxpdata[idx(i+2,j,Nx,Ny,3)];
                     //yn[2+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
                     //yn[1+3*7] = -yxndata[idx(i+1,j,Nx,Ny,3)];
@@ -1774,28 +1930,50 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
                 }
                 if (i==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
                         yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                         yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
                     //yp[1+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
                     //yp[0+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
                     //yn[2+3*7] = -yxndata[idx(i-1,j,Nx,Ny,3)];
                     //yn[1+3*7] = -yxndata[idx(i-1,j,Nx,Ny,3)];
-                    //yn[0+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
+		    // yn[0+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
                 }
                 if (i==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                    }
+                    //yp[2+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
+                    //yp[1+3*7] = -yxpdata[idx(i-2,j,Nx,Ny,3)];
+                    //yp[0+3*7] = -yxpdata[idx(i-2,j,Nx,Ny,3)];
+                    //yn[2+3*7] = -yxndata[idx(i-1,j,Nx,Ny,3)];
+                    //yn[1+3*7] = -yxndata[idx(i-2,j,Nx,Ny,3)];
+                    //yn[0+3*7] = -yxndata[idx(i-2,j,Nx,Ny,3)];
+                }
+		if (i==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yxpdata[idx(i-1,j,Nx,Ny,3)];
                     //yp[1+3*7] = -yxpdata[idx(i-2,j,Nx,Ny,3)];
@@ -1806,22 +1984,22 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
                 }
             }
             
-            if(i>Nx-4){
+            if(i>Nx-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
-                if (i==Nx-3){
+                if (i==Nx-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
                     //yp[5+3*7] = -yxpdata[idx(i+2,j,Nx,Ny,3)];
@@ -1830,14 +2008,14 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
                     //yn[5+3*7] = -yxndata[idx(i+2,j,Nx,Ny,3)];
                     //yn[6+3*7] = -yxndata[idx(i+2,j,Nx,Ny,3)];
                 }
-                if (i==Nx-2){
+                if (i==Nx-1){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
                     //yn[4+3*7] = -yxndata[idx(i+1,j,Nx,Ny,3)];
@@ -1846,14 +2024,14 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
                     //yp[6+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
                     //yn[6+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
                 }
-                if (i==Nx-1){
+                if (i==Nx){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
                     //yn[4+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
@@ -1866,87 +2044,100 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
         }
         
         
-        if (flag == 2){
-            if (i<3){
+        if (flag == 2){           
+            if (i<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+3,j,Nx,Ny,n)];
+                        yn[3+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+			yn[2+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+3,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
                         yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[1+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
                         yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[1+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
                         yp[1+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yp[0+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[2+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
                         yn[1+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
-                        yn[0+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                    }
+                }
+		if (i==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yp[2+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yp[1+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yp[0+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+			yn[3+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yn[2+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yn[1+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
+                        yn[0+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(i>Nx-4){
+            if(i>Nx-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yxpdata[idx(i-3+k,j,Nx,Ny,n)];
-                        yn[k+n*7] = yxndata[idx(i-3+k,j,Nx,Ny,n)];
-                    }
-                }
-                
-                if (i==Nx-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i+2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
+                        yp[k+n*7] = yxpdata[idx(i-4+k,j,Nx,Ny,n)];
+                        yn[k+n*7] = yxndata[idx(i-4+k,j,Nx,Ny,n)];
                     }
                 }
                 
                 if (i==Nx-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
-                        yn[4+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
+                        yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i+1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
                         yn[5+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i+1,j,Nx,Ny,n)];
                     }
                 }
-                
                 if (i==Nx-1){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
                         yn[4+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
-                        yn[5+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
-                        yp[6+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
-                        yn[6+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                    }
+                }
+                if (i==Nx){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yxpdata[idx(i-1,j,Nx,Ny,n)];
+                        yn[4+n*7] = yxndata[idx(i-1,j,Nx,Ny,n)];
+                        yp[5+n*7] = yxpdata[idx(i-2,j,Nx,Ny,n)];
+                        yn[5+n*7] = yxndata[idx(i-2,j,Nx,Ny,n)];
+                        yp[6+n*7] = yxpdata[idx(i-3,j,Nx,Ny,n)];
+                        yn[6+n*7] = yxndata[idx(i-3,j,Nx,Ny,n)];
                     }
                 }
             }
@@ -1958,9 +2149,9 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
             
             u_tnphx[n]=w2_nx[n]*((-1.0/6.0)*yn[2+n*7]+(5.0/6.0)*yn[3+n*7]+(2.0/6.0)*yn[4+n*7])+w1_nx[n]*((2.0/6.0)*yn[3+n*7]+(5.0/6.0)*yn[4+n*7]-(1.0/6.0)*yn[5+n*7])+w0_nx[n]*((11.0/6.0)*yn[4+n*7]-(7.0/6.0)*yn[5+n*7]+(2.0/6.0)*yn[6+n*7]);
             
-            u_tpnhx[n]=w0_px[n]*((2.0/6.0)*yp[0+n*7]-(7.0/6.0)*yp[1+n*7]+(11.0/6.0)*yp[2+n*7])+w1_px[n]*((-1.0/6.0)*yp[1+n*7]+(5.0/6.0)*yp[2+n*7]+(2.0/6.0)*yp[3+n*7])+w2_px[n]*((2.0/6.0)*yp[2+n*7]+(5.0/6.0)*yp[3+n*7]-(1.0/6.0)*yp[4+n*7]);
+            //u_tpnhx[n]=w0_px[n]*((2.0/6.0)*yp[0+n*7]-(7.0/6.0)*yp[1+n*7]+(11.0/6.0)*yp[2+n*7])+w1_px[n]*((-1.0/6.0)*yp[1+n*7]+(5.0/6.0)*yp[2+n*7]+(2.0/6.0)*yp[3+n*7])+w2_px[n]*((2.0/6.0)*yp[2+n*7]+(5.0/6.0)*yp[3+n*7]-(1.0/6.0)*yp[4+n*7]);
             
-            u_tnnhx[n]=w2_nx[n]*((-1.0/6.0)*yn[1+n*7]+(5.0/6.0)*yn[2+n*7]+(2.0/6.0)*yn[3+n*7])+w1_nx[n]*((2.0/6.0)*yn[2+n*7]+(5.0/6.0)*yn[3+n*7]-(1.0/6.0)*yn[4+n*7])+w0_nx[n]*((11.0/6.0)*yn[3+n*7]-(7.0/6.0)*yn[4+n*7]+(2.0/6.0)*yn[5+n*7]);
+            //u_tnnhx[n]=w2_nx[n]*((-1.0/6.0)*yn[1+n*7]+(5.0/6.0)*yn[2+n*7]+(2.0/6.0)*yn[3+n*7])+w1_nx[n]*((2.0/6.0)*yn[2+n*7]+(5.0/6.0)*yn[3+n*7]-(1.0/6.0)*yn[4+n*7])+w0_nx[n]*((11.0/6.0)*yn[3+n*7]-(7.0/6.0)*yn[4+n*7]+(2.0/6.0)*yn[5+n*7]);
 	    
         }
         
@@ -1972,9 +2163,10 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
 }
 
 /* Get the derivative on y direction */
-static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, realtype *u_tpnhy, realtype *u_tnnhy, long int i, long int j, long int Nx, long int Ny, int flag)
+//static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, realtype *u_tpnhy, realtype *u_tnnhy, long int i, long int j, long int Nx, long int Ny, int flag)
+static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, long int i, long int j, long int Nx, long int Ny, int flag)
 {
-    /* consider Ny */
+     /* consider Ny */
     if (Ny<4){
         cerr << "\nNy should be more than 3!\n";
         return 1;
@@ -1985,81 +2177,100 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
         realtype *yp = new realtype [28];
         realtype *yn = new realtype [28];
         
-        if (j>2&&j<Ny-3){
+        if (j>3&&j<Ny-2){
             for (n=0;n<4;n++){
                 for (k=0;k<7;k++){
-                    yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                    yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                    yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                 }
             }
         }
         
         if (flag == 0){
-            if (j<3){
+            if (j<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
                 if (j==0){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,Ny-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,Ny-3,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,Ny-4,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,Ny-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,Ny-3,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,Ny-4,Nx,Ny,n)];
+                    }
+                }
+                
+                if (j==1){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
                         yp[2+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,Ny-2,Nx,Ny,n)];
                         yp[0+n*7] = yypdata[idx(i,Ny-3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                         yn[2+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,Ny-2,Nx,Ny,n)];
                         yn[0+n*7] = yyndata[idx(i,Ny-3,Nx,Ny,n)];
                     }
                 }
                 
-                if (j==1){
+                if (j==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
                         yp[0+n*7] = yypdata[idx(i,Ny-2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
                         yn[0+n*7] = yyndata[idx(i,Ny-2,Nx,Ny,n)];
                     }
                 }
-                
-                if (j==2){
+
+		if (j==3){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
                         yp[0+n*7] = yypdata[idx(i,Ny-1,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                         yn[0+n*7] = yyndata[idx(i,Ny-1,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(j>Ny-4){
+            if(j>Ny-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
-                    }
-                }
-                
-                if (j==Ny-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
                 if (j==Ny-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
+                    }
+                }
+                
+                if (j==Ny-1){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
                         yn[5+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
                         yp[6+n*7] = yypdata[idx(i,1,Nx,Ny,n)];
@@ -2067,7 +2278,7 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
                     }
                 }
                 
-                if (j==Ny-1){
+                if (j==Ny){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yypdata[idx(i,0,Nx,Ny,n)];
                         yn[4+n*7] = yyndata[idx(i,0,Nx,Ny,n)];
@@ -2083,37 +2294,41 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
         
         if (flag == 1){
             /* consider the situations of different i */
-            if (j<3){
+            if (j<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 if (j==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+3,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yypdata[idx(i,j,Nx,Ny,3)];
                     //yp[1+3*7] = -yypdata[idx(i,j+1,Nx,Ny,3)];
                     //yp[0+3*7] = -yypdata[idx(i,j+2,Nx,Ny,3)];
                     //yn[2+3*7] = -yyndata[idx(i,j,Nx,Ny,3)];
-		    // yn[1+3*7] = -yyndata[idx(i,j+1,Nx,Ny,3)];
+                    //yn[1+3*7] = -yyndata[idx(i,j+1,Nx,Ny,3)];
                     //yn[0+3*7] = -yyndata[idx(i,j+2,Nx,Ny,3)];
                 }
                 if (j==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
                         yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                         yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
                     //yp[1+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
@@ -2124,12 +2339,32 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
                 }
                 if (j==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                    }
+                    //yp[2+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
+                    //yp[1+3*7] = -yypdata[idx(i,j-2,Nx,Ny,3)];
+                    //yp[0+3*7] = -yypdata[idx(i,j-2,Nx,Ny,3)];
+                    //yn[2+3*7] = -yyndata[idx(i,j-1,Nx,Ny,3)];
+                    //yn[1+3*7] = -yyndata[idx(i,j-2,Nx,Ny,3)];
+                    //yn[0+3*7] = -yyndata[idx(i,j-2,Nx,Ny,3)];
+                }
+		if (j==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                     //yp[2+3*7] = -yypdata[idx(i,j-1,Nx,Ny,3)];
                     //yp[1+3*7] = -yypdata[idx(i,j-2,Nx,Ny,3)];
@@ -2140,22 +2375,22 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
                 }
             }
             
-            if(j>Ny-4){
+            if(j>Ny-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
-                if (j==Ny-3){
+                if (j==Ny-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yypdata[idx(i,j+1,Nx,Ny,3)];
                     //yp[5+3*7] = -yypdata[idx(i,j+2,Nx,Ny,3)];
@@ -2164,14 +2399,14 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
                     //yn[5+3*7] = -yyndata[idx(i,j+2,Nx,Ny,3)];
                     //yn[6+3*7] = -yyndata[idx(i,j+2,Nx,Ny,3)];
                 }
-                if (j==Ny-2){
+                if (j==Ny-1){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yypdata[idx(i,j+1,Nx,Ny,3)];
                     //yn[4+3*7] = -yyndata[idx(i,j+1,Nx,Ny,3)];
@@ -2180,14 +2415,14 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
                     //yp[6+3*7] = -yypdata[idx(i,j,Nx,Ny,3)];
                     //yn[6+3*7] = -yyndata[idx(i,j,Nx,Ny,3)];
                 }
-                if (j==Ny-1){
+                if (j==Ny){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                     //yp[4+3*7] = -yypdata[idx(i,j,Nx,Ny,3)];
                     //yn[4+3*7] = -yyndata[idx(i,j,Nx,Ny,3)];
@@ -2201,86 +2436,100 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
         
         
         if (flag == 2){
-            if (j<3){
+            /* consider the situations of different i */
+            if (j<4){
                 for (n=0;n<4;n++){
-                    for (k=3;k<7;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
+                    for (k=4;k<7;k++){
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==0){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+3,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==1){
                     for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
                         yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[1+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
                         yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[1+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==2){
                     for (n=0;n<4;n++){
-                        yp[2+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
                         yp[1+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yp[0+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[2+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
                         yn[1+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
-                        yn[0+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                    }
+                }
+		if (j==3){
+                    for (n=0;n<4;n++){
+		        yp[3+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yp[2+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yp[1+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yp[0+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+			yn[3+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yn[2+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yn[1+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
+                        yn[0+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                 }
             }
             
-            if(j>Ny-4){
+            if(j>Ny-3){
                 for (n=0;n<4;n++){
                     for (k=0;k<4;k++){
-                        yp[k+n*7] = yypdata[idx(i,j-3+k,Nx,Ny,n)];
-                        yn[k+n*7] = yyndata[idx(i,j-3+k,Nx,Ny,n)];
-                    }
-                }
-                
-                if (j==Ny-3){
-                    for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j+2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j+2,Nx,Ny,n)];
+                        yp[k+n*7] = yypdata[idx(i,j-4+k,Nx,Ny,n)];
+                        yn[k+n*7] = yyndata[idx(i,j-4+k,Nx,Ny,n)];
                     }
                 }
                 
                 if (j==Ny-2){
                     for (n=0;n<4;n++){
-                        yp[4+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
-                        yn[4+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
+                        yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
                         yp[5+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j+1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
                         yn[5+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j+1,Nx,Ny,n)];
                     }
                 }
-                
                 if (j==Ny-1){
                     for (n=0;n<4;n++){
                         yp[4+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
                         yn[4+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
-                        yp[5+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
-                        yn[5+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
-                        yp[6+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
-                        yn[6+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                    }
+                }
+                if (j==Ny){
+                    for (n=0;n<4;n++){
+                        yp[4+n*7] = yypdata[idx(i,j-1,Nx,Ny,n)];
+                        yn[4+n*7] = yyndata[idx(i,j-1,Nx,Ny,n)];
+                        yp[5+n*7] = yypdata[idx(i,j-2,Nx,Ny,n)];
+                        yn[5+n*7] = yyndata[idx(i,j-2,Nx,Ny,n)];
+                        yp[6+n*7] = yypdata[idx(i,j-3,Nx,Ny,n)];
+                        yn[6+n*7] = yyndata[idx(i,j-3,Nx,Ny,n)];
                     }
                 }
             }
@@ -2292,9 +2541,9 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
             
             u_tnphy[n]=w2_ny[n]*((-1.0/6.0)*yn[2+n*7]+(5.0/6.0)*yn[3+n*7]+(2.0/6.0)*yn[4+n*7])+w1_ny[n]*((2.0/6.0)*yn[3+n*7]+(5.0/6.0)*yn[4+n*7]-(1.0/6.0)*yn[5+n*7])+w0_ny[n]*((11.0/6.0)*yn[4+n*7]-(7.0/6.0)*yn[5+n*7]+(2.0/6.0)*yn[6+n*7]);
             
-            u_tpnhy[n]=w0_py[n]*((2.0/6.0)*yp[0+n*7]-(7.0/6.0)*yp[1+n*7]+(11.0/6.0)*yp[2+n*7])+w1_py[n]*((-1.0/6.0)*yp[1+n*7]+(5.0/6.0)*yp[2+n*7]+(2.0/6.0)*yp[3+n*7])+w2_py[n]*((2.0/6.0)*yp[2+n*7]+(5.0/6.0)*yp[3+n*7]-(1.0/6.0)*yp[4+n*7]);
+            //u_tpnhy[n]=w0_py[n]*((2.0/6.0)*yp[0+n*7]-(7.0/6.0)*yp[1+n*7]+(11.0/6.0)*yp[2+n*7])+w1_py[n]*((-1.0/6.0)*yp[1+n*7]+(5.0/6.0)*yp[2+n*7]+(2.0/6.0)*yp[3+n*7])+w2_py[n]*((2.0/6.0)*yp[2+n*7]+(5.0/6.0)*yp[3+n*7]-(1.0/6.0)*yp[4+n*7]);
             
-            u_tnnhy[n]=w2_ny[n]*((-1.0/6.0)*yn[1+n*7]+(5.0/6.0)*yn[2+n*7]+(2.0/6.0)*yn[3+n*7])+w1_ny[n]*((2.0/6.0)*yn[2+n*7]+(5.0/6.0)*yn[3+n*7]-(1.0/6.0)*yn[4+n*7])+w0_ny[n]*((11.0/6.0)*yn[3+n*7]-(7.0/6.0)*yn[4+n*7]+(2.0/6.0)*yn[5+n*7]);
+            //u_tnnhy[n]=w2_ny[n]*((-1.0/6.0)*yn[1+n*7]+(5.0/6.0)*yn[2+n*7]+(2.0/6.0)*yn[3+n*7])+w1_ny[n]*((2.0/6.0)*yn[2+n*7]+(5.0/6.0)*yn[3+n*7]-(1.0/6.0)*yn[4+n*7])+w0_ny[n]*((11.0/6.0)*yn[3+n*7]-(7.0/6.0)*yn[4+n*7]+(2.0/6.0)*yn[5+n*7]);
         }
         
         delete []yp;
