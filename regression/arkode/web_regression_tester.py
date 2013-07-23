@@ -106,30 +106,30 @@ testsI2 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_no
            './ark_heat1D.exe', './ark_pollu.exe' )
 testsI3 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_brusselator1D.exe',
-           './ark_bruss.exe', './ark_heat1D.exe', './ark_medakzo.exe', './ark_pollu.exe', 
-           './ark_rober.exe', './ark_vdpol.exe' )
+           './ark_bruss.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
+           './ark_pollu.exe', './ark_vdpol.exe' )
 testsI4 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
            './ark_brusselator1D.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
            './ark_orego.exe', './ark_pollu.exe', './ark_ringmod.exe', './ark_rober.exe', 
-           './ark_vdpol.exe', './ark_vdpolm.exe' )
+           './ark_robertson.exe', './ark_vdpol.exe', './ark_vdpolm.exe' )
 testsI5 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
            './ark_brusselator1D.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe', 
-           './ark_pollu.exe', './ark_rober.exe', './ark_vdpol.exe', './ark_vdpolm.exe' )
+           './ark_pollu.exe', './ark_rober.exe', './ark_robertson.exe', './ark_vdpol.exe', 
+           './ark_vdpolm.exe' )
 testsI = (testsI2, testsI3, testsI4, testsI5)
 
 testsIF2 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
             './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_heat1D.exe' )
 testsIF3 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
             './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-            './ark_heat1D.exe', './ark_medakzo.exe' )
+            './ark_heat1D.exe' )
 testsIF4 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
-            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_heat1D.exe', 
-            './ark_medakzo.exe', './ark_ringmod.exe' )
+            './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_heat1D.exe' )
 testsIF5 = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 
             './ark_analytic_sys.exe', './ark_brusselator.exe', './ark_bruss.exe', 
-            './ark_brusselator1D.exe', './ark_heat1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+            './ark_heat1D.exe' )
 testsIF = (testsIF2, testsIF3, testsIF4, testsIF5)
 
 testsA3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
@@ -144,11 +144,11 @@ testsA5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.ex
 testsA = (testsA3, testsA4, testsA5)
 
 testsAF3 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
-            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_medakzo.exe' )
+            './ark_bruss.exe', './ark_brusselator1D.exe' )
 testsAF4 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
-            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe' )
 testsAF5 = ('./ark_analytic.exe', './ark_analytic_sys.exe', './ark_brusselator.exe', 
-            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe', './ark_medakzo.exe' )
+            './ark_bruss.exe', './ark_brusselator1D.exe', './ark_hires.exe' )
 testsAF = (testsAF3, testsAF4, testsAF5)
 
 testsE = ('./ark_analytic.exe', './ark_analytic_nonlin.exe', './ark_analytic_nonlin_back.exe', 

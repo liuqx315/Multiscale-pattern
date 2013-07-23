@@ -1768,7 +1768,7 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
       * ARK_MEM_NULL if the ARKode memory is ``NULL``
       * ARK_ILL_INPUT if an argument has an illegal value
    
-   **Notes:** The default value is 0.2; set *nlscoef* :math:`\le 0`
+   **Notes:** The default value is 0.1; set *nlscoef* :math:`\le 0`
    to specify this default.
 
 

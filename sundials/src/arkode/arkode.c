@@ -2824,8 +2824,16 @@ static int arkSetButcherTables(ARKodeMem ark_mem)
     /* 			     ark_mem->ark_b, */
     /* 			     ark_mem->ark_c, */
     /* 			     ark_mem->ark_b2); */
-    case(3):    /* Kvaerno(4,2,3): q=3, p=2, s=4 */
-      ARKodeLoadButcherTable(14, &ark_mem->ark_stages,
+    /* case(3):    /\* Kvaerno(4,2,3): q=3, p=2, s=4 *\/ */
+    /*   ARKodeLoadButcherTable(14, &ark_mem->ark_stages, */
+    /* 			     &q, */
+    /* 			     &ark_mem->ark_p, */
+    /* 			     ark_mem->ark_Ai, */
+    /* 			     ark_mem->ark_b, */
+    /* 			     ark_mem->ark_c, */
+    /* 			     ark_mem->ark_b2); */
+    case(3):    /* ARK3(2)4L[2]SA: q=3, p=2, s=4 */
+      ARKodeLoadButcherTable(15, &ark_mem->ark_stages,
     			     &q,
     			     &ark_mem->ark_p,
     			     ark_mem->ark_Ai,
