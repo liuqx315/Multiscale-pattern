@@ -86,9 +86,10 @@ NVECTOR_SERIAL.
 
 8. Attach linear solver module
 
-   If an implicit solve is required, initialize the linear solver
-   module with one of the following calls (for details see the section
-   :ref:`CInterface.LinearSolvers`):  
+   If an implicit solve is required and a Newton-based iteration is
+   chosen for the solver, initialize the linear solver module with one
+   of the following calls (for details see the section
+   :ref:`CInterface.LinearSolvers`):
 
    [S] ``ier = ARKDense(...);``
 
@@ -114,7 +115,37 @@ NVECTOR_SERIAL.
    change optional inputs specific to that linear solver. See the section
    :ref:`CInterface.OptionalInputs` for details. 
 
-10. Specify rootfinding problem
+10. Attach linear mass matrix solver module 
+
+    If a non-identity mass matrix solve is required, initialize the
+    linear mass matrix solver module with one of the following calls
+    (for details see the section :ref:`CInterface.LinearSolvers`):
+
+    [S] ``ier = ARKMassDense(...);``
+
+    [S] ``ier = ARKMassBand(...);``
+
+    [S] ``ier = ARKMassLapackDense(...);`` 
+
+    [S] ``ier = ARKMassLapackBand(...);``
+
+    ``ier = ARKMassSpgmr(...);``
+
+    ``ier = ARKMassSpbcg(...);``
+
+    ``ier = ARKMassSptfqmr(...);``
+
+    ``ier = ARKMassSpfgmr(...);``
+
+    ``ier = ARKMassPcg(...);``
+
+11. Set linear mass matrix solver optional inputs 
+
+    Call ``ARK*Set*`` functions from the selected mass matrix linear
+    solver module to change optional inputs specific to that linear
+    solver. See the section :ref:`CInterface.OptionalInputs` for details. 
+
+12. Specify rootfinding problem
 
     Optionally, call :c:func:`ARKodeRootInit()` to initialize a rootfinding
     problem to be solved during the integration of the ODE system. See
@@ -122,7 +153,7 @@ NVECTOR_SERIAL.
     the section :ref:`CInterface.OptionalInputs` for relevant optional
     input calls. 
 
-11. Advance solution in time
+13. Advance solution in time
 
     For each point at which output is desired, call 
 
@@ -133,12 +164,12 @@ NVECTOR_SERIAL.
     the vector ``y0`` above) will contain :math:`y(t)`. See the section
     :ref:`CInterface.Integration` for details. 
 
-12. Get optional outputs 
+14. Get optional outputs 
 
     Call ``ARK*Get*`` functions to obtain optional output. See
     the section :ref:`CInterface.OptionalInputs` for details.  
 
-13. Deallocate memory for solution vector 
+15. Deallocate memory for solution vector 
 
     Upon completion of the integration, deallocate memory for the
     vector ``y`` by calling the destructor function defined by the
@@ -148,10 +179,10 @@ NVECTOR_SERIAL.
 
     [P] ``N_VDestroy_Parallel(y);`` 
 
-14. Free solver memory 
+16. Free solver memory 
 
     Call ``ARKodeFree(&arkode_mem)`` to free the memory allocated for ARKode. 
 
-15. [P] Finalize MPI 
+17. [P] Finalize MPI 
 
     Call ``MPI_Finalize`` to terminate MPI.

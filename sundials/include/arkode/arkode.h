@@ -82,6 +82,10 @@ extern "C" {
 #define ARK_UNREC_RHSFUNC_ERR    -11
 #define ARK_RTFUNC_FAIL          -12
 #define ARK_LFREE_FAIL           -13
+#define ARK_MASSINIT_FAIL        -14
+#define ARK_MASSSETUP_FAIL       -15
+#define ARK_MASSSOLVE_FAIL       -16
+#define ARK_MASSFREE_FAIL        -17
 
 #define ARK_MEM_FAIL             -20
 #define ARK_MEM_NULL             -21
@@ -1012,6 +1016,9 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
  ARKodeGetNumLinSolvSetups returns the number of calls made to
                            the linear solver's setup routine
 
+ ARKodeGetNumMassSolves returns the number of calls made to
+                           the mass matrix solve routine
+
  ARKodeGetNumErrTestFails returns the number of local error test
                           failures that have occured
 
@@ -1071,6 +1078,8 @@ SUNDIALS_EXPORT int ARKodeGetNumRhsEvals(void *arkode_mem,
 					 long int *nfi_evals);
 SUNDIALS_EXPORT int ARKodeGetNumLinSolvSetups(void *arkode_mem, 
 					      long int *nlinsetups);
+SUNDIALS_EXPORT int ARKodeGetNumMassSolves(void *arkode_mem, 
+					   long int *nMassSolves);
 SUNDIALS_EXPORT int ARKodeGetNumErrTestFails(void *arkode_mem, 
 					     long int *netfails);
 SUNDIALS_EXPORT int ARKodeGetActualInitStep(void *arkode_mem, 

@@ -120,13 +120,21 @@ Note that both these files in turn include the header file
 ``sundials_nvector.h`` which defines the abstract ``N_Vector`` data
 type.
 
-Finally, if the user includes a non-trivial implicit component to their
+If the user includes a non-trivial implicit component to their
 ODE system, then each time step will require a nonlinear solver for
 the resulting systems of equations.  ARKode allows an accelerated
 fixed point iteration and Newton-based iterations for this solver; if
 a Newton method is used then a linear solver module header file may
-also be required. The header files corresponding to the various linear
-solvers built into ARKode are:  
+also be required.  Similarly, if the ODE system 
+
+.. math::
+   M y' = f_I(t,y) + f_E(t,y)
+
+involves a non-identity mass matrix :math:`M\ne I`, then each time
+step will require a linear solver for systems of the form
+:math:`Mx=b`.  The header files corresponding to the various linear
+solvers built into ARKode, and that can be used with either the Newton
+solver or for mass-matrix solves, are:  
 
 - ``arkode_dense.h``, which is used with the dense direct linear solver; 
 - ``arkode_band.h``, which is used with the band direct linear solver;

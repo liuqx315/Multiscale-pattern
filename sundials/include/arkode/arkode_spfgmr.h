@@ -55,6 +55,46 @@ extern "C" {
 SUNDIALS_EXPORT int ARKSpfgmr(void *arkode_mem, int pretype, int maxl);
 
 
+/*---------------------------------------------------------------
+ ARKMassSpfgmr:
+
+ A call to ARKMassSpfgmr links the mass matrix solve
+ with the ARKSPFGMR linear solver.
+
+ arkode_mem is the pointer to the integrator memory returned by
+           ARKodeCreate.
+
+ pretype   is the type of user preconditioning to be done.
+           This must be one of the four enumeration constants
+           PREC_NONE, PREC_LEFT, PREC_RIGHT, or PREC_BOTH defined 
+           in sundials_iterative.h.
+           These correspond to no preconditioning,
+           left preconditioning only, right preconditioning
+           only, and both left and right preconditioning,
+           respectively. ARKSPFGMR only implements right 
+	   preconditioning, so if any one of PREC_LEFT, 
+	   PREC_RIGHT or PREC_BOTH are defined, it will default 
+	   to using the right preconditioner only.
+
+ maxl      is the maximum Krylov dimension. This is an
+           optional input to the ARKSPFGMR solver. Pass 0 to
+           use the default value ARKSPFGMR_MAXL=5.
+
+ mtimes    is the user-supplied mass-matrix-vector product 
+           routine.
+
+ The return value of ARKMassSpfgmr is one of:
+    ARKSPILS_SUCCESS   if successful
+    ARKSPILS_MEM_NULL  if the arkode memory was NULL
+    ARKSPILS_MEM_FAIL  if there was a memory allocation failure
+    ARKSPILS_ILL_INPUT if a required vector operation is missing
+ The above constants are defined in arkode_spils.h
+
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKMassSpfgmr(void *arkode_mem, int pretype, 
+				  int maxl, ARKSpilsMassTimesVecFn mtimes);
+
+
 #ifdef __cplusplus
 }
 #endif

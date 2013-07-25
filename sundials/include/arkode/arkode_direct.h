@@ -28,10 +28,13 @@ extern "C" {
 #define ARKDLS_LMEM_NULL       -2
 #define ARKDLS_ILL_INPUT       -3
 #define ARKDLS_MEM_FAIL        -4
+#define ARKDLS_MASSMEM_NULL    -5
 
 /* Additional last_flag values */
-#define ARKDLS_JACFUNC_UNRECVR -5
-#define ARKDLS_JACFUNC_RECVR   -6
+#define ARKDLS_JACFUNC_UNRECVR  -6
+#define ARKDLS_JACFUNC_RECVR    -7
+#define ARKDLS_MASSFUNC_UNRECVR -8
+#define ARKDLS_MASSFUNC_RECVR   -9
 
 
 /*===============================================================
@@ -102,6 +105,39 @@ typedef int (*ARKDlsDenseJacFn)(long int N, realtype t,
 				DlsMat Jac, void *user_data,
 				N_Vector tmp1, N_Vector tmp2, 
 				N_Vector tmp3);
+  
+
+/*---------------------------------------------------------------
+ Type: ARKDlsDenseMassFn
+
+ A dense mass matrix approximation function Mass must be of type 
+ ARKDlsDenseMassFn. Its parameters are:
+
+ N   is the problem size.
+
+ M   is the dense matrix (of type DlsMat) that will be loaded
+     by a ARKDlsDenseMassFn with an approximation to the mass matrix.
+
+ t   is the current value of the independent variable.
+
+ y   is the current value of the dependent variable vector,
+     namely the predicted value of y(t).
+
+ user_data is a pointer to user data - the same as the user_data
+     parameter passed to ARKodeSetFdata.
+
+ tmp1, tmp2, and tmp3 are pointers to memory allocated for
+ vectors of length N which can be used by a ARKDlsDenseMassFn
+ as temporary storage or work space.
+
+ A ARKDlsDenseMassFn should return 0 if successful, and a 
+ negative value if an unrecoverable error occurred.
+
+---------------------------------------------------------------*/
+typedef int (*ARKDlsDenseMassFn)(long int N, realtype t,
+				 N_Vector y, DlsMat M, 
+				 void *user_data, N_Vector tmp1, 
+				 N_Vector tmp2, N_Vector tmp3);
   
 
 /*---------------------------------------------------------------
@@ -189,6 +225,43 @@ typedef int (*ARKDlsBandJacFn)(long int N, long int mupper,
 			       N_Vector tmp1, N_Vector tmp2, 
 			       N_Vector tmp3);
 
+/*---------------------------------------------------------------
+ Type: ARKDlsBandMassFn
+
+ A band mass matrix approximation function Mass must have the
+ prototype given below. Its parameters are:
+
+ N is the length of all vector arguments.
+
+ mupper is the upper half-bandwidth of the approximate banded
+ Jacobian. This parameter is the same as the mupper parameter
+ passed by the user to the linear solver initialization function.
+
+ mlower is the lower half-bandwidth of the approximate banded
+ Jacobian. This parameter is the same as the mlower parameter
+ passed by the user to the linear solver initialization function.
+
+ t is the current value of the independent variable.
+
+ y is the current value of the dependent variable vector,
+      namely the predicted value of y(t).
+
+ M is the band matrix (of type DlsMat) that will be loaded
+ by a ARKDlsBandMassFn with an approximation to the mass matrix
+
+ tmp1, tmp2, and tmp3 are pointers to memory allocated for
+ vectors of length N which can be used by a ARKDlsBandMassFn
+ as temporary storage or work space.
+
+ A ARKDlsBandMassFn should return 0 if successful, and a negative 
+ value if an unrecoverable error occurred.
+---------------------------------------------------------------*/
+typedef int (*ARKDlsBandMassFn)(long int N, long int mupper, 
+				long int mlower, realtype t, 
+				N_Vector y, DlsMat M, 
+				void *user_data, N_Vector tmp1, 
+				N_Vector tmp2, N_Vector tmp3);
+
 
 /*===============================================================
   EXPORTED FUNCTIONS
@@ -218,17 +291,43 @@ SUNDIALS_EXPORT int ARKDlsSetBandJacFn(void *arkode_mem,
 
 
 /*---------------------------------------------------------------
+ Optional inputs to the ARKDLS linear solver:
+
+ ARKDlsSetDenseMassFn specifies the dense mass matrix 
+ approximation routine to be used for a direct dense solver.
+
+ ARKDlsSetBandMassFn specifies the band mass matrix approximation
+ routine to be used for a direct band solver.
+
+ The return value is one of:
+    ARKDLS_SUCCESS      if successful
+    ARKDLS_MEM_NULL     if the ARKODE memory was NULL
+    ARKDLS_MASSMEM_NULL if the mass matrix solver memory was NULL
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKDlsSetDenseMassFn(void *arkode_mem, 
+					 ARKDlsDenseMassFn mass);
+SUNDIALS_EXPORT int ARKDlsSetBandMassFn(void *arkode_mem, 
+					ARKDlsBandMassFn mass);
+
+
+/*---------------------------------------------------------------
  Optional outputs from the ARKDLS linear solver:
 
  ARKDlsGetWorkSpace   returns the real and integer workspace used
                      by the direct linear solver.
+ ARKDlsGetMassWorkSpace   returns the real and integer workspace used
+                     by the mass matrix direct linear solver.
  ARKDlsGetNumJacEvals returns the number of calls made to the
                      Jacobian evaluation routine jac.
+ ARKDlsGetNumMassEvals returns the number of calls made to the
+                     mass matrix evaluation routine Mass.
  ARKDlsGetNumRhsEvals returns the number of calls to the user
                      f routine due to finite difference Jacobian
                      evaluation.
  ARKDlsGetLastFlag    returns the last error flag set by any of
                      the ARKDLS interface functions.
+ ARKDlsGetLastMassFlag  returns the last error flag set by any of
+                     the ARKDLS interface mass matrix functions.
 
  The return value of ARKDlsGet* is one of:
     ARKDLS_SUCCESS   if successful
@@ -238,12 +337,19 @@ SUNDIALS_EXPORT int ARKDlsSetBandJacFn(void *arkode_mem,
 SUNDIALS_EXPORT int ARKDlsGetWorkSpace(void *arkode_mem, 
 				       long int *lenrwLS, 
 				       long int *leniwLS);
+SUNDIALS_EXPORT int ARKDlsGetMassWorkSpace(void *arkode_mem, 
+					   long int *lenrwMLS, 
+					   long int *leniwMLS);
 SUNDIALS_EXPORT int ARKDlsGetNumJacEvals(void *arkode_mem, 
 					 long int *njevals);
+SUNDIALS_EXPORT int ARKDlsGetNumMassEvals(void *arkode_mem, 
+					  long int *nmevals);
 SUNDIALS_EXPORT int ARKDlsGetNumRhsEvals(void *arkode_mem, 
 					 long int *nfevalsLS);
 SUNDIALS_EXPORT int ARKDlsGetLastFlag(void *arkode_mem, 
 				      long int *flag);
+SUNDIALS_EXPORT int ARKDlsGetLastMassFlag(void *arkode_mem, 
+					  long int *flag);
 
 
 /*---------------------------------------------------------------

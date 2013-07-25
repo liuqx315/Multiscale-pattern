@@ -398,6 +398,19 @@ typedef struct ARKodeMemRec {
   void (*ark_lfree)(struct ARKodeMemRec *ark_mem);
   void *ark_lmem;           
 
+  /*-----------------------
+    Mass Matrix Solver Data 
+    -----------------------*/
+  booleantype ark_mass_matrix;   /* flag denoting use of a non-identity M */
+  long int ark_mass_solves;      /* number of mass matrix solve calls */
+  int (*ark_minit)(struct ARKodeMemRec *ark_mem);
+  int (*ark_msetup)(struct ARKodeMemRec *ark_mem, N_Vector ypred, 
+		    N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3); 
+  int (*ark_msolve)(struct ARKodeMemRec *ark_mem, N_Vector b, N_Vector weight,
+		    N_Vector ycur);
+  void (*ark_mfree)(struct ARKodeMemRec *ark_mem);
+  void *ark_mass_mem;
+
   /*------------
     Saved Values
     ------------*/
@@ -544,16 +557,17 @@ typedef struct ARKodeMemRec {
 
 /*---------------------------------------------------------------
  int (*ark_lsolve)(ARKodeMem ark_mem, N_Vector b, N_Vector weight,
-                  N_Vector ycur, N_Vector fcur);
+                   N_Vector ycur, N_Vector fcur);
 -----------------------------------------------------------------
  ark_lsolve must solve the linear equation P x = b, where
- P is some approximation to (I - gamma J), J = (df/dy)(tn,ycur)
- and the RHS vector b is input. The N-vector ycur contains
- the solver's current approximation to y(tn) and the vector
- fcur contains the N_Vector f(tn,ycur). The solution is to be
- returned in the vector b. ark_lsolve returns a positive value
- for a recoverable error and a negative value for an
- unrecoverable error. Success is indicated by a 0 return value.
+ P is some approximation to (M - gamma J), M is the system mass
+ matrix, J = (df/dy)(tn,ycur), and the RHS vector b is input. The 
+ N-vector ycur contains the solver's current approximation to 
+ y(tn) and the vector fcur contains the N_Vector f(tn,ycur). The 
+ solution is to be returned in the vector b. ark_lsolve returns 
+ a positive value for a recoverable error and a negative value 
+ for an unrecoverable error. Success is indicated by a 0 return 
+ value.
 ---------------------------------------------------------------*/
 
 /*---------------------------------------------------------------
@@ -562,6 +576,65 @@ typedef struct ARKodeMemRec {
  ark_lfree should free up any memory allocated by the linear
  solver. This routine is called once a problem has been
  completed and the linear solver is no longer needed.
+---------------------------------------------------------------*/
+
+
+
+/*---------------------------------------------------------------
+ int (*ark_minit)(ARKodeMem ark_mem);
+-----------------------------------------------------------------
+ The purpose of ark_minit is to complete initializations for a
+ specific mass matrix linear solver, such as counters and 
+ statistics. An function of this type should return 0 if it has 
+ successfully initialized the mass matrix linear solver and a 
+ negative value otherwise.  If an error does occur, an 
+ appropriate message should be sent to the error handler function.
+---------------------------------------------------------------*/
+  
+/*---------------------------------------------------------------
+ int (*ark_msetup)(ARKodeMem ark_mem, N_Vector ypred, 
+		   N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+ -----------------------------------------------------------------
+ The job of ark_msetup is to prepare the mass matrix solver for
+ subsequent calls to ark_msolve. It may recompute mass matrix
+ related data is it deems necessary. Its parameters are as
+ follows:
+
+ ark_mem - problem memory pointer of type ARKodeMem. See the
+          typedef earlier in this file.
+
+ ypred - the predicted y vector for the current ARKODE internal
+         step.
+
+ vtemp1 - temporary N_Vector provided for use by ark_lsetup.
+
+ vtemp3 - temporary N_Vector provided for use by ark_lsetup.
+
+ vtemp3 - temporary N_Vector provided for use by ark_lsetup.
+
+ The ark_msetup routine should return 0 if successful, and a 
+ negative value for an unrecoverable error.
+---------------------------------------------------------------*/
+
+/*---------------------------------------------------------------
+ int (*ark_msolve)(ARKodeMem ark_mem, N_Vector b, 
+                   N_Vector weight, N_Vector ycur);
+-----------------------------------------------------------------
+ ark_msolve must solve the linear equation M x = b, where
+ M is the system mass matrix, and the RHS vector b is input. The 
+ N-vector ycur contains the solver's current approximation to 
+ y(tn). The solution is to be returned in the vector b. 
+ ark_msolve returns a positive value for a recoverable error and 
+ a negative value for an unrecoverable error. Success is 
+ indicated by a 0 return value.
+---------------------------------------------------------------*/
+
+/*---------------------------------------------------------------
+ void (*ark_mfree)(ARKodeMem ark_mem);
+-----------------------------------------------------------------
+ ark_mfree should free up any memory allocated by the mass matrix
+ solver. This routine is called once a problem has been
+ completed and the solver is no longer needed.
 ---------------------------------------------------------------*/
 
   
@@ -673,6 +746,9 @@ void arkProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_MISSING_FI     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 #define MSGARK_MISSING_F      "Cannot specify that method is ImEx without providing function pointers to fi(t,y) and fe(t,y)."
 #define MSGARK_RESIZE_FAIL    "Error in user-supplied resize() function."
+#define MSGARK_MASSINIT_FAIL  "The mass matrix solver's init routine failed."
+#define MSGARK_MASSSOLVE_NULL "The mass matrix solver's solve routine is NULL."
+#define MSGARK_MASSFREE_FAIL  "The mass matrixsolver's free routine failed."
 
 #ifdef __cplusplus
 }
