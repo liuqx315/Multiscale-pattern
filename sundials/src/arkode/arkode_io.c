@@ -2083,6 +2083,27 @@ int ARKodeGetNumLinSolvSetups(void *arkode_mem, long int *nlinsetups)
 
 
 /*---------------------------------------------------------------
+ ARKodeGetNumMassSolves:
+
+ Returns the current number of calls to the mass matrix solver.
+---------------------------------------------------------------*/
+int ARKodeGetNumMassSolves(void *arkode_mem, long int *nMassSolves)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeGetNumMassSolves", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  *nMassSolves = ark_mem->ark_mass_solves;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKodeGetNumErrTestFails:
 
  Returns the current number of error test failures

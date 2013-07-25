@@ -43,6 +43,29 @@ SUNDIALS_EXPORT int ARKLapackDense(void *arkode_mem, int N);
 
 
 /*---------------------------------------------------------------
+ ARKMassLapackDense:
+
+ A call to the ARKMassLapackDense function links the mass matrix 
+ solve with the ARKLAPACK linear solver.
+
+ arkode_mem is the pointer to the integrator memory returned by
+           ARKodeCreate.
+
+ N is the size of the ODE system.
+
+ dmass is the user-supplied dense mass matrix setup routine.
+
+ The return value of ARKMassLapackDense is one of:
+    ARKLAPACK_SUCCESS   if successful
+    ARKLAPACK_MEM_NULL  if the ARKODE memory was NULL
+    ARKLAPACK_MEM_FAIL  if there was a memory allocation failure
+    ARKLAPACK_ILL_INPUT if a required vector operation is missing
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKMassLapackDense(void *arkode_mem, int N, 
+				       ARKDlsDenseMassFn dmass);
+
+
+/*---------------------------------------------------------------
  ARKLapackBand:
 
  A call to the ARKLapackBand function links the main integrator
@@ -65,6 +88,33 @@ SUNDIALS_EXPORT int ARKLapackDense(void *arkode_mem, int N);
                         or if a bandwidth has an illegal value.
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower);
+
+/*---------------------------------------------------------------
+ ARKMassLapackBand:
+
+ A call to the ARKMassLapackBand function links the mass matrix 
+ solve with the ARKLAPACK linear solver. 
+
+ arkode_mem is the pointer to the integrator memory returned by
+           ARKodeCreate.
+
+ N is the size of the ODE system.
+
+ mupper is the upper bandwidth of the band Jacobian approximation.
+
+ mlower is the lower bandwidth of the band Jacobian approximation.
+
+ bmass is the user-supplied band mass matrix setup routine.
+
+ The return value of ARKLapackBand is one of:
+    ARKLAPACK_SUCCESS   if successful
+    ARKLAPACK_MEM_NULL  if the ARKODE memory was NULL
+    ARKLAPACK_MEM_FAIL  if there was a memory allocation failure
+    ARKLAPACK_ILL_INPUT if a required vector operation is missing 
+                        or if a bandwidth has an illegal value.
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKMassLapackBand(void *arkode_mem, int N, int mupper, 
+				      int mlower, ARKDlsBandMassFn bmass);
 
 #ifdef __cplusplus
 }

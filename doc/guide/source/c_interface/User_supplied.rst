@@ -481,7 +481,7 @@ products.
 
 .. _CInterface.PrecSolveFn:
 
-Preconditioning (linear system solution)^
+Preconditioning (linear system solution)
 --------------------------------------------------------------
 
 If one of the Krylov iterative linear solvers SPGMR, SPBCG,
@@ -604,6 +604,250 @@ a user-supplied function of type :c:func:`ARKSpilsPrecSetupFn()`.
    can be accessed as ``UNIT_ROUNDOFF`` defined in the header file
    ``sundials_types.h``. 
 
+
+
+.. _CInterface.DenseMassFn:
+
+Mass matrix information (direct method with dense mass matrix)
+---------------------------------------------------------------
+
+If the direct linear solver with dense treatment of the
+mass matrix is used (i.e., :c:func:`ARKMassDense()` or
+:c:func:`ARKMassLapackDense()` is called in Step 10 of 
+the section :ref:`CInterface.Skeleton`), the user may provide a
+function of type :c:func:`ARKDlsDenseMassFn()` to provide the mass
+matrix approximation. 
+
+
+
+.. c:function:: typedef int (*ARKDlsDenseMassFn)(long int N, realtype t, N_Vector y, DlsMat M, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+
+   This function computes the mass matrix :math:`M` (or an approximation to it).
+   
+   **Arguments:**
+      * `N` -- the size of the ODE system.
+      * `t` -- the current value of the independent variable.
+      * `y` -- the current value of the dependent variable vector.
+      * `M` -- the output dense mass matrix (of type ``DlsMat``).
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used by an
+        ARKDlsDenseMassFn as temporary storage or work space.
+   
+   **Return value:** 
+   An ARKDlsDenseMassFn function should return 0 if
+   successful, or a negative value if it failed unrecoverably (in
+   which case the integration is halted, :c:func:`ARKode()` returns
+   ARK_MASSSETUP_FAIL and ARKDENSE sets `last_flag` to
+   ARKDLS_MASSFUNC_UNRECVR). 
+   
+   **Notes:** A user-supplied dense mass matrix function must load the
+   `N` by `N` dense matrix `M` with an approximation to the mass matrix
+   :math:`M(t)`. Only nonzero elements need to
+   be loaded into `M` because it is initialized to the zero matrix
+   before the call to the mass matrix function. The type of `M` is ``DlsMat``. 
+   
+   As discussed above in section :ref:`CInterface.DenseJacobianFn`,
+   the accessor macros ``DENSE_ELEM`` and ``DENSE_COL`` allow the user
+   to read and write dense matrix elements without making explicit
+   references to the underlying representation of the ``DlsMat`` 
+   type. Similarly, the ``DlsMat`` type and accessor macros
+   ``DENSE_ELEM`` and ``DENSE_COL`` are documented in the section
+   :ref:`LinearSolvers`. 
+   
+   For the sake of uniformity, the argument `N` is of type ``long int``,
+   even in the case that the LAPACK dense solver is to be used. 
+
+
+
+.. _CInterface.BandMassFn:
+
+Mass matrix information (direct method with banded mass matrix)
+----------------------------------------------------------------
+
+If the direct linear solver with banded treatment of the mass matrix is
+used (i.e. :c:func:`ARKMassBand()` or :c:func:`ARKMassLapackBand()` is
+called in Step 10 of the section :ref:`CInterface.Skeleton`), the user
+may provide a function of type :c:func:`ARKDlsBandMassFn()` to provide
+the mass matrix approximation. 
+
+
+
+.. c:function:: typedef int (*ARKDlsBandMassFn)(long int N, long int mupper, long int mlower, realtype t, N_Vector y, DlsMat M, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+
+   This function computes the banded mass matrix :math:`M` (or an approximation to it).
+   
+   **Arguments:**
+      * `N` -- the size of the ODE system.
+      * `mlower`, `mupper` -- the lower and upper half-bandwidths of
+        the mass matrix.
+      * `t` -- the current value of the independent variable
+      * `y` -- the current value of the dependent variable vector, namely
+        the predicted value of :math:`y(t)`.
+      * `M` -- the output dense mass matrix (of type ``DlsMat``).
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used by an
+        ARKDlsBandMassFn as temporary storage or work space.
+   
+   **Return value:** 
+   An ARKDlsBandMassFn function should return 0 if
+   successful, or a negative value if it failed unrecoverably (in
+   which case the integration is halted, :c:func:`ARKode()` returns
+   ARK_MASSSETUP_FAIL and ARKBAND sets `last_flag` to
+   ARKDLS_MASSFUNC_UNRECVR). 
+   
+   **Notes:** A user-supplied banded mass matrix function must load
+   the band matrix `M` of type ``DlsMat`` with the elements of the
+   mass matrix :math:`M(t)`. Only nonzero elements need to be loaded
+   into `M` because it is initialized to the zero matrix before the
+   call to the mass matrix function.  
+  
+   As discussed above in section :ref:`CInterface.BandJacobianFn`,
+   the accessor macros ``BAND_ELEM``, ``BAND_COL``, and
+   ``BAND_COL_ELEM`` allow the user to read and write band matrix 
+   elements without making specific references to the underlying
+   representation of the ``DlsMat`` type.  Similarly, the ``DlsMat``
+   type and the accessor macros ``BAND_ELEM``, ``BAND_COL`` and
+   ``BAND_COL_ELEM`` are documented in the section
+   :ref:`LinearSolvers`.
+
+   For the sake of uniformity, the arguments `N`, `mlower`, and
+   `mupper` are of type ``long int``, even in the case that the
+   LAPACK band solver is to be used.
+
+
+
+.. _CInterface.MTimesFn:
+
+Mass matrix information (matrix-vector product)
+--------------------------------------------------------------
+
+If one of the Krylov iterative linear solvers SPGMR, SPBCG, 
+SPTFQMR, SPFGMR or PCG is selected (i.e. ARKMassSp* is called in step 10 of
+the section :ref:`CInterface.Skeleton`), the user may provide a function
+of type :c:func:`ARKSpilsMassTimesVecFn()` in the following form, to compute
+matrix-vector products :math:`M*v`.
+
+
+
+.. c:function:: typedef int (*ARKSpilsMassTimesVecFn)(N_Vector v, N_Vector Mv, realtype t, N_Vector y, void *user_data, N_Vector tmp)
+
+   This function computes the product :math:`M*v` (or an approximation to it).
+   
+   **Arguments:**
+      * `v` -- the vector to multiply.
+      * `Mv` -- the output vector computed.
+      * `t` -- the current value of the independent variable
+      * `y` -- the current value of the dependent variable vector.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp` -- pointer to memory allocated to a variable of type
+        ``N_Vector`` which can be used as temporary storage or work space.
+   
+   **Return value:** 
+   The value to be returned by the mass-matrix-vector product
+   function should be 0 if successful. Any other return value will
+   result in an unrecoverable error of the SPILS generic solver,
+   in which case the integration is halted. 
+   
+
+
+
+
+.. _CInterface.MassPrecSolveFn:
+
+Mass matrix preconditioning (linear system solution)
+--------------------------------------------------------------
+
+If one of the Krylov iterative linear solvers SPGMR, SPBCG,
+SPTFQMR, SPFGMR or PCG is selected for the mass matrix systems, and
+preconditioning is used, then the user must provide a function of type
+:c:func:`ARKSpilsMassPrecSolveFn()` to solve the linear system
+:math:`Pz=r`, where :math:`P` may be either a left or right
+preconditioning matrix.  Here :math:`P` should approximate (at least
+crudely) the mass matrix :math:`M`.  If preconditioning is done on
+both sides, the product of the two preconditioner matrices should
+approximate :math:`M`.
+
+
+
+.. c:function:: typedef int (*ARKSpilsMassPrecSolveFn)(realtype t, N_Vector y, N_Vector r, N_Vector z, realtype delta, int lr, void *user_data, N_Vector tmp)
+
+   This function solves the preconditioner system :math:`Pz=r`.
+   
+   **Arguments:**
+      * `t` -- the current value of the independent variable.
+      * `y` -- the current value of the dependent variable vector.
+      * `r` -- the right-hand side vector of the linear system.
+      * `z` -- the computed output solution vector 
+      * `delta` -- an input tolerance to be used if an iterative method
+        is employed in the solution.  In that case, the resdual vector
+        :math:`Res = r-Pz` of the system should be made to be less than `delta`
+        in the weighted :math:`l_2` norm, i.e. :math:`\left(\sum_{i=1}^n
+        \left(Res_i * ewt_i\right)^2 \right)^{1/2} < \delta`, where :math:`\delta =`
+        `delta`.  To obtain the ``N_Vector`` `ewt`, call
+        :c:func:`ARKodeGetErrWeights()`. 
+      * `lr` -- an input flag indicating whether the preconditioner
+        solve is to use the left preconditioner (`lr = 1`) or the right
+        preconditioner (`lr = 2`).
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp` -- pointer to memory allocated to a variable of type
+        ``N_Vector`` which can be used as temporary storage or work space.
+   
+   **Return value:** 
+   The value to be returned by the preconditioner solve
+   function is a flag indicating whether it was successful. This value
+   should be 0 if successful, positive for a recoverable error (in
+   which case the step will be retried), or negative for an
+   unrecoverable error (in which case the integration is halted).  
+
+
+
+
+.. _CInterface.MasPrecSetupFn:
+
+Mass matrix preconditioning (mass matrix data)
+--------------------------------------------------------------
+
+If the user's mass matrix preconditioner requires that any
+problem data be preprocessed or evaluated, then these actions need to
+occur within a user-supplied function of type
+:c:func:`ARKSpilsMassPrecSetupFn()`.
+
+
+
+.. c:function:: typedef int (*ARKSpilsMassPrecSetupFn)(realtype t, N_Vector y, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+
+   This function preprocesses and/or evaluates mass-matrix-related
+   data needed by the preconditioner.
+   
+   **Arguments:**
+      * `t` -- the current value of the independent variable.
+      * `y` -- the current value of the dependent variable vector.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * `tmp1`, `tmp2`, `tmp3` -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used as temporary
+        storage or work space.
+   
+   **Return value:** 
+   The value to be returned by the mass matrix preconditioner setup
+   function is a flag indicating whether it was successful. This value
+   should be 0 if successful, positive for a recoverable error (in
+   which case the step will be retried), or negative for an
+   unrecoverable error (in which case the integration is halted). 
+   
+   **Notes:**  The operations performed by this function might include
+   forming a mass matrix and performing an incomplete 
+   factorization of the result.  Although such operations would
+   typically be performed only once at the beginning of a simulation,
+   these may be required if the mass matrix can change as a function
+   of time.
+   
 
 
 .. _CInterface.VecResizeFn:

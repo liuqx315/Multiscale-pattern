@@ -289,6 +289,15 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_lfree  = NULL;
   ark_mem->ark_lmem   = NULL;
 
+  /* Set the mass matrix to identity, and mass matrix solver 
+     addresses to NULL. (We check != NULL later, in ARKode.) */
+  ark_mem->ark_mass_matrix = FALSE;
+  ark_mem->ark_minit    = NULL;
+  ark_mem->ark_msetup   = NULL;
+  ark_mem->ark_msolve   = NULL;
+  ark_mem->ark_mfree    = NULL;
+  ark_mem->ark_mass_mem = NULL;
+
   /* Initialize ycur */
   N_VScale(ONE, y0, ark_mem->ark_ycur);
 
@@ -318,6 +327,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nstlp        = 0;
   ark_mem->ark_nge          = 0;
   ark_mem->ark_irfnd        = 0;
+  ark_mem->ark_mass_solves  = 0;
 
   /* Initialize other integrator optional outputs */
   ark_mem->ark_h0u    = ZERO;
@@ -431,6 +441,7 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nstlp        = 0;
   ark_mem->ark_nge          = 0;
   ark_mem->ark_irfnd        = 0;
+  ark_mem->ark_mass_solves  = 0;
 
   /* Indicate that problem size is new */
   ark_mem->ark_resized = TRUE;
@@ -1090,6 +1101,17 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
       }
     }
 
+    /* Re-initialize the mass matrix solver (assumes that solver 
+       memory has already been resized appropriately) */
+    if (ark_mem->ark_minit != NULL) {
+      ier = ark_mem->ark_minit(ark_mem);
+      if (ier != 0) {
+	arkProcessError(ark_mem, ARK_MASSINIT_FAIL, "ARKODE", 
+			"ARKodeResize", MSGARK_MASSINIT_FAIL);
+	return(ARK_MASSINIT_FAIL);
+      }
+    }
+
     /* Fill initial ynew and fnew arrays */
     N_VScale(ONE, ark_mem->ark_ycur, ark_mem->ark_ynew);
     ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
@@ -1485,6 +1507,9 @@ void ARKodeFree(void **arkode_mem)
 
   if (ark_mem->ark_lfree != NULL) 
     ark_mem->ark_lfree(ark_mem);
+
+  if (ark_mem->ark_mfree != NULL) 
+    ark_mem->ark_mfree(ark_mem);
 
   if (ark_mem->ark_nrtfn > 0) {
     free(ark_mem->ark_glo);     ark_mem->ark_glo     = NULL;
@@ -2493,6 +2518,16 @@ static int arkInitialSetup(ARKodeMem ark_mem)
 			"arkInitialSetup", MSGARK_LINIT_FAIL);
 	return(ARK_LINIT_FAIL);
       }
+    }
+  }
+
+  /* Call minit (if it exists) */
+  if (ark_mem->ark_minit != NULL) {
+    ier = ark_mem->ark_minit(ark_mem);
+    if (ier != 0) {
+      arkProcessError(ark_mem, ARK_MASSINIT_FAIL, "ARKODE", 
+		      "arkInitialSetup", MSGARK_MASSINIT_FAIL);
+      return(ARK_MASSINIT_FAIL);
     }
   }
 

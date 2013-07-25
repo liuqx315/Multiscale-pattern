@@ -6,7 +6,7 @@
 Linear Solvers in ARKode
 ========================
 
-In this section, we describe six generic linear solver code modules
+In this section, we describe the generic linear solver code modules
 that are included in ARKode.  While these may be used in conjunction
 with ARKode, they may also be used separately as generic packages in
 themselves.  These generic linear solver modules in SUNDIALS are
