@@ -698,9 +698,9 @@ static int Setlfxegm(realtype *Ydata, realtype **lfxegm, long int i, long int j,
    
     egvx[idx(i,j,Nx,Ny,0)]=vx-a;
     egvx[idx(i,j,Nx,Ny,1)]=vx;
-    egvx[idx(i,j,Nx,Ny,2)]=vx+a;
-    egvx[idx(i,j,Nx,Ny,3)]=vx;
-    
+    egvx[idx(i,j,Nx,Ny,2)]=vx;
+    egvx[idx(i,j,Nx,Ny,3)]=vx+a;
+    /*
     lfxegm[0][0] = ((gama-1.0)*h)/(2.0*a*a)+vx/(2.0*a)-0.5;
     lfxegm[1][0] = ((1.0-gama)*h)/(a*a)+2.0;
     lfxegm[2][0] = ((gama-1.0)*h)/(2.0*a*a)-vx/(2.0*a)-0.5;
@@ -717,6 +717,7 @@ static int Setlfxegm(realtype *Ydata, realtype **lfxegm, long int i, long int j,
     lfxegm[1][3] = (1.0-gama)/(a*a);
     lfxegm[2][3] = (gama-1.0)/(2*a*a);
     lfxegm[3][3] = (1.0-gama)*vy/(a*a);
+    */
     /*
     lfxegm[0][0] = vx/(2.0*a)+(vx*vx+vy*vy)/(4.0*h-2.0*(vx*vx+vy*vy));
     lfxegm[1][0] = 1.0-(vx*vx+vy*vy)/(2.0*h-1.0*(vx*vx+vy*vy));
@@ -735,6 +736,23 @@ static int Setlfxegm(realtype *Ydata, realtype **lfxegm, long int i, long int j,
     lfxegm[2][3] = 1.0/(2.0*h-1.0*(vx*vx+vy*vy));
     lfxegm[3][3] = 0.0;
     */
+    lfxegm[0][0] = ((gama-1.0)/(2.0*a*a))*(h+(a/(gama-1.0))*(vx-a));
+    lfxegm[1][0] = ((gama-1.0)/(2.0*a*a))*(-2.0*h+(4.0/(gama-1.0))*a*a);
+    lfxegm[2][0] = ((gama-1.0)/(2.0*a*a))*(-2.0*vy*a*a/(gama-1.0));
+    lfxegm[3][0] = ((gama-1.0)/(2.0*a*a))*(h-(a/(gama-1.0))*(vx+a));
+    lfxegm[0][1] = ((gama-1.0)/(2.0*a*a))*(-(vx+a/(gama-1.0)));
+    lfxegm[1][1] = ((gama-1.0)/(2.0*a*a))*(2.0*vx);
+    lfxegm[2][1] = 0.0;
+    lfxegm[3][1] = ((gama-1.0)/(2.0*a*a))*(-vx+a/(gama-1.0));
+    lfxegm[0][2] = ((gama-1.0)/(2.0*a*a))*(-vy);
+    lfxegm[1][2] = ((gama-1.0)/(2.0*a*a))*(2.0*vy);
+    lfxegm[2][2] = ((gama-1.0)/(2.0*a*a))*(2.0*a*a/(gama-1.0));
+    lfxegm[3][2] = ((gama-1.0)/(2.0*a*a))*(-vy);
+    lfxegm[0][3] = ((gama-1.0)/(2.0*a*a))*1.0;
+    lfxegm[1][3] = ((gama-1.0)/(2.0*a*a))*(-2.0);
+    lfxegm[2][3] = 0.0;
+    lfxegm[3][3] = ((gama-1.0)/(2.0*a*a))*1.0;
+
     //printf("lfxegm : i=%li, j=%li, lfxegm[0][0]=%f, lfxegm[1][0]=%f, lfxegm[2][0]=%f, lfxegm[3][0]=%f, lfxegm[0][1]=%f, lfxegm[1][1]=%f, lfxegm[2][1]=%f, lfxegm[3][1]=%f, lfxegm[0][2]=%f, lfxegm[1][2]=%f, lfxegm[2][2]=%f, lfxegm[3][2]=%f, lfxegm[0][3]=%f, lfxegm[1][3]=%f, lfxegm[2][3]=%f, lfxegm[3][3]=%f\n", i, j, lfxegm[0][0], lfxegm[1][0], lfxegm[2][0], lfxegm[3][0], lfxegm[0][1], lfxegm[1][1], lfxegm[2][1], lfxegm[3][1], lfxegm[0][2], lfxegm[1][2], lfxegm[2][2], lfxegm[3][2], lfxegm[0][3], lfxegm[1][3], lfxegm[2][3], lfxegm[3][3]);
     
     return 0;
@@ -809,7 +827,7 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
     }
     }
     a = sqrt(gama*p/rou);
-    
+    /*
     rhxegm[0][0] = 1.0;
     rhxegm[1][0] = vx-a;
     rhxegm[2][0] = vy;
@@ -826,7 +844,7 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
     rhxegm[1][3] = 0.0;
     rhxegm[2][3] = 1.0;
     rhxegm[3][3] = vy;
-    /*
+    */
     rhxegm[0][0] = 1.0;
     rhxegm[1][0] = vx-a;
     rhxegm[2][0] = vy;
@@ -835,15 +853,15 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
     rhxegm[1][1] = vx;
     rhxegm[2][1] = vy;
     rhxegm[3][1] = 0.5*(vx*vx+vy*vy);
-    rhxegm[0][2] = 1.0;
-    rhxegm[1][2] = vx+a;
-    rhxegm[2][2] = vy;
-    rhxegm[3][2] = h+a*vx;
-    rhxegm[0][3] = 0.0;
-    rhxegm[1][3] = 0.0;
-    rhxegm[2][3] = 1.0;
-    rhxegm[3][3] = vy;
-    */
+    rhxegm[0][2] = 0.0;
+    rhxegm[1][2] = 0.0;
+    rhxegm[2][2] = 1.0;
+    rhxegm[3][2] = vy;
+    rhxegm[0][3] = 1.0;
+    rhxegm[1][3] = vx+a;
+    rhxegm[2][3] = vy;
+    rhxegm[3][3] = h+a*vx; 
+    
     return 0;
 }
 
@@ -860,25 +878,26 @@ static int Setlfyegm(realtype *Ydata, realtype **lfyegm, long int i, long int j,
     
     egvy[idx(i,j,Nx,Ny,0)]=vy-a;
     egvy[idx(i,j,Nx,Ny,1)]=vy;
-    egvy[idx(i,j,Nx,Ny,2)]=vy+a;
-    egvy[idx(i,j,Nx,Ny,3)]=vy;
+    egvy[idx(i,j,Nx,Ny,2)]=vy;
+    egvy[idx(i,j,Nx,Ny,3)]=vy+a;
 
     lfyegm[0][0] = ((gama-1.0)*h)/(2.0*a*a)+vy/(2.0*a)-0.5;
-    lfyegm[1][0] = ((1.0-gama)*h)/(a*a)+2.0;
-    lfyegm[2][0] = ((gama-1.0)*h)/(2.0*a*a)-vy/(2.0*a)-0.5;
-    lfyegm[3][0] = ((1.0-gama)*h*vx)/(a*a)+vx;
+    lfyegm[1][0] = ((1.0-gama)*h)/(a*a)+2.0;    
+    lfyegm[2][0] = ((1.0-gama)*h*vx)/(a*a)+vx;
+    lfyegm[3][0] = ((gama-1.0)*h)/(2.0*a*a)-vy/(2.0*a)-0.5;
     lfyegm[0][1] = ((1.0-gama)*vx)/(2*a*a);
     lfyegm[1][1] = (gama-1.0)*vx/(a*a);
-    lfyegm[2][1] = ((1.0-gama)*vx)/(2*a*a);
-    lfyegm[3][1] = (gama-1.0)*vx*vx/(a*a)+1.0;
+    lfyegm[2][1] = (gama-1.0)*vx*vx/(a*a)+1.0;
+    lfyegm[3][1] = ((1.0-gama)*vx)/(2*a*a);   
     lfyegm[0][2] = ((1.0-gama)*vy)/(2*a*a)-1.0/(2.0*a);
-    lfyegm[1][2] = (gama-1.0)*vy/(a*a);
-    lfyegm[2][2] = ((1.0-gama)*vy)/(2*a*a)+1.0/(2.0*a);
-    lfyegm[3][2] = (gama-1.0)*vx*vy/(a*a);
+    lfyegm[1][2] = (gama-1.0)*vy/(a*a);    
+    lfyegm[2][2] = (gama-1.0)*vx*vy/(a*a);
+    lfyegm[3][2] = ((1.0-gama)*vy)/(2*a*a)+1.0/(2.0*a);
     lfyegm[0][3] = (gama-1.0)/(2*a*a);
-    lfyegm[1][3] = (1.0-gama)/(a*a);
-    lfyegm[2][3] = (gama-1.0)/(2*a*a);
-    lfyegm[3][3] = (1.0-gama)*vx/(a*a);
+    lfyegm[1][3] = (1.0-gama)/(a*a);   
+    lfyegm[2][3] = (1.0-gama)*vx/(a*a);
+    lfyegm[3][3] = (gama-1.0)/(2*a*a);
+    
     
     return 0;
 }
@@ -961,14 +980,14 @@ static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j,
     rhyegm[1][1] = 0.0;
     rhyegm[2][1] = vy;
     rhyegm[3][1] = vy*vy+a*a/(gama-1.0)-h;
-    rhyegm[0][2] = 1.0;
-    rhyegm[1][2] = vx;
-    rhyegm[2][2] = vy+a;
-    rhyegm[3][2] = vx*vx+vy*vy-h+vy*a+(2.0*a*a)/(gama-1.0);
-    rhyegm[0][3] = 0.0;
-    rhyegm[1][3] = 1.0;
-    rhyegm[2][3] = 0.0;
-    rhyegm[3][3] = vx;
+    rhyegm[0][2] = 0.0;
+    rhyegm[1][2] = 1.0;
+    rhyegm[2][2] = 0.0;
+    rhyegm[3][2] = vx;
+    rhyegm[0][3] = 1.0;
+    rhyegm[1][3] = vx;
+    rhyegm[2][3] = vy+a;
+    rhyegm[3][3] = vx*vx+vy*vy-h+vy*a+(2.0*a*a)/(gama-1.0);
     
     return 0;
 }
