@@ -36,12 +36,14 @@ TESTS = ARKode_WENO.exe ARKode_WENO2D.exe
 
 # target to build all test executables
 #all : ${TESTS}
-all : ARKode_WENO.exe ARKode_WENO2D.exe
+all : ARKode_WENO.exe ARKode_WENO2D.exe ARKode_WENO_2D.exe
 #%.exe : %.cpp
 
 ARKode_WENO.exe : ARKode_WENO.cpp
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 ARKode_WENO2D.exe : ARKode_WENO_2D.cpp
+	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+ARKode_WENO_2D.exe : ARKode_WENO2D.cpp
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 clean :
 	\rm -f *.o *.exe
