@@ -1,0 +1,1333 @@
+Legend:
+  + least steps (1st or 2nd place)
+  * least time (1st or 2nd place)
+  - failed a test
+  / failed an accuracy (below 0.1)
+
+
+
+DIRK tests:
+  order 2:
+    DIRK11: the only option
+    analytic:
+       DIRK11_rtol1     18   3.38e+02   0.004 
+       DIRK11_rtol3     35   2.16e+01   0.0042 
+       DIRK11_rtol5    654   8.26e+00   0.018 
+       DIRK11_rtol7   8732   3.73e+00   0.21 
+    analytic_nonlin:
+       DIRK11_rtol1     21   1.40e+01   0.004 
+       DIRK11_rtol3     87   2.90e+00   0.0057 
+       DIRK11_rtol5    753   3.24e+00   0.024 
+       DIRK11_rtol7   7837   3.44e+00   0.19 
+    analytic_nonlin_back:
+       DIRK11_rtol1     32   5.07e+02   0.0039 
+       DIRK11_rtol3     51   4.80e+00   0.0044 
+       DIRK11_rtol5    351   1.08e+00   0.013 
+       DIRK11_rtol7   3287   7.83e-01   0.07 
+    analytic_sys:
+       DIRK11_rtol1     41   1.64e+02   0.0055 
+       DIRK11_rtol3    142   2.54e+01   0.0084 
+       DIRK11_rtol5   1414   2.51e+01   0.041 
+       DIRK11_rtol7  13972   2.43e+01   0.32 
+    brusselator:
+       DIRK11_rtol1     28   1.22e+00   0.005 
+       DIRK11_rtol3    241   1.11e+00   0.013 
+       DIRK11_rtol5   2371   1.08e+00   0.069 
+       DIRK11_rtol7  24873   1.14e+00   0.5 
+    brusselator1D:
+       DIRK11_rtol1     23   1.12e+02   0.066 
+       DIRK11_rtol3    101   3.18e+01   0.16 
+       DIRK11_rtol5    971   4.51e+01   0.71 
+       DIRK11_rtol7   9973   4.78e+01   4.4 
+    heat1D:
+       DIRK11_rtol1    298   5.12e+04   0.33 
+       DIRK11_rtol3    865   8.41e+03   0.56 
+       DIRK11_rtol5   3946   7.85e+03   1.5 
+       DIRK11_rtol7  14266   7.58e+03   3.4 
+    heat2D:
+       DIRK11_rtol1     44   3.94e+03   16 
+       DIRK11_rtol3    131   8.75e+02   17 
+       DIRK11_rtol5   1083   6.32e+02   27 
+       DIRK11_rtol7      0   1e-05      3.8 
+    pollu:
+       DIRK11_rtol1   3199   1.75e+03   0.25 
+       DIRK11_rtol3   3199   1.75e+03   0.25 
+       DIRK11_rtol5   3199   1.75e+03   0.25 
+       DIRK11_rtol7   3199   1.75e+03   0.25 
+    robertson:
+       DIRK11_rtol1  22190   2.46e+05   1.6 
+       DIRK11_rtol3  22190   2.46e+05   1.7 
+       DIRK11_rtol5  22190   2.46e+05   2.3 
+       DIRK11_rtol7  22190   2.46e+05   1.7 
+  order 3:
+    DIRK12: +5, -7    **not recommended
+    DIRK13: +6, -6    **not recommended
+    DIRK14: +20, -1
+    DIRK15: +24, -1   **use as the default
+    analytic:
+       DIRK12_rtol1     41   9.56e+00   0.0045 
+       DIRK12_rtol3     90   3.09e+00   0.0065 
+       DIRK12_rtol5    334   6.82e+00   0.016 
+       DIRK12_rtol7   1423   4.42e+00   0.047 
+       DIRK13_rtol1    139   2.17e+00   0.0078 
+       DIRK13_rtol3    151   3.63e+00   0.0081 
+       DIRK13_rtol5    191   4.30e+00   0.25 
+       DIRK13_rtol7    488   6.24e+00   0.017 
++*     DIRK14_rtol1     23   7.73e+03   0.0041 
+       DIRK14_rtol3     31   8.82e+02   0.0045 
+       DIRK14_rtol5     90   6.13e+01   0.0067 
+       DIRK14_rtol7    462   3.96e+01   0.019 
++*     DIRK15_rtol1     19   1.30e+03   0.0039 
+       DIRK15_rtol3     21   2.57e+01   0.0039 
+       DIRK15_rtol5     40   1.02e+01   0.0048 
+       DIRK15_rtol7    151   6.31e-01   0.0096 
+    analytic_nonlin:
++      DIRK12_rtol1     23   4.13e+01   0.0038 
+       DIRK12_rtol3     39   1.08e+00   0.0048 
+       DIRK12_rtol5     88   5.97e-01   0.0076 
+       DIRK12_rtol7    313   6.44e-01   0.02 
++*     DIRK13_rtol1     22   4.43e+02   0.0039 
+       DIRK13_rtol3     32   1.34e+01   0.0043 
+       DIRK13_rtol5     90   5.77e+00   0.0066 
+       DIRK13_rtol7    344   5.94e+00   0.016 
+       DIRK14_rtol1     21   2.11e+02   0.004 
+       DIRK14_rtol3     34   8.40e+00   0.0047 
+       DIRK14_rtol5    101   4.29e+00   0.0081 
+       DIRK14_rtol7    419   5.41e+00   0.022 
++*     DIRK15_rtol1     20   1.75e+02   0.0039 
+       DIRK15_rtol3     23   2.24e+00   0.0042 
+       DIRK15_rtol5     55   5.16e-01   0.0059 
+       DIRK15_rtol7    189   4.52e-01   0.013 
+    analytic_nonlin_back:
+   /   DIRK12_rtol1     33   2.19e+02   0.0037 
+       DIRK12_rtol3     33   2.08e+00   0.004 
+       DIRK12_rtol5     80   9.52e-02   0.0066 
+       DIRK12_rtol7    243   7.68e-02   0.016 
++*     DIRK13_rtol1     33   7.48e+03   0.0033 
+       DIRK13_rtol3     33   3.72e+02   0.0039 
+       DIRK13_rtol5     65   2.45e+01   0.0053 
+       DIRK13_rtol7    193   2.29e+01   0.011 
++      DIRK14_rtol1     33   1.51e+03   0.0038 
+       DIRK14_rtol3     33   3.02e+01   0.0041 
+       DIRK14_rtol5     64   2.15e+00   0.0058 
+       DIRK14_rtol7    241   2.50e+00   0.015 
++*     DIRK15_rtol1     33   2.90e+03   0.0038 
+       DIRK15_rtol3     33   7.17e+01   0.0041 
+       DIRK15_rtol5     36   9.23e-01   0.0045 
+       DIRK15_rtol7    118   5.87e-01   0.009 
+    analytic_sys:
++      DIRK12_rtol1     13   1.52e+03   0.0043 
+       DIRK12_rtol3     30   4.08e+02   0.0049 
+       DIRK12_rtol5     98   2.48e+02   0.01 
+       DIRK12_rtol7    470   2.99e+02   0.03 
++*     DIRK13_rtol1     13   2.68e+02   0.0042 
+       DIRK13_rtol3     27   4.12e+01   0.005 
+       DIRK13_rtol5    101   2.95e+01   0.0074 
+       DIRK13_rtol7    445   2.71e+01   0.022 
+       DIRK14_rtol1     13   2.03e+02   0.0044 
+       DIRK14_rtol3     36   3.52e+01   0.0059 
+       DIRK14_rtol5    125   3.09e+01   0.011 
+       DIRK14_rtol7    548   2.56e+01   0.42 
++*     DIRK15_rtol1     15   2.76e+02   0.0046 
+       DIRK15_rtol3     28   1.25e+01   0.0057 
+       DIRK15_rtol5     60   2.98e+00   0.0079 
+       DIRK15_rtol7    247   2.15e+00   0.021 
+    brusselator:
+       DIRK12_rtol1  10366   8.19e-01   0.26 
+       DIRK12_rtol3  16442   1.43e+00   0.4 
+       DIRK12_rtol5  24459   1.70e+00   0.69 
+       DIRK12_rtol7  21194   1.21e+00   0.72 
+       DIRK13_rtol1 145983   1.33e+00   4.2 
+       DIRK13_rtol3 157815   1.93e+00   3.8 
+       DIRK13_rtol5 156660   2.46e+00   4.4 
+       DIRK13_rtol7 158785   1.29e+00   5.5 
++*     DIRK14_rtol1     31   9.62e+00   0.036 
+       DIRK14_rtol3     72   3.14e+00   0.038 
+       DIRK14_rtol5    302   3.29e+00   0.053 
+       DIRK14_rtol7   1327   4.01e+00   0.11 
++*     DIRK15_rtol1     24   8.56e+00   0.0053 
+       DIRK15_rtol3     45   4.85e-01   0.0078 
+       DIRK15_rtol5    137   4.11e-01   0.018 
+       DIRK15_rtol7    583   4.28e-01   0.049 
+    brusselator1D:
+  -    DIRK12_rtol1      0   1e-05      0.041 
+       DIRK12_rtol3  11389   1.55e+01   6.4 
+       DIRK12_rtol5  23377   6.98e+01   14 
+       DIRK12_rtol7  23923   2.08e+01   18 
+  -    DIRK13_rtol1      0   1e-05      5.6 
+       DIRK13_rtol3      0   1e-05      5.5 
+       DIRK13_rtol5      0   1e-05      5.3 
+       DIRK13_rtol7      0   1e-05      7.1 
++*     DIRK14_rtol1     20   1.80e+02   0.07 
+       DIRK14_rtol3     44   4.09e+01   0.14 
+       DIRK14_rtol5    155   2.45e+01   0.37 
+       DIRK14_rtol7    675   2.39e+01   1.1 
++*     DIRK15_rtol1     16   2.40e+02   0.063 
+       DIRK15_rtol3     28   1.66e+01   0.13 
+       DIRK15_rtol5     73   4.72e+00   0.28 
+       DIRK15_rtol7    278   3.64e+00   0.83 
+    bruss:
+  -    DIRK12_rtol1      0   1e-05      0.044 
+       DIRK12_rtol3      0   1e-05      0.044 
+       DIRK12_rtol5      0   1e-05      0.044 
+       DIRK12_rtol7      0   1e-05      0.044 
+  -    DIRK13_rtol1      0   1e-05      0.038 
+       DIRK13_rtol3      0   1e-05      0.037 
+       DIRK13_rtol5      0   1e-05      0.039 
+       DIRK13_rtol7      0   1e-05      0.037 
++*     DIRK14_rtol1    663   1.11e+01   0.037 
+       DIRK14_rtol3    663   1.11e+01   0.037 
+       DIRK14_rtol5    663   1.11e+01   0.035 
+       DIRK14_rtol7    663   1.11e+01   0.036 
++*     DIRK15_rtol1    274   6.06e-01   0.022 
+       DIRK15_rtol3    274   6.06e-01   0.02 
+       DIRK15_rtol5    274   6.06e-01   0.02 
+       DIRK15_rtol7    274   6.06e-01   0.02 
+    heat1D:
+       DIRK12_rtol1     76   1.31e+06   0.22 
+       DIRK12_rtol3    764   6.49e+03   0.48 
+       DIRK12_rtol5   1661   2.76e+03   0.85 
+       DIRK12_rtol7   1831   4.36e+03   1.1 
+       DIRK13_rtol1  12464   3.25e+03   2.2 
+       DIRK13_rtol3  12677   3.73e+03   2.4 
+       DIRK13_rtol5  12721   4.40e+03   2.5 
+       DIRK13_rtol7  12817   5.20e+03   2.8 
++*     DIRK14_rtol1     90   3.02e+05   0.23 
+       DIRK14_rtol3    206   2.56e+04   0.33 
+       DIRK14_rtol5    447   1.35e+04   0.55 
+       DIRK14_rtol7   1041   1.22e+04   0.95 
++*     DIRK15_rtol1     55   2.02e+05   0.22 
+       DIRK15_rtol3    100   5.30e+03   0.29 
+       DIRK15_rtol5    198   1.30e+03   0.46 
+       DIRK15_rtol7    455   1.02e+03   0.75 
+    heat2D:
+ *     DIRK12_rtol1     95   9.71e+02   15 
+       DIRK12_rtol3    290   1.19e+03   20 
+       DIRK12_rtol5    304   8.33e+02   23 
+       DIRK12_rtol7    543   8.32e+02   24 
+       DIRK13_rtol1   1864   1.52e+03   25 
+       DIRK13_rtol3   2171   1.39e+03   28 
+       DIRK13_rtol5   2228   5.90e+02   32 
+       DIRK13_rtol7   2266   4.28e+02   34 
++      DIRK14_rtol1     29   2.49e+04   16 
+       DIRK14_rtol3     50   3.46e+03   17 
+       DIRK14_rtol5    138   1.35e+03   21 
+       DIRK14_rtol7    552   9.52e+02   26 
++*     DIRK15_rtol1     28   2.25e+04   15 
+       DIRK15_rtol3     35   5.64e+02   18 
+       DIRK15_rtol5     69   1.38e+02   20 
+       DIRK15_rtol7    243   8.05e+01   23 
+    hires:
+  -    DIRK12_rtol1      0   1e-05      0.065 
+       DIRK12_rtol3      0   1e-05      0.064 
+       DIRK12_rtol5      0   1e-05      0.064 
+       DIRK12_rtol7      0   1e-05      0.065 
+  -    DIRK13_rtol1      0   1e-05      0.055 
+       DIRK13_rtol3      0   1e-05      0.054 
+       DIRK13_rtol5      0   1e-05      0.052 
+       DIRK13_rtol7      0   1e-05      0.053 
+  -    DIRK14_rtol1      0   1e-05      0.073 
+       DIRK14_rtol3      0   1e-05      0.071 
+       DIRK14_rtol5      0   1e-05      0.073 
+       DIRK14_rtol7      0   1e-05      0.073 
++*     DIRK15_rtol1   3284   6.04e+03   0.39 
+       DIRK15_rtol3   3284   6.04e+03   0.38 
+       DIRK15_rtol5   3284   6.04e+03   0.39 
+       DIRK15_rtol7   3284   6.04e+03   0.38 
+    medakzo:
++*     DIRK12_rtol1   7965   2.72e+01   7.4 
+       DIRK12_rtol3   7965   2.72e+01   7.4 
+       DIRK12_rtol5   7965   2.72e+01   7.4 
+       DIRK12_rtol7   7965   2.72e+01   7.4 
+       DIRK13_rtol1  29204   3.82e+03   16 
+       DIRK13_rtol3  29204   3.82e+03   16 
+       DIRK13_rtol5  29204   3.82e+03   16 
+       DIRK13_rtol7  29204   3.82e+03   16 
++*     DIRK14_rtol1   9804   2.82e+03   12 
+       DIRK14_rtol3   9804   2.82e+03   12 
+       DIRK14_rtol5   9804   2.82e+03   12 
+       DIRK14_rtol7   9804   2.82e+03   12 
+       DIRK15_rtol1  10690   9.57e+02   16 
+       DIRK15_rtol3  10690   9.57e+02   16 
+       DIRK15_rtol5  10690   9.57e+02   16 
+       DIRK15_rtol7  10690   9.57e+02   16 
+    pollu:
+  -    DIRK12_rtol1      0   1e-05      0.0091 
+       DIRK12_rtol3      0   1e-05      0.0089 
+       DIRK12_rtol5      0   1e-05      0.009 
+       DIRK12_rtol7      0   1e-05      0.009 
+  -    DIRK13_rtol1      0   1e-05      0.57 
+       DIRK13_rtol3      0   1e-05      0.57 
+       DIRK13_rtol5      0   1e-05      0.57 
+       DIRK13_rtol7      0   1e-05      0.59 
++*     DIRK14_rtol1    378   8.82e+02   0.044 
+       DIRK14_rtol3    378   8.82e+02   0.043 
+       DIRK14_rtol5    378   8.82e+02   0.043 
+       DIRK14_rtol7    378   8.82e+02   0.045 
++*     DIRK15_rtol1    169   2.21e+02   0.025 
+       DIRK15_rtol3    169   2.21e+02   0.025 
+       DIRK15_rtol5    169   2.21e+02   0.025 
+       DIRK15_rtol7    169   2.21e+02   0.025 
+    rober:
+  -    DIRK12_rtol1      0   1e-05      0.03 
+       DIRK12_rtol3      0   1e-05      0.029 
+       DIRK12_rtol5      0   1e-05      0.029 
+       DIRK12_rtol7      0   1e-05      0.029 
+  -    DIRK13_rtol1      0   1e-05      0.023 
+       DIRK13_rtol3      0   1e-05      0.024 
+       DIRK13_rtol5      0   1e-05      0.023 
+       DIRK13_rtol7      0   1e-05      0.024 
++*     DIRK14_rtol1    543   1.17e+04   0.048 
+       DIRK14_rtol3    543   1.17e+04   0.047 
+       DIRK14_rtol5    543   1.17e+04   0.78 
+       DIRK14_rtol7    543   1.17e+04   0.058 
+  -    DIRK15_rtol1      0   1e-05      0.025 
+       DIRK15_rtol3      0   1e-05      0.027 
+       DIRK15_rtol5      0   1e-05      0.026 
+       DIRK15_rtol7      0   1e-05      0.026 
+    vdpol:
+  -    DIRK12_rtol1      0   1e-05      0.35 
+       DIRK12_rtol3      0   1e-05      0.35 
+       DIRK12_rtol5      0   1e-05      0.35 
+       DIRK12_rtol7      0   1e-05      0.35 
+  -    DIRK13_rtol1      0   1e-05      0.29 
+       DIRK13_rtol3      0   1e-05      0.29 
+       DIRK13_rtol5      0   1e-05      0.29 
+       DIRK13_rtol7      0   1e-05      0.29 
++*     DIRK14_rtol1  14198   2.81e+01   0.94 
+       DIRK14_rtol3  14198   2.81e+01   0.67 
+       DIRK14_rtol5  14198   2.81e+01   0.68 
+       DIRK14_rtol7  14198   2.81e+01   0.68 
++*     DIRK15_rtol1  11731   1.32e+00   0.59 
+       DIRK15_rtol3  11731   1.32e+00   0.59 
+       DIRK15_rtol5  11731   1.32e+00   0.59 
+       DIRK15_rtol7  11731   1.32e+00   0.59 
+  order 4:
+    DIRK16: +5, -2     **not recommended
+    DIRK17: +8, -2     **not recommended
+    DIRK18: +31, -2    **use as the default
+    DIRK19: +17, -4
+    DIRK20: +28, -5
+    analytic:
+       DIRK16_rtol1     34   8.77e+01   0.0046 
+       DIRK16_rtol3    106   8.70e+01   0.0073 
+       DIRK16_rtol5    577   7.00e-01   0.026 
+       DIRK16_rtol7   3100   1.21e-01   0.11 
+       DIRK17_rtol1     35   5.82e+00   0.005 
+       DIRK17_rtol3    107   5.58e-01   0.0078 
+       DIRK17_rtol5    536   5.31e-01   0.022 
+       DIRK17_rtol7   2007   5.75e-02   0.069 
+   /   DIRK18_rtol1     36   2.97e+01   0.0051 
+       DIRK18_rtol3     80   5.27e+00   0.0069 
+       DIRK18_rtol5    290   3.64e-01   0.015 
+       DIRK18_rtol7   1064   1.10e-02   0.041 
++*     DIRK19_rtol1     22   4.02e+03   0.0043 
+       DIRK19_rtol3     30   9.07e+01   0.0048 
+       DIRK19_rtol5     86   5.05e+01   0.0074 
+       DIRK19_rtol7    368   3.80e+01   0.016 
++* /   DIRK20_rtol1     21   2.18e+03   0.0042 
+       DIRK20_rtol3     33   7.09e+02   0.0049 
+       DIRK20_rtol5     72   3.52e-02   0.0069 
+       DIRK20_rtol7    190   2.07e-02   0.012 
+    analytic_nonlin:
+       DIRK16_rtol1     22   2.82e+02   0.0042 
+       DIRK16_rtol3     40   1.14e+02   0.0055 
+       DIRK16_rtol5    127   2.62e+02   0.011 
+       DIRK16_rtol7    541   1.65e+03   0.036 
+       DIRK17_rtol1     24   2.44e+02   0.0045 
+       DIRK17_rtol3     32   4.16e+01   0.0053 
+       DIRK17_rtol5     64   2.27e+01   0.0076 
+       DIRK17_rtol7    169   2.72e+01   0.016 
++*     DIRK18_rtol1     21   7.78e+02   0.0042 
+       DIRK18_rtol3     26   9.85e+01   0.005 
+       DIRK18_rtol5     49   2.03e+01   0.0068 
+       DIRK18_rtol7    117   1.31e+01   0.012 
++*     DIRK19_rtol1     21   6.01e+02   0.0042 
+       DIRK19_rtol3     26   9.17e+01   0.0046 
+       DIRK19_rtol5     51   2.69e+01   0.0064 
+       DIRK19_rtol7    126   1.60e+01   0.012 
++*     DIRK20_rtol1     20   1.87e+03   0.0042 
+       DIRK20_rtol3     26   4.13e+01   0.0048 
+       DIRK20_rtol5     27   2.23e+00   0.0052 
+       DIRK20_rtol7     57   7.56e-01   0.0078 
+    analytic_nonlin_back:
+       DIRK16_rtol1     33   4.56e+03   0.004 
+       DIRK16_rtol3     33   4.45e+02   0.0044 
+       DIRK16_rtol5     59   4.16e+01   0.0065 
+       DIRK16_rtol7    202   2.57e+02   0.018 
++*     DIRK17_rtol1     35   3.61e+03   0.0038 
+       DIRK17_rtol3     35   4.46e+02   0.0045 
+       DIRK17_rtol5     34   7.47e+00   0.005 
+       DIRK17_rtol7     44   3.55e-01   0.0065 
++*     DIRK18_rtol1     35   3.55e+03   0.0041 
+       DIRK18_rtol3     35   1.11e+03   0.0045 
+       DIRK18_rtol5     35   2.57e+02   0.0049 
+       DIRK18_rtol7     45   2.04e+01   0.0061 
++*     DIRK19_rtol1     35   3.48e+03   0.0041 
+       DIRK19_rtol3     35   5.20e+03   0.0044 
+       DIRK19_rtol5     35   3.14e+01   0.0048 
+       DIRK19_rtol7     53   2.51e+00   0.0063 
++*     DIRK20_rtol1     35   6.28e+03   0.0042 
+       DIRK20_rtol3     35   1.47e+03   0.0045 
+       DIRK20_rtol5     35   9.42e+01   0.0049 
+       DIRK20_rtol7     35   9.63e-01   0.0054 
+    analytic_sys:
+       DIRK16_rtol1     13   9.61e+02   0.0047 
+       DIRK16_rtol3     35   4.02e+02   0.0072 
+       DIRK16_rtol5    127   1.18e+03   0.015 
+       DIRK16_rtol7    553   3.86e+03   0.048 
+       DIRK17_rtol1     16   1.69e+03   0.0051 
+       DIRK17_rtol3     28   2.31e+02   0.0064 
+       DIRK17_rtol5     64   6.60e+01   0.0099 
+       DIRK17_rtol7    173   5.82e+01   0.022 
++*     DIRK18_rtol1     14   1.95e+03   0.0046 
+       DIRK18_rtol3     24   1.04e+03   0.0058 
+       DIRK18_rtol5     45   2.49e+02   0.0082 
+       DIRK18_rtol7    123   1.62e+02   0.015 
+ *     DIRK19_rtol1     16   1.14e+04   0.0049 
+       DIRK19_rtol3     31   6.75e+02   0.0063 
+       DIRK19_rtol5     52   1.49e+02   0.0085 
+       DIRK19_rtol7    155   1.02e+02   0.017 
++*     DIRK20_rtol1     14   7.82e+03   0.0047 
+       DIRK20_rtol3     14   1.38e+02   0.0053 
+       DIRK20_rtol5     28   1.22e+01   0.0069 
+       DIRK20_rtol7     52   4.27e+00   0.0099 
+    brusselator:
+       DIRK16_rtol1     31   1.14e+01   0.0059 
+       DIRK16_rtol3     83   4.32e+00   0.011 
+       DIRK16_rtol5    355   2.83e+01   0.031 
+       DIRK16_rtol7   1537   1.21e+02   0.11 
+       DIRK17_rtol1     32   1.05e+01   0.0061 
+       DIRK17_rtol3     65   5.74e+00   0.01 
+       DIRK17_rtol5    195   2.65e+00   0.025 
+       DIRK17_rtol7    594   2.56e+00   0.061 
++*     DIRK18_rtol1     25   7.77e+01   0.0056 
+       DIRK18_rtol3     55   1.67e+01   0.0092 
+       DIRK18_rtol5    134   8.15e+00   0.02 
+       DIRK18_rtol7    372   4.56e+00   0.048 
+ *     DIRK19_rtol1     32   2.17e+01   0.0059 
+       DIRK19_rtol3     58   1.05e+01   0.0091 
+       DIRK19_rtol5    151   4.02e+00   0.019 
+       DIRK19_rtol7    461   6.51e+00   0.048 
++*     DIRK20_rtol1     23   7.03e+01   0.0056 
+       DIRK20_rtol3     34   2.27e+00   0.0081 
+       DIRK20_rtol5     66   1.64e+00   0.015 
+       DIRK20_rtol7    164   7.13e-01   0.034 
+    brusselator1D:
+       DIRK16_rtol1     17   4.11e+02   0.073 
+       DIRK16_rtol3     39   6.38e+01   0.15 
+       DIRK16_rtol5    146   4.32e+02   0.44 
+       DIRK16_rtol7    686   1.88e+03   1.5 
+       DIRK17_rtol1     18   4.00e+02   0.075 
+       DIRK17_rtol3     37   6.04e+01   0.15 
+       DIRK17_rtol5     86   3.92e+01   0.34 
+       DIRK17_rtol7    270   3.28e+01   1 
++*     DIRK18_rtol1     19   1.26e+03   0.073 
+       DIRK18_rtol3     31   2.65e+02   0.14 
+       DIRK18_rtol5     68   1.54e+02   0.3 
+       DIRK18_rtol7    180   9.53e+01   0.85 
++      DIRK19_rtol1     19   7.90e+02   0.071 
+       DIRK19_rtol3     37   2.20e+01   0.14 
+       DIRK19_rtol5     77   1.85e+02   0.3 
+       DIRK19_rtol7    227   2.05e+02   0.88 
++*     DIRK20_rtol1     18   7.02e+03   0.072 
+       DIRK20_rtol3     21   7.28e+01   0.13 
+       DIRK20_rtol5     39   8.54e+00   0.26 
+       DIRK20_rtol7     87   1.47e+01   0.69 
+    bruss:
+       DIRK16_rtol1    751   3.07e+00   0.054 
+       DIRK16_rtol3    751   3.07e+00   0.055 
+       DIRK16_rtol5    751   3.07e+00   0.054 
+       DIRK16_rtol7    751   3.07e+00   0.055 
+       DIRK17_rtol1    334   1.33e+00   0.033 
+       DIRK17_rtol3    334   1.33e+00   0.032 
+       DIRK17_rtol5    334   1.33e+00   0.032 
+       DIRK17_rtol7    334   1.33e+00   0.033 
++*     DIRK18_rtol1    223   1.14e+01   0.023 
+       DIRK18_rtol3    223   1.14e+01   0.024 
+       DIRK18_rtol5    223   1.14e+01   0.023 
+       DIRK18_rtol7    223   1.14e+01   0.022 
++      DIRK19_rtol1    262   2.76e+00   0.025 
+       DIRK19_rtol3    262   2.76e+00   0.024 
+       DIRK19_rtol5    262   2.76e+00   0.023 
+       DIRK19_rtol7    262   2.76e+00   0.024 
++*     DIRK20_rtol1    104   1.70e+00   0.014 
+       DIRK20_rtol3    104   1.70e+00   0.015 
+       DIRK20_rtol5    104   1.70e+00   0.015 
+       DIRK20_rtol7    104   1.70e+00   0.014 
+    heat1D:
+       DIRK16_rtol1     89   1.52e+06   0.26 
+       DIRK16_rtol3    202   1.22e+05   0.39 
+       DIRK16_rtol5    450   2.57e+05   0.67 
+       DIRK16_rtol7   1036   7.08e+05   1.2 
+       DIRK17_rtol1     81   1.50e+06   0.26 
+       DIRK17_rtol3    125   6.30e+04   0.35 
+       DIRK17_rtol5    245   2.13e+04   0.56 
+       DIRK17_rtol7    441   2.12e+04   0.88 
++*     DIRK18_rtol1     61   1.41e+07   0.24 
+       DIRK18_rtol3     93   4.27e+05   0.31 
+       DIRK18_rtol5    170   1.27e+05   0.48 
+       DIRK18_rtol7    301   8.12e+04   0.76 
+ *     DIRK19_rtol1     74   6.79e+06   0.25 
+       DIRK19_rtol3    112   2.18e+05   0.33 
+       DIRK19_rtol5    214   8.64e+04   0.52 
+       DIRK19_rtol7    386   5.82e+04   0.8 
++*     DIRK20_rtol1     39   3.23e+06   0.22 
+       DIRK20_rtol3     50   1.58e+05   0.29 
+       DIRK20_rtol5     78   4.91e+03   0.44 
+       DIRK20_rtol7    129   2.38e+03   0.66 
+    heat2D:
+       DIRK16_rtol1     33   7.51e+04   16 
+       DIRK16_rtol3     47   2.00e+04   18 
+       DIRK16_rtol5    137   1.18e+04   22 
+       DIRK16_rtol7    546   1.80e+04   27 
+       DIRK17_rtol1     33   8.15e+04   16 
+       DIRK17_rtol3     41   1.06e+04   18 
+       DIRK17_rtol5     80   3.26e+03   22 
+       DIRK17_rtol7    215   2.16e+03   25 
++*     DIRK18_rtol1     43   1.62e+05   16 
+       DIRK18_rtol3     63   7.92e+04   19 
+       DIRK18_rtol5     77   1.87e+04   21 
+       DIRK18_rtol7    154   8.75e+03   23 
++*     DIRK19_rtol1     35   1.40e+05   15 
+       DIRK19_rtol3     43   4.76e+04   18 
+       DIRK19_rtol5     77   1.00e+04   21 
+       DIRK19_rtol7    180   5.07e+03   23 
++*     DIRK20_rtol1     29   1.64e+05   16 
+       DIRK20_rtol3     31   1.89e+04   17 
+       DIRK20_rtol5     46   8.03e+02   21 
+       DIRK20_rtol7     68   2.25e+02   22 
+    hires:
+  -    DIRK16_rtol1      0   1e-05      0.081 
+       DIRK16_rtol3      0   1e-05      0.081 
+       DIRK16_rtol5      0   1e-05      0.082 
+       DIRK16_rtol7      0   1e-05      0.082 
+       DIRK17_rtol1   3453   9.00e+03   0.41 
+       DIRK17_rtol3   3453   9.00e+03   0.42 
+       DIRK17_rtol5   3453   9.00e+03   0.42 
+       DIRK17_rtol7   3453   9.00e+03   0.41 
++*     DIRK18_rtol1   1836   6.73e+03   0.23 
+       DIRK18_rtol3   1836   6.73e+03   0.22 
+       DIRK18_rtol5   1836   6.73e+03   0.23 
+       DIRK18_rtol7   1836   6.73e+03   0.23 
+ *     DIRK19_rtol1   2634   9.93e+03   0.34 
+       DIRK19_rtol3   2634   9.93e+03   0.35 
+       DIRK19_rtol5   2634   9.93e+03   0.35 
+       DIRK19_rtol7   2634   9.93e+03   0.36 
++*     DIRK20_rtol1   1820   9.99e+03   0.28 
+       DIRK20_rtol3   1820   9.99e+03   0.28 
+       DIRK20_rtol5   1820   9.99e+03   0.31 
+       DIRK20_rtol7   1820   9.99e+03   0.28 
+    medakzo:
+       DIRK16_rtol1   9780   1.33e+03   16 
+       DIRK16_rtol3   9780   1.33e+03   16 
+       DIRK16_rtol5   9780   1.33e+03   16 
+       DIRK16_rtol7   9780   1.33e+03   16 
+       DIRK17_rtol1   8248   6.18e+01   15 
+       DIRK17_rtol3   8248   6.18e+01   15 
+       DIRK17_rtol5   8248   6.18e+01   15 
+       DIRK17_rtol7   8248   6.18e+01   15 
++*     DIRK18_rtol1   5450   4.51e+00   9.3 
+       DIRK18_rtol3   5450   4.51e+00   9.3 
+       DIRK18_rtol5   5450   4.51e+00   9.3 
+       DIRK18_rtol7   5450   4.51e+00   9.3 
+       DIRK19_rtol1   8772   1.09e+03   15 
+       DIRK19_rtol3   8772   1.09e+03   15 
+       DIRK19_rtol5   8772   1.09e+03   15 
+       DIRK19_rtol7   8772   1.09e+03   15 
++*     DIRK20_rtol1   5997   4.31e+01   13 
+       DIRK20_rtol3   5997   4.31e+01   13 
+       DIRK20_rtol5   5997   4.31e+01   13 
+       DIRK20_rtol7   5997   4.31e+01   13 
+    orego:
++      DIRK16_rtol1  10957   2.06e+00   1 
+       DIRK16_rtol3  10957   2.06e+00   1 
+       DIRK16_rtol5  10957   2.06e+00   1 
+       DIRK16_rtol7  10957   2.06e+00   1 
+  -    DIRK17_rtol1      0   1e-05      0.33 
+       DIRK17_rtol3      0   1e-05      0.3 
+       DIRK17_rtol5      0   1e-05      0.31 
+       DIRK17_rtol7      0   1e-05      0.31 
++* /   DIRK18_rtol1   5600   4.24e-02   0.59 
+       DIRK18_rtol3   5600   4.24e-02   0.59 
+       DIRK18_rtol5   5600   4.24e-02   0.59 
+       DIRK18_rtol7   5600   4.24e-02   0.59 
+  -    DIRK19_rtol1      0   0.00589746      0.22 
+       DIRK19_rtol3      0   0.00589746      0.21 
+       DIRK19_rtol5      0   0.00589746      0.21 
+       DIRK19_rtol7      0   0.00589746      0.21 
+  -    DIRK20_rtol1      0   1e-05      0.12 
+       DIRK20_rtol3      0   1e-05      0.12 
+       DIRK20_rtol5      0   1e-05      0.12 
+       DIRK20_rtol7      0   1e-05      0.12 
+    pollu:
+       DIRK16_rtol1    445   6.17e+03   0.065 
+       DIRK16_rtol3    445   6.17e+03   0.066 
+       DIRK16_rtol5    445   6.17e+03   0.066 
+       DIRK16_rtol7    445   6.17e+03   0.065 
+       DIRK17_rtol1    301   6.42e+03   0.056 
+       DIRK17_rtol3    301   6.42e+03   0.054 
+       DIRK17_rtol5    301   6.42e+03   0.053 
+       DIRK17_rtol7    301   6.42e+03   0.052 
+       DIRK18_rtol1    223   8.58e+03   0.042 
+       DIRK18_rtol3    223   8.58e+03   0.042 
+       DIRK18_rtol5    223   8.58e+03   0.041 
+       DIRK18_rtol7    223   8.58e+03   0.04 
++*     DIRK19_rtol1    179   9.79e+03   0.032 
+       DIRK19_rtol3    179   9.79e+03   0.031 
+       DIRK19_rtol5    179   9.79e+03   0.029 
+       DIRK19_rtol7    179   9.79e+03   0.029 
++*     DIRK20_rtol1     72   4.64e+03   0.021 
+       DIRK20_rtol3     72   4.64e+03   0.02 
+       DIRK20_rtol5     72   4.64e+03   0.021 
+       DIRK20_rtol7     72   4.64e+03   0.021 
+    ringmod:
+   /   DIRK16_rtol1  97950   3.56e-02   16 
+       DIRK16_rtol3  97950   3.56e-02   16 
+       DIRK16_rtol5  97950   3.56e-02   16 
+       DIRK16_rtol7  97950   3.56e-02   17 
+  -    DIRK17_rtol1      0   0.00608117      9.7 
+       DIRK17_rtol3      0   0.00608117      10 
+       DIRK17_rtol5      0   0.00608117      10 
+       DIRK17_rtol7      0   0.00608117      9.8 
++*     DIRK18_rtol1  46962   4.37e+00   7.6 
+       DIRK18_rtol3  46962   4.37e+00   7.6 
+       DIRK18_rtol5  46962   4.37e+00   7.6 
+       DIRK18_rtol7  46962   4.37e+00   7.7 
+ * /   DIRK19_rtol1  55731   1.36e-02   7.4 
+       DIRK19_rtol3  55731   1.36e-02   7.4 
+       DIRK19_rtol5  55731   1.36e-02   7.5 
+       DIRK19_rtol7  55731   1.36e-02   7.6 
++* /   DIRK20_rtol1  17804   1.14e-02   3.5 
+       DIRK20_rtol3  17804   1.14e-02   3.5 
+       DIRK20_rtol5  17804   1.14e-02   3.5 
+       DIRK20_rtol7  17804   1.14e-02   3.5 
+    rober:
++*     DIRK16_rtol1    440   1.00e+06   0.095 
+       DIRK16_rtol3    440   1.00e+06   0.044 
+       DIRK16_rtol5    440   1.00e+06   0.044 
+       DIRK16_rtol7    440   1.00e+06   0.044 
++*     DIRK17_rtol1    428   1.00e+06   0.042 
+       DIRK17_rtol3    428   1.00e+06   0.044 
+       DIRK17_rtol5    428   1.00e+06   0.043 
+       DIRK17_rtol7    428   1.00e+06   0.043 
++      DIRK18_rtol1    396   1.00e+06   0.12 
+       DIRK18_rtol3    396   1.00e+06   0.86 
+       DIRK18_rtol5    396   1.00e+06   0.13 
+       DIRK18_rtol7    396   1.00e+06   0.14 
+       DIRK19_rtol1    587   5.92e+04   0.13 
+       DIRK19_rtol3    587   5.92e+04   0.12 
+       DIRK19_rtol5    587   5.92e+04   0.18 
+       DIRK19_rtol7    587   5.92e+04   0.05 
+  -    DIRK20_rtol1      0   1e-05      0.034 
+       DIRK20_rtol3      0   1e-05      0.034 
+       DIRK20_rtol5      0   1e-05      0.034 
+       DIRK20_rtol7      0   1e-05      0.035 
+    robertson:
++*     DIRK16_rtol1  24548   3.89e+05   3.3 
+       DIRK16_rtol3  24548   3.89e+05   2.9 
+       DIRK16_rtol5  24548   3.89e+05   2.9 
+       DIRK16_rtol7  24548   3.89e+05   2.9 
++*     DIRK17_rtol1  25741   1.01e+05   3 
+       DIRK17_rtol3  25741   1.01e+05   3 
+       DIRK17_rtol5  25741   1.01e+05   3 
+       DIRK17_rtol7  25741   1.01e+05   3 
++*     DIRK18_rtol1  25643   3.01e+05   2.5 
+       DIRK18_rtol3  25643   3.01e+05   2.5 
+       DIRK18_rtol5  25643   3.01e+05   2.5 
+       DIRK18_rtol7  25643   3.01e+05   2.7 
+  -    DIRK19_rtol1      0   1e-05      5.4 
+       DIRK19_rtol3      0   1e-05      5.4 
+       DIRK19_rtol5      0   1e-05      5.7 
+       DIRK19_rtol7      0   1e-05      5.5 
+       DIRK20_rtol1      0   1e-05      0.35 
+       DIRK20_rtol3      0   1e-05      0.34 
+       DIRK20_rtol5      0   1e-05      0.35 
+       DIRK20_rtol7      0   1e-05      0.35 
+    vdpol:
+       DIRK16_rtol1  10140   4.05e+02   0.58 
+       DIRK16_rtol3  10140   4.05e+02   0.59 
+       DIRK16_rtol5  10140   4.05e+02   0.58 
+       DIRK16_rtol7  10140   4.05e+02   0.58 
+       DIRK17_rtol1   9048   6.34e+01   0.53 
+       DIRK17_rtol3   9048   6.34e+01   0.53 
+       DIRK17_rtol5   9048   6.34e+01   0.53 
+       DIRK17_rtol7   9048   6.34e+01   0.73 
++*     DIRK18_rtol1   8292   3.30e+01   0.49 
+       DIRK18_rtol3   8292   3.30e+01   0.49 
+       DIRK18_rtol5   8292   3.30e+01   0.49 
+       DIRK18_rtol7   8292   3.30e+01   0.49 
+       DIRK19_rtol1  12436   1.37e+01   0.66 
+       DIRK19_rtol3  12436   1.37e+01   0.66 
+       DIRK19_rtol5  12436   1.37e+01   0.66 
+       DIRK19_rtol7  12436   1.37e+01   0.66 
++*     DIRK20_rtol1   6361   1.17e+01   0.42 
+       DIRK20_rtol3   6361   1.17e+01   0.43 
+       DIRK20_rtol5   6361   1.17e+01   0.43 
+       DIRK20_rtol7   6361   1.17e+01   0.42 
+    vdpolm:
+       DIRK16_rtol1   9922   8.75e+02   0.7 
+       DIRK16_rtol3   9922   8.75e+02   0.7 
+       DIRK16_rtol5   9922   8.75e+02   0.7 
+       DIRK16_rtol7   9922   8.75e+02   0.71 
++*     DIRK17_rtol1   6278   3.09e+01   0.48 
+       DIRK17_rtol3   6278   3.09e+01   0.47 
+       DIRK17_rtol5   6278   3.09e+01   0.47 
+       DIRK17_rtol7   6278   3.09e+01   0.47 
++*     DIRK18_rtol1   9086   1.03e+01   0.63 
+       DIRK18_rtol3   9086   1.03e+01   0.63 
+       DIRK18_rtol5   9086   1.03e+01   0.63 
+       DIRK18_rtol7   9086   1.03e+01   0.63 
+  -    DIRK19_rtol1      0   1e-05      0.013 
+       DIRK19_rtol3      0   1e-05      0.012 
+       DIRK19_rtol5      0   1e-05      0.013 
+       DIRK19_rtol7      0   1e-05      0.013 
+  -    DIRK20_rtol1      0   1e-05      0.041 
+       DIRK20_rtol3      0   1e-05      0.04 
+       DIRK20_rtol5      0   1e-05      0.042 
+       DIRK20_rtol7      0   1e-05      0.041 
+  order 5:
+    DIRK21: +15, -7
+    DIRK22: +32, -4    **use as the default
+    analytic:
+ *     DIRK21_rtol1     26   5.18e+02   0.0044 
+       DIRK21_rtol3     48   3.36e+00   0.0059 
+       DIRK21_rtol5    104   3.16e-01   0.0099 
+       DIRK21_rtol7    272   2.60e-01   0.019 
++*-    DIRK22_rtol1     24   4.49e+03   0.0045 
+       DIRK22_rtol3     33   2.56e+02   0.0052 
+       DIRK22_rtol5     60   7.32e+01   0.0074 
+       DIRK22_rtol7      0   0.00878088      0.011 
+    analytic_nonlin:
+ * /   DIRK21_rtol1     21   4.35e+01   0.0046 
+       DIRK21_rtol3     31   1.19e+00   0.0054 
+       DIRK21_rtol5     49   8.51e-02   0.0081 
+       DIRK21_rtol7     87   6.91e-02   0.013 
++*     DIRK22_rtol1     21   1.24e+03   0.0043 
+       DIRK22_rtol3     22   4.47e+02   0.0049 
+       DIRK22_rtol5     24   1.42e+01   0.0055 
+       DIRK22_rtol7     36   1.38e+00   0.0068 
+    analytic_nonlin_back:
+ *-/   DIRK21_rtol1     34   2.04e+02   0.0048 
+       DIRK21_rtol3     34   1.91e+00   0.0051 
+       DIRK21_rtol5     63   4.89e-02   0.0072 
+       DIRK21_rtol7      0   0.00557022      0.017 
++*     DIRK22_rtol1     34   1.59e+03   0.0045 
+       DIRK22_rtol3     34   2.38e+01   0.0049 
+       DIRK22_rtol5     34   2.13e+03   0.0063 
+       DIRK22_rtol7     34   8.37e+01   0.0074 
+    analytic_sys:
+ *     DIRK21_rtol1     15   1.44e+04   0.005 
+       DIRK21_rtol3     14   7.53e+02   0.0055 
+       DIRK21_rtol5     32   1.80e+02   0.0079 
+       DIRK21_rtol7     51   4.05e+01   0.011 
++*     DIRK22_rtol1     14   1.16e+04   0.0048 
+       DIRK22_rtol3     12   3.03e+03   0.0056 
+       DIRK22_rtol5     27   6.11e+02   0.0078 
+       DIRK22_rtol7     39   2.95e+01   0.01 
+    brusselator:
+ *     DIRK21_rtol1     25   5.27e+01   0.0058 
+       DIRK21_rtol3     44   6.85e+00   0.0092 
+       DIRK21_rtol5     63   1.60e+00   0.015 
+       DIRK21_rtol7    145   1.25e+00   0.034 
++* /   DIRK22_rtol1     19   2.78e+01   0.0054 
+       DIRK22_rtol3     30   1.62e+00   0.0087 
+       DIRK22_rtol5     45   1.25e-01   0.014 
+       DIRK22_rtol7     81   4.42e-02   0.028 
+    brusselator1D:
+ *     DIRK21_rtol1     24   9.46e+03   0.081 
+       DIRK21_rtol3     30   8.30e+01   0.15 
+       DIRK21_rtol5     43   7.78e+01   0.28 
+       DIRK21_rtol7     83   1.59e+01   0.69 
++*     DIRK22_rtol1     18   1.52e+04   0.076 
+       DIRK22_rtol3     22   3.15e+02   0.14 
+       DIRK22_rtol5     31   2.05e+01   0.26 
+       DIRK22_rtol7     51   2.18e+00   0.64 
+    bruss:
+       DIRK21_rtol1     94   7.56e-01   0.015 
+       DIRK21_rtol3     94   7.56e-01   0.014 
+       DIRK21_rtol5     94   7.56e-01   0.013 
+       DIRK21_rtol7     94   7.56e-01   0.015 
++* /   DIRK22_rtol1     59   5.20e-02   0.012 
+       DIRK22_rtol3     59   5.20e-02   0.012 
+       DIRK22_rtol5     59   5.20e-02   0.012 
+       DIRK22_rtol7     59   5.20e-02   0.011 
+    heat1D:
+ *     DIRK21_rtol1     44   3.21e+07   0.24 
+       DIRK21_rtol3     57   1.02e+06   0.32 
+       DIRK21_rtol5     85   4.07e+04   0.46 
+       DIRK21_rtol7    130   1.06e+04   0.7 
++*     DIRK22_rtol1     35   2.61e+07   0.24 
+       DIRK22_rtol3     41   2.13e+06   0.3 
+       DIRK22_rtol5     50   6.05e+04   0.44 
+       DIRK22_rtol7     68   1.21e+03   0.64 
+    heat2D:
++*     DIRK21_rtol1     35   1.42e+05   17 
+       DIRK21_rtol3     56   7.30e+04   18 
+       DIRK21_rtol5     69   4.96e+03   21 
+       DIRK21_rtol7     76   1.56e+03   23 
++*     DIRK22_rtol1     45   1.87e+05   16 
+       DIRK22_rtol3     32   1.44e+05   17 
+       DIRK22_rtol5     35   6.61e+03   20 
+       DIRK22_rtol7     60   1.86e+03   23 
+    hires:
+ *     DIRK21_rtol1   2333   9.97e+03   0.38 
+       DIRK21_rtol3   2333   9.97e+03   0.38 
+       DIRK21_rtol5   2333   9.97e+03   0.38 
+       DIRK21_rtol7   2333   9.97e+03   0.38 
++*     DIRK22_rtol1   1956   9.98e+03   0.35 
+       DIRK22_rtol3   1956   9.98e+03   0.35 
+       DIRK22_rtol5   1956   9.98e+03   0.35 
+       DIRK22_rtol7   1956   9.98e+03   0.36 
+    medakzo:
+ *     DIRK21_rtol1   5626   2.11e+01   13 
+       DIRK21_rtol3   5626   2.11e+01   13 
+       DIRK21_rtol5   5626   2.11e+01   13 
+       DIRK21_rtol7   5626   2.11e+01   13 
++*     DIRK22_rtol1   4002   2.33e+02   10 
+       DIRK22_rtol3   4002   2.33e+02   10 
+       DIRK22_rtol5   4002   2.33e+02   10 
+       DIRK22_rtol7   4002   2.33e+02   10 
+    orego:
++* /   DIRK21_rtol1    833   1.33e-02   0.15 
+       DIRK21_rtol3    833   1.33e-02   0.15 
+       DIRK21_rtol5    833   1.33e-02   0.15 
+       DIRK21_rtol7    833   1.33e-02   0.15 
+  -    DIRK22_rtol1      0   0.0012851      0.12 
+       DIRK22_rtol3      0   0.0012851      0.11 
+       DIRK22_rtol5      0   0.0012851      0.12 
+       DIRK22_rtol7      0   0.0012851      0.12 
+    pollu:
+ *     DIRK21_rtol1     87   8.86e+03   0.027 
+       DIRK21_rtol3     87   8.86e+03   0.025 
+       DIRK21_rtol5     87   8.86e+03   0.025 
+       DIRK21_rtol7     87   8.86e+03   0.025 
++*     DIRK22_rtol1     58   7.61e+03   0.022 
+       DIRK22_rtol3     58   7.61e+03   0.02 
+       DIRK22_rtol5     58   7.61e+03   0.022 
+       DIRK22_rtol7     58   7.61e+03   0.021 
+    rober:
+  -    DIRK21_rtol1      0   1e-05      0.038 
+       DIRK21_rtol3      0   1e-05      0.039 
+       DIRK21_rtol5      0   1e-05      0.039 
+       DIRK21_rtol7      0   1e-05      0.038 
++*     DIRK22_rtol1    434   6.40e+03   0.056 
+       DIRK22_rtol3    434   6.40e+03   0.056 
+       DIRK22_rtol5    434   6.40e+03   0.057 
+       DIRK22_rtol7    434   6.40e+03   0.057 
+    robertson:
+  -    DIRK21_rtol1      0   1e-05      0.69 
+       DIRK21_rtol3      0   1e-05      0.62 
+       DIRK21_rtol5      0   1e-05      0.63 
+       DIRK21_rtol7      0   1e-05      0.62 
++*     DIRK22_rtol1  30059   2.64e+01   3.6 
+       DIRK22_rtol3  30059   2.64e+01   3.6 
+       DIRK22_rtol5  30059   2.64e+01   3.7 
+       DIRK22_rtol7  30059   2.64e+01   3.9 
+    vdpol:
+ *     DIRK21_rtol1   9557   4.00e+02   0.68 
+       DIRK21_rtol3   9557   4.00e+02   0.68 
+       DIRK21_rtol5   9557   4.00e+02   0.68 
+       DIRK21_rtol7   9557   4.00e+02   0.68 
++*     DIRK22_rtol1   5967   2.93e+01   0.63 
+       DIRK22_rtol3   5967   2.93e+01   0.49 
+       DIRK22_rtol5   5967   2.93e+01   0.49 
+       DIRK22_rtol7   5967   2.93e+01   0.49 
+    vdpolm:
+  -    DIRK21_rtol1      0   1e-05      0.0078 
+       DIRK21_rtol3      0   1e-05      0.0076 
+       DIRK21_rtol5      0   1e-05      0.0077 
+       DIRK21_rtol7      0   1e-05      0.0077 
++*     DIRK22_rtol1    876   2.46e-01   0.11 
+       DIRK22_rtol3    876   2.46e-01   0.11 
+       DIRK22_rtol5    876   2.46e-01   0.11 
+       DIRK22_rtol7    876   2.46e-01   0.11 
+
+
+
+ARK tests:
+  order 3:
+    analytic:
+       ARK2_rtol1     23   1.09e+01   0.0041 
+       ARK2_rtol3     45   1.14e+00   0.0048 
+       ARK2_rtol5    247   4.91e-01   0.011 
+       ARK2_rtol7   1530   5.48e-01   0.047 
+    analytic_sys:
+       ARK2_rtol1     15   2.75e+02   0.0048 
+       ARK2_rtol3     28   1.25e+01   0.0057 
+       ARK2_rtol5     60   2.98e+00   0.008 
+       ARK2_rtol7    244   2.10e+00   0.02 
+    brusselator:
+  -/   ARK2_rtol1      0   1e-05      0.0044 
+       ARK2_rtol3     62   1.03e-01   0.0076 
+       ARK2_rtol5    319   3.06e-02   0.021 
+       ARK2_rtol7   2787   6.05e-02   0.1 
+    brusselator1D:
+       ARK2_rtol1  12795   1.93e+00   14 
+       ARK2_rtol3  11587   3.80e+00   10 
+       ARK2_rtol5  11652   1.70e+00   10 
+       ARK2_rtol7  11611   8.23e+00   12 
+    bruss:
+       ARK2_rtol1   2078   1.35e-01   0.093 
+       ARK2_rtol3   2078   1.35e-01   0.092 
+       ARK2_rtol5   2078   1.35e-01   0.092 
+       ARK2_rtol7   2078   1.35e-01   0.093 
+    hires:
+       ARK2_rtol1   5203   9.53e+03   0.4 
+       ARK2_rtol3   5203   9.53e+03   0.4 
+       ARK2_rtol5   5203   9.53e+03   0.45 
+       ARK2_rtol7   5203   9.53e+03   0.4 
+    medakzo:
+       ARK2_rtol1   5867   5.53e+00   3.3 
+       ARK2_rtol3   5867   5.53e+00   3.3 
+       ARK2_rtol5   5867   5.53e+00   3.3 
+       ARK2_rtol7   5867   5.53e+00   3.3 
+    pollu:
+       ARK2_rtol1  18410   1.00e+04   1.4 
+       ARK2_rtol3  18410   1.00e+04   1.3 
+       ARK2_rtol5  18410   1.00e+04   1.3 
+       ARK2_rtol7  18410   1.00e+04   1.3 
+    vdpol:
+       ARK2_rtol1   7316   9.96e+00   0.49 
+       ARK2_rtol3   7316   9.96e+00   0.49 
+       ARK2_rtol5   7316   9.96e+00   0.49 
+       ARK2_rtol7   7316   9.96e+00   0.5 
+  order 4:
+    analytic:
+   /   ARK4_rtol1     25   1.52e+01   0.0043 
+       ARK4_rtol3     58   1.81e+00   0.0058 
+       ARK4_rtol5    220   8.64e-02   0.012 
+       ARK4_rtol7    829   1.86e+01   0.035 
+    analytic_sys:
+       ARK4_rtol1     14   7.78e+03   0.0047 
+       ARK4_rtol3     14   1.38e+02   0.0054 
+       ARK4_rtol5     28   1.23e+01   0.0072 
+       ARK4_rtol7     52   4.27e+00   0.01 
+    brusselator:
+       ARK4_rtol1     23   2.12e+00   0.0049 
+       ARK4_rtol3     88   3.76e+00   0.0093 
+       ARK4_rtol5    695   6.19e-01   0.035 
+       ARK4_rtol7   5631   1.16e-01   0.24 
+    brusselator1D:
+       ARK4_rtol1  10116   2.58e+00   13 
+       ARK4_rtol3   9840   1.19e+01   11 
+       ARK4_rtol5   9837   5.89e+00   11 
+       ARK4_rtol7   9788   8.97e+00   13 
+    bruss:
+       ARK4_rtol1   2078   1.35e-01   0.094 
+       ARK4_rtol3   2078   1.35e-01   0.093 
+       ARK4_rtol5   2078   1.35e-01   0.094 
+       ARK4_rtol7   2078   1.35e-01   0.092 
+    hires:
+       ARK4_rtol1   5203   9.53e+03   0.4 
+       ARK4_rtol3   5203   9.53e+03   0.4 
+       ARK4_rtol5   5203   9.53e+03   0.4 
+       ARK4_rtol7   5203   9.53e+03   0.4 
+    medakzo:
+       ARK4_rtol1   5867   5.53e+00   3.3 
+       ARK4_rtol3   5867   5.53e+00   3.3 
+       ARK4_rtol5   5867   5.53e+00   3.3 
+       ARK4_rtol7   5867   5.53e+00   3.3 
+    pollu:
+       ARK4_rtol1  18410   1.00e+04   1.3 
+       ARK4_rtol3  18410   1.00e+04   1.3 
+       ARK4_rtol5  18410   1.00e+04   1.5 
+       ARK4_rtol7  18410   1.00e+04   1.3 
+    vdpol:
+       ARK4_rtol1   7316   9.96e+00   0.51 
+       ARK4_rtol3   7316   9.96e+00   0.49 
+       ARK4_rtol5   7316   9.96e+00   0.49 
+       ARK4_rtol7   7316   9.96e+00   0.49 
+  order 5:
+    analytic:
+  -    ARK9_rtol1     31   8.62e+02   0.0048 
+       ARK9_rtol3     60   2.65e+00   0.0065 
+       ARK9_rtol5    184   1.90e+00   0.013 
+       ARK9_rtol7      0   0.00305684      0.03 
+    analytic_sys:
+       ARK9_rtol1     14   1.15e+04   0.0048 
+       ARK9_rtol3     12   2.05e+03   0.0054 
+       ARK9_rtol5     27   6.11e+02   0.008 
+       ARK9_rtol7     39   2.97e+01   0.011 
+    brusselator:
+   /   ARK9_rtol1     39   1.23e+00   0.006 
+       ARK9_rtol3    155   9.54e-01   0.013 
+       ARK9_rtol5    914   9.53e-01   0.052 
+       ARK9_rtol7   7338   6.09e-02   0.49 
+    brusselator1D:
+       ARK9_rtol1   9624   3.86e+00   15 
+       ARK9_rtol3   9811   1.31e+02   12 
+       ARK9_rtol5   9738   9.28e+01   13 
+       ARK9_rtol7   9678   2.40e+00   18 
+    bruss:
+       ARK9_rtol1   2078   1.35e-01   0.092 
+       ARK9_rtol3   2078   1.35e-01   0.092 
+       ARK9_rtol5   2078   1.35e-01   0.093 
+       ARK9_rtol7   2078   1.35e-01   0.093 
+    hires:
+       ARK9_rtol1   5203   9.53e+03   0.4 
+       ARK9_rtol3   5203   9.53e+03   0.4 
+       ARK9_rtol5   5203   9.53e+03   0.4 
+       ARK9_rtol7   5203   9.53e+03   0.4 
+    medakzo:
+       ARK9_rtol1   5867   5.53e+00   3.3 
+       ARK9_rtol3   5867   5.53e+00   3.3 
+       ARK9_rtol5   5867   5.53e+00   3.3 
+       ARK9_rtol7   5867   5.53e+00   3.3 
+    pollu:
+       ARK9_rtol1  18410   1.00e+04   1.3 
+       ARK9_rtol3  18410   1.00e+04   1.3 
+       ARK9_rtol5  18410   1.00e+04   1.3 
+       ARK9_rtol7  18410   1.00e+04   1.3 
+    vdpol:
+       ARK9_rtol1   7316   9.96e+00   1.2 
+       ARK9_rtol3   7316   9.96e+00   0.49 
+       ARK9_rtol5   7316   9.96e+00   0.49 
+       ARK9_rtol7   7316   9.96e+00   0.99 
+
+
+
+ERK tests:
+  order 2:
+    analytic:
+       ERK0_rtol1    504   4.00e+00   0.011 
+       ERK0_rtol3    556   3.38e+00   0.011 
+       ERK0_rtol5   1254   5.25e+00   0.022 
+       ERK0_rtol7  10105   4.22e+00   0.14 
+    analytic_nonlin:
+       ERK0_rtol1     22   1.11e+01   0.0033 
+       ERK0_rtol3     91   2.74e+00   0.0045 
+       ERK0_rtol5    774   3.36e+00   0.015 
+       ERK0_rtol7   7744   3.32e+00   0.11 
+    analytic_nonlin_back:
+       ERK0_rtol1     32   6.35e+02   0.0034 
+       ERK0_rtol3     52   5.57e+00   0.0038 
+       ERK0_rtol5    346   1.03e+00   0.0081 
+       ERK0_rtol7   3272   7.84e-01   0.044 
+    analytic_sys:
+       ERK0_rtol1     25   3.20e+01   0.0041 
+       ERK0_rtol3    152   2.22e+01   0.006 
+       ERK0_rtol5   1433   2.56e+01   0.024 
+       ERK0_rtol7  14230   2.63e+01   0.18 
+    brusselator:
+       ERK0_rtol1 498241   2.22e+00   8.2 
+       ERK0_rtol3 498918   2.29e+00   8.2 
+       ERK0_rtol5 499089   2.00e+00   8 
+       ERK0_rtol7 500937   1.84e+00   8.3 
+    heat1D:
+       ERK0_rtol1  39940   5.99e+03   1.7 
+       ERK0_rtol3  40190   3.70e+03   2 
+       ERK0_rtol5  41749   6.03e+03   2 
+       ERK0_rtol7  45219   3.92e+03   2.3 
+  order 3:
+    ERK1: +8, -0    **use as the default
+    ERK2: +12, -3
+    analytic:
++*     ERK1_rtol1    393   2.12e+00   0.012 
+       ERK1_rtol3    397   1.91e+00   0.012 
+       ERK1_rtol5    520   1.68e+00   0.014 
+       ERK1_rtol7   1291   1.13e+00   0.026 
++*-    ERK2_rtol1      0   8.63004e-10      0.011 
+       ERK2_rtol3    299   1.20e+00   0.0093 
+       ERK2_rtol5    481   1.43e-01   0.013 
+       ERK2_rtol7   1702   6.50e+00   0.033 
+    analytic_nonlin:
++*     ERK1_rtol1     20   4.19e+01   0.0034 
+       ERK1_rtol3     27   5.51e-01   0.0036 
+       ERK1_rtol5     72   8.73e-01   0.0045 
+       ERK1_rtol7    270   6.50e-01   0.0091 
++*     ERK2_rtol1     20   7.68e+02   0.0034 
+       ERK2_rtol3     29   8.83e+01   0.0035 
+       ERK2_rtol5     74   9.92e+00   0.0044 
+       ERK2_rtol7    292   7.22e+00   0.0086 
+    analytic_nonlin_back:
+ *     ERK1_rtol1     33   1.15e+04   0.0035 
+       ERK1_rtol3     33   1.15e+02   0.0036 
+       ERK1_rtol5     47   3.40e+00   0.0039 
+       ERK1_rtol7    157   2.77e+00   0.0064 
++*     ERK2_rtol1     33   7.44e+04   0.0035 
+       ERK2_rtol3     33   7.44e+02   0.0036 
+       ERK2_rtol5     33   7.44e+00   0.0035 
+       ERK2_rtol7     99   6.88e-01   0.0049 
+    analytic_sys:
+ *     ERK1_rtol1     13   7.10e+01   0.0039 
+       ERK1_rtol3     24   7.49e+00   0.0042 
+       ERK1_rtol5     84   4.11e+00   0.0055 
+       ERK1_rtol7    353   3.95e+00   0.012 
++*     ERK2_rtol1     13   2.91e+02   0.0039 
+       ERK2_rtol3     23   2.41e+01   0.0042 
+       ERK2_rtol5     76   1.33e+01   0.0052 
+       ERK2_rtol7    325   9.80e+00   0.0098 
+    brusselator:
+       ERK1_rtol1 373803   6.64e-01   8.6 
+       ERK1_rtol3 391880   6.20e-01   9 
+       ERK1_rtol5 390218   1.59e+00   8.6 
+       ERK1_rtol7 391059   6.39e-01   8.9 
++* /   ERK2_rtol1 278857   1.73e-02   6.1 
+       ERK2_rtol3 288282   4.34e-02   6.4 
+       ERK2_rtol5 289074   1.12e-02   6.5 
+       ERK2_rtol7 289590   7.67e-01   6.7 
+    heat1D:
++*     ERK1_rtol1  31226   1.79e+03   2.2 
+       ERK1_rtol3  31233   9.50e+02   2.3 
+       ERK1_rtol5  31258   1.14e+03   2.4 
+       ERK1_rtol7  31445   1.52e+03   2.7 
++*-    ERK2_rtol1      0   1e-05      0.77 
+       ERK2_rtol3  23303   6.31e+01   1.8 
+       ERK2_rtol5  23228   3.14e+02   2 
+       ERK2_rtol7  23243   1.48e+02   2.1 
+  order 4:
+    ERK3: +10, -1    **use as the default
+    ERK4: +14, -3
+    ERK5: +7, -1
+    analytic:
++*     ERK3_rtol1    378   1.23e+01   0.012 
+       ERK3_rtol3    411   9.28e+00   0.012 
+       ERK3_rtol5    625   1.66e+01   0.017 
+       ERK3_rtol7   1494   1.04e+01   0.031 
++*-    ERK4_rtol1      0   9.06631e-11      0.011 
+       ERK4_rtol3    266   7.13e-01   0.01 
+       ERK4_rtol5    362   3.60e-01   0.012 
+       ERK4_rtol7    893   9.13e+00   0.021 
+ *     ERK5_rtol1    438   2.33e+00   0.014 
+       ERK5_rtol3    442   9.44e-01   0.015 
+       ERK5_rtol5    621   1.40e+00   0.017 
+       ERK5_rtol7   1916   1.57e+01   0.042 
+    analytic_nonlin:
+ *     ERK3_rtol1     23   1.97e+03   0.0035 
+       ERK3_rtol3     30   6.67e+01   0.0036 
+       ERK3_rtol5     65   4.84e+01   0.0044 
+       ERK3_rtol7    168   2.22e+01   0.0067 
++*     ERK4_rtol1     23   9.91e+02   0.0035 
+       ERK4_rtol3     23   2.86e+01   0.0036 
+       ERK4_rtol5     33   3.38e+00   0.0038 
+       ERK4_rtol7     71   1.37e+00   0.0047 
++*     ERK5_rtol1     21   2.69e+02   0.0034 
+       ERK5_rtol3     27   1.28e+01   0.0037 
+       ERK5_rtol5     51   4.21e+00   0.0042 
+       ERK5_rtol7    130   4.05e+00   0.29 
+    analytic_nonlin_back:
+ *     ERK3_rtol1     35   7.15e+05   0.0036 
+       ERK3_rtol3     35   7.15e+03   0.0036 
+       ERK3_rtol5     41   1.55e+02   0.0038 
+       ERK3_rtol7     98   1.28e+02   0.0051 
++*     ERK4_rtol1     35   3.03e+05   0.0037 
+       ERK4_rtol3     35   3.03e+03   0.0038 
+       ERK4_rtol5     35   3.03e+01   0.0037 
+       ERK4_rtol7     43   6.27e-01   0.0039 
++*     ERK5_rtol1     35   3.50e+05   0.0037 
+       ERK5_rtol3     35   3.50e+03   0.0037 
+       ERK5_rtol5     35   3.50e+01   0.0037 
+       ERK5_rtol7     56   1.37e+01   0.0045 
+    analytic_sys:
++*     ERK3_rtol1     14   8.58e+02   0.004 
+       ERK3_rtol3     27   1.47e+02   0.0042 
+       ERK3_rtol5     57   8.19e+01   0.0049 
+       ERK3_rtol7    167   5.95e+01   0.0072 
++*     ERK4_rtol1     15   9.91e+03   0.0041 
+       ERK4_rtol3     15   9.63e+01   0.004 
+       ERK4_rtol5     24   6.29e+00   0.0043 
+       ERK4_rtol7     52   3.67e+00   0.005 
+ *     ERK5_rtol1     14   4.36e+02   0.004 
+       ERK5_rtol3     26   7.93e+01   0.0043 
+       ERK5_rtol5     56   4.35e+01   0.005 
+       ERK5_rtol7    173   3.77e+01   0.0078 
+    brusselator:
++*     ERK3_rtol1 369687   7.68e+00   11 
+       ERK3_rtol3 360571   5.56e+00   9.4 
+       ERK3_rtol5 359616   8.47e+00   9.3 
+       ERK3_rtol7 364363   8.31e+00   9.7 
++* /   ERK4_rtol1 238662   2.28e-02   6 
+       ERK4_rtol3 242959   9.67e-01   6.3 
+       ERK4_rtol5 242660   4.13e-01   6.4 
+       ERK4_rtol7 242643   2.45e-02   6.7 
+       ERK5_rtol1 429323   7.66e-01   11 
+       ERK5_rtol3 427436   7.02e-01   12 
+       ERK5_rtol5 434975   4.73e-01   13 
+       ERK5_rtol7 427280   4.45e-01   12 
+    heat1D:
++*     ERK3_rtol1  28870   1.40e+04   2.8 
+       ERK3_rtol3  29073   1.62e+04   2.7 
+       ERK3_rtol5  28983   1.34e+04   2.9 
+       ERK3_rtol7  29126   1.62e+04   3.1 
++*-    ERK4_rtol1      0   0      2.2 
+       ERK4_rtol3  19469   9.21e+02   2 
+       ERK4_rtol5  19617   1.05e+03   2.3 
+       ERK4_rtol7  19517   9.46e+01   2.4 
+ *     ERK5_rtol1  34206   1.59e+03   3.5 
+       ERK5_rtol3  34197   1.53e+03   3.6 
+       ERK5_rtol5  34839   1.48e+03   4 
+       ERK5_rtol7  34254   7.86e+02   4 
+    medakzo:
+  -    ERK3_rtol1      0   1e-05      0.83 
+       ERK3_rtol3      0   1e-05      0.81 
+       ERK3_rtol5      0   1e-05      0.8 
+       ERK3_rtol7      0   1e-05      0.82 
++*     ERK4_rtol1  43792   5.85e+01   13 
+       ERK4_rtol3  43792   5.85e+01   13 
+       ERK4_rtol5  43792   5.85e+01   13 
+       ERK4_rtol7  43792   5.85e+01   13 
+  -    ERK5_rtol1      0   1e-05      0.95 
+       ERK5_rtol3      0   1e-05      0.95 
+       ERK5_rtol5      0   1e-05      0.96 
+       ERK5_rtol7      0   1e-05      0.97 
+  order 5:
+    ERK6: +14, -0    **use as the default
+    ERK7: +9, -1
+    ERK8: +7, -1
+    ERK9: +12, -0
+    analytic:
++*     ERK6_rtol1    278   7.78e+00   0.011 
+       ERK6_rtol3    286   1.54e+00   0.011 
+       ERK6_rtol5    373   4.18e+01   0.011 
+       ERK6_rtol7    719   1.97e+01   0.019 
++*     ERK7_rtol1    289   9.47e+00   0.01 
+       ERK7_rtol3    298   9.59e+00   0.011 
+       ERK7_rtol5    413   4.11e+01   0.012 
+       ERK7_rtol7    957   2.23e+01   0.023 
+ *     ERK8_rtol1    346   5.14e+00   0.013 
+       ERK8_rtol3    347   2.82e+00   0.013 
+       ERK8_rtol5    429   1.77e+01   0.013 
+       ERK8_rtol7    816   1.99e+01   0.023 
+ *     ERK9_rtol1    269   1.25e+01   0.012 
+       ERK9_rtol3    290   1.58e+01   0.012 
+       ERK9_rtol5    443   1.25e+01   0.015 
+       ERK9_rtol7   1015   7.77e+01   0.028 
+    analytic_nonlin:
++*     ERK6_rtol1     22   1.29e+04   0.0036 
+       ERK6_rtol3     22   1.39e+02   0.0036 
+       ERK6_rtol5     30   1.78e+01   0.0037 
+       ERK6_rtol7     44   1.91e+00   0.0038 
+ *     ERK7_rtol1     22   2.33e+03   0.0035 
+       ERK7_rtol3     23   1.02e+02   0.0036 
+       ERK7_rtol5     33   2.81e+01   0.0038 
+       ERK7_rtol7     51   2.24e+01   0.0043 
++*     ERK8_rtol1     22   2.16e+03   0.0036 
+       ERK8_rtol3     22   2.15e+01   0.0035 
+       ERK8_rtol5     29   1.10e+01   0.0037 
+       ERK8_rtol7     49   8.37e+00   0.0043 
+ *     ERK9_rtol1     22   5.64e+03   0.0037 
+       ERK9_rtol3     25   4.12e+02   0.0038 
+       ERK9_rtol5     35   1.49e+02   0.004 
+       ERK9_rtol7     56   1.82e+02   0.0046 
+    analytic_nonlin_back:
++*     ERK6_rtol1     34   6.39e+07   0.0037 
+       ERK6_rtol3     34   6.43e+05   0.0036 
+       ERK6_rtol5     34   6.43e+03   0.0037 
+       ERK6_rtol7     34   6.43e+01   0.0038 
++*     ERK7_rtol1     34   6.75e+07   0.0037 
+       ERK7_rtol3     34   6.79e+05   0.0036 
+       ERK7_rtol5     34   6.79e+03   0.0037 
+       ERK7_rtol7     34   6.79e+01   0.0033 
++*     ERK8_rtol1     34   1.38e+08   0.0037 
+       ERK8_rtol3     34   1.40e+06   0.0038 
+       ERK8_rtol5     34   1.40e+04   0.0037 
+       ERK8_rtol7     34   1.40e+02   0.0038 
++*     ERK9_rtol1     34   3.45e+07   0.0038 
+       ERK9_rtol3     34   3.46e+05   0.0038 
+       ERK9_rtol5     34   3.46e+03   0.0038 
+       ERK9_rtol7     34   3.46e+01   0.0038 
+    analytic_sys:
++*     ERK6_rtol1     14   1.58e+04   0.004 
+       ERK6_rtol3     15   2.05e+02   0.0041 
+       ERK6_rtol5     23   1.32e+01   0.0043 
+       ERK6_rtol7     40   4.60e+00   0.0047 
+ *     ERK7_rtol1     15   1.47e+04   0.0041 
+       ERK7_rtol3     12   1.63e+02   0.004 
+       ERK7_rtol5     27   5.36e+01   0.0043 
+       ERK7_rtol7     60   8.17e+01   0.0051 
++*     ERK8_rtol1     16   4.71e+04   0.0041 
+       ERK8_rtol3     12   3.56e+02   0.004 
+       ERK8_rtol5     26   9.47e+01   0.0043 
+       ERK8_rtol7     51   1.08e+02   0.005 
++*     ERK9_rtol1     15   4.52e+04   0.0041 
+       ERK9_rtol3     12   4.89e+02   0.004 
+       ERK9_rtol5     27   2.18e+02   0.0044 
+       ERK9_rtol7     57   2.66e+02   0.0053 
+    brusselator:
++*     ERK6_rtol1 265120   1.54e+00   8.3 
+       ERK6_rtol3 266238   2.36e+00   8.4 
+       ERK6_rtol5 266255   2.02e+00   8.5 
+       ERK6_rtol7 266260   2.33e+00   8.8 
++      ERK7_rtol1 286373   4.83e+00   9 
+       ERK7_rtol3 285949   3.20e+00   9.4 
+       ERK7_rtol5 285963   4.41e+00   9.1 
+       ERK7_rtol7 286001   2.86e+00   9 
+       ERK8_rtol1 347646   2.07e+00   13 
+       ERK8_rtol3 348361   1.40e+00   13 
+       ERK8_rtol5 348375   6.57e+00   13 
+       ERK8_rtol7 348378   1.67e+00   13 
++*     ERK9_rtol1 220037   4.08e+00   6.8 
+       ERK9_rtol3 220799   3.11e+01   6.8 
+       ERK9_rtol5 218745   4.20e+00   6.6 
+       ERK9_rtol7 223280   3.76e+00   6.9 
+    heat1D:
++*     ERK6_rtol1  21312   3.20e+03   2.6 
+       ERK6_rtol3  21307   2.81e+03   2.5 
+       ERK6_rtol5  21313   3.47e+03   2.7 
+       ERK6_rtol7  21320   5.88e+03   2.9 
++*     ERK7_rtol1  22868   2.39e+04   2.7 
+       ERK7_rtol3  22874   4.82e+03   2.7 
+       ERK7_rtol5  22875   1.05e+04   2.9 
+       ERK7_rtol7  22890   1.06e+04   3 
+       ERK8_rtol1  27876   7.33e+03   3.9 
+       ERK8_rtol3  27852   4.53e+03   4 
+       ERK8_rtol5  27854   5.69e+03   3.9 
+       ERK8_rtol7  27879   4.14e+03   4.3 
++*     ERK9_rtol1  18844   6.55e+03   2.5 
+       ERK9_rtol3  18482   1.32e+04   2.4 
+       ERK9_rtol5  18750   1.05e+04   2.6 
+       ERK9_rtol7  19044   6.44e+03   2.9 
+    medakzo:
++*     ERK6_rtol1  47773   3.28e+01   16 
+       ERK6_rtol3  47773   3.28e+01   17 
+       ERK6_rtol5  47773   3.28e+01   17 
+       ERK6_rtol7  47773   3.28e+01   17 
+  -    ERK7_rtol1      0   1e-05      1.1 
+       ERK7_rtol3      0   1e-05      1.1 
+       ERK7_rtol5      0   1e-05      1.1 
+       ERK7_rtol7      0   1e-05      1.1 
+  -    ERK8_rtol1      0   1e-05      1.3 
+       ERK8_rtol3      0   1e-05      1.3 
+       ERK8_rtol5      0   1e-05      1.3 
+       ERK8_rtol7      0   1e-05      1.2 
++*     ERK9_rtol1  42615   4.83e+01   15 
+       ERK9_rtol3  42615   4.83e+01   15 
+       ERK9_rtol5  42615   4.83e+01   15 
+       ERK9_rtol7  42615   4.83e+01   15 
+  order 6:
+    analytic:
+       ERK10_rtol1    287   5.97e+01   0.012 
+       ERK10_rtol3    310   3.83e+01   0.012 
+       ERK10_rtol5    435   4.20e+02   0.014 
+       ERK10_rtol7    933   4.09e+02   0.027 
+    analytic_nonlin:
+       ERK10_rtol1     24   3.54e+03   0.0037 
+       ERK10_rtol3     26   6.69e+01   0.0037 
+       ERK10_rtol5     33   1.03e+01   0.0039 
+       ERK10_rtol7     43   3.25e+00   0.0042 
+    analytic_nonlin_back:
+       ERK10_rtol1     35   4.04e+08   0.0038 
+       ERK10_rtol3     35   4.21e+06   0.0038 
+       ERK10_rtol5     35   4.21e+04   0.0038 
+       ERK10_rtol7     35   4.21e+02   0.0038 
+    analytic_sys:
+       ERK10_rtol1     15   1.43e+07   0.0041 
+       ERK10_rtol3     12   1.74e+05   0.0041 
+       ERK10_rtol5     23   8.67e+03   0.0043 
+       ERK10_rtol7     40   2.68e+03   0.0048 
+    brusselator:
+       ERK10_rtol1 257121   4.57e+00   9.8 
+       ERK10_rtol3 256322   1.33e+01   9.8 
+       ERK10_rtol5 256527   9.07e+00   10 
+       ERK10_rtol7 256449   4.30e+00   9.7 
+    heat1D:
+       ERK10_rtol1  20483   1.46e+04   3.2 
+       ERK10_rtol3  20538   9.19e+04   3.2 
+       ERK10_rtol5  20553   1.29e+04   3.3 
+       ERK10_rtol7  20505   2.81e+04   3.7 
+    medakzo:
+       ERK10_rtol1  46028   2.12e+02   22 
+       ERK10_rtol3  46028   2.12e+02   22 
+       ERK10_rtol5  46028   2.12e+02   22 
+       ERK10_rtol7  46028   2.12e+02   22 
