@@ -346,7 +346,8 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
        this test is not sufficient to guarantee use of the 
        serial NVECTOR package.
 ---------------------------------------------------------------*/
-int ARKMassLapackDense(void *arkode_mem, int N)
+int ARKMassLapackDense(void *arkode_mem, int N, 
+		       ARKDlsDenseMassFn dmass)
 {
   ARKodeMem ark_mem;
   ARKDlsMassMem arkdls_mem;
@@ -388,8 +389,8 @@ int ARKMassLapackDense(void *arkode_mem, int N)
   /* Set matrix type */
   arkdls_mem->d_type = SUNDIALS_DENSE;
 
-  /* Initialize Jacobian-related data */
-  arkdls_mem->d_djac   = NULL;
+  /* Initialize mass-matrix-related data */
+  arkdls_mem->d_dmass = dmass;
   arkdls_mem->d_M_data = NULL;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
 
@@ -447,7 +448,8 @@ int ARKMassLapackDense(void *arkode_mem, int N)
        N_VGetArrayPointer exists.  Again, this test is insufficient
        to guarantee the serial NVECTOR package, but it's a start.
 ---------------------------------------------------------------*/                  
-int ARKMassLapackBand(void *arkode_mem, int N, int mupper, int mlower)
+int ARKMassLapackBand(void *arkode_mem, int N, int mupper, 
+		      int mlower, ARKDlsBandMassFn bmass)
 {
   ARKodeMem ark_mem;
   ARKDlsMassMem arkdls_mem;
@@ -488,8 +490,8 @@ int ARKMassLapackBand(void *arkode_mem, int N, int mupper, int mlower)
   /* Set matrix type */
   arkdls_mem->d_type = SUNDIALS_BAND;
 
-  /* Initialize Jacobian-related data */
-  arkdls_mem->d_bjac   = NULL;
+  /* Initialize mass-matrix-related data */
+  arkdls_mem->d_bmass = bmass;
   arkdls_mem->d_M_data = NULL;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
   
@@ -647,10 +649,10 @@ static int arkLapackDenseSetup(ARKodeMem ark_mem, int convfail,
     arkdls_mass_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
     SetToZero(arkdls_mass_mem->d_M);
     retval = arkdls_mass_mem->d_dmass(arkdls_mass_mem->d_n, 
-				      ark_mem->ark_tn, ypred, 
+				      ark_mem->ark_tn, yP, 
 				      arkdls_mass_mem->d_M, 
 				      arkdls_mass_mem->d_M_data, 
-				      vtemp1, vtemp2, vtemp3);
+				      tmp1, tmp2, tmp3);
     arkdls_mass_mem->d_nme++;
     if (retval < 0) {
       arkProcessError(ark_mem, ARKDLS_MASSFUNC_UNRECVR, "ARKDENSE", 
@@ -749,7 +751,7 @@ static int arkMassLapackDenseInit(ARKodeMem ark_mem)
 {
   ARKDlsMassMem arkdls_mem;
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
-  arkdls_mem->d_nje   = 0;
+  arkdls_mem->d_nme = 0;
   arkdls_mem->d_M_data = ark_mem->ark_user_data;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
   return(0);
@@ -779,7 +781,7 @@ static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector yP,
   retval = arkdls_mem->d_dmass(arkdls_mem->d_n, ark_mem->ark_tn, 
 			       yP, arkdls_mem->d_M, arkdls_mem->d_M_data, 
 			       tmp1, tmp2, tmp3);
-  arkdls_mem->d_nje++;
+  arkdls_mem->d_nme++;
   if (retval < 0) {
     arkProcessError(ark_mem, ARKDLS_MASSFUNC_UNRECVR, "ARKLAPACK", 
 		    "arkMassLapackDenseSetup", MSGD_MASSFUNC_FAILED);
@@ -946,9 +948,9 @@ static int arkLapackBandSetup(ARKodeMem ark_mem, int convfail,
     arkdls_mass_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
     SetToZero(arkdls_mass_mem->d_M);
     retval = arkdls_mass_mem->d_bmass(arkdls_mass_mem->d_n, arkdls_mass_mem->d_mu, 
-				      arkdls_mass_mem->d_ml, ark_mem->ark_tn, ypred, 
+				      arkdls_mass_mem->d_ml, ark_mem->ark_tn, yP, 
 				      arkdls_mass_mem->d_M, arkdls_mass_mem->d_M_data, 
-				      vtemp1, vtemp2, vtemp3);
+				      tmp1, tmp2, tmp3);
     arkdls_mass_mem->d_nme++;
     if (retval < 0) {
       arkProcessError(ark_mem, ARKDLS_MASSFUNC_UNRECVR, "ARKLAPACK", 
@@ -1053,7 +1055,7 @@ static int arkMassLapackBandInit(ARKodeMem ark_mem)
 {
   ARKDlsMassMem arkdls_mem;
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
-  arkdls_mem->d_nme   = 0;
+  arkdls_mem->d_nme = 0;
   arkdls_mem->d_M_data = ark_mem->ark_user_data;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
   return(0);
