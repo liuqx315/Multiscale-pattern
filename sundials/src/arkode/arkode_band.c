@@ -407,11 +407,8 @@ int ARKMassBand(void *arkode_mem, long int N, long int mupper,
   /* Set matrix type */
   arkdls_mem->d_type = SUNDIALS_BAND;
   
-  /* Set the band mass matrix function */
-  arkdls_mem->d_bmass = bmass;
-
   /* Initialize mass-matrix-related data */
-  arkdls_mem->d_bmass = NULL;
+  arkdls_mem->d_bmass = bmass;
   arkdls_mem->d_M_data = NULL;
 
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;

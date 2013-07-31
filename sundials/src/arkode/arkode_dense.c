@@ -401,11 +401,8 @@ int ARKMassDense(void *arkode_mem, long int N, ARKDlsDenseMassFn dmass)
   /* Set matrix type */
   arkdls_mem->d_type = SUNDIALS_DENSE;
 
-  /* Set the dense mass matrix creation routine */
-  arkdls_mem->d_dmass = dmass;
-
   /* Initialize mass-matrix-related data */
-  arkdls_mem->d_dmass  = NULL;
+  arkdls_mem->d_dmass = dmass;
   arkdls_mem->d_M_data = NULL;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
 
