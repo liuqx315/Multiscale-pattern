@@ -49,23 +49,23 @@ static int Splitfluxesx(realtype *Ydata, realtype *fp, realtype *fn, long int i,
 /* Split g to g_positve and g_negative parts for y component */
 static int Splitfluxesy(realtype *Ydata, realtype *gp, realtype *gn, long int i, long int j, long int Nx, long int Ny, realtype gama);
 
-/* Set left eigenvectors in x direction */
+/* Set left eigenvectors in x direction and eigenvalues*/
 static int Setlfxegm(realtype *Ydata, realtype **lfxegm, long int i, long int j, long int Nx, long int Ny, realtype gama, realtype *egvx);
 
 /* Set right eigenvectors in x direction */
 static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j, long int Nx, long int Ny, realtype gama, int flag);
 
-/* Set left eigenvectors in y direction */
+/* Set left eigenvectors in y direction and eigenvalues*/
 static int Setlfyegm(realtype *Ydata, realtype **lfyegm, long int i, long int j, long int Nx, long int Ny, realtype gama, realtype *egvy);
 
 /* Set right eigenvectors in y direction */
 static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j, long int Nx, long int Ny, realtype gama, int flag);
 
 /* Fill in the indicators of smoothness on x direction */
-static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype *IS0_nx, realtype *IS1_nx, realtype *IS2_nx,realtype *yxpdata, realtype *yxndata, long int i, long int j, long int Nx, long int Ny, int flag);
+static int SetISX(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype *IS0_nx, realtype *IS1_nx, realtype *IS2_nx, realtype *yxpdata, realtype *yxndata, long int i, long int j, long int Nx, long int Ny, int flag);
 
 /* Fill in the indicators of smoothness on y direction */
-static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype *IS0_ny, realtype *IS1_ny, realtype *IS2_ny,realtype *yypdata, realtype *yyndata, long int i, long int j, long int Nx, long int Ny, int flag);
+static int SetISY(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype *IS0_ny, realtype *IS1_ny, realtype *IS2_ny, realtype *yypdata, realtype *yyndata, long int i, long int j, long int Nx, long int Ny, int flag);
 
 /* Fill in the stencil weights on x direction */
 static int Setalphawx(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, realtype *IS0_nx, realtype *IS1_nx, realtype *IS2_nx, realtype *alpha_0px, realtype *alpha_1px, realtype *alpha_2px, realtype *alpha_0nx, realtype *alpha_1nx, realtype *alpha_2nx, realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype Epsilon);
@@ -73,10 +73,10 @@ static int Setalphawx(realtype *IS0_px, realtype *IS1_px, realtype *IS2_px, real
 /* Fill in the stencil weights on y direction */
 static int Setalphawy(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, realtype *IS0_ny, realtype *IS1_ny, realtype *IS2_ny, realtype *alpha_0py, realtype *alpha_1py, realtype *alpha_2py, realtype *alpha_0ny, realtype *alpha_1ny, realtype *alpha_2ny, realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype Epsilon);
 
-/* Get the derivative on x direction */
+/* Get the interface value on x direction */
 static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, long int i, long int j, long int Nx, long int Ny, int flag);
 
-/* Get the derivative on y direction */
+/* Get the interface value on y direction */
 static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, long int i, long int j, long int Nx, long int Ny, int flag);
 
 int main(int argc, const char * argv[])
@@ -153,7 +153,8 @@ int main(int argc, const char * argv[])
     /* Access data array for new NVector y */
     data = N_VGetArrayPointer(y);
     if (check_flag((void *) data, "N_VGetArrayPointer", 0)) return 1;
-    
+
+    /* Set initial data */
     for(j=0;j<Ny;j++){
         for (i=0; i<Nx; i++) {
              if (udata->dx*(i+0.5)<0.5&&udata->dy*(j+0.5)>0.5){
@@ -319,7 +320,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype p, Epsilon;
     Epsilon = 10.0e-6;
     
-    /* create relative arrays */
+    /* create relative 2D WENO arrays */
     realtype *IS0_px = new realtype [4];
     realtype *IS1_px = new realtype [4];
     realtype *IS2_px = new realtype [4];
@@ -403,7 +404,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype Ly = udata->Ly;
     realtype gama = udata->gama;
     
-    /* fill in the value of NEQ and NEQS */    
+    /* fill in relative data arrays */    
     realtype *yxdata = new realtype [4*(Nx+1)*Ny];
     realtype *yydata = new realtype [4*Nx*(Ny+1)];
     realtype *yxpdata = new realtype [4*Nx*Ny];
@@ -447,14 +448,15 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
       }
     }
     */
-    /* compute max absolue eigenvalue and fill in yxpdata, yxndata, x direction */
+    /* compute eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
 	    flag = Setlfxegm(Ydata, lfxegm, i, j, Nx, Ny, gama, egvx);
             if (flag!=0) printf("error in Setlfxegm function \n");
 	   
 	    //printf(" Ydata : i = %li, j = %li, Ydata[idx(i, j, Nx, Ny, 0)] = %f, Ydata[idx(i, j, Nx, Ny, 1)] = %f, Ydata[idx(i, j, Nx, Ny, 2)] = %f, Ydata[idx(i, j, Nx, Ny, 3)] = %f\n", i, j, Ydata[idx(i, j, Nx, Ny, 0)], Ydata[idx(i, j, Nx, Ny, 1)],Ydata[idx(i, j, Nx, Ny, 2)],Ydata[idx(i, j, Nx, Ny, 3)]);
-		
+	    
+	    /* compute characteristic variables */
             for (k=0;k<4;k++){	     
 	      //printf(" lfxegm : i = %li, j = %li, lfxegm[k][0] = %f, lfxegm[k][1] = %f, lfxegm[k][2] = %f, lfxegm[k][3] = %f\n", i, j, lfxegm[k][0], lfxegm[k][1],lfxegm[k][2],lfxegm[k][3]);	     
 	      yxnewdata[idx(i, j, Nx, Ny, k)] = lfxegm[k][0]*Ydata[idx(i, j, Nx, Ny, 0)]+lfxegm[k][1]*Ydata[idx(i, j, Nx, Ny, 1)]+lfxegm[k][2]*Ydata[idx(i, j, Nx, Ny, 2)]+lfxegm[k][3]*Ydata[idx(i, j, Nx, Ny, 3)];
@@ -463,38 +465,51 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             }
             //printf("   yxnew problem parameters: i = %li, j = %li, yxnew0 = %e,  yxnew1 = %e, yxnew2 = %e,  yxnew3 = %e\n", i, j, yxnewdata[idx(i, j, Nx, Ny, 0)], yxnewdata[idx(i, j, Nx, Ny, 1)], yxnewdata[idx(i, j, Nx, Ny, 2)], yxnewdata[idx(i, j, Nx, Ny, 3)]);
            
-            egvxmax[idx_v(i,j,Nx)] = (fabs(egvx[idx(i,j,Nx,Ny,0)])>fabs(egvx[idx(i,j,Nx,Ny,2)])) ? fabs(egvx[idx(i,j,Nx,Ny,0)]) : fabs(egvx[idx(i,j,Nx,Ny,2)]);
+            //egvxmax[idx_v(i,j,Nx)] = (fabs(egvx[idx(i,j,Nx,Ny,0)])>fabs(egvx[idx(i,j,Nx,Ny,2)])) ? fabs(egvx[idx(i,j,Nx,Ny,0)]) : fabs(egvx[idx(i,j,Nx,Ny,2)]);
 	    
 	    //printf(" maxeigen : i = %li, j = %li, egv1 = %f, egv2 = %f, egv3 = %f, egv4 = %f, egvmaxx = %f\n", i, j, egvx[idx(i,j,Nx,Ny,0)], egvx[idx(i,j,Nx,Ny,1)],egvx[idx(i,j,Nx,Ny,2)],egvx[idx(i,j,Nx,Ny,3)], egvxmax[idx_v(i,j,Nx)]);
       
-            yxpdata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 0)]);
-            yxndata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 0)]);
+            //yxpdata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 0)]);
+            //yxndata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 0)]);
 	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 0)] = %g, yxndata[idx(i, j, Nx, Ny, 0)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 0)], yxndata[idx(i, j, Nx, Ny, 0)]);
-            yxpdata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 1)]);
-            yxndata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 1)]);
+            //yxpdata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 1)]);
+            //yxndata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 1)]);
 	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 1)] = %g, yxndata[idx(i, j, Nx, Ny, 1)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 1)], yxndata[idx(i, j, Nx, Ny, 1)]);
-            yxpdata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 2)]);
-            yxndata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 2)]);
+            //yxpdata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 2)]);
+            //yxndata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 2)]);
 	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 2)] = %g, yxndata[idx(i, j, Nx, Ny, 2)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 2)], yxndata[idx(i, j, Nx, Ny, 2)]);
-            yxpdata[idx(i, j, Nx, Ny, 3)]=0.5*(egvx[idx(i,j,Nx,Ny,3)]*yxnewdata[idx(i, j, Nx, Ny, 3)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 3)]);
-            yxndata[idx(i, j, Nx, Ny, 3)]=0.5*(egvx[idx(i,j,Nx,Ny,3)]*yxnewdata[idx(i, j, Nx, Ny, 3)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 3)]);
+            //yxpdata[idx(i, j, Nx, Ny, 3)]=0.5*(egvx[idx(i,j,Nx,Ny,3)]*yxnewdata[idx(i, j, Nx, Ny, 3)]+egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 3)]);
+            //yxndata[idx(i, j, Nx, Ny, 3)]=0.5*(egvx[idx(i,j,Nx,Ny,3)]*yxnewdata[idx(i, j, Nx, Ny, 3)]-egvxmax[idx_v(i,j,Nx)]*yxnewdata[idx(i, j, Nx, Ny, 3)]);
+
+	    yxpdata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]+fabs(egvx[idx(i,j,Nx,Ny,0)])*yxnewdata[idx(i, j, Nx, Ny, 0)]);
+            yxndata[idx(i, j, Nx, Ny, 0)]=0.5*(egvx[idx(i,j,Nx,Ny,0)]*yxnewdata[idx(i, j, Nx, Ny, 0)]-fabs(egvx[idx(i,j,Nx,Ny,0)])*yxnewdata[idx(i, j, Nx, Ny, 0)]);
+	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 0)] = %g, yxndata[idx(i, j, Nx, Ny, 0)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 0)], yxndata[idx(i, j, Nx, Ny, 0)]);
+            yxpdata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]+fabs(egvx[idx(i,j,Nx,Ny,1)])*yxnewdata[idx(i, j, Nx, Ny, 1)]);
+            yxndata[idx(i, j, Nx, Ny, 1)]=0.5*(egvx[idx(i,j,Nx,Ny,1)]*yxnewdata[idx(i, j, Nx, Ny, 1)]-fabs(egvx[idx(i,j,Nx,Ny,1)])*yxnewdata[idx(i, j, Nx, Ny, 1)]);
+	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 1)] = %g, yxndata[idx(i, j, Nx, Ny, 1)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 1)], yxndata[idx(i, j, Nx, Ny, 1)]);
+            yxpdata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]+fabs(egvx[idx(i,j,Nx,Ny,2)])*yxnewdata[idx(i, j, Nx, Ny, 2)]);
+            yxndata[idx(i, j, Nx, Ny, 2)]=0.5*(egvx[idx(i,j,Nx,Ny,2)]*yxnewdata[idx(i, j, Nx, Ny, 2)]-fabs(egvx[idx(i,j,Nx,Ny,2)])*yxnewdata[idx(i, j, Nx, Ny, 2)]);
+	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 2)] = %g, yxndata[idx(i, j, Nx, Ny, 2)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 2)], yxndata[idx(i, j, Nx, Ny, 2)]);
+            yxpdata[idx(i, j, Nx, Ny, 3)]=0.5*(egvx[idx(i,j,Nx,Ny,3)]*yxnewdata[idx(i, j, Nx, Ny, 3)]+fabs(egvx[idx(i,j,Nx,Ny,3)])*yxnewdata[idx(i, j, Nx, Ny, 3)]);
+            yxndata[idx(i, j, Nx, Ny, 3)]=0.5*(egvx[idx(i,j,Nx,Ny,3)]*yxnewdata[idx(i, j, Nx, Ny, 3)]-fabs(egvx[idx(i,j,Nx,Ny,3)])*yxnewdata[idx(i, j, Nx, Ny, 3)]);
 	    //printf("i = %li, j = %li,yxpdata[idx(i, j, Nx, Ny, 3)] = %g, yxndata[idx(i, j, Nx, Ny, 3)] = %g\n", i,j,yxpdata[idx(i, j, Nx, Ny, 3)], yxndata[idx(i, j, Nx, Ny, 3)]);
         }
     }
     
-    /* compute max absolue eigenvalue and fill in yypdata, yyndata, y direction */
+    /* compute eigenvalues and fill in positive and negative characteristic variables and fill in yypdata, yyndata, y direction */
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
 	  flag = Setlfyegm(Ydata, lfyegm, i, j, Nx, Ny, gama, egvy);
             if (flag!=0) printf("error in Setlfyegm function \n");
             for (k=0;k<4;k++){
+	      /* compute characteristic variables */
 	      yynewdata[idx(i, j, Nx, Ny, k)] = lfyegm[k][0]*Ydata[idx(i, j, Nx, Ny, 0)]+lfyegm[k][1]*Ydata[idx(i, j, Nx, Ny, 1)]+lfyegm[k][2]*Ydata[idx(i, j, Nx, Ny, 2)]+lfyegm[k][3]*Ydata[idx(i, j, Nx, Ny, 3)];
 	      //yypdata[idx(i, j, Nx, Ny, k)] = lfxegm[k][0]*yyptdata[idx(i, j, Nx, Ny, 0)]+lfxegm[k][1]*yyptdata[idx(i, j, Nx, Ny, 1)]+lfxegm[k][2]*yyptdata[idx(i, j, Nx, Ny, 2)]+lfxegm[k][3]*yyptdata[idx(i, j, Nx, Ny, 3)];
 	      //yyndata[idx(i, j, Nx, Ny, k)] = lfxegm[k][0]*yyntdata[idx(i, j, Nx, Ny, 0)]+lfxegm[k][1]*yyntdata[idx(i, j, Nx, Ny, 1)]+lfxegm[k][2]*yyntdata[idx(i, j, Nx, Ny, 2)]+lfxegm[k][3]*yyntdata[idx(i, j, Nx, Ny, 3)];
             }
             
-	    egvymax[idx_v(i,j,Nx)] = (fabs(egvy[idx(i,j,Nx,Ny,0)])>fabs(egvy[idx(i,j,Nx,Ny,2)])) ? fabs(egvy[idx(i,j,Nx,Ny,0)]) : fabs(egvy[idx(i,j,Nx,Ny,2)]);
-            
+	    //egvymax[idx_v(i,j,Nx)] = (fabs(egvy[idx(i,j,Nx,Ny,0)])>fabs(egvy[idx(i,j,Nx,Ny,2)])) ? fabs(egvy[idx(i,j,Nx,Ny,0)]) : fabs(egvy[idx(i,j,Nx,Ny,2)]);
+            /*
             yypdata[idx(i, j, Nx, Ny, 0)]=0.5*(egvy[idx(i,j,Nx,Ny,0)]*yynewdata[idx(i, j, Nx, Ny, 0)]+egvymax[idx_v(i,j,Nx)]*yynewdata[idx(i, j, Nx, Ny, 0)]);
             yyndata[idx(i, j, Nx, Ny, 0)]=0.5*(egvy[idx(i,j,Nx,Ny,0)]*yynewdata[idx(i, j, Nx, Ny, 0)]-egvymax[idx_v(i,j,Nx)]*yynewdata[idx(i, j, Nx, Ny, 0)]);
             yypdata[idx(i, j, Nx, Ny, 1)]=0.5*(egvy[idx(i,j,Nx,Ny,1)]*yynewdata[idx(i, j, Nx, Ny, 1)]+egvymax[idx_v(i,j,Nx)]*yynewdata[idx(i, j, Nx, Ny, 1)]);
@@ -503,28 +518,38 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             yyndata[idx(i, j, Nx, Ny, 2)]=0.5*(egvy[idx(i,j,Nx,Ny,2)]*yynewdata[idx(i, j, Nx, Ny, 2)]-egvymax[idx_v(i,j,Nx)]*yynewdata[idx(i, j, Nx, Ny, 2)]);
             yypdata[idx(i, j, Nx, Ny, 3)]=0.5*(egvy[idx(i,j,Nx,Ny,3)]*yynewdata[idx(i, j, Nx, Ny, 3)]+egvymax[idx_v(i,j,Nx)]*yynewdata[idx(i, j, Nx, Ny, 3)]);
             yyndata[idx(i, j, Nx, Ny, 3)]=0.5*(egvy[idx(i,j,Nx,Ny,3)]*yynewdata[idx(i, j, Nx, Ny, 3)]-egvymax[idx_v(i,j,Nx)]*yynewdata[idx(i, j, Nx, Ny, 3)]);
+	    */
+	    yypdata[idx(i, j, Nx, Ny, 0)]=0.5*(egvy[idx(i,j,Nx,Ny,0)]*yynewdata[idx(i, j, Nx, Ny, 0)]+fabs(egvy[idx(i,j,Nx,Ny,0)])*yynewdata[idx(i, j, Nx, Ny, 0)]);
+            yyndata[idx(i, j, Nx, Ny, 0)]=0.5*(egvy[idx(i,j,Nx,Ny,0)]*yynewdata[idx(i, j, Nx, Ny, 0)]-fabs(egvy[idx(i,j,Nx,Ny,0)])*yynewdata[idx(i, j, Nx, Ny, 0)]);
+            yypdata[idx(i, j, Nx, Ny, 1)]=0.5*(egvy[idx(i,j,Nx,Ny,1)]*yynewdata[idx(i, j, Nx, Ny, 1)]+fabs(egvy[idx(i,j,Nx,Ny,1)])*yynewdata[idx(i, j, Nx, Ny, 1)]);
+            yyndata[idx(i, j, Nx, Ny, 1)]=0.5*(egvy[idx(i,j,Nx,Ny,1)]*yynewdata[idx(i, j, Nx, Ny, 1)]-fabs(egvy[idx(i,j,Nx,Ny,1)])*yynewdata[idx(i, j, Nx, Ny, 1)]);
+            yypdata[idx(i, j, Nx, Ny, 2)]=0.5*(egvy[idx(i,j,Nx,Ny,2)]*yynewdata[idx(i, j, Nx, Ny, 2)]+fabs(egvy[idx(i,j,Nx,Ny,2)])*yynewdata[idx(i, j, Nx, Ny, 2)]);
+            yyndata[idx(i, j, Nx, Ny, 2)]=0.5*(egvy[idx(i,j,Nx,Ny,2)]*yynewdata[idx(i, j, Nx, Ny, 2)]-fabs(egvy[idx(i,j,Nx,Ny,2)])*yynewdata[idx(i, j, Nx, Ny, 2)]);
+            yypdata[idx(i, j, Nx, Ny, 3)]=0.5*(egvy[idx(i,j,Nx,Ny,3)]*yynewdata[idx(i, j, Nx, Ny, 3)]+fabs(egvy[idx(i,j,Nx,Ny,3)])*yynewdata[idx(i, j, Nx, Ny, 3)]);
+            yyndata[idx(i, j, Nx, Ny, 3)]=0.5*(egvy[idx(i,j,Nx,Ny,3)]*yynewdata[idx(i, j, Nx, Ny, 3)]-fabs(egvy[idx(i,j,Nx,Ny,3)])*yynewdata[idx(i, j, Nx, Ny, 3)]);
 	    
 	    // printf("    problem parameters:  i = %li, j=%li, yypdata0 = %g,  yypdata1 = %g, yypdata2 = %g,  yypdata3 = %g\n", i, j, yypdata[idx(i, j, Nx, Ny, 0)], yypdata[idx(i, j, Nx, Ny, 1)], yypdata[idx(i, j, Nx, Ny, 2)], yypdata[idx(i, j, Nx, Ny, 3)]);
         }
     }
     
-    /* iterate over domain, computing all equations */
+    /* iterate over domain, using WENO to compute all equations on x direction */
     for(j=0; j<Ny; j++){
       for (i=0; i<(Nx+1); i++){
             /* get indicator of smoothness on x direction */
-            flag = SetISX(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, yxpdata, yxndata, i, j, Nx, Ny, 0);
+            flag = SetISX(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, yxpdata, yxndata, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetISX function \n");
 	    //for (n=0;n<4;n++){
 	      // printf("i=%li,j=%li,n=%li,IS0_px[n]=%f,IS1_px[n]=%f,IS2_px[n]=%f,IS0_nx[n]=%f,IS1_nx[n]=%f,IS2_nx[n]=%f\n",i,j,n,IS0_px[n],IS1_px[n],IS2_px[n],IS0_nx[n],IS1_nx[n],IS2_nx[n]);
 	    // }
-	    /* get weight on x direction for each variable */
+	    /* get weight on x direction for four variables */
             flag = Setalphawx(IS0_px, IS1_px, IS2_px, IS0_nx, IS1_nx, IS2_nx, alpha_0px, alpha_1px, alpha_2px, alpha_0nx, alpha_1nx, alpha_2nx, w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, Epsilon);
             if (flag!=0) printf("error in Setalphawx function \n");
             
 	    /* compute the positive and negative parts of right interface on x direction */
-            flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, i, j, Nx, Ny, 0);
+            flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetUx function \n");
             
+	    /* get the interface values */
             for(k=0;k<4;k++){
 	      //printf("w: i=%li, j=%li, k=%li, w0_px[k]=%g,w1_px[k]=%g,w2_px[k]=%g,w0_nx[k]=%g,w1_nx[k]=%g,w2_nx[k]=%g\n",i,j,k,w0_px[k],w1_px[k],w2_px[k],w0_nx[k],w1_nx[k],w2_nx[k]);
 	      yxdata[idx(i, j, Nx+1, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
@@ -534,21 +559,22 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         }
     }
     
-     /* iterate over domain, computing all equations */
+     /* iterate over domain, using WENO to compute all equations on x direction */
     for (i=0;i<Nx;i++){
       for(j=0;j<(Ny+1);j++){            
             /* get indicator of smoothness on y direction */
-            flag = SetISY(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, yypdata, yyndata, i, j, Nx, Ny, 0);
+            flag = SetISY(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, yypdata, yyndata, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetISY function \n");
             
-	    /* get weight on y direction for each variable */
+	    /* get weight on y direction for four variables */
             flag = Setalphawy(IS0_py, IS1_py, IS2_py, IS0_ny, IS1_ny, IS2_ny, alpha_0py, alpha_1py, alpha_2py, alpha_0ny, alpha_1ny, alpha_2ny, w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, Epsilon);
             if (flag!=0) printf("error in Setalphawy function \n");
             
 	    /* compute the positive and negative parts of right interface on y direction */
-            flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, i, j, Nx, Ny, 0);
+            flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, i, j, Nx, Ny, 2);
             if (flag!=0) printf("error in SetUy function \n");
             
+	    /* get the interface values */
             for(k=0;k<4;k++){
                 yydata[idx(i, j, Nx, Ny+1, k)]=u_tpphy[k]+u_tnphy[k];
 		//printf("yy: i=%li, j=%li, k=%li, u_tpphy[k]=%f, u_tnphy[k]=%f,u_tpnhy[k]=%f,u_tnnhy[k]=%f\n",i,j, k,u_tpphy[k], u_tnphy[k], u_tpnhy[k],u_tnnhy[k]);
@@ -559,7 +585,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     /* transform the interface values back to the physical ones on x direction*/
     for(j=0; j<Ny; j++){
       for (i=0; i<(Nx+1); i++){
-            flag = Setrhxegm(Ydata, rhxegm, i, j, Nx, Ny, gama, 0);
+            flag = Setrhxegm(Ydata, rhxegm, i, j, Nx, Ny, gama, 2);
             if (flag!=0) printf("error in Setrhxegm function \n");
             for (k=0;k<4;k++){
 	     
@@ -575,7 +601,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     /* transform the interface values back to the physical ones on y direction*/
     for(i=0; i<Nx; i++){
       for (j=0; j<(Ny+1); j++){
-            flag = Setrhyegm(Ydata, rhyegm, i, j, Nx, Ny, gama, 0);
+            flag = Setrhyegm(Ydata, rhyegm, i, j, Nx, Ny, gama, 2);
             if (flag!=0) printf("error in Setrhyegm function \n");
             for (k=0;k<4;k++){
 	      
@@ -592,18 +618,18 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     flag = GetCj(yxbackdata, yybackdata, Cj, Nx, Ny, gama);
     if (flag!=0) printf("error in GetCj function \n");
     
+    /* get derivative both on x and y direction for the whole problem*/
     for(j=0; j<Ny; j++){
       for (i=0; i<Nx; i++){
-            /* get derivative both on x and y direction for the whole problem*/
 
             //for (k=0; k<4; k++){
                 //  if(k==2)
                 //        dYdata[idx(i, j, Nx, Ny, k)]=yxdata[idx(i, j, Nx, Ny, k)]+yydata[idx(i, j, Nx, Ny, k)]-0.1;
                 // else
-	      //printf(" dYdata0 : i = %li, j = %li, yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)] = %f, yxbackdata[idx(i, j, (Nx+1), Ny, 1)] = %f, yybackdata[idx(i, j+1, Nx, (Ny+1), 2)] = %f, yybackdata[idx(i, j, Nx, (Ny+1), 2)] = %f\n", i, j, yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)], yxbackdata[idx(i, j, (Nx+1), Ny, 1)], yybackdata[idx(i, j+1, Nx, (Ny+1), 2)],yybackdata[idx(i, j, Nx, (Ny+1), 2)]);
-	      //printf(" dYdata1 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)] = %f, tao[idx_v(i,j,Nx+1)] = %f, tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)], tao[idx_v(i,j,Nx+1)], tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)]);
-	      //printf(" dYdata2 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]);
-	      //printf(" dYdata3 : i = %li, j = %li, Cj[idx_v(i+1,j,Nx+1)] = %f, Cj[idx_v(i,j,Nx+1)] = %f, Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny] = %f, Cj[idx_v(i,j,Nx)+(Nx+1)*Ny] = %f\n", i, j, Cj[idx_v(i+1,j,Nx+1)], Cj[idx_v(i,j,Nx+1)], Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny], Cj[idx_v(i,j,Nx)+(Nx+1)*Ny]);
+	      printf(" dYdata0 : i = %li, j = %li, yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)] = %f, yxbackdata[idx(i, j, (Nx+1), Ny, 1)] = %f, yybackdata[idx(i, j+1, Nx, (Ny+1), 2)] = %f, yybackdata[idx(i, j, Nx, (Ny+1), 2)] = %f\n", i, j, yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)], yxbackdata[idx(i, j, (Nx+1), Ny, 1)], yybackdata[idx(i, j+1, Nx, (Ny+1), 2)],yybackdata[idx(i, j, Nx, (Ny+1), 2)]);
+	      printf(" dYdata1 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)] = %f, tao[idx_v(i,j,Nx+1)] = %f, tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)], tao[idx_v(i,j,Nx+1)], tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)]);
+	      printf(" dYdata2 : i = %li, j = %li, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny] = %f, tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f, tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)] = %f\n", i, j, tao[idx_v(i+1,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j,Nx+1)+(Nx+1)*Ny], tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)], tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)+Nx*(Ny+1)]);
+	      printf(" dYdata3 : i = %li, j = %li, Cj[idx_v(i+1,j,Nx+1)] = %f, Cj[idx_v(i,j,Nx+1)] = %f, Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny] = %f, Cj[idx_v(i,j,Nx)+(Nx+1)*Ny] = %f\n", i, j, Cj[idx_v(i+1,j,Nx+1)], Cj[idx_v(i,j,Nx+1)], Cj[idx_v(i,j+1,Nx)+(Nx+1)*Ny], Cj[idx_v(i,j,Nx)+(Nx+1)*Ny]);
 	      
 	dYdata[idx(i, j, Nx, Ny, 0)]=(-1.0/dx)*(yxbackdata[idx(i+1, j, (Nx+1), Ny, 1)]-yxbackdata[idx(i, j, (Nx+1), Ny, 1)])+(-1.0/dy)*(yybackdata[idx(i, j+1, Nx, (Ny+1), 2)]-yybackdata[idx(i, j, Nx, (Ny+1), 2)]);
 	dYdata[idx(i, j, Nx, Ny, 1)]=(-1.0/dx)*(tao[idx_v(i+1,j,Nx+1)]-tao[idx_v(i,j,Nx+1)])+(-1.0/dy)*(tao[idx_v(i,j+1,Nx)+2*((Nx+1)*Ny)]-tao[idx_v(i,j,Nx)+2*((Nx+1)*Ny)]);
@@ -705,37 +731,37 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     return 0;
 }
 
-/* split f into f_positive part and f_negative part x component*/ 
+/* split f into f_positive part and f_negative part for x component*/ 
 static int Splitfluxesx(realtype *Ydata, realtype *fp, realtype *fn, long int i, long int j, long int Nx, long int Ny, realtype gama)
 {
   /* declaration */
     realtype rou, vx, vy, p, a, h;
-    int i1, j1;
+    int m, n;
     realtype eps = 1.0e-3;
 
     realtype **lfxegm = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        lfxegm[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        lfxegm[m] = new realtype [4];
     }
     realtype **rhxegm = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        rhxegm[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        rhxegm[m] = new realtype [4];
     }
     realtype **tempx1 = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        tempx1[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        tempx1[m] = new realtype [4];
     }
     realtype **tempx2 = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        tempx2[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        tempx2[m] = new realtype [4];
     }
     realtype **egvxp = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        egvxp[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        egvxp[m] = new realtype [4];
     }
     realtype **egvxn = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        egvxn[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        egvxn[m] = new realtype [4];
     }
 
     vx = Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)];
@@ -744,22 +770,22 @@ static int Splitfluxesx(realtype *Ydata, realtype *fp, realtype *fn, long int i,
     a = sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)]);
     h = (Ydata[idx(i, j, Nx, Ny, 3)]+p)/Ydata[idx(i, j, Nx, Ny, 0)];
    
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    egvxp[i1][j1]=0.0;
+	    egvxp[m][n]=0.0;
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    egvxn[i1][j1]=0.0;
+	    egvxn[m][n]=0.0;
 	  }
       }
-    /* eigenvalues */
+    /* set eigenvalues */
     egvxp[0][0]=(vx-a+sqrt((vx-a)*(vx-a)+eps))/2.0;
     egvxp[1][1]=(vx+sqrt(vx*vx+eps))/2.0;
     egvxp[2][2]=(vx+sqrt(vx*vx+eps))/2.0;
@@ -842,114 +868,114 @@ static int Splitfluxesx(realtype *Ydata, realtype *fp, realtype *fn, long int i,
     rhxegm[3][3] = vx*vx+vy*vy-h+a*vx+(2*a*a)/(gama-1.0);
     */
     /* get fp */
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempx1[i1][j1]=rhxegm[i1][0]*egvxp[0][j1]+rhxegm[i1][1]*egvxp[1][j1]+rhxegm[i1][2]*egvxp[2][j1]+rhxegm[i1][3]*egvxp[3][j1];
+	    tempx1[m][n]=rhxegm[m][0]*egvxp[0][n]+rhxegm[m][1]*egvxp[1][n]+rhxegm[m][2]*egvxp[2][n]+rhxegm[m][3]*egvxp[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempx2[i1][j1]=tempx1[i1][0]*lfxegm[0][j1]+tempx1[i1][1]*lfxegm[1][j1]+tempx1[i1][2]*lfxegm[2][j1]+tempx1[i1][3]*lfxegm[3][j1];
+	    tempx2[m][n]=tempx1[m][0]*lfxegm[0][n]+tempx1[m][1]*lfxegm[1][n]+tempx1[m][2]*lfxegm[2][n]+tempx1[m][3]*lfxegm[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	fp[idx(i, j, Nx, Ny, i1)]=tempx2[i1][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempx2[i1][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempx2[i1][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempx2[i1][3]*Ydata[idx(i, j, Nx, Ny, 3)];
+	fp[idx(i, j, Nx, Ny, m)]=tempx2[m][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempx2[m][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempx2[m][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempx2[m][3]*Ydata[idx(i, j, Nx, Ny, 3)];
       }
 
     /* get fn */
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempx1[i1][j1]=rhxegm[i1][0]*egvxn[0][j1]+rhxegm[i1][1]*egvxn[1][j1]+rhxegm[i1][2]*egvxn[2][j1]+rhxegm[i1][3]*egvxn[3][j1];
+	    tempx1[m][n]=rhxegm[m][0]*egvxn[0][n]+rhxegm[m][1]*egvxn[1][n]+rhxegm[m][2]*egvxn[2][n]+rhxegm[m][3]*egvxn[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempx2[i1][j1]=tempx1[i1][0]*lfxegm[0][j1]+tempx1[i1][1]*lfxegm[1][j1]+tempx1[i1][2]*lfxegm[2][j1]+tempx1[i1][3]*lfxegm[3][j1];
+	    tempx2[m][n]=tempx1[m][0]*lfxegm[0][n]+tempx1[m][1]*lfxegm[1][n]+tempx1[m][2]*lfxegm[2][n]+tempx1[m][3]*lfxegm[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	fn[idx(i, j, Nx, Ny, i1)]=tempx2[i1][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempx2[i1][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempx2[i1][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempx2[i1][3]*Ydata[idx(i, j, Nx, Ny, 3)];
+	fn[idx(i, j, Nx, Ny, m)]=tempx2[m][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempx2[m][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempx2[m][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempx2[m][3]*Ydata[idx(i, j, Nx, Ny, 3)];
       }
 
     /* delete arrays */
-    for (i1=0;i1<4;i1++){
-        delete[] lfxegm[i1];
+    for (m=0;m<4;m++){
+        delete[] lfxegm[m];
     }
     delete []lfxegm;
 
-    for (i1=0;i1<4;i1++){
-        delete[] rhxegm[i1];
+    for (m=0;m<4;m++){
+        delete[] rhxegm[m];
     }
     delete []rhxegm;
 
-    for (i1=0;i1<4;i1++){
-        delete[] tempx1[i1];
+    for (m=0;m<4;m++){
+        delete[] tempx1[m];
     }
     delete []tempx1;
 
-    for (i1=0;i1<4;i1++){
-        delete[] tempx2[i1];
+    for (m=0;m<4;m++){
+        delete[] tempx2[m];
     }
     delete []tempx2;
 
-    for (i1=0;i1<4;i1++){
-        delete[] egvxp[i1];
+    for (m=0;m<4;m++){
+        delete[] egvxp[m];
     }
     delete []egvxp;
 
-    for (i1=0;i1<4;i1++){
-        delete[] egvxn[i1];
+    for (m=0;m<4;m++){
+        delete[] egvxn[m];
     }
     delete []egvxn;
     
     return 0;
 }
 
-/* split g into g_positive part and g_negative part y component*/ 
+/* split g into g_positive part and g_negative part for y component*/ 
 static int Splitfluxesy(realtype *Ydata, realtype *gp, realtype *gn, long int i, long int j, long int Nx, long int Ny, realtype gama)
 {
   /* declaration */
     realtype rou, vx, vy, p, a, h;
-    int i1, j1;
+    int m, n;
     realtype eps = 1.0e-3;
     
     realtype **lfyegm = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        lfyegm[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        lfyegm[m] = new realtype [4];
     }
     realtype **rhyegm = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        rhyegm[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        rhyegm[m] = new realtype [4];
     }
     realtype **tempy1 = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        tempy1[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        tempy1[m] = new realtype [4];
     }
     realtype **tempy2 = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        tempy2[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        tempy2[m] = new realtype [4];
     }
     realtype **egvyp = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        egvyp[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        egvyp[m] = new realtype [4];
     }
     realtype **egvyn = new realtype *[4];
-    for (i1=0;i1<4;i1++){
-        egvyn[i1] = new realtype [4];
+    for (m=0;m<4;m++){
+        egvyn[m] = new realtype [4];
     }
 
     vx = Ydata[idx(i, j, Nx, Ny, 1)]/Ydata[idx(i, j, Nx, Ny, 0)];
@@ -958,19 +984,19 @@ static int Splitfluxesy(realtype *Ydata, realtype *gp, realtype *gn, long int i,
     a = sqrt(gama*p/Ydata[idx(i, j, Nx, Ny, 0)]);
     h = (Ydata[idx(i, j, Nx, Ny, 3)]+p)/Ydata[idx(i, j, Nx, Ny, 0)];
    
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    egvyp[i1][j1]=0.0;
+	    egvyp[m][n]=0.0;
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    egvyn[i1][j1]=0.0;
+	    egvyn[m][n]=0.0;
 	  }
       }
     /* eigenvalues */
@@ -1020,77 +1046,77 @@ static int Splitfluxesy(realtype *Ydata, realtype *gp, realtype *gn, long int i,
     rhyegm[3][3] = vx*vx+vy*vy-h+vy*a+(2.0*a*a)/(gama-1.0);
 
     /* get gp */
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempy1[i1][j1]=rhyegm[i1][0]*egvyp[0][j1]+rhyegm[i1][1]*egvyp[1][j1]+rhyegm[i1][2]*egvyp[2][j1]+rhyegm[i1][3]*egvyp[3][j1];
+	    tempy1[m][n]=rhyegm[m][0]*egvyp[0][n]+rhyegm[m][1]*egvyp[1][n]+rhyegm[m][2]*egvyp[2][n]+rhyegm[m][3]*egvyp[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempy2[i1][j1]=tempy1[i1][0]*lfyegm[0][j1]+tempy1[i1][1]*lfyegm[1][j1]+tempy1[i1][2]*lfyegm[2][j1]+tempy1[i1][3]*lfyegm[3][j1];
+	    tempy2[m][n]=tempy1[m][0]*lfyegm[0][n]+tempy1[m][1]*lfyegm[1][n]+tempy1[m][2]*lfyegm[2][n]+tempy1[m][3]*lfyegm[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	gp[idx(i, j, Nx, Ny, i1)]=tempy2[i1][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempy2[i1][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempy2[i1][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempy2[i1][3]*Ydata[idx(i, j, Nx, Ny, 3)];
+	gp[idx(i, j, Nx, Ny, m)]=tempy2[m][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempy2[m][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempy2[m][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempy2[m][3]*Ydata[idx(i, j, Nx, Ny, 3)];
       }
 
     /* get gn */
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempy1[i1][j1]=rhyegm[i1][0]*egvyn[0][j1]+rhyegm[i1][1]*egvyn[1][j1]+rhyegm[i1][2]*egvyn[2][j1]+rhyegm[i1][3]*egvyn[3][j1];
+	    tempy1[m][n]=rhyegm[m][0]*egvyn[0][n]+rhyegm[m][1]*egvyn[1][n]+rhyegm[m][2]*egvyn[2][n]+rhyegm[m][3]*egvyn[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	for (j1=0;j1<4;j1++)
+	for (n=0;n<4;n++)
 	  {
-	    tempy2[i1][j1]=tempy1[i1][0]*lfyegm[0][j1]+tempy1[i1][1]*lfyegm[1][j1]+tempy1[i1][2]*lfyegm[2][j1]+tempy1[i1][3]*lfyegm[3][j1];
+	    tempy2[m][n]=tempy1[m][0]*lfyegm[0][n]+tempy1[m][1]*lfyegm[1][n]+tempy1[m][2]*lfyegm[2][n]+tempy1[m][3]*lfyegm[3][n];
 	  }
       }
 
-    for (i1=0;i1<4;i1++)
+    for (m=0;m<4;m++)
       {
-	gn[idx(i, j, Nx, Ny, i1)]=tempy2[i1][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempy2[i1][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempy2[i1][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempy2[i1][3]*Ydata[idx(i, j, Nx, Ny, 3)];
+	gn[idx(i, j, Nx, Ny, m)]=tempy2[m][0]*Ydata[idx(i, j, Nx, Ny, 0)]+tempy2[m][1]*Ydata[idx(i, j, Nx, Ny, 1)]+tempy2[m][2]*Ydata[idx(i, j, Nx, Ny, 2)]+tempy2[m][3]*Ydata[idx(i, j, Nx, Ny, 3)];
       }
 
     /* delete arrays */
-    for (i1=0;i1<4;i1++){
-        delete[] lfyegm[i1];
+    for (m=0;m<4;m++){
+        delete[] lfyegm[m];
     }
     delete []lfyegm;
 
-    for (i1=0;i1<4;i1++){
-        delete[] rhyegm[i1];
+    for (m=0;m<4;m++){
+        delete[] rhyegm[m];
     }
     delete []rhyegm;
 
-    for (i1=0;i1<4;i1++){
-        delete[] tempy1[i1];
+    for (m=0;m<4;m++){
+        delete[] tempy1[m];
     }
     delete []tempy1;
 
-    for (i1=0;i1<4;i1++){
-        delete[] tempy2[i1];
+    for (m=0;m<4;m++){
+        delete[] tempy2[m];
     }
     delete []tempy2;
 
-    for (i1=0;i1<4;i1++){
-        delete[] egvyp[i1];
+    for (m=0;m<4;m++){
+        delete[] egvyp[m];
     }
     delete []egvyp;
 
-    for (i1=0;i1<4;i1++){
-        delete[] egvyn[i1];
+    for (m=0;m<4;m++){
+        delete[] egvyn[m];
     }
     delete []egvyn;
     
@@ -1118,21 +1144,21 @@ static int Setlfxegm(realtype *Ydata, realtype **lfxegm, long int i, long int j,
     /* left eigenvectors derivated by myself */
     /*
     lfxegm[0][0] = ((gama-1.0)*h)/(2.0*a*a)+vx/(2.0*a)-0.5;
-    lfxegm[1][0] = ((1.0-gama)*h)/(a*a)+2.0;
-    lfxegm[2][0] = ((gama-1.0)*h)/(2.0*a*a)-vx/(2.0*a)-0.5;
-    lfxegm[3][0] = ((1.0-gama)*h*vy)/(a*a)+vy;
+    lfxegm[1][0] = ((1.0-gama)*h)/(a*a)+2.0;    
+    lfxegm[2][0] = ((1.0-gama)*h*vy)/(a*a)+vy;
+    lfxegm[3][0] = ((gama-1.0)*h)/(2.0*a*a)-vx/(2.0*a)-0.5;
     lfxegm[0][1] = ((1.0-gama)*vx)/(2*a*a)-1.0/(2.0*a);
-    lfxegm[1][1] = (gama-1.0)*vx/(a*a);
-    lfxegm[2][1] = ((1.0-gama)*vx)/(2*a*a)+1.0/(2.0*a);
-    lfxegm[3][1] = (gama-1.0)*vx*vy/(a*a);
+    lfxegm[1][1] = (gama-1.0)*vx/(a*a);    
+    lfxegm[2][1] = (gama-1.0)*vx*vy/(a*a);
+    lfxegm[3][1] = ((1.0-gama)*vx)/(2*a*a)+1.0/(2.0*a);
     lfxegm[0][2] = ((1.0-gama)*vy)/(2*a*a);
-    lfxegm[1][2] = (gama-1.0)*vy/(a*a);
-    lfxegm[2][2] = ((1.0-gama)*vy)/(2*a*a);
-    lfxegm[3][2] = (gama-1.0)*vy*vy/(a*a)+1.0;
+    lfxegm[1][2] = (gama-1.0)*vy/(a*a);    
+    lfxegm[2][2] = (gama-1.0)*vy*vy/(a*a)+1.0;
+    lfxegm[3][2] = ((1.0-gama)*vy)/(2*a*a);
     lfxegm[0][3] = (gama-1.0)/(2*a*a);
-    lfxegm[1][3] = (1.0-gama)/(a*a);
-    lfxegm[2][3] = (gama-1.0)/(2*a*a);
-    lfxegm[3][3] = (1.0-gama)*vy/(a*a);
+    lfxegm[1][3] = (1.0-gama)/(a*a);   
+    lfxegm[2][3] = (1.0-gama)*vy/(a*a);
+    lfxegm[3][3] = (gama-1.0)/(2*a*a);
     */
     /* left eigenvectors derivated from the book */
     lfxegm[0][0] = ((gama-1.0)/(2.0*a*a))*(h+(a/(gama-1.0))*(vx-a));
@@ -1183,7 +1209,7 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
     /* reflecting boundary condition */
     if (flag == 1)
     {
-      vx = -(Ydata[idx(i-1, j, Nx, Ny, 1)]+Ydata[idx(i-1, j, Nx, Ny, 1)])/(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]);
+      vx = (-Ydata[idx(i-1, j, Nx, Ny, 1)]+Ydata[idx(i-1, j, Nx, Ny, 1)])/(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]);
       vy = (Ydata[idx(i-1, j, Nx, Ny, 2)]+Ydata[idx(i-1, j, Nx, Ny, 2)])/(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i-1, j, Nx, Ny, 3)]+Ydata[idx(i-1, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i-1, j, Nx, Ny, 3)]+Ydata[idx(i-1, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]));
@@ -1196,7 +1222,7 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
       vy = (Ydata[idx(i-1, j, Nx, Ny, 2)]+Ydata[idx(i-1, j, Nx, Ny, 2)])/(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i-1, j, Nx, Ny, 3)]+Ydata[idx(i-1, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i-1, j, Nx, Ny, 3)]+Ydata[idx(i-1, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i-1, j, Nx, Ny, 0)]+Ydata[idx(i-1, j, Nx, Ny, 0)]);
     }
     }
 
@@ -1207,16 +1233,16 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
       vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(Nx-1, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(Nx-1, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(Nx-1, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(Nx-1, j, Nx, Ny, 0)]);
     }
     /* reflecting boundary condition */
     if (flag == 1)
     {
-      vx = -(Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(i, j, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      vx = (-Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(i, j, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
       vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
     }
     /* nature or transmissive boundary condition */
     if (flag == 2)
@@ -1225,7 +1251,7 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
       vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
     }
     }
     a = sqrt(gama*p/rou);
@@ -1239,14 +1265,15 @@ static int Setrhxegm(realtype *Ydata, realtype **rhxegm, long int i, long int j,
     rhxegm[1][1] = vx;
     rhxegm[2][1] = 0.0;
     rhxegm[3][1] = vx*vx+a*a/(gama-1.0)-h;
-    rhxegm[0][2] = 1.0;
-    rhxegm[1][2] = vx+a;
-    rhxegm[2][2] = vy;
-    rhxegm[3][2] = vx*vx+vy*vy-h+a*vx+(2*a*a)/(gama-1.0);
-    rhxegm[0][3] = 0.0;
-    rhxegm[1][3] = 0.0;
-    rhxegm[2][3] = 1.0;
-    rhxegm[3][3] = vy;
+    rhxegm[0][2] = 0.0;
+    rhxegm[1][2] = 0.0;
+    rhxegm[2][2] = 1.0;
+    rhxegm[3][2] = vy;
+    rhxegm[0][3] = 1.0;
+    rhxegm[1][3] = vx+a;
+    rhxegm[2][3] = vy;
+    rhxegm[3][3] = vx*vx+vy*vy-h+a*vx+(2*a*a)/(gama-1.0);
+    
     */
     /* right eigenvectors derivated from the book */
     rhxegm[0][0] = 1.0;
@@ -1349,16 +1376,16 @@ static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j,
       vy = (Ydata[idx(i, j-1, Nx, Ny, 2)]+Ydata[idx(i, 0, Nx, Ny, 2)])/(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j-1, Nx, Ny, 3)]+Ydata[idx(i, 0, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j-1, Nx, Ny, 3)]+Ydata[idx(i, 0, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, 0, Nx, Ny, 0)]);
     }
     /* reflecting boundary condition */
     if (flag == 1)
     {
-      vx = -(Ydata[idx(i, j-1, Nx, Ny, 1)]+Ydata[idx(i, j-1, Nx, Ny, 1)])/(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
-      vy = (Ydata[idx(i, j-1, Nx, Ny, 2)]+Ydata[idx(i, j-1, Nx, Ny, 2)])/(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
+      vx = (Ydata[idx(i, j-1, Nx, Ny, 1)]+Ydata[idx(i, j-1, Nx, Ny, 1)])/(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
+      vy = (-Ydata[idx(i, j-1, Nx, Ny, 2)]+Ydata[idx(i, j-1, Nx, Ny, 2)])/(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j-1, Nx, Ny, 3)]+Ydata[idx(i, j-1, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j-1, Nx, Ny, 3)]+Ydata[idx(i, j-1, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
     }
     /* nature or transmissive boundary condition */
     if (flag == 2)
@@ -1367,7 +1394,7 @@ static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j,
       vy = (Ydata[idx(i, j-1, Nx, Ny, 2)]+Ydata[idx(i, j-1, Nx, Ny, 2)])/(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j-1, Nx, Ny, 3)]+Ydata[idx(i, j-1, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j-1, Nx, Ny, 3)]+Ydata[idx(i, j-1, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j-1, Nx, Ny, 0)]+Ydata[idx(i, j-1, Nx, Ny, 0)]);
     }
     }
 
@@ -1378,16 +1405,16 @@ static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j,
       vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, Ny-1, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, Ny-1, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, Ny-1, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, Ny-1, Nx, Ny, 0)]);
     }
     /* reflecting boundary condition */
     if (flag == 1)
     {
-      vx = -(Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(i, j, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
-      vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      vx = (Ydata[idx(i, j, Nx, Ny, 1)]+Ydata[idx(i, j, Nx, Ny, 1)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      vy = (-Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
     }
     /* nature or transmissive boundary condition */
     if (flag == 2)
@@ -1396,7 +1423,7 @@ static int Setrhyegm(realtype *Ydata, realtype **rhyegm, long int i, long int j,
       vy = (Ydata[idx(i, j, Nx, Ny, 2)]+Ydata[idx(i, j, Nx, Ny, 2)])/(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
       p = (gama-1.0)*0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])-0.5*0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)])*(gama-1.0)*(vx*vx+vy*vy);
       h = (0.5*(Ydata[idx(i, j, Nx, Ny, 3)]+Ydata[idx(i, j, Nx, Ny, 3)])+p)/(0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]));
-            rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
+      rou = 0.5*(Ydata[idx(i, j, Nx, Ny, 0)]+Ydata[idx(i, j, Nx, Ny, 0)]);
     }
     }
     a = sqrt(gama*p/rou);
@@ -2287,12 +2314,12 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
         return 1;
     }
     else {
-        /* declaration */
+     /* declaration */
         long int k, n;
         realtype *yp = new realtype [28];
         realtype *yn = new realtype [28];
         
-	/* without considering BCs */
+	/* without condisering BCs */
         if (i>3&&i<Nx-2){
             for (n=0;n<4;n++){
                 for (k=0;k<7;k++){
@@ -2429,12 +2456,6 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
                         yn[1+n*7] = yxndata[idx(i+2,j,Nx,Ny,n)];
                         yn[0+n*7] = yxndata[idx(i+3,j,Nx,Ny,n)];
                     }
-		    //        yp[2+3*7] = -yxpdata[idx(i,j,Nx,Ny,3)];
-		    // yp[1+3*7] = -yxpdata[idx(i+1,j,Nx,Ny,3)];
-                    //yp[0+3*7] = -yxpdata[idx(i+2,j,Nx,Ny,3)];
-                    //yn[2+3*7] = -yxndata[idx(i,j,Nx,Ny,3)];
-                    //yn[1+3*7] = -yxndata[idx(i+1,j,Nx,Ny,3)];
-                    //yn[0+3*7] = -yxndata[idx(i+2,j,Nx,Ny,3)];
                 }
                 if (i==1){
                     for (n=0;n<4;n++){
@@ -2551,8 +2572,9 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
             }
         }
         
-        /* nature and transmisive BC */
-        if (flag == 2){           
+        /* nature or transmissive BC */
+        if (flag == 2){
+            
             if (i<4){
                 for (n=0;n<4;n++){
                     for (k=4;k<7;k++){
@@ -2684,7 +2706,7 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
         realtype *yp = new realtype [28];
         realtype *yn = new realtype [28];
         
-	/* without considering BCs */
+	/* without considering BC */
         if (j>3&&j<Ny-2){
             for (n=0;n<4;n++){
                 for (k=0;k<7;k++){
@@ -2943,7 +2965,7 @@ static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0
             }
         }
         
-        /* nature and transmissive BC */
+        /* nature or transmissive BC */
         if (flag == 2){
             /* consider the situations of different i */
             if (j<4){
