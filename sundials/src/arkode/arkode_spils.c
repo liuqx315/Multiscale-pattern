@@ -121,10 +121,11 @@ int ARKSpilsSetGSType(void *arkode_mem, int gstype)
   }
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
-  if ((arkspils_mem->s_type != SPILS_SPGMR) ||
+  if ((arkspils_mem->s_type != SPILS_SPGMR) &&
       (arkspils_mem->s_type != SPILS_SPFGMR)) {
     arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
 		    "ARKSpilsSetGSType", MSGS_BAD_LSTYPE);
+    fprintf(stderr,"solver type = %i\n",arkspils_mem->s_type);
     return(ARKSPILS_ILL_INPUT);
   }
 
