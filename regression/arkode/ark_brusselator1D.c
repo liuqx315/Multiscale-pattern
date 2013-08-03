@@ -32,9 +32,11 @@
  tolerances, are provided in the input file 
  input_brusselator1D.txt.
  
- This program solves the problem with the BDF method, using a
- Newton iteration with the CVBAND band linear solver, and a
- user-supplied Jacobian routine.
+ This program solves the problem with the DIRK method, using a
+ Newton iteration.  Code is supplied to solve the linear Newton
+ systems using any one of the ARKBAND, ARKSPGMR, ARKSPBCG or 
+ ARKSPTFQMR linear solvers, with user-supplied Jacobian or 
+ Jacobian-vector-product routine.
 
  100 outputs are printed at equal intervals, and run statistics 
  are printed at the end.
@@ -53,7 +55,7 @@
 #include <sundials/sundials_types.h>
 
 #define NO_USE_ITERATIVE
-#define USE_SPGMR
+/* #define USE_SPGMR */
 /* #define USE_SPBCG */
 /* #define USE_SPTFQMR */
 
