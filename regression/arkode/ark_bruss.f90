@@ -54,8 +54,8 @@ program driver
   !    rpar(1) -> "a" parameter
   !    rpar(2) -> "b" parameter 
   !    rpar(3) -> "ep" parameter
-  integer :: ipar
-  real*8  :: rpar(3)
+  integer*8 :: ipar
+  real*8    :: rpar(3)
 
   ! solver parameters
   logical :: denseout
@@ -245,11 +245,11 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(3)
-  integer, intent(in)  :: ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(3)
-  real*8,  intent(out) :: ydot(3)
+  real*8,  intent(in)   :: t, rpar(3)
+  integer*8, intent(in) :: ipar(1)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(3)
+  real*8,  intent(out)  :: ydot(3)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
@@ -287,11 +287,11 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(3)
-  integer, intent(in)  :: ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(3)
-  real*8,  intent(out) :: ydot(3)
+  real*8,  intent(in)   :: t, rpar(3)
+  integer*8, intent(in) :: ipar(1)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(3)
+  real*8,  intent(out)  :: ydot(3)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
@@ -329,11 +329,11 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(3)
-  integer, intent(in)  :: neq, ipar(1)
-  integer, intent(out) :: ier
+  real*8,  intent(in)   :: t, h, rpar(3)
+  integer*8, intent(in) :: neq, ipar(1)
+  integer, intent(out)  :: ier
   real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,  intent(out)  :: DJac(neq,neq)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
