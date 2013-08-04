@@ -421,6 +421,9 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype *egvy = new realtype [4*Nx*Ny];
     realtype *egvxmax = new realtype [Nx*Ny];
     realtype *egvymax = new realtype [Nx*Ny];
+    realtype *egxmax = new realtype [4];
+    realtype *egymax = new realtype [4];
+
     /*
     realtype *yxptdata = new realtype [4*Nx*Ny];
     realtype *yxntdata = new realtype [4*Nx*Ny];
@@ -730,6 +733,50 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     
     return 0;
 }
+
+/*
+static int Getmaxegvx(realtype *egvx, realtype *egxmax, long int Nx, long int Ny)
+{
+  long int i, j, k;
+
+  for(k=0;k<4;k++){
+    egxmax[k]=0.0;
+  }
+
+  for (j=0;j<Ny;j++){
+    for(i=0;i<Nx;i++){
+      for(k=0;k<4;k++){
+	if(fabs(egvx[idx(i,j,Nx,Ny,k)])>egxmax[k])
+	  {
+	    egxmax[k]=fabs(egvx[idx(i,j,Nx,Ny,k)]);
+	      }
+	   }
+        }
+    }
+}
+*/
+
+/*
+static int Getmaxegy(realtype *egvy, realtype *egymax, long int Nx, long int Ny)
+{
+  long int i, j, k;
+
+  for(k=0;k<4;k++){
+    egymax[k]=0.0;
+  }
+
+  for (i=0;i<Nx;i++){
+    for(j=0;j<Ny;j++){
+      for(k=0;k<4;k++){
+	if(fabs(egvy[idx(i,j,Nx,Ny,k)])>egymax[k])
+	  {
+	    egymax[k]=fabs(egvy[idx(i,j,Nx,Ny,k)]);
+	      }
+	   }
+        }
+    }
+}
+*/
 
 /* split f into f_positive part and f_negative part for x component*/ 
 static int Splitfluxesx(realtype *Ydata, realtype *fp, realtype *fn, long int i, long int j, long int Nx, long int Ny, realtype gama)
