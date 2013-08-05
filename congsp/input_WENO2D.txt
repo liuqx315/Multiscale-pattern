@@ -3,3 +3,4 @@ Ny = 10
 Lx = 1.0
 Ly = 1.0 
 gama = 1.4
+bcflag = 2
