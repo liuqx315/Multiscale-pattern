@@ -2386,6 +2386,7 @@ static int arkAllocFPData(ARKodeMem ark_mem)
   if (ark_mem->ark_fp_fval == NULL) {
     ark_mem->ark_fp_fval = N_VClone(ark_mem->ark_ewt);
     if (ark_mem->ark_fp_fval == NULL) {
+      arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
       ark_mem->ark_lrw += ark_mem->ark_lrw1;
@@ -2397,6 +2398,7 @@ static int arkAllocFPData(ARKodeMem ark_mem)
   if (ark_mem->ark_fp_fold == NULL) {
     ark_mem->ark_fp_fold = N_VClone(ark_mem->ark_ewt);
     if (ark_mem->ark_fp_fold == NULL) {
+      arkFreeFPData(ark_mem);
       return(ARK_MEM_FAIL);
     } else {
       ark_mem->ark_lrw += ark_mem->ark_lrw1;
@@ -2514,7 +2516,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   long int maa = ark_mem->ark_fp_m;
 
   /* Resize ark_fp_fval if needed */
-  if (ark_mem->ark_fp_fval == NULL) {
+  if (ark_mem->ark_fp_fval != NULL) {
     if (resize == NULL) {
       N_VDestroy(ark_mem->ark_fp_fval);
       ark_mem->ark_fp_fval = N_VClone(ark_mem->ark_ewt);
@@ -2530,7 +2532,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_fold if needed */
-  if (ark_mem->ark_fp_fold == NULL) {
+  if (ark_mem->ark_fp_fold != NULL) {
     if (resize == NULL) {
       N_VDestroy(ark_mem->ark_fp_fold);
       ark_mem->ark_fp_fold = N_VClone(ark_mem->ark_ewt);
@@ -2546,7 +2548,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_gold if needed */
-  if (ark_mem->ark_fp_gold == NULL) {
+  if (ark_mem->ark_fp_gold != NULL) {
     if (resize == NULL) {
       N_VDestroy(ark_mem->ark_fp_gold);
       ark_mem->ark_fp_gold = N_VClone(ark_mem->ark_ewt);
@@ -2562,7 +2564,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_df if needed */
-  if ((ark_mem->ark_fp_df == NULL) && (maa > 0)) {
+  if ((ark_mem->ark_fp_df != NULL) && (maa > 0)) {
     for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_df[i]);
@@ -2580,7 +2582,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_dg if needed */
-  if ((ark_mem->ark_fp_dg == NULL) && (maa > 0)) {
+  if ((ark_mem->ark_fp_dg != NULL) && (maa > 0)) {
     for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_dg[i]);
@@ -2598,7 +2600,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_q if needed */
-  if ((ark_mem->ark_fp_q == NULL) && (maa > 0)) {
+  if ((ark_mem->ark_fp_q != NULL) && (maa > 0)) {
     for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_q[i]);
@@ -2616,7 +2618,7 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
   }
 
   /* Resize ark_fp_qtmp if needed */
-  if ((ark_mem->ark_fp_qtmp == NULL) && (maa > 0)) {
+  if ((ark_mem->ark_fp_qtmp != NULL) && (maa > 0)) {
     for (i=0; i<maa; i++) {
       if (resize == NULL) {
 	N_VDestroy(ark_mem->ark_fp_qtmp[i]);
