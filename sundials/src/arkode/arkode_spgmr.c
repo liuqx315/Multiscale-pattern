@@ -104,7 +104,7 @@ int ARKSpgmr(void *arkode_mem, int pretype, int maxl)
   arkspils_mem->s_pretype    = pretype;
   mxl = arkspils_mem->s_maxl = (maxl <= 0) ? ARKSPILS_MAXL : maxl;
 
-  /* Set defaults for Jacobian-related fileds */
+  /* Set defaults for Jacobian-related fields */
   arkspils_mem->s_jtimesDQ = TRUE;
   arkspils_mem->s_jtimes   = NULL;
   arkspils_mem->s_j_data   = NULL;
@@ -490,7 +490,7 @@ int ARKMassSpgmr(void *arkode_mem, int pretype, int maxl,
   arkspils_mem->s_pretype    = pretype;
   mxl = arkspils_mem->s_maxl = (maxl <= 0) ? ARKSPILS_MAXL : maxl;
 
-  /* Set defaults for mass-matrix-related fileds */
+  /* Set defaults for mass-matrix-related fields */
   arkspils_mem->s_mtimes   = NULL;
   arkspils_mem->s_m_data   = NULL;
 
