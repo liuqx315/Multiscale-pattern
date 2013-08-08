@@ -86,8 +86,8 @@ program driver
   y(1) = 3.9d0     ! u0
   y(2) = 1.1d0     ! v0
   y(3) = 2.8d0     ! w0
-  rpar(1) = 1.2    ! a
-  rpar(2) = 2.5    ! b
+  rpar(1) = 1.2d0  ! a
+  rpar(2) = 2.5d0  ! b
   rpar(3) = 1.d-5  ! ep
 
   ! set final solution
@@ -96,7 +96,7 @@ program driver
   ytrue(3) = 2.4999733761419733
 
   ! set tolerances according to problem specifications
-  atol = 1.d-10
+  atol = 1.d-9
   rtol = 1.d-6
   
   ! initialize vector module
@@ -360,7 +360,16 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
      DJac(3,2) = 0.0
      DJac(3,3) = -1.d0/ep - u
   else 
-     DJac = 0.d0
+     DJac(1,1) = 0.d0
+     DJac(1,2) = 0.d0
+     DJac(1,3) = 0.d0
+
+     DJac(2,1) = 0.d0
+     DJac(2,2) = 0.d0
+     DJac(2,3) = 0.d0
+
+     DJac(3,1) = 0.d0
+     DJac(3,2) = 0.d0
      DJac(3,3) = -1.d0/ep
   end if
   ier = 0
