@@ -534,7 +534,7 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
 
     /* Encode hscale into ark_mem structure */
     ark_mem->ark_eta = hscale;
-    ark_mem->ark_hprime = ark_mem->ark_h * hscale;
+    ark_mem->ark_hprime *= hscale;
 
     /* If next step would overtake tstop, adjust stepsize */
     if ( ark_mem->ark_tstopset ) 
