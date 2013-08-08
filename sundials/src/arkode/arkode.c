@@ -4072,6 +4072,9 @@ static int arkNlsNewton(ARKodeMem ark_mem, int nflag)
     ark_mem->ark_mnewt = m = 0;
     del = delp = ZERO;
 
+    /* Reset the local truncation error estimate */
+    ark_mem->ark_eLTE = ark_mem->ark_nlscoef * RCONST(0.1);
+
     /* Looping point for Newton iteration */
     for(;;) {
 
