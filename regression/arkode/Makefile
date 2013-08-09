@@ -41,6 +41,7 @@ TESTS = ark_analytic.exe \
         ark_brusselator.exe \
         ark_brusselator1D.exe \
         ark_heat1D.exe \
+        ark_heat1D_adapt.exe \
         ark_heat2D.exe \
         ark_robertson.exe \
         ark_robertson_root.exe \
