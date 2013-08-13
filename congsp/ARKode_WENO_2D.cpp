@@ -671,7 +671,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 yxbackdata[idx(i, j, Nx+1, Ny, k)] = rhxegm[k][0]*yxdata[idx(i, j, Nx+1, Ny, 0)]+rhxegm[k][1]*yxdata[idx(i, j, Nx+1, Ny, 1)]+rhxegm[k][2]*yxdata[idx(i, j, Nx+1, Ny, 2)]+rhxegm[k][3]*yxdata[idx(i, j, Nx+1, Ny, 3)];
             }
 	    //printf(" yxdata : i = %li, j = %li, yxdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxdata[idx(i, j, Nx+1, Ny, 3)]=%f\n",i,j,yxdata[idx(i, j, Nx+1, Ny, 0)],yxdata[idx(i, j, Nx+1, Ny, 1)],yxdata[idx(i, j, Nx+1, Ny, 2)],yxdata[idx(i, j, Nx+1, Ny, 3)]);
-	    //printf("yxbackdata : i = %li, j = %li, yxbackdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 3)]=%e\n",i,j,yxbackdata[idx(i, j, Nx+1, Ny, 0)],yxbackdata[idx(i, j, Nx+1, Ny, 1)],yxbackdata[idx(i, j, Nx+1, Ny, 2)],yxbackdata[idx(i, j, Nx+1, Ny, 3)]);
+	    printf("yxbackdata : i = %li, j = %li, yxbackdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 3)]=%e\n",i,j,yxbackdata[idx(i, j, Nx+1, Ny, 0)],yxbackdata[idx(i, j, Nx+1, Ny, 1)],yxbackdata[idx(i, j, Nx+1, Ny, 2)],yxbackdata[idx(i, j, Nx+1, Ny, 3)]);
         }
     }
     

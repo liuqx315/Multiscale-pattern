@@ -36,16 +36,18 @@ TESTS = ARKode_WENO.exe ARKode_WENO2D.exe
 
 # target to build all test executables
 #all : ${TESTS}
-all : ARKode_WENO.exe ARKode_WENO2D.exe ARKode_WENO_2D.exe ARKode_WENO_2Dnew.exe
+all : ARKode_WENO.exe ARKode_WENO2D.exe ARKode_WENO2D_method2.exe ARKode_WENO2D_method3.exe ARKode_WENO2D_ud_method3.exe 
 #%.exe : %.cpp
 
 ARKode_WENO.exe : ARKode_WENO.cpp
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-ARKode_WENO2D.exe : ARKode_WENO_2D.cpp
+ARKode_WENO2D.exe : ARKode_WENO2D.cpp
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-ARKode_WENO_2D.exe : ARKode_WENO2D.cpp
+ARKode_WENO2D_method2.exe : ARKode_WENO2D_method2.cpp
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
-ARKode_WENO_2Dnew.exe : ARKode_WENO2Dnew.cpp
+ARKode_WENO2D_method3.exe : ARKode_WENO2D_method3.cpp
+	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+ARKode_WENO2D_ud_method3.exe : ARKode_WENO2D_ud_method3.cpp
 	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 clean :
 	\rm -f *.o *.exe
