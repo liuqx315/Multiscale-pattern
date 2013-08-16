@@ -1,8 +1,9 @@
-function [X,Y] = stab_region(B,Theta)
-% Usage: [X,Y] = stab_region(B,Theta)
+function [X,Y] = stab_region(A,b,Theta)
+% Usage: [X,Y] = stab_region(A,b,Theta)
 % 
 % Inputs:
-%    B is a Butcher table
+%    A is a Butcher table matrix
+%    b is a Butcher table gluing coefficients
 %    Theta is an array of values in the interval [0,2*pi)
 %
 % We consider the RK stability function
@@ -12,9 +13,9 @@ function [X,Y] = stab_region(B,Theta)
 % that R(eta) = exp(i*theta), for some value of theta.
 %
 % For each theta in the input array Theta, and for the RK method
-% defined by the array b and matrix A contained in B, we find the
-% coordinates (x,y) of the complex number eta that gives rise to
-% that point on the stability region boundary. 
+% defined by the array b and matrix A, we find the coordinates
+% (x,y) of the complex number eta that gives rise to that point on
+% the stability region boundary.  
 %
 % Outputs:
 %    X is an array of real components of the stability boundary
@@ -29,16 +30,13 @@ function [X,Y] = stab_region(B,Theta)
 sig = sqrt(eps);
 ctol = 1e-7;
 dtol = 1000;
-maxit = 20;
+maxit = 50;
 
 % determine total number of plotting points
 N = length(Theta);
 
 % extract the components of the Butcher table
-[m,n] = size(B);
-s = n-1;
-b = B(s+1,2:n)';
-A = B(1:s,2:n);
+s = length(b);
 I = eye(s);
 e = ones(s,1);
 
