@@ -9,7 +9,7 @@
 clear all
 
 % set plotting points
-N = 800;
+N = 10000;
 Theta = linspace(0,16*pi,N);
 
 % set graphics type
@@ -84,20 +84,16 @@ for itable = 1:length(tables)
    % compute method stability region boundary and create plot
    [X,Y] = stab_region(A,b,Theta);
    plot(X,Y,'b-'), hold on
-   if (itable ~= 15 & itable ~= 17)
-      % compute embedding stability region boundary, add to plot
-      [X,Y] = stab_region(A,b2,Theta);
-      plot(X,Y,'r-')
-   end
+   % compute embedding stability region boundary, add to plot
+   [X,Y] = stab_region(A,b2,Theta);
+   plot(X,Y,'r-')
    xl = xlim();  yl = ylim();
    plot(linspace(xl(1),xl(2),10),zeros(1,10),'b:')
    plot(zeros(1,10),linspace(yl(1),yl(2),10),'b:'), hold off
    xlabel('Re(z)')
    ylabel('Im(z)')
    title(sprintf('Stability boundary for %s method',table))
-   if (itable ~= 15 & itable ~= 17)
-      legend('method','embedding')
-   end
+   legend('method','embedding')
    pname = [ pnames{itable}, '.', gtype ];
    print(pname, ptype);
 end
