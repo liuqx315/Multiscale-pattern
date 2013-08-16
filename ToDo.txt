@@ -201,6 +201,10 @@ Completed components:
 
 
 Remaining components to build:
+[ ] Consider swapping method/embedding for Billington and TRBDF2
+    methods, since in those the higher-order method is not A-stable
+    whereas the embedding is A-stable; i.e. here the method would be
+    order 2 and the embedding order 3.
 [ ] Organize User_callable.rst file to group optional inputs so that
     they aren't so haphazard (and so numerous in one place).  Within
     each group, alphebetize based on name of "set" routine.
