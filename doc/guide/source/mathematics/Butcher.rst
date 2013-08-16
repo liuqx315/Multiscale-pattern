@@ -58,9 +58,14 @@ understand the method.  Since all complex numbers with unit magnitude
 may be written as :math:`e^{i\theta}` for some value of :math:`theta`,
 we perform the following algorithm to trace out this boundary.
 
-1. Define an array of values ``Theta``.  Since we wish for a
+1. efine an array of values ``Theta``.  Since we wish for a
    smooth curve, and since we wish to trace out the entire boundary,
-   we choose 800 linearly-spaced points from 0 to :math:`8\pi`.
+   we choose 10,000 linearly-spaced points from 0 to :math:`16\pi`.
+   Since some angles will correspond to multiple locations on the
+   stability boundary, by going beyond :math:`2\pi` we ensure that all
+   boundary locations are plotted, and by using such a fine
+   discretization the Newton method is more likely to converge to the
+   root closest to the previous boundary point, ensuring a smooth plot.
 
 2. For each value :math:`\theta \in` ``Theta``, we solve the nonlinear
    equation 
@@ -80,11 +85,12 @@ we perform the following algorithm to trace out this boundary.
 3. We then plot the resulting :math:`\eta` values that trace the
    stability region boundary.
 
-The value :math:`\eta_0 = -\varepsilon + 0i` is always within the
-stability region for a stable IVP method, so in each of the following
-pictures, the region including :math:`\eta_0` constitutes :math:`S`.
-Resultingly, methods whose linear stability boundary is located entirely in
-the right half-plane indicate an `A-stable` method.
+We note that for any stable IVP method, the value :math:`\eta_0 =
+-\varepsilon + 0i` is always within the stability region.  So in each
+of the following pictures, the interior of the stability region is the
+connected region that includes :math:`\eta_0`.  Resultingly, methods
+whose linear stability boundary is located entirely in the right
+half-plane indicate an `A-stable` method.
 
 
 
@@ -458,7 +464,8 @@ SDIRK 2(1)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Butcher table number 11 for :func:`ARKodeSetIRKTableNum()`.  This is
-the default 2nd order implicit method.
+the default 2nd order implicit method.  Both the method and embedding
+are A- and B-stable.
 
 .. math::
 
@@ -485,7 +492,8 @@ the default 2nd order implicit method.
 Billington
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 12 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 12 for :func:`ARKodeSetIRKTableNum()`.  Here, the
+higher-order method is less stable than the lower-order embedding.
 
 .. math::
 
@@ -514,7 +522,9 @@ Butcher table number 12 for :func:`ARKodeSetIRKTableNum()`.
 TRBDF2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.  As with
+Billington, here the higher-order method is less stable than the
+lower-order embedding.  
 
 .. math::
 
@@ -543,7 +553,8 @@ Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.
 Kvaerno(4,2,3)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.  Both the
+method and embedding are A-stable; additionally the method is L-stable.
 
 .. math::
 
@@ -562,8 +573,7 @@ Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.
    :align: center
    
    Linear stability region for the Kvaerno(4,2,3) method.  The method's
-   region is outlined in blue; the plotting approach failed to
-   converge for the embedding, so it is not shown.
+   region is outlined in blue; the embedding's region is in red.
 
 
 
@@ -575,7 +585,8 @@ ARK3(2)4L[2]SA (implicit)
 
 Butcher table number 15 for :func:`ARKodeSetIRKTableNum()`.  This is
 the default 3rd order implicit method, and the implicit portion of the
-default 3rd order additive method. 
+default 3rd order additive method.  Both the method and embedding are
+A-stable; additionally the method is L-stable.
 
 .. math::
 
@@ -605,7 +616,8 @@ default 3rd order additive method.
 Cash(5,2,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.  Both the
+method and embedding are A-stable; additionally the method is L-stable.  
 
 .. math::
 
@@ -625,8 +637,7 @@ Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.
    :align: center
    
    Linear stability region for the Cash(5,2,4) method.  The method's
-   region is outlined in blue; the plotting approach failed to
-   converge for the embedding, so it is not shown.
+   region is outlined in blue; the embedding's region is in red.
 
 
 
@@ -637,7 +648,8 @@ Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.
 Cash(5,3,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 17 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 17 for :func:`ARKodeSetIRKTableNum()`.  Both the
+method and embedding are A-stable; additionally the method is L-stable.  
 
 .. math::
 
@@ -668,7 +680,8 @@ SDIRK 5(4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Butcher table number 18 for :func:`ARKodeSetIRKTableNum()`.  This is
-the default 4th order implicit method.
+the default 4th order implicit method.  Here, the method is both A-
+and L-stable, although the embedding has reduced stability.
 
 .. math::
 
@@ -700,7 +713,8 @@ the default 4th order implicit method.
 Kvaerno(5,3,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 19 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 19 for :func:`ARKodeSetIRKTableNum()`.  Both the
+method and embedding are A-stable.  
 
 .. math::
 
@@ -732,7 +746,9 @@ ARK4(3)6L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Butcher table number 20 for :func:`ARKodeSetIRKTableNum()`.  This is
-the implicit portion of the default 4th order additive method.
+the implicit portion of the default 4th order additive method.  Both
+the method and embedding are A-stable; additionally the method is
+L-stable. 
 
 .. math::
 
@@ -764,7 +780,9 @@ the implicit portion of the default 4th order additive method.
 Kvaerno(7,4,5)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 21 for :func:`ARKodeSetIRKTableNum()`.
+Butcher table number 21 for :func:`ARKodeSetIRKTableNum()`.  Both the
+method and embedding are A-stable; additionally the method is
+L-stable.
 
 .. math::
 
@@ -799,7 +817,8 @@ ARK5(4)8L[2]SA (implicit)
 
 Butcher table number 22 for :func:`ARKodeSetIRKTableNum()`.  This is
 the default 5th order implicit method, and the implicit portion of the
-default 5th order additive method. 
+default 5th order additive method.  Both the method and embedding are
+A-stable; additionally the method is L-stable.   
 
 .. math::
 
