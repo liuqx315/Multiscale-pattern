@@ -53,6 +53,7 @@ function B = butcher(method_name)
 %
 % Diagonally implicit:
 %    SDIRK-2-2                          q=2, s=2
+%    SDIRK-2-1                          q=2, s=2, p=1
 %    Ascher(2,3,2)-SDIRK                q=2, s=2
 %    Ascher(2,2,2)-SDIRK                q=2, s=2
 %    TRBDF2-ESDIRK (*)                  q=3, s=3, p=2
