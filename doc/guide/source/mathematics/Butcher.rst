@@ -32,6 +32,61 @@ the coefficients :math:`b` and :math:`\tilde{b}` to generate methods
 of orders :math:`q` (the main method) and :math:`p` (the embedding,
 typically :math:`q = p+1`).
 
+Additionally, for each method we provide a plot of the linear
+stability region in the complex plane.  These have been computed via
+the following approach.  For any Runge Kutta method as defined above,
+we may define the stability function
+
+.. math::
+
+   R(\eta) = 1 + \eta b [I - \eta A]^{-1} e,
+
+where :math:`e\in\mathbb{R}^s` is a column vector of all ones, :math:`\eta =
+h\lambda` and :math:`h` is the time step size.  If the stability
+function satisfies :math:`|R(\eta)| \le 1` for all eigenvalues,
+:math:`\lambda`, of :math:`\frac{\partial }{\partial y}f(t,y)` for a
+given IVP, then the method will be linearly stable for that problem
+and step size.  The stability region 
+
+.. math::
+
+   S = \{ \eta\in\mathbb{C}\; |\; |R(\eta)| \le 1\}
+
+is typically given by an enclosed region of the complex plane, so it
+is standard to search for the border of that region in order to
+understand the method.  Since all complex numbers with unit magnitude
+may be written as :math:`e^{i\theta}` for some value of :math:`theta`,
+we perform the following algorithm to trace out this boundary.
+
+1. Define an array of values ``Theta``.  Since we wish for a
+   smooth curve, and since we wish to trace out the entire boundary,
+   we choose 800 linearly-spaced points from 0 to :math:`8\pi`.
+
+2. For each value :math:`\theta \in` ``Theta``, we solve the nonlinear
+   equation 
+
+   .. math::
+
+      0 = f(\eta) = R(\eta) - e^{i\theta}
+
+   using a finite-difference Newton iteration, using tolerance
+   :math:`10^{-7}`, and differencing parameter
+   :math:`\sqrt{\varepsilon}` (:math:`\approx 10^{-8}`).
+
+   In this iteration, we use as initial guess the solution from the
+   previous value of :math:`\theta`, starting with an initial-initial
+   guess of :math:`\eta=0` for :math:`\theta=0`.  
+
+3. We then plot the resulting :math:`\eta` values that trace the
+   stability region boundary.
+
+The value :math:`\eta_0 = -\varepsilon + 0i` is always within the
+stability region for a stable IVP method, so in each of the following
+pictures, the region including :math:`\eta_0` constitutes :math:`S`.
+Resultingly, methods whose linear stability boundary is located entirely in
+the right half-plane indicate an `A-stable` method.
+
+
 
 .. _Mathematics.Butcher.explicit:
 
@@ -61,6 +116,13 @@ the default 2nd order explicit method.
      1 & 1 & 0
    \end{array}
 
+.. figure:: figs/stab_region_0.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Heun-Euler method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 .. _Mathematics.Butcher.Bogacki_Shampine:
@@ -83,6 +145,14 @@ the default 3rd order explicit method.
      2 & 7/24 & 1/4 & 1/3 & 1/8
    \end{array}
 
+.. figure:: figs/stab_region_1.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Bogacki-Shampine method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 .. _Mathematics.Butcher.ARK_3_2_E:
 
@@ -103,6 +173,14 @@ the explicit portion of the default 3rd order additive method.
      3 & \frac{1471266399579}{7840856788654} & -\frac{4482444167858}{7529755066697} & \frac{11266239266428}{11593286722821} & \frac{1767732205903}{4055673282236} \\
      2 & \frac{2756255671327}{12835298489170} & -\frac{10771552573575}{22201958757719} & \frac{9247589265047}{10645013368117} & \frac{2193209047091}{5459859503100}
    \end{array}
+
+.. figure:: figs/stab_region_2.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the explicit ARK3(2)4L[2]SA method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 .. _Mathematics.Butcher.Zonneveld:
@@ -125,6 +203,14 @@ the default 4th order explicit method.
      4 & 1/6 & 1/3 & 1/3 & 1/6 & 0 \\
      3 & -1/2 & 7/3 & 7/3 & 13/6 & -16/3
    \end{array}
+
+.. figure:: figs/stab_region_3.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Zonneveld method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 .. _Mathematics.Butcher.ARK_4_3_E:
@@ -149,6 +235,14 @@ the explicit portion of the default 4th order additive method.
      3 & \frac{4586570599}{29645900160} & 0 & \frac{178811875}{945068544} & \frac{814220225}{1159782912} & -\frac{3700637}{11593932} & \frac{61727}{225920}
    \end{array}
 
+.. figure:: figs/stab_region_4.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the explicit ARK4(3)6L[2]SA method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 .. _Mathematics.Butcher.Sayfy_Aburub:
 
@@ -170,6 +264,14 @@ Butcher table number 5 for :func:`ARKodeSetERKTableNum()`.
      4 & 1/6 & 1/3 & 1/12 & 0 & 1/3 & 1/12 \\
      3 & 1/6 & 2/3 & 1/6 & 0 & 0 & 0
    \end{array}
+
+.. figure:: figs/stab_region_5.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Sayfy-Aburub-4-3 method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -195,6 +297,14 @@ the default 5th order explicit method.
      4 & 37/348 & 0 & 250/621 & 125/594 & 0 & 512/1771
    \end{array}
 
+.. figure:: figs/stab_region_6.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Cash-Karp method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -219,6 +329,14 @@ Butcher table number 7 for :func:`ARKodeSetERKTableNum()`.
      4 & 25/216 & 0 & 1408/2565 & 2197/4104 & -1/5 & 0
    \end{array}
 
+.. figure:: figs/stab_region_7.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Fehlberg method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 .. _Mathematics.Butcher.Dormand_Prince:
@@ -242,6 +360,14 @@ Butcher table number 8 for :func:`ARKodeSetERKTableNum()`.
      5 & 35/384 & 0 & 500/1113 & 125/192 & -2187/6784 & 11/84 & 0 \\
      4 & 5179/57600 & 0 & 7571/16695 & 393/640 & -92097/339200 & 187/2100 & 1/40
    \end{array}
+
+.. figure:: figs/stab_region_8.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Dormand-Prince method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -269,6 +395,14 @@ the explicit portion of the default 5th order additive method.
      4 & -\frac{975461918565}{9796059967033} & 0 & 0 & \frac{78070527104295}{32432590147079} & -\frac{548382580838}{3424219808633} & -\frac{33438840321285}{15594753105479} & \frac{3629800801594}{4656183773603} & \frac{4035322873751}{18575991585200}
    \end{array}
 
+.. figure:: figs/stab_region_9.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the explicit ARK5(4)8L[2]SA method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -295,6 +429,14 @@ the default 6th order explicit method.
      6 & 3/40 & 0 & 875/2244 & 23/72 & 264/1955 & 0 & 125/11592 & 43/616 \\
      5 & 13/160 & 0 & 2375/5984 & 5/16 & 12/85 & 3/44 & 0 & 0
    \end{array}
+
+.. figure:: figs/stab_region_10.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Verner-6-5 method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -328,6 +470,14 @@ the default 2nd order implicit method.
      1 & 1 & 0
    \end{array}
 
+.. figure:: figs/stab_region_11.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the SDIRK 2(1) method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 .. _Mathematics.Butcher.Billington:
@@ -347,6 +497,14 @@ Butcher table number 12 for :func:`ARKodeSetIRKTableNum()`.
      3 & 0.691665115992 & 0.503597029883 & -0.195262145876 \\
      2 & 0.740789228840 & 0.259210771159 & 0
    \end{array}
+
+.. figure:: figs/stab_region_12.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Billington method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -369,6 +527,14 @@ Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.
      2 & \frac{\sqrt{2}}{4} & \frac{\sqrt{2}}{4} & \frac{2-\sqrt{2}}{2}
    \end{array}
 
+.. figure:: figs/stab_region_13.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the TRBDF2 method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -390,6 +556,15 @@ Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.
      3 & 0.308809969973036 & 1.490563388254106 & -1.235239879727145 & 0.4358665215 \\
      2 & 0.490563388419108 & 0.073570090080892 & 0.4358665215 & 0
    \end{array}
+
+.. figure:: figs/stab_region_14.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Kvaerno(4,2,3) method.  The method's
+   region is outlined in blue; the plotting approach failed to
+   converge for the embedding, so it is not shown.
+
 
 
 
@@ -414,6 +589,14 @@ default 3rd order additive method.
      2 & \frac{2756255671327}{12835298489170} & -\frac{10771552573575}{22201958757719} & \frac{9247589265047}{10645013368117} & \frac{2193209047091}{5459859503100}
    \end{array}
 
+.. figure:: figs/stab_region_15.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the implicit ARK3(2)4L[2]SA method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -436,6 +619,15 @@ Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.
      4 & 0.896869652944 & 0.0182725272734 & -0.0845900310706 & -0.266418670647 & 0.435866521508 \\
      2 & 1.05646216107052 & -0.0564621610705236 & 0 & 0 & 0
    \end{array}
+
+.. figure:: figs/stab_region_16.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Cash(5,2,4) method.  The method's
+   region is outlined in blue; the plotting approach failed to
+   converge for the embedding, so it is not shown.
+
 
 
 
@@ -460,6 +652,14 @@ Butcher table number 17 for :func:`ARKodeSetIRKTableNum()`.
      3 & 0.776691932910 & 0.0297472791484 & -0.0267440239074 & 0.220304811849 & 0
    \end{array}
 
+.. figure:: figs/stab_region_17.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Cash(5,3,4) method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 .. _Mathematics.Butcher.SDIRK-5-4:
@@ -482,6 +682,14 @@ the default 4th order implicit method.
      4 & 25/24 & -49/48 & 125/16 & -85/12 & 1/4 \\
      3 & 59/48 & -17/96 & 225/32 & -85/12 & 0
    \end{array}
+
+.. figure:: figs/stab_region_18.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the SDIRK 5(4) method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -506,6 +714,14 @@ Butcher table number 19 for :func:`ARKodeSetIRKTableNum()`.
      4 & 0.157024897860995 & 0.117330441357768 & 0.61667803039168 & -0.326899891110444 & 0.4358665215 \\
      3 & 0.102399400616089 & -0.376878452267324 & 0.838612530151233 & 0.4358665215 & 0
    \end{array}
+
+.. figure:: figs/stab_region_19.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Kvaerno(5,3,4) method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -532,6 +748,14 @@ the implicit portion of the default 4th order additive method.
      3 & \frac{4586570599}{29645900160} & 0 & \frac{178811875}{945068544} & \frac{814220225}{1159782912} & -\frac{3700637}{11593932} & \frac{61727}{225920}
    \end{array}
 
+.. figure:: figs/stab_region_20.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the implicit ARK4(3)6L[2]SA method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -556,6 +780,14 @@ Butcher table number 21 for :func:`ARKodeSetIRKTableNum()`.
      5 & 0.13659751177640291 & 0 & -0.05496908796538376 & -0.04118626728321046 & 0.62993304899016403 & 0.06962479448202728 & 0.26 \\
      4 & 0.13855640231268224 & 0 & -0.04245337201752043 & 0.02446657898003141 & 0.61943039072480676 & 0.26 & 0
    \end{array}
+
+.. figure:: figs/stab_region_21.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the Kvaerno(7,4,5) method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -584,6 +816,14 @@ default 5th order additive method.
      5 & -\frac{872700587467}{9133579230613} & 0 & 0 & \frac{22348218063261}{9555858737531} & -\frac{1143369518992}{8141816002931} & -\frac{39379526789629}{19018526304540} & \frac{32727382324388}{42900044865799} & \frac{41}{200} \\
      4 & -\frac{975461918565}{9796059967033} & 0 & 0 & \frac{78070527104295}{32432590147079} & -\frac{548382580838}{3424219808633} & -\frac{33438840321285}{15594753105479} & \frac{3629800801594}{4656183773603} & \frac{4035322873751}{18575991585200}
    \end{array}
+
+.. figure:: figs/stab_region_22.png
+   :scale: 50 %
+   :align: center
+   
+   Linear stability region for the implicit ARK5(4)8L[2]SA method.  The method's
+   region is outlined in blue; the embedding's region is in red.
+
 
 
 

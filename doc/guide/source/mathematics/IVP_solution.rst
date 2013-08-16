@@ -23,14 +23,14 @@ form
 Here the :math:`y_n` are computed approximations to :math:`y(t_n)`,
 :math:`\tilde{y}_n` are lower-order embedded solutions (used in error
 estimation), and :math:`h_n \equiv t_n - t_{n-1}` is the step size.
-The coefficients :math:`A^E \in \Re^{s\times s}`, :math:`A^I \in
-\Re^{s\times s}`, :math:`b \in \Re^{s}` and :math:`c \in \Re^{s}` 
-correspond with the explicit and implicit Butcher tables (that must
-share :math:`b` and :math:`c`) in an ARK pair.  The user of ARKode
-must choose appropriately between one of three classes of methods:
-*multi-rate*, *nonstiff* and *stiff*.  All of the Butcher tables
-encoding the coefficients :math:`c`, :math:`A`, :math:`b` and
-:math:`\tilde{b}` are further described in the section
+The coefficients :math:`A^E \in \mathbb{R}^{s\times s}`, :math:`A^I \in
+\mathbb{R}^{s\times s}`, :math:`b \in \mathbb{R}^{s}` and 
+:math:`c \in \mathbb{R}^{s}` correspond with the explicit and implicit
+Butcher tables (that must share :math:`b` and :math:`c`) in an ARK
+pair.  The user of ARKode must choose appropriately between one of
+three classes of methods: *multi-rate*, *nonstiff* and *stiff*.  All
+of the Butcher tables encoding the coefficients :math:`c`, :math:`A`,
+:math:`b` and :math:`\tilde{b}` are further described in the section
 :ref:`Mathematics.Butcher`. 
 
 For multi-rate problems, a user must provide both of the functions

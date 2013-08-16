@@ -14,10 +14,10 @@ ARKode solves ODE initial value problems (IVPs) in real :math:`N`
    :label: IVP
 
 Here, :math:`t` is the independent variable (e.g. time), and the
-dependent variables are given by :math:`y \in \Re^N`.  We use the
+dependent variables are given by :math:`y \in \mathbb{R}^N`.  We use the
 notation :math:`\dot{y}` to denote :math:`dy/dt`.  :math:`M` is a
-user-specified nonsingular linear operator from :math:`\Re^N \to
-\Re^N`.  For standard systems of ordinary differential equations and
+user-specified nonsingular linear operator from :math:`\mathbb{R}^N \to
+\mathbb{R}^N`.  For standard systems of ordinary differential equations and
 for problems arising from the spatial semi-discretization of partial
 differential equations using finite difference or finite volume
 methods, :math:`M` is typically the identity matrix :math:`I`;  for
