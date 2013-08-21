@@ -1,3 +1,10 @@
+/*
+Programmer: Cong Zhang
+Example:
+u_t+f(u)_x+g(u)_y = 0，f(u) and g(u) come from the Euler equations (fluid dynamics) with 2D Riemann test initial conditions (different initial conditions in different quadrants) and natural boundary conditions.
+This program solves the problem with WENO method in paper (Guang-Shan Jiang and Chi-Wang Shu, Efficient Implementation of Weighted ENO Schemes), especially section 4. This method is different from the method 1 and method 2 because in this method, for the grid (i,j), it uses L(i,j) to multiply stencil (f(i-2,j),...f(i+3,j)) while in the other 2 methods, they use different L(i,j), for example, L(i-1,j) multiplies f(i-1,j) and L(i,j) multiplies f(i,j). 
+All the parameters are provided in the input file input_WENO2D.txt.
+*/
 /* Header files */
 #include <iostream>
 #include <string.h>
@@ -470,7 +477,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
      }
      }
      */
-    /* compute eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
+    /* compute eigenvalues and max eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx+1; i++){
             flag = Getegvx(Ydata, i, j, Nx, Ny, gama, egvx, bcflag);
@@ -746,7 +753,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                     }
                 }
             }
-            
+            /* get left eigenvectors */
             flag = Setlfxegm(Ydata, lfxegm, i, j, Nx, Ny, gama, bcflag);
             if (flag!=0) printf("error in Setlfxegm function \n");
             
@@ -818,7 +825,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 //printf("yx: i=%li, j=%li, k=%li, u_tpphx[k]=%f, u_tnphx[k]=%f\n",i,j, k,u_tpphx[k], u_tnphx[k]);
             }
             
-            /* transform the interface values back to the physical ones on x direction*/
+            /* get right eigenvectors and transform the interface values back to the physical ones on x direction*/
             flag = Setrhxegm(Ydata, rhxegm, i, j, Nx, Ny, gama, bcflag);
             if (flag!=0) printf("error in Setrhxegm function \n");
             for (k=0;k<4;k++){
@@ -832,7 +839,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         }
     }
     
-    /* compute eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
+    /* compute eigenvalues and max eigenvalues and fill in positive and negative characteristic variables yypdata, yyndata, y direction */
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny+1; j++){
             flag =  Getegvy(Ydata, i, j, Nx, Ny, gama, egvy, bcflag);
@@ -1100,7 +1107,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                     }
                 }
             }
-            
+            /* get the left eigenvectors for y component */
             flag = Setlfyegm(Ydata, lfyegm, i, j, Nx, Ny, gama, bcflag);
             if (flag!=0) printf("error in Setlfyegm function \n");
             
@@ -1165,10 +1172,11 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 yydata[idx(i, j, Nx, Ny+1, k)]=u_tpphy[k]+u_tnphy[k];
                 //printf("yy: i=%li, j=%li, k=%li, u_tpphy[k]=%f, u_tnphy[k]=%f,u_tpnhy[k]=%f,u_tnnhy[k]=%f\n",i,j, k,u_tpphy[k], u_tnphy[k], u_tpnhy[k],u_tnnhy[k]);
             }
+	    /* get the right eigenvetors for y component */
             flag = Setrhyegm(Ydata, rhyegm, i, j, Nx, Ny, gama, bcflag);
             if (flag!=0) printf("error in Setrhyegm function \n");
-            for (k=0;k<4;k++){
-                
+	    /* transform back to the physical values */
+            for (k=0;k<4;k++){                
                 //printf(" rhyegm : i = %li, j = %li, rhyegm[k][0] = %f, rhyegm[k][1] = %f, rhyegm[k][2] = %f, rhyegm[k][3] = %f\n", i, j, rhyegm[k][0], rhyegm[k][1],rhyegm[k][2],rhyegm[k][3]);
                 
                 yybackdata[idx(i, j, Nx, Ny+1, k)] = rhyegm[k][0]*yydata[idx(i, j, Nx, Ny+1, 0)]+rhyegm[k][1]*yydata[idx(i, j, Nx, Ny+1, 1)]+rhyegm[k][2]*yydata[idx(i, j, Nx, Ny+1, 2)]+rhyegm[k][3]*yydata[idx(i, j, Nx, Ny+1, 3)];
@@ -1297,7 +1305,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     
     return 0;
 }
-
+/* Get max eigenvalue on x direction for each component */
 static int Getmaxegvx(realtype *egvx, realtype *egxmax, long int Nx, long int Ny)
 {
     long int i, j, k;
@@ -1318,7 +1326,7 @@ static int Getmaxegvx(realtype *egvx, realtype *egxmax, long int Nx, long int Ny
     }
     return 0;
 }
-
+/* Get max eigenvalue on y direction for each component */
 static int Getmaxegvy(realtype *egvy, realtype *egymax, long int Nx, long int Ny)
 {
     long int i, j, k;
