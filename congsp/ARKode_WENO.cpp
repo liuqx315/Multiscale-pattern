@@ -1,3 +1,10 @@
+/*
+Programmer: Cong Zhang
+Example:
+u_t+u_x = 0, 0<x<2, t>0，with initial conditions u(x,0)=(sin(pi*x))^9 and periodic boundary conditions.
+This is an example in paper, Rong Wang and Raymond J.Spiteri, Linear Instability of the Fifth-order WENO Method. This program solves the problem with 1D WENO method in this paper.
+The last ten outputs are printed.
+*/
 /* Header files */
 #include <iostream>
 #include <string.h>

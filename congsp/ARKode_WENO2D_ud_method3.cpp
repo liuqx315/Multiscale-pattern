@@ -1,3 +1,10 @@
+/*
+Programmer: Cong Zhang
+Example:
+u_t+f(u)_x+g(u)_y = 0，f(u) and g(u) come from the Euler equations (fluid dynamics) with 2D Riemann test initial conditions (different initial conditions in different quadrants) and natural boundary conditions.
+This program solves the problem with WENO method in paper (Guang-Shan Jiang and Chi-Wang Shu, Efficient Implementation of Weighted ENO Schemes), especially section 4. This method is same with method 3 but it computes the right interface and left interface for every grid, for example, computing f(i-1/2,j) and f(i+1/2,j) at grid (i,j) because based on this, it's easy to check whether f(i-1+1/2,j) obtianed by (i-1,j) is almost same with f(i-1/2,j) obtianed by (i,j). 
+All the parameters are provided in the input file input_WENO2D.txt.
+*/
 /* Header files */
 #include <iostream>
 #include <string.h>
@@ -44,8 +51,10 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
 /* Set value of J in whole domain*/
 static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yybackupdata, realtype *yybackdowndata, realtype *Cjup, realtype *Cjdown, long int Nx, long int Ny, realtype gama);
 
+/* Get max eigenvalue on x direction for each component */
 static int Getmaxegvx(realtype *egvx, realtype *egxmax, long int Nx, long int Ny);
 
+/* Get max eigenvalue on y direction for each component */
 static int Getmaxegvy(realtype *egvy, realtype *egymax, long int Nx, long int Ny);
 
 /* Split f to f_positve and f_negative parts for x component */
@@ -54,8 +63,10 @@ static int Splitfluxesx(realtype *Ydata, realtype *fp, realtype *fn, long int i,
 /* Split g to g_positve and g_negative parts for y component */
 static int Splitfluxesy(realtype *Ydata, realtype *gp, realtype *gn, long int i, long int j, long int Nx, long int Ny, realtype gama);
 
+/* Get eigenvalue on x direction for every grid */
 static int Getegvx(realtype *Ydata, long int i, long int j, long int Nx, long int Ny, realtype gama, realtype *egvx, int flag);
 
+/* Get eigenvalue on y direction for every grid */
 static int Getegvy(realtype *Ydata, long int i, long int j, long int Nx, long int Ny, realtype gama, realtype *egvy, int flag);
 
 /* Set left eigenvectors in x direction and eigenvalues*/
@@ -418,6 +429,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     int bcflag = udata->bcflag;
     
     /* fill in relative data arrays */
+    /* up means the right interface and down means the left interface */
     realtype *yxupdata = new realtype [4*(Nx)*Ny];
     realtype *yyupdata = new realtype [4*Nx*(Ny)];
     realtype *yxdowndata = new realtype [4*(Nx)*Ny];
@@ -472,7 +484,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
      }
      }
      */
-    /* compute eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
+    /* compute eigenvalues and max eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
             flag = Getegvx(Ydata, i, j, Nx, Ny, gama, egvx, bcflag);
@@ -841,7 +853,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             flag = SetUx(w0_px, w1_px, w2_px, w0_nx, w1_nx, w2_nx, yxpdata, yxndata, u_tpphx, u_tnphx, u_tpnhx, u_tnnhx, i, j, Nx, Ny);
             if (flag!=0) printf("error in SetUx function \n");
             
-            /* get the interface values */
+            /* get the left and right interface values */
             for(k=0;k<4;k++){
                 //printf("w: i=%li, j=%li, k=%li, w0_px[k]=%g,w1_px[k]=%g,w2_px[k]=%g,w0_nx[k]=%g,w1_nx[k]=%g,w2_nx[k]=%g\n",i,j,k,w0_px[k],w1_px[k],w2_px[k],w0_nx[k],w1_nx[k],w2_nx[k]);
                 yxupdata[idx(i, j, Nx, Ny, k)]=(u_tpphx[k]+u_tnphx[k]);
@@ -850,7 +862,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 //printf("yx: i=%li, j=%li, k=%li, u_tpphx[k]=%f, u_tnphx[k]=%f\n",i,j, k,u_tpphx[k], u_tnphx[k]);
             }
             
-            /* transform the interface values back to the physical ones on x direction*/
+            /* transform the left and right interface values back to the physical ones on x direction*/
             flag = Setrhxegm(Ydata, rhxegm, i+1, j, Nx, Ny, gama, bcflag);
             if (flag!=0) printf("error in Setrhxegm function \n");
             for (k=0;k<4;k++){
@@ -860,6 +872,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 yxbackupdata[idx(i, j, Nx, Ny, k)] = rhxegm[k][0]*yxupdata[idx(i, j, Nx, Ny, 0)]+rhxegm[k][1]*yxupdata[idx(i, j, Nx, Ny, 1)]+rhxegm[k][2]*yxupdata[idx(i, j, Nx, Ny, 2)]+rhxegm[k][3]*yxupdata[idx(i, j, Nx, Ny, 3)];
             
             }
+	    
             flag = Setrhxegm(Ydata, rhxegm, i, j, Nx, Ny, gama, bcflag);
             if (flag!=0) printf("error in Setrhxegm function \n");
             for (k=0;k<4;k++){
@@ -874,7 +887,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         }
     }
     
-    /* compute eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, x direction */
+    /* compute eigenvalues and max eigenvalues and fill in positive and negative characteristic variables yxpdata, yxndata, y direction */
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
             flag =  Getegvy(Ydata, i, j, Nx, Ny, gama, egvy, bcflag);
@@ -1225,7 +1238,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
             flag = SetUy(w0_py, w1_py, w2_py, w0_ny, w1_ny, w2_ny, yypdata, yyndata, u_tpphy, u_tnphy, u_tpnhy, u_tnnhy, i, j, Nx, Ny);
             if (flag!=0) printf("error in SetUy function \n");
             
-            /* get the interface values */
+            /* get the left and right interface values */
             for(k=0;k<4;k++){
                 yyupdata[idx(i, j, Nx, Ny, k)]=u_tpphy[k]+u_tnphy[k];
                 yydowndata[idx(i, j, Nx, Ny, k)]=u_tpnhy[k]+u_tnnhy[k];
@@ -1381,6 +1394,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     return 0;
 }
 
+/* Get max eigenvalue on x direction for each component */
 static int Getmaxegvx(realtype *egvx, realtype *egxmax, long int Nx, long int Ny)
 {
     long int i, j, k;
@@ -1402,6 +1416,7 @@ static int Getmaxegvx(realtype *egvx, realtype *egxmax, long int Nx, long int Ny
     return 0;
 }
 
+/* Get max eigenvalue on y direction for each component */
 static int Getmaxegvy(realtype *egvy, realtype *egymax, long int Nx, long int Ny)
 {
     long int i, j, k;
@@ -2288,7 +2303,7 @@ static int Setalphawy(realtype *IS0_py, realtype *IS1_py, realtype *IS2_py, real
     return 0;
 }
 
-/* Get the positive and negative parts of right interface on x direction */
+/* Get the positive and negative parts of interface on x direction */
 static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0_nx, realtype *w1_nx, realtype *w2_nx, realtype *yxpdata, realtype *yxndata, realtype *u_tpphx, realtype *u_tnphx, realtype *u_tpnhx, realtype *u_tnnhx, long int i, long int j, long int Nx, long int Ny)
 {       
     long int n;
@@ -2305,7 +2320,7 @@ static int SetUx(realtype *w0_px, realtype *w1_px, realtype *w2_px, realtype *w0
     return 0;
 }
 
-/* Get the positive and negative parts of right interface  on y direction */
+/* Get the positive and negative parts of interface on y direction */
 static int SetUy(realtype *w0_py, realtype *w1_py, realtype *w2_py, realtype *w0_ny, realtype *w1_ny, realtype *w2_ny, realtype *yypdata, realtype *yyndata, realtype *u_tpphy, realtype *u_tnphy, realtype *u_tpnhy, realtype *u_tnnhy, long int i, long int j, long int Nx, long int Ny)
 {
     long int n;
@@ -2343,7 +2358,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
     realtype *pxdown = new realtype [(Nx)*Ny];
     realtype *pydown = new realtype [Nx*(Ny)];
     
-    /* Set values into vx and vy on x direction*/
+    /* Set values into vx and vy on x direction for roght interface */
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             vxxup[idx_v(i,j,(Nx))]=yxbackupdata[idx(i, j, (Nx), Ny, 1)]/yxbackupdata[idx(i, j, (Nx), Ny, 0)];
@@ -2354,7 +2369,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         }
     }
     
-    /* Set values into vx and vy on x direction*/
+    /* Set values into vx and vy on x direction for left interface */
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             vxxdown[idx_v(i,j,(Nx))]=yxbackdowndata[idx(i, j, (Nx), Ny, 1)]/yxbackdowndata[idx(i, j, (Nx), Ny, 0)];
@@ -2365,7 +2380,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         }
     }
     
-    /* Set values into vxy and vyy on y direction*/
+    /* Set values into vxyup and vyyup on y direction*/
     for(i=0;i<Nx;i++){
         for(j=0;j<(Ny);j++){
             vxyup[idx_v(i,j,Nx)]=yybackupdata[idx(i, j, Nx, (Ny), 1)]/yybackupdata[idx(i, j, Nx, (Ny), 0)];
@@ -2375,7 +2390,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         }
     }
     
-    /* Set values into vxy and vyy on y direction*/
+    /* Set values into vxydown and vyydown on y direction*/
     for(i=0;i<Nx;i++){
         for(j=0;j<(Ny);j++){
             vxydown[idx_v(i,j,Nx)]=yybackdowndata[idx(i, j, Nx, (Ny), 1)]/yybackdowndata[idx(i, j, Nx, (Ny), 0)];
@@ -2385,7 +2400,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         }
     }
     
-    /* Compute the values of tao in the whole domain on x direction*/
+    /* Compute the values of taoup in the whole domain on x direction*/
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             pxup[idx_v(i,j,(Nx))] =  yxbackupdata[idx(i, j, (Nx), Ny, 0)]*(gama-1.0)*(yxbackupdata[idx(i, j, (Nx), Ny, 3)]/yxbackupdata[idx(i, j, (Nx), Ny, 0)]-0.5*(vxxup[idx_v(i,j,(Nx))]*vxxup[idx_v(i,j,(Nx))]+vyxup[idx_v(i,j,(Nx))]*vyxup[idx_v(i,j,(Nx))]));
@@ -2394,7 +2409,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         } 
 	}
     
-    /* Compute the values of tao in the whole domain on x direction*/
+    /* Compute the values of taodown in the whole domain on x direction*/
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             pxdown[idx_v(i,j,(Nx))] =  yxbackdowndata[idx(i, j, (Nx), Ny, 0)]*(gama-1.0)*(yxbackdowndata[idx(i, j, (Nx), Ny, 3)]/yxbackdowndata[idx(i, j, (Nx), Ny, 0)]-0.5*(vxxdown[idx_v(i,j,(Nx))]*vxxdown[idx_v(i,j,(Nx))]+vyxdown[idx_v(i,j,(Nx))]*vyxdown[idx_v(i,j,(Nx))]));
@@ -2403,7 +2418,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         }
 	}
     
-    /* Compute the values of tao in the whole domain on y direction*/
+    /* Compute the values of taoup in the whole domain on y direction*/
     for (i=0;i<Nx;i++){
         for (j=0;j<(Ny);j++){
             pyup[idx_v(i,j,Nx)] =  yybackupdata[idx(i, j, Nx, (Ny), 0)]*(gama-1.0)*(yybackupdata[idx(i, j, Nx, (Ny), 3)]/yybackupdata[idx(i, j, Nx, (Ny), 0)]-0.5*(vyxup[idx_v(i,j,Nx)]*vyxup[idx_v(i,j,Nx)]+vyyup[idx_v(i,j,Nx)]*vyyup[idx_v(i,j,Nx)]));
@@ -2412,6 +2427,7 @@ static int Gettao(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yy
         }
     }
     
+    /* Compute the values of taodown in the whole domain on y direction*/
     for (i=0;i<Nx;i++){
         for (j=0;j<(Ny);j++){
             pydown[idx_v(i,j,Nx)] =  yybackdowndata[idx(i, j, Nx, (Ny), 0)]*(gama-1.0)*(yybackdowndata[idx(i, j, Nx, (Ny), 3)]/yybackdowndata[idx(i, j, Nx, (Ny), 0)]-0.5*(vyxdown[idx_v(i,j,Nx)]*vyxdown[idx_v(i,j,Nx)]+vyydown[idx_v(i,j,Nx)]*vyydown[idx_v(i,j,Nx)]));
@@ -2456,7 +2472,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
     realtype *pxdown = new realtype [(Nx)*Ny];
     realtype *pydown = new realtype [Nx*(Ny)];
     
-    /* Set values into vx and vy on x direction*/
+    /* Set values into vxup and vyup on x direction*/
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             vxxup[idx_v(i,j,(Nx))]=yxbackupdata[idx(i, j, (Nx), Ny, 1)]/yxbackupdata[idx(i, j, (Nx), Ny, 0)];
@@ -2467,7 +2483,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         }
     }
     
-    /* Set values into vx and vy on x direction*/
+    /* Set values into vxdown and vydown on x direction*/
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             vxxdown[idx_v(i,j,(Nx))]=yxbackdowndata[idx(i, j, (Nx), Ny, 1)]/yxbackdowndata[idx(i, j, (Nx), Ny, 0)];
@@ -2478,7 +2494,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         }
     }
     
-    /* Set values into vxy and vyy on y direction*/
+    /* Set values into vxyup and vyyup on y direction*/
     for(i=0;i<Nx;i++){
         for(j=0;j<(Ny);j++){
             vxyup[idx_v(i,j,Nx)]=yybackupdata[idx(i, j, Nx, (Ny), 1)]/yybackupdata[idx(i, j, Nx, (Ny), 0)];
@@ -2488,7 +2504,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         }
     }
     
-    /* Set values into vxy and vyy on y direction*/
+    /* Set values into vxydown and vyydown on y direction*/
     for(i=0;i<Nx;i++){
         for(j=0;j<(Ny);j++){
             vxydown[idx_v(i,j,Nx)]=yybackdowndata[idx(i, j, Nx, (Ny), 1)]/yybackdowndata[idx(i, j, Nx, (Ny), 0)];
@@ -2498,7 +2514,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         }
     }
     
-    /* Compute the values of tao in the whole domain on x direction*/
+    /* Compute the values of taoup in the whole domain on x direction*/
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             pxup[idx_v(i,j,(Nx))] =  yxbackupdata[idx(i, j, (Nx), Ny, 0)]*(gama-1.0)*(yxbackupdata[idx(i, j, (Nx), Ny, 3)]/yxbackupdata[idx(i, j, (Nx), Ny, 0)]-0.5*(vxxup[idx_v(i,j,(Nx))]*vxxup[idx_v(i,j,(Nx))]+vyxup[idx_v(i,j,(Nx))]*vyxup[idx_v(i,j,(Nx))]));  
@@ -2506,7 +2522,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         } 
     }
     
-    /* Compute the values of tao in the whole domain on x direction*/
+    /* Compute the values of taodown in the whole domain on x direction*/
     for(j=0;j<Ny;j++){
         for(i=0;i<(Nx);i++){
             pxdown[idx_v(i,j,(Nx))] =  yxbackdowndata[idx(i, j, (Nx), Ny, 0)]*(gama-1.0)*(yxbackdowndata[idx(i, j, (Nx), Ny, 3)]/yxbackdowndata[idx(i, j, (Nx), Ny, 0)]-0.5*(vxxdown[idx_v(i,j,(Nx))]*vxxdown[idx_v(i,j,(Nx))]+vyxdown[idx_v(i,j,(Nx))]*vyxdown[idx_v(i,j,(Nx))]));
@@ -2514,7 +2530,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         }
     }
 
-    /* Compute the values of tao in the whole domain on y direction*/
+    /* Compute the values of taoup in the whole domain on y direction*/
     for (i=0;i<Nx;i++){
         for (j=0;j<(Ny);j++){
             pyup[idx_v(i,j,Nx)] =  yybackupdata[idx(i, j, Nx, (Ny), 0)]*(gama-1.0)*(yybackupdata[idx(i, j, Nx, (Ny), 3)]/yybackupdata[idx(i, j, Nx, (Ny), 0)]-0.5*(vyxup[idx_v(i,j,Nx)]*vyxup[idx_v(i,j,Nx)]+vyyup[idx_v(i,j,Nx)]*vyyup[idx_v(i,j,Nx)]));
@@ -2522,7 +2538,7 @@ static int GetCj(realtype *yxbackupdata, realtype *yxbackdowndata, realtype *yyb
         }
     }
     
-    /* Compute the values of tao in the whole domain on y direction*/
+    /* Compute the values of taodown in the whole domain on y direction*/
     for (i=0;i<Nx;i++){
         for (j=0;j<(Ny);j++){
             pydown[idx_v(i,j,Nx)] =  yybackdowndata[idx(i, j, Nx, (Ny), 0)]*(gama-1.0)*(yybackdowndata[idx(i, j, Nx, (Ny), 3)]/yybackdowndata[idx(i, j, Nx, (Ny), 0)]-0.5*(vyxdown[idx_v(i,j,Nx)]*vyxdown[idx_v(i,j,Nx)]+vyydown[idx_v(i,j,Nx)]*vyydown[idx_v(i,j,Nx)]));

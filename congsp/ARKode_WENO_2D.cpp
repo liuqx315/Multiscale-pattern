@@ -1,3 +1,10 @@
+/*
+Programmer: Cong Zhang
+Example:
+u_t+f(u)_x+g(u)_y = 0，f(u) and g(u) come from the Euler equations (fluid dynamics) with 2D Riemann test initial conditions (different initial conditions in different quadrants) and natural boundary conditions.
+This program solves the prblem with Characteristic-wise Approach in paper (Maxim Pisarenco, ENO and WENO Schemes for Hyperbolic Conservation Laws) and 1D WENO method in paper (Rong Wang and Raymond J.Spiteri, Linear Instability of the Fifth-order WENO Method), especially section 2. 
+All the parameters are provided in the input file input_WENO2D.txt.
+*/
 /* Header files */
 #include <iostream>
 #include <string.h>
@@ -454,6 +461,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     realtype *dYdata = N_VGetArrayPointer(ydot);
     if (check_flag((void *) dYdata, "N_VGetArrayPointer", 0)) return 1;
     /*
+      // Split Ydata to positve and negative parts for x component
     for(j=0;j<Ny;j++){
       for(i=0;i<Nx;i++){
 	flag = Splitfluxesx(Ydata, yxptdata, yxntdata, i, j, Nx, Ny, gama);
@@ -461,6 +469,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
       }
     }
 
+    // Split Ydata to positve and negative parts for y component
     for(i=0;i<Nx;i++){
       for(j=0;j<Ny;j++){
 	flag = Splitfluxesy(Ydata, yyptdata, yyntdata, i, j, Nx, Ny, gama);
@@ -470,13 +479,15 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     */
 
     /*
+     // Get eigenvalue on x direction for every grid
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
             flag = Getegvx(Ydata, i, j, Nx, Ny, gama, egvx, bcflag);
             if (flag!=0) printf("error in Getegvx function \n");
         }
     }
-    
+
+    // Get max eigenvalue on x direction for each component over the whole domain
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
             flag = Getmaxegvx(egvx, egxmax, Nx, Ny);
@@ -547,13 +558,14 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     }
     
     /*
+      //Get eigenvalue on y direction for every grid
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
             flag =  Getegvy(Ydata, i, j, Nx, Ny, gama, egvy, bcflag);
             if (flag!=0) printf("error in Getegvy function \n");
         }
     }
-    
+    //Get max eigenvalue on y direction for each component over the whold domain
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
             flag = Getmaxegvy(egvy, egymax, Nx, Ny);
@@ -671,7 +683,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
                 yxbackdata[idx(i, j, Nx+1, Ny, k)] = rhxegm[k][0]*yxdata[idx(i, j, Nx+1, Ny, 0)]+rhxegm[k][1]*yxdata[idx(i, j, Nx+1, Ny, 1)]+rhxegm[k][2]*yxdata[idx(i, j, Nx+1, Ny, 2)]+rhxegm[k][3]*yxdata[idx(i, j, Nx+1, Ny, 3)];
             }
 	    //printf(" yxdata : i = %li, j = %li, yxdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxdata[idx(i, j, Nx+1, Ny, 3)]=%f\n",i,j,yxdata[idx(i, j, Nx+1, Ny, 0)],yxdata[idx(i, j, Nx+1, Ny, 1)],yxdata[idx(i, j, Nx+1, Ny, 2)],yxdata[idx(i, j, Nx+1, Ny, 3)]);
-	    printf("yxbackdata : i = %li, j = %li, yxbackdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 3)]=%e\n",i,j,yxbackdata[idx(i, j, Nx+1, Ny, 0)],yxbackdata[idx(i, j, Nx+1, Ny, 1)],yxbackdata[idx(i, j, Nx+1, Ny, 2)],yxbackdata[idx(i, j, Nx+1, Ny, 3)]);
+	    //printf("yxbackdata : i = %li, j = %li, yxbackdata[idx(i, j, Nx+1, Ny, 0)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 1)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 2)]=%f, yxbackdata[idx(i, j, Nx+1, Ny, 3)]=%e\n",i,j,yxbackdata[idx(i, j, Nx+1, Ny, 0)],yxbackdata[idx(i, j, Nx+1, Ny, 1)],yxbackdata[idx(i, j, Nx+1, Ny, 2)],yxbackdata[idx(i, j, Nx+1, Ny, 3)]);
         }
     }
     

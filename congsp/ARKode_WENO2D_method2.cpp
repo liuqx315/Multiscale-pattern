@@ -1,3 +1,10 @@
+/*
+Programmer: Cong Zhang
+Example:
+u_t+f(u)_x+g(u)_y = 0，f(u) and g(u) come from the Euler equations (fluid dynamics) with 2D Riemann test initial conditions (different initial conditions in different quadrants) and natural boundary conditions.
+This program solves the problem with WENO method in paper (Jun Luo, Lijun Xuan and Kun Xu, Comparison of Fifth-Order WENO Scheme and Finite Volume WENO-Gas-Kinetic Scheme for Inviscid and Viscous Flow Simulation), especially section 3.2.1 and section 2. 
+All the parameters are provided in the input file input_WENO2D.txt.
+*/
 /* Header files */
 #include <iostream>
 #include <string.h>
@@ -434,6 +441,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
     if (check_flag((void *) dYdata, "N_VGetArrayPointer", 0)) return 1;
 
     /* declare relative arrays */
+    /* up means the right interface and down means the left interface for the same grid */
     realtype *fp = new realtype [4*Nx*Ny];
     realtype *fn = new realtype [4*Nx*Ny];
     realtype *gp = new realtype [4*Nx*Ny];
@@ -473,7 +481,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
       }
     }
 
-    /* compute max absolue eigenvalue and fill in fpnew, fnnew */
+    /* compute inverse eigenvector matrix and fill in fpnew, fnnew */
     for(j=0; j<Ny; j++){
         for (i=0; i<Nx; i++){
 	    flag = Setlfxegm(Ydata, lfxegm, i, j, Nx, Ny, gama);
@@ -493,7 +501,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
         }
     }
     
-    /* compute max absolue eigenvalue and fill in gpnew, gnnew */
+    /* compute inverse eigenvector matrix and fill in gpnew, gnnew */
     for(i=0; i<Nx; i++){
         for (j=0; j<Ny; j++){
 	  flag = Setlfyegm(Ydata, lfyegm, i, j, Nx, Ny, gama);
