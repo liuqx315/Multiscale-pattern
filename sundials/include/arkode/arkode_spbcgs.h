@@ -15,6 +15,7 @@
 extern "C" {
 #endif
 
+#include <arkode/arkode.h>
 #include <arkode/arkode_spils.h>
 #include <sundials/sundials_spbcgs.h>
 
@@ -83,7 +84,8 @@ SUNDIALS_EXPORT int ARKSpbcg(void *arkode_mem, int pretype, int maxl);
 
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKMassSpbcg(void *arkode_mem, int pretype, 
-				 int maxl, ARKSpilsMassTimesVecFn mtimes);
+				 int maxl, ARKMTimesFn mtimes,
+				 void *mtimes_data);
 
 
 #ifdef __cplusplus

@@ -32,13 +32,13 @@ static void arkDenseFree(ARKodeMem ark_mem);
 
 /* ARKDENSE minit, msetup, msolve, and mfree routines */
 static int arkMassDenseInit(ARKodeMem ark_mem);
-static int arkMassDenseSetup(ARKodeMem ark_mem, N_Vector ypred,
-			     N_Vector vtemp1, N_Vector vtemp2, 
-			     N_Vector vtemp3);
+static int arkMassDenseSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			     N_Vector vtemp2, N_Vector vtemp3);
 static int arkMassDenseSolve(ARKodeMem ark_mem, N_Vector b, 
-			     N_Vector weight, N_Vector ycur);
+			     N_Vector weight);
 static void arkMassDenseFree(ARKodeMem ark_mem);
-
+static int arkMassDenseMultiply(N_Vector v, N_Vector Mv, 
+				realtype t, void *user_data);
                 
                 
 /*---------------------------------------------------------------
@@ -91,6 +91,7 @@ int ARKDense(void *arkode_mem, long int N)
   ark_mem->ark_lsetup = arkDenseSetup;
   ark_mem->ark_lsolve = arkDenseSolve;
   ark_mem->ark_lfree  = arkDenseFree;
+  ark_mem->ark_lsolve_type = 1;
 
   /* Get memory for ARKDlsMemRec */
   arkdls_mem = NULL;
@@ -223,8 +224,9 @@ static int arkDenseSetup(ARKodeMem ark_mem, int convfail,
     *jcurPtr = TRUE;
     SetToZero(arkdls_mem->d_M);
 
-    retval = arkdls_mem->d_djac(arkdls_mem->d_n, ark_mem->ark_tn, ypred, 
-				fpred, arkdls_mem->d_M, arkdls_mem->d_J_data, 
+    retval = arkdls_mem->d_djac(arkdls_mem->d_n, ark_mem->ark_tn, 
+				ypred, fpred, arkdls_mem->d_M, 
+				arkdls_mem->d_J_data, 
 				vtemp1, vtemp2, vtemp3);
     if (retval < 0) {
       arkProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKDENSE", 
@@ -251,7 +253,7 @@ static int arkDenseSetup(ARKodeMem ark_mem, int convfail,
     arkdls_mass_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
     SetToZero(arkdls_mass_mem->d_M);
     retval = arkdls_mass_mem->d_dmass(arkdls_mass_mem->d_n, 
-				      ark_mem->ark_tn, ypred, 
+				      ark_mem->ark_tn, 
 				      arkdls_mass_mem->d_M, 
 				      arkdls_mass_mem->d_M_data, 
 				      vtemp1, vtemp2, vtemp3);
@@ -349,9 +351,10 @@ static void arkDenseFree(ARKodeMem ark_mem)
  arkMassDenseInit, arkMassDenseSetup, arkMassDenseSolve, and 
  arkMassDenseFree, respectively.  It allocates memory for a 
  structure of type ARKDlsMassMemRec and sets the ark_mass_mem
- field in (*arkode_mem) to the address of this structure.  
- Finally, it allocates memory for M and lpivots. The return value 
- is SUCCESS = 0, or LMEM_FAIL = -1.
+ field in (*arkode_mem) to the address of this structure.  It 
+ sets MassSetupNonNull in (*arkode_mem) to TRUE.  Finally, it 
+ allocates memory for M and lpivots. The return value is 
+ SUCCESS = 0, or LMEM_FAIL = -1.
 
  NOTE: The dense linear solver assumes a serial implementation
        of the NVECTOR package. Therefore, ARKMassDense will first 
@@ -388,6 +391,9 @@ int ARKMassDense(void *arkode_mem, long int N, ARKDlsDenseMassFn dmass)
   ark_mem->ark_msetup = arkMassDenseSetup;
   ark_mem->ark_msolve = arkMassDenseSolve;
   ark_mem->ark_mfree  = arkMassDenseFree;
+  ark_mem->ark_mtimes = arkMassDenseMultiply;
+  ark_mem->ark_mtimes_data = (void *) ark_mem;
+  ark_mem->ark_msolve_type = 1;
 
   /* Get memory for ARKDlsMassMemRec */
   arkdls_mem = NULL;
@@ -405,6 +411,7 @@ int ARKMassDense(void *arkode_mem, long int N, ARKDlsDenseMassFn dmass)
   arkdls_mem->d_dmass = dmass;
   arkdls_mem->d_M_data = NULL;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
+  ark_mem->ark_MassSetupNonNull = TRUE;
 
   /* Set problem dimension */
   arkdls_mem->d_n = N;
@@ -461,9 +468,8 @@ static int arkMassDenseInit(ARKodeMem ark_mem)
  solver.  It calls the mass matrix evaluation, updates counters, 
  and calls the dense LU factorization routine.
 ---------------------------------------------------------------*/
-static int arkMassDenseSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			     N_Vector vtemp1, N_Vector vtemp2, 
-			     N_Vector vtemp3)
+static int arkMassDenseSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			     N_Vector vtemp2, N_Vector vtemp3)
 {
   long int ier;
   ARKDlsMassMem arkdls_mem;
@@ -474,7 +480,7 @@ static int arkMassDenseSetup(ARKodeMem ark_mem, N_Vector ypred,
   /* call Mass routine for new M matrix */
   SetToZero(arkdls_mem->d_M);
   retval = arkdls_mem->d_dmass(arkdls_mem->d_n, ark_mem->ark_tn, 
-			       ypred, arkdls_mem->d_M, 
+			       arkdls_mem->d_M, 
 			       arkdls_mem->d_M_data, vtemp1, 
 			       vtemp2, vtemp3);
   arkdls_mem->d_nme++;
@@ -507,7 +513,7 @@ static int arkMassDenseSetup(ARKodeMem ark_mem, N_Vector ypred,
  returned value is 0.
 ---------------------------------------------------------------*/
 static int arkMassDenseSolve(ARKodeMem ark_mem, N_Vector b, 
-			     N_Vector weight, N_Vector ycur)
+			     N_Vector weight)
 {
   ARKDlsMassMem arkdls_mem;
   realtype *bd;
@@ -535,6 +541,48 @@ static void arkMassDenseFree(ARKodeMem ark_mem)
   DestroyArray(arkdls_mem->d_lpivots);
   free(arkdls_mem);
   ark_mem->ark_mass_mem = NULL;
+}
+
+
+/*---------------------------------------------------------------
+ arkMassDenseMultiply performs a matrix-vector product, 
+ multiplying the current mass matrix by a given vector.
+---------------------------------------------------------------*/                  
+static int arkMassDenseMultiply(N_Vector v, N_Vector Mv, 
+				realtype t, void *arkode_mem)
+{
+  /* extract the DlsMassMem structure from the user_data pointer */
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDENSE", 
+		    "arkMassDenseMultiply", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  /* zero out the result */
+  N_VConst(0.0, Mv);
+
+  /* access the vector arrays (since they must be serial vectors) */
+  realtype *vdata=NULL, *Mvdata=NULL;
+  vdata = N_VGetArrayPointer(v);
+  Mvdata = N_VGetArrayPointer(Mv);
+  if (vdata == NULL || Mvdata == NULL)
+    return(1);
+
+  /* perform matrix-vector product and return */
+  realtype *Mcol_j;
+  long int i, j;
+  for (j=0; j<arkdls_mem->d_M->N; j++) {
+    Mcol_j = arkdls_mem->d_M->cols[j];
+    for (i=0; i<arkdls_mem->d_M->M; i++) 
+      Mvdata[i] += Mcol_j[i]*vdata[j];
+  }
+  return(0);
 }
 
 

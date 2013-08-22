@@ -54,8 +54,8 @@ static int arkCheckButcherTables(ARKodeMem ark_mem);
 
 static int arkStep(ARKodeMem ark_mem);
 static void arkPredict(ARKodeMem ark_mem, int istage);
-static void arkSet(ARKodeMem ark_mem);
-static realtype arkComputeSolutions(ARKodeMem ark_mem);
+static int arkSet(ARKodeMem ark_mem);
+static int arkComputeSolutions(ARKodeMem ark_mem, realtype *dsm);
 static int arkDoErrorTest(ARKodeMem ark_mem, int *nflagPtr,
 			  realtype saved_t, int *nefPtr, 
 			  realtype dsm);
@@ -289,15 +289,19 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_lsolve = NULL;
   ark_mem->ark_lfree  = NULL;
   ark_mem->ark_lmem   = NULL;
+  ark_mem->ark_lsolve_type = -1;
 
   /* Set the mass matrix to identity, and mass matrix solver 
      addresses to NULL. (We check != NULL later, in ARKode.) */
   ark_mem->ark_mass_matrix = FALSE;
-  ark_mem->ark_minit    = NULL;
-  ark_mem->ark_msetup   = NULL;
-  ark_mem->ark_msolve   = NULL;
-  ark_mem->ark_mfree    = NULL;
-  ark_mem->ark_mass_mem = NULL;
+  ark_mem->ark_minit       = NULL;
+  ark_mem->ark_msetup      = NULL;
+  ark_mem->ark_msolve      = NULL;
+  ark_mem->ark_mfree       = NULL;
+  ark_mem->ark_mtimes      = NULL;
+  ark_mem->ark_mtimes_data = NULL;
+  ark_mem->ark_mass_mem    = NULL;
+  ark_mem->ark_msolve_type = -1;
 
   /* Initialize ycur */
   N_VScale(ONE, y0, ark_mem->ark_ycur);
@@ -321,6 +325,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nfe          = 0;
   ark_mem->ark_nfi          = 0;
   ark_mem->ark_ncfn         = 0;
+  ark_mem->ark_nmassfails   = 0;
   ark_mem->ark_netf         = 0;
   ark_mem->ark_nni          = 0;
   ark_mem->ark_nsetups      = 0;
@@ -329,6 +334,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nge          = 0;
   ark_mem->ark_irfnd        = 0;
   ark_mem->ark_mass_solves  = 0;
+  ark_mem->ark_mass_mult    = 0;
 
   /* Initialize other integrator optional outputs */
   ark_mem->ark_h0u    = ZERO;
@@ -435,6 +441,7 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nfe          = 0;
   ark_mem->ark_nfi          = 0;
   ark_mem->ark_ncfn         = 0;
+  ark_mem->ark_nmassfails   = 0;
   ark_mem->ark_netf         = 0;
   ark_mem->ark_nni          = 0;
   ark_mem->ark_nsetups      = 0;
@@ -443,6 +450,7 @@ int ARKodeReInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_nge          = 0;
   ark_mem->ark_irfnd        = 0;
   ark_mem->ark_mass_solves  = 0;
+  ark_mem->ark_mass_mult    = 0;
 
   /* Indicate that problem size is new */
   ark_mem->ark_resized = TRUE;
@@ -1787,6 +1795,8 @@ static void arkPrintMem(ARKodeMem ark_mem)
   printf("ark_msbp = %i\n", ark_mem->ark_msbp);
   printf("ark_predictor = %i\n", ark_mem->ark_predictor);
   printf("ark_nhnil = %i\n", ark_mem->ark_nhnil);
+  printf("ark_lsolve_type = %i\n", ark_mem->ark_lsolve_type);
+  printf("ark_msolve_type = %i\n", ark_mem->ark_msolve_type);
   printf("ark_nrtfn = %i\n", ark_mem->ark_nrtfn);
   if (ark_mem->ark_iroots != NULL) 
     for (i=0; i<ark_mem->ark_nrtfn; i++)
@@ -1807,6 +1817,7 @@ static void arkPrintMem(ARKodeMem ark_mem)
   printf("ark_nfe = %li\n", ark_mem->ark_nfe);
   printf("ark_nfi = %li\n", ark_mem->ark_nfi);
   printf("ark_ncfn = %li\n", ark_mem->ark_ncfn);
+  printf("ark_nmassfails = %li\n", ark_mem->ark_nmassfails);
   printf("ark_netf = %li\n", ark_mem->ark_netf);
   printf("ark_nni = %li\n", ark_mem->ark_nni);
   printf("ark_nsetups = %li\n", ark_mem->ark_nsetups);
@@ -1819,6 +1830,7 @@ static void arkPrintMem(ARKodeMem ark_mem)
     for (i=0; i<ark_mem->ark_fp_m; i++)
       printf("ark_fp_imap[%i] = %li\n", i, ark_mem->ark_fp_imap[i]);
   printf("ark_mass_solves = %li\n", ark_mem->ark_mass_solves);
+  printf("ark_mass_mult = %li\n", ark_mem->ark_mass_mult);
   printf("ark_nstlp = %li\n", ark_mem->ark_nstlp);
   printf("ark_nge = %li\n", ark_mem->ark_nge);
 
@@ -1834,6 +1846,7 @@ static void arkPrintMem(ARKodeMem ark_mem)
   printf("ark_mass_matrix = %i\n", ark_mem->ark_mass_matrix);
   printf("ark_jcur = %i\n", ark_mem->ark_jcur);
   printf("ark_setupNonNull = %i\n", ark_mem->ark_setupNonNull);
+  printf("ark_MassSetupNonNull = %i\n", ark_mem->ark_MassSetupNonNull);
   printf("ark_VabstolMallocDone = %i\n", ark_mem->ark_VabstolMallocDone);
   printf("ark_MallocDone = %i\n", ark_mem->ark_MallocDone);
   printf("ark_resized = %i\n", ark_mem->ark_resized);
@@ -2813,6 +2826,19 @@ static int arkInitialSetup(ARKodeMem ark_mem)
     }
   }
 
+  /* Check for consistency between linear system modules 
+     (if lsolve is direct, msolve needs to match) */
+  if (ark_mem->ark_mass_matrix) {  /* M != I */
+    if (ark_mem->ark_lsolve_type != 0) { /* non-iterative */
+      if (ark_mem->ark_lsolve_type != ark_mem->ark_msolve_type) {
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkInitialSetup", 
+			"Incompatible linear and mass matrix solvers");
+	return(ARK_MEM_FAIL);
+      }
+    }
+  }
+
   /* Allocate fixed-point solver memory */
   if (ark_mem->ark_use_fp) {
     ier = arkAllocFPData(ark_mem);
@@ -3452,7 +3478,8 @@ static int arkStep(ARKodeMem ark_mem)
 #endif
       
       /* Set up data for evaluation of ARK stage residual (data stored in ark_sdata) */
-      arkSet(ark_mem);
+      if (arkSet(ark_mem) != ARK_SUCCESS)  
+	return (ARK_MASSMULT_FAIL);
 
 #ifdef DEBUG_OUTPUT
  printf("rhs data:\n");
@@ -3484,12 +3511,35 @@ static int arkStep(ARKodeMem ark_mem)
 	/* Return if nonlinear solve failed and recovery not possible. */
 	if (kflag != SOLVE_SUCCESS) return(kflag);
 
-      /* otherwise just update necessary data structures */
+      /* otherwise no nonlinear solve is needed */
       } else {
-      
-      	/* set y to be ycur + RHS data computed in arkSet */
-	N_VLinearSum(ONE, ark_mem->ark_sdata, ONE, 
-		     ark_mem->ark_ycur, ark_mem->ark_y);
+
+	/* if M!=I, solve with M to compute update (place back in sdata) */
+	if (ark_mem->ark_mass_matrix) {
+
+	  /* perform mass matrix solve */
+	  nflag = ark_mem->ark_msolve(ark_mem, ark_mem->ark_sdata, 
+				      ark_mem->ark_ewt); 
+	  ark_mem->ark_mass_solves++;
+	  
+	  /* check for convergence (on failure, h will have been modified) */
+	  kflag = arkHandleNFlag(ark_mem, &nflag, saved_t, &ncf);
+
+	  /* increment failure counter if necessary */
+	  if (kflag != SOLVE_SUCCESS)
+	    ark_mem->ark_nmassfails++;
+
+	  /* If h reduced and step needs to be retried, break loop */
+	  if (kflag == PREDICT_AGAIN) break;
+
+	  /* Return if solve failed and recovery not possible. */
+	  if (kflag != SOLVE_SUCCESS) return(kflag);
+
+      	/* if M==I, set y to be ycur + RHS data computed in arkSet */
+	} else {
+	  N_VLinearSum(ONE, ark_mem->ark_sdata, ONE, 
+		       ark_mem->ark_ycur, ark_mem->ark_y);
+	}
 
 #ifdef DEBUG_OUTPUT
  printf("explicit solution:\n");
@@ -3521,7 +3571,8 @@ static int arkStep(ARKodeMem ark_mem)
     if (kflag == PREDICT_AGAIN)  continue;
       
     /* compute time-evolved solution (in ark_y), error estimate (in dsm) */
-    dsm = arkComputeSolutions(ark_mem);
+    retval = arkComputeSolutions(ark_mem, &dsm);
+    if (retval < 0)  return(retval);    /* msetup failure */
 
 #ifdef DEBUG_OUTPUT
  printf("error estimate = %19.16g\n", dsm);
@@ -3634,15 +3685,26 @@ static void arkPredict(ARKodeMem ark_mem, int istage)
  residual, along with the step- and method-related factors 
  gamma, gammap and gamrat.
 ---------------------------------------------------------------*/
-static void arkSet(ARKodeMem ark_mem)
+static int arkSet(ARKodeMem ark_mem)
 {
   /* local data */
   realtype hA;
-  int j, i = ark_mem->ark_istage;
+  int retval, j, i = ark_mem->ark_istage;
+  N_Vector tmp = ark_mem->ark_tempv;
 
   /* Initialize sdata to yn - ycur (ycur holds guess) */
   N_VLinearSum(ONE, ark_mem->ark_ynew, -ONE, ark_mem->ark_ycur, 
 	       ark_mem->ark_sdata);
+
+
+  /* If M!=I, replace sdata with M*sdata, so that sdata = M*(yn-ycur) */
+  if (ark_mem->ark_mass_matrix) {
+    N_VScale(ONE, ark_mem->ark_sdata, tmp);
+    retval = ark_mem->ark_mtimes(tmp, ark_mem->ark_sdata, ark_mem->ark_tn, 
+				 ark_mem->ark_mtimes_data);
+    ark_mem->ark_mass_mult++;
+    if (retval != ARK_SUCCESS)  return (ARK_MASSMULT_FAIL);
+  }
 
   /* Iterate over each prior stage updating rhs */
   /*    Explicit pieces */
@@ -3666,6 +3728,10 @@ static void arkSet(ARKodeMem ark_mem)
     ark_mem->ark_gammap = ark_mem->ark_gamma;
   ark_mem->ark_gamrat = (ark_mem->ark_firststage) ? 
     ONE : ark_mem->ark_gamma / ark_mem->ark_gammap;  /* protect x/x != 1.0 */
+
+  /* return with success */
+  return (ARK_SUCCESS);
+
 }
 
 
@@ -3675,10 +3741,13 @@ static void arkSet(ARKodeMem ark_mem)
  This routine calculates the final RK solution using the existing 
  data.  This solution is placed directly in ark_y.  This routine 
  also computes the error estimate ||y-ytilde||_WRMS, where ytilde 
- is the embedded solution, and the norm weights come from ark_ewt.  
- This norm value is returned.  The vector form of this estimated 
- error (y-ytilde) is stored in ark_tempv, in case the calling 
- routine wishes to examine the error locations.
+ is the embedded solution, and the norm weights come from 
+ ark_ewt.  This norm value is returned.  The vector form of this 
+ estimated error (y-ytilde) is stored in ark_tempv, in case the 
+ calling routine wishes to examine the error locations.
+
+ Note: at this point in the step, the vectors ark_tempv, 
+ ark_sdata and ark_ycur may all be used as temporary vectors.
 
  For now, we assume that the ODE is of the form 
     y' = fe(t,y) + fi(t,y)
@@ -3687,40 +3756,99 @@ static void arkSet(ARKodeMem ark_mem)
  mass matrices, this routine will perform two additional solves
  to compute the solution and embedding.
 ---------------------------------------------------------------*/
-static realtype arkComputeSolutions(ARKodeMem ark_mem)
+static int arkComputeSolutions(ARKodeMem ark_mem, realtype *dsm)
 {
   /* local data */
   realtype hb;
-  int j;
+  int ier, j;
   N_Vector y    = ark_mem->ark_y;
   N_Vector yerr = ark_mem->ark_tempv;
+  N_Vector tmp1 = ark_mem->ark_sdata;
+  N_Vector tmp2 = ark_mem->ark_ycur;
 
-  /* Initialize solution to yn, error estimate to zero */
-  N_VScale(ONE, ark_mem->ark_ynew, y);
-  N_VConst(ZERO, yerr);
+  /* Compute updated solution and error estimate based on whether
+     a non-identity mass matrix is present */
+  if (ark_mem->ark_mass_matrix) {   /* M != I */
 
-  /* Iterate over each stage, updating solution and error estimate */
-  for (j=0; j<ark_mem->ark_stages; j++) {
+    /* setup mass matrix, using y, tmp1, tmp2 as temporaries */
+    if (ark_mem->ark_MassSetupNonNull) {
+      ier = ark_mem->ark_msetup(ark_mem, y, tmp1, tmp2);
+      if (ier != ARK_SUCCESS)  return(ARK_MASSSETUP_FAIL);
+    }
 
-    /* solution */
-    hb = ark_mem->ark_h * ark_mem->ark_b[j];
-    if (!ark_mem->ark_implicit)
-      N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, y, y);
-    if (!ark_mem->ark_explicit)
-      N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, y, y);
+    /* compute y RHS (store in y) */
+    N_VConst(ZERO, y);
+    for (j=0; j<ark_mem->ark_stages; j++) {
+      hb = ark_mem->ark_h * ark_mem->ark_b[j];
+      if (!ark_mem->ark_implicit)
+	N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, y, y);
+      if (!ark_mem->ark_explicit)
+	N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, y, y);
+    }
+    
+    /* solve for y update (stored in y) */
+    ier = ark_mem->ark_msolve(ark_mem, y, ark_mem->ark_ewt); 
+    ark_mem->ark_mass_solves++;
+    if (ier < 0) {
+      ark_mem->ark_nmassfails++;
+      *dsm = 2.0;         /* indicate too much error, step with smaller step */
+      N_VScale(ONE, ark_mem->ark_ynew, y);      /* place old solution into y */
+      return(CONV_FAIL);
+    }
 
-    /* error */
-    hb = ark_mem->ark_h * (ark_mem->ark_b[j] - ark_mem->ark_b2[j]);
-    if (!ark_mem->ark_implicit)
-      N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, yerr, yerr);
-    if (!ark_mem->ark_explicit)
-      N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, yerr, yerr);
+    /* compute y = ynew + update */
+    N_VLinearSum(ONE, ark_mem->ark_ynew, ONE, y, y);
+
+
+    /* compute yerr RHS (store in yerr) */
+    N_VConst(ZERO, yerr);
+    for (j=0; j<ark_mem->ark_stages; j++) {
+      hb = ark_mem->ark_h * (ark_mem->ark_b[j] - ark_mem->ark_b2[j]);
+      if (!ark_mem->ark_implicit)
+	N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, yerr, yerr);
+      if (!ark_mem->ark_explicit)
+	N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, yerr, yerr);
+    }
+
+    /* solve for yerr */
+    ier = ark_mem->ark_msolve(ark_mem, yerr, ark_mem->ark_ewt); 
+    ark_mem->ark_mass_solves++;
+    if (ier < 0) {
+      ark_mem->ark_nmassfails++;
+      *dsm = 2.0;         /* indicate too much error, step with smaller step */
+      return(CONV_FAIL);
+    }
+
+  } else {                          /* M == I */
+
+    /* Initialize solution to yn, error estimate to zero */
+    N_VScale(ONE, ark_mem->ark_ynew, y);
+    N_VConst(ZERO, yerr);
+
+    /* Iterate over each stage, updating solution and error estimate */
+    for (j=0; j<ark_mem->ark_stages; j++) {
+      
+      /* solution */
+      hb = ark_mem->ark_h * ark_mem->ark_b[j];
+      if (!ark_mem->ark_implicit)
+	N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, y, y);
+      if (!ark_mem->ark_explicit)
+	N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, y, y);
+      
+      /* error */
+      hb = ark_mem->ark_h * (ark_mem->ark_b[j] - ark_mem->ark_b2[j]);
+      if (!ark_mem->ark_implicit)
+	N_VLinearSum(hb, ark_mem->ark_Fe[j], ONE, yerr, yerr);
+      if (!ark_mem->ark_explicit)
+	N_VLinearSum(hb, ark_mem->ark_Fi[j], ONE, yerr, yerr);
+      
+    }
 
   }
 
-  /* return error norm */
-  return(N_VWrmsNorm(yerr, ark_mem->ark_ewt));
-  
+  /* fill error norm and return */
+  *dsm = N_VWrmsNorm(yerr, ark_mem->ark_ewt);
+  return(ARK_SUCCESS);
 }
 
 
@@ -3866,6 +3994,19 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
     if (!ark_mem->ark_implicit) 
       N_VLinearSum(ONE, ark_mem->ark_Fe[ark_mem->ark_stages-1], 
 		   ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
+
+    /* if M!=I, update fnew with M^{-1}*fnew (note, mass matrix already current) */
+    if (ark_mem->ark_mass_matrix) {   /* M != I */
+      retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt); 
+      ark_mem->ark_mass_solves++;
+      if (retval != ARK_SUCCESS) {
+	ark_mem->ark_nmassfails++;
+	arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
+			"arkCompleteStep", "Mass matrix solver failure");
+	return(ARK_MASSSOLVE_FAIL);
+      }
+    }
+
   } else {
     /* NOTE: new y value is currently in yold, due to swap above */
     retval = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_yold, 
@@ -3939,22 +4080,41 @@ static int arkNls(ARKodeMem ark_mem, int nflag)
  combines this old data with the current ODE RHS vector, 
  fy = f(t,y), to compute the nonlinear residual r.
 
+ At the ith stage, we compute 
+    r = -M*zi + M*yn + h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) 
+                     + h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
+    r = -M*zi + gamma*Fi(zi) + M*yn + data
+ where
+    zi is stored in y
+    Fi(zi) is stored in fy
+    (M*yn+data) is stored in ark_mem->ark_sdata,
+ so we really just compute
+    r = -M*y + gamma*fy + ark_mem->ark_sdata
+
  Possible return values:  ARK_SUCCESS  or  ARK_RHSFUNC_FAIL
 ---------------------------------------------------------------*/
 static int arkNlsResid(ARKodeMem ark_mem, N_Vector y, 
 		       N_Vector fy, N_Vector r)
 {
-  /* At the ith stage, we compute 
-       r = -zi + yn + h*sum_{j=0}^{i-1} Ae(i,j)*Fe(j) + h*sum_{j=0}^{i} Ai(i,j)*Fi(j)
-       r = -zi + gamma*Fi(zi) + yn + data
-     where
-       zi is stored in y
-       Fi(zi) is stored in fy
-       (yn+data) is stored in ark_mem->ark_sdata,
-     so we really just compute
-       r = -y + gamma*fy + ark_mem->ark_sdata
-   */
-  N_VLinearSum(-ONE, y, ONE, ark_mem->ark_sdata, r);
+
+  /* temporary variables */
+  int retval;
+
+  /* put M*y in r */
+  if (ark_mem->ark_mass_matrix) {
+    retval = ark_mem->ark_mtimes(y, r, ark_mem->ark_tn, 
+				 ark_mem->ark_mtimes_data);
+    ark_mem->ark_mass_mult++;
+    if (retval != ARK_SUCCESS)  
+      return (ARK_MASSMULT_FAIL);
+  } else {
+    N_VScale(ONE, y, r);
+  }
+
+  /* update with sdata */
+  N_VLinearSum(-ONE, r, ONE, ark_mem->ark_sdata, r);
+
+  /* update with gamma*fy */
   N_VLinearSum(ark_mem->ark_gamma, fy, ONE, r, r);
 
   return(ARK_SUCCESS);
@@ -4719,7 +4879,9 @@ static int arkDenseEval(ARKodeMem ark_mem, realtype tau,
 /*---------------------------------------------------------------
  arkFullRHS
 
- This routine computes the full ODE RHS [fe(t,y) + fi(t,y)].
+ This routine computes the full ODE RHS [fe(t,y) + fi(t,y)].  If
+ a non-identity mass matrix is defined for the problem, it fills
+ the return array with M^{-1}*[fe(t,y) + fi(t,y)]
 
  Inputs (unchanged): ark_mem, t, y
  Output: f
@@ -4729,6 +4891,14 @@ static int arkFullRHS(ARKodeMem ark_mem, realtype t,
 		      N_Vector y, N_Vector tmp, N_Vector f)
 {
   int retval;
+
+  /* if the problem involves a non-identity mass matrix and setup is
+     required, do so here (use f, tmp and ark_sdata as a temporaries) */
+  if (ark_mem->ark_mass_matrix && ark_mem->ark_MassSetupNonNull) {
+    retval = ark_mem->ark_msetup(ark_mem, f, tmp, ark_mem->ark_sdata);
+    if (retval != ARK_SUCCESS)  return(ARK_MASSSETUP_FAIL);
+  }
+
 
   /* explicit problem -- only call fe */
   if (ark_mem->ark_explicit) {
@@ -4775,6 +4945,18 @@ static int arkFullRHS(ARKodeMem ark_mem, realtype t,
       return(ARK_RHSFUNC_FAIL);
     }
     N_VLinearSum(ONE, tmp, ONE, f, f);
+  }
+
+  /* if the problem involves a non-identity mass matrix, perform solve here */
+  if (ark_mem->ark_mass_matrix) {
+    retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_ewt); 
+    ark_mem->ark_mass_solves++;
+    if (retval != ARK_SUCCESS) {
+      ark_mem->ark_nmassfails++;
+      arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
+		      "arkFullRHS", "Mass matrix solver failure");
+      return(ARK_MASSSOLVE_FAIL);
+    }
   }
   
   return(ARK_SUCCESS);

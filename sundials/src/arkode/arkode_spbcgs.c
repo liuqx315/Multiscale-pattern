@@ -35,11 +35,10 @@ static void ARKSpbcgFree(ARKodeMem ark_mem);
 
 /* ARKSPBCG minit, msetup, msolve, and mfree routines */
 static int ARKMassSpbcgInit(ARKodeMem ark_mem);
-static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			     N_Vector vtemp1, N_Vector vtemp2, 
-			     N_Vector vtemp3);
+static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			     N_Vector vtemp2, N_Vector vtemp3);
 static int ARKMassSpbcgSolve(ARKodeMem ark_mem, N_Vector b, 
-			     N_Vector weight, N_Vector ynow);
+			     N_Vector weight);
 static void ARKMassSpbcgFree(ARKodeMem ark_mem);
 
 
@@ -88,6 +87,7 @@ int ARKSpbcg(void *arkode_mem, int pretype, int maxl)
   ark_mem->ark_lsetup = ARKSpbcgSetup;
   ark_mem->ark_lsolve = ARKSpbcgSolve;
   ark_mem->ark_lfree  = ARKSpbcgFree;
+  ark_mem->ark_lsolve_type = 0;
 
   /* Get memory for ARKSpilsMemRec */
   arkspils_mem = NULL;
@@ -428,13 +428,14 @@ static void ARKSpbcgFree(ARKodeMem ark_mem)
  ARKMassSpbcgSetup, ARKMassSpbcgSolve, and ARKMassSpbcgFree, 
  respectively. It allocates memory for a structure of type 
  ARKSpilsMassMemRec and sets the ark_mass_mem field in
- (*arkode_mem) to the address of this structure. It sets various
- fields in the ARKSpilsMassMemRec structure, allocates memory 
- for ytemp and x, and calls SpbcgMalloc to allocate memory for 
- the Spbcg solver.
+ (*arkode_mem) to the address of this structure. It sets 
+ MassSetupNonNull in (*arkode_mem), and sets various fields in
+ the ARKSpilsMassMemRec structure, allocates memory for ytemp 
+ and x, and calls SpbcgMalloc to allocate memory for the Spbcg 
+ solver.
 ---------------------------------------------------------------*/
 int ARKMassSpbcg(void *arkode_mem, int pretype, int maxl, 
-		 ARKSpilsMassTimesVecFn mtimes)
+		 ARKMTimesFn mtimes, void *mtimes_data)
 {
   ARKodeMem ark_mem;
   ARKSpilsMassMem arkspils_mem;
@@ -464,6 +465,7 @@ int ARKMassSpbcg(void *arkode_mem, int pretype, int maxl,
   ark_mem->ark_msetup = ARKMassSpbcgSetup;
   ark_mem->ark_msolve = ARKMassSpbcgSolve;
   ark_mem->ark_mfree  = ARKMassSpbcgFree;
+  ark_mem->ark_msolve_type = 0;
 
   /* Get memory for ARKSpilsMassMemRec */
   arkspils_mem = NULL;
@@ -475,18 +477,15 @@ int ARKMassSpbcg(void *arkode_mem, int pretype, int maxl,
   }
 
   /* Set mass-matrix-vector product routine */
-  arkspils_mem->s_mtimes = mtimes;
+  ark_mem->ark_mtimes      = mtimes;
+  ark_mem->ark_mtimes_data = mtimes_data;
 
   /* Set ILS type */
   arkspils_mem->s_type = SPILS_SPBCG;
 
   /* Set Spbcg parameters that have been passed in call sequence */
-  arkspils_mem->s_pretype = pretype;
+  arkspils_mem->s_pretype    = pretype;
   mxl = arkspils_mem->s_maxl = (maxl <= 0) ? ARKSPILS_MAXL : maxl;
-
-  /* Set defaults for mass-matrix-related fields */
-  arkspils_mem->s_mtimes = NULL;
-  arkspils_mem->s_m_data = NULL;
 
   /* Set defaults for preconditioner-related fields */
   arkspils_mem->s_pset   = NULL;
@@ -497,7 +496,7 @@ int ARKMassSpbcg(void *arkode_mem, int pretype, int maxl,
   /* Set default values for the rest of the Spbcg parameters */
   arkspils_mem->s_eplifac = ARKSPILS_EPLIN;
   arkspils_mem->s_last_flag = ARKSPILS_SUCCESS;
-  ark_mem->ark_setupNonNull = FALSE;
+  ark_mem->ark_MassSetupNonNull = FALSE;
 
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
@@ -570,7 +569,6 @@ static int ARKMassSpbcgInit(ARKodeMem ark_mem)
   /* Initialize counters */
   arkspils_mem->s_npe = arkspils_mem->s_nli = 0;
   arkspils_mem->s_nps = arkspils_mem->s_ncfl = 0;
-  arkspils_mem->s_nmtimes = 0;
 
   /* Check for legal combination pretype - psolve */
   if ((arkspils_mem->s_pretype != PREC_NONE) && 
@@ -581,8 +579,11 @@ static int ARKMassSpbcgInit(ARKodeMem ark_mem)
     return(-1);
   }
 
-  /* Set mass matrix data fields */
-  arkspils_mem->s_m_data = ark_mem->ark_user_data;
+  /* Set MassSetupNonNull = TRUE iff there is preconditioning
+     (pretype != PREC_NONE)  and there is a preconditioning
+     setup phase (pset != NULL) */
+  ark_mem->ark_MassSetupNonNull = (arkspils_mem->s_pretype != PREC_NONE) 
+    && (arkspils_mem->s_pset != NULL);
 
   /*  Set maxl in the SPBCG memory in case it was changed by the user */
   spbcg_mem->l_max = arkspils_mem->s_maxl;
@@ -598,9 +599,8 @@ static int ARKMassSpbcgInit(ARKodeMem ark_mem)
  This routine does the setup operations for the Spbcg mass matrix 
  solver. It calls pset and increments npe.
 ---------------------------------------------------------------*/
-static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			     N_Vector vtemp1, N_Vector vtemp2, 
-			     N_Vector vtemp3)
+static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			     N_Vector vtemp2, N_Vector vtemp3)
 {
   booleantype jbad, jok;
   realtype dgamma;
@@ -610,9 +610,9 @@ static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector ypred,
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
   /* Call pset routine and possibly reset jcur */
-  retval = arkspils_mem->s_pset(ark_mem->ark_tn, ypred, 
-				arkspils_mem->s_P_data, vtemp1, 
-				vtemp2, vtemp3);
+  retval = arkspils_mem->s_pset(ark_mem->ark_tn, 
+				arkspils_mem->s_P_data, 
+				vtemp1, vtemp2, vtemp3);
   arkspils_mem->s_npe++;
   if (retval < 0) {
     arkProcessError(ark_mem, SPBCG_PSET_FAIL_UNREC, "ARKSPBCG", 
@@ -646,7 +646,7 @@ static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector ypred,
  value is set according to the success of SpbcgSolve.
 ---------------------------------------------------------------*/
 static int ARKMassSpbcgSolve(ARKodeMem ark_mem, N_Vector b, 
-			     N_Vector weight, N_Vector ynow)
+			     N_Vector weight)
 {
   realtype bnorm, res_norm;
   ARKSpilsMassMem arkspils_mem;
@@ -662,9 +662,6 @@ static int ARKMassSpbcgSolve(ARKodeMem ark_mem, N_Vector b,
   if (bnorm <= arkspils_mem->s_deltar) 
     return(0);
 
-  /* Set ycur for use by the Mtimes and MPsolve routines */
-  arkspils_mem->s_ycur = ynow;
-
   /* Set inputs delta and initial guess x = 0 to SpbcgSolve */  
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;
   N_VConst(ZERO, arkspils_mem->s_x);
@@ -672,8 +669,8 @@ static int ARKMassSpbcgSolve(ARKodeMem ark_mem, N_Vector b,
   /* Call SpbcgSolve and copy x to b */
   retval = SpbcgSolve(spbcg_mem, ark_mem, arkspils_mem->s_x, b, 
 		      arkspils_mem->s_pretype, arkspils_mem->s_delta,
-		      ark_mem, weight, weight, ARKSpilsAtimes, 
-		      ARKSpilsPSolve, &res_norm, &nli_inc, &nps_inc);
+		      ark_mem, weight, weight, ARKSpilsMtimes, 
+		      ARKSpilsMPSolve, &res_norm, &nli_inc, &nps_inc);
   N_VScale(ONE, arkspils_mem->s_x, b);
   
   /* Increment counters nli, nps, and ncfl */

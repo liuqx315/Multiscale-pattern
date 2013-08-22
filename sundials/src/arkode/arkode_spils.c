@@ -429,43 +429,6 @@ int ARKSpilsSetJacTimesVecFn(void *arkode_mem,
 
 
 /*---------------------------------------------------------------
- ARKSpilsSetMassTimesVecFn
----------------------------------------------------------------*/
-int ARKSpilsSetMassTimesVecFn(void *arkode_mem, 
-			      ARKSpilsMassTimesVecFn mtv)
-{
-  ARKodeMem ark_mem;
-  ARKSpilsMassMem arkspils_mem;
-
-  /* Return immediately if arkode_mem is NULL */
-  if (arkode_mem == NULL) {
-    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
-		    "ARKSpilsSetMassTimesVecFn", MSGS_ARKMEM_NULL);
-    return(ARKSPILS_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem) arkode_mem;
-
-  if (ark_mem->ark_mass_mem == NULL) {
-    arkProcessError(ark_mem, ARKSPILS_MASSMEM_NULL, "ARKSPILS", 
-		    "ARKSpilsSetMassTimesVecFn", MSGS_MASSMEM_NULL);
-    return(ARKSPILS_MASSMEM_NULL);
-  }
-  arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
-
-  if (mtv != NULL) {
-    arkspils_mem->s_mtimes = mtv;
-  } else {
-    arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPILS", 
-		    "ARKSpilsSetMassTimesVecFn", 
-		    "MassTimesVecFn must be non-NULL");
-    return(ARKSPILS_ILL_INPUT);
-  }
-
-  return(ARKSPILS_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
  ARKSpilsGetWorkSpace
 ---------------------------------------------------------------*/
 int ARKSpilsGetWorkSpace(void *arkode_mem, long int *lenrwLS, 
@@ -835,35 +798,6 @@ int ARKSpilsGetNumJtimesEvals(void *arkode_mem, long int *njvevals)
 
 
 /*---------------------------------------------------------------
- ARKSpilsGetNumMtimesEvals
----------------------------------------------------------------*/
-int ARKSpilsGetNumMtimesEvals(void *arkode_mem, long int *nmvevals)
-{
-  ARKodeMem ark_mem;
-  ARKSpilsMassMem arkspils_mem;
-
-  /* Return immediately if arkode_mem is NULL */
-  if (arkode_mem == NULL) {
-    arkProcessError(NULL, ARKSPILS_MEM_NULL, "ARKSPILS", 
-		    "ARKSpilsGetNumMtimesEvals", MSGS_ARKMEM_NULL);
-    return(ARKSPILS_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem) arkode_mem;
-
-  if (ark_mem->ark_mass_mem == NULL) {
-    arkProcessError(ark_mem, ARKSPILS_MASSMEM_NULL, "ARKSPILS", 
-		    "ARKSpilsGetNumMtimesEvals", MSGS_MASSMEM_NULL);
-    return(ARKSPILS_MASSMEM_NULL);
-  }
-  arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
-
-  *nmvevals = arkspils_mem->s_nmtimes;
-
-  return(ARKSPILS_SUCCESS);
-}
-
-
-/*---------------------------------------------------------------
  ARKSpilsGetNumRhsEvals
 ---------------------------------------------------------------*/
 int ARKSpilsGetNumRhsEvals(void *arkode_mem, long int *nfevalsLS)
@@ -1083,11 +1017,9 @@ int ARKSpilsMtimes(void *arkode_mem, N_Vector v, N_Vector z)
   ark_mem = (ARKodeMem) arkode_mem;
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
-  retval = arkspils_mem->s_mtimes(v, z, ark_mem->ark_tn, 
-				  arkspils_mem->s_ycur, 
-				  arkspils_mem->s_m_data, 
-				  arkspils_mem->s_ytemp);
-  arkspils_mem->s_nmtimes++;
+  retval = ark_mem->ark_mtimes(v, z, ark_mem->ark_tn, 
+			       ark_mem->ark_mtimes_data);
+  ark_mem->ark_mass_mult++;
 
   return(retval);
 }
@@ -1115,8 +1047,7 @@ int ARKSpilsMPSolve(void *arkode_mem, N_Vector r, N_Vector z, int lr)
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
   /* This call is counted in nps within the ARKSp***Solve routine */
-  retval = arkspils_mem->s_psolve(ark_mem->ark_tn, 
-				  arkspils_mem->s_ycur, r, z, 
+  retval = arkspils_mem->s_psolve(ark_mem->ark_tn, r, z, 
 				  arkspils_mem->s_delta, lr, 
 				  arkspils_mem->s_P_data, 
 				  arkspils_mem->s_ytemp);
