@@ -32,12 +32,12 @@ static void arkBandFree(ARKodeMem ark_mem);
 
 /* ARKBAND minit, msetup, msolve, and mfree routines */
 static int arkMassBandInit(ARKodeMem ark_mem);
-static int arkMassBandSetup(ARKodeMem ark_mem, N_Vector ypred,
-			    N_Vector vtemp1, N_Vector vtemp2, 
-			    N_Vector vtemp3);
-static int arkMassBandSolve(ARKodeMem ark_mem, N_Vector b, N_Vector weight,
-			    N_Vector ycur);
+static int arkMassBandSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			    N_Vector vtemp2, N_Vector vtemp3);
+static int arkMassBandSolve(ARKodeMem ark_mem, N_Vector b, N_Vector weight);
 static void arkMassBandFree(ARKodeMem ark_mem);
+static int arkMassBandMultiply(N_Vector v, N_Vector Mv, 
+			       realtype t, void *user_data);
 
 
 /*---------------------------------------------------------------
@@ -52,9 +52,9 @@ static void arkMassBandFree(ARKodeMem ark_mem);
  ARKDlsMemRec and sets the ark_lmem field in (*arkode_mem) to the
  address of this structure.  It sets setupNonNull in (*arkode_mem) to be
  TRUE, d_mu to be mupper, d_ml to be mlower, and the d_jac field to be 
- arkDlsBandDQJac.
- Finally, it allocates memory for M, savedJ, and pivot.  The ARKBand
- return value is SUCCESS = 0, LMEM_FAIL = -1, or LIN_ILL_INPUT = -2.
+ arkDlsBandDQJac.  Finally, it allocates memory for M, savedJ, and pivot.  
+ The ARKBand return value is SUCCESS = 0, LMEM_FAIL = -1, or 
+ LIN_ILL_INPUT = -2.
 
  NOTE: The band linear solver assumes a serial implementation
        of the NVECTOR package. Therefore, ARKBand will first 
@@ -87,6 +87,7 @@ int ARKBand(void *arkode_mem, long int N, long int mupper, long int mlower)
   ark_mem->ark_lsetup = arkBandSetup;
   ark_mem->ark_lsolve = arkBandSolve;
   ark_mem->ark_lfree  = arkBandFree;
+  ark_mem->ark_lsolve_type = 2;
   
   /* Get memory for ARKDlsMemRec */
   arkdls_mem = NULL;
@@ -231,7 +232,9 @@ static int arkBandSetup(ARKodeMem ark_mem, int convfail,
     *jcurPtr = TRUE;
     SetToZero(arkdls_mem->d_M); 
 
-    retval = arkdls_mem->d_bjac(arkdls_mem->d_n, arkdls_mem->d_mu, arkdls_mem->d_ml, ark_mem->ark_tn, ypred, fpred, arkdls_mem->d_M, arkdls_mem->d_J_data, vtemp1, vtemp2, vtemp3);
+    retval = arkdls_mem->d_bjac(arkdls_mem->d_n, arkdls_mem->d_mu, arkdls_mem->d_ml, 
+				ark_mem->ark_tn, ypred, fpred, arkdls_mem->d_M, 
+				arkdls_mem->d_J_data, vtemp1, vtemp2, vtemp3);
     if (retval < 0) {
       arkProcessError(ark_mem, ARKDLS_JACFUNC_UNRECVR, "ARKBAND", "arkBandSetup", MSGD_JACFUNC_FAILED);
       arkdls_mem->d_last_flag = ARKDLS_JACFUNC_UNRECVR;
@@ -256,7 +259,7 @@ static int arkBandSetup(ARKodeMem ark_mem, int convfail,
     arkdls_mass_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
     SetToZero(arkdls_mass_mem->d_M);
     retval = arkdls_mass_mem->d_bmass(arkdls_mass_mem->d_n, arkdls_mass_mem->d_mu, 
-				      arkdls_mass_mem->d_ml, ark_mem->ark_tn, ypred, 
+				      arkdls_mass_mem->d_ml, ark_mem->ark_tn, 
 				      arkdls_mass_mem->d_M, arkdls_mass_mem->d_M_data, 
 				      vtemp1, vtemp2, vtemp3);
     arkdls_mass_mem->d_nme++;
@@ -358,9 +361,10 @@ static void arkBandFree(ARKodeMem ark_mem)
  arkMassBandFree, respectively.  It allocates memory for a 
  structure of type ARKDlsMassMemRec and sets the ark_mass_mem 
  field in (*arkode_mem) to the address of this structure.  It 
- sets d_mu to be mupper and d_ml to be mlower. Finally, it 
- allocates memory for M and pivot.  The ARKMassBand return 
- value is SUCCESS = 0, LMEM_FAIL = -1, or LIN_ILL_INPUT = -2.
+ sets MassSetupNonNull in (*arkode_mem) to be TRUE, d_mu to be 
+ mupper and d_ml to be mlower. Finally, it allocates memory for 
+ M and pivot.  The ARKMassBand return value is SUCCESS = 0, 
+ LMEM_FAIL = -1, or LIN_ILL_INPUT = -2.
 
  NOTE: The band linear solver assumes a serial implementation
        of the NVECTOR package. Therefore, ARKMassBand will first 
@@ -395,6 +399,9 @@ int ARKMassBand(void *arkode_mem, long int N, long int mupper,
   ark_mem->ark_msetup = arkMassBandSetup;
   ark_mem->ark_msolve = arkMassBandSolve;
   ark_mem->ark_mfree  = arkMassBandFree;
+  ark_mem->ark_mtimes = arkMassBandMultiply;
+  ark_mem->ark_mtimes_data = (void *) ark_mem;
+  ark_mem->ark_msolve_type = 2;
   
   /* Get memory for ARKDlsMassMemRec */
   arkdls_mem = NULL;
@@ -412,6 +419,7 @@ int ARKMassBand(void *arkode_mem, long int N, long int mupper,
   arkdls_mem->d_M_data = NULL;
 
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
+  ark_mem->ark_MassSetupNonNull = TRUE;
 
   /* Load problem dimension */
   arkdls_mem->d_n = N;
@@ -480,9 +488,8 @@ static int arkMassBandInit(ARKodeMem ark_mem)
  solver. It constructs the mass matrix, M, updates counters, 
  and calls the band LU factorization routine.
 ---------------------------------------------------------------*/
-static int arkMassBandSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			    N_Vector vtemp1, N_Vector vtemp2, 
-			    N_Vector vtemp3)
+static int arkMassBandSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			    N_Vector vtemp2, N_Vector vtemp3)
 {
   booleantype jbad, jok;
   realtype dgamma;
@@ -493,9 +500,10 @@ static int arkMassBandSetup(ARKodeMem ark_mem, N_Vector ypred,
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
 
   SetToZero(arkdls_mem->d_M); 
-  retval = arkdls_mem->d_bmass(arkdls_mem->d_n, arkdls_mem->d_mu, arkdls_mem->d_ml, 
-			       ark_mem->ark_tn, ypred, arkdls_mem->d_M, 
-			       arkdls_mem->d_M_data, vtemp1, vtemp2, vtemp3);
+  retval = arkdls_mem->d_bmass(arkdls_mem->d_n, arkdls_mem->d_mu, 
+			       arkdls_mem->d_ml, ark_mem->ark_tn, 
+			       arkdls_mem->d_M, arkdls_mem->d_M_data, 
+			       vtemp1, vtemp2, vtemp3);
   arkdls_mem->d_nme++;
   if (retval < 0) {
     arkProcessError(ark_mem, ARKDLS_MASSFUNC_UNRECVR, "ARKBAND", "arkMassBandSetup", 
@@ -529,7 +537,7 @@ static int arkMassBandSetup(ARKodeMem ark_mem, N_Vector ypred,
  return value is 0.
 ---------------------------------------------------------------*/
 static int arkMassBandSolve(ARKodeMem ark_mem, N_Vector b, 
-			    N_Vector weight, N_Vector ycur)
+			    N_Vector weight)
 {
   ARKDlsMassMem arkdls_mem;
   realtype *bd;
@@ -556,6 +564,50 @@ static void arkMassBandFree(ARKodeMem ark_mem)
   DestroyArray(arkdls_mem->d_lpivots);
   free(arkdls_mem);
   ark_mem->ark_mass_mem = NULL;
+}
+
+
+/*---------------------------------------------------------------
+ arkMassBandMultiply performs a matrix-vector product, 
+ multiplying the current mass matrix by a given vector.
+---------------------------------------------------------------*/                  
+static int arkMassBandMultiply(N_Vector v, N_Vector Mv, 
+			       realtype t, void *arkode_mem)
+{
+  /* extract the DlsMassMem structure from the user_data pointer */
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKBAND", 
+		    "arkMassBandMultiply", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  /* zero out the result */
+  N_VConst(0.0, Mv);
+
+  /* access the vector arrays (since they must be serial vectors) */
+  realtype *vdata=NULL, *Mvdata=NULL;
+  vdata = N_VGetArrayPointer(v);
+  Mvdata = N_VGetArrayPointer(Mv);
+  if (vdata == NULL || Mvdata == NULL)
+    return(1);
+
+  /* perform matrix-vector product and return */
+  realtype *Mcol_j;
+  long int colSize = arkdls_mem->d_M->mu + arkdls_mem->d_M->ml + 1;
+  long int s_mu = arkdls_mem->d_M->s_mu;
+  long int i, j;
+  for (j=0; j<arkdls_mem->d_M->M; j++) {
+    Mcol_j = arkdls_mem->d_M->cols[j] + arkdls_mem->d_M->s_mu - arkdls_mem->d_M->mu;
+    for (i=0; i<colSize; i++) 
+      Mvdata[i+j-s_mu] += Mcol_j[i]*vdata[j];
+  }
+  return(0);
 }
 
 

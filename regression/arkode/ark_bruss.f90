@@ -360,16 +360,7 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
      DJac(3,2) = 0.0
      DJac(3,3) = -1.d0/ep - u
   else 
-     DJac(1,1) = 0.d0
-     DJac(1,2) = 0.d0
-     DJac(1,3) = 0.d0
-
-     DJac(2,1) = 0.d0
-     DJac(2,2) = 0.d0
-     DJac(2,3) = 0.d0
-
-     DJac(3,1) = 0.d0
-     DJac(3,2) = 0.d0
+     DJac = 0.d0
      DJac(3,3) = -1.d0/ep
   end if
   ier = 0

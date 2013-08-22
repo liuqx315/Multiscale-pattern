@@ -276,9 +276,9 @@ typedef int (*ARKSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv,
    0   if successful,
    < 0 for an unrecoverable error (integration is halted).
 ---------------------------------------------------------------*/
-typedef int (*ARKSpilsMassPrecSetupFn)(realtype t, N_Vector y, 
-				       void *user_data, N_Vector tmp1,
-				       N_Vector tmp2, N_Vector tmp3);
+typedef int (*ARKSpilsMassPrecSetupFn)(realtype t, void *user_data, 
+				       N_Vector tmp1, N_Vector tmp2, 
+				       N_Vector tmp3);
 
 
 /*---------------------------------------------------------------
@@ -324,41 +324,10 @@ typedef int (*ARKSpilsMassPrecSetupFn)(realtype t, N_Vector y,
    0 if successful,
    negative for an unrecoverable error (integration is halted).
 ---------------------------------------------------------------*/
-typedef int (*ARKSpilsMassPrecSolveFn)(realtype t, N_Vector y, 
-				       N_Vector r, N_Vector z, 
-				       realtype delta, int lr, 
-				       void *user_data, N_Vector tmp);
-
-
-/*---------------------------------------------------------------
- Type: ARKSpilsMassTimesVecFn
-
- The user-supplied function mtimes is to generate the product
- M*v for given v, where M is the mass matrix, or an 
- approximation to it, and v is a given vector. It should return 
- 0 if successful or a negative value for an unrecoverable failure.
-
- A function mtimes must have the prototype given below. Its
- parameters are as follows:
-
-   v        is the N_Vector to be multiplied by M.
-
-   Mv       is the output N_Vector containing M*v.
-
-   t        is the current value of the independent variable.
-
-   y        is the current value of the dependent variable
-            vector.
-
-   user_data   is a pointer to user data, the same as the user_data
-            parameter passed to the ARKodeSetUserData function.
-
-   tmp      is a pointer to memory allocated for an N_Vector
-            which can be used by Jtimes for work space.
----------------------------------------------------------------*/
-typedef int (*ARKSpilsMassTimesVecFn)(N_Vector v, N_Vector Mv, 
-				      realtype t, N_Vector y, 
-				      void *user_data, N_Vector tmp);
+typedef int (*ARKSpilsMassPrecSolveFn)(realtype t, N_Vector r, 
+				       N_Vector z, realtype delta, 
+				       int lr, void *user_data, 
+				       N_Vector tmp);
 
 
 /*---------------------------------------------------------------
@@ -398,9 +367,6 @@ typedef int (*ARKSpilsMassTimesVecFn)(N_Vector v, N_Vector Mv,
                 is to use an internal finite difference 
 		approximation routine.
 
- ARKSpilsSetMassTimesVecFn specifies the mtimes function. 
-                There is no default.
-
  The return value of ARKSpilsSet* is one of:
     ARKSPILS_SUCCESS      if successful
     ARKSPILS_MEM_NULL     if the arkode memory was NULL
@@ -424,8 +390,6 @@ SUNDIALS_EXPORT int ARKSpilsSetMassPreconditioner(void *arkode_mem,
 						  ARKSpilsMassPrecSolveFn psolve);
 SUNDIALS_EXPORT int ARKSpilsSetJacTimesVecFn(void *arkode_mem, 
 					     ARKSpilsJacTimesVecFn jtv);
-SUNDIALS_EXPORT int ARKSpilsSetMassTimesVecFn(void *arkode_mem, 
-					      ARKSpilsMassTimesVecFn mtv);
 
 
 /*---------------------------------------------------------------
@@ -463,8 +427,6 @@ SUNDIALS_EXPORT int ARKSpilsSetMassTimesVecFn(void *arkode_mem,
                  convergence failures.
 
  ARKSpilsGetNumJtimesEvals returns the number of calls to jtimes.
-
- ARKSpilsGetNumMtimesEvals returns the number of calls to mtimes.
 
  ARKSpilsGetNumRhsEvals returns the number of calls to the user
                  f routine due to finite difference Jacobian
@@ -506,8 +468,6 @@ SUNDIALS_EXPORT int ARKSpilsGetNumMassConvFails(void *arkode_mem,
 						long int *nmcfails);
 SUNDIALS_EXPORT int ARKSpilsGetNumJtimesEvals(void *arkode_mem, 
 					      long int *njvevals);
-SUNDIALS_EXPORT int ARKSpilsGetNumMtimesEvals(void *arkode_mem, 
-					      long int *nmvevals);
 SUNDIALS_EXPORT int ARKSpilsGetNumRhsEvals(void *arkode_mem, 
 					   long int *nfevalsLS); 
 SUNDIALS_EXPORT int ARKSpilsGetLastFlag(void *arkode_mem, 

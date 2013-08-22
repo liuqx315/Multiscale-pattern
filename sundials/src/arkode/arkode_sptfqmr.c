@@ -33,11 +33,10 @@ static void ARKSptfqmrFree(ARKodeMem ark_mem);
 
 /* ARKSPTFQMR minit, msetup, msolve, and mfree routines */
 static int ARKMassSptfqmrInit(ARKodeMem ark_mem);
-static int ARKMassSptfqmrSetup(ARKodeMem ark_mem, N_Vector ypred,
-			       N_Vector vtemp1, N_Vector vtemp2, 
-			       N_Vector vtemp3);
+static int ARKMassSptfqmrSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			       N_Vector vtemp2, N_Vector vtemp3);
 static int ARKMassSptfqmrSolve(ARKodeMem ark_mem, N_Vector b, 
-			       N_Vector weight, N_Vector ynow);
+			       N_Vector weight);
 static void ARKMassSptfqmrFree(ARKodeMem ark_mem);
 
 
@@ -87,6 +86,7 @@ int ARKSptfqmr(void *arkode_mem, int pretype, int maxl)
   ark_mem->ark_lsetup = ARKSptfqmrSetup;
   ark_mem->ark_lsolve = ARKSptfqmrSolve;
   ark_mem->ark_lfree  = ARKSptfqmrFree;
+  ark_mem->ark_lsolve_type = 0;
 
   /* Get memory for ARKSpilsMemRec */
   arkspils_mem = NULL;
@@ -432,12 +432,13 @@ static void ARKSptfqmrFree(ARKodeMem ark_mem)
  and ARKMassSptfqmrFree, respectively. It allocates memory for a
  structure of type ARKMassSpilsMemRec and sets the ark_mass_mem
  field in (*arkode_mem) to the address of this structure. It sets 
- various fields in the ARKSpilsMassMemRec structure, 
- allocates memory for ytemp and x, and calls SptfqmrMalloc to 
- allocate memory for the Sptfqmr solver.
+ MassSetupNonNull in (*arkode_mem), and sets various fields in 
+ the ARKSpilsMassMemRec structure, allocates memory for ytemp 
+ and x, and calls SptfqmrMalloc to allocate memory for the 
+ Sptfqmr solver.
 ---------------------------------------------------------------*/
 int ARKMassSptfqmr(void *arkode_mem, int pretype, int maxl, 
-		   ARKSpilsMassTimesVecFn mtimes)
+		   ARKMTimesFn mtimes, void *mtimes_data)
 {
   ARKodeMem ark_mem;
   ARKSpilsMassMem arkspils_mem;
@@ -467,6 +468,7 @@ int ARKMassSptfqmr(void *arkode_mem, int pretype, int maxl,
   ark_mem->ark_msetup = ARKMassSptfqmrSetup;
   ark_mem->ark_msolve = ARKMassSptfqmrSolve;
   ark_mem->ark_mfree  = ARKMassSptfqmrFree;
+  ark_mem->ark_msolve_type = 0;
 
   /* Get memory for ARKSpilsMassMemRec */
   arkspils_mem = NULL;
@@ -478,7 +480,8 @@ int ARKMassSptfqmr(void *arkode_mem, int pretype, int maxl,
   }
 
   /* Set mass-matrix-vector product routine */
-  arkspils_mem->s_mtimes = mtimes;
+  ark_mem->ark_mtimes      = mtimes;
+  ark_mem->ark_mtimes_data = mtimes_data;
 
   /* Set ILS type */
   arkspils_mem->s_type = SPILS_SPTFQMR;
@@ -486,10 +489,6 @@ int ARKMassSptfqmr(void *arkode_mem, int pretype, int maxl,
   /* Set Sptfqmr parameters that have been passed in call sequence */
   arkspils_mem->s_pretype = pretype;
   mxl = arkspils_mem->s_maxl = (maxl <= 0) ? ARKSPILS_MAXL : maxl;
-
-  /* Set defaults for mass-matrix-related fields */
-  arkspils_mem->s_mtimes = NULL;
-  arkspils_mem->s_m_data = NULL;
 
   /* Set defaults for preconditioner-related fields */
   arkspils_mem->s_pset   = NULL;
@@ -500,6 +499,9 @@ int ARKMassSptfqmr(void *arkode_mem, int pretype, int maxl,
   /* Set default values for the rest of the Sptfqmr parameters */
   arkspils_mem->s_eplifac = ARKSPILS_EPLIN;
   arkspils_mem->s_last_flag = ARKSPILS_SUCCESS;
+
+  /* Disable call to msetup in ARKode solver (for now) */
+  ark_mem->ark_MassSetupNonNull = FALSE;
 
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
@@ -572,7 +574,6 @@ static int ARKMassSptfqmrInit(ARKodeMem ark_mem)
   /* Initialize counters */
   arkspils_mem->s_npe = arkspils_mem->s_nli = 0;
   arkspils_mem->s_nps = arkspils_mem->s_ncfl = 0;
-  arkspils_mem->s_nmtimes = 0;
 
   /* Check for legal combination pretype - psolve */
   if ((arkspils_mem->s_pretype != PREC_NONE) && 
@@ -583,8 +584,11 @@ static int ARKMassSptfqmrInit(ARKodeMem ark_mem)
     return(-1);
   }
 
-  /* Set mass matrix data field */
-  arkspils_mem->s_m_data = ark_mem->ark_user_data;
+  /* Set MassSetupNonNull = TRUE iff there is preconditioning
+     (pretype != PREC_NONE)  and there is a preconditioning
+     setup phase (pset != NULL) */
+  ark_mem->ark_MassSetupNonNull = (arkspils_mem->s_pretype != PREC_NONE) && 
+    (arkspils_mem->s_pset != NULL);
 
   /* Set maxl in the SPTFQMR memory in case it was changed by the user */
   sptfqmr_mem->l_max = arkspils_mem->s_maxl;
@@ -599,9 +603,8 @@ static int ARKMassSptfqmrInit(ARKodeMem ark_mem)
  This routine does the setup operations for the Sptfqmr mass 
  matrix solver. It calls the setup routine and increments npe.
 ---------------------------------------------------------------*/
-static int ARKMassSptfqmrSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			       N_Vector vtemp1, N_Vector vtemp2, 
-			       N_Vector vtemp3)
+static int ARKMassSptfqmrSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			       N_Vector vtemp2, N_Vector vtemp3)
 {
   booleantype jbad, jok;
   realtype dgamma;
@@ -611,7 +614,7 @@ static int ARKMassSptfqmrSetup(ARKodeMem ark_mem, N_Vector ypred,
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
   /* Call pset routine and possibly reset jcur */
-  retval = arkspils_mem->s_pset(ark_mem->ark_tn, ypred, 
+  retval = arkspils_mem->s_pset(ark_mem->ark_tn, 
 				arkspils_mem->s_P_data, 
 				vtemp1, vtemp2, vtemp3);
   arkspils_mem->s_npe++;
@@ -648,7 +651,7 @@ static int ARKMassSptfqmrSetup(ARKodeMem ark_mem, N_Vector ypred,
  success flag is returned if SptfqmrSolve converged.
 ---------------------------------------------------------------*/
 static int ARKMassSptfqmrSolve(ARKodeMem ark_mem, N_Vector b, 
-			       N_Vector weight, N_Vector ynow)
+			       N_Vector weight)
 {
   realtype bnorm, res_norm;
   ARKSpilsMassMem arkspils_mem;
@@ -663,9 +666,6 @@ static int ARKMassSptfqmrSolve(ARKodeMem ark_mem, N_Vector b,
   bnorm = N_VWrmsNorm(b, weight);
   if (bnorm <= arkspils_mem->s_deltar) 
     return(0);
-
-  /* Set ycur for use by the Mtimes and Psolve routines */
-  arkspils_mem->s_ycur = ynow;
 
   /* Set inputs delta and initial guess x = 0 to SptfqmrSolve */  
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;

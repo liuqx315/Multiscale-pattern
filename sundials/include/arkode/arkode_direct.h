@@ -134,8 +134,7 @@ typedef int (*ARKDlsDenseJacFn)(long int N, realtype t,
  negative value if an unrecoverable error occurred.
 
 ---------------------------------------------------------------*/
-typedef int (*ARKDlsDenseMassFn)(long int N, realtype t,
-				 N_Vector y, DlsMat M, 
+typedef int (*ARKDlsDenseMassFn)(long int N, realtype t, DlsMat M, 
 				 void *user_data, N_Vector tmp1, 
 				 N_Vector tmp2, N_Vector tmp3);
   
@@ -258,9 +257,9 @@ typedef int (*ARKDlsBandJacFn)(long int N, long int mupper,
 ---------------------------------------------------------------*/
 typedef int (*ARKDlsBandMassFn)(long int N, long int mupper, 
 				long int mlower, realtype t, 
-				N_Vector y, DlsMat M, 
-				void *user_data, N_Vector tmp1, 
-				N_Vector tmp2, N_Vector tmp3);
+				DlsMat M, void *user_data, 
+				N_Vector tmp1, N_Vector tmp2, 
+				N_Vector tmp3);
 
 
 /*===============================================================
