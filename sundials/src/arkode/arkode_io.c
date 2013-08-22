@@ -2104,6 +2104,27 @@ int ARKodeGetNumMassSolves(void *arkode_mem, long int *nMassSolves)
 
 
 /*---------------------------------------------------------------
+ ARKodeGetNumMassMultiplies:
+
+ Returns the current number of calls to the mass matrix product.
+---------------------------------------------------------------*/
+int ARKodeGetNumMassMultiplies(void *arkode_mem, long int *nMassMult)
+{
+  ARKodeMem ark_mem;
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeGetNumMassMult", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  *nMassMult = ark_mem->ark_mass_mult;
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKodeGetNumErrTestFails:
 
  Returns the current number of error test failures

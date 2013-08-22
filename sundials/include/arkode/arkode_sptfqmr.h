@@ -15,6 +15,7 @@
 extern "C" {
 #endif
 
+#include <arkode/arkode.h>
 #include <arkode/arkode_spils.h>
 #include <sundials/sundials_sptfqmr.h>
 
@@ -81,7 +82,8 @@ SUNDIALS_EXPORT int ARKSptfqmr(void *arkode_mem, int pretype, int maxl);
  The above constants are defined in arkode_spils.h
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKMassSptfqmr(void *arkode_mem, int pretype, 
-				   int maxl, ARKSpilsMassTimesVecFn mtimes);
+				   int maxl, ARKMTimesFn mtimes,
+				   void *mtimes_data);
 
 
 #ifdef __cplusplus

@@ -34,11 +34,10 @@ static void ARKSpfgmrFree(ARKodeMem ark_mem);
 
 /* ARKSPFGMR minit, msetup, msolve, and mfree routines */
 static int ARKMassSpfgmrInit(ARKodeMem ark_mem);
-static int ARKMassSpfgmrSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			      N_Vector vtemp1, N_Vector vtemp2, 
-			      N_Vector vtemp3);
+static int ARKMassSpfgmrSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			      N_Vector vtemp2, N_Vector vtemp3);
 static int ARKMassSpfgmrSolve(ARKodeMem ark_mem, N_Vector b, 
-			      N_Vector weight, N_Vector ynow);
+			      N_Vector weight);
 static void ARKMassSpfgmrFree(ARKodeMem ark_mem);
 
 
@@ -87,6 +86,7 @@ int ARKSpfgmr(void *arkode_mem, int pretype, int maxl)
   ark_mem->ark_lsetup = ARKSpfgmrSetup;
   ark_mem->ark_lsolve = ARKSpfgmrSolve;
   ark_mem->ark_lfree  = ARKSpfgmrFree;
+  ark_mem->ark_lsolve_type = 0;
 
   /* Get memory for ARKSpilsMemRec */
   arkspils_mem = NULL;
@@ -435,12 +435,13 @@ static void ARKSpfgmrFree(ARKodeMem ark_mem)
  ARKMassSpfgmrFree, respectively.  It allocates memory for a 
  structure of type ARKSpilsMassMemRec and sets the ark_mass_mem
  field in (*arkode_mem) to the address of this structure.  It 
- sets various fields in the ARKSpilsMassMemRec structure, 
- allocates memory for ytemp and x, and calls SpfgmrMalloc to 
- allocate memory for the Spfgmr solver.
+ sets MassSetupNonNull in (*arkode_mem), and sets various fields
+ in the ARKSpilsMassMemRec structure, allocates memory for ytemp 
+ and x, and calls SpfgmrMalloc to allocate memory for the Spfgmr 
+ solver.
 ---------------------------------------------------------------*/
 int ARKMassSpfgmr(void *arkode_mem, int pretype, int maxl, 
-		  ARKSpilsMassTimesVecFn mtimes)
+		  ARKMTimesFn mtimes, void *mtimes_data)
 {
   ARKodeMem ark_mem;
   ARKSpilsMassMem arkspils_mem;
@@ -470,6 +471,7 @@ int ARKMassSpfgmr(void *arkode_mem, int pretype, int maxl,
   ark_mem->ark_msetup = ARKMassSpfgmrSetup;
   ark_mem->ark_msolve = ARKMassSpfgmrSolve;
   ark_mem->ark_mfree  = ARKMassSpfgmrFree;
+  ark_mem->ark_msolve_type = 0;
 
   /* Get memory for ARKSpilsMassMemRec */
   arkspils_mem = NULL;
@@ -481,7 +483,8 @@ int ARKMassSpfgmr(void *arkode_mem, int pretype, int maxl,
   }
 
   /* Set mass-matrix-vector product routine */
-  arkspils_mem->s_mtimes = mtimes;
+  ark_mem->ark_mtimes      = mtimes;
+  ark_mem->ark_mtimes_data = mtimes_data;
 
   /* Set ILS type */
   arkspils_mem->s_type = SPILS_SPFGMR;
@@ -489,10 +492,6 @@ int ARKMassSpfgmr(void *arkode_mem, int pretype, int maxl,
   /* Set Spfgmr parameters that have been passed in call sequence */
   arkspils_mem->s_pretype    = pretype;
   mxl = arkspils_mem->s_maxl = (maxl <= 0) ? ARKSPILS_MAXL : maxl;
-
-  /* Set defaults for mass-matrix-related fields */
-  arkspils_mem->s_mtimes = NULL;
-  arkspils_mem->s_m_data = NULL;
 
   /* Set defaults for preconditioner-related fields */
   arkspils_mem->s_pset   = NULL;
@@ -504,6 +503,7 @@ int ARKMassSpfgmr(void *arkode_mem, int pretype, int maxl,
   arkspils_mem->s_gstype    = MODIFIED_GS;
   arkspils_mem->s_eplifac   = ARKSPILS_EPLIN;
   arkspils_mem->s_last_flag = ARKSPILS_SUCCESS;
+  ark_mem->ark_MassSetupNonNull = FALSE;
 
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
@@ -573,7 +573,6 @@ static int ARKMassSpfgmrInit(ARKodeMem ark_mem)
   /* Initialize counters */
   arkspils_mem->s_npe = arkspils_mem->s_nli = 0;
   arkspils_mem->s_nps = arkspils_mem->s_ncfl = 0;
-  arkspils_mem->s_nmtimes = 0;
 
   /* Check for legal combination pretype - psolve */
   if ((arkspils_mem->s_pretype != PREC_NONE) 
@@ -584,13 +583,11 @@ static int ARKMassSpfgmrInit(ARKodeMem ark_mem)
     return(-1);
   }
 
-  /* Set setupNonNull=TRUE iff there is preconditioning (pretype != PREC_NONE)
-     and there is a preconditioning setup phase (pset != NULL)             */
-  ark_mem->ark_setupNonNull = (arkspils_mem->s_pretype != PREC_NONE) 
+  /* Set MassSetupNonNull=TRUE iff there is preconditioning 
+     (pretype != PREC_NONE) and there is a preconditioning 
+     setup phase (pset != NULL)             */
+  ark_mem->ark_MassSetupNonNull = (arkspils_mem->s_pretype != PREC_NONE) 
     && (arkspils_mem->s_pset != NULL);
-
-  /* Set mass matrix data fields */
-  arkspils_mem->s_m_data = ark_mem->ark_user_data;
 
   arkspils_mem->s_last_flag = ARKSPILS_SUCCESS;
   return(0);
@@ -603,9 +600,8 @@ static int ARKMassSpfgmrInit(ARKodeMem ark_mem)
  This routine does the setup operations for the Spfgmr mass
  matrix solver. It calls pset, and increments npe.
 ---------------------------------------------------------------*/
-static int ARKMassSpfgmrSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			      N_Vector vtemp1, N_Vector vtemp2, 
-			      N_Vector vtemp3)
+static int ARKMassSpfgmrSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			      N_Vector vtemp2, N_Vector vtemp3)
 {
   booleantype jbad, jok;
   realtype dgamma;
@@ -615,9 +611,9 @@ static int ARKMassSpfgmrSetup(ARKodeMem ark_mem, N_Vector ypred,
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
   /* Call pset routine and possibly reset jcur */
-  retval = arkspils_mem->s_pset(ark_mem->ark_tn, ypred, 
-				arkspils_mem->s_P_data, vtemp1, 
-				vtemp2, vtemp3);
+  retval = arkspils_mem->s_pset(ark_mem->ark_tn, 
+				arkspils_mem->s_P_data, 
+				vtemp1, vtemp2, vtemp3);
   arkspils_mem->s_npe++;
   if (retval < 0) {
     arkProcessError(ark_mem, SPFGMR_PSET_FAIL_UNREC, "ARKSPFGMR", 
@@ -651,7 +647,7 @@ static int ARKMassSpfgmrSetup(ARKodeMem ark_mem, N_Vector ypred,
  value is set according to the success of SpfgmrSolve.
 ---------------------------------------------------------------*/
 static int ARKMassSpfgmrSolve(ARKodeMem ark_mem, N_Vector b, 
-			      N_Vector weight, N_Vector ynow)
+			      N_Vector weight)
 {
   realtype bnorm, res_norm;
   ARKSpilsMassMem arkspils_mem;
@@ -667,9 +663,6 @@ static int ARKMassSpfgmrSolve(ARKodeMem ark_mem, N_Vector b,
   bnorm = N_VWrmsNorm(b, weight);
   if (bnorm <= arkspils_mem->s_deltar) 
     return(0);
-
-  /* Set ycur for use by the Mtimes and MPsolve routines */
-  arkspils_mem->s_ycur = ynow;
 
   /* Set inputs delta and initial guess x = 0 to SpfgmrSolve */  
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;

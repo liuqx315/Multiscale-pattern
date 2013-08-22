@@ -86,6 +86,7 @@ extern "C" {
 #define ARK_MASSSETUP_FAIL       -15
 #define ARK_MASSSOLVE_FAIL       -16
 #define ARK_MASSFREE_FAIL        -17
+#define ARK_MASSMULT_FAIL        -18
 
 #define ARK_MEM_FAIL             -20
 #define ARK_MEM_NULL             -21
@@ -264,6 +265,30 @@ typedef int (*ARKExpStabFn)(N_Vector y, realtype t,
 ---------------------------------------------------------------*/
 typedef int (*ARKVecResizeFn)(N_Vector y, N_Vector ytemplate, 
 			      void *user_data);
+
+
+/*---------------------------------------------------------------
+ Type: ARKMTimesFn
+
+ The user-supplied function mtimes is to generate the product
+ M*v for given v, where M is the mass matrix, or an 
+ approximation to it, and v is a given vector. It should return 
+ 0 if successful or a negative value for an unrecoverable failure.
+
+ A function mtimes must have the prototype given below. Its
+ parameters are as follows:
+
+   v        is the N_Vector to be multiplied by M.
+
+   Mv       is the output N_Vector containing M*v.
+
+   t        is the current value of the independent variable.
+
+   user_data   is a pointer to user data, the same as the user_data
+            parameter passed to the ARKodeSetUserData function.
+---------------------------------------------------------------*/
+typedef int (*ARKMTimesFn)(N_Vector v, N_Vector Mv, 
+			   realtype t, void *user_data);
 
 
 /*===============================================================
@@ -1019,6 +1044,9 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
  ARKodeGetNumMassSolves returns the number of calls made to
                            the mass matrix solve routine
 
+ ARKodeGetNumMassMultiplies returns the number of calls made to
+                            the mass matrix times vector routine
+
  ARKodeGetNumErrTestFails returns the number of local error test
                           failures that have occured
 
@@ -1080,6 +1108,8 @@ SUNDIALS_EXPORT int ARKodeGetNumLinSolvSetups(void *arkode_mem,
 					      long int *nlinsetups);
 SUNDIALS_EXPORT int ARKodeGetNumMassSolves(void *arkode_mem, 
 					   long int *nMassSolves);
+SUNDIALS_EXPORT int ARKodeGetNumMassMultiplies(void *arkode_mem, 
+					       long int *nMassMult);
 SUNDIALS_EXPORT int ARKodeGetNumErrTestFails(void *arkode_mem, 
 					     long int *netfails);
 SUNDIALS_EXPORT int ARKodeGetActualInitStep(void *arkode_mem, 
