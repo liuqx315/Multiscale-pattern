@@ -34,11 +34,10 @@ static void ARKPcgFree(ARKodeMem ark_mem);
 
 /* ARKPCG minit, msetup, msolve, and mfree routines */
 static int ARKMassPcgInit(ARKodeMem ark_mem);
-static int ARKMassPcgSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			   N_Vector vtemp1, N_Vector vtemp2, 
-			   N_Vector vtemp3);
+static int ARKMassPcgSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			   N_Vector vtemp2, N_Vector vtemp3);
 static int ARKMassPcgSolve(ARKodeMem ark_mem, N_Vector b, 
-			   N_Vector weight, N_Vector ynow);
+			   N_Vector weight);
 static void ARKMassPcgFree(ARKodeMem ark_mem);
 
 
@@ -88,6 +87,7 @@ int ARKPcg(void *arkode_mem, int pretype, int maxl)
   ark_mem->ark_lsetup = ARKPcgSetup;
   ark_mem->ark_lsolve = ARKPcgSolve;
   ark_mem->ark_lfree  = ARKPcgFree;
+  ark_mem->ark_lsolve_type = 0;
 
   /* Get memory for ARKSpilsMemRec */
   arkspils_mem = NULL;
@@ -423,14 +423,14 @@ static void ARKPcgFree(ARKodeMem ark_mem)
  NULL. It then sets the ark_minit, ark_msetup, ark_msolve, 
  ark_mfree fields in (*arkode_mem) to be ARKMassPcgInit, 
  ARKMassPcgSetup, ARKMassPcgSolve, and ARKMassPcgFree, 
- respectively. It allocates memory for a structure of type
- ARKSpilsMassMemRec and sets the ark_mass_mem field in 
- (*arkode_mem) to the address of this structure.  Finally, 
- ARKMassPcg allocates memory for ytemp and x, and calls
- PcgMalloc to allocate memory for the Pcg solver.
+ respectively. It sets MassSetupNonNull in (*arkode_mem), 
+ allocates memory for a structure of type ARKSpilsMassMemRec and 
+ sets the ark_mass_mem field in (*arkode_mem) to the address of 
+ this structure.  Finally, ARKMassPcg allocates memory for ytemp 
+ and x, and calls PcgMalloc to allocate memory for the Pcg solver.
 ---------------------------------------------------------------*/
 int ARKMassPcg(void *arkode_mem, int pretype, int maxl, 
-	       ARKSpilsMassTimesVecFn mtimes)
+	       ARKMTimesFn mtimes, void *mtimes_data)
 {
   ARKodeMem ark_mem;
   ARKSpilsMassMem arkspils_mem;
@@ -461,6 +461,7 @@ int ARKMassPcg(void *arkode_mem, int pretype, int maxl,
   ark_mem->ark_msetup = ARKMassPcgSetup;
   ark_mem->ark_msolve = ARKMassPcgSolve;
   ark_mem->ark_mfree  = ARKMassPcgFree;
+  ark_mem->ark_msolve_type = 0;
 
   /* Get memory for ARKSpilsMassMemRec */
   arkspils_mem = NULL;
@@ -472,7 +473,8 @@ int ARKMassPcg(void *arkode_mem, int pretype, int maxl,
   }
 
   /* Set mass-matrix-vector product routine */
-  arkspils_mem->s_mtimes = mtimes;
+  ark_mem->ark_mtimes      = mtimes;
+  ark_mem->ark_mtimes_data = mtimes_data;
 
   /* Set ILS type */
   arkspils_mem->s_type = SPILS_PCG;
@@ -480,10 +482,6 @@ int ARKMassPcg(void *arkode_mem, int pretype, int maxl,
   /* Set Pcg parameters that have been passed in call sequence */
   arkspils_mem->s_pretype = pretype;
   mxl = arkspils_mem->s_maxl = (maxl <= 0) ? ARKSPILS_MAXL : maxl;
-
-  /* Set defaults for mass-matrix-related fields */
-  arkspils_mem->s_mtimes = NULL;
-  arkspils_mem->s_m_data = NULL;
 
   /* Set defaults for preconditioner-related fields */
   arkspils_mem->s_pset   = NULL;
@@ -494,6 +492,7 @@ int ARKMassPcg(void *arkode_mem, int pretype, int maxl,
   /* Set default values for the rest of the Pcg parameters */
   arkspils_mem->s_eplifac   = ARKSPILS_EPLIN;
   arkspils_mem->s_last_flag = ARKSPILS_SUCCESS;
+  ark_mem->ark_MassSetupNonNull = FALSE;
 
   /* Check for legal pretype */ 
   if ((pretype != PREC_NONE) && (pretype != PREC_LEFT) &&
@@ -566,7 +565,6 @@ static int ARKMassPcgInit(ARKodeMem ark_mem)
   /* Initialize counters */
   arkspils_mem->s_npe = arkspils_mem->s_nli = 0;
   arkspils_mem->s_nps = arkspils_mem->s_ncfl = 0;
-  arkspils_mem->s_nmtimes = 0;
 
   /* Check for legal combination pretype - psolve */
   if ((arkspils_mem->s_pretype != PREC_NONE) && 
@@ -577,8 +575,11 @@ static int ARKMassPcgInit(ARKodeMem ark_mem)
     return(-1);
   }
 
-  /* Set mass-matrix-related fields, based on jtimesDQ */
-  arkspils_mem->s_m_data = ark_mem->ark_user_data;
+  /* Set MassSetupNonNull = TRUE iff there is preconditioning
+     (pretype != PREC_NONE)  and there is a preconditioning
+     setup phase (pset != NULL) */
+  ark_mem->ark_MassSetupNonNull = (arkspils_mem->s_pretype != PREC_NONE) 
+    && (arkspils_mem->s_pset != NULL);
 
   /* Set maxl in the PCG memory in case it was changed by the user */
   pcg_mem->l_max = arkspils_mem->s_maxl;
@@ -599,9 +600,8 @@ static int ARKMassPcgInit(ARKodeMem ark_mem)
  of the pset output. In any case, if jcur == TRUE, we increment 
  npe and save nst in nstlpre.
 ---------------------------------------------------------------*/
-static int ARKMassPcgSetup(ARKodeMem ark_mem, N_Vector ypred, 
-			   N_Vector vtemp1, N_Vector vtemp2, 
-			   N_Vector vtemp3)
+static int ARKMassPcgSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
+			   N_Vector vtemp2, N_Vector vtemp3)
 {
   booleantype jbad, jok;
   realtype dgamma;
@@ -611,9 +611,9 @@ static int ARKMassPcgSetup(ARKodeMem ark_mem, N_Vector ypred,
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
   /* Call pset routine and possibly reset jcur */
-  retval = arkspils_mem->s_pset(ark_mem->ark_tn, ypred, 
-				arkspils_mem->s_P_data, vtemp1, 
-				vtemp2, vtemp3);
+  retval = arkspils_mem->s_pset(ark_mem->ark_tn, 
+				arkspils_mem->s_P_data, 
+				vtemp1, vtemp2, vtemp3);
   arkspils_mem->s_npe++;
   if (retval < 0) {
     arkProcessError(ark_mem, PCG_PSET_FAIL_UNREC, "ARKPCG", 
@@ -648,7 +648,7 @@ static int ARKMassPcgSetup(ARKodeMem ark_mem, N_Vector ypred,
  success flag is returned if PcgSolve converged.
 ---------------------------------------------------------------*/
 static int ARKMassPcgSolve(ARKodeMem ark_mem, N_Vector b, 
-			   N_Vector weight, N_Vector ynow)
+			   N_Vector weight)
 {
   realtype bnorm, res_norm;
   ARKSpilsMassMem arkspils_mem;
@@ -663,9 +663,6 @@ static int ARKMassPcgSolve(ARKodeMem ark_mem, N_Vector b,
   bnorm = N_VWrmsNorm(b, weight);
   if (bnorm <= arkspils_mem->s_deltar) 
     return(0);
-
-  /* Set vectors ycur for use by the Mtimes and Psolve routines */
-  arkspils_mem->s_ycur = ynow;
 
   /* Set inputs delta and initial guess x = 0 to PcgSolve */
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;

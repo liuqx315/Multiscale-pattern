@@ -43,12 +43,13 @@ static void arkLapackDenseFree(ARKodeMem ark_mem);
 
 /* ARKLAPACK DENSE minit, msetup, msolve, and mfree routines */ 
 static int arkMassLapackDenseInit(ARKodeMem ark_mem);
-static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector yP, 
-				   N_Vector tmp1, N_Vector tmp2, 
-				   N_Vector tmp3);
+static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector tmp1, 
+				   N_Vector tmp2, N_Vector tmp3);
 static int arkMassLapackDenseSolve(ARKodeMem ark_mem, N_Vector b, 
-				   N_Vector weight, N_Vector yC);
+				   N_Vector weight);
 static void arkMassLapackDenseFree(ARKodeMem ark_mem);
+static int arkMassLapackDenseMultiply(N_Vector v, N_Vector Mv, 
+				      realtype t, void *user_data);
 
 /* ARKLAPACK BAND linit, lsetup, lsolve, and lfree routines */ 
 static int arkLapackBandInit(ARKodeMem ark_mem);
@@ -63,13 +64,13 @@ static void arkLapackBandFree(ARKodeMem ark_mem);
 
 /* ARKLAPACK BAND minit, msetup, msolve, and mfree routines */ 
 static int arkMassLapackBandInit(ARKodeMem ark_mem);
-static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector yP, 
-				  N_Vector tmp1, N_Vector tmp2, 
-				  N_Vector tmp3);
+static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector tmp1, 
+				  N_Vector tmp2, N_Vector tmp3);
 static int arkMassLapackBandSolve(ARKodeMem ark_mem, N_Vector b, 
-			      N_Vector weight, N_Vector yC);
+				  N_Vector weight);
 static void arkMassLapackBandFree(ARKodeMem ark_mem);
-
+static int arkMassLapackBandMultiply(N_Vector v, N_Vector Mv, 
+				     realtype t, void *user_data);
 
 /*===============================================================
  EXPORTED FUNCTIONS FOR IMPLICIT INTEGRATION
@@ -128,6 +129,7 @@ int ARKLapackDense(void *arkode_mem, int N)
   ark_mem->ark_lsetup = arkLapackDenseSetup;
   ark_mem->ark_lsolve = arkLapackDenseSolve;
   ark_mem->ark_lfree  = arkLapackDenseFree;
+  ark_mem->ark_lsolve_type = 1;
 
   /* Get memory for ARKDlsMemRec */
   arkdls_mem = NULL;
@@ -201,10 +203,10 @@ int ARKLapackDense(void *arkode_mem, int N)
  respectively.  It allocates memory for a structure of type 
  ARKLapackBandMemRec and sets the ark_lmem field in (*arkode_mem) 
  to the address of this structure.  It sets setupNonNull in 
- (*arkode_mem) to be TRUE, mu to be mupper, ml to be mlower, and 
- the jacE and jacI field to NULL.  Finally, it allocates memory 
- for M, pivots, and savedJ.  The ARKLapackBand return value is 
- ARKDLS_SUCCESS=0, ARKDLS_MEM_FAIL=-1, or ARKDLS_ILL_INPUT=-2.
+ (*arkode_mem) to be TRUE, mu to be mupper, and ml to be mlower.  
+ Finally, it allocates memory for M, pivots, and savedJ.  The 
+ ARKLapackBand return value is ARKDLS_SUCCESS=0, 
+ ARKDLS_MEM_FAIL=-1, or ARKDLS_ILL_INPUT=-2.
 
  NOTE: The ARKLAPACK linear solver assumes a serial implementation
        of the NVECTOR package. Therefore, ARKLapackBand will first 
@@ -240,6 +242,7 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
   ark_mem->ark_lsetup = arkLapackBandSetup;
   ark_mem->ark_lsolve = arkLapackBandSolve;
   ark_mem->ark_lfree  = arkLapackBandFree;
+  ark_mem->ark_lsolve_type = 2;
   
   /* Get memory for ARKDlsMemRec */
   arkdls_mem = NULL;
@@ -333,7 +336,8 @@ int ARKLapackBand(void *arkode_mem, int N, int mupper, int mlower)
  arkMassLapackDenseSolve, and arkMassLapackDenseFree, 
  respectively.  It allocates memory for a structure of type 
  ARKDlsMassMemRec and sets the ark_mass_mem field in 
- (*arkode_mem) to the address of this structure.  Finally, it 
+ (*arkode_mem) to the address of this structure.  It sets 
+ MassSetupNonNull in (*arkode_mem) to TRUE.  Finally, it 
  allocates memory for M and pivots. The return value is 
  SUCCESS = 0, or LMEM_FAIL = -1.
 
@@ -370,12 +374,15 @@ int ARKMassLapackDense(void *arkode_mem, int N,
 
   if (ark_mem->ark_mfree !=NULL) ark_mem->ark_mfree(ark_mem);
 
-  /* Set four main function fields in ark_mem, enable mass matrix */
+  /* Set related function fields in ark_mem, enable mass matrix */
   ark_mem->ark_mass_matrix = TRUE;
   ark_mem->ark_minit  = arkMassLapackDenseInit;
   ark_mem->ark_msetup = arkMassLapackDenseSetup;
   ark_mem->ark_msolve = arkMassLapackDenseSolve;
   ark_mem->ark_mfree  = arkMassLapackDenseFree;
+  ark_mem->ark_mtimes = arkMassLapackDenseMultiply;
+  ark_mem->ark_mtimes_data = (void *) ark_mem;
+  ark_mem->ark_msolve_type = 1;
 
   /* Get memory for ARKDlsMassMemRec */
   arkdls_mem = NULL;
@@ -393,6 +400,7 @@ int ARKMassLapackDense(void *arkode_mem, int N,
   arkdls_mem->d_dmass = dmass;
   arkdls_mem->d_M_data = NULL;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
+  ark_mem->ark_MassSetupNonNull = TRUE;
 
   /* Set problem dimension */
   arkdls_mem->d_n = (long int) N;
@@ -436,9 +444,9 @@ int ARKMassLapackDense(void *arkode_mem, int N,
  arkMassLapackBandFree, respectively.  It allocates memory for a
  structure of type ARKMassLapackBandMemRec and sets the 
  ark_mass_mem field in (*arkode_mem) to the address of this 
- structure.  It sets mu to be mupper, ml to be mlower, and 
- the jacE and jacI field to NULL.  Finally, it allocates memory 
- for M and pivots.  The ARKMassLapackBand return value is 
+ structure.  It sets MassSetupNonNull in (*arkode_mem) to be TRUE, 
+ mu to be mupper, and ml to be mlower.  Finally, it allocates 
+ memory for M and pivots.  The ARKMassLapackBand return value is 
  ARKDLS_SUCCESS=0, ARKDLS_MEM_FAIL=-1, or ARKDLS_ILL_INPUT=-2.
 
  NOTE: The ARKLAPACK linear solver assumes a serial implementation
@@ -477,6 +485,9 @@ int ARKMassLapackBand(void *arkode_mem, int N, int mupper,
   ark_mem->ark_msetup = arkMassLapackBandSetup;
   ark_mem->ark_msolve = arkMassLapackBandSolve;
   ark_mem->ark_mfree  = arkMassLapackBandFree;
+  ark_mem->ark_mtimes = arkMassLapackBandMultiply;
+  ark_mem->ark_mtimes_data = (void *) ark_mem;
+  ark_mem->ark_msolve_type = 2;
   
   /* Get memory for ARKDlsMassMemRec */
   arkdls_mem = NULL;
@@ -494,6 +505,7 @@ int ARKMassLapackBand(void *arkode_mem, int N, int mupper,
   arkdls_mem->d_bmass = bmass;
   arkdls_mem->d_M_data = NULL;
   arkdls_mem->d_last_flag = ARKDLS_SUCCESS;
+  ark_mem->ark_MassSetupNonNull = TRUE;
   
   /* Load problem dimension */
   arkdls_mem->d_n = (long int) N;
@@ -649,7 +661,7 @@ static int arkLapackDenseSetup(ARKodeMem ark_mem, int convfail,
     arkdls_mass_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
     SetToZero(arkdls_mass_mem->d_M);
     retval = arkdls_mass_mem->d_dmass(arkdls_mass_mem->d_n, 
-				      ark_mem->ark_tn, yP, 
+				      ark_mem->ark_tn, 
 				      arkdls_mass_mem->d_M, 
 				      arkdls_mass_mem->d_M_data, 
 				      tmp1, tmp2, tmp3);
@@ -763,9 +775,8 @@ static int arkMassLapackDenseInit(ARKodeMem ark_mem)
  mass matrix solver. It calls the mass matrix evaluation routine,
  updates counters, and calls the dense LU factorization routine.
 ---------------------------------------------------------------*/                  
-static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector yP, 
-				   N_Vector tmp1, N_Vector tmp2, 
-				   N_Vector tmp3)
+static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector tmp1, 
+				   N_Vector tmp2, N_Vector tmp3)
 {
   ARKDlsMassMem arkdls_mem;
   realtype dgamma, fact;
@@ -779,7 +790,7 @@ static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector yP,
 
   SetToZero(arkdls_mem->d_M);
   retval = arkdls_mem->d_dmass(arkdls_mem->d_n, ark_mem->ark_tn, 
-			       yP, arkdls_mem->d_M, arkdls_mem->d_M_data, 
+			       arkdls_mem->d_M, arkdls_mem->d_M_data, 
 			       tmp1, tmp2, tmp3);
   arkdls_mem->d_nme++;
   if (retval < 0) {
@@ -808,7 +819,7 @@ static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector yP,
  dense mass matrix solver by calling the dense backsolve routine.
 ---------------------------------------------------------------*/                  
 static int arkMassLapackDenseSolve(ARKodeMem ark_mem, N_Vector b, 
-				   N_Vector weight, N_Vector yC)
+				   N_Vector weight)
 {
   ARKDlsMassMem arkdls_mem;
   realtype *bd, fact;
@@ -837,6 +848,48 @@ static void arkMassLapackDenseFree(ARKodeMem ark_mem)
   DestroyArray(arkdls_mem->d_pivots);
   free(arkdls_mem); 
   arkdls_mem = NULL;
+}
+
+
+/*---------------------------------------------------------------
+ arkMassLapackDenseMultiply performs a matrix-vector product, 
+ multiplying the current mass matrix by a given vector.
+---------------------------------------------------------------*/                  
+static int arkMassLapackDenseMultiply(N_Vector v, N_Vector Mv, 
+				      realtype t, void *arkode_mem)
+{
+  /* extract the DlsMassMem structure from the user_data pointer */
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKLAPACK", 
+		    "arkMassLapackDenseMultiply", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  /* zero out the result */
+  N_VConst(0.0, Mv);
+
+  /* access the vector arrays (since they must be serial vectors) */
+  realtype *vdata=NULL, *Mvdata=NULL;
+  vdata = N_VGetArrayPointer(v);
+  Mvdata = N_VGetArrayPointer(Mv);
+  if (vdata == NULL || Mvdata == NULL)
+    return(1);
+
+  /* perform matrix-vector product and return */
+  realtype *Mcol_j;
+  int i, j;
+  for (j=0; j<arkdls_mem->d_M->N; j++) {
+    Mcol_j = arkdls_mem->d_M->cols[j];
+    for (i=0; i<arkdls_mem->d_M->M; i++) 
+      Mvdata[i] += Mcol_j[i]*vdata[j];
+  }
+  return(0);
 }
 
 
@@ -948,7 +1001,7 @@ static int arkLapackBandSetup(ARKodeMem ark_mem, int convfail,
     arkdls_mass_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
     SetToZero(arkdls_mass_mem->d_M);
     retval = arkdls_mass_mem->d_bmass(arkdls_mass_mem->d_n, arkdls_mass_mem->d_mu, 
-				      arkdls_mass_mem->d_ml, ark_mem->ark_tn, yP, 
+				      arkdls_mass_mem->d_ml, ark_mem->ark_tn, 
 				      arkdls_mass_mem->d_M, arkdls_mass_mem->d_M_data, 
 				      tmp1, tmp2, tmp3);
     arkdls_mass_mem->d_nme++;
@@ -1067,9 +1120,8 @@ static int arkMassLapackBandInit(ARKodeMem ark_mem)
  mass matrix solver. It constructs the mass matrix M, updates 
  counters, and calls the band LU factorization routine.
 ---------------------------------------------------------------*/                  
-static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector yP, 
-				  N_Vector tmp1, N_Vector tmp2, 
-				  N_Vector tmp3)
+static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector tmp1, 
+				  N_Vector tmp2, N_Vector tmp3)
 {
   ARKDlsMassMem arkdls_mem;
   realtype dgamma, fact;
@@ -1087,7 +1139,7 @@ static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector yP,
   SetToZero(arkdls_mem->d_M);
   retval = arkdls_mem->d_bmass(arkdls_mem->d_n, arkdls_mem->d_mu, 
 			       arkdls_mem->d_ml, ark_mem->ark_tn, 
-			       yP, arkdls_mem->d_M, arkdls_mem->d_M_data, 
+			       arkdls_mem->d_M, arkdls_mem->d_M_data, 
 			       tmp1, tmp2, tmp3);
   arkdls_mem->d_nme++;
   if (retval < 0) {
@@ -1116,7 +1168,7 @@ static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector yP,
  mass matrix solver by calling the band backsolve routine.
 ---------------------------------------------------------------*/                  
 static int arkMassLapackBandSolve(ARKodeMem ark_mem, N_Vector b, 
-				  N_Vector weight, N_Vector yC)
+				  N_Vector weight)
 {
   ARKDlsMassMem arkdls_mem;
   realtype *bd, fact;
@@ -1149,6 +1201,50 @@ static void arkMassLapackBandFree(ARKodeMem ark_mem)
   DestroyArray(arkdls_mem->d_pivots);
   free(arkdls_mem); 
   arkdls_mem = NULL;
+}
+
+
+/*---------------------------------------------------------------
+ arkMassLapackBandMultiply performs a matrix-vector product, 
+ multiplying the current mass matrix by a given vector.
+---------------------------------------------------------------*/                  
+static int arkMassLapackBandMultiply(N_Vector v, N_Vector Mv, 
+				     realtype t, void *arkode_mem)
+{
+  /* extract the DlsMassMem structure from the user_data pointer */
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKLAPACK", 
+		    "arkMassLapackBandMultiply", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  /* zero out the result */
+  N_VConst(0.0, Mv);
+
+  /* access the vector arrays (since they must be serial vectors) */
+  realtype *vdata=NULL, *Mvdata=NULL;
+  vdata = N_VGetArrayPointer(v);
+  Mvdata = N_VGetArrayPointer(Mv);
+  if (vdata == NULL || Mvdata == NULL)
+    return(1);
+
+  /* perform matrix-vector product and return */
+  realtype *Mcol_j;
+  int colSize = arkdls_mem->d_M->mu + arkdls_mem->d_M->ml + 1;
+  int s_mu = arkdls_mem->d_M->s_mu;
+  int i, j;
+  for (j=0; j<arkdls_mem->d_M->M; j++) {
+    Mcol_j = arkdls_mem->d_M->cols[j] + arkdls_mem->d_M->s_mu - arkdls_mem->d_M->mu;
+    for (i=0; i<colSize; i++) 
+      Mvdata[i+j-s_mu] += Mcol_j[i]*vdata[j];
+  }
+  return(0);
 }
 
 

@@ -349,6 +349,7 @@ typedef struct ARKodeMemRec {
   long int ark_nfe;          /* number of fe calls                         */
   long int ark_nfi;          /* number of fi calls                         */
   long int ark_ncfn;         /* number of corrector convergence failures   */
+  long int ark_nmassfails;   /* number of mass matrix solver failures      */
   long int ark_netf;         /* number of error test failures              */
   long int ark_nni;          /* number of Newton iterations performed      */
   long int ark_nsetups;      /* number of setup calls                      */
@@ -396,20 +397,26 @@ typedef struct ARKodeMemRec {
   int (*ark_lsolve)(struct ARKodeMemRec *ark_mem, N_Vector b, N_Vector weight,
 		    N_Vector ycur, N_Vector fcur);
   void (*ark_lfree)(struct ARKodeMemRec *ark_mem);
-  void *ark_lmem;           
+  void *ark_lmem;
+  int ark_lsolve_type;   /* linear solver type: 0=iterative; 1=dense; 
+                                                2=band; 3=custom */
 
   /*-----------------------
     Mass Matrix Solver Data 
     -----------------------*/
-  booleantype ark_mass_matrix;   /* flag denoting use of a non-identity M */
-  long int ark_mass_solves;      /* number of mass matrix solve calls */
+  booleantype ark_mass_matrix;   /* flag denoting use of a non-identity M  */
+  long int ark_mass_solves;      /* number of mass matrix solve calls      */
+  long int ark_mass_mult;        /* number of mass matrix product calls    */
+  ARKMTimesFn ark_mtimes;        /* mass-matrix-vector product routine     */
+  void *ark_mtimes_data;         /* user pointer passed to mtimes          */
   int (*ark_minit)(struct ARKodeMemRec *ark_mem);
-  int (*ark_msetup)(struct ARKodeMemRec *ark_mem, N_Vector ypred, 
-		    N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3); 
-  int (*ark_msolve)(struct ARKodeMemRec *ark_mem, N_Vector b, N_Vector weight,
-		    N_Vector ycur);
+  int (*ark_msetup)(struct ARKodeMemRec *ark_mem, N_Vector vtemp1, 
+		    N_Vector vtemp2, N_Vector vtemp3); 
+  int (*ark_msolve)(struct ARKodeMemRec *ark_mem, N_Vector b, N_Vector weight);
   void (*ark_mfree)(struct ARKodeMemRec *ark_mem);
   void *ark_mass_mem;
+  int ark_msolve_type;   /* mass matrix type: 0=iterative; 1=dense; 
+			                      2=band; 3=custom */
 
   /*------------
     Saved Values
@@ -420,7 +427,8 @@ typedef struct ARKodeMemRec {
   realtype    ark_hold;         /* last successful h value used               */
   booleantype ark_jcur;         /* is Jacobian info. for lin. solver current? */
   realtype    ark_tolsf;        /* tolerance scale factor                     */
-  booleantype ark_setupNonNull; /* does setup do anything?                    */
+  booleantype ark_setupNonNull; /* does ark_lsetup do anything?               */
+  booleantype ark_MassSetupNonNull; /* does ark_msetup do anything?           */
   booleantype ark_VabstolMallocDone;
   booleantype ark_MallocDone;  
   booleantype ark_resized;      /* denotes first step after ARKodeResize      */
@@ -592,8 +600,8 @@ typedef struct ARKodeMemRec {
 ---------------------------------------------------------------*/
   
 /*---------------------------------------------------------------
- int (*ark_msetup)(ARKodeMem ark_mem, N_Vector ypred, 
-		   N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+ int (*ark_msetup)(ARKodeMem ark_mem, N_Vector vtemp1, 
+                   N_Vector vtemp2, N_Vector vtemp3);
  -----------------------------------------------------------------
  The job of ark_msetup is to prepare the mass matrix solver for
  subsequent calls to ark_msolve. It may recompute mass matrix
@@ -602,9 +610,6 @@ typedef struct ARKodeMemRec {
 
  ark_mem - problem memory pointer of type ARKodeMem. See the
           typedef earlier in this file.
-
- ypred - the predicted y vector for the current ARKODE internal
-         step.
 
  vtemp1 - temporary N_Vector provided for use by ark_lsetup.
 
@@ -617,14 +622,12 @@ typedef struct ARKodeMemRec {
 ---------------------------------------------------------------*/
 
 /*---------------------------------------------------------------
- int (*ark_msolve)(ARKodeMem ark_mem, N_Vector b, 
-                   N_Vector weight, N_Vector ycur);
+ int (*ark_msolve)(ARKodeMem ark_mem, N_Vector b, N_Vector weight);
 -----------------------------------------------------------------
  ark_msolve must solve the linear equation M x = b, where
- M is the system mass matrix, and the RHS vector b is input. The 
- N-vector ycur contains the solver's current approximation to 
- y(tn). The solution is to be returned in the vector b. 
- ark_msolve returns a positive value for a recoverable error and 
+ M is the system mass matrix, and the RHS vector b is input. The
+ solution is to be returned in the vector b.  The ark_msolve
+ routine returns a positive value for a recoverable error and 
  a negative value for an unrecoverable error. Success is 
  indicated by a 0 return value.
 ---------------------------------------------------------------*/
