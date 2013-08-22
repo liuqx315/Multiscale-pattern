@@ -197,26 +197,22 @@ Completed components:
     capabilities. 
 [X] Add FGMRES solver to ARKode/FARKODE routines and documentation.
 [X] Add support for fixed-point solver for implicit stage solves.
+[X] Organize User_callable.rst file to group optional inputs so that
+    they aren't so haphazard (and so numerous in one place).  Within
+    each group, alphebetize based on name of "set" routine.
+[X] Optimize fixed-point solver.
 
 
 
 Remaining components to build:
-[ ] Organize User_callable.rst file to group optional inputs so that
-    they aren't so haphazard (and so numerous in one place).  Within
-    each group, alphebetize based on name of "set" routine.
-[ ] Optimize fixed-point solver (currently results in too much ODE error).
 [ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
     logic to account for this in step solution & embedding.  Update
     time step solution/embedding routine to now do solves to compute
     these. 
 [ ] Consider whether a non-identity matrix M will change how
-    preconditioning occurs, i.e. whether it disables either right or
-    left preconditioning.
-[ ] Update ARKSpilsAtimes function (and similar, e.g. arkDenseSetup) 
-    to accommodate a non-identity mass matrix.  This may also change 
-    how gamma/gammap are handled, since changes to gamma may have 
-    more/less effect with a non-identity mass matrix.  Think about 
-    this.
+    linear system scaling or tolerances should be performed.
+[ ] Consider whether changes to gamma may have more/less effect with a
+    non-identity mass matrix.
 [ ] Determine optimal input parameters for a user to control how often
     mesh adaptivity should be enabled (e.g. a physical amount of time,
     a fixed number of time steps, etc.).
@@ -228,7 +224,7 @@ Remaining components to build:
     communication preceding a call to fI for an ImEx problem.  A call
     preceding fI would be more useful than one preceding fE, since fI
     should be called more often throughout the solve. 
-[ ] Begin tuning solver parameters for increased efficiency on all
+[ ] Tune solver parameters for increased efficiency on all
     test problems.
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
