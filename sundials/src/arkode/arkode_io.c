@@ -1730,7 +1730,7 @@ int ARKodeSetMaxStepsBetweenLSet(void *arkode_mem, int msbp)
  ARKodeSetPredictorMethod:
 
  Specifies the method to use for predicting implicit solutions.  
- Non-default choices are {1,2,3}, all others will use default 
+ Non-default choices are {1,2,3,4}, all others will use default 
  (trivial) predictor.
 ---------------------------------------------------------------*/
 int ARKodeSetPredictorMethod(void *arkode_mem, int pred_method)
