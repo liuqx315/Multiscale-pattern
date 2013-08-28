@@ -1025,6 +1025,9 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   ----------------------------------------*/
   if (ark_mem->ark_nst == 0) {
 
+    /* Temporarily set ark_h and perform initial integrator setup */
+    ark_mem->ark_h = fabs(tout - ark_mem->ark_tn);
+    if (ark_mem->ark_h == ZERO)  ark_mem->ark_h = ONE;
     ier = arkInitialSetup(ark_mem);
     if (ier!= ARK_SUCCESS) return(ier);
     
@@ -1041,6 +1044,10 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
       return(ARK_ILL_INPUT);
     }
     if (ark_mem->ark_h == ZERO) {
+      /* Again, temporarily set ark_h for estimating an optimal value */
+      ark_mem->ark_h = fabs(tout - ark_mem->ark_tn);
+      if (ark_mem->ark_h == ZERO)  ark_mem->ark_h = ONE;
+      /* Estimate the first step size */
       tout_hin = tout;
       if ( ark_mem->ark_tstopset && 
 	   (tout-ark_mem->ark_tn)*(tout-ark_mem->ark_tstop) > 0 ) 
@@ -3627,8 +3634,9 @@ static int arkStep(ARKodeMem ark_mem)
 ---------------------------------------------------------------*/
 static void arkPredict(ARKodeMem ark_mem, int istage)
 {
-  int retval, ord;
+  int i, retval, ord, jstage;
   realtype tau, tau_tol = 0.5;
+  realtype h, a0, a1, a2;
   N_Vector yguess = ark_mem->ark_ycur;
 
   /* if the first step (or if resized), use initial condition as guess */
@@ -3668,6 +3676,42 @@ static void arkPredict(ARKodeMem ark_mem, int istage)
       retval = arkDenseEval(ark_mem, tau, 0, 1, yguess);
     }
     if (retval == ARK_SUCCESS)  return;
+    break;
+
+  case 4:
+
+    /***** Bootstrap predictor: if any previous stage in step has nonzero c_i, 
+	   construct a quadratic Hermite interpolant for prediction; otherwise 
+	   use the trivial predictor. *****/
+
+    /* this approach will not work (for now) when using a non-identity mass matrix */
+    if (ark_mem->ark_mass_matrix)  break;
+
+    /* determine if any previous stages in step meet criteria */
+    jstage = -1;
+    for (i=0; i<istage; i++)
+      jstage = (ark_mem->ark_c[i] != ZERO) ? i : jstage;
+
+    /* if using the trivial predictor, break */
+    if (jstage == -1)  break;
+    
+    /* find the "optimal" previous stage to use */
+    for (i=0; i<istage; i++) 
+      if ((ark_mem->ark_c[i] > ark_mem->ark_c[jstage]) && (ark_mem->ark_c[i] != ZERO))
+	jstage = i;
+
+    /* evaluate the quadratic Hermite interpolant for the prediction */
+    h = ark_mem->ark_h * ark_mem->ark_c[jstage];
+    tau = ark_mem->ark_h * ark_mem->ark_c[istage];
+    a0 = ONE;
+    a2 = tau*tau/TWO/h;
+    a1 = tau - a2;
+
+    N_VLinearSum(a0, ark_mem->ark_ynew, a1, ark_mem->ark_fnew, yguess);
+    if (!ark_mem->ark_explicit) 
+      N_VLinearSum(a2, ark_mem->ark_Fi[jstage], ONE, yguess, yguess);
+    if (!ark_mem->ark_implicit) 
+      N_VLinearSum(a2, ark_mem->ark_Fe[jstage], ONE, yguess, yguess);
     break;
 
   }
@@ -3997,7 +4041,9 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
 
     /* if M!=I, update fnew with M^{-1}*fnew (note, mass matrix already current) */
     if (ark_mem->ark_mass_matrix) {   /* M != I */
+      N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);      /* scale RHS */
       retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt); 
+      N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);  /* scale result */
       ark_mem->ark_mass_solves++;
       if (retval != ARK_SUCCESS) {
 	ark_mem->ark_nmassfails++;
@@ -4949,7 +4995,9 @@ static int arkFullRHS(ARKodeMem ark_mem, realtype t,
 
   /* if the problem involves a non-identity mass matrix, perform solve here */
   if (ark_mem->ark_mass_matrix) {
+    N_VScale(ark_mem->ark_h, f, f);      /* scale RHS */
     retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_ewt); 
+    N_VScale(ONE/ark_mem->ark_h, f, f);      /* scale result */
     ark_mem->ark_mass_solves++;
     if (retval != ARK_SUCCESS) {
       ark_mem->ark_nmassfails++;

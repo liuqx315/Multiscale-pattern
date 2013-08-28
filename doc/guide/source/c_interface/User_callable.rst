@@ -1,4 +1,4 @@
- :tocdepth: 3
+:tocdepth: 3
 
 .. _CInterface.UserCallable:
 
@@ -2021,17 +2021,24 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
 .. c:function:: int ARKodeSetPredictorMethod(void *arkode_mem, int method)
 
    Specifies the method to use for predicting implicit solutions.  
-   Non-default choices are {1,2,3}, all others will use default 
+   Non-default choices are {1,2,3,4}, all others will use default 
    (trivial) predictor.
    
    **Arguments:**
       * `arkode_mem` -- pointer to the ARKode memory block.
-      * `method` -- method choice (0 :math:`\le` `method` :math:`\le`
-        3): 0 is the trivial predictor, 1 is the dense output predictor, 2
-        is the dense output predictor that decreases the polynomial degree
-        for more distant RK stages, 3 is the dense output predictor to max
-        order for early RK stages, and a first-order predictor for distant
-        RK stages.
+      * `method` -- method choice (0 :math:`\le` `method` :math:`\le` 4): 
+
+        * 0 is the trivial predictor, 
+
+        * 1 is the dense output predictor, 
+
+	* 2 is the dense output predictor that decreases the
+	  polynomial degree for more distant RK stages, 
+
+        * 3 is the dense output predictor to max order for early RK
+	  stages, and a first-order predictor for distant RK stages, 
+
+        * 4 is the bootstrap predictor.
    
    **Return value:** 
       * ARK_SUCCESS if successful

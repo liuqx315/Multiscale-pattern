@@ -157,3 +157,23 @@ interpolant to use for prediction:
       q_{max}, & \text{if}\quad \tau < \tfrac12,\\
       1, & \text{otherwise}.
    \end{cases}
+
+
+
+.. _Mathematics.Predictors.Bootstrap:
+
+Bootstrap predictor
+---------------------------
+
+This predictor does not use any information from the preceding step,
+aside from the previous solution :math:`y_{n-1}` and right-hand side
+:math:`f(t_{n-1},y_{n-1})`.  However, unlike the trivial predictor,
+in computing the predictor :math:`z_i^{(0)}` this approach will use
+the right-hand side from a previously computed stage solution
+:math:`f(t_{n-1}+c_j h,z_j)` to construct a quadratic Hermite
+interpolant for the prediction.  For stages in which :math:`c_j=0` for
+all previous stages :math:`j`, and for the first stage of any time step,
+this method reduces to using the trivial predictor 
+:math:`z_i^{(0)} = y_{n-1}`.  For stages in which multiple
+:math:`c_j\ne 0`, :math:`j` will be chosen as the stage with the
+largest :math:`c_j` value.

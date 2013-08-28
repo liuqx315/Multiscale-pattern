@@ -189,8 +189,8 @@ for j in range(len(rtol)):
     ierr += iret
     itot += len(testsI[2])
 
-# check predictor methods {0,1,2,3} (DIRK only)
-algs = (0,1,2,3);
+# check predictor methods {0,1,2,3,4} (DIRK only)
+algs = (0,1,2,3,4);
 for j in range(len(rtol)):
   for i in range(len(algs)):
     sys.stdout.write("Predictor method %i tests (rtol = %g, atol = %g):" 

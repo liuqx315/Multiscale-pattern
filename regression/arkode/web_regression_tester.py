@@ -260,8 +260,8 @@ for j in range(len(rtol)):
     f.write("<br><b>    " + test_string + "</b>  (<a href=\"" + pfile + "\">input parameters</a>)\n")
     iret = run_tests(outdir,f,testsI[2],ovtol);
 
-# check predictor methods {0,1,2,3} (DIRK only)
-algs = (0,1,2,3);
+# check predictor methods {0,1,2,3,4} (DIRK only)
+algs = (0,1,2,3,4);
 for j in range(len(rtol)):
   for i in range(len(algs)):
     test_string = "Predictor method %i tests (rtol = %g, atol = %g):" % (algs[i], rtol[j], atol[j])
