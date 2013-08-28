@@ -171,9 +171,19 @@ aside from the previous solution :math:`y_{n-1}` and right-hand side
 in computing the predictor :math:`z_i^{(0)}` this approach will use
 the right-hand side from a previously computed stage solution
 :math:`f(t_{n-1}+c_j h,z_j)` to construct a quadratic Hermite
-interpolant for the prediction.  For stages in which :math:`c_j=0` for
-all previous stages :math:`j`, and for the first stage of any time step,
-this method reduces to using the trivial predictor 
+interpolant for the prediction.  If we define the constants
+:math:`\tilde{h} = c_j h` and :math:`\tau = c_i h`, the predictor is
+given by 
+
+.. math::
+ 
+   z_i^{(0)} = y_{n-1} + \left(\tau - \frac{\tau^2}{2\tilde{h}}\right)
+      f(t_{n-1},y_{n-1}) + \frac{\tau^2}{2\tilde{h}} f(t_{n-1}+c_j h,z_j).
+
+For stages in which :math:`c_j=0` for all previous stages 
+:math:`j = 0,\ldots,i-1`, and for the first stage of any time step
+:math:`(i=0)`, this method reduces to using the trivial predictor  
 :math:`z_i^{(0)} = y_{n-1}`.  For stages in which multiple
 :math:`c_j\ne 0`, :math:`j` will be chosen as the stage with the
-largest :math:`c_j` value.
+largest :math:`c_j` value, to minimize the amount of extrapolation
+induced through the prediction.
