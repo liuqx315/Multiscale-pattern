@@ -330,7 +330,8 @@ static int ARKSpgmrSolve(ARKodeMem ark_mem, N_Vector b,
 
   /* Set inputs delta and initial guess x = 0 to SpgmrSolve */  
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;
-  N_VConst(ZERO, arkspils_mem->s_x);
+  /* N_VConst(ZERO, arkspils_mem->s_x); */
+  N_VConst(ark_mem->ark_uround, arkspils_mem->s_x);
   
   /* Call SpgmrSolve and copy x to b */
   retval = SpgmrSolve(spgmr_mem, ark_mem, arkspils_mem->s_x, b, 
@@ -662,8 +663,8 @@ static int ARKMassSpgmrSolve(ARKodeMem ark_mem, N_Vector b,
   /* Test norm(b); if small, return x = 0 or x = b */
   arkspils_mem->s_deltar = arkspils_mem->s_eplifac * ark_mem->ark_eLTE; 
   bnorm = N_VWrmsNorm(b, weight);
-  if (bnorm <= arkspils_mem->s_deltar) 
-    return(0);
+  /* if (bnorm <= arkspils_mem->s_deltar)  */
+  /*   return(0); */
 
   /* Set inputs delta and initial guess x = 0 to SpgmrSolve */  
   arkspils_mem->s_delta = arkspils_mem->s_deltar * arkspils_mem->s_sqrtN;

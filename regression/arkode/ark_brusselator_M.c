@@ -424,12 +424,14 @@ int main()
   printf("   Total linear iterations = %li\n", nli);
   printf("   Total linear convergence failures = %li\n", nlcf);
   printf("   Total J*v evaluations = %li\n", nJv);
-  printf("   Total mass matrix solver iters = %li\n", nmi);
-  printf("   Total mass matrix solver sonvergence failures = %li\n", nmcf);
   printf("   Total M*v evaluations = %li\n", nMv);
 #else
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
+#endif
+#ifdef MASS_USE_ITERATIVE
+  printf("   Total mass matrix solver iters = %li\n", nmi);
+  printf("   Total mass matrix solver sonvergence failures = %li\n", nmcf);
 #endif
   printf("   Total number of nonlinear iterations = %li\n", nni);
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);

@@ -203,7 +203,8 @@ static int arkBandSetup(ARKodeMem ark_mem, int convfail,
 {
   booleantype jbad, jok;
   realtype dgamma, *Acol_j, *Mcol_j;
-  long int i, j, colSize, ier;
+  long int i, j, colSize, ier, ml, mu, N, M, is, ie;
+  DlsMat A, Mass;
   ARKDlsMem arkdls_mem;
   ARKDlsMassMem arkdls_mass_mem;
   int retval;
@@ -274,16 +275,21 @@ static int arkBandSetup(ARKodeMem ark_mem, int convfail,
       return(1);
     }
 
-    /* Add to A -- CURRENTLY ASSUMES THAT BOTH MATRICES HAVE 
-                   THE SAME BAND STRUCTURE AND COLUMN SIZE */
-    colSize = arkdls_mem->d_M->mu + arkdls_mem->d_M->ml + 1;
-    for (j=0; j<arkdls_mem->d_M->M; j++) {
-      Acol_j = arkdls_mem->d_M->cols[j] + arkdls_mem->d_M->s_mu - arkdls_mem->d_M->mu;
-      Mcol_j = arkdls_mass_mem->d_M->cols[j] + arkdls_mass_mem->d_M->s_mu 
-	     - arkdls_mass_mem->d_M->mu;
-      for (i=0; i<colSize; i++) 
-	Acol_j[i] += Mcol_j[i];
+    /* perform matrix sum */
+    ml = arkdls_mem->d_M->ml;
+    mu = arkdls_mem->d_M->mu;
+    N = arkdls_mem->d_M->N;
+    M = arkdls_mem->d_M->M;
+    A = arkdls_mem->d_M;
+    Mass = arkdls_mass_mem->d_M;
+    for (j=0; j<N; j++) {                /* loop over columns */
+      is = (0 > j-mu) ? 0 : j-mu;        /* colum nonzero bounds */
+      ie = (M-1 < j+ml) ? M-1 : j+ml;
+      for (i=is; i<=ie; i++) {           /* loop over rows */
+	BAND_ELEM(A,i,j) += BAND_ELEM(Mass,i,j);
+      }
     }
+
   } else {
     AddIdentity(arkdls_mem->d_M);
   }
@@ -598,14 +604,18 @@ static int arkMassBandMultiply(N_Vector v, N_Vector Mv,
     return(1);
 
   /* perform matrix-vector product and return */
-  realtype *Mcol_j;
-  long int colSize = arkdls_mem->d_M->mu + arkdls_mem->d_M->ml + 1;
-  long int s_mu = arkdls_mem->d_M->s_mu;
-  long int i, j;
-  for (j=0; j<arkdls_mem->d_M->M; j++) {
-    Mcol_j = arkdls_mem->d_M->cols[j] + arkdls_mem->d_M->s_mu - arkdls_mem->d_M->mu;
-    for (i=0; i<colSize; i++) 
-      Mvdata[i+j-s_mu] += Mcol_j[i]*vdata[j];
+  long int ml = arkdls_mem->d_M->ml;
+  long int mu = arkdls_mem->d_M->mu;
+  long int N = arkdls_mem->d_M->N;
+  long int M = arkdls_mem->d_M->M;
+  DlsMat A = arkdls_mem->d_M;
+  long int i, is, ie, j;
+  for (j=0; j<N; j++) {                /* loop over columns */
+    is = (0 > j-mu) ? 0 : j-mu;        /* colum nonzero bounds */
+    ie = (M-1 < j+ml) ? M-1 : j+ml;
+    for (i=is; i<=ie; i++) {           /* loop over rows */
+      Mvdata[i] += BAND_ELEM(A,i,j)*vdata[j];
+    }
   }
   return(0);
 }
