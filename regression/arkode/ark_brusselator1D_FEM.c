@@ -77,8 +77,10 @@
 #define USE_SPGMR
 /* #define USE_SPBCG */
 /* #define USE_SPTFQMR */
-/* #define MASS_USE_SPGMR */
-#define MASS_USE_PCG
+
+#define MASS_USE_ITERATIVE
+#define MASS_USE_SPGMR
+/* #define MASS_USE_PCG */
 /* #define MASS_USE_SPBCG */
 /* #define MASS_USE_SPTFQMR */
 
@@ -440,7 +442,7 @@ int main() {
 
 
   /* Specify the mass matrix linear solver */
-#ifdef USE_ITERATIVE
+#ifdef MASS_USE_ITERATIVE
 #ifdef MASS_USE_SPGMR
   flag = ARKMassSpgmr(arkode_mem, 0, 500, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSpgmr", 1)) return 1;
@@ -579,15 +581,17 @@ int main() {
   check_flag(&flag, "ARKSpilsGetNumConvFails", 1);
   flag = ARKSpilsGetNumJtimesEvals(arkode_mem, &nJv);
   check_flag(&flag, "ARKSpilsGetNumJtimesEvals", 1);
-  flag = ARKSpilsGetNumMassIters(arkode_mem, &nmi);
-  check_flag(&flag, "ARKSpilsGetNumMassIters", 1);
-  flag = ARKSpilsGetNumMassConvFails(arkode_mem, &nmcf);
-  check_flag(&flag, "ARKSpilsGetNumMassConvFails", 1);
 #else
   flag = ARKDlsGetNumJacEvals(arkode_mem, &nje);
   check_flag(&flag, "ARKDlsGetNumJacEvals", 1);
   flag = ARKDlsGetNumRhsEvals(arkode_mem, &nfeLS);
   check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
+#endif
+#ifdef MASS_USE_ITERATIVE
+  flag = ARKSpilsGetNumMassIters(arkode_mem, &nmi);
+  check_flag(&flag, "ARKSpilsGetNumMassIters", 1);
+  flag = ARKSpilsGetNumMassConvFails(arkode_mem, &nmcf);
+  check_flag(&flag, "ARKSpilsGetNumMassConvFails", 1);
 #endif
 
   printf("\nFinal Solver Statistics:\n");
@@ -600,12 +604,14 @@ int main() {
   printf("   Total linear iterations = %li\n", nli);
   printf("   Total linear convergence failures = %li\n", nlcf);
   printf("   Total J*v evaluations = %li\n", nJv);
-  printf("   Total mass matrix solver iters = %li\n", nmi);
-  printf("   Total mass matrix solver sonvergence failures = %li\n", nmcf);
   printf("   Total M*v evaluations = %li\n", nMv);
 #else
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
+#endif
+#ifdef MASS_USE_ITERATIVE
+  printf("   Total mass matrix solver iters = %li\n", nmi);
+  printf("   Total mass matrix solver sonvergence failures = %li\n", nmcf);
 #endif
   printf("   Total number of nonlinear iterations = %li\n", nni);
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
