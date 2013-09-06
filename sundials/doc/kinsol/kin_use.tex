@@ -165,12 +165,13 @@ provided with {\kinsol}: Steps marked {\p} correspond to
 \item
   {\bf Set problem dimensions}
 
-  {\s} Set \id{N}, the problem size $N$ (of type \id{int}).
+  {\s} Set \id{N}, the problem size $N$.
 
-  {\p} Set \id{Nlocal} (of type \id{int}), the local vector length (the
-  sub-vector length for this process). Set \id{N} (of type \id{int}), the global
-  vector length (the problem size $N$, and the sum of all the values of \id{Nlocal}).
-  Set the active set of processes.
+  {\p} Set \id{Nlocal}, the local vector length (the sub-vector length for this process).
+  Set \id{N}, the global vector length (the problem size $N$, and the sum of all the
+  values of \id{Nlocal}).  Set the active set of processes.
+
+  Note: The variables \id{N} and \id{Nlocal} should be of type \id{long int}.
 
 \item
   {\bf Set vector with initial guess}
@@ -234,9 +235,9 @@ provided with {\kinsol}: Steps marked {\p} correspond to
 
   {\s} \id{ier = }\Id{KINBand}\id{(...);}
 
-  {\s} \id{flag = }\Id{KINLapackDense}\id{(...);}
+  {\s} \id{ier = }\Id{KINLapackDense}\id{(...);}
 
-  {\s} \id{flag = }\Id{KINLapackBand}\id{(...);}
+  {\s} \id{ier = }\Id{KINLapackBand}\id{(...);}
 
   \id{ier = }\Id{KINSpgmr}\id{(...);}
   
@@ -340,7 +341,8 @@ flag = KINInit(kin\_mem, func, tmpl);
   \item[kin\_mem] (\id{void *})
     pointer to the {\kinsol} memory block returned by \id{KINCreate}.
   \item[func] (\Id{KINSysFn})
-    is the {\C} function which computes the system function $F$ in the nonlinear
+    is the {\C} function which computes the system function $F$ 
+    (or $G(u)$ for fixed-point iteration and Anderson acceleration) in the nonlinear
     problem.  This function has the form \id{func(u, fval, user\_data)}. 
     (For full details see \S\ref{ss:sysFn}.)
   \item[tmpl] (\id{N\_Vector})
@@ -885,9 +887,9 @@ Pointer to an info file & \id{KINSetInfoFile} & \id{stdout} \\
 Data for problem-defining function & \id{KINSetUserData} & \id{NULL} \\
 Verbosity level of output & \id{KINSetPrintLevel} & 0 \\
 Max. number of nonlinear iterations & \id{KINSetNumMaxIters} & 200 \\
-No initial preconditioner setup & \id{KINSetNoInitSetup} & \id{FALSE} \\
+No initial matrix setup & \id{KINSetNoInitSetup} & \id{FALSE} \\
 No residual monitoring${}^{*}$ & \id{KINSetNoResMon} & \id{FALSE} \\
-Max. iterations without prec. setup & \id{KINSetMaxSetupCalls} & 10 \\
+Max. iterations without matrix setup & \id{KINSetMaxSetupCalls} & 10 \\
 Max. iterations without residual check${}^{*}$ & \id{KINSetMaxSubSetupCalls} & 5 \\
 Form of $\eta$ coefficient & \id{KINSetEtaForm} &  \id{KIN\_ETACHOICE1}\\
 Constant value of $\eta$ & \id{KINSetEtaConstValue} &  0.1 \\
@@ -1208,15 +1210,15 @@ flag = KINSetNoInitSetup(kin\_mem, noInitSetup);
 }
 {
   The function \ID{KINSetNoInitSetup} specifies whether an initial call
-  to the preconditioner setup function should be made or not.
+  to the preconditioner or Jacobian setup function should be made or not.
 }
 {
   \begin{args}[noInitSeti[]
   \item[kin\_mem] (\id{void *})
     pointer to the {\kinsol} memory block.
   \item[noInitSetup] (\id{booleantype})
-    flag controlling whether an initial call to the preconditioner setup
-    function is made (pass \id{FALSE}) or not made (pass \id{TRUE}).
+    flag controlling whether an initial call to the preconditioner or Jacobian
+    setup function is made (pass \id{FALSE}) or not made (pass \id{TRUE}).
   \end{args}
 }
 {
@@ -1230,10 +1232,10 @@ flag = KINSetNoInitSetup(kin\_mem, noInitSetup);
 }
 {
   The default value for \id{noInitSetup} is \id{FALSE}, meaning that an initial call
-  to the preconditioner setup function will be made.
+  to the preconditioner or Jacobian setup function will be made.
 
-  A call to this function is useful when solving a sequence of problems,
-  in which the final preconditioner value from problem is to be used initially
+  A call to this function is useful when solving a sequence of problems, in which
+  the final preconditioner or Jacobian value from one problem is to be used initially
   for the next problem. 
 }
 %%
@@ -1281,7 +1283,7 @@ flag = KINSetMaxSetupCalls(kin\_mem, msbset);
 {
   The function \ID{KINSetMaxSetupCalls} specifies the maximum number of 
   nonlinear iterations that can be performed between calls to the 
-  preconditioner setup function.
+  preconditioner or Jacobian setup function.
 }
 {
   \begin{args}[kin\_mem]
@@ -1289,7 +1291,7 @@ flag = KINSetMaxSetupCalls(kin\_mem, msbset);
     pointer to the {\kinsol} memory block.
   \item[msbset] (\id{long int})
     maximum number of nonlinear iterations without a call to the
-    preconditioner setup function.  Pass 0 to indicate the default.
+    preconditioner or Jacobian setup function.  Pass 0 to indicate the default.
   \end{args}
 }
 {
@@ -1776,7 +1778,8 @@ flag = KINSetSysFunc(kin\_mem, func);
   \item[kin\_mem] (\id{void *})
     pointer to the {\kinsol} memory block.
   \item[func] (\id{KINSysFn})
-    user-supplied function that evaluates $F(u)$.
+    user-supplied function that evaluates $F(u)$ (or $G(u)$ for fixed-point 
+    iteration and Anderson acceleration).
   \end{args}
 }
 {

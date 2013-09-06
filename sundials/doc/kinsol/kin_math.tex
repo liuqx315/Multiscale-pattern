@@ -4,7 +4,7 @@
 
 {\kinsol} solves nonlinear algebraic systems in real $N$-space.  
 
-Using Newton's method or the Picard iteration, one can solve
+Using Newton's method, or the Picard iteration, one can solve
 \index{nonlinear system!definition}
 \begin{equation}\label{nonlinear_system}
   F(u) = 0 \, , \quad F:\mbox{\bf R}^N \rightarrow \mbox{\bf R}^N \, ,
@@ -324,7 +324,7 @@ value of $\sigma$ remains appropriately small, as shown in~\cite{Bro:87}.
 
 \subsubsection*{Basic Fixed Point iteration}
 %%
-The basic fixed-point iteration scheme, implemented in {\kinsol} is given by:
+The basic fixed-point iteration scheme implemented in {\kinsol} is given by:
 
 \vspace{1ex}
 \index{Fixed-point iteration!definition}
@@ -352,7 +352,7 @@ The Picard iteration, as implemented in {\kinsol}, is given by:
    \item Set $u_0 = $ an initial guess
    \item For $n = 0, 1, 2,...$ until convergence do:
       \begin{itemize}
-          \item[(a)] Set $u_{n+1} = u_n - L^{-1}N(u_n)$.
+          \item[(a)] Set $u_{n+1} = u_n - L^{-1}F(u_n)$.
           \item[(b)] Test $F(u_{n+1})$ for convergence.
       \end{itemize}
 \end{enumerate}
@@ -423,13 +423,13 @@ roughly the same order of magnitude.
 It is also possible for the user to set the stopping criterion via the user 
 supplied problem-defining function and calling \ID{KINSetAAStopCrit}.  
 Note that when using Anderson acceleration, 
-convergence is checked after teh acceleration is applied.
+convergence is checked after the acceleration is applied.
 
 
 \subsubsection*{Picard - Anderson Acceleration Stopping Criterion}
 
 The default stopping criterion is 
-\[ \|F(u_n)_{D_F,\infty} < \mbox{\sc ftol} \, , \]
+\[ \|F(u_n)\|_{D_F,\infty} < \mbox{\sc ftol} \, , \]
 where $D_F$ is a user-defined diagonal identity matrix that can be the identity 
 or a scaling matrix that is chosen so that the components of $D_F F(u)$ have 
 roughly the same order of magnitude.
