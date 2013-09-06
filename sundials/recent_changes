@@ -127,3 +127,21 @@ public by way of updates to the website after 3/22/12.
     In examples fkinDiagon_kry.f and fkinDiagon_kry_p.,f, changed format specs i2
     to i4 in writes of error return values.
 
+30. Fixed bug in KINSOL involving initialization of mxnewtstep.  On repeated
+    user calls to KINSol with no call to KINSetMaxNewtonStep, the old value of
+    mxnewtstep was being incorrectly used.  In the fix, a new solver memory
+    member, mxnstepin, is the input (or preset to 0) value of mxnewtstep.
+    KINSetMaxNewtonStep sets mxnstepin (if non-negative).  KINSolInit sets
+    mxnewtstep to either the default or user's input according to mxnstepin.
+
+31. In all FCVODE, FIDA, FKINSOL examples, revised integer declarations so that
+    those which must match a C type (long int or int) have INTEGER*4 and a
+    comment about the type match.  All others are just INTEGER.  In the
+    corresponding user guides, added (or corrected) notes about the type
+    of N and Nlocal, and of arguments to FCVBPOPT and *BBDOPT.
+
+32. Added ARKODE solver to SUNDIALS, including additional PCG and FGMRES 
+    Krylov solvers and CMAKE-based build system support for C++ and Fortran90
+    example programs.  Also added a new parallel N_Vector kernel, corresponding 
+    to a multi-dimensional Cartesian grid with an arbitrary number of ghost zones
+    defined at each Cartesian face.
