@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009/03/29 23:28:01 $
+ * $Revision: $
+ * $Date: $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -99,6 +99,7 @@ typedef struct KINMemRec {
 				       algorithm)                              */
 
   realtype kin_mxnewtstep;     /* maximum allowable scaled step length         */
+  realtype kin_mxnstepin;      /* input (or preset) value for mxnewtstep       */  
   realtype kin_sqrt_relfunc;   /* relative error bound for func(u)             */
   realtype kin_stepl;          /* scaled length of current step                */
   realtype kin_stepmul;        /* step scaling factor                          */

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2010/12/01 22:43:33 $
+ * $Revision: $
+ * $Date: $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -599,9 +599,9 @@ int KINSetMaxNewtonStep(void *kinmem, realtype mxnewtstep)
   }
 
   /* Note: passing a value of 0.0 will use the default
-     value (computed in KINSolinit) */
+     value (computed in KINSolInit) */
 
-  kin_mem->kin_mxnewtstep = mxnewtstep;
+  kin_mem->kin_mxnstepin = mxnewtstep;
 
   return(KIN_SUCCESS);
 }
