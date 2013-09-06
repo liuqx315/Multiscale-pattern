@@ -22,12 +22,6 @@ SET(CVODE_examples
   cvKrylovDemo_prec
   cvRoberts_dns
   cvRoberts_dns_uw
-  cv_VanderPol
-  cv_analytic
-  cv_analytic_nonlin
-  cv_analytic_sys
-  cv_brusselator
-  cv_brusselator1D
   )
 
 # Add variable CVODE_examples_BL with the names of the serial CVODE examples
