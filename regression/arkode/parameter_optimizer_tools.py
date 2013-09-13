@@ -48,7 +48,7 @@ def set_baseline(tests,CM):
     """ returns an array containing the baseline costs of each test.    """
     baseline = [];
     for i in range(len(tests)):
-        baseline.append(run_cost(tests[i],1.0,CM));
+        baseline.append(run_cost(tests[i], 1.0, CM));
     return baseline
 
 ##########
@@ -61,9 +61,18 @@ def calc_cost(tests,baseline,CM):
     totalcost = 0.0
     ntests = len(tests);
     for i in range(len(tests)):
-        cost = run_cost(tests[i],baseline[i],CM);
+        cost = run_cost(tests[i], baseline[i], CM);
         totalcost += cost/ntests;
     return totalcost
+
+##########
+def calc_cost_single(test,CM):
+    """ This routine takes in a strings containing an executable name   """ 
+    """ and a cost model array.  It runs the test and computes its cost """
+    """ according to the supplied cost model, returning a single value  """
+    """ corresponding to the cost of the run.                           """
+    cost = run_cost(test, 1.0, CM);
+    return cost
 
 ##########
 def sort_params(param_list):
@@ -315,6 +324,228 @@ def parameter_rand_search(order, dense_order, imex, adapt_method, cflfac,
 
         # run tests to evaluate overall cost
         p.cost = calc_cost(tests, base, CM)
+        if (p.cost != p.cost):
+            p.cost = 10000.0;
+
+        # output progress
+        if ((1.0*ntested/ntries >= 0.1) and (1.0*(ntested-1)/ntries < 0.1)):
+            elapsed = (time.time() - tstart)
+            eta = 9.0/1.0*elapsed;
+            sys.stdout.write(" 1/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.2) and (1.0*(ntested-1)/ntries < 0.2)):
+            elapsed = (time.time() - tstart)
+            eta = 8.0/2.0*elapsed;
+            sys.stdout.write(" 2/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.3) and (1.0*(ntested-1)/ntries < 0.3)):
+            elapsed = (time.time() - tstart)
+            eta = 7.0/3.0*elapsed;
+            sys.stdout.write(" 3/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.4) and (1.0*(ntested-1)/ntries < 0.4)):
+            elapsed = (time.time() - tstart)
+            eta = 6.0/4.0*elapsed;
+            sys.stdout.write(" 4/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.5) and (1.0*(ntested-1)/ntries < 0.5)):
+            elapsed = (time.time() - tstart)
+            eta = 5.0/5.0*elapsed;
+            sys.stdout.write(" 5/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.6) and (1.0*(ntested-1)/ntries < 0.6)):
+            elapsed = (time.time() - tstart)
+            eta = 4.0/6.0*elapsed;
+            sys.stdout.write(" 6/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.7) and (1.0*(ntested-1)/ntries < 0.7)):
+            elapsed = (time.time() - tstart)
+            eta = 3.0/7.0*elapsed;
+            sys.stdout.write(" 7/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.8) and (1.0*(ntested-1)/ntries < 0.8)):
+            elapsed = (time.time() - tstart)
+            eta = 2.0/8.0*elapsed;
+            sys.stdout.write(" 8/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+        if ((1.0*ntested/ntries >= 0.9) and (1.0*(ntested-1)/ntries < 0.9)):
+            elapsed = (time.time() - tstart)
+            eta = 1.0/9.0*elapsed;
+            sys.stdout.write(" 9/10 complete (%g seconds, %g remaining)\n" % (elapsed,eta))
+
+        # if structure is not full, just add entry and sort
+        if (isaved < nsaved):
+            optimal.append(p);
+            optimal = sort_params(optimal);
+            isaved = isaved + 1;
+            
+        # otherwise, compare cost to see if it qualifies
+        elif (p.cost < optimal[-1].cost):
+            # store and sort
+            optimal[-1] = p;
+            optimal = sort_params(optimal);
+
+        # increment the interval update counter
+        iupdate += 1
+        
+        # update intervals if necessary
+        if (iupdate >= nupdate):
+            iupdate = 0;
+            oldbounds = ((dord_l, dord_r), (hmeth_l, hmeth_r), (snef_l, snef_r), 
+                         (pred_l, pred_r), (msbp_l, msbp_r), (pq_l, pq_r), (fxpt_l, fxpt_r), 
+                         (maa_l, maa_r), (mxcr_l, mxcr_r), (cfl_l, cfl_r), (safe_l, safe_r), 
+                         (bias_l, bias_r), (grow_l, grow_r), (hf_lb_l, hf_lb_r), 
+                         (hf_ub_l, hf_ub_r), (k1_l, k1_r), (k2_l, k2_r), (k3_l, k3_r), 
+                         (emx1_l, emx1_r), (emxf_l, emxf_r), (ecf_l, ecf_r), (crd_l, crd_r), 
+                         (rdv_l, rdv_r), (dgmx_l, dgmx_r), (nlsc_l, nlsc_r));
+            newbounds = update_param_bounds(optimal, oldbounds);
+            dord_l = newbounds[0][0];  dord_r = newbounds[0][1];
+            hmeth_l = newbounds[1][0];  hmeth_r = newbounds[1][1];
+            snef_l = newbounds[2][0];   snef_r = newbounds[2][1];
+            pred_l = newbounds[3][0];   pred_r = newbounds[3][1];
+            msbp_l = newbounds[4][0];   msbp_r = newbounds[4][1];
+            pq_l = newbounds[5][0];     pq_r = newbounds[5][1];
+            fxpt_l = newbounds[6][0];   fxpt_r = newbounds[6][1];
+            maa_l = newbounds[7][0];    maa_r = newbounds[7][1];
+            mxcr_l = newbounds[8][0];   mxcr_r = newbounds[8][1];
+            cfl_l = newbounds[9][0];    cfl_r = newbounds[9][1];
+            safe_l = newbounds[10][0];   safe_r = newbounds[10][1];
+            bias_l = newbounds[11][0];   bias_r = newbounds[11][1];
+            grow_l = newbounds[12][0];   grow_r = newbounds[12][1];
+            hf_lb_l = newbounds[13][0];  hf_lb_r = newbounds[13][1];
+            hf_ub_l = newbounds[14][0];  hf_ub_r = newbounds[14][1];
+            k1_l = newbounds[15][0];     k1_r = newbounds[15][1];
+            k2_l = newbounds[16][0];     k2_r = newbounds[16][1];
+            k3_l = newbounds[17][0];     k3_r = newbounds[17][1];
+            emx1_l = newbounds[18][0];   emx1_r = newbounds[18][1];
+            emxf_l = newbounds[19][0];   emxf_r = newbounds[19][1];
+            ecf_l = newbounds[20][0];    ecf_r = newbounds[20][1];
+            crd_l = newbounds[21][0];    crd_r = newbounds[21][1];
+            rdv_l = newbounds[22][0];    rdv_r = newbounds[22][1];
+            dgmx_l = newbounds[23][0];   dgmx_r = newbounds[23][1];
+            nlsc_l = newbounds[24][0];   nlsc_r = newbounds[24][1];
+            
+    # output final parameter bounds to screen
+    newbounds = update_param_bounds(optimal, oldbounds);
+    sys.stdout.write("Final parameter bounds:\n")
+    sys.stdout.write("   dense order = [%i, %i]\n" % (newbounds[0][0],newbounds[0][1]))
+    sys.stdout.write("   adaptivity method = [%i, %i]\n" % (newbounds[1][0],newbounds[1][1]))
+    sys.stdout.write("   small_nef = [%i, %i]\n" % (newbounds[2][0],newbounds[2][1]))
+    sys.stdout.write("   predictor = [%i, %i]\n" % (newbounds[3][0],newbounds[3][1]))
+    sys.stdout.write("   msbp = [%i, %i]\n" % (newbounds[4][0],newbounds[4][1]))
+    sys.stdout.write("   pq = [%i, %i]\n" % (newbounds[5][0],newbounds[5][1]))
+    sys.stdout.write("   fxpt = [%i, %i]\n" % (newbounds[6][0],newbounds[6][1]))
+    sys.stdout.write("   maa = [%i, %i]\n" % (newbounds[7][0],newbounds[7][1]))
+    sys.stdout.write("   maxcor = [%i, %i]\n" % (newbounds[8][0],newbounds[8][1]))
+    sys.stdout.write("   cflfac = [%g, %g]\n" % (newbounds[9][0],newbounds[9][1]))
+    sys.stdout.write("   safety = [%g, %g]\n" % (newbounds[10][0],newbounds[10][1]))
+    sys.stdout.write("   bias = [%g, %g]\n" % (newbounds[11][0],newbounds[11][1]))
+    sys.stdout.write("   growth = [%g, %g]\n" % (newbounds[12][0],newbounds[12][1]))
+    sys.stdout.write("   hfixed_lb = [%g, %g]\n" % (newbounds[13][0],newbounds[13][1]))
+    sys.stdout.write("   hfixed_ub = [%g, %g]\n" % (newbounds[14][0],newbounds[14][1]))
+    sys.stdout.write("   k1 = [%g, %g]\n" % (newbounds[15][0],newbounds[15][1]))
+    sys.stdout.write("   k2 = [%g, %g]\n" % (newbounds[16][0],newbounds[16][1]))
+    sys.stdout.write("   k3 = [%g, %g]\n" % (newbounds[17][0],newbounds[17][1]))
+    sys.stdout.write("   etamx1 = [%g, %g]\n" % (newbounds[18][0],newbounds[18][1]))
+    sys.stdout.write("   etamxf = [%g, %g]\n" % (newbounds[19][0],newbounds[19][1]))
+    sys.stdout.write("   etacf = [%g, %g]\n" % (newbounds[20][0],newbounds[20][1]))
+    sys.stdout.write("   crdown = [%g, %g]\n" % (newbounds[21][0],newbounds[21][1]))
+    sys.stdout.write("   rdiv = [%g, %g]\n" % (newbounds[22][0],newbounds[22][1]))
+    sys.stdout.write("   dgmax = [%g, %g]\n" % (newbounds[23][0],newbounds[23][1]))
+    sys.stdout.write("   nlscoef = [%g, %g]\n" % (newbounds[24][0],newbounds[24][1]))
+    sys.stdout.write("\n")
+    return optimal;
+                           
+##########
+def parameter_rand_search_single(order, dense_order, imex, adapt_method, cflfac, 
+                                 safety, biases, growth, hfixed_lb, hfixed_ub, pqvals, 
+                                 k1vals, k2vals, k3vals, etamx1, etamxf, etacf, small_nef, 
+                                 crdown, rdiv, dgmax, predictor, msbpvals, fixedpt, m_aa, 
+                                 maxcor, nlscoef, nsaved, test, CM, rtol, atol, ntries):
+    """ This routine performs a stochastic optimization over the """
+    """ set of possible solver parameters.  Each input should be """ 
+    """ an array of length 2, storing the bounds of allowed      """
+    """ values for the given parameter.  The only exceptions to  """
+    """ this rule are order (a single integer), imex (a single   """
+    """ integer) and CM (a single cost model).                   """
+
+    # create parameter file of all defaults, set baseline cost
+    p = ark.SolParams(-1.0, -1, order, -1, imex, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0.0, rtol, atol);
+    ark.write_parameter_file(p);
+    p.cost = calc_cost_single(test, CM)
+
+    # create list of saved choices
+    optimal = [];  
+    optimal.append(p);
+    isaved = 0;
+
+    # bound update frequency, counter
+    nupdate = max(nsaved, ntries/10);
+    iupdate = 0;
+
+    # set scalar variables for the current bounds on each value
+    dord_l = dense_order[0];    dord_r = dense_order[1];
+    hmeth_l = adapt_method[0];  hmeth_r = adapt_method[1];
+    snef_l = small_nef[0];      snef_r = small_nef[1];
+    pred_l = predictor[0];      pred_r = predictor[1];
+    msbp_l = msbpvals[0];       msbp_r = msbpvals[1];
+    pq_l = pqvals[0];           pq_r = pqvals[1];
+    fxpt_l = fixedpt[0];        fxpt_r = fixedpt[1];
+    maa_l = m_aa[0];            maa_r = m_aa[1];
+    mxcr_l = maxcor[0];         mxcr_r = maxcor[1];
+    cfl_l = cflfac[0];          cfl_r = cflfac[1];
+    safe_l = safety[0];         safe_r = safety[1];
+    bias_l = biases[0];         bias_r = biases[1];
+    grow_l = growth[0];         grow_r = growth[1];
+    hf_lb_l = hfixed_lb[0];     hf_lb_r = hfixed_lb[1];
+    hf_ub_l = hfixed_ub[0];     hf_ub_r = hfixed_ub[1];
+    k1_l = k1vals[0];           k1_r = k1vals[1];
+    k2_l = k2vals[0];           k2_r = k2vals[1];
+    k3_l = k3vals[0];           k3_r = k3vals[1];
+    emx1_l = etamx1[0];         emx1_r = etamx1[1];
+    emxf_l = etamxf[0];         emxf_r = etamxf[1];
+    ecf_l = etacf[0];           ecf_r = etacf[1];
+    crd_l = crdown[0];          crd_r = crdown[1];
+    rdv_l = rdiv[0];            rdv_r = rdiv[1];
+    dgmx_l = dgmax[0];          dgmx_r = dgmax[1];
+    nlsc_l = nlscoef[0];        nlsc_r = nlscoef[1];
+
+    # loop over all possible parameters combinations
+    ntested = 0;
+    sys.stdout.write("Total number of tests to run: %i\n" % (ntries));
+    tstart = time.time()
+    for ntested in range(ntries):
+
+        # generate real and integer random parameter values in input interval
+        dord  = np.random.random_integers(dord_l,  dord_r);
+        hmeth = np.random.random_integers(hmeth_l, hmeth_r);
+        snef  = np.random.random_integers(snef_l,  snef_r);
+        pred  = np.random.random_integers(pred_l,  pred_r);
+        msbp  = np.random.random_integers(msbp_l,  msbp_r);
+        pq    = np.random.random_integers(pq_l,    pq_r);
+        fxpt  = np.random.random_integers(fxpt_l,  fxpt_r);
+        maa   = np.random.random_integers(maa_l,   maa_r);
+        mxcr  = np.random.random_integers(mxcr_l,  mxcr_r);
+        cfl   = cfl_l   + np.random.random_sample()*(cfl_r   - cfl_l);
+        safe  = safe_l  + np.random.random_sample()*(safe_r  - safe_l);
+        bias  = bias_l  + np.random.random_sample()*(bias_r  - bias_l);
+        grow  = grow_l  + np.random.random_sample()*(grow_r  - grow_l);
+        hf_lb = hf_lb_l + np.random.random_sample()*(hf_lb_r - hf_lb_l);
+        hf_ub = hf_ub_l + np.random.random_sample()*(hf_ub_r - hf_ub_l);
+        k1    = k1_l    + np.random.random_sample()*(k1_r    - k1_l);
+        k2    = k2_l    + np.random.random_sample()*(k2_r    - k2_l);
+        k3    = k3_l    + np.random.random_sample()*(k3_r    - k3_l);
+        emx1  = emx1_l  + np.random.random_sample()*(emx1_r  - emx1_l);
+        emxf  = emxf_l  + np.random.random_sample()*(emxf_r  - emxf_l);
+        ecf   = ecf_l   + np.random.random_sample()*(ecf_r   - ecf_l);
+        crd   = crd_l   + np.random.random_sample()*(crd_r   - crd_l);
+        rdv   = rdv_l   + np.random.random_sample()*(rdv_r   - rdv_l);
+        dgmx  = dgmx_l  + np.random.random_sample()*(dgmx_r  - dgmx_l);
+        nlsc  = nlsc_l  + np.random.random_sample()*(nlsc_r  - nlsc_l);
+
+        # create parameter object
+        p = ark.SolParams(-1.0, -1, order, dord, imex, hmeth, cfl, safe, bias, grow, 
+                           hf_lb, hf_ub, pq, k1, k2, k3, emx1, emxf, ecf, snef, crd, 
+                           rdv, dgmx, pred, msbp, fxpt, maa, mxcr, nlsc, rtol, atol);
+                         
+        # create parameter file 
+        ark.write_parameter_file(p);
+
+        # run test to evaluate overall cost
+        p.cost = calc_cost_single(test, CM)
         if (p.cost != p.cost):
             p.cost = 10000.0;
 
