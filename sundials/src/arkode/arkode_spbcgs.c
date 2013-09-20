@@ -603,14 +603,12 @@ static int ARKMassSpbcgInit(ARKodeMem ark_mem)
 static int ARKMassSpbcgSetup(ARKodeMem ark_mem, N_Vector vtemp1, 
 			     N_Vector vtemp2, N_Vector vtemp3)
 {
-  booleantype jbad, jok;
-  realtype dgamma;
   int  retval;
   ARKSpilsMassMem arkspils_mem;
 
   arkspils_mem = (ARKSpilsMassMem) ark_mem->ark_mass_mem;
 
-  /* Call pset routine and possibly reset jcur */
+  /* Call pset routine */
   retval = arkspils_mem->s_pset(ark_mem->ark_tn, 
 				arkspils_mem->s_P_data, 
 				vtemp1, vtemp2, vtemp3);
