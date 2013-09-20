@@ -1,0 +1,3 @@
+N_VNew_Parallel -- Sum of local vector lengths differs from input global length. 
+
+SUNDIALS_ERROR: FNVINITP returned IER =   -1

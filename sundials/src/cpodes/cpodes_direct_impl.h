@@ -66,7 +66,7 @@ typedef struct {
   DlsMat d_M;             /* M = I - gamma * df/dy                        */
   DlsMat d_savedJ;        /* savedJ = old Jacobian                        */
 
-  int *d_pivots;          /* pivots = pivot array for PM = LU             */
+  long *d_pivots;         /* pivots = pivot array for PM = LU             */
   
   long int  d_nstlj;      /* nstlj = nst at last Jacobian eval.           */
 
@@ -109,7 +109,7 @@ typedef struct {
   int d_nr;                 /* no. of independent constraints (QRP)        */
 
   DlsMat d_K;               /* K matrix (s.p.d., form depends on ftype)    */
-  int *d_pivotsP;           /* pivotsP = pivot array (for ftype LU)        */
+  long int *d_pivotsP;           /* pivotsP = pivot array (for ftype LU)        */
 
   realtype *d_beta;         /* beta array (for ftype QR)                   */
 

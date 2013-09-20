@@ -1,0 +1,2 @@
+
+MPI_ERROR(0); npes = 1 is not equal to NPEX*NPEY = 4

@@ -251,6 +251,21 @@ IF(UNIX)
   ENDIF(USE_GENERIC_MATH)
 ENDIF(UNIX)
 
+## clock-monotonic, see if we need to link with rt
+include(CheckSymbolExists)
+set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
+set(CMAKE_REQUIRED_LIBRARIES rt)
+CHECK_SYMBOL_EXISTS(_POSIX_TIMERS "unistd.h;time.h" SUNDIALS_POSIX_TIMERS)
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
+if(SUNDIALS_POSIX_TIMERS)
+  find_library(SUNDIALS_RT_LIBRARY NAMES rt)
+  mark_as_advanced(SUNDIALS_RT_LIBRARY)
+  if(SUNDIALS_RT_LIBRARY)
+    SET(SUNDIALS_HAVE_POSIX_TIMERS "#define SUNDIALS_HAVE_POSIX_TIMERS")
+    set(EXTRA_LINK_LIBS ${EXTRA_LINK_LIBS} ${SUNDIALS_RT_LIBRARY})
+  endif()
+endif()
+
 # -------------------------------------------------------------
 # Enable Fortran support?
 # -------------------------------------------------------------
@@ -329,6 +344,36 @@ IF(NOT MPI_ENABLE)
   HIDE_VARIABLE(MPI_MPIF77)
   HIDE_VARIABLE(MPI_MPIF90)
 ENDIF(NOT MPI_ENABLE)
+
+# -------------------------------------------------------------
+# Enable OpenMP support?
+# -------------------------------------------------------------
+
+OPTION(OPENMP_ENABLE "Enable OpenMP support" OFF)
+
+IF(OPENMP_ENABLE)
+  FIND_PACKAGE(OpenMP)
+  IF(NOT OPENMP_FOUND)
+    message(STATUS "Disabling OpenMP support, could not determine compiler flags")
+  ENDIF(NOT OPENMP_FOUND)
+ENDIF(OPENMP_ENABLE)
+
+# -------------------------------------------------------------
+# Enable Pthread support?
+# -------------------------------------------------------------
+
+OPTION(PTHREAD_ENABLE "Enable Pthreads support" OFF)
+
+IF(PTHREAD_ENABLE)
+  FIND_PACKAGE(Threads)
+  IF(CMAKE_USE_PTHREADS_INIT)
+    message(STATUS "Using Pthreads")
+    SET(PTHREADS_FOUND TRUE)
+    # SGS    
+  ELSE()
+    message(STATUS "Disabling Pthreads support, could not determine compiler flags")
+  endif()
+ENDIF(PTHREAD_ENABLE)
 
 # -------------------------------------------------------------
 # Enable examples?
@@ -671,6 +716,14 @@ IF(MPIC_FOUND)
   ADD_SUBDIRECTORY(src/nvec_pargrid)
 ENDIF(MPIC_FOUND)
 
+IF(OPENMP_FOUND)
+  ADD_SUBDIRECTORY(src/nvec_openmp)	
+ENDIF(OPENMP_FOUND)
+
+IF(PTHREADS_FOUND)
+  ADD_SUBDIRECTORY(src/nvec_pthreads)	
+ENDIF(PTHREADS_FOUND)
+
 # ARKODE library
 
 IF(BUILD_ARKODE)	
@@ -909,6 +962,21 @@ IF(EXAMPLES_ENABLE)
       ADD_SUBDIRECTORY(examples/cpodes/parallel)
     ENDIF(MPIC_FOUND)
   ENDIF(BUILD_CPODES)
+
+  # Always add the nvector sieral examples
+  ADD_SUBDIRECTORY(examples/nvector/serial)
+
+  IF(MPIC_FOUND)
+      ADD_SUBDIRECTORY(examples/nvector/parallel)
+  ENDIF(MPIC_FOUND)
+
+  IF(PTHREADS_FOUND)
+      ADD_SUBDIRECTORY(examples/nvector/pthreads)
+  ENDIF(PTHREADS_FOUND)
+
+  IF(OPENMP_FOUND)
+      ADD_SUBDIRECTORY(examples/nvector/openmp)
+  ENDIF(OPENMP_FOUND)
   
 ENDIF(EXAMPLES_ENABLE)
 

@@ -27,7 +27,6 @@
 SlsMat NewSparseMat(int M, int N, int NNZ)
 {
   SlsMat A;
-  int j;
 
   if ( (M <= 0) || (N <= 0) ) return(NULL);
 
@@ -117,7 +116,7 @@ void PrintSparseMat(SlsMat A)
 #if defined(SUNDIALS_EXTENDED_PRECISION)
       printf("%d  %12Lg  ", A->rowvals[i], A->data[i]);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-      printf("%d  %12lg  ", A->rowvals[i], A->data[i]);
+      printf("%d  %12g  ", A->rowvals[i], A->data[i]);
 #else
       printf("%d  %12g  ", A->rowvals[i], A->data[i]);
 #endif
