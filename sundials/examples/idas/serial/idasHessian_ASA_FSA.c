@@ -194,14 +194,14 @@ int main(int argc, char *argv[])
 
   IDAGetQuad(ida_mem, &time, q);
   G = Ith(q,1);
-  printf("     G:    %12.4le\n", G);
+  printf("     G:    %12.4e\n", G);
 
   /* Sensitivities are needed for IC of backward problems. */
   IDAGetSensDky(ida_mem, tf, 0, yyS);
   IDAGetSensDky(ida_mem, tf, 1, ypS);
 
   IDAGetQuadSens(ida_mem, &time, qS);
-  printf("   dG/dp:  %12.4le %12.4le\n", Ith(qS[0],1), Ith(qS[1],1));
+  printf("   dG/dp:  %12.4e %12.4e\n", Ith(qS[0],1), Ith(qS[1],1));
   printf("\n");
   /******************************
   * BACKWARD PROBLEM #1
@@ -269,21 +269,23 @@ int main(int argc, char *argv[])
   flag = IDASolveB(ida_mem, ti, IDA_NORMAL);
 
   flag = IDAGetB(ida_mem, indexB1, &time, yyB1, ypB1);
-  //flag = IDAGetNumSteps(IDAGetAdjIDABmem(ida_mem, indexB1), &nst);
-  //printf("at time=%g \tpb 1 Num steps:%d\n", time, nst); 
-  //flag = IDAGetNumSteps(IDAGetAdjIDABmem(ida_mem, indexB2), &nst);
-  //printf("at time=%g \tpb 2 Num steps:%d\n\n", time, nst); 
+  /* 
+     flag = IDAGetNumSteps(IDAGetAdjIDABmem(ida_mem, indexB1), &nst);
+     printf("at time=%g \tpb 1 Num steps:%d\n", time, nst); 
+     flag = IDAGetNumSteps(IDAGetAdjIDABmem(ida_mem, indexB2), &nst);
+     printf("at time=%g \tpb 2 Num steps:%d\n\n", time, nst); 
+  */
 
   flag = IDAGetQuadB(ida_mem, indexB1, &time, qB1);
   flag = IDAGetQuadB(ida_mem, indexB2, &time, qB2);
-  printf("   dG/dp:  %12.4le %12.4le   (from backward pb. 1)\n", Ith(qB1,1), Ith(qB1,2));
-  printf("   dG/dp:  %12.4le %12.4le   (from backward pb. 2)\n", Ith(qB2,1), Ith(qB2,2));
+  printf("   dG/dp:  %12.4e %12.4e   (from backward pb. 1)\n", Ith(qB1,1), Ith(qB1,2));
+  printf("   dG/dp:  %12.4e %12.4e   (from backward pb. 2)\n", Ith(qB2,1), Ith(qB2,2));
 
   printf("\n");
   printf("   H = d2G/dp2:\n");
   printf("        (1)            (2)\n");
-  printf("  %12.4le  %12.4le\n", Ith(qB1,3), Ith(qB2,3));
-  printf("  %12.4le  %12.4le\n", Ith(qB1,4), Ith(qB2,4));
+  printf("  %12.4e  %12.4e\n", Ith(qB1,3), Ith(qB2,3));
+  printf("  %12.4e  %12.4e\n", Ith(qB1,4), Ith(qB2,4));
 
   IDAFree(&ida_mem);
 
@@ -395,12 +397,12 @@ int main(int argc, char *argv[])
 
 
   printf("\n");
-  printf("   dG/dp:  %12.4le  %12.4le   (fwd FD)\n",  grdG_fwd[0],  grdG_fwd[1]);
-  printf("           %12.4le  %12.4le   (bck FD)\n",  grdG_bck[0],  grdG_bck[1]);
-  printf("           %12.4le  %12.4le   (cntr FD)\n", grdG_cntr[0], grdG_cntr[1]);
+  printf("   dG/dp:  %12.4e  %12.4e   (fwd FD)\n",  grdG_fwd[0],  grdG_fwd[1]);
+  printf("           %12.4e  %12.4e   (bck FD)\n",  grdG_bck[0],  grdG_bck[1]);
+  printf("           %12.4e  %12.4e   (cntr FD)\n", grdG_cntr[0], grdG_cntr[1]);
   printf("\n");
-  printf("  H(1,1):  %12.4le\n", H11);
-  printf("  H(2,2):  %12.4le\n", H22);
+  printf("  H(1,1):  %12.4e\n", H11);
+  printf("  H(2,2):  %12.4e\n", H22);
 
   IDAFree(&ida_mem);
 
