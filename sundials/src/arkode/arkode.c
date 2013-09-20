@@ -507,7 +507,9 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
 		 ARKVecResizeFn resize, void *resize_data)
 {
   ARKodeMem ark_mem;
-  int ier;
+  long int lrw1=0, liw1=0;
+  long int lrw_diff, liw_diff;
+  int ier, i;
  
   /* Check arkode_mem */
   if (arkode_mem==NULL) {
@@ -554,11 +556,10 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
   }
 
   /* Determing change in vector sizes */
-  long int lrw1=0, liw1=0;
   if (y0->ops->nvspace != NULL) 
     N_VSpace(y0, &lrw1, &liw1);
-  long int lrw_diff = lrw1 - ark_mem->ark_lrw1;
-  long int liw_diff = liw1 - ark_mem->ark_liw1;
+  lrw_diff = lrw1 - ark_mem->ark_lrw1;
+  liw_diff = liw1 - ark_mem->ark_liw1;
   ark_mem->ark_lrw1 = lrw1;
   ark_mem->ark_liw1 = liw1;
 
@@ -579,7 +580,6 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     ark_mem->ark_liw += liw_diff;
   }
   /*     ark_Fe */
-  int i;
   for (i=0; i<ARK_S_MAX; i++) {
     if (ark_mem->ark_Fe[i] != NULL) {
       if (resize == NULL) {
