@@ -70,7 +70,7 @@ static int arkNlsAccelFP(ARKodeMem ark_mem, int nflag);
 static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval, 
 			  N_Vector fv, N_Vector x, N_Vector xold, 
 			  int iter, realtype *R, realtype *gamma);
-static int arkLs(ARKodeMem ark_mem, int nflag);
+/* static int arkLs(ARKodeMem ark_mem, int nflag); */
 static int arkHandleNFlag(ARKodeMem ark_mem, int *nflagPtr, 
 			  realtype saved_t, int *ncfPtr);
 
@@ -2666,7 +2666,6 @@ static int arkResizeFPData(ARKodeMem ark_mem, ARKVecResizeFn resize,
 ---------------------------------------------------------------*/
 static void arkFreeFPData(ARKodeMem ark_mem)
 {
-  long int i;
   long int maa = ark_mem->ark_fp_m;
 
   /* free ark_fp_fval if needed */
@@ -4669,10 +4668,10 @@ static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval,
 
    RHSFUNC_RECVR     --> predict again or stop if too many
 ---------------------------------------------------------------*/
-static int arkLs(ARKodeMem ark_mem, int nflag)
-{
-  return(ARK_SUCCESS);
-}
+/* static int arkLs(ARKodeMem ark_mem, int nflag) */
+/* { */
+/*   return(ARK_SUCCESS); */
+/* } */
 
 
 /*---------------------------------------------------------------
@@ -5482,7 +5481,8 @@ static int arkRootCheck1(ARKodeMem ark_mem)
 static int arkRootCheck2(ARKodeMem ark_mem)
 {
   int i, retval;
-  realtype smallh, hratio, tplus;
+  /* realtype smallh, hratio, tplus; */
+  realtype smallh, tplus;
   booleantype zroot;
 
   /* return if no roots in previous step */
@@ -5521,7 +5521,7 @@ static int arkRootCheck2(ARKodeMem ark_mem)
   tplus = ark_mem->ark_tlo + smallh;
   /*     update ark_y with small explicit Euler step (if tplus is past tn) */
   if ( (tplus - ark_mem->ark_tn)*ark_mem->ark_h >= ZERO ) {
-    hratio = smallh/ark_mem->ark_h;
+    /* hratio = smallh/ark_mem->ark_h; */
     N_VLinearSum(ONE, ark_mem->ark_y, smallh, 
 		 ark_mem->ark_fold, ark_mem->ark_y);
   } else {
