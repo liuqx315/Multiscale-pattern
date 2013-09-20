@@ -71,6 +71,10 @@ int main() {
   int flag;                 /* reusable error-checking flag */
   N_Vector y = NULL;             /* empty vector for storing solution */
   void *arkode_mem = NULL;        /* empty ARKode memory structure */
+  FILE *FID, *UFID;
+  realtype t, dTout, tout;
+  int iout;
+  long int nst, nst_a, nfe, nfi, nsetups, nli, nJv, nlcf, nni, ncfn, netf;
 
   /* allocate and fill udata structure */
   udata = (UserData) malloc(sizeof(*udata));
@@ -112,12 +116,12 @@ int main() {
   if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
   /* output mesh to disk */
-  FILE *FID=fopen("heat_mesh.txt","w");
+  FID=fopen("heat_mesh.txt","w");
   for (i=0; i<N; i++)  fprintf(FID,"  %.16e\n", udata->dx*i);
   fclose(FID);
 
   /* Open output stream for results, access data array */
-  FILE *UFID=fopen("heat1D.txt","w");
+  UFID=fopen("heat1D.txt","w");
   data = N_VGetArrayPointer(y);
 
   /* output initial condition to disk */
@@ -126,13 +130,12 @@ int main() {
 
   /* Main time-stepping loop: calls ARKode to perform the integration, then
      prints results.  Stops when the final time has been reached */
-  realtype t = T0;
-  realtype dTout = (Tf-T0)/Nt;
-  realtype tout = T0+dTout;
+  t = T0;
+  dTout = (Tf-T0)/Nt;
+  tout = T0+dTout;
   printf("        t      ||u||_rms\n");
   printf("   -------------------------\n");
   printf("  %10.6f  %10.6f\n", t, sqrt(N_VDotProd(y,y)/N));
-  int iout;
   for (iout=0; iout<Nt; iout++) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);         /* call integrator */
@@ -154,7 +157,6 @@ int main() {
   fclose(UFID);
 
   /* Print some final statistics */
-  long int nst, nst_a, nfe, nfi, nsetups, nli, nJv, nlcf, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
@@ -201,21 +203,24 @@ int main() {
 /* f routine to compute the ODE RHS function f(t,y). */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
-  N_VConst(0.0, ydot);                      /* Initialize ydot to zero */
   UserData udata = (UserData) user_data;    /* access problem data */
   long int N  = udata->N;                   /* set variable shortcuts */
   realtype k  = udata->k;
   realtype dx = udata->dx;
-  realtype *Y = N_VGetArrayPointer(y);      /* access data arrays */
+  realtype *Y=NULL, *Ydot=NULL;
+  realtype c1, c2;
+  long int i, isource;
+
+  Y = N_VGetArrayPointer(y);      /* access data arrays */
   if (check_flag((void *) Y, "N_VGetArrayPointer", 0)) return 1;
-  realtype *Ydot = N_VGetArrayPointer(ydot);
+  Ydot = N_VGetArrayPointer(ydot);
   if (check_flag((void *) Ydot, "N_VGetArrayPointer", 0)) return 1;
+  N_VConst(0.0, ydot);                      /* Initialize ydot to zero */
 
   /* iterate over domain, computing all equations */
-  realtype c1 = k/dx/dx;
-  realtype c2 = -RCONST(2.0)*k/dx/dx;
-  long int i;
-  long int isource = N/2;
+  c1 = k/dx/dx;
+  c2 = -RCONST(2.0)*k/dx/dx;
+  isource = N/2;
   Ydot[0] = 0.0;                 /* left boundary condition */
   for (i=1; i<N-1; i++)
     Ydot[i] = c1*Y[i-1] + c2*Y[i] + c1*Y[i+1];
@@ -229,20 +234,23 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 static int Jac(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
 	       N_Vector fy, void *user_data, N_Vector tmp)
 {
-  N_VConst(0.0, Jv);                         /* initialize Jv product to zero */
   UserData udata = (UserData) user_data;     /* variable shortcuts */
   long int N  = udata->N;
   realtype k  = udata->k;
   realtype dx = udata->dx;
-  realtype *V = N_VGetArrayPointer(v);       /* access data arrays */
+  realtype *V=NULL, *JV=NULL;
+  realtype c1, c2;
+  long int i;
+
+  V = N_VGetArrayPointer(v);       /* access data arrays */
   if (check_flag((void *) V, "N_VGetArrayPointer", 0)) return 1;
-  realtype *JV = N_VGetArrayPointer(Jv);
+  JV = N_VGetArrayPointer(Jv);
   if (check_flag((void *) JV, "N_VGetArrayPointer", 0)) return 1;
+  N_VConst(0.0, Jv);                         /* initialize Jv product to zero */
 
   /* iterate over domain, computing all Jacobian-vector products */
-  realtype c1 = k/dx/dx;
-  realtype c2 = -RCONST(2.0)*k/dx/dx;
-  long int i;
+  c1 = k/dx/dx;
+  c2 = -RCONST(2.0)*k/dx/dx;
   JV[0] = 0.0;
   for (i=1; i<N-1; i++)
     JV[i] = c1*V[i-1] + c2*V[i] + c1*V[i+1];

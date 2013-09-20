@@ -82,6 +82,11 @@ int main()
   int flag;                      /* reusable error-checking flag */
   N_Vector y = NULL;             /* empty vector for storing solution */
   void *arkode_mem = NULL;       /* empty ARKode memory structure */
+  realtype rdata[3];
+  FILE *UFID;
+  realtype t, tout;
+  int iout;
+  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
 
   /* set up the test problem according to the desired test */
   if (test == 1) {
@@ -114,7 +119,9 @@ int main()
   printf("    reltol = %.1e,  abstol = %.1e\n\n",reltol,abstol);
 
   /* Initialize data structures */
-  realtype rdata[3] = {a, b, ep};   /* set user data  */
+  rdata[0] = a;     /* set user data  */
+  rdata[1] = b;
+  rdata[2] = ep;
   y = N_VNew_Serial(NEQ);           /* Create serial vector for solution */
   if (check_flag((void *)y, "N_VNew_Serial", 0)) return 1;
   NV_Ith_S(y,0) = u0;               /* Set initial conditions */
@@ -143,7 +150,7 @@ int main()
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
   /* Open output stream for results, output comment line */
-  FILE *UFID = fopen("solution.txt","w");
+  UFID = fopen("solution.txt","w");
   fprintf(UFID,"# t u v w\n");
 
   /* output initial condition to disk */
@@ -152,11 +159,10 @@ int main()
 
   /* Main time-stepping loop: calls ARKode to perform the integration, then
      prints results.  Stops when the final time has been reached */
-  realtype t = T0;
-  realtype tout = T0+dTout;
+  t = T0;
+  tout = T0+dTout;
   printf("        t           u           v           w\n");
   printf("   -------------------------------------------\n");
-  int iout;
   for (iout=0; iout<Nt; iout++) {
 
     flag = ARKode(arkode_mem, tout, y, &t, ARK_NORMAL);      /* call integrator */
@@ -177,7 +183,6 @@ int main()
   fclose(UFID);
 
   /* Print some final statistics */
-  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
