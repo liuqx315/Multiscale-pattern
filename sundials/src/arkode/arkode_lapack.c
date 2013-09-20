@@ -779,14 +779,11 @@ static int arkMassLapackDenseSetup(ARKodeMem ark_mem, N_Vector tmp1,
 				   N_Vector tmp2, N_Vector tmp3)
 {
   ARKDlsMassMem arkdls_mem;
-  realtype dgamma, fact;
-  booleantype jbad, jok;
-  int ier, retval, one = 1;
-  int intn, lenmat;
+  int ier, retval;
+  int intn;
 
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
   intn = (int) arkdls_mem->d_n;
-  lenmat = arkdls_mem->d_M->ldata;
 
   SetToZero(arkdls_mem->d_M);
   retval = arkdls_mem->d_dmass(arkdls_mem->d_n, ark_mem->ark_tn, 
@@ -822,7 +819,7 @@ static int arkMassLapackDenseSolve(ARKodeMem ark_mem, N_Vector b,
 				   N_Vector weight)
 {
   ARKDlsMassMem arkdls_mem;
-  realtype *bd, fact;
+  realtype *bd;
   int ier, one = 1;
   int intn;
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
@@ -858,9 +855,11 @@ static void arkMassLapackDenseFree(ARKodeMem ark_mem)
 static int arkMassLapackDenseMultiply(N_Vector v, N_Vector Mv, 
 				      realtype t, void *arkode_mem)
 {
-  /* extract the DlsMassMem structure from the user_data pointer */
   ARKodeMem ark_mem;
   ARKDlsMassMem arkdls_mem;
+  realtype *vdata=NULL, *Mvdata=NULL;
+  realtype *Mcol_j;
+  int i, j;
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
@@ -868,6 +867,8 @@ static int arkMassLapackDenseMultiply(N_Vector v, N_Vector Mv,
 		    "arkMassLapackDenseMultiply", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
+
+  /* extract the DlsMassMem structure from the user_data pointer */
   ark_mem = (ARKodeMem) arkode_mem;
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
 
@@ -875,15 +876,12 @@ static int arkMassLapackDenseMultiply(N_Vector v, N_Vector Mv,
   N_VConst(0.0, Mv);
 
   /* access the vector arrays (since they must be serial vectors) */
-  realtype *vdata=NULL, *Mvdata=NULL;
   vdata = N_VGetArrayPointer(v);
   Mvdata = N_VGetArrayPointer(Mv);
   if (vdata == NULL || Mvdata == NULL)
     return(1);
 
   /* perform matrix-vector product and return */
-  realtype *Mcol_j;
-  int i, j;
   for (j=0; j<arkdls_mem->d_M->N; j++) {
     Mcol_j = arkdls_mem->d_M->cols[j];
     for (i=0; i<arkdls_mem->d_M->M; i++) 
@@ -1124,16 +1122,13 @@ static int arkMassLapackBandSetup(ARKodeMem ark_mem, N_Vector tmp1,
 				  N_Vector tmp2, N_Vector tmp3)
 {
   ARKDlsMassMem arkdls_mem;
-  realtype dgamma, fact;
-  booleantype jbad, jok;
-  int ier, retval, one = 1;
-  int intn, iml, imu, lenmat, ldmat;
+  int ier, retval;
+  int intn, iml, imu, ldmat;
 
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
   intn = (int) arkdls_mem->d_n;
   iml = (int) arkdls_mem->d_ml;
   imu = (int) arkdls_mem->d_mu;
-  lenmat = arkdls_mem->d_M->ldata;
   ldmat = arkdls_mem->d_M->ldim;
 
   SetToZero(arkdls_mem->d_M);
@@ -1171,7 +1166,7 @@ static int arkMassLapackBandSolve(ARKodeMem ark_mem, N_Vector b,
 				  N_Vector weight)
 {
   ARKDlsMassMem arkdls_mem;
-  realtype *bd, fact;
+  realtype *bd;
   int ier, one = 1;
   int intn, iml, imu, ldmat;
 
@@ -1211,9 +1206,11 @@ static void arkMassLapackBandFree(ARKodeMem ark_mem)
 static int arkMassLapackBandMultiply(N_Vector v, N_Vector Mv, 
 				     realtype t, void *arkode_mem)
 {
-  /* extract the DlsMassMem structure from the user_data pointer */
   ARKodeMem ark_mem;
   ARKDlsMassMem arkdls_mem;
+  realtype *vdata=NULL, *Mvdata=NULL;
+  realtype *Mcol_j;
+  int colSize, s_mu, i, j;
 
   /* Return immediately if arkode_mem is NULL */
   if (arkode_mem == NULL) {
@@ -1221,6 +1218,8 @@ static int arkMassLapackBandMultiply(N_Vector v, N_Vector Mv,
 		    "arkMassLapackBandMultiply", MSGD_ARKMEM_NULL);
     return(ARKDLS_MEM_NULL);
   }
+
+  /* extract the DlsMassMem structure from the user_data pointer */
   ark_mem = (ARKodeMem) arkode_mem;
   arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
 
@@ -1228,17 +1227,14 @@ static int arkMassLapackBandMultiply(N_Vector v, N_Vector Mv,
   N_VConst(0.0, Mv);
 
   /* access the vector arrays (since they must be serial vectors) */
-  realtype *vdata=NULL, *Mvdata=NULL;
   vdata = N_VGetArrayPointer(v);
   Mvdata = N_VGetArrayPointer(Mv);
   if (vdata == NULL || Mvdata == NULL)
     return(1);
 
   /* perform matrix-vector product and return */
-  realtype *Mcol_j;
-  int colSize = arkdls_mem->d_M->mu + arkdls_mem->d_M->ml + 1;
-  int s_mu = arkdls_mem->d_M->s_mu;
-  int i, j;
+  colSize = arkdls_mem->d_M->mu + arkdls_mem->d_M->ml + 1;
+  s_mu = arkdls_mem->d_M->s_mu;
   for (j=0; j<arkdls_mem->d_M->M; j++) {
     Mcol_j = arkdls_mem->d_M->cols[j] + arkdls_mem->d_M->s_mu - arkdls_mem->d_M->mu;
     for (i=0; i<colSize; i++) 
