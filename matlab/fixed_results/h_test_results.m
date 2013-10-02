@@ -1,7 +1,12 @@
 % Analysis script for results from h_tests.m
 %
-% Daniel R. Reynolds
-% SMU Mathematics
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % same time step factors were used for all tests
 hfac = [1e-2, 5e-3, 2e-3, 1e-3, 5e-4, 2e-4, 1e-4];

@@ -1,12 +1,13 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  This is the implementation file for a ARKODE dense linear solver
  using BLAS and LAPACK functions.
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 
 /* NOTE: the only operation that does not use Blas/Lapack functions
    is matrix plus mass matrix (in calculating M-gamma*J in lsetup) */

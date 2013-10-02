@@ -21,11 +21,13 @@ function [y,inewt,ierr] = newton_damped(Fcn, Afn, y0, Fdata, tol, maxit, alpha)
 %          inewt = number of Newton iterations to convergence
 %          ierr = output flag denoting success (0) or failure (1)
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 DO_OUTPUT = 0;
 

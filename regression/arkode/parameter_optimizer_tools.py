@@ -1,5 +1,11 @@
+#------------------------------------------------------------
+# Programmer(s):  Daniel R. Reynolds @ SMU
+#------------------------------------------------------------
+# Copyright (c) 2013, Southern Methodist University.
+# All rights reserved.
+# For details, see the LICENSE file.
+#------------------------------------------------------------
 # analysis functions for running ARKODE tests with various parameters
-# Daniel R. Reynolds, reynolds@smu.edu
 
 # imports
 import sys

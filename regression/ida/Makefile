@@ -1,7 +1,10 @@
 ###################################################################
-#  Daniel R. Reynolds, SMU Mathematics
-#  Copyright 2013; all rights reserved
-#
+#  Programmer(s):  Daniel R. Reynolds @ SMU
+###################################################################
+#  Copyright (c) 2013, Southern Methodist University.
+#  All rights reserved.
+#  For details, see the LICENSE file.
+###################################################################
 #  Regression directory Makefile: assumes that SUNDIALS+ARKode
 #  has been built in this same source repository, with the 
 #  directory structure:

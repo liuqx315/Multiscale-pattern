@@ -1,9 +1,10 @@
 /*---------------------------------------------------------------
- $Revision: $
- $Date: $
------------------------------------------------------------------
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  Example problem:
  
  The following test simulates a brusselator problem from chemical 
@@ -55,11 +56,11 @@
 #include <arkode/arkode.h>
 #include <nvector/nvector_serial.h>
 #include <arkode/arkode_dense.h>
-#include <sundials/sundials_dense.h>
 #include <arkode/arkode_spgmr.h>
 #include <arkode/arkode_spbcgs.h>
 #include <arkode/arkode_sptfqmr.h>
 #include <arkode/arkode_pcg.h>
+#include <sundials/sundials_dense.h>
 #include <sundials/sundials_types.h>
 
 #define USE_ITERATIVE
@@ -109,7 +110,9 @@ int main()
   realtype T0 = RCONST(0.0);
   realtype Tf = RCONST(10.0);
   realtype dTout = RCONST(1.0);
-  realtype dscale = RCONST(200.0);
+  realtype M00 = RCONST(1.0);  realtype M01 = RCONST(0.0);  realtype M02 = RCONST(0.0);
+  realtype M10 = RCONST(0.0);  realtype M11 = RCONST(0.0);  realtype M12 = RCONST(1.0);
+  realtype M20 = RCONST(0.0);  realtype M21 = RCONST(1.0);  realtype M22 = RCONST(0.0);
   int Nt = ceil(Tf/dTout);
   realtype a, b, ep, u0, v0, w0;
   long int NEQ = 3;
@@ -161,13 +164,14 @@ int main()
   }
 
   /* set user data to contain problem-defining parameters */
-  realtype rdata[] = {a, b, ep, dscale};
+  realtype rdata[] = {a, b, ep, M00, M01, M02, M10, M11, M12, M20, M21, M22};
 
   /* Initial problem output */
   printf("\nBrusselator (mass matrix) ODE test problem:\n");
   printf("    initial conditions:  u0 = %g,  v0 = %g,  w0 = %g\n",u0,v0,w0);
   printf("    problem parameters:  a = %g,  b = %g,  ep = %g\n",a,b,ep);
-  printf("    diagonal scaling:    dscale = %g\n",dscale);
+  printf("    M:  %4g %4g %4g\n        %4g %4g %4g\n        %4g %4g %4g\n",
+	 M00, M01, M02, M10, M11, M12, M20, M21, M22);
 
   /* Create serial vector of length NEQ for initial condition */
   y = N_VNew_Serial(NEQ);
@@ -262,7 +266,7 @@ int main()
   if (check_flag(&flag, "ARKDense", 1)) return 1;
 #endif
 
-  /* Set the Jacobian routine to Jac (user-supplied) */
+  /* Set the Jacobian routine (user-supplied) */
 #ifdef USE_ITERATIVE
   switch (imex) {
   case 0:         /* purely implicit */
@@ -465,19 +469,32 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype a  = rdata[0];
   realtype b  = rdata[1];
   realtype ep = rdata[2];
-  realtype d  = rdata[3];
+  realtype M00 = rdata[3];
+  realtype M01 = rdata[4];
+  realtype M02 = rdata[5];
+  realtype M10 = rdata[6];
+  realtype M11 = rdata[7];
+  realtype M12 = rdata[8];
+  realtype M20 = rdata[9];
+  realtype M21 = rdata[10];
+  realtype M22 = rdata[11];
   realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
   /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(ydot,0) = d*(a - (w+1.0)*u + v*u*u);
+  realtype du0 = a - (w+1.0)*u + v*u*u;
 
   /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(ydot,1) = d*(w*u - v*u*u);
+  realtype du1 = w*u - v*u*u;
 
   /* dw/dt = (b-w)/ep - w*u */
-  NV_Ith_S(ydot,2) = d*((b-w)/ep - w*u);
+  realtype du2 = (b-w)/ep - w*u;
+
+  /* multiply by M */
+  NV_Ith_S(ydot,0) = M00*du0 + M01*du1 + M02*du2;
+  NV_Ith_S(ydot,1) = M10*du0 + M11*du1 + M12*du2;
+  NV_Ith_S(ydot,2) = M20*du0 + M21*du1 + M22*du2;
 
   return 0;
 }
@@ -488,19 +505,32 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   realtype *rdata = (realtype *) user_data;
   realtype a = rdata[0];
-  realtype d = rdata[3];
+  realtype M00 = rdata[3];
+  realtype M01 = rdata[4];
+  realtype M02 = rdata[5];
+  realtype M10 = rdata[6];
+  realtype M11 = rdata[7];
+  realtype M12 = rdata[8];
+  realtype M20 = rdata[9];
+  realtype M21 = rdata[10];
+  realtype M22 = rdata[11];
   realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
   /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(ydot,0) = d*(a - (w+1.0)*u + v*u*u);
+  realtype du0 = a - (w+1.0)*u + v*u*u;
 
   /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(ydot,1) = d*(w*u - v*u*u);
+  realtype du1 = w*u - v*u*u;
 
   /* dw/dt = -w*u */
-  NV_Ith_S(ydot,2) = -d*w*u;
+  realtype du2 = -w*u;
+
+  /* multiply by M */
+  NV_Ith_S(ydot,0) = M00*du0 + M01*du1 + M02*du2;
+  NV_Ith_S(ydot,1) = M10*du0 + M11*du1 + M12*du2;
+  NV_Ith_S(ydot,2) = M20*du0 + M21*du1 + M22*du2;
 
   return 0;
 }
@@ -512,17 +542,30 @@ static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype *rdata = (realtype *) user_data;
   realtype b  = rdata[1];
   realtype ep = rdata[2];
-  realtype d  = rdata[3];
+  realtype M00 = rdata[3];
+  realtype M01 = rdata[4];
+  realtype M02 = rdata[5];
+  realtype M10 = rdata[6];
+  realtype M11 = rdata[7];
+  realtype M12 = rdata[8];
+  realtype M20 = rdata[9];
+  realtype M21 = rdata[10];
+  realtype M22 = rdata[11];
   realtype w  = NV_Ith_S(y,2);
 
   /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(ydot,0) = 0.0;
+  realtype du0 = 0.0;
 
   /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(ydot,1) = 0.0;
+  realtype du1 = 0.0;
 
   /* dw/dt = (b-w)/ep - w*u */
-  NV_Ith_S(ydot,2) = d*(b-w)/ep;
+  realtype du2 = (b-w)/ep;
+
+  /* multiply by M */
+  NV_Ith_S(ydot,0) = M00*du0 + M01*du1 + M02*du2;
+  NV_Ith_S(ydot,1) = M10*du0 + M11*du1 + M12*du2;
+  NV_Ith_S(ydot,2) = M20*du0 + M21*du1 + M22*du2;
 
   return 0;
 }
@@ -535,25 +578,46 @@ static int Jac(long int N, realtype t,
 {
   realtype *rdata = (realtype *) user_data;
   realtype ep = rdata[2];
-  realtype d  = rdata[3];
+  realtype M00 = rdata[3];
+  realtype M01 = rdata[4];
+  realtype M02 = rdata[5];
+  realtype M10 = rdata[6];
+  realtype M11 = rdata[7];
+  realtype M12 = rdata[8];
+  realtype M20 = rdata[9];
+  realtype M21 = rdata[10];
+  realtype M22 = rdata[11];
   realtype u = NV_Ith_S(y,0);
   realtype v = NV_Ith_S(y,1);
   realtype w = NV_Ith_S(y,2);
 
   /* du/dt = a - (w+1)*u + v*u^2 */
-  DENSE_ELEM(J,0,0) = d*(-(w+1.0) + 2.0*u*v);
-  DENSE_ELEM(J,0,1) = d*u*u;
-  DENSE_ELEM(J,0,2) = -d*u;
+  realtype J00 = -(w+1.0) + 2.0*u*v;
+  realtype J01 = u*u;
+  realtype J02 = -u;
 
   /* dv/dt = w*u - v*u^2 */
-  DENSE_ELEM(J,1,0) = d*(w - 2.0*u*v);
-  DENSE_ELEM(J,1,1) = -d*u*u;
-  DENSE_ELEM(J,1,2) = d*u;
+  realtype J10 = w - 2.0*u*v;
+  realtype J11 = -u*u;
+  realtype J12 = u;
 
   /* dw/dt = (b-w)/ep - w*u */
-  DENSE_ELEM(J,2,0) = -d*w;
-  DENSE_ELEM(J,2,1) = 0.0;
-  DENSE_ELEM(J,2,2) = d*(-1.0/ep - u);
+  realtype J20 = -w;
+  realtype J21 = 0.0;
+  realtype J22 = -1.0/ep - u;
+
+  /* perform multiply by M */
+  DENSE_ELEM(J,0,0) = M00*J00 + M01*J10 + M02*J20;
+  DENSE_ELEM(J,0,1) = M00*J01 + M01*J11 + M02*J21;
+  DENSE_ELEM(J,0,2) = M00*J02 + M01*J12 + M02*J22;
+
+  DENSE_ELEM(J,1,0) = M10*J00 + M11*J10 + M12*J20;
+  DENSE_ELEM(J,1,1) = M10*J01 + M11*J11 + M12*J21;
+  DENSE_ELEM(J,1,2) = M10*J02 + M11*J12 + M12*J22;
+
+  DENSE_ELEM(J,2,0) = M20*J00 + M21*J10 + M22*J20;
+  DENSE_ELEM(J,2,1) = M20*J01 + M21*J11 + M22*J21;
+  DENSE_ELEM(J,2,2) = M20*J02 + M21*J12 + M22*J22;
 
   return 0;
 }
@@ -566,9 +630,18 @@ static int JacI(long int N, realtype t,
 {
   realtype *rdata = (realtype *) user_data;
   realtype ep = rdata[2];
-  realtype d  = rdata[3];
+  realtype M02 = rdata[5];
+  realtype M12 = rdata[8];
+  realtype M22 = rdata[11];
+  realtype u = NV_Ith_S(y,0);
   SetToZero(J);
-  DENSE_ELEM(J,2,2) = -d/ep;
+  realtype J22 = -1.0/ep - u;
+
+  /* perform multiply by M */
+  DENSE_ELEM(J,0,2) = M02*J22;
+  DENSE_ELEM(J,1,2) = M12*J22;
+  DENSE_ELEM(J,2,2) = M22*J22;
+
   return 0;
 }
 
@@ -582,7 +655,15 @@ static int JacV(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
   int ier;
   realtype *rdata = (realtype *) user_data;
   realtype ep = rdata[2];
-  realtype d  = rdata[3];
+  realtype M00 = rdata[3];
+  realtype M01 = rdata[4];
+  realtype M02 = rdata[5];
+  realtype M10 = rdata[6];
+  realtype M11 = rdata[7];
+  realtype M12 = rdata[8];
+  realtype M20 = rdata[9];
+  realtype M21 = rdata[10];
+  realtype M22 = rdata[11];
   realtype v_u = NV_Ith_S(v,0);
   realtype v_v = NV_Ith_S(v,1);
   realtype v_w = NV_Ith_S(v,2);
@@ -594,13 +675,18 @@ static int JacV(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
   N_VConst(0.0, Jv);
 
   /* du/dt = a - (w+1)*u + v*u^2 */
-  NV_Ith_S(Jv,0) = d*((2.0*y_u*y_v - (y_w+1.0))*v_u + (y_u*y_u)*v_v - y_u*v_w);
+  realtype du = (2.0*y_u*y_v - (y_w+1.0))*v_u + (y_u*y_u)*v_v - y_u*v_w;
 
   /* dv/dt = w*u - v*u^2 */
-  NV_Ith_S(Jv,1) = d*((y_w - 2.0*y_u*y_v)*v_u - y_u*y_u*v_v + y_u*v_w);
+  realtype dv = (y_w - 2.0*y_u*y_v)*v_u - y_u*y_u*v_v + y_u*v_w;
 
   /* dw/dt = (b-w)/ep - w*u */
-  NV_Ith_S(Jv,2) = d*(-y_w*v_u - (1.0/ep + y_u)*v_w);
+  realtype dw = -y_w*v_u - (1.0/ep + y_u)*v_w;
+
+  /* multiply by M */
+  NV_Ith_S(Jv,0) = M00*du + M01*dv + M02*dw;
+  NV_Ith_S(Jv,1) = M10*du + M11*dv + M12*dw;
+  NV_Ith_S(Jv,2) = M20*du + M21*dv + M22*dw;
 
   return 0;
 }
@@ -615,14 +701,21 @@ static int JacVI(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
   int ier;
   realtype *rdata = (realtype *) user_data;
   realtype ep = rdata[2];
-  realtype d  = rdata[3];
+  realtype M02 = rdata[5];
+  realtype M12 = rdata[8];
+  realtype M22 = rdata[11];
   realtype v_w = NV_Ith_S(v,2);
   
   /* clear out result */
   N_VConst(0.0, Jv);
 
   /* dw/dt = (b-w)/ep */
-  NV_Ith_S(Jv,2) = -d*v_w/ep;
+  realtype dw = -v_w/ep;
+
+  /* perform multiply by M */
+  NV_Ith_S(Jv,0) = M02*dw;
+  NV_Ith_S(Jv,1) = M12*dw;
+  NV_Ith_S(Jv,2) = M22*dw;
 
   return 0;
 }
@@ -632,11 +725,16 @@ static int JacVI(N_Vector v, N_Vector Jv, realtype t, N_Vector y,
 static int MassMatrix(long int N, realtype t, DlsMat M, void *user_data, 
 		      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
   realtype *rdata = (realtype *) user_data;
-  realtype d = rdata[3];
   SetToZero(M);
-  DENSE_ELEM(M,0,0) = d;
-  DENSE_ELEM(M,1,1) = d;
-  DENSE_ELEM(M,2,2) = d;
+  DENSE_ELEM(M,0,0) = rdata[3];
+  DENSE_ELEM(M,0,1) = rdata[4];
+  DENSE_ELEM(M,0,2) = rdata[5];
+  DENSE_ELEM(M,1,0) = rdata[6];
+  DENSE_ELEM(M,1,1) = rdata[7];
+  DENSE_ELEM(M,1,2) = rdata[8];
+  DENSE_ELEM(M,2,0) = rdata[9];
+  DENSE_ELEM(M,2,1) = rdata[10];
+  DENSE_ELEM(M,2,2) = rdata[11];
   return 0;
 }
 
@@ -648,10 +746,25 @@ static int MassTimes(N_Vector v, N_Vector Mv,
   /* user data structure */
   realtype *rdata = (realtype *) user_data;
   realtype ep = rdata[2];
-  realtype d = rdata[3];
+  realtype M00 = rdata[3];
+  realtype M01 = rdata[4];
+  realtype M02 = rdata[5];
+  realtype M10 = rdata[6];
+  realtype M11 = rdata[7];
+  realtype M12 = rdata[8];
+  realtype M20 = rdata[9];
+  realtype M21 = rdata[10];
+  realtype M22 = rdata[11];
 
-  /* fill in result as a scaled multiple of v */
-  N_VScale(d, v, Mv);
+  /* input vector entries */
+  realtype v0 = NV_Ith_S(v,0);
+  realtype v1 = NV_Ith_S(v,1);
+  realtype v2 = NV_Ith_S(v,2);
+
+  /* fill in result as a product with v */
+  NV_Ith_S(Mv,0) = M00*v0 + M01*v1 + M02*v2;
+  NV_Ith_S(Mv,1) = M10*v0 + M11*v1 + M12*v2;
+  NV_Ith_S(Mv,2) = M20*v0 + M21*v1 + M22*v2;
   return 0;
 }
 

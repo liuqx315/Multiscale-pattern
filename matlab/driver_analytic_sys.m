@@ -1,3 +1,10 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % driver for stiff ODE system with analytical solution:
 %    u' = A*u
 % where u(0) = [1,1,1]', A = V*D*Vinv, 
@@ -7,12 +14,6 @@
 % where lam is a large negative number. The analytical solution to
 % this problem is 
 %   Y(t) = V*exp(D*t)*Vinv*Y0
-%
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2012
-% All Rights Reserved
 
 clear
 

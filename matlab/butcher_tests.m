@@ -1,10 +1,11 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % driver to check accuracy of various RK methods in butcher.m
-%
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% November 2011
-% All Rights Reserved
 
 clear
 !\rm butcher_tests.txt

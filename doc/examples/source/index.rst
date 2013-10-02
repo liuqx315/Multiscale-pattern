@@ -1,3 +1,11 @@
+..
+   Programmer(s): Daniel R. Reynolds @ SMU
+   ----------------------------------------------------------------
+   Copyright (c) 2013, Southern Methodist University.
+   All rights reserved.
+   For details, see the LICENSE file.
+   ----------------------------------------------------------------
+
 .. ARKode_example documentation master file, created by
    sphinx-quickstart on Sat Dec 22 20:38:03 2012.
    You can adapt this file completely to your liking, but it should at least

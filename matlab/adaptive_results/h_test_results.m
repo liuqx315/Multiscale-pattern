@@ -1,7 +1,12 @@
 % Analysis script for results from h_tests.m
 %
-% Daniel R. Reynolds
-% SMU Mathematics
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % controller indexing:
 %    0 = none

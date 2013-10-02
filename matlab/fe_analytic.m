@@ -1,11 +1,13 @@
 function dy = fe_analytic(t, y)
 % usage: dy = fe_analytic(t, y)
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % form the ODE RHS
 dy = 1/(1+t^2);

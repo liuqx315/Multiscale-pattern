@@ -1,11 +1,13 @@
 function butcher_test_method(B,mname)
 % function to check accuracy of a given RK Butcher table
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% May 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % set the total integration time
 Tf = 10;

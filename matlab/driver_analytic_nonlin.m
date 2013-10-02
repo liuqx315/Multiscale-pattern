@@ -1,12 +1,13 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % driver for stiff ODE version of analytical test problem:
 %    y' = (t+1)*exp(-y)
 % where y(0) = 0.  This has analytical solution y(t) = log(0.5*((t+1)^2+1))
-%
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2012
-% All Rights Reserved
 
 clear
 

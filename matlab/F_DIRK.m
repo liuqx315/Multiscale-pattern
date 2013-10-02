@@ -9,12 +9,13 @@ function F = F_DIRK(z, Fdata)
 % stage solution, through calling the user-supplied (in Fdata) ODE
 % right-hand side function.
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
-
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % extract DIRK method information from Fdata
 B = Fdata.B;

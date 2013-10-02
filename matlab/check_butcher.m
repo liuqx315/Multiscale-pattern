@@ -12,10 +12,13 @@ function [q,p,Bs,As,Ls] = check_butcher(B)
 %
 % If the method has no embedding, then we set p=0.
 %
-% Daniel R. Reynolds
-% SMU Mathematics
-% May 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % set tolerance on 'equality'
 tol = 1e-8;

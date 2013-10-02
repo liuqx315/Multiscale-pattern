@@ -1,6 +1,13 @@
 #!/usr/bin/env python
-# script to perform regression tests on ARKODE solvers, and generate web page with the results.
-# Daniel R. Reynolds, reynolds@smu.edu
+#------------------------------------------------------------
+# Programmer(s):  Daniel R. Reynolds @ SMU
+#------------------------------------------------------------
+# Copyright (c) 2013, Southern Methodist University.
+# All rights reserved.
+# For details, see the LICENSE file.
+#------------------------------------------------------------
+# script to perform regression tests on ARKODE solvers, and 
+# generate web page with the results.
 
 # imports
 import sys

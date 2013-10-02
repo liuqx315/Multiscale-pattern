@@ -1,14 +1,15 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % driver for 1D Cahn-Hilliard problem,
 %   u_t = -\partial_xx (c^2 \partial_xx u - u(u^2 - 1)), on [0,1]
 %      u_x = 0     at x=0,x=1
 %      u_xxx = 0   at x=0,x=1
 %      u(x,0) = u_0 + r,  r is a uniform random number in [-0.05,0.05].
-%
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
 
 clear
 
