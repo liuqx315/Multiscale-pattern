@@ -13,11 +13,13 @@ function B = build_dense(method_name)
 %
 % Method types are as specified in butcher.m
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% January 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % get the butcher table
 Butcher = butcher(method_name);

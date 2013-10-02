@@ -37,11 +37,13 @@ function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, 
 % Note: to run in fixed-step mode, just call the solver using hmin=hmax as
 % the desired time step size.
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % extract DIRK method information from Bi
 [Brows, Bcols] = size(Bi);

@@ -5,11 +5,13 @@ function dy = f_CH_1D(t, y)
 %      u_x = 0     at x=0,x=1
 %      u_xxx = 0   at x=0,x=1
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % extract model parameters, mesh size; set shortcut constants
 global Pdata;

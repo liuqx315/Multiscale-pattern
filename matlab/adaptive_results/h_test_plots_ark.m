@@ -7,8 +7,13 @@ function h_test_plots_ark(probname, pname, ode15s, ...
 %                          dirk43_c1, dirk43_c2, dirk43_c3, dirk43_c4, dirk43_c5, ...
 %                          dirk54_c1, dirk54_c2, dirk54_c3, dirk54_c4, dirk54_c5)
 %
-% Daniel R. Reynolds
-% SMU Mathematics
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % extract rtol
 rtol = ode15s(:,1);

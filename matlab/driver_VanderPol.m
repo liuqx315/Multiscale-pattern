@@ -1,13 +1,14 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % driver for stiff ODE version of Van der Pol test problem:
 %    u' = v
 %    v' = (v - v*u^2 - u)/ep
 % where u(0) = 2,  v(0) = -0.6666654321121172, and ep = 1e-5.
-%
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
 
 clear
 

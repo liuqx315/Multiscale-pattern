@@ -1,9 +1,12 @@
-% driver to check analytical properties of various RK methods in butcher.m
-%
-% Daniel R. Reynolds
-% SMU Mathematics
-% May 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
+% driver to check analytical properties of various RK methods 
+% in butcher.m
 
 clear
 !\rm butcher_tests2.txt

@@ -1,11 +1,13 @@
 function dy = f_analytic_nonlin(t, y)
 % usage: dy = f_analytic_nonlin(t, y)
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % form the ODE RHS
 %    f = (t+1)*exp(-y)

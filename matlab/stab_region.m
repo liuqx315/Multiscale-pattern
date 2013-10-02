@@ -21,10 +21,13 @@ function [X,Y] = stab_region(A,b,Theta)
 %    X is an array of real components of the stability boundary
 %    Y is an array of imaginary components of the stability boundary
 %
-% Daniel R. Reynolds
-% SMU Mathematics
-% August 2013
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % set perturbation, tolerance, maxit
 sig = sqrt(eps);

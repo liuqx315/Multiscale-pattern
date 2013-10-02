@@ -1,9 +1,10 @@
 /*---------------------------------------------------------------
- $Revision: $
- $Date: $
------------------------------------------------------------------
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  Example problem:
  
  The following test simulates a brusselator problem from chemical 
@@ -55,8 +56,16 @@
 #include <arkode/arkode.h>
 #include <nvector/nvector_serial.h>
 #include <arkode/arkode_dense.h>
+#include <arkode/arkode_spgmr.h>
+#include <arkode/arkode_spbcgs.h>
+#include <arkode/arkode_sptfqmr.h>
 #include <sundials/sundials_dense.h>
 #include <sundials/sundials_types.h>
+
+#define USE_ITERATIVE
+#define USE_SPGMR
+/* #define USE_SPBCG */
+/* #define USE_SPTFQMR */
 
 /* User-supplied Functions Called by the Solver */
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
@@ -68,6 +77,10 @@ static int Jac(long int N, realtype t,
 static int JacI(long int N, realtype t,
                N_Vector y, N_Vector fy, DlsMat J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int JacV(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		N_Vector fy, void *user_data, N_Vector tmp1);
+static int JacVI(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		 N_Vector fy, void *user_data, N_Vector tmp1);
 
 /* Private function to check function return values */
 static int check_flag(void *flagvalue, char *funcname, int opt);
@@ -210,13 +223,47 @@ int main()
   flag = ARKodeSStolerances(arktrue_mem, reltol2, abstol2);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* Call ARKDense to specify the ARKDENSE dense linear solver */
+  /* Specify the linear solver */
+#ifdef USE_ITERATIVE
+#ifdef USE_SPGMR
+  flag = ARKSpgmr(arkode_mem, 0, NEQ);
+  if (check_flag(&flag, "ARKSpgmr", 1)) return 1;
+  flag = ARKSpgmr(arktrue_mem, 0, NEQ);
+  if (check_flag(&flag, "ARKSpgmr", 1)) return 1;
+#endif
+#ifdef USE_SPBCG
+  flag = ARKSpbcg(arkode_mem, 0, NEQ);
+  if (check_flag(&flag, "ARKSpbcg", 1)) return 1;
+  flag = ARKSpbcg(arktrue_mem, 0, NEQ);
+  if (check_flag(&flag, "ARKSpbcg", 1)) return 1;
+#endif
+#ifdef USE_SPTFQMR
+  flag = ARKSptfqmr(arkode_mem, 0, NEQ);
+  if (check_flag(&flag, "ARKSptfqmr", 1)) return 1;
+  flag = ARKSptfqmr(arktrue_mem, 0, NEQ);
+  if (check_flag(&flag, "ARKSptfqmr", 1)) return 1;
+#endif
+#else
   flag = ARKDense(arkode_mem, NEQ);
   if (check_flag(&flag, "ARKDense", 1)) return 1;
   flag = ARKDense(arktrue_mem, NEQ);
   if (check_flag(&flag, "ARKDense", 1)) return 1;
+#endif
 
-  /* Set the Jacobian routine to Jac (user-supplied) */
+  /* Set the Jacobian routine (user-supplied) */
+#ifdef USE_ITERATIVE
+  switch (imex) {
+  case 0:         /* purely implicit */
+    flag = ARKSpilsSetJacTimesVecFn(arkode_mem, JacV);   break;
+  case 1:         /* purely explicit */
+    break;
+  default:        /* imex */
+    flag = ARKSpilsSetJacTimesVecFn(arkode_mem, JacVI);  break;
+  }
+  if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
+  flag = ARKSpilsSetJacTimesVecFn(arktrue_mem, JacV);
+  if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
+#else
   switch (imex) {
   case 0:         /* purely implicit */
     flag = ARKDlsSetDenseJacFn(arkode_mem, Jac);   break;
@@ -228,6 +275,7 @@ int main()
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
   flag = ARKDlsSetDenseJacFn(arktrue_mem, Jac);
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
+#endif
 
   /* Write all solver parameters to stdout */
   printf("\n");
@@ -280,6 +328,7 @@ int main()
 
   /* Print some final statistics */
   long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
+  long int nli, nlcf, nJv;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
@@ -294,18 +343,33 @@ int main()
   check_flag(&flag, "ARKodeGetNumNonlinSolvIters", 1);
   flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
   check_flag(&flag, "ARKodeGetNumNonlinSolvConvFails", 1);
+#ifdef USE_ITERATIVE
+  flag = ARKSpilsGetNumLinIters(arkode_mem, &nli);
+  check_flag(&flag, "ARKSpilsGetNumLinIters", 1);
+  flag = ARKSpilsGetNumConvFails(arkode_mem, &nlcf);
+  check_flag(&flag, "ARKSpilsGetNumConvFails", 1);
+  flag = ARKSpilsGetNumJtimesEvals(arkode_mem, &nJv);
+  check_flag(&flag, "ARKSpilsGetNumJtimesEvals", 1);
+#else
   flag = ARKDlsGetNumJacEvals(arkode_mem, &nje);
   check_flag(&flag, "ARKDlsGetNumJacEvals", 1);
   flag = ARKDlsGetNumRhsEvals(arkode_mem, &nfeLS);
   check_flag(&flag, "ARKDlsGetNumRhsEvals", 1);
+#endif
 
   printf("\nFinal Solver Statistics:\n");
   printf("   Internal solver steps = %li (attempted = %li)\n", 
 	 nst, nst_a);
   printf("   Total RHS evals:  Fe = %li,  Fi = %li\n", nfe, nfi);
   printf("   Total linear solver setups = %li\n", nsetups);
+#ifdef USE_ITERATIVE
+  printf("   Total linear iterations = %li\n", nli);
+  printf("   Total linear convergence failures = %li\n", nlcf);
+  printf("   Total J*v evaluations = %li\n", nJv);
+#else
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
+#endif
   printf("   Total number of nonlinear iterations = %li\n", nni);
   printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n", netf);
@@ -436,6 +500,53 @@ static int JacI(long int N, realtype t,
   return 0;
 }
 
+/* Interface routine to compute the Jacobian-vector product 
+   for the full RHS function, f(y) */
+static int JacV(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		N_Vector fy, void *user_data, N_Vector tmp1) {
+
+  /* temporary variables */
+  int ier;
+  realtype *rdata = (realtype *) user_data;
+  realtype ep = rdata[2];
+  realtype v_u = NV_Ith_S(v,0);
+  realtype v_v = NV_Ith_S(v,1);
+  realtype v_w = NV_Ith_S(v,2);
+  realtype y_u = NV_Ith_S(y,0);
+  realtype y_v = NV_Ith_S(y,1);
+  realtype y_w = NV_Ith_S(y,2);
+
+  /* du/dt = a - (w+1)*u + v*u^2 */
+  NV_Ith_S(Jv,0) = (2.0*y_u*y_v - (y_w+1.0))*v_u + (y_u*y_u)*v_v - y_u*v_w;
+
+  /* dv/dt = w*u - v*u^2 */
+  NV_Ith_S(Jv,1) = (y_w - 2.0*y_u*y_v)*v_u - y_u*y_u*v_v + y_u*v_w;
+
+  /* dw/dt = (b-w)/ep - w*u */
+  NV_Ith_S(Jv,2) = -y_w*v_u - (1.0/ep + y_u)*v_w;
+
+  return 0;
+}
+
+/* Interface routine to compute the Jacobian-vector product 
+   for the implicit RHS function, fi(y) */
+static int JacVI(N_Vector v, N_Vector Jv, realtype t, N_Vector y, 
+		 N_Vector fy, void *user_data, N_Vector tmp1) {
+
+  /* temporary variables */
+  int ier;
+  realtype *rdata = (realtype *) user_data;
+  realtype ep = rdata[2];
+  realtype v_w = NV_Ith_S(v,2);
+  
+  /* clear out result */
+  N_VConst(0.0, Jv);
+
+  /* dw/dt = (b-w)/ep */
+  NV_Ith_S(Jv,2) = -v_w/ep;
+
+  return 0;
+}
 
 
 /*-------------------------------

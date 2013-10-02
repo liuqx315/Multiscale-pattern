@@ -9,11 +9,13 @@ function y = Y_IRK(z, Fdata)
 % multi-stage IRK method, and pieces them together to form the time-evolved
 % solution y(t_{n+1}). 
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % extract IRK method information from Fdata
 B = Fdata.B;

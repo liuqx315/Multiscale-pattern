@@ -1,12 +1,13 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % driver for stiff ODE version of analytical test problem:
 %    u' = lam*u + 1/(1+t^2) - lam*atan(t)
 % where u(0) = 0, lam = -1/ep, and ep = 1e-5.
-%
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% May 2012
-% All Rights Reserved
 
 clear
 

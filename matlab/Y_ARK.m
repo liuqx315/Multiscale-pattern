@@ -10,11 +10,13 @@ function [y,yerr] = Y_ARK(z, Fdata)
 % multi-stage DIRK method, and pieces them together to form the time-evolved
 % solution y(t_{n+1}). 
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % extract DIRK method information from Fdata
 Bi = Fdata.B;

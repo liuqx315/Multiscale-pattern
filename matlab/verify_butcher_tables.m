@@ -1,10 +1,12 @@
 % driver to check accuracy of a few specific RK methods (and embeddings) in butcher.m
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% May 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 clear
 !\rm verify_butcher.txt

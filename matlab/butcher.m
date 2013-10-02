@@ -107,11 +107,13 @@ function B = butcher(method_name)
 %    RadauIIA-5-9-IRK                   q=9, s=5
 %    Gauss-6-12-IRK                     q=12, s=6
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 % set the butcher table
 if (strcmp(method_name,'ARK3(2)4L[2]SA-ERK'))

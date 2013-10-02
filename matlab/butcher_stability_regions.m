@@ -1,10 +1,12 @@
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 % Script to plot stability regions for each Butcher table
 % comprising ARKode.
-%
-% Daniel R. Reynolds
-% SMU Mathematics
-% August 2013
-% All Rights Reserved
 
 clear all
 

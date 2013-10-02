@@ -15,11 +15,13 @@ function h = h_estimate_Gustafsson_imex(Yerr, h_old, ewt, p, hflag)
 %
 % Output:   h -- new time step
 %
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% November 2011
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
 
 % get estimates from both implicit and explicit approaches

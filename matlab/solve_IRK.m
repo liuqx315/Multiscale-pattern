@@ -52,11 +52,13 @@ function [tvals,Y,nsteps] = solve_IRK(fcn,Jfcn,tvals,Y0,B,rtol,atol,hmin,hmax,hm
 % Note2: to run in fixed-step mode, call with hmin=hmax as the desired 
 % time step size, and set the tolerances to large positive numbers.
 %   
-% Daniel R. Reynolds
-% Department of Mathematics
-% Southern Methodist University
-% August 2012
-% All Rights Reserved
+%------------------------------------------------------------
+% Programmer(s):  Daniel R. Reynolds @ SMU
+%------------------------------------------------------------
+% Copyright (c) 2013, Southern Methodist University.
+% All rights reserved.
+% For details, see the LICENSE file.
+%------------------------------------------------------------
 
    
 % get number of stages and internal time fractions for IRK method
