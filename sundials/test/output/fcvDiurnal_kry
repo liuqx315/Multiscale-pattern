@@ -1,0 +1,15 @@
+
+Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
+Backtrace for this error:
+#0  0x2BA255F44667
+#1  0x2BA255F44C34
+#2  0x2BA2569404EF
+#3  0x42570C in N_VMin_Serial
+#4  0x41BC46 in N_VMin
+#5  0x41406D in cvEwtSetSS at cvode.c:0
+#6  0x413FA3 in cvEwtSet
+#7  0x40CD31 in cvInitialSetup at cvode.c:0
+#8  0x40ADD5 in CVode
+#9  0x408D14 in fcvode_
+#10  0x406F8E in MAIN__ at fcvDiurnal_kry.f:0
