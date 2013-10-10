@@ -87,6 +87,10 @@ static int arkEwtSetSS(ARKodeMem ark_mem, N_Vector ycur,
 		       N_Vector weight);
 static int arkEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, 
 		       N_Vector weight);
+static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector fcur, 
+		       N_Vector weight);
+static int arkRwtSetSV(ARKodeMem ark_mem, N_Vector fcur, 
+		       N_Vector weight);
 
 static int arkAdapt(ARKodeMem ark_mem);
 static int arkAdaptPID(ARKodeMem ark_mem, realtype *hnew);
@@ -193,8 +197,9 @@ void *ARKodeCreate()
   ark_mem->ark_liw = 40;   /* to be updated */
 
   /* No mallocs have been done yet */
-  ark_mem->ark_VabstolMallocDone = FALSE;
-  ark_mem->ark_MallocDone        = FALSE;
+  ark_mem->ark_VabstolMallocDone  = FALSE;
+  ark_mem->ark_VRabstolMallocDone = FALSE;
+  ark_mem->ark_MallocDone         = FALSE;
 
   /* Return pointer to ARKODE memory block */
   return((void *)ark_mem);
@@ -340,6 +345,9 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   /* Initialize other integrator optional outputs */
   ark_mem->ark_h0u    = ZERO;
   ark_mem->ark_next_h = ZERO;
+
+  /* Initialy, rwt should point to ewt */
+  ark_mem->ark_rwt_is_ewt = TRUE;
 
   /* Indicate that problem size is new */
   ark_mem->ark_resized = TRUE;
@@ -580,6 +588,21 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     ark_mem->ark_lrw += lrw_diff;
     ark_mem->ark_liw += liw_diff;
   }
+  /*     VRabstol */
+  if (ark_mem->ark_VRabstol != NULL) {
+    if (resize == NULL) {
+      N_VDestroy(ark_mem->ark_VRabstol);
+      ark_mem->ark_VRabstol = N_VClone(y0);
+    } else {
+      if (resize(ark_mem->ark_VRabstol, y0, resize_data)) {
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RESIZE_FAIL);
+	return(ARK_ILL_INPUT);
+      }
+    }
+    ark_mem->ark_lrw += lrw_diff;
+    ark_mem->ark_liw += liw_diff;
+  }
   /*     ark_Fe */
   for (i=0; i<ARK_S_MAX; i++) {
     if (ark_mem->ark_Fe[i] != NULL) {
@@ -628,6 +651,25 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     }
     ark_mem->ark_lrw += lrw_diff;
     ark_mem->ark_liw += liw_diff;
+  }
+  /*     rwt  */
+  if (ark_mem->ark_rwt_is_ewt) {      /* update pointer to ewt */
+    ark_mem->ark_rwt = ark_mem->ark_ewt;
+  } else {                            /* resize if distinct from ewt */
+    if (ark_mem->ark_rwt != NULL) {
+      if (resize == NULL) {
+	N_VDestroy(ark_mem->ark_rwt);
+	ark_mem->ark_rwt = N_VClone(y0);
+      } else {
+	if (resize(ark_mem->ark_rwt, y0, resize_data)) {
+	  arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			  "ARKodeResize", MSGARK_RESIZE_FAIL);
+	  return(ARK_ILL_INPUT);
+	}
+      }
+      ark_mem->ark_lrw += lrw_diff;
+      ark_mem->ark_liw += liw_diff;
+    }
   }
   /*     ycur */
   if (ark_mem->ark_ycur != NULL) {
@@ -934,6 +976,155 @@ int ARKodeWFtolerances(void *arkode_mem, ARKEwtFn efun)
   ark_mem->ark_user_efun = TRUE;
   ark_mem->ark_efun      = efun;
   ark_mem->ark_e_data    = NULL; /* set to user_data in InitialSetup */
+
+  return(ARK_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKodeResStolerance:
+ ARKodeResVtolerance:
+ ARKodeResFtolerance:
+
+ These functions specify the absolute residual tolerance. 
+ Specification of the absolute residual tolerance is only 
+ necessary for problems with non-identity mass matrices in which
+ the units of the solution vector y dramatically differ from the 
+ units of the ODE right-hand side f(t,y).  If this occurs, one 
+ of these routines SHOULD be called before the first call to 
+ ARKode; otherwise the default value of rabstol=1e-9 will be 
+ used, which may be entirely incorrect for a specific problem.
+
+ ARKodeResStolerances specifies a scalar residual tolerance.
+
+ ARKodeResVtolerances specifies a vector residual tolerance 
+  (a potentially different absolute residual tolerance for 
+   each vector component).
+
+ ARKodeResFtolerances specifies a user-provides function (of 
+   type ARKRwtFn) which will be called to set the residual 
+   weight vector.
+---------------------------------------------------------------*/
+int ARKodeResStolerance(void *arkode_mem, realtype rabstol)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeResStolerances", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_MallocDone == FALSE) {
+    arkProcessError(ark_mem, ARK_NO_MALLOC, "ARKODE", 
+		    "ARKodeResStolerances", MSGARK_NO_MALLOC);
+    return(ARK_NO_MALLOC);
+  }
+
+  /* Check inputs */
+  if (rabstol < ZERO) {
+    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeResStolerances", MSGARK_BAD_RABSTOL);
+    return(ARK_ILL_INPUT);
+  }
+
+  /* Allocate space for rwt if necessary */
+  if (ark_mem->ark_rwt_is_ewt) {
+    ark_mem->ark_rwt_is_ewt = FALSE;
+    ark_mem->ark_rwt = N_VClone(ark_mem->ark_ewt);
+    ark_mem->ark_lrw += ark_mem->ark_lrw1;
+    ark_mem->ark_liw += ark_mem->ark_liw1;
+  }
+
+  /* Copy tolerances into memory */
+  ark_mem->ark_SRabstol  = rabstol;
+  ark_mem->ark_ritol     = ARK_SS;
+  ark_mem->ark_user_rfun = FALSE;
+  ark_mem->ark_rfun      = arkRwtSet;
+  ark_mem->ark_r_data    = NULL; /* set to arkode_mem in InitialSetup */
+
+  return(ARK_SUCCESS);
+}
+
+int ARKodeResVtolerance(void *arkode_mem, N_Vector rabstol)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeResVtolerances", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_MallocDone == FALSE) {
+    arkProcessError(ark_mem, ARK_NO_MALLOC, "ARKODE", 
+		    "ARKodeResVtolerances", MSGARK_NO_MALLOC);
+    return(ARK_NO_MALLOC);
+  }
+
+  /* Check inputs */
+  if (N_VMin(rabstol) < ZERO) {
+    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+		    "ARKodeResVtolerances", MSGARK_BAD_RABSTOL);
+    return(ARK_ILL_INPUT);
+  }
+
+  /* Allocate space for rwt if necessary */
+  if (ark_mem->ark_rwt_is_ewt) {
+    ark_mem->ark_rwt_is_ewt = FALSE;
+    ark_mem->ark_rwt = N_VClone(ark_mem->ark_ewt);
+    ark_mem->ark_lrw += ark_mem->ark_lrw1;
+    ark_mem->ark_liw += ark_mem->ark_liw1;
+  }
+
+  /* Copy tolerances into memory */
+  if ( !(ark_mem->ark_VRabstolMallocDone) ) {
+    ark_mem->ark_VRabstol = N_VClone(ark_mem->ark_rwt);
+    ark_mem->ark_lrw += ark_mem->ark_lrw1;
+    ark_mem->ark_liw += ark_mem->ark_liw1;
+    ark_mem->ark_VRabstolMallocDone = TRUE;
+  }
+  N_VScale(ONE, rabstol, ark_mem->ark_VRabstol);
+  ark_mem->ark_ritol     = ARK_SV;
+  ark_mem->ark_user_rfun = FALSE;
+  ark_mem->ark_rfun      = arkRwtSet;
+  ark_mem->ark_r_data    = NULL; /* set to arkode_mem in InitialSetup */
+
+  return(ARK_SUCCESS);
+}
+
+int ARKodeResFtolerance(void *arkode_mem, ARKRwtFn rfun)
+{
+  ARKodeMem ark_mem;
+
+  if (arkode_mem==NULL) {
+    arkProcessError(NULL, ARK_MEM_NULL, "ARKODE", 
+		    "ARKodeResFtolerances", MSGARK_NO_MEM);
+    return(ARK_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_MallocDone == FALSE) {
+    arkProcessError(ark_mem, ARK_NO_MALLOC, "ARKODE", 
+		    "ARKodeResFtolerances", MSGARK_NO_MALLOC);
+    return(ARK_NO_MALLOC);
+  }
+
+  /* Allocate space for rwt if necessary */
+  if (ark_mem->ark_rwt_is_ewt) {
+    ark_mem->ark_rwt_is_ewt = FALSE;
+    ark_mem->ark_rwt = N_VClone(ark_mem->ark_ewt);
+    ark_mem->ark_lrw += ark_mem->ark_lrw1;
+    ark_mem->ark_liw += ark_mem->ark_liw1;
+  }
+
+  /* Copy tolerance data into memory */
+  ark_mem->ark_ritol     = ARK_WF;
+  ark_mem->ark_user_rfun = TRUE;
+  ark_mem->ark_rfun      = rfun;
+  ark_mem->ark_r_data    = NULL; /* set to user_data in InitialSetup */
 
   return(ARK_SUCCESS);
 }
@@ -1302,6 +1493,27 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
         else 
           arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
 			  MSGARK_EWT_NOW_BAD, ark_mem->ark_tn);
+	
+        istate = ARK_ILL_INPUT;
+        ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+        N_VScale(ONE, ark_mem->ark_ycur, yout);
+        break;
+      }
+    }
+    
+    /* Reset and check rwt */
+    if (ark_mem->ark_nst > 0 && !ark_mem->ark_rwt_is_ewt) {
+      ewtsetOK = ark_mem->ark_rfun(ark_mem->ark_ycur,
+				   ark_mem->ark_fnew, 
+				   ark_mem->ark_rwt, 
+				   ark_mem->ark_r_data);
+      if (ewtsetOK != 0) {
+        if (ark_mem->ark_ritol == ARK_WF) 
+          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			  MSGARK_RWT_NOW_FAIL, ark_mem->ark_tn);
+        else 
+          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			  MSGARK_RWT_NOW_BAD, ark_mem->ark_tn);
 	
         istate = ARK_ILL_INPUT;
         ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
@@ -1711,7 +1923,7 @@ int ARKodeRootInit(void *arkode_mem, int nrtfn, ARKRootFn g)
  This routine is responsible for setting the error weight vector ewt,
  according to tol_type, as follows:
 
- (1) ewt[i] = 1 / (reltol * ABS(ycur[i]) + *abstol), i=0,...,neq-1
+ (1) ewt[i] = 1 / (reltol * ABS(ycur[i]) + abstol), i=0,...,neq-1
      if tol_type = ARK_SS
  (2) ewt[i] = 1 / (reltol * ABS(ycur[i]) + abstol[i]), i=0,...,neq-1
      if tol_type = ARK_SV
@@ -1736,6 +1948,49 @@ int arkEwtSet(N_Vector ycur, N_Vector weight, void *data)
     break;
   case ARK_SV: 
     flag = arkEwtSetSV(ark_mem, ycur, weight);
+    break;
+  }
+  
+  return(flag);
+}
+
+
+/*---------------------------------------------------------------
+ arkRwtSet
+
+ This routine is responsible for setting the residual weight 
+ vector rwt, according to tol_type, as follows:
+
+ (1) rwt[i] = 1 / (reltol * ABS(fcur[i]) + rabstol), i=0,...,neq-1
+     if tol_type = ARK_SS
+ (2) rwt[i] = 1 / (reltol * ABS(fcur[i]) + rabstol[i]), i=0,...,neq-1
+     if tol_type = ARK_SV
+ (3) unset if tol_type is any other value (occurs rwt=ewt)
+
+ arkRwtSet returns 0 if rwt is successfully set as above to a
+ positive vector and -1 otherwise. In the latter case, rwt is
+ considered undefined.
+
+ All the real work is done in the routines arkRwtSetSS, arkRwtSetSV.
+---------------------------------------------------------------*/
+int arkRwtSet(N_Vector ycur, N_Vector fcur, N_Vector weight, void *data)
+{
+  ARKodeMem ark_mem;
+  int flag = 0;
+
+  /* data points to ark_mem here */
+  ark_mem = (ARKodeMem) data;
+
+  /* return if rwt is just ewt */
+  if (ark_mem->ark_rwt_is_ewt)  return(0);
+
+  /* call appropriate routine to fill rwt */
+  switch(ark_mem->ark_ritol) {
+  case ARK_SS: 
+    flag = arkRwtSetSS(ark_mem, fcur, weight);
+    break;
+  case ARK_SV: 
+    flag = arkRwtSetSV(ark_mem, fcur, weight);
     break;
   }
   
@@ -1788,6 +2043,7 @@ static void arkPrintMem(ARKodeMem ark_mem)
 
   /* output integer quantities */
   printf("ark_itol = %i\n", ark_mem->ark_itol);
+  printf("ark_ritol = %i\n", ark_mem->ark_ritol);
   printf("ark_q = %i\n", ark_mem->ark_q);
   printf("ark_p = %i\n", ark_mem->ark_p);
   printf("ark_istage = %i\n", ark_mem->ark_istage);
@@ -1980,6 +2236,10 @@ static void arkPrintMem(ARKodeMem ark_mem)
     printf("ark_ewt:\n");
     N_VPrint_Serial(ark_mem->ark_ewt);
   }
+  if (!ark_mem->ark_rwt_is_ewt && ark_mem->ark_rwt != NULL)
+    printf("ark_rwt:\n");
+    N_VPrint_Serial(ark_mem->ark_rwt);
+  }
   if (ark_mem->ark_y != NULL) {
     printf("ark_y:\n");
     N_VPrint_Serial(ark_mem->ark_y);
@@ -2114,6 +2374,10 @@ static booleantype arkAllocVectors(ARKodeMem ark_mem, N_Vector tmpl)
       ark_mem->ark_liw += ark_mem->ark_liw1;
     }
   }
+
+  /* Set rwt to point at ewt */
+  if (ark_mem->ark_rwt_is_ewt) 
+    ark_mem->ark_rwt = ark_mem->ark_ewt;
 
   /* Allocate acor if needed */
   if (ark_mem->ark_acor == NULL) {
@@ -2301,6 +2565,12 @@ static void arkFreeVectors(ARKodeMem ark_mem)
   if (ark_mem->ark_ewt != NULL) {
     N_VDestroy(ark_mem->ark_ewt);
     ark_mem->ark_ewt = NULL;
+    ark_mem->ark_lrw -= ark_mem->ark_lrw1;
+    ark_mem->ark_liw -= ark_mem->ark_liw1;
+  }
+  if ((!ark_mem->ark_rwt_is_ewt) && (ark_mem->ark_rwt != NULL)) {
+    N_VDestroy(ark_mem->ark_rwt);
+    ark_mem->ark_rwt = NULL;
     ark_mem->ark_lrw -= ark_mem->ark_lrw1;
     ark_mem->ark_liw -= ark_mem->ark_liw1;
   }
@@ -2861,6 +3131,23 @@ static int arkInitialSetup(ARKodeMem ark_mem)
   ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
 		   ark_mem->ark_ftemp, ark_mem->ark_fnew);
   if (ier != 0)  return(ARK_RHSFUNC_FAIL);
+
+  /* Load initial residual weights */
+  if (!ark_mem->ark_rwt_is_ewt) {
+    ier = ark_mem->ark_rfun(ark_mem->ark_ycur,
+			    ark_mem->ark_fnew,
+			    ark_mem->ark_rwt, 
+			    ark_mem->ark_r_data);
+    if (ier != 0) {
+      if (ark_mem->ark_ritol == ARK_WF) 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkInitialSetup", MSGARK_RWT_FAIL);
+      else 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkInitialSetup", MSGARK_BAD_RWT);
+      return(ARK_ILL_INPUT);
+    }
+  }
   
   return(ARK_SUCCESS);
 }
@@ -5043,6 +5330,44 @@ static int arkEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
   N_VAbs(ycur, ark_mem->ark_tempv);
   N_VLinearSum(ark_mem->ark_reltol, ark_mem->ark_tempv, ONE, 
 	       ark_mem->ark_Vabstol, ark_mem->ark_tempv);
+  if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
+  N_VInv(ark_mem->ark_tempv, weight);
+  return(0);
+}
+
+
+/*---------------------------------------------------------------
+ arkRwtSetSS
+
+ This routine sets rwt as decribed above in the case tol_type = ARK_SS.
+ It tests for non-positive components before inverting. arkRwtSetSS
+ returns 0 if rwt is successfully set to a positive vector
+ and -1 otherwise. In the latter case, rwt is considered undefined.
+---------------------------------------------------------------*/
+static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector fcur, N_Vector weight)
+{
+  N_VAbs(fcur, ark_mem->ark_tempv);
+  N_VScale(ark_mem->ark_reltol, ark_mem->ark_tempv, ark_mem->ark_tempv);
+  N_VAddConst(ark_mem->ark_tempv, ark_mem->ark_SRabstol, ark_mem->ark_tempv);
+  if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
+  N_VInv(ark_mem->ark_tempv, weight);
+  return(0);
+}
+
+
+/*---------------------------------------------------------------
+ arkRwtSetSV
+
+ This routine sets rwt as decribed above in the case tol_type = ARK_SV.
+ It tests for non-positive components before inverting. arkRwtSetSV
+ returns 0 if rwt is successfully set to a positive vector
+ and -1 otherwise. In the latter case, rwt is considered undefined.
+---------------------------------------------------------------*/
+static int arkRwtSetSV(ARKodeMem ark_mem, N_Vector fcur, N_Vector weight)
+{
+  N_VAbs(fcur, ark_mem->ark_tempv);
+  N_VLinearSum(ark_mem->ark_reltol, ark_mem->ark_tempv, ONE, 
+	       ark_mem->ark_VRabstol, ark_mem->ark_tempv);
   if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
   N_VInv(ark_mem->ark_tempv, weight);
   return(0);

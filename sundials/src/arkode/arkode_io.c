@@ -61,7 +61,9 @@ int ARKodeSetDefaults(void *arkode_mem)
   ark_mem->ark_predictor        = 3;
   ark_mem->ark_reltol           = 1.e-4;
   ark_mem->ark_Sabstol          = 1.e-9;
+  ark_mem->ark_SRabstol         = 1.e-9;
   ark_mem->ark_itol             = ARK_SS;
+  ark_mem->ark_ritol            = ARK_SS;
   ark_mem->ark_user_efun        = FALSE;
   ark_mem->ark_efun             = arkEwtSet;
   ark_mem->ark_e_data           = NULL;
@@ -2642,6 +2644,17 @@ int ARKodeWriteParameters(void *arkode_mem, FILE *fp)
       fprintf(fp, "  Solver absolute tolerance = %g\n", ark_mem->ark_Sabstol);
     } else {
       fprintf(fp, "  Vector-valued solver absolute tolerance\n");
+    }
+  }
+  if (!ark_mem->ark_rwt_is_ewt) {
+    if (ark_mem->ark_ritol == ARK_WF) {
+      fprintf(fp, "  User provided residual weight function\n");
+    } else {
+      if (ark_mem->ark_ritol == ARK_SS) {
+	fprintf(fp, "  Absolute residual tolerance = %g\n", ark_mem->ark_SRabstol);
+      } else {
+	fprintf(fp, "  Vector-valued residual absolute tolerance\n");
+      }
     }
   }
   if (ark_mem->ark_hin != ZERO)  
