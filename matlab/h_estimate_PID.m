@@ -43,6 +43,10 @@ persistent Eratio_old;
 if isempty(Eratio_old)
    Eratio_old = 1;
 end
+persistent Eratio_older;
+if isempty(Eratio_older)
+   Eratio_older = 1;
+end
 
 % update old error estimates
 Eratio_oldest = Eratio_older;

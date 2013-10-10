@@ -55,6 +55,7 @@ s = Bcols - 1;        % number of stages
 c = B(1:s,1);         % stage time fraction array
 b = (B(s+1,2:s+1))';  % solution weights (convert to column)
 A = B(1:s,2:s+1);     % RK coefficients
+q = B(s+1,1);         % method order
 
 % initialize as non-embedded, until proven otherwise
 embedded = 0;
@@ -79,7 +80,8 @@ a_fails = 0;
 
 % set the solver parameters
 newt_maxit = 20;             % max number of Newton iterations
-newt_tol   = 1e-10;          % Newton solver tolerance
+%newt_tol   = 1e-10;          % Newton solver tolerance
+newt_tol   = 1e-12;          % Newton solver tolerance
 newt_alpha = 1;              % Newton damping parameter
 h_reduce   = 0.1;            % failed step reduction factor 
 SMALL      = sqrt(eps);      % tolerance for floating-point comparisons
@@ -102,7 +104,7 @@ Fdata.s     = s;      % number of stages
 h = hmin;
 
 % initialize error weight vector
-ewt = 1.0/(rtol*Ynew + atol);
+ewt = 1.0./(rtol*Ynew + atol);
 
 if (DO_OUTPUT)
    fprintf('updated ewt =');
@@ -245,7 +247,7 @@ for tstep = 2:length(tvals)
 
 	 % estimate error and update time step
 	 if (embedded) 
-	    hnew = h_estimate(Yerr, h, ewt, p, hmethod, 0);
+	    hnew = h_estimate(Yerr, h, ewt, q, hmethod, 0);
 	 else
 	    hnew = hmin;
          end
@@ -260,7 +262,7 @@ for tstep = 2:length(tvals)
          end
 
          % update error weight vector
-         ewt = 1.0/(rtol*Ynew + atol);
+         ewt = 1.0./(rtol*Ynew + atol);
          
          if (DO_OUTPUT)
             fprintf('updated ewt =');
@@ -288,7 +290,7 @@ for tstep = 2:length(tvals)
          if (nef >= small_nef)
             h = h * h_reduce;
          else
-	    h = h_estimate(Yerr, h, ewt, p, hmethod, -1);
+	    h = h_estimate(Yerr, h, ewt, q, hmethod, -1);
          end
 
          % reset guess, and try solve again
@@ -309,7 +311,7 @@ for tstep = 2:length(tvals)
    
 end  % time step loop
 
-% $$$ fprintf('solve_DIRK: step failures:  %i convergence,  %i accuracy\n',...
-% $$$     c_fails,a_fails);
+fprintf('solve_DIRK: step failures:  %i convergence,  %i accuracy\n',...
+        c_fails,a_fails);
 
 % end function
