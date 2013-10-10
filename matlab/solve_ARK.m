@@ -1,5 +1,7 @@
-function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, Be, rtol, atol, hmin, hmax, hmethod)
-% usage: [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, Bi, Be, rtol, atol, hmin, hmax, hmethod)
+function [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, ...
+                                      Bi, Be, rtol, atol, hmin, hmax, hmethod)
+% usage: [tvals,Y,nsteps] = solve_ARK(fcnI, fcnE, Jfcn, EStabFn, tvals, Y0, ...
+%                                     Bi, Be, rtol, atol, hmin, hmax, hmethod)
 %
 % Adaptive time step additive RK solver for the vector-valued ODE problem
 %     y' = F(t,Y), t in tspan,
@@ -51,11 +53,14 @@ si = Bcols - 1;
 ci = Bi(1:si,1);
 bi = (Bi(si+1,2:si+1))';
 Ai = Bi(1:si,2:si+1);
+qi = Bi(si+1,1);
 if (Brows > Bcols) 
    embedded = 1;
    bi2 = (Bi(si+2,2:si+1))';
+   pi = Bi(si+2,1);
 else
    embedded = 0;
+   pi = 0;
 end
 
 % extract ERK method information from Be
@@ -64,11 +69,14 @@ se = Bcols2 - 1;
 ce = Be(1:se,1);
 be = (Be(se+1,2:se+1))';
 Ae = Be(1:se,2:se+1);
+qe = Be(se+1,1);
 if ((Brows > Bcols2) && (embedded == 1))
    embedded = 1;
    be2 = (Be(se+2,2:se+1))';
+   pe = Be(se+2,1);
 else
    embedded = 0;
+   pe = 0;
 end
 
 % ensure that DIRK and ERK method match at internal stage times
@@ -87,34 +95,18 @@ if (si == se-1)
    end
 end
 
+
 % determine method order (and embedding order)
-if (s == 4) 
-   q_method = 3;
-   p_method = 2;
-elseif (s == 5)
-   q_method = 4;
-   p_method = 3;
-elseif (s == 6)
-   q_method = 4;
-   p_method = 3;
-elseif (s == 7)
-   q_method = 5;
-   p_method = 4;
-elseif (s == 8)
-   q_method = 5;
-   p_method = 4;
-else
-   q_method = 5;
-   p_method = 4;
-end   
+q_method = min([qi, qe]);
+p_method = min([pi, pe]);
 
 
 % ensure that ci now equals ce, otherwise return with error
 if (si ~= se)
-   error('incompatible SDIRK/EKR pair for ARK method, internal stage mismatch!')
+   error('incompatible SDIRK/ERK pair for ARK method, internal stage mismatch!')
 end
 if (norm(ci-ce) > sqrt(eps))
-   error('incompatible SDIRK/EKR pair for ARK method, internal stage mismatch!')
+   error('incompatible SDIRK/ERK pair for ARK method, internal stage mismatch!')
 end
 
 
@@ -138,7 +130,11 @@ newt_alpha = 1;
 dt_safety  = 0.1;
 dt_reduce  = 0.1;
 dt_stable  = 0.5;
-
+SMALL      = sqrt(eps);      % tolerance for floating-point comparisons
+ONEMSM     = 1.0-SMALL;      % coefficients to account for
+ONEPSM     = 1.0+SMALL;      %   floating-point roundoff
+ERRTOL     = 1.1;            % upper bound on allowed step error
+                             %   (in WRMS norm)
 
 % store temporary states
 t = tvals(1);
@@ -158,7 +154,7 @@ Fdata.Be = Be;
 h = hmin;
 
 % initialize error weight vector
-ewt = rtol*Ynew + atol;
+ewt = 1.0./(rtol*Ynew + atol);
 
 % reset time step controller
 h_estimate(0, 0, 0, 0, hmethod, 1);
@@ -166,19 +162,32 @@ h_estimate(0, 0, 0, 0, hmethod, 1);
 % initialize work counter
 nsteps = 0;
 
+% initialize error failure counters
+small_nef = 2;
+nef = 0;
+last_fail = 0;
+
 % iterate over time steps
 for tstep = 2:length(tvals)
 
    % loop over internal time steps to get to desired output time
-   while (t < tvals(tstep))
+   while (t < tvals(tstep)*ONEMSM)
       
       % bound internal time step using inputs
       h = max([h, hmin]);            % enforce minimum time step size
       h = min([h, hmax]);            % maximum time step size
       h = min([h, tvals(tstep)-t]);  % stop at output time
+
+      % look-ahead to avoid a small step to output time
+      if (abs(tvals(tstep)-(t+h)/tvals(tstep)) < SMALL)
+         h = tvals(tstep)-t;
+      end
+      
+
+      % set Fdata values for this step
       Fdata.h = h;
       Fdata.yold = Y0;
-
+      Fdata.t = t;
 
       % initialize data storage for multiple stages
       z = zeros(m,si);
@@ -211,9 +220,8 @@ for tstep = 2:length(tvals)
 	 end
 	 
 	 % call newton solver to compute new stage solution
-	 Fdata.t = t;
-	 [Ynew,inewt,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, ...
-	     Fdata, newt_tol, newt_maxit, newt_alpha);
+	 [Ynew,inewt,ierr] = newton_damped('F_DIRK', 'A_DIRK', Yguess, Fdata, ...
+                                           newt_tol, newt_maxit, newt_alpha);
 	 
 	 % check newton error flag, if failure break out of stage loop
 	 if (ierr ~= 0) 
@@ -229,43 +237,40 @@ for tstep = 2:length(tvals)
       end
       nsteps = nsteps + 1;
 
-
       % compute new solution, embedding (if available)
       [Ynew,Yerr] = Y_ARK(z,Fdata);
-
       
-      % check whether step accuracy meets tolerances (only if stages successful)
+      % if stages succeeded and time step adaptivity enabled, check step accuracy
       if ((st_fail == 0) & embedded)
 
 	 % compute error in current step
-	 err_step = max(norm(Yerr./ewt,inf), eps);
+	 err_step = norm(Yerr.*ewt,inf);
 	 
-	 % if error too high, flag step as a failure (to be recomputed)
-	 if (err_step > 1.2) 
-	    a_fails = a_fails + 1;
-	    st_fail = 1;
-	 end
-	 
-      end
-      
-      
-      % if step was successful
-      if (st_fail == 0) 
-      
-	 % update old solution, current time
-	 Y0 = Ynew;
-	 t = t + h;
-   
-         % update error weight vector
-         ewt = rtol*Ynew + atol;
+         % if error too high, flag step as a failure (will be be recomputed)
+         if (err_step > ERRTOL*ONEPSM) 
+            a_fails = a_fails + 1;
+            st_fail = 1;
+         end
          
-	 % for embedded methods, estimate error and update time step
+      end
+
+      % if step was successful (solves succeeded, and error acceptable)
+      if (st_fail == 0) 
+
+         % reset error failure counter
+         nef = 0;
+         
+         % update solution and time for last successful step
+         Y0 = Ynew;
+         t  = t + h;
+
+	 % estimate error and update time step
 	 if (embedded) 
-	    h = h_estimate(Yerr, h, ewt, q_method, hmethod, 0);
+	    hnew = h_estimate(Yerr, h, ewt, q_method, hmethod, 0);
 	 else
-	    h = hmin;
-	 end
-	 
+	    hnew = hmin;
+         end
+
 	 % limit time step by explicit method stability condition
 	 hstab = dt_stable * feval(EStabFn, t, Ynew);
 	 if (h < hstab)
@@ -274,21 +279,46 @@ for tstep = 2:length(tvals)
 	    h_s = h_s + 1;
 	    % fprintf('   h limited for explicit stability: h = %g, h_stab = %g\n',h,hstab);
 	 end
-	 h = min([h, hstab]);
-	 
+	 hnew = min([hnew, hstab]);
+         
+         % if last step failed, disallow growth on this step and
+         % turn off flag, otherwise just update as normal
+         if (last_fail)
+            h = min(hnew, h);
+            last_fail = 0;
+         else
+            h = hnew;
+         end
+
+         % update error weight vector
+         ewt = 1.0./(rtol*Ynew + atol);
+         
       % if step failed, reduce step size and retry
       else
 	 
-	 % reset solution guess, update work counter, reduce time step
-	 Ynew = Y0;
-	 h = h * dt_reduce;
-	 h_s = h_s + 1;
+         % if already at minimum step, just return with failure
          if (h <= hmin) 
+            fprintf('Cannot achieve desired accuracy.\n');
+            fprintf('Consider reducing hmin or increasing rtol.\n');
             return
          end
-      
-      end
-      
+
+         % update error failure counter
+         nef = nef + 1;
+         last_fail = 1;
+         
+         % update time step
+         if (nef >= small_nef)
+            h = h * h_reduce;
+         else
+	    h = h_estimate(Yerr, h, ewt, q_method, hmethod, -1);
+         end
+
+         % reset guess, and try solve again
+         Ynew = Y0;
+
+      end  % end logic tests for step success/failure
+   
    end
 
    % store updated solution
