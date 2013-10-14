@@ -205,6 +205,11 @@ Completed components:
 
 
 Remaining components to build:
+[ ] For non-identity mass matrices, come up with an alternate strategy
+    for estimating the initial step size if it is not supplied by the
+    user.  The current approach performs a finite difference on f(t,y)
+    to estimate y''(t), but for non-identity mass matrices this will
+    instead estimate My''(t).
 [ ] Consider swapping method/embedding for Billington and TRBDF2
     methods, since in those the higher-order method is not A-stable
     whereas the embedding is A-stable; i.e. here the method would be
