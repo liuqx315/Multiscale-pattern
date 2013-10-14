@@ -77,16 +77,26 @@ following sub-sections:
 .. toctree::
    :maxdepth: 1
 
-   Simple linear example (ark_analytic) <analytic>
-   Simple nonlinear example (ark_analytic_nonlin) <analytic_nonlin>
-   Simple linear system example (ark_analytic_sys) <analytic_sys>
-   Stiff nonlinear system example (ark_brusselator) <brusselator>
+   Simple linear example (ark_analytic) <ark_analytic>
+   Simple nonlinear example (ark_analytic_nonlin) <ark_analytic_nonlin>
+   Simple linear system example (ark_analytic_sys) <ark_analytic_sys>
+   Stiff nonlinear system example (ark_brusselator) <ark_brusselator>
    Stiff nonlinear system, Fortran example (ark_bruss) <bruss>
-   Stiff nonlinear system example (ark_robertson) <robertson>
-   Stiff nonlinear system with root-finding example (ark_robertson_root) <robertson_root>
-   Stiff PDE system example (ark_brusselator1D) <brusselator1D>
-   PDE example with iterative linear solver (ark_heat1D) <heat1D>
-   Parallel PDE example with iterative linear solver (ark_heat2D) <heat2D>
+   Stiff nonlinear system example (ark_robertson) <ark_robertson>
+   Stiff nonlinear system with root-finding example (ark_robertson_root) <ark_robertson_root>
+   Stiff PDE system example (ark_brusselator1D) <ark_brusselator1D>
+   PDE example with iterative linear solver (ark_heat1D) <ark_heat1D>
+   Parallel PDE example with iterative linear solver (ark_heat2D) <ark_heat2D>
+   C example using a variety of Krylov linear solvers (ark_KrylovDemo) <ark_KrylovDemo>
+   C example using the accelerated fixed-point nonlinear solver (ark_brusselator_fp) <ark_brusselator_fp>
+   Parallel C example with BBD preconditioner (ark_diurnal_kry_bbd_p) <ark_diurnal_kry_bbd_p>
+   Parallel C example (ark_diurnal_kry_p) <ark_diurnal_kry_p>
+   C example demonstrating "resize" capabilities (ark_heat1D_adapt) <ark_heat1D_adapt>
+   Parallel Fortran 77 example using the BBD preconditioner (fark_diag_kry_bbd_p) <fark_diag_kry_bbd_p>
+   Parallel Fortran 77 example (fark_diag_non_p) <fark_diag_non_p>
+   Fortran 77 example demonstrating banded preconditioner (fark_diurnal_kry_bp) <fark_diurnal_kry_bp>
+   Parallel Fortran 90 example that replicates the ark_heat2D example (fark_heat2D) <fark_heat2D>
+   Fortran 77 example using Lapack solver interface (fark_roberts_dnsL) <fark_roberts_dnsL>
    
 .. only:: html
 
