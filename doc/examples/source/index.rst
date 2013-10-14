@@ -54,20 +54,30 @@ that is most closely related to your own.
 
 .. cssclass:: table-bordered
 
-================================================  ==========  =============  =============  ========  ===============================================================
-Problem                                           Integrator  Linear Solver  Size           Language  Extras
-================================================  ==========  =============  =============  ========  ===============================================================
-:ref:`ark_analytic <ark_analytic>`                DIRK        Dense          1              C         Analytical solution, variable stiffness
-:ref:`ark_analytic_nonlin <ark_analytic_nonlin>`  ERK         N.A.           1              C         Nonlinear, analytical solution
-:ref:`ark_analytic_sys <ark_analytic_sys>`        DIRK        Dense          3              C++       ODE system, analytical solution, variable stiffness
-:ref:`ark_brusselator <ark_brusselator>`          DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`ark_bruss <ark_bruss>`                      ARK         Dense          3              F90       Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`ark_robertson <ark_robertson>`              DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`ark_robertson_root <ark_robertson_root>`    DIRK        Dense          3              C         Utilizes root-finding capabilities
-:ref:`ark_brusselator1D <ark_brusselator1D>`      DIRK        Band           3N             C         Stiff, nonlinear, reaction-diffusion PDE system
-:ref:`ark_heat1D <ark_heat1D>`                    DIRK        PCG            N              C         Stiff, linear, diffusion PDE, iterative linear solver
-:ref:`ark_heat2D <ark_heat2D>`                    DIRK        PCG            :math:`nx*ny`  C++       Parallel, stiff, linear, diffusion PDE, iterative linear solver
-================================================  ==========  =============  =============  ========  ===============================================================
+====================================================  ==========  =============  =============  ========  ===============================================================
+Problem                                               Integrator  Linear Solver  Size           Language  Extras
+====================================================  ==========  =============  =============  ========  ===============================================================
+:ref:`ark_analytic <ark_analytic>`                    DIRK        Dense          1              C         Analytical solution, variable stiffness
+:ref:`ark_analytic_nonlin <ark_analytic_nonlin>`      ERK         N.A.           1              C         Nonlinear, analytical solution
+:ref:`ark_analytic_sys <ark_analytic_sys>`            DIRK        Dense          3              C++       ODE system, analytical solution, variable stiffness
+:ref:`ark_brusselator <ark_brusselator>`              DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_bruss <ark_bruss>`                          ARK         Dense          3              F90       Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_robertson <ark_robertson>`                  DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_robertson_root <ark_robertson_root>`        DIRK        Dense          3              C         Utilizes root-finding capabilities
+:ref:`ark_brusselator1D <ark_brusselator1D>`          DIRK        Band           3N             C         Stiff, nonlinear, reaction-diffusion PDE system
+:ref:`ark_heat1D <ark_heat1D>`                        DIRK        PCG            N              C         Stiff, linear, diffusion PDE, iterative linear solver
+:ref:`ark_heat2D <ark_heat2D>`                        DIRK        PCG            :math:`nx*ny`  C++       Parallel, stiff, linear, diffusion PDE, iterative linear solver
+:ref:`ark_KrylovDemo_prec <ark_KrylovDemo_prec>`                                                C
+:ref:`ark_brusselator_fp <ark_brusselator_fp>`                                                  C
+:ref:`ark_diurnal_kry_bbd_p <ark_diurnal_kry_bbd_p>`                                            C
+:ref:`ark_diurnal_kry_p <ark_diurnal_kry_p>`                                                    C
+:ref:`ark_heat1D_adapt <ark_heat1D_adapt>`                                                      C
+:ref:`fark_diag_kry_bbd_p <fark_diag_kry_bbd_p>`                                                F77
+:ref:`fark_diag_non_p <fark_diag_non_p>`                                                        F77
+:ref:`fark_diurnal_kry_bp <fark_diurnal_kry_bp>`                                                F77
+:ref:`fark_heat2D <fark_heat2D>`                                                                F90
+:ref:`fark_roberts_dnsL <fark_roberts_dnsL>`                                                    F77
+====================================================  ==========  =============  =============  ========  ===============================================================
 
 
 Further details on each of the above-listed examples, including both
@@ -87,7 +97,7 @@ following sub-sections:
    Stiff PDE system example (ark_brusselator1D) <ark_brusselator1D>
    PDE example with iterative linear solver (ark_heat1D) <ark_heat1D>
    Parallel PDE example with iterative linear solver (ark_heat2D) <ark_heat2D>
-   C example using a variety of Krylov linear solvers (ark_KrylovDemo) <ark_KrylovDemo>
+   C example using a variety of Krylov linear solvers (ark_KrylovDemo_prec) <ark_KrylovDemo_prec>
    C example using the accelerated fixed-point nonlinear solver (ark_brusselator_fp) <ark_brusselator_fp>
    Parallel C example with BBD preconditioner (ark_diurnal_kry_bbd_p) <ark_diurnal_kry_bbd_p>
    Parallel C example (ark_diurnal_kry_p) <ark_diurnal_kry_p>
