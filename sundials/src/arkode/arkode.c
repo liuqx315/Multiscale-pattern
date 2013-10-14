@@ -1502,7 +1502,8 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     }
     
     /* Reset and check rwt */
-    if (ark_mem->ark_nst > 0 && !ark_mem->ark_rwt_is_ewt) {
+    /* if (ark_mem->ark_nst > 0 && !ark_mem->ark_rwt_is_ewt) { */
+    if (!ark_mem->ark_rwt_is_ewt) {
       ewtsetOK = ark_mem->ark_rfun(ark_mem->ark_ycur,
 				   ark_mem->ark_fnew, 
 				   ark_mem->ark_rwt, 
@@ -3133,7 +3134,9 @@ static int arkInitialSetup(ARKodeMem ark_mem)
   if (ier != 0)  return(ARK_RHSFUNC_FAIL);
 
   /* Load initial residual weights */
-  if (!ark_mem->ark_rwt_is_ewt) {
+  if (ark_mem->ark_rwt_is_ewt) {      /* update pointer to ewt */
+    ark_mem->ark_rwt = ark_mem->ark_ewt;
+  } else {
     ier = ark_mem->ark_rfun(ark_mem->ark_ycur,
 			    ark_mem->ark_fnew,
 			    ark_mem->ark_rwt, 
@@ -3812,8 +3815,10 @@ static int arkStep(ARKodeMem ark_mem)
 	if (ark_mem->ark_mass_matrix) {
 
 	  /* perform mass matrix solve */
+	  /* nflag = ark_mem->ark_msolve(ark_mem, ark_mem->ark_sdata,  */
+	  /* 			      ark_mem->ark_ewt);  */
 	  nflag = ark_mem->ark_msolve(ark_mem, ark_mem->ark_sdata, 
-				      ark_mem->ark_ewt); 
+				      ark_mem->ark_rwt); 
 	  ark_mem->ark_mass_solves++;
 	  
 	  /* check for convergence (on failure, h will have been modified) */
@@ -4118,7 +4123,8 @@ static int arkComputeSolutions(ARKodeMem ark_mem, realtype *dsm)
     }
     
     /* solve for y update (stored in y) */
-    ier = ark_mem->ark_msolve(ark_mem, y, ark_mem->ark_ewt); 
+    /* ier = ark_mem->ark_msolve(ark_mem, y, ark_mem->ark_ewt);  */
+    ier = ark_mem->ark_msolve(ark_mem, y, ark_mem->ark_rwt); 
     ark_mem->ark_mass_solves++;
     if (ier < 0) {
       ark_mem->ark_nmassfails++;
@@ -4142,7 +4148,8 @@ static int arkComputeSolutions(ARKodeMem ark_mem, realtype *dsm)
     }
 
     /* solve for yerr */
-    ier = ark_mem->ark_msolve(ark_mem, yerr, ark_mem->ark_ewt); 
+    /* ier = ark_mem->ark_msolve(ark_mem, yerr, ark_mem->ark_ewt);  */
+    ier = ark_mem->ark_msolve(ark_mem, yerr, ark_mem->ark_rwt); 
     ark_mem->ark_mass_solves++;
     if (ier < 0) {
       ark_mem->ark_nmassfails++;
@@ -4329,7 +4336,8 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
     /* if M!=I, update fnew with M^{-1}*fnew (note, mass matrix already current) */
     if (ark_mem->ark_mass_matrix) {   /* M != I */
       N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);      /* scale RHS */
-      retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt); 
+      /* retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt);  */
+      retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_rwt); 
       N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);  /* scale result */
       ark_mem->ark_mass_solves++;
       if (retval != ARK_SUCCESS) {
@@ -4580,8 +4588,10 @@ static int arkNlsNewton(ARKodeMem ark_mem, int nflag)
       }
 
       /* Call the lsolve function */
-      retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt, 
+      retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_rwt, 
 				   ark_mem->ark_y, ark_mem->ark_ftemp); 
+      /* retval = ark_mem->ark_lsolve(ark_mem, b, ark_mem->ark_ewt,  */
+      /* 				   ark_mem->ark_y, ark_mem->ark_ftemp);  */
       ark_mem->ark_nni++;
     
       if (retval < 0) {
@@ -5283,7 +5293,8 @@ static int arkFullRHS(ARKodeMem ark_mem, realtype t,
   /* if the problem involves a non-identity mass matrix, perform solve here */
   if (ark_mem->ark_mass_matrix) {
     N_VScale(ark_mem->ark_h, f, f);      /* scale RHS */
-    retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_ewt); 
+    retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_rwt); 
+    /* retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_ewt);  */
     N_VScale(ONE/ark_mem->ark_h, f, f);      /* scale result */
     ark_mem->ark_mass_solves++;
     if (retval != ARK_SUCCESS) {

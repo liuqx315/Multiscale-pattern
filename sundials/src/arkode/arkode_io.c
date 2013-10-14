@@ -2317,7 +2317,9 @@ int ARKodeGetErrWeights(void *arkode_mem, N_Vector eweight)
 
 
 /*---------------------------------------------------------------
- ARKodeGetEstLocalErrors:  (to be updated)
+ ARKodeGetEstLocalErrors: (updated to the correct vector, but 
+   need to verify that it is unchanged between filling the 
+   estimated error and the end of the time step)
 
  Returns an estimate of the local error
 ---------------------------------------------------------------*/
@@ -2331,7 +2333,7 @@ int ARKodeGetEstLocalErrors(void *arkode_mem, N_Vector ele)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  N_VScale(ONE, ark_mem->ark_acor, ele);
+  N_VScale(ONE, ark_mem->ark_tempv, ele);
 
   return(ARK_SUCCESS);
 }
