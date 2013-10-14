@@ -9,6 +9,13 @@ gmon.out
 *.a
 diags*.txt
 regression_results_*
-build
-install
+build_dbg
+install_dbg
+examples_dbg
+build_opt
+install_opt
+examples_opt
 Make.machine
+www/build
+doc/guide/build
+doc/examples/build
