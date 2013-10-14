@@ -39,12 +39,13 @@ B598130 from `Lawrence Livermore National Laboratory
 
 Along with the ARKode solver, we have created a suite of example
 problems demonstrating its usage on applications written in C, C++ and
-Fortran.  These examples demonstrate a large variety of ARKode solver
-options, including explicit, implicit and ImEx solvers,
-root-finding, direct and iterative linear solvers, and the Fortran
-solver interface, FARKODE.  While these examples are not an exhaustive
-set of all possible usage scenarios, they are designed to show a
-variety of usage scenarios, and can be used as templates for new
+Fortran 77 and Fortran 90.  These examples demonstrate a large variety
+of ARKode solver options, including explicit, implicit and ImEx
+solvers, root-finding, Newton and fixed-point nonlinear solvers,
+direct and iterative linear solvers, adaptive resize capabilities, and
+the Fortran solver interface.  While these examples are not an
+exhaustive set of all possible usage scenarios, they are designed to
+show a variety of exemplars, and can be used as templates for new
 problems using ARKode's solvers.
 
 The following table summarizes the salient features of each of the
