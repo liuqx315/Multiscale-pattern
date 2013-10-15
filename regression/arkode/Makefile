@@ -98,7 +98,7 @@ ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
 	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 clean :
-	\rm -f *.o *.exe
+	\rm -f *.o *.exe diags_*.txt bruss_*.txt heat*.txt output.txt
 
 
 ####### End of Makefile #######
