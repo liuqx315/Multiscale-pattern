@@ -32,9 +32,9 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
-FLIBS = -L../../install/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
+INCS = -I../../install_opt/include/
+LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
+FLIBS = -L../../install_opt/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = ark_analytic.exe \

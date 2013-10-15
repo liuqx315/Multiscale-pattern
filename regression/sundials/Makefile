@@ -27,8 +27,8 @@ CFLAGS = -O2
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecserial -lsundials_nvecparallel -lsundials_nvecparallelgrid
+INCS = -I../../install_opt/include/
+LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecserial -lsundials_nvecparallel -lsundials_nvecparallelgrid
 
 # listing of all test routines
 TESTS = nvector_serial_test.exe \

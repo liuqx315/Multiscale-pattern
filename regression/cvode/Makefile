@@ -27,8 +27,8 @@ CFLAGS = -O2
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_cvode -lsundials_nvecserial
+INCS = -I../../install_opt/include/
+LIBS = -L../../install_opt/lib -lsundials_cvode -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = cv_analytic.exe \
