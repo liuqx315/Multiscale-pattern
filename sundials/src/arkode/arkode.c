@@ -346,7 +346,7 @@ int ARKodeInit(void *arkode_mem, ARKRhsFn fe, ARKRhsFn fi,
   ark_mem->ark_h0u    = ZERO;
   ark_mem->ark_next_h = ZERO;
 
-  /* Initialy, rwt should point to ewt */
+  /* Initially, rwt should point to ewt */
   ark_mem->ark_rwt_is_ewt = TRUE;
 
   /* Indicate that problem size is new */
@@ -1303,7 +1303,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
 	ier = ark_mem->ark_linit(ark_mem);
 	if (ier != 0) {
 	  arkProcessError(ark_mem, ARK_LINIT_FAIL, "ARKODE", 
-			  "ARKodeResize", MSGARK_LINIT_FAIL);
+			  "ARKode", MSGARK_LINIT_FAIL);
 	  return(ARK_LINIT_FAIL);
 	}
       }
@@ -1315,7 +1315,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
       ier = ark_mem->ark_minit(ark_mem);
       if (ier != 0) {
 	arkProcessError(ark_mem, ARK_MASSINIT_FAIL, "ARKODE", 
-			"ARKodeResize", MSGARK_MASSINIT_FAIL);
+			"ARKode", MSGARK_MASSINIT_FAIL);
 	return(ARK_MASSINIT_FAIL);
       }
     }
@@ -1325,6 +1325,38 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
 		     ark_mem->ark_ftemp, ark_mem->ark_fnew);
 
+    /* Reset and check rwt */
+    if (!ark_mem->ark_rwt_is_ewt) {
+      ewtsetOK = ark_mem->ark_rfun(ark_mem->ark_ycur,
+				   ark_mem->ark_fnew, 
+				   ark_mem->ark_rwt, 
+				   ark_mem->ark_r_data);
+      if (ewtsetOK != 0) {
+        if (ark_mem->ark_ritol == ARK_WF) 
+          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			  MSGARK_RWT_NOW_FAIL, ark_mem->ark_tn);
+        else 
+          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			  MSGARK_RWT_NOW_BAD, ark_mem->ark_tn);
+        return(ARK_ILL_INPUT);
+      }
+    }
+    
+    /* if the problem involves a non-identity mass matrix, update fnew here */
+    if (ark_mem->ark_mass_matrix) {
+      N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);   /* scale RHS */
+      retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_rwt); 
+      /* retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt);  */
+      N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);   /* scale result */
+      ark_mem->ark_mass_solves++;
+      if (retval != ARK_SUCCESS) {
+	ark_mem->ark_nmassfails++;
+	arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
+			"ARKode", "Mass matrix solver failure");
+	return(ARK_MASSSOLVE_FAIL);
+      }
+    }
+  
     /* Copy f(t0,y0) into ark_fold */
     /* if (!ark_mem->ark_explicit) */
     N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
@@ -1493,28 +1525,6 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
         else 
           arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
 			  MSGARK_EWT_NOW_BAD, ark_mem->ark_tn);
-	
-        istate = ARK_ILL_INPUT;
-        ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
-        N_VScale(ONE, ark_mem->ark_ycur, yout);
-        break;
-      }
-    }
-    
-    /* Reset and check rwt */
-    /* if (ark_mem->ark_nst > 0 && !ark_mem->ark_rwt_is_ewt) { */
-    if (!ark_mem->ark_rwt_is_ewt) {
-      ewtsetOK = ark_mem->ark_rfun(ark_mem->ark_ycur,
-				   ark_mem->ark_fnew, 
-				   ark_mem->ark_rwt, 
-				   ark_mem->ark_r_data);
-      if (ewtsetOK != 0) {
-        if (ark_mem->ark_ritol == ARK_WF) 
-          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
-			  MSGARK_RWT_NOW_FAIL, ark_mem->ark_tn);
-        else 
-          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
-			  MSGARK_RWT_NOW_BAD, ark_mem->ark_tn);
 	
         istate = ARK_ILL_INPUT;
         ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
@@ -2237,7 +2247,7 @@ static void arkPrintMem(ARKodeMem ark_mem)
     printf("ark_ewt:\n");
     N_VPrint_Serial(ark_mem->ark_ewt);
   }
-  if (!ark_mem->ark_rwt_is_ewt && ark_mem->ark_rwt != NULL)
+  if (!ark_mem->ark_rwt_is_ewt && ark_mem->ark_rwt != NULL) {
     printf("ark_rwt:\n");
     N_VPrint_Serial(ark_mem->ark_rwt);
   }
@@ -3133,6 +3143,12 @@ static int arkInitialSetup(ARKodeMem ark_mem)
 		   ark_mem->ark_ftemp, ark_mem->ark_fnew);
   if (ier != 0)  return(ARK_RHSFUNC_FAIL);
 
+  /* Set data for rfun (if left unspecified) */
+  if (ark_mem->ark_user_rfun) 
+    ark_mem->ark_r_data = ark_mem->ark_user_data;
+  else                        
+    ark_mem->ark_r_data = ark_mem;
+
   /* Load initial residual weights */
   if (ark_mem->ark_rwt_is_ewt) {      /* update pointer to ewt */
     ark_mem->ark_rwt = ark_mem->ark_ewt;
@@ -3149,6 +3165,21 @@ static int arkInitialSetup(ARKodeMem ark_mem)
 	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 			"arkInitialSetup", MSGARK_BAD_RWT);
       return(ARK_ILL_INPUT);
+    }
+  }
+  
+  /* if the problem involves a non-identity mass matrix, update fnew here */
+  if (ark_mem->ark_mass_matrix) {
+    N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);   /* scale RHS */
+    ier = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_rwt); 
+    /* ier = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt);  */
+    N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);   /* scale result */
+    ark_mem->ark_mass_solves++;
+    if (ier != ARK_SUCCESS) {
+      ark_mem->ark_nmassfails++;
+      arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
+		      "arkInitialSetup", "Mass matrix solver failure");
+      return(ARK_MASSSOLVE_FAIL);
     }
   }
   
@@ -3338,15 +3369,36 @@ static int arkYddNorm(ARKodeMem ark_mem, realtype hg, realtype *yddnrm)
 {
   int retval;
 
+  /* increment y with a multiple of f */
   N_VLinearSum(hg, ark_mem->ark_fnew, ONE, 
 	       ark_mem->ark_ynew, ark_mem->ark_y);
+
+  /* compute y', via the ODE RHS routine */
   retval = arkFullRHS(ark_mem, ark_mem->ark_tn+hg, ark_mem->ark_y, 
 		      ark_mem->ark_ftemp, ark_mem->ark_tempv);
   if (retval != 0) return(ARK_RHSFUNC_FAIL);
+
+  /* if using a non-identity mass matrix, update fnew here to get y' */
+  if (ark_mem->ark_mass_matrix) {
+    N_VScale(ark_mem->ark_h, ark_mem->ark_tempv, ark_mem->ark_tempv);
+    retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_tempv, ark_mem->ark_rwt); 
+    /* retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_tempv, ark_mem->ark_ewt);  */
+    N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_tempv, ark_mem->ark_tempv);
+    ark_mem->ark_mass_solves++;
+    if (retval != ARK_SUCCESS) {
+      ark_mem->ark_nmassfails++;
+      arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
+		      "arkYddNorm", "Mass matrix solver failure");
+      return(ARK_MASSSOLVE_FAIL);
+    }
+  }
+
+  /* difference new f and original f to estimate y'' */
   N_VLinearSum(ONE, ark_mem->ark_tempv, -ONE, 
 	       ark_mem->ark_fnew, ark_mem->ark_tempv);
   N_VScale(ONE/hg, ark_mem->ark_tempv, ark_mem->ark_tempv);
 
+  /* compute norm of y'' */
   *yddnrm = N_VWrmsNorm(ark_mem->ark_tempv, ark_mem->ark_ewt);
 
   return(ARK_SUCCESS);
@@ -4332,27 +4384,45 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
     if (!ark_mem->ark_implicit) 
       N_VLinearSum(ONE, ark_mem->ark_Fe[ark_mem->ark_stages-1], 
 		   ONE, ark_mem->ark_fnew, ark_mem->ark_fnew);
-
-    /* if M!=I, update fnew with M^{-1}*fnew (note, mass matrix already current) */
-    if (ark_mem->ark_mass_matrix) {   /* M != I */
-      N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);      /* scale RHS */
-      /* retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt);  */
-      retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_rwt); 
-      N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);  /* scale result */
-      ark_mem->ark_mass_solves++;
-      if (retval != ARK_SUCCESS) {
-	ark_mem->ark_nmassfails++;
-	arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
-			"arkCompleteStep", "Mass matrix solver failure");
-	return(ARK_MASSSOLVE_FAIL);
-      }
-    }
-
   } else {
     /* NOTE: new y value is currently in yold, due to swap above */
     retval = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_yold, 
 			ark_mem->ark_ftemp, ark_mem->ark_fnew);
     if (retval != 0) return(ARK_RHSFUNC_FAIL);
+  }
+
+  /* Reset and check rwt */
+  if (!ark_mem->ark_rwt_is_ewt) {
+    retval = ark_mem->ark_rfun(ark_mem->ark_yold,
+			       ark_mem->ark_fnew, 
+			       ark_mem->ark_rwt, 
+			       ark_mem->ark_r_data);
+    if (retval != 0) {
+      if (ark_mem->ark_ritol == ARK_WF) 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkCompleteStep", MSGARK_RWT_NOW_FAIL, 
+			ark_mem->ark_tn);
+      else 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkCompleteStep", MSGARK_RWT_NOW_BAD, 
+			ark_mem->ark_tn);
+      return(ARK_ILL_INPUT);
+    }
+  }
+    
+  /* if M!=I, update fnew with M^{-1}*fnew (note, mass matrix already current) */
+  if (ark_mem->ark_mass_matrix) {   /* M != I */
+    N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);      /* scale RHS */
+    /* retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_ewt);  */
+    retval = ark_mem->ark_msolve(ark_mem, ark_mem->ark_fnew, ark_mem->ark_rwt); 
+    N_VScale(ONE/ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);  /* scale result */
+    ark_mem->ark_mass_solves++;
+    if (retval != ARK_SUCCESS) {
+      ark_mem->ark_nmassfails++;
+      arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
+		      "arkCompleteStep", "Mass matrix solver failure");
+      return(ARK_MASSSOLVE_FAIL);
+    }
   }
 
   /* update ynew (cannot swap since ark_y is a pointer to user-supplied data) */
@@ -5290,21 +5360,6 @@ static int arkFullRHS(ARKodeMem ark_mem, realtype t,
     N_VLinearSum(ONE, tmp, ONE, f, f);
   }
 
-  /* if the problem involves a non-identity mass matrix, perform solve here */
-  if (ark_mem->ark_mass_matrix) {
-    N_VScale(ark_mem->ark_h, f, f);      /* scale RHS */
-    retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_rwt); 
-    /* retval = ark_mem->ark_msolve(ark_mem, f, ark_mem->ark_ewt);  */
-    N_VScale(ONE/ark_mem->ark_h, f, f);      /* scale result */
-    ark_mem->ark_mass_solves++;
-    if (retval != ARK_SUCCESS) {
-      ark_mem->ark_nmassfails++;
-      arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", 
-		      "arkFullRHS", "Mass matrix solver failure");
-      return(ARK_MASSSOLVE_FAIL);
-    }
-  }
-  
   return(ARK_SUCCESS);
 }
 
