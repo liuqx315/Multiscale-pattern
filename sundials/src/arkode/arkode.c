@@ -87,9 +87,9 @@ static int arkEwtSetSS(ARKodeMem ark_mem, N_Vector ycur,
 		       N_Vector weight);
 static int arkEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, 
 		       N_Vector weight);
-static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector fcur, 
+static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector My, 
 		       N_Vector weight);
-static int arkRwtSetSV(ARKodeMem ark_mem, N_Vector fcur, 
+static int arkRwtSetSV(ARKodeMem ark_mem, N_Vector My, 
 		       N_Vector weight);
 
 static int arkAdapt(ARKodeMem ark_mem);
@@ -837,6 +837,22 @@ int ARKodeResize(void *arkode_mem, N_Vector y0,
     return(ARK_ILL_INPUT);
   }
 
+  /* Load updated residual weights */
+  if (!ark_mem->ark_rwt_is_ewt) {
+    ier = ark_mem->ark_rfun(ark_mem->ark_ycur,
+			    ark_mem->ark_rwt, 
+			    ark_mem->ark_r_data);
+    if (ier != 0) {
+      if (ark_mem->ark_itol == ARK_WF) 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_RWT_FAIL);
+      else 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"ARKodeResize", MSGARK_BAD_RWT);
+      return(ARK_ILL_INPUT);
+    }
+  }
+
   /* Indicate that problem size is new */
   ark_mem->ark_resized = TRUE;
   ark_mem->ark_firststage = TRUE;
@@ -1325,23 +1341,6 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     ier = arkFullRHS(ark_mem, ark_mem->ark_tn, ark_mem->ark_ycur,
 		     ark_mem->ark_ftemp, ark_mem->ark_fnew);
 
-    /* Reset and check rwt */
-    if (!ark_mem->ark_rwt_is_ewt) {
-      ewtsetOK = ark_mem->ark_rfun(ark_mem->ark_ycur,
-				   ark_mem->ark_fnew, 
-				   ark_mem->ark_rwt, 
-				   ark_mem->ark_r_data);
-      if (ewtsetOK != 0) {
-        if (ark_mem->ark_ritol == ARK_WF) 
-          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
-			  MSGARK_RWT_NOW_FAIL, ark_mem->ark_tn);
-        else 
-          arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
-			  MSGARK_RWT_NOW_BAD, ark_mem->ark_tn);
-        return(ARK_ILL_INPUT);
-      }
-    }
-    
     /* if the problem involves a non-identity mass matrix, update fnew here */
     if (ark_mem->ark_mass_matrix) {
       N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);   /* scale RHS */
@@ -1530,6 +1529,28 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
         ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
         N_VScale(ONE, ark_mem->ark_ycur, yout);
         break;
+      }
+    }
+    
+    /* Reset and check rwt */
+    if (!ark_mem->ark_rwt_is_ewt) {
+      if (ark_mem->ark_nst > 0 && !ark_mem->ark_resized) {
+	ewtsetOK = ark_mem->ark_rfun(ark_mem->ark_ycur,
+				     ark_mem->ark_rwt,
+				     ark_mem->ark_r_data);
+	if (ewtsetOK != 0) {
+	  if (ark_mem->ark_itol == ARK_WF) 
+	    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			    MSGARK_RWT_NOW_FAIL, ark_mem->ark_tn);
+	  else 
+	    arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
+			    MSGARK_RWT_NOW_BAD, ark_mem->ark_tn);
+	
+	  istate = ARK_ILL_INPUT;
+	  ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
+	  N_VScale(ONE, ark_mem->ark_ycur, yout);
+	  break;
+	}
       }
     }
     
@@ -1972,9 +1993,9 @@ int arkEwtSet(N_Vector ycur, N_Vector weight, void *data)
  This routine is responsible for setting the residual weight 
  vector rwt, according to tol_type, as follows:
 
- (1) rwt[i] = 1 / (reltol * ABS(fcur[i]) + rabstol), i=0,...,neq-1
+ (1) rwt[i] = 1 / (reltol * ABS(M*ycur[i]) + rabstol), i=0,...,neq-1
      if tol_type = ARK_SS
- (2) rwt[i] = 1 / (reltol * ABS(fcur[i]) + rabstol[i]), i=0,...,neq-1
+ (2) rwt[i] = 1 / (reltol * ABS(M*ycur[i]) + rabstol[i]), i=0,...,neq-1
      if tol_type = ARK_SV
  (3) unset if tol_type is any other value (occurs rwt=ewt)
 
@@ -1984,9 +2005,10 @@ int arkEwtSet(N_Vector ycur, N_Vector weight, void *data)
 
  All the real work is done in the routines arkRwtSetSS, arkRwtSetSV.
 ---------------------------------------------------------------*/
-int arkRwtSet(N_Vector ycur, N_Vector fcur, N_Vector weight, void *data)
+int arkRwtSet(N_Vector y, N_Vector weight, void *data)
 {
   ARKodeMem ark_mem;
+  N_Vector My;
   int flag = 0;
 
   /* data points to ark_mem here */
@@ -1995,13 +2017,24 @@ int arkRwtSet(N_Vector ycur, N_Vector fcur, N_Vector weight, void *data)
   /* return if rwt is just ewt */
   if (ark_mem->ark_rwt_is_ewt)  return(0);
 
+  /* put M*y into ark_ftemp */
+  My = ark_mem->ark_ftemp;
+  if (ark_mem->ark_mass_matrix) {
+    flag = ark_mem->ark_mtimes(y, My, ark_mem->ark_tn, 
+			       ark_mem->ark_mtimes_data);
+    ark_mem->ark_mass_mult++;
+    if (flag != ARK_SUCCESS)  return (ARK_MASSMULT_FAIL);
+  } else {  /* this condition should not apply, but just in case */
+    N_VScale(ONE, y, My);
+  }
+
   /* call appropriate routine to fill rwt */
   switch(ark_mem->ark_ritol) {
   case ARK_SS: 
-    flag = arkRwtSetSS(ark_mem, fcur, weight);
+    flag = arkRwtSetSS(ark_mem, My, weight);
     break;
   case ARK_SV: 
-    flag = arkRwtSetSV(ark_mem, fcur, weight);
+    flag = arkRwtSetSV(ark_mem, My, weight);
     break;
   }
   
@@ -3087,6 +3120,30 @@ static int arkInitialSetup(ARKodeMem ark_mem)
     return(ARK_ILL_INPUT);
   }
 
+  /* Set data for rfun (if left unspecified) */
+  if (ark_mem->ark_user_rfun) 
+    ark_mem->ark_r_data = ark_mem->ark_user_data;
+  else                        
+    ark_mem->ark_r_data = ark_mem;
+
+  /* Load initial residual weights */
+  if (ark_mem->ark_rwt_is_ewt) {      /* update pointer to ewt */
+    ark_mem->ark_rwt = ark_mem->ark_ewt;
+  } else { 
+    ier = ark_mem->ark_rfun(ark_mem->ark_ycur,
+			    ark_mem->ark_rwt, 
+			    ark_mem->ark_r_data);
+    if (ier != 0) {
+      if (ark_mem->ark_itol == ARK_WF) 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkInitialSetup", MSGARK_RWT_FAIL);
+      else 
+	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
+			"arkInitialSetup", MSGARK_BAD_RWT);
+      return(ARK_ILL_INPUT);
+    }
+  }
+
   /* Check if lsolve function exists and call linit (if it exists) */
   if (!ark_mem->ark_explicit && !ark_mem->ark_use_fp) {
     if (ark_mem->ark_lsolve == NULL) {
@@ -3143,31 +3200,6 @@ static int arkInitialSetup(ARKodeMem ark_mem)
 		   ark_mem->ark_ftemp, ark_mem->ark_fnew);
   if (ier != 0)  return(ARK_RHSFUNC_FAIL);
 
-  /* Set data for rfun (if left unspecified) */
-  if (ark_mem->ark_user_rfun) 
-    ark_mem->ark_r_data = ark_mem->ark_user_data;
-  else                        
-    ark_mem->ark_r_data = ark_mem;
-
-  /* Load initial residual weights */
-  if (ark_mem->ark_rwt_is_ewt) {      /* update pointer to ewt */
-    ark_mem->ark_rwt = ark_mem->ark_ewt;
-  } else {
-    ier = ark_mem->ark_rfun(ark_mem->ark_ycur,
-			    ark_mem->ark_fnew,
-			    ark_mem->ark_rwt, 
-			    ark_mem->ark_r_data);
-    if (ier != 0) {
-      if (ark_mem->ark_ritol == ARK_WF) 
-	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-			"arkInitialSetup", MSGARK_RWT_FAIL);
-      else 
-	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-			"arkInitialSetup", MSGARK_BAD_RWT);
-      return(ARK_ILL_INPUT);
-    }
-  }
-  
   /* if the problem involves a non-identity mass matrix, update fnew here */
   if (ark_mem->ark_mass_matrix) {
     N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);   /* scale RHS */
@@ -4391,25 +4423,6 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
     if (retval != 0) return(ARK_RHSFUNC_FAIL);
   }
 
-  /* Reset and check rwt */
-  if (!ark_mem->ark_rwt_is_ewt) {
-    retval = ark_mem->ark_rfun(ark_mem->ark_yold,
-			       ark_mem->ark_fnew, 
-			       ark_mem->ark_rwt, 
-			       ark_mem->ark_r_data);
-    if (retval != 0) {
-      if (ark_mem->ark_ritol == ARK_WF) 
-	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-			"arkCompleteStep", MSGARK_RWT_NOW_FAIL, 
-			ark_mem->ark_tn);
-      else 
-	arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
-			"arkCompleteStep", MSGARK_RWT_NOW_BAD, 
-			ark_mem->ark_tn);
-      return(ARK_ILL_INPUT);
-    }
-  }
-    
   /* if M!=I, update fnew with M^{-1}*fnew (note, mass matrix already current) */
   if (ark_mem->ark_mass_matrix) {   /* M != I */
     N_VScale(ark_mem->ark_h, ark_mem->ark_fnew, ark_mem->ark_fnew);      /* scale RHS */
@@ -5163,6 +5176,10 @@ static int arkHandleFailure(ARKodeMem ark_mem, int flag)
     arkProcessError(ark_mem, ARK_TOO_CLOSE, "ARKODE", "ARKode", 
 		    MSGARK_TOO_CLOSE);
     break;
+  case ARK_MASSSOLVE_FAIL:
+    arkProcessError(ark_mem, ARK_MASSSOLVE_FAIL, "ARKODE", "ARKode", 
+		    MSGARK_MASSSOLVE_FAIL);
+    break;
   default:
     return(ARK_SUCCESS);   
   }
@@ -5410,9 +5427,9 @@ static int arkEwtSetSV(ARKodeMem ark_mem, N_Vector ycur, N_Vector weight)
  returns 0 if rwt is successfully set to a positive vector
  and -1 otherwise. In the latter case, rwt is considered undefined.
 ---------------------------------------------------------------*/
-static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector fcur, N_Vector weight)
+static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector My, N_Vector weight)
 {
-  N_VAbs(fcur, ark_mem->ark_tempv);
+  N_VAbs(My, ark_mem->ark_tempv);
   N_VScale(ark_mem->ark_reltol, ark_mem->ark_tempv, ark_mem->ark_tempv);
   N_VAddConst(ark_mem->ark_tempv, ark_mem->ark_SRabstol, ark_mem->ark_tempv);
   if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
@@ -5429,9 +5446,9 @@ static int arkRwtSetSS(ARKodeMem ark_mem, N_Vector fcur, N_Vector weight)
  returns 0 if rwt is successfully set to a positive vector
  and -1 otherwise. In the latter case, rwt is considered undefined.
 ---------------------------------------------------------------*/
-static int arkRwtSetSV(ARKodeMem ark_mem, N_Vector fcur, N_Vector weight)
+static int arkRwtSetSV(ARKodeMem ark_mem, N_Vector My, N_Vector weight)
 {
-  N_VAbs(fcur, ark_mem->ark_tempv);
+  N_VAbs(My, ark_mem->ark_tempv);
   N_VLinearSum(ark_mem->ark_reltol, ark_mem->ark_tempv, ONE, 
 	       ark_mem->ark_VRabstol, ark_mem->ark_tempv);
   if (N_VMin(ark_mem->ark_tempv) <= ZERO) return(-1);
