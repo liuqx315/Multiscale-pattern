@@ -661,7 +661,7 @@ typedef struct ARKodeMemRec {
 int arkEwtSet(N_Vector ycur, N_Vector weight, void *data);
 
 /* Prototype of internal rwtSet function */
-int arkRwtSet(N_Vector ycur, N_Vector fcur, N_Vector weight, void *data);
+int arkRwtSet(N_Vector ycur, N_Vector weight, void *data);
 
 /* Prototype of internal errHandler function */
 void arkErrHandler(int error_code, const char *module, 
@@ -772,6 +772,7 @@ void arkProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_RESIZE_FAIL    "Error in user-supplied resize() function."
 #define MSGARK_MASSINIT_FAIL  "The mass matrix solver's init routine failed."
 #define MSGARK_MASSSOLVE_NULL "The mass matrix solver's solve routine is NULL."
+#define MSGARK_MASSSOLVE_FAIL "The mass matrix solver failed."
 #define MSGARK_MASSFREE_FAIL  "The mass matrixsolver's free routine failed."
 
 #ifdef __cplusplus
