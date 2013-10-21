@@ -68,8 +68,8 @@
 /* #define USE_SPBCG */
 /* #define USE_SPTFQMR */
 
-#define NO_MASS_USE_ITERATIVE
-/* #define MASS_USE_SPGMR */
+#define MASS_USE_ITERATIVE
+#define MASS_USE_SPGMR
 /* #define MASS_USE_PCG */
 /* #define MASS_USE_SPBCG */
 /* #define MASS_USE_SPTFQMR */
@@ -110,9 +110,9 @@ int main()
   realtype T0 = RCONST(0.0);
   realtype Tf = RCONST(10.0);
   realtype dTout = RCONST(1.0);
-  realtype M00 = RCONST(1.0);  realtype M01 = RCONST(0.0);  realtype M02 = RCONST(0.0);
-  realtype M10 = RCONST(0.0);  realtype M11 = RCONST(0.0);  realtype M12 = RCONST(1.0);
-  realtype M20 = RCONST(0.0);  realtype M21 = RCONST(1.0);  realtype M22 = RCONST(0.0);
+  realtype M00 = RCONST(10.0);  realtype M01 = RCONST(1.0);    realtype M02 = RCONST(1.0);
+  realtype M10 = RCONST(1.0);   realtype M11 = RCONST(1.0);    realtype M12 = RCONST(100.0);
+  realtype M20 = RCONST(1.0);   realtype M21 = RCONST(100.0);  realtype M22 = RCONST(1.0);
   int Nt = ceil(Tf/dTout);
   realtype a, b, ep, u0, v0, w0;
   long int NEQ = 3;
@@ -239,6 +239,13 @@ int main()
   flag = ARKodeSStolerances(arktrue_mem, reltol2, abstol2);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
+  /* Call ARKodeResStolerance to specify the scalar 
+     absolute residual tolerance */
+  flag = ARKodeResStolerance(arkode_mem, abstol);
+  if (check_flag(&flag, "ARKodeResStolerance", 1)) return 1;
+  flag = ARKodeResStolerance(arktrue_mem, abstol2);
+  if (check_flag(&flag, "ARKodeResStolerance", 1)) return 1;
+
   /* Specify the linear solver */
 #ifdef USE_ITERATIVE
 #ifdef USE_SPGMR
@@ -303,21 +310,21 @@ int main()
   if (check_flag(&flag, "ARKMassSpgmr", 1)) return 1;
 #endif
 #ifdef MASS_USE_PCG
-  flag = ARKMassPcg(arkode_mem, 0, NEQ, MassTimes, (void *) rdata);
+  flag = ARKMassPcg(arkode_mem, 0, 10*NEQ, MassTimes, (void *) rdata);
   if (check_flag(&flag, "ARKMassPcg", 1)) return 1;
-  flag = ARKMassPcg(arktrue_mem, 0, NEQ, MassTimes, (void *) rdata);
+  flag = ARKMassPcg(arktrue_mem, 0, 10*NEQ, MassTimes, (void *) rdata);
   if (check_flag(&flag, "ARKMassPcg", 1)) return 1;
 #endif
 #ifdef MASS_USE_SPBCG
-  flag = ARKMassSpbcg(arkode_mem, 0, NEQ, MassTimes, (void *) rdata);
+  flag = ARKMassSpbcg(arkode_mem, 0, 10*NEQ, MassTimes, (void *) rdata);
   if (check_flag(&flag, "ARKMassSpbcg", 1)) return 1;
-  flag = ARKMassSpbcg(arktrue_mem, 0, NEQ, MassTimes, (void *) rdata);
+  flag = ARKMassSpbcg(arktrue_mem, 0, 10*NEQ, MassTimes, (void *) rdata);
   if (check_flag(&flag, "ARKMassSpbcg", 1)) return 1;
 #endif
 #ifdef MASS_USE_SPTFQMR
-  flag = ARKMassSptfqmr(arkode_mem, 0, NEQ, MassTimes, (void *) rdata);
+  flag = ARKMassSptfqmr(arkode_mem, 0, 10*NEQ, MassTimes, (void *) rdata);
   if (check_flag(&flag, "ARKMassSptfqmr", 1)) return 1;
-  flag = ARKMassSptfqmr(arktrue_mem, 0, NEQ, MassTimes, (void *) rdata);
+  flag = ARKMassSptfqmr(arktrue_mem, 0, 10*NEQ, MassTimes, (void *) rdata);
   if (check_flag(&flag, "ARKMassSptfqmr", 1)) return 1;
 #endif
 #else
