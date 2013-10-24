@@ -48,6 +48,7 @@ CVS_VER="2.7.0"
 IDA_VER="2.7.0"
 IDAS_VER="1.1.0"
 KIN_VER="2.7.0"
+ARK_VER="1.0.0"
 
 #---------------------------------------------------------
 # Test if the script is executed from within its directory
@@ -190,11 +191,14 @@ cp -r sundials/include/nvector tmp_dir/include/
 cp -r sundials/src/sundials tmp_dir/src/
 cp -r sundials/src/nvec_ser tmp_dir/src/
 cp -r sundials/src/nvec_par tmp_dir/src/
+cp -r sundials/src/nvec_openmp tmp_dir/src/
+cp -r sundials/src/nvec_pthreads tmp_dir/src/
 
 cp -r sundials/doc/sundials tmp_dir/doc/
 
 cp -r sundials/bin tmp_dir/
 
+cp -r sundials/examples/nvector tmp_dir/examples/
 cp -r sundials/examples/templates tmp_dir/examples/
 
 cd tmp_dir
