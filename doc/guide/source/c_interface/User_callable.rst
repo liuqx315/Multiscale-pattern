@@ -1580,7 +1580,7 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
       * ARK_ILL_INPUT if an argument has an illegal value
    
    **Notes:** Both `itable` and `etable` should match an existing
-   implicit/explicit pair from the section :ref:`Mathematics.Butcher.additive`.   
+   implicit/explicit pair from the section :ref:`Butcher.additive`.   
    Error-checking is performed to ensure that the tables exist.
    Subsequent error-checking is automatically performed to ensure that
    the tables' stage times and solution coefficients match.  
@@ -1604,7 +1604,7 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
       * ARK_ILL_INPUT if an argument has an illegal value
    
    **Notes:** `etable` should match an existing explicit method from
-   the section :ref:`Mathematics.Butcher.explicit`.
+   the section :ref:`Butcher.explicit`.
    Error-checking is performed to ensure that the table exists, and is
    not implicit.  
    
@@ -1627,7 +1627,7 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
       * ARK_ILL_INPUT if an argument has an illegal value
    
    **Notes:** `itable` should match an existing implicit method from
-   the section :ref:`Mathematics.Butcher.implicit`.
+   the section :ref:`Butcher.implicit`.
    Error-checking is performed to ensure that the table exists, and is
    not explicit.  
    
@@ -2437,6 +2437,8 @@ when setting up that linear solver module in any of the functions
 :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassPcg()` or
 :c:func:`ARKMassSpfgmr()`. 
 
+
+.. _CInterface.ARKSpilsInputTable:
 
 Table: Optional inputs for ARKSPILS
 """""""""""""""""""""""""""""""""""""""

@@ -33,6 +33,10 @@
 	   selection in implicit Runge-Kutta methods. *ACM
 	   Trans. Math. Soft.* 20:496-512, 1994. 
 
+.. [HW1993] E. Hairer, S. Norsett and G. Wanner.  Solving Ordinary
+	    Differential Equations I. *Springer Series in
+	    Computational Mathematics*, vol. 8, 1993.
+
 .. [HS1980] K.L. Hiebert and L.F. Shampine.  Implicitly Defined Output
 	    Points for Solutions of ODEs.  Technical Report
 	    SAND80-0180, Sandia National Laboratories, February 1980. 

@@ -10,9 +10,9 @@
 
 .. _Constants:
 
-================
-ARKode Constants
-================
+===========================
+Appendix: ARKode Constants
+===========================
 
 Below we list all input and output constants used by the main solver
 and linear solver modules, together with their numerical values and a

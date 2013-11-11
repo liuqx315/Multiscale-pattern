@@ -9,10 +9,11 @@
 :tocdepth: 3
 
 
-.. _Mathematics.Butcher:
+.. _Butcher:
 
-Butcher tables
-======================
+=========================
+Appendix: Butcher tables
+=========================
 
 Here we catalogue the full set of Butcher tables included in ARKode.
 We group these into three categories: *explicit*, *implicit* and
@@ -102,7 +103,7 @@ half-plane indicate an `A-stable` method.
 
 
 
-.. _Mathematics.Butcher.explicit:
+.. _Butcher.explicit:
 
 Explicit Butcher tables
 ---------------------------
@@ -112,7 +113,7 @@ methods that have orders 2 through 6, with embeddings that are of
 orders 1 through 5.
 
 
-.. _Mathematics.Butcher.Heun_Euler:
+.. _Butcher.Heun_Euler:
 
 Heun-Euler
 ^^^^^^^^^^^^
@@ -139,7 +140,7 @@ the default 2nd order explicit method.
 
 
 
-.. _Mathematics.Butcher.Bogacki_Shampine:
+.. _Butcher.Bogacki_Shampine:
 
 Bogacki-Shampine
 ^^^^^^^^^^^^^^^^^^
@@ -168,7 +169,7 @@ the default 3rd order explicit method.
 
 
 
-.. _Mathematics.Butcher.ARK_3_2_E:
+.. _Butcher.ARK_3_2_E:
 
 ARK3(2)4L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -197,7 +198,7 @@ the explicit portion of the default 3rd order additive method.
 
 
 
-.. _Mathematics.Butcher.Zonneveld:
+.. _Butcher.Zonneveld:
 
 Zonneveld
 ^^^^^^^^^^^^
@@ -227,7 +228,7 @@ the default 4th order explicit method.
 
 
 
-.. _Mathematics.Butcher.ARK_4_3_E:
+.. _Butcher.ARK_4_3_E:
 
 ARK4(3)6L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -258,7 +259,7 @@ the explicit portion of the default 4th order additive method.
 
 
 
-.. _Mathematics.Butcher.Sayfy_Aburub:
+.. _Butcher.Sayfy_Aburub:
 
 Sayfy-Aburub-4-3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -289,7 +290,7 @@ Butcher table number 5 for :func:`ARKodeSetERKTableNum()`.
 
 
 
-.. _Mathematics.Butcher.Cash-Karp:
+.. _Butcher.Cash-Karp:
 
 Cash-Karp
 ^^^^^^^^^^^^
@@ -322,7 +323,7 @@ the default 5th order explicit method.
 
 
 
-.. _Mathematics.Butcher.Fehlberg:
+.. _Butcher.Fehlberg:
 
 Fehlberg
 ^^^^^^^^^^^^
@@ -353,7 +354,7 @@ Butcher table number 7 for :func:`ARKodeSetERKTableNum()`.
 
 
 
-.. _Mathematics.Butcher.Dormand_Prince:
+.. _Butcher.Dormand_Prince:
 
 Dormand-Prince
 ^^^^^^^^^^^^^^^^^
@@ -385,7 +386,7 @@ Butcher table number 8 for :func:`ARKodeSetERKTableNum()`.
 
 
 
-.. _Mathematics.Butcher.ARK_5_4_E:
+.. _Butcher.ARK_5_4_E:
 
 ARK5(4)8L[2]SA (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -420,7 +421,7 @@ the explicit portion of the default 5th order additive method.
 
 
 
-.. _Mathematics.Butcher.Verner-6-5:
+.. _Butcher.Verner-6-5:
 
 Verner-6-5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -455,7 +456,7 @@ the default 6th order explicit method.
 
 
 
-.. _Mathematics.Butcher.implicit:
+.. _Butcher.implicit:
 
 Implicit Butcher tables
 ---------------------------
@@ -466,7 +467,7 @@ includes methods that have orders 2 through 5, with embeddings that are of
 orders 1 through 4.
 
 
-.. _Mathematics.Butcher.SDIRK-2-1:
+.. _Butcher.SDIRK-2-1:
 
 SDIRK 2(1)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -495,7 +496,7 @@ are A- and B-stable.
 
 
 
-.. _Mathematics.Butcher.Billington:
+.. _Butcher.Billington:
 
 Billington
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -525,7 +526,7 @@ higher-order method is less stable than the lower-order embedding.
 
 
 
-.. _Mathematics.Butcher.TRBDF2:
+.. _Butcher.TRBDF2:
 
 TRBDF2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -556,7 +557,7 @@ lower-order embedding.
 
 
 
-.. _Mathematics.Butcher.Kvaerno_4_2_3:
+.. _Butcher.Kvaerno_4_2_3:
 
 Kvaerno(4,2,3)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -586,7 +587,7 @@ method and embedding are A-stable; additionally the method is L-stable.
 
 
 
-.. _Mathematics.Butcher.ARK_3_2_I:
+.. _Butcher.ARK_3_2_I:
 
 ARK3(2)4L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -619,7 +620,7 @@ A-stable; additionally the method is L-stable.
 
 
 
-.. _Mathematics.Butcher.Cash_5_2_4:
+.. _Butcher.Cash_5_2_4:
 
 Cash(5,2,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -651,7 +652,7 @@ method and embedding are A-stable; additionally the method is L-stable.
 
 
 
-.. _Mathematics.Butcher.Cash_5_3_4:
+.. _Butcher.Cash_5_3_4:
 
 Cash(5,3,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -682,7 +683,7 @@ method and embedding are A-stable; additionally the method is L-stable.
 
 
 
-.. _Mathematics.Butcher.SDIRK-5-4:
+.. _Butcher.SDIRK-5-4:
 
 SDIRK 5(4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -716,7 +717,7 @@ and L-stable, although the embedding has reduced stability.
 
 
 
-.. _Mathematics.Butcher.Kvaerno_5_3_4:
+.. _Butcher.Kvaerno_5_3_4:
 
 Kvaerno(5,3,4)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -748,7 +749,7 @@ method and embedding are A-stable.
 
 
 
-.. _Mathematics.Butcher.ARK_4_3_I:
+.. _Butcher.ARK_4_3_I:
 
 ARK4(3)6L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -783,7 +784,7 @@ L-stable.
 
 
 
-.. _Mathematics.Butcher.Kvaerno_7_4_5:
+.. _Butcher.Kvaerno_7_4_5:
 
 Kvaerno(7,4,5)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -818,7 +819,7 @@ L-stable.
 
 
 
-.. _Mathematics.Butcher.ARK_5_4_I:
+.. _Butcher.ARK_5_4_I:
 
 ARK5(4)8L[2]SA (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -857,7 +858,7 @@ A-stable; additionally the method is L-stable.
 
 
 
-.. _Mathematics.Butcher.additive:
+.. _Butcher.additive:
 
 Additive Butcher tables
 ---------------------------
@@ -867,15 +868,15 @@ explicit calculations, ARKode includes methods that have orders 3
 through 5, with embeddings that are of orders 2 through 4.  These
 Butcher table pairs are as follows:
 
-* 3rd-order pair:  :ref:`Mathematics.Butcher.ARK_3_2_E` with
-  :ref:`Mathematics.Butcher.ARK_3_2_I`, corresponding to Butcher
+* 3rd-order pair:  :ref:`Butcher.ARK_3_2_E` with
+  :ref:`Butcher.ARK_3_2_I`, corresponding to Butcher
   tables 2 and 15 for :func:`ARKodeSetARKTableNum()`.
 
-* 4th-order pair:  :ref:`Mathematics.Butcher.ARK_4_3_E` with
-  :ref:`Mathematics.Butcher.ARK_4_3_I`, corresponding to Butcher 
+* 4th-order pair:  :ref:`Butcher.ARK_4_3_E` with
+  :ref:`Butcher.ARK_4_3_I`, corresponding to Butcher 
   tables 4 and 20 for :func:`ARKodeSetARKTableNum()`. 
 
-* 5th-order pair:  :ref:`Mathematics.Butcher.ARK_5_4_E` with
-  :ref:`Mathematics.Butcher.ARK_5_4_I`, corresponding to Butcher
+* 5th-order pair:  :ref:`Butcher.ARK_5_4_E` with
+  :ref:`Butcher.ARK_5_4_I`, corresponding to Butcher
   tables 9 and 22 for :func:`ARKodeSetARKTableNum()`
 
