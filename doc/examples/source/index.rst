@@ -55,30 +55,30 @@ that is most closely related to your own.
 
 .. cssclass:: table-bordered
 
-====================================================  ==========  =============  =============  ========  ===============================================================
-Problem                                               Integrator  Linear Solver  Size           Language  Extras
-====================================================  ==========  =============  =============  ========  ===============================================================
-:ref:`ark_analytic <ark_analytic>`                    DIRK        Dense          1              C         Analytical solution, variable stiffness
-:ref:`ark_analytic_nonlin <ark_analytic_nonlin>`      ERK         N.A.           1              C         Nonlinear, analytical solution
-:ref:`ark_analytic_sys <ark_analytic_sys>`            DIRK        Dense          3              C++       ODE system, analytical solution, variable stiffness
-:ref:`ark_brusselator <ark_brusselator>`              DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`ark_bruss <ark_bruss>`                          ARK         Dense          3              F90       Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`ark_robertson <ark_robertson>`                  DIRK        Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
-:ref:`ark_robertson_root <ark_robertson_root>`        DIRK        Dense          3              C         Utilizes root-finding capabilities
-:ref:`ark_brusselator1D <ark_brusselator1D>`          DIRK        Band           3N             C         Stiff, nonlinear, reaction-diffusion PDE system
-:ref:`ark_heat1D <ark_heat1D>`                        DIRK        PCG            N              C         Stiff, linear, diffusion PDE, iterative linear solver
-:ref:`ark_heat2D <ark_heat2D>`                        DIRK        PCG            :math:`nx*ny`  C++       Parallel, stiff, linear, diffusion PDE, iterative linear solver
-:ref:`ark_KrylovDemo_prec <ark_KrylovDemo_prec>`                                                C
-:ref:`ark_brusselator_fp <ark_brusselator_fp>`                                                  C
-:ref:`ark_diurnal_kry_bbd_p <ark_diurnal_kry_bbd_p>`                                            C
-:ref:`ark_diurnal_kry_p <ark_diurnal_kry_p>`                                                    C
-:ref:`ark_heat1D_adapt <ark_heat1D_adapt>`                                                      C
-:ref:`fark_diag_kry_bbd_p <fark_diag_kry_bbd_p>`                                                F77
-:ref:`fark_diag_non_p <fark_diag_non_p>`                                                        F77
-:ref:`fark_diurnal_kry_bp <fark_diurnal_kry_bp>`                                                F77
-:ref:`fark_heat2D <fark_heat2D>`                                                                F90
-:ref:`fark_roberts_dnsL <fark_roberts_dnsL>`                                                    F77
-====================================================  ==========  =============  =============  ========  ===============================================================
+====================================================  ==========  ================  =============  =============  ========  ===============================================================
+Problem                                               Integrator  Nonlinear Solver  Linear Solver  Size           Language  Extras
+====================================================  ==========  ================  =============  =============  ========  ===============================================================
+:ref:`ark_analytic <ark_analytic>`                    DIRK        Newton            Dense          1              C         Analytical solution, variable stiffness
+:ref:`ark_analytic_nonlin <ark_analytic_nonlin>`      ERK         N.A.              N.A.           1              C         Nonlinear, analytical solution
+:ref:`ark_analytic_sys <ark_analytic_sys>`            DIRK        Newton            Dense          3              C++       ODE system, analytical solution, variable stiffness
+:ref:`ark_brusselator <ark_brusselator>`              DIRK        Newton            Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_bruss <ark_bruss>`                          ARK         Newton            Dense          3              F90       Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_robertson <ark_robertson>`                  DIRK        Newton            Dense          3              C         Stiff, nonlinear, ODE system, "standard" test problem
+:ref:`ark_robertson_root <ark_robertson_root>`        DIRK        Newton            Dense          3              C         Utilizes rootfinding capabilities
+:ref:`ark_brusselator1D <ark_brusselator1D>`          DIRK        Newton            Band           3N             C         Stiff, nonlinear, reaction-diffusion PDE system
+:ref:`ark_heat1D <ark_heat1D>`                        DIRK        Newton            PCG            N              C         Stiff, linear, diffusion PDE, iterative linear solver
+:ref:`ark_heat2D <ark_heat2D>`                        DIRK        Newton            PCG            :math:`nx*ny`  C++       Parallel, stiff, linear, diffusion PDE, iterative linear solver
+:ref:`ark_KrylovDemo_prec <ark_KrylovDemo_prec>`      DIRK        Newton            SPGMR          216            C         Stiff, nonlinear, rx-diff PDE system, different preconditioners
+:ref:`ark_brusselator_fp <ark_brusselator_fp>`        ARK         Fixed-point       N.A.           3              C         Stiff, nonlinear, ODE system
+:ref:`ark_diurnal_kry_bbd_p <ark_diurnal_kry_bbd_p>`  DIRK        Newton            SPGMR          200            C         Stiff, nonlinear, PDE system, parallel, BBD preconditioner
+:ref:`ark_diurnal_kry_p <ark_diurnal_kry_p>`          DIRK        Newton            SPGMR          200            C         Stiff, nonlinear, PDE system, parallel, block-diagonal precond.
+:ref:`ark_heat1D_adapt <ark_heat1D_adapt>`            DIRK        Newton            PCG            (dynamic)      C         Stiff, linear, diffusion, PCG solver, adaptive vector resizing
+:ref:`fark_diag_kry_bbd_p <fark_diag_kry_bbd_p>`      DIRK        Newton            SPGMR          10*NProcs      F77       Stiff, linear, diagonal ODE system, BBD preconditioner
+:ref:`fark_diag_non_p <fark_diag_non_p>`              ERK         N.A.              N.A.           10*NProcs      F77       Nonstiff, linear, diagonal ODE system
+:ref:`fark_diurnal_kry_bp <fark_diurnal_kry_bp>`      DIRK        Newton            SPGMR          10             F77       Stiff, nonlinear, PDE system, banded preconditioner
+:ref:`fark_heat2D <fark_heat2D>`                      DIRK        Newton            PCG            :math:`nx*ny`  F90       Parallel, stiff, linear, diffusion PDE, iterative linear solver
+:ref:`fark_roberts_dnsL <fark_roberts_dnsL>`          DIRK        Newton            Dense          3              F77       Stiff, nonlinear, ODE system, LAPACK dense solver, rootfinding
+====================================================  ==========  ================  =============  =============  ========  ===============================================================
 
 
 Further details on each of the above-listed examples, including both
@@ -89,25 +89,45 @@ following sub-sections:
    :maxdepth: 1
 
    Simple linear example (ark_analytic) <ark_analytic>
+
    Simple nonlinear example (ark_analytic_nonlin) <ark_analytic_nonlin>
+
    Simple linear system example (ark_analytic_sys) <ark_analytic_sys>
+
    Stiff nonlinear system example (ark_brusselator) <ark_brusselator>
-   Stiff nonlinear system, Fortran example (ark_bruss) <bruss>
+
+   Stiff nonlinear system, Fortran 90 example (ark_bruss) <ark_bruss>
+
    Stiff nonlinear system example (ark_robertson) <ark_robertson>
-   Stiff nonlinear system with root-finding example (ark_robertson_root) <ark_robertson_root>
+
+   Stiff nonlinear system with rootfinding example (ark_robertson_root) <ark_robertson_root>
+
    Stiff PDE system example (ark_brusselator1D) <ark_brusselator1D>
+
    PDE example with iterative linear solver (ark_heat1D) <ark_heat1D>
+
    Parallel PDE example with iterative linear solver (ark_heat2D) <ark_heat2D>
-   C example using a variety of Krylov linear solvers (ark_KrylovDemo_prec) <ark_KrylovDemo_prec>
-   C example using the accelerated fixed-point nonlinear solver (ark_brusselator_fp) <ark_brusselator_fp>
-   Parallel C example with BBD preconditioner (ark_diurnal_kry_bbd_p) <ark_diurnal_kry_bbd_p>
-   Parallel C example (ark_diurnal_kry_p) <ark_diurnal_kry_p>
-   C example demonstrating "resize" capabilities (ark_heat1D_adapt) <ark_heat1D_adapt>
-   Parallel Fortran 77 example using the BBD preconditioner (fark_diag_kry_bbd_p) <fark_diag_kry_bbd_p>
-   Parallel Fortran 77 example (fark_diag_non_p) <fark_diag_non_p>
-   Fortran 77 example demonstrating banded preconditioner (fark_diurnal_kry_bp) <fark_diurnal_kry_bp>
+
+   Stiff nonlinear system, uses GMRES with different preconditioners (ark_KrylovDemo_prec) <ark_KrylovDemo_prec>
+
+   Stiff nonlinear system, ImEx example, using the accelerated fixed-point nonlinear solver (ark_brusselator) <ark_brusselator_fp>
+
+   Stiff nonlinear parallel C example with BBD preconditioner (ark_diurnal_kry_bbd_p) <ark_diurnal_kry_bbd_p>
+
+   Stiff nonlinear parallel C example with block-diagonal preconditioner (ark_diurnal_kry_p) <ark_diurnal_kry_p>
+
+   PDE example with PCG linear solver, and dynamic vector "resize" capabilities (ark_heat1D_adapt) <ark_heat1D_adapt>
+
+   Nonstiff parallel diagonal ODE, Fortran 77 example using the BBD preconditioner (fark_diag_kry_bbd_p) <fark_diag_kry_bbd_p>
+
+   Stiff parallel diagonal ODE, Fortran 77  example (fark_diag_non_p) <fark_diag_non_p>
+
+   Stiff kinetics-transport Fortran 77 example using the banded preconditioner (fark_diurnal_kry_bp) <fark_diurnal_kry_bp>
+
    Parallel Fortran 90 example that replicates the ark_heat2D example (fark_heat2D) <fark_heat2D>
-   Fortran 77 example using Lapack solver interface (fark_roberts_dnsL) <fark_roberts_dnsL>
+
+   Stiff chemical kinetics Fortran 77 example using Lapack solver interface and rootfinding module (fark_roberts_dnsL) <fark_roberts_dnsL>
+
    
 .. only:: html
 
