@@ -47,13 +47,6 @@
  dw and ep are provided in the input file 
  input_brusselator1D.txt.
 
- We use a vector-valued absolute tolerance, where the values are 
- set as the input scalar value multiplied by the width of the 
- support for the corresponding basis function.  On a uniform mesh 
- this would result in a constant set of values, but on a 
- non-uniform mesh this spreads these weights in an integral 
- sense.
- 
  This program solves the problem with the DIRK method, using a
  Newton iteration with the ARKBAND band linear solver.
 
@@ -131,6 +124,8 @@ typedef struct {
 static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int f_diff(realtype t, N_Vector y, N_Vector ydot, void *user_data);
+static int f_rx(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 static int MassMatrix(long int N, long int mu, long int ml, realtype t, 
 		      DlsMat M, void *user_data, N_Vector tmp1, 
 		      N_Vector tmp2, N_Vector tmp3);
@@ -185,7 +180,6 @@ int main() {
   N_Vector y = NULL;
   N_Vector ytrue = NULL;
   N_Vector yerr = NULL;
-  N_Vector avtol = NULL;
   N_Vector umask = NULL;
   N_Vector vmask = NULL;
   N_Vector wmask = NULL;
@@ -242,25 +236,25 @@ int main() {
   printf("    diffusion coefficients:  du = %g,  dv = %g,  dw = %g\n", 
 	 udata->du, udata->dv, udata->dw);
 
-  /* Create serial vectors of length NEQ for initial condition & abs tol */
+  /* Create serial vectors of length NEQ for initial condition, etc. */
   y = N_VNew_Serial(NEQ);
   if (check_flag((void *) y, "N_VNew_Serial", 0)) return 1;
   ytrue = N_VNew_Serial(NEQ);
   if (check_flag((void *) ytrue, "N_VNew_Serial", 0)) return 1;
   yerr = N_VNew_Serial(NEQ);
   if (check_flag((void *) yerr, "N_VNew_Serial", 0)) return 1;
-  avtol = N_VNew_Serial(NEQ);
-  if (check_flag((void *) avtol, "N_VNew_Serial", 0)) return 1;
 
 
   /* allocate and set up spatial mesh; this [arbitrarily] clusters 
-     more intervals near the endpoints of the interval */
+     more intervals near the end points of the interval */
   udata->x = (realtype *) malloc(N*sizeof(realtype));
   if (check_flag((void *)udata->x, "malloc", 2)) return 1;
-  realtype z, h = ONE/(N-1);
+  realtype pi=RCONST(4.0)*atan(ONE);
+  realtype h=10.0/(N-1);
+  realtype z;
   for (i=0; i<N; i++) {
-    z = h*i - 0.5;
-    udata->x[i] = RCONST(4.0)*z*z*z + RCONST(0.5);
+    z = -5.0 + h*i;
+    udata->x[i] = 0.5/atan(5.0)*atan(z) + 0.5;
   }
 
   /* output mesh to disk */
@@ -278,7 +272,6 @@ int main() {
   if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* Set initial conditions into y, ytrue */
-  realtype pi = RCONST(4.0)*atan(ONE);
   for (i=0; i<N; i++) {
     data[IDX(i,0)] =  a  + RCONST(0.1)*sin(pi*udata->x[i]);  /* u */
     data[IDX(i,1)] = b/a + RCONST(0.1)*sin(pi*udata->x[i]);  /* v */
@@ -330,28 +323,6 @@ int main() {
   realtype reltol2 = rtol*1.0e-2;
   realtype abstol2 = atol*1.0e-2;
 
-  /* Access data array for absolute tolerance NVector avtol */
-  data = N_VGetArrayPointer(avtol);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
-
-  /* Set support widths into avtol */
-  i = 0; {
-    data[IDX(i,0)] = abstol * (udata->x[i+1] - udata->x[i]);  /* u */
-    data[IDX(i,1)] = abstol * (udata->x[i+1] - udata->x[i]);  /* v */
-    data[IDX(i,2)] = abstol * (udata->x[i+1] - udata->x[i]);  /* w */
-  }
-  for (i=1; i<N-1; i++) {
-    data[IDX(i,0)] = abstol * (udata->x[i+1] - udata->x[i-1]);  /* u */
-    data[IDX(i,1)] = abstol * (udata->x[i+1] - udata->x[i-1]);  /* v */
-    data[IDX(i,2)] = abstol * (udata->x[i+1] - udata->x[i-1]);  /* w */
-  }
-  i=N-1; {
-    data[IDX(i,0)] = abstol * (udata->x[i] - udata->x[i-1]);  /* u */
-    data[IDX(i,1)] = abstol * (udata->x[i] - udata->x[i-1]);  /* v */
-    data[IDX(i,2)] = abstol * (udata->x[i] - udata->x[i-1]);  /* w */
-  }
-
-
   /* If (dense_order == -1), tell integrator to use tstop */
   if (dense_order == -1) {
     idense = 0;
@@ -376,35 +347,41 @@ int main() {
   /* Call ARKodeSetMaxNumSteps to increase default (for testing) */
   flag = ARKodeSetMaxNumSteps(arkode_mem, 10000);
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
+  flag = ARKodeSetMaxNumSteps(arktrue_mem, 10000);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
 
-  /* Call ARKodeSVtolerances to specify the scalar relative and 
-     vector absolute tolerances */
-  flag = ARKodeSVtolerances(arkode_mem, reltol, avtol);
+  /* Call ARKodeSStolerances to specify the scalar relative and 
+     absolute tolerances */
+  flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
-  flag = ARKodeSVtolerances(arktrue_mem, reltol2, avtol);
+  flag = ARKodeSStolerances(arktrue_mem, reltol2, abstol2);
   if (check_flag(&flag, "ARKodeSStolerances", 1)) return 1;
 
-  /* Free avtol */
-  N_VDestroy_Serial(avtol);
+  /* Call ARKodeResStolerance to specify the scalar 
+     absolute residual tolerance */
+  flag = ARKodeResStolerance(arkode_mem, abstol);
+  if (check_flag(&flag, "ARKodeResStolerance", 1)) return 1;
+  flag = ARKodeResStolerance(arktrue_mem, abstol2);
+  if (check_flag(&flag, "ARKodeResStolerance", 1)) return 1;
 
   /* Specify the linear solver */
 #ifdef USE_ITERATIVE
 #ifdef USE_SPGMR
-  flag = ARKSpgmr(arkode_mem, 0, 500);
+  flag = ARKSpgmr(arkode_mem, 0, NEQ);
   if (check_flag(&flag, "ARKSpgmr", 1)) return 1;
   flag = ARKSpgmr(arktrue_mem, 0, 500);
   if (check_flag(&flag, "ARKSpgmr", 1)) return 1;
 #endif
 #ifdef USE_SPBCG
-  flag = ARKSpbcg(arkode_mem, 0, 500);
+  flag = ARKSpbcg(arkode_mem, 0, NEQ);
   if (check_flag(&flag, "ARKSpbcg", 1)) return 1;
-  flag = ARKSpbcg(arktrue_mem, 0, 500);
+  flag = ARKSpbcg(arktrue_mem, 0, NEQ);
   if (check_flag(&flag, "ARKSpbcg", 1)) return 1;
 #endif
 #ifdef USE_SPTFQMR
-  flag = ARKSptfqmr(arkode_mem, 0, 500);
+  flag = ARKSptfqmr(arkode_mem, 0, NEQ);
   if (check_flag(&flag, "ARKSptfqmr", 1)) return 1;
-  flag = ARKSptfqmr(arktrue_mem, 0, 500);
+  flag = ARKSptfqmr(arktrue_mem, 0, NEQ);
   if (check_flag(&flag, "ARKSptfqmr", 1)) return 1;
 #endif
 #else
@@ -414,7 +391,7 @@ int main() {
   if (check_flag(&flag, "ARKBand", 1)) return 1;
 #endif
 
-  /* Set the Jacobian routine to Jac (user-supplied) */
+  /* Set the Jacobian routine (user-supplied) */
 #ifdef USE_ITERATIVE
   switch (imex) {
   case 0:         /* purely implicit */
@@ -445,27 +422,27 @@ int main() {
   /* Specify the mass matrix linear solver */
 #ifdef MASS_USE_ITERATIVE
 #ifdef MASS_USE_SPGMR
-  flag = ARKMassSpgmr(arkode_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassSpgmr(arkode_mem, 0, NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSpgmr", 1)) return 1;
-  flag = ARKMassSpgmr(arktrue_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassSpgmr(arktrue_mem, 0, NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSpgmr", 1)) return 1;
 #endif
 #ifdef MASS_USE_PCG
-  flag = ARKMassPcg(arkode_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassPcg(arkode_mem, 0, 10*NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassPcg", 1)) return 1;
-  flag = ARKMassPcg(arktrue_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassPcg(arktrue_mem, 0, 10*NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassPcg", 1)) return 1;
 #endif
 #ifdef MASS_USE_SPBCG
-  flag = ARKMassSpbcg(arkode_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassSpbcg(arkode_mem, 0, 10*NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSpbcg", 1)) return 1;
-  flag = ARKMassSpbcg(arktrue_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassSpbcg(arktrue_mem, 0, 10*NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSpbcg", 1)) return 1;
 #endif
 #ifdef MASS_USE_SPTFQMR
-  flag = ARKMassSptfqmr(arkode_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassSptfqmr(arkode_mem, 0, 10*NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSptfqmr", 1)) return 1;
-  flag = ARKMassSptfqmr(arktrue_mem, 0, 500, MassTimes, (void *) udata);
+  flag = ARKMassSptfqmr(arktrue_mem, 0, 10*NEQ, MassTimes, (void *) udata);
   if (check_flag(&flag, "ARKMassSptfqmr", 1)) return 1;
 #endif
 #else
@@ -660,26 +637,63 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
   /* problem data */
   UserData udata = (UserData) user_data;
 
-  /* fill reaction portion of RHS array */
-  ier = fi(t, y, ydot, user_data);
+  /* clear out RHS (to be careful) */
+  N_VConst(0.0, ydot);
+
+  /* add reaction terms to RHS */
+  ier = f_rx(t, y, ydot, user_data);
   if (ier != 0)  return ier;
   
-  /* fill diffusion portion of RHS array */
-  ier = fe(t, y, udata->tmp, user_data);
+  /* add diffusion terms to RHS */
+  ier = f_diff(t, y, ydot, user_data);
   if (ier != 0)  return ier;
   
-  /* add components together */
-  N_VLinearSum( 1.0, udata->tmp, 1.0, ydot, ydot );
+  return 0;
+}
+
+
+/* Routine to compute the explicit components of the ODE RHS function f(t,y). */
+static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
+
+  /* local data */
+  int ier;
+
+  /* problem data */
+  UserData udata = (UserData) user_data;
+
+  /* clear out RHS (to be careful) */
+  N_VConst(0.0, ydot);
+
+  /* add diffusion terms to RHS */
+  ier = f_diff(t, y, ydot, user_data);
+  if (ier != 0)  return ier;
+  
+  return 0;
+}
+
+
+/* Routine to compute the implicit components of the ODE RHS function f(t,y). */
+static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
+
+  /* local data */
+  int ier;
+
+  /* problem data */
+  UserData udata = (UserData) user_data;
+
+  /* clear out RHS (to be careful) */
+  N_VConst(0.0, ydot);
+
+  /* add reaction terms to RHS */
+  ier = f_rx(t, y, ydot, user_data);
+  if (ier != 0)  return ier;
   
   return 0;
 }
 
 
 /* Routine to compute the diffusion portion of the ODE RHS function f(t,y). */
-static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
-
-  /* clear out RHS (to be careful) */
-  N_VConst(0.0, ydot);
+static int f_diff(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
   /* problem data */
   UserData udata = (UserData) user_data;
@@ -759,10 +773,7 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
 
 /* Routine to compute the reaction portion of the ODE RHS function f(t,y). */
-static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
-
-  /* clear out RHS (to be careful) */
-  N_VConst(0.0, ydot);
+static int f_rx(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
   /* problem data */
   UserData udata = (UserData) user_data;
