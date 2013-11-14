@@ -74,7 +74,7 @@ ARKode initialization and deallocation functions
       * *ARK_ILL_INPUT* if an argument has an illegal value.
 
 
-.. c:function:: void ARKodeFree(void *arkode_mem)
+.. c:function:: void ARKodeFree(void* arkode_mem)
 
    This function frees the problem memory *arkode_mem* created by
    :c:func:`ARKodeCreate()` and allocated by :c:func:`ARKodeInit()`.
@@ -1169,21 +1169,23 @@ Optional input functions
 -------------------------
 
 There are numerous optional input parameters that control the behavior
-of the ARKode solver. ARKode provides functions that can be
-used to change these optional input parameters from their default
-values. The following tables list all optional input functions in
-ARKode which are then described in detail in the remainder of this
-section.  These optional inputs are grouped into the following
-categories:
+of the ARKode solver, each of which may be modified from its default
+value through calling an appropriate input function.  The following
+tables list all optional input functions, grouped by which aspect of
+ARKode they control.  Detailed information on the calling syntax and
+arguments for each function are then provided following each table.  
+
+The optional inputs are grouped into the following categories:
 
 * General solver options (:ref:`CInterface.ARKodeInputTable`), 
 * IVP method solver options (:ref:`CInterface.ARKodeMethodInputTable`), 
 * Step adaptivity solver options (:ref:`CInterface.ARKodeAdaptivityInputTable`), 
 * Implicit stage solver options (:ref:`CInterface.CInterface.ARKodeSolverInputTable`), 
-* Dense linear solver options (:ref:`CInterface.ARKDlsInputs`) 
+* Dense linear solver options (:ref:`CInterface.ARKDlsInputs`),
 * Iterative linear solver options (:ref:`CInterface.ARKSpilsInputs`).  
 
-For the most casual use of ARKode, the reader can skip to the section
+For the most casual use of ARKode, relying on the default set of
+solver parameters, the reader can skip to the following section,
 :ref:`CInterface.UserSupplied`.
 
 We note that, on an error return, all of the optional input functions
@@ -1203,28 +1205,50 @@ Optional inputs for ARKode
 ===============================================  ====================================  ==============
 Optional input                                   Function name                         Default
 ===============================================  ====================================  ==============
+Return all solver parameters to their defaults   :c:func:`ARKodeSetDefaults()`         internal
 Set dense output order                           :c:func:`ARKodeSetDenseOrder()`       3
-Set default solver parameters                    :c:func:`ARKodeSetDefaults()`         internal
-Pointer to a diagnostics file                    :c:func:`ARKodeSetDiagnostics()`      ``NULL``
-Pointer to an error file                         :c:func:`ARKodeSetErrFile()`          ``stderr``
-Error handler function                           :c:func:`ARKodeSetErrHandlerFn()`     internal fn
-Initial step size                                :c:func:`ARKodeSetInitStep()`         estimated
+Supply a pointer to a diagnostics output file    :c:func:`ARKodeSetDiagnostics()`      ``NULL``
+Supply a pointer to an error output file         :c:func:`ARKodeSetErrFile()`          ``stderr``
+Supply a custom error handler function           :c:func:`ARKodeSetErrHandlerFn()`     internal fn
+Supply an initial step size to attempt           :c:func:`ARKodeSetInitStep()`         estimated
 Maximum no. of warnings for :math:`t_n+h = t_n`  :c:func:`ARKodeSetMaxHnilWarns()`     10
-Maximum no. of internal steps before `tout`      :c:func:`ARKodeSetMaxNumSteps()`      500
+Maximum no. of internal steps before *tout*      :c:func:`ARKodeSetMaxNumSteps()`      500
 Maximum no. of error test failures               :c:func:`ARKodeSetMaxErrTestFails()`  7
 Maximum absolute step size                       :c:func:`ARKodeSetMaxStep()`          :math:`\infty`
 Minimum absolute step size                       :c:func:`ARKodeSetMinStep()`          0.0
-Set 'optimal' adaptivity params                  :c:func:`ARKodeSetOptimalParams()`    internal
-Value of :math:`t_{stop}`                        :c:func:`ARKodeSetStopTime()`         :math:`\infty`
-User data                                        :c:func:`ARKodeSetUserData()`         ``NULL``
+Set 'optimal' adaptivity params for a method     :c:func:`ARKodeSetOptimalParams()`    internal
+Set a value for :math:`t_{stop}`                 :c:func:`ARKodeSetStopTime()`         :math:`\infty`
+Supply a pointer for user data                   :c:func:`ARKodeSetUserData()`         ``NULL``
 ===============================================  ====================================  ==============
+
+
+
+.. c:function:: int ARKodeSetDefaults(void* arkode_mem)
+
+   Resets all optional input parameters to ARKode's original 
+   default values.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+   
+   **Return value:** 
+      * *ARK_SUCCESS* if successful
+      * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
+      * *ARK_ILL_INPUT* if an argument has an illegal value
+   
+   **Notes:** Does not change problem-defining function pointers *fe*
+   and *fi* or the *user_data* pointer.  
+   
+   Also leaves alone any data structures or options related to
+   root-finding (those can be reset using :c:func:`ARKodeRootInit()`).
 
 
 
 .. c:function:: int ARKodeSetDenseOrder(void* arkode_mem, int dord)
 
-   Specifies the order of accuracy for the polynomial
-   interpolant used for dense output.
+   Specifies the order of accuracy for the polynomial interpolant 
+   used for dense output (i.e. interpolation of solution output values
+   and implicit method predictors). 
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1240,28 +1264,7 @@ User data                                        :c:func:`ARKodeSetUserData()`  
 
 
 
-.. c:function:: int ARKodeSetDefaults(void* arkode_mem)
-
-   Resets all optional inputs to ARKode default
-   values.  
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-   
-   **Return value:** 
-      * *ARK_SUCCESS* if successful
-      * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
-      * *ARK_ILL_INPUT* if an argument has an illegal value
-   
-   **Notes:** Does not change problem-defining function pointers *fe*
-   and *fi* or the *user_data* pointer.  
-   
-   Also leaves alone any data structures or  options related to
-   root-finding (those can be reset using :c:func:`ARKodeRootInit()`).
-
-
-
-.. c:function:: int ARKodeSetDiagnostics(void* arkode_mem, FILE *diagfp)
+.. c:function:: int ARKodeSetDiagnostics(void* arkode_mem, FILE* diagfp)
 
    Specifies the file pointer for a diagnostics file where
    all ARKode step adaptivity and solver information is written.  
@@ -1286,11 +1289,11 @@ User data                                        :c:func:`ARKodeSetUserData()`  
    
 
 
-.. c:function:: int ARKodeSetErrFile(void* arkode_mem, FILE *errfp)
+.. c:function:: int ARKodeSetErrFile(void* arkode_mem, FILE* errfp)
 
-   Specifies a pointer to the file where all ARKode
-   warning and error messages will be written if the default internal
-   error handling function is used. 
+   Specifies a pointer to the file where all ARKode warning and error
+   messages will be written if the default internal error handling
+   function is used.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1313,7 +1316,7 @@ User data                                        :c:func:`ARKodeSetUserData()`  
 
 
 
-.. c:function:: int ARKodeSetErrHandlerFn(void* arkode_mem, ARKErrHandlerFn ehfun, void *eh_data)
+.. c:function:: int ARKodeSetErrHandlerFn(void* arkode_mem, ARKErrHandlerFn ehfun, void* eh_data)
 
    Specifies the optional user-defined function to be used
    in handling error messages.
@@ -1334,9 +1337,11 @@ User data                                        :c:func:`ARKodeSetUserData()`  
 
 
 
+
 .. c:function:: int ARKodeSetInitStep(void* arkode_mem, realtype hin)
 
-   Specifies the initial time step size.
+   Specifies the initial time step size ARKode should use after
+   initialization or reinitialization.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1348,18 +1353,20 @@ User data                                        :c:func:`ARKodeSetUserData()`  
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** Pass 0.0 to use the default value.  
-   
+
    By default, ARKode estimates the initial step size to be the
    solution :math:`h` of the equation :math:`\left\| \frac{h^2
    \ddot{y}}{2}\right\| = 1`, where :math:`\ddot{y}` is an estimated
-   value of the second derivative of the solution at *t0*.
+   value of the second derivative of the solution at *t0*.  
+
 
 
 
 .. c:function:: int ARKodeSetMaxHnilWarns(void* arkode_mem, int mxhnil)
 
    Specifies the maximum number of messages issued by the
-   solver warning that :math:`t+h=t` on the next internal step.
+   solver to warn that :math:`t+h=t` on the next internal step, before
+   ARKode will instead return with an error.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1381,7 +1388,8 @@ User data                                        :c:func:`ARKodeSetUserData()`  
 .. c:function:: int ARKodeSetMaxNumSteps(void* arkode_mem, long int mxsteps)
 
    Specifies the maximum number of steps to be taken by the
-   solver in its attempt to reach the next output time.
+   solver in its attempt to reach the next output time, before ARKode
+   will return with an error.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1392,17 +1400,18 @@ User data                                        :c:func:`ARKodeSetUserData()`  
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** Passing *mxsteps = 0* results in ARKode using the
+   **Notes:** Passing *mxsteps* = 0 results in ARKode using the
    default value (500).
    
-   Passing *mxsteps < 0* disables the test (not recommended).
+   Passing *mxsteps* < 0 disables the test (not recommended).
 
 
 
 .. c:function:: int ARKodeSetMaxErrTestFails(void* arkode_mem, int maxnef)
 
    Specifies the maximum number of error test failures
-   permitted in attempting one step.
+   permitted in attempting one step, before ARKode
+   will return with an error.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1431,7 +1440,7 @@ User data                                        :c:func:`ARKodeSetUserData()`  
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** Pass *hmax* = 0.0 to set the default value of :math:`\infty`.  
+   **Notes:** Pass *hmax* :math:`\le 0.0` to set the default value of :math:`\infty`.  
 
 
 
@@ -1467,7 +1476,10 @@ User data                                        :c:func:`ARKodeSetUserData()`  
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** Should only be called after the method order and integration
-   method have been set.
+   method have been set.  These values resulted from repeated testing
+   of ARKode's solvers on a variety of training problems.  However,
+   all problems are different, so these values may not be optimal for
+   all users.
 
 
 
@@ -1490,14 +1502,14 @@ User data                                        :c:func:`ARKodeSetUserData()`  
 
 
 
-.. c:function:: int ARKodeSetUserData(void* arkode_mem, void *user_data)
+.. c:function:: int ARKodeSetUserData(void* arkode_mem, void* user_data)
 
    Specifies the user data block *user_data* and
    attaches it to the main ARKode memory block.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *user_data* -- pointer to the user data
+      * *user_data* -- pointer to the user data.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -1528,14 +1540,14 @@ Optional inputs for IVP method selection
 =================================  ================================  ==============
 Optional input                     Function name                     Default
 =================================  ================================  ==============
-Set method order                   :c:func:`ARKodeSetOrder()`        4
+Set integrator method order        :c:func:`ARKodeSetOrder()`        4
 Specify implicit/explicit problem  :c:func:`ARKodeSetImEx()`         ``TRUE``
 Specify explicit problem           :c:func:`ARKodeSetExplicit()`     ``FALSE``
 Specify implicit problem           :c:func:`ARKodeSetImplicit()`     ``FALSE``
 Set additive RK tables             :c:func:`ARKodeSetARKTables()`    internal
 Set explicit RK table              :c:func:`ARKodeSetERKTable()`     internal
 Set implicit RK table              :c:func:`ARKodeSetIRKTable()`     internal
-Specify additive RK tables number  :c:func:`ARKodeSetARKTableNum()`  internal
+Specify additive RK table numbers  :c:func:`ARKodeSetARKTableNum()`  internal
 Specify explicit RK table number   :c:func:`ARKodeSetERKTableNum()`  internal
 Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 =================================  ================================  ==============
@@ -1544,22 +1556,24 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 .. c:function:: int ARKodeSetOrder(void* arkode_mem, int ord)
 
-   Specifies the order of accuracy for the RK method.
+   Specifies the order of accuracy for the integration method.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *ord* -- requested order of accuracy
+      * *ord* -- requested order of accuracy.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** For explicit methods, the allowed values are 2 :math:`\le`
-   *ord* :math:`\le` 6.  For implicit and IMEX methods,  the allowed values are 3 :math:`\le`
-   *ord* :math:`\le` 5.  An illegal input will result in the default value of 4.
+   **Notes:** For explicit methods, the allowed values are :math:`2 \le`
+   *ord* :math:`\le 6`.  For implicit methods, the allowed values are
+   :math:`2\le` *ord* :math:`\le 5`, and for IMEX methods the allowed
+   values are :math:`3 \le` *ord* :math:`\le 5`.  Any illegal input
+   will result in the default value of 4. 
    
-   Since *ord* affects the memory requirements for the internal
+z   Since *ord* affects the memory requirements for the internal
    ARKode memory block, it cannot be increased between calls to
    :c:func:`ARKode()` unless :c:func:`ARKodeReInit()` is called.
 
@@ -1622,16 +1636,16 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 
 
-.. c:function:: int ARKodeSetARKTables(void* arkode_mem, int s, int q, int p, realtype *c, realtype *Ai, realtype *Ae, realtype *b, realtype *bembed)
+.. c:function:: int ARKodeSetARKTables(void* arkode_mem, int s, int q, int p, realtype* c, realtype* Ai, realtype* Ae, realtype* b, realtype* bembed)
 
    Specifies a customized Butcher table pair for the
    additive RK method.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *s* -- number of stages in the RK method
-      * *q* -- global order of accuracy for the RK method
-      * *p* -- global order of accuracy for the embedded RK method
+      * *s* -- number of stages in the RK method.
+      * *q* -- global order of accuracy for the RK method.
+      * *p* -- global order of accuracy for the embedded RK method.
       * *c* -- array (of length *s*) of stage times for the RK method.
       * *Ai* -- array of coefficients defining the implicit RK stages.  This should
         be stored as a 1D array of size *s*s*, in row-major order.
@@ -1659,15 +1673,15 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 
 
-.. c:function:: int ARKodeSetERKTable(void* arkode_mem, int s, int q, int p, realtype *c, realtype *A, realtype *b, realtype *bembed)
+.. c:function:: int ARKodeSetERKTable(void* arkode_mem, int s, int q, int p, realtype* c, realtype* A, realtype* b, realtype* bembed)
 
    Specifies a customized Butcher table for the explicit portion of the system.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *s* -- number of stages in the RK method
-      * *q* -- global order of accuracy for the RK method
-      * *p* -- global order of accuracy for the embedded RK method
+      * *s* -- number of stages in the RK method.
+      * *q* -- global order of accuracy for the RK method.
+      * *p* -- global order of accuracy for the embedded RK method.
       * *c* -- array (of length *s*) of stage times for the RK method.
       * *A* -- array of coefficients defining the RK stages.  This should
         be stored as a 1D array of size *s*s*, in row-major order.
@@ -1691,15 +1705,15 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 
 
-.. c:function:: int ARKodeSetIRKTable(void* arkode_mem, int s, int q, int p, realtype *c, realtype *A, realtype *b, realtype *bembed)
+.. c:function:: int ARKodeSetIRKTable(void* arkode_mem, int s, int q, int p, realtype* c, realtype* A, realtype* b, realtype* bembed)
 
    Specifies a customized Butcher table for the implicit portion of the system.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *s* -- number of stages in the RK method
-      * *q* -- global order of accuracy for the RK method
-      * *p* -- global order of accuracy for the embedded RK method
+      * *s* -- number of stages in the RK method.
+      * *q* -- global order of accuracy for the RK method.
+      * *p* -- global order of accuracy for the embedded RK method.
       * *c* -- array (of length *s*) of stage times for the RK method.
       * *A* -- array of coefficients defining the RK stages.  This should
         be stored as a 1D array of size *s*s*, in row-major order.
@@ -1717,8 +1731,8 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
    correctly describe the coefficients that were input.
    
    Error checking is performed to ensure that *A* is 
-   lower-triangular with nonzeros on at least some of the diagonal
-   entries (i.e. that it specifies a DIRK method).
+   lower-triangular with a nonzero value on at least one of the
+   diagonal entries (i.e. that it specifies a DIRK method).
    
    The embedding *bembed* is required.
 
@@ -1726,7 +1740,7 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 .. c:function:: int ARKodeSetARKTableNum(void* arkode_mem, int itable, int etable)
 
-   Specifies to use built-in Butcher tables for the ImEx system.
+   Indicates to use specific built-in Butcher tables for the ImEx system.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1739,7 +1753,7 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** Both *itable* and *etable* should match an existing
-   implicit/explicit pair from the section :ref:`Butcher.additive`.   
+   implicit/explicit pair, listed in the section :ref:`Butcher.additive`.   
    Error-checking is performed to ensure that the tables exist.
    Subsequent error-checking is automatically performed to ensure that
    the tables' stage times and solution coefficients match.  
@@ -1750,8 +1764,8 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 .. c:function:: int ARKodeSetERKTableNum(void* arkode_mem, int etable)
 
-   Specifies to use a built-in Butcher table for the
-   explicit portion of the system.
+   Indicates to use a specific built-in Butcher table for explicit
+   integration of the problem.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1763,9 +1777,8 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** *etable* should match an existing explicit method from
-   the section :ref:`Butcher.explicit`.
-   Error-checking is performed to ensure that the table exists, and is
-   not implicit.  
+   the section :ref:`Butcher.explicit`.  Error-checking is performed
+   to ensure that the table exists, and is not implicit.  
    
    This automatically calls :c:func:`ARKodeSetExplicit()`. 
 
@@ -1773,8 +1786,8 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 
 .. c:function:: int ARKodeSetIRKTableNum(void* arkode_mem, int itable)
 
-   Specifies to use a built-in Butcher table for the
-   implicit portion of the system.
+   Indicates to use a specific built-in Butcher table for implicit
+   integration of the problem.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -1786,9 +1799,8 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** *itable* should match an existing implicit method from
-   the section :ref:`Butcher.implicit`.
-   Error-checking is performed to ensure that the table exists, and is
-   not explicit.  
+   the section :ref:`Butcher.implicit`.  Error-checking is performed
+   to ensure that the table exists, and is not explicit.  
    
    This automatically calls :c:func:`ARKodeSetImplicit()`. 
 
@@ -1803,20 +1815,25 @@ Specify implicit RK table number   :c:func:`ARKodeSetIRKTableNum()`  internal
 Optional inputs for time step adaptivity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The mathematical explanation of ARKode's time step adaptivity
+algorithm, including how each of the parameters below is used within
+the code, is provided in the section :ref:`Mathematics.Adaptivity`.
+
+
 .. cssclass:: table-bordered
 
 ==============================================  =====================================  ========
 Optional input                                  Function name                          Default
 ==============================================  =====================================  ========
-Time step adaptivity function                   :c:func:`ARKodeSetAdaptivityFn()`      internal
-Time step adaptivity method                     :c:func:`ARKodeSetAdaptivityMethod()`  0
+Set a custom time step adaptivity function      :c:func:`ARKodeSetAdaptivityFn()`      internal
+Choose an existing time step adaptivity method  :c:func:`ARKodeSetAdaptivityMethod()`  0
 Explicit stability safety factor                :c:func:`ARKodeSetCFLFraction()`       0.5
 Time step error bias factor                     :c:func:`ARKodeSetErrorBias()`         1.5
 Bounds determining no change in step size       :c:func:`ARKodeSetFixedStepBounds()`   1.0  1.5
+Maximum step growth factor on convergence fail  :c:func:`ARKodeSetMaxCFailGrowth()`    0.25
 Maximum step growth factor on error test fail   :c:func:`ARKodeSetMaxEFailGrowth()`    0.3
 Maximum first step growth factor                :c:func:`ARKodeSetMaxFirstGrowth()`    10000.0
-Maximum step growth factor                      :c:func:`ARKodeSetMaxGrowth()`         20.0
-Maximum step growth factor on convergence fail  :c:func:`ARKodeSetMaxCFailGrowth()`    0.25
+Maximum general step growth factor              :c:func:`ARKodeSetMaxGrowth()`         20.0
 Time step safety factor                         :c:func:`ARKodeSetSafetyFactor()`      0.96
 Error fails before MaxEFailGrowth takes effect  :c:func:`ARKodeSetSmallNumEFails()`    2
 Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`       internal
@@ -1824,7 +1841,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
 
 
 
-.. c:function:: int ARKodeSetAdaptivityFn(void* arkode_mem, ARKAdaptFn hfun, void *h_data)
+.. c:function:: int ARKodeSetAdaptivityFn(void* arkode_mem, ARKAdaptFn hfun, void* h_data)
 
    Sets a user-supplied time-step adaptivity function.
    
@@ -1832,7 +1849,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *hfun* -- name of user-supplied adaptivity function.
       * *h_data* -- pointer to user data passed to *hfun* every time
-        it is called
+        it is called.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -1845,7 +1862,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
 
 
       
-.. c:function:: int ARKodeSetAdaptivityMethod(void* arkode_mem, int imethod, int idefault, int pq, realtype *adapt_params)
+.. c:function:: int ARKodeSetAdaptivityMethod(void* arkode_mem, int imethod, int idefault, int pq, realtype* adapt_params)
 
    Specifies the method (and associated parameters) used for time step adaptivity.
    
@@ -1860,7 +1877,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
 	*adapt_params* argument (0).
       * *pq* -- flag denoting whether to use the embedding order of
 	accuracy *p* (0) or the method order of accuracy *q* (1)
-	within the adaptivity algorithm.
+	within the adaptivity algorithm.  *p* is the ARKode default.
       * *adapt_params[0]* -- :math:`k_1` parameter within accuracy-based adaptivity algorithms.
       * *adapt_params[1]* -- :math:`k_2` parameter within accuracy-based adaptivity algorithms.
       * *adapt_params[2]* -- :math:`k_3` parameter within accuracy-based adaptivity algorithms.
@@ -1872,19 +1889,18 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    
    **Notes:** If custom parameters are supplied, they will be checked
    for validity against published stability intervals.  If other
-   parameter values are desired, it is recommended to use the
-   following function, :c:func:`ARKodeSetAdaptivityFn()`.
+   parameter values are desired, it is recommended to instead provide
+   a custom function through a call to :c:func:`ARKodeSetAdaptivityFn()`.
 
 
       
 .. c:function:: int ARKodeSetCFLFraction(void* arkode_mem, realtype cfl_frac)
 
-   Specifies the fraction of the estimated explicitly stable
-   step to use.
+   Specifies the fraction of the estimated explicitly stable step to use.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *cfl_frac* -- maximum allowed fraction of explicitly stable step (default is 0.5)
+      * *cfl_frac* -- maximum allowed fraction of explicitly stable step (default is 0.5).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -1904,37 +1920,54 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *bias* -- bias applied to error in accuracy-based time
-        step estimation (default is 1.5)
+        step estimation (default is 1.5).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** Any value below 1.0 will imply a reset to the default
-   value.  
+   **Notes:** Any value below 1.0 will imply a reset to the default value.  
 
 
       
 .. c:function:: int ARKodeSetFixedStepBounds(void* arkode_mem, realtype lb, realtype ub)
 
-   Specifies the step growth interval in which the step size will
-   remain unchanged.
+   Specifies the step growth interval in which the step size will remain unchanged.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *lb* -- lower bound on window to leave step size fixed (default is 1.0)
-      * *ub* -- upper bound on window to leave step size fixed (default is 1.5)
+      * *lb* -- lower bound on window to leave step size fixed (default is 1.0).
+      * *ub* -- upper bound on window to leave step size fixed (default is 1.5).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** Any interval *not* containing 1.0 will imply a reset to the default value.  
+   **Notes:** Any interval *not* containing 1.0 will imply a reset to the default values.
    
 
       
+.. c:function:: int ARKodeSetMaxCFailGrowth(void* arkode_mem, realtype etacf)
+
+   Specifies the maximum step size growth factor upon a convergence
+   failure on a stage solve within a step.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *etacf* -- time step reduction factor on a nonlinear solver
+        convergence failure (default is 0.25).
+   
+   **Return value:** 
+      * *ARK_SUCCESS* if successful
+      * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
+      * *ARK_ILL_INPUT* if an argument has an illegal value
+   
+   **Notes:** Any value outside the interval :math:`(0,1]` will imply a reset to the default value.
+
+
+
 .. c:function:: int ARKodeSetMaxEFailGrowth(void* arkode_mem, realtype etamxf)
 
    Specifies the maximum step size growth factor upon multiple successive
@@ -1942,14 +1975,14 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *etamxf* -- time step reduction factor on multiple error fails (default is 0.3)
+      * *etamxf* -- time step reduction factor on multiple error fails (default is 0.3).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** Any value outside the interval (0,1] will imply a reset to the default value.
+   **Notes:** Any value outside the interval :math:`(0,1]` will imply a reset to the default value.
    
 
       
@@ -1961,7 +1994,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *etamx1* -- maximum allowed growth factor after the first time
-        step (default is 10000.0)
+        step (default is 10000.0).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -1979,7 +2012,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *growth* -- maximum allowed growth factor between consecutive time steps (default is 20.0)
+      * *growth* -- maximum allowed growth factor between consecutive time steps (default is 20.0).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -1991,25 +2024,6 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
 
 
 
-.. c:function:: int ARKodeSetMaxCFailGrowth(void* arkode_mem, realtype etacf)
-
-   Specifies the maximum step size growth factor upon a convergence
-   failure on a stage solve within a step.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *etacf* -- time step reduction factor on a nonlinear solver
-        convergence failure (default is 0.25)
-   
-   **Return value:** 
-      * *ARK_SUCCESS* if successful
-      * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
-      * *ARK_ILL_INPUT* if an argument has an illegal value
-   
-   **Notes:** Any value outside the interval (0,1] will imply a reset to the default value.
-
-
-
 .. c:function:: int ARKodeSetSafetyFactor(void* arkode_mem, realtype safety)
 
    Specifies the safety factor to be applied to the accuracy-based
@@ -2017,7 +2031,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *safety* -- safety factor applied to accuracy-based time step (default is 0.96)
+      * *safety* -- safety factor applied to accuracy-based time step (default is 0.96).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2037,7 +2051,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *small_nef* -- bound to determine 'multiple' for *etamxf* (default is 2)
+      * *small_nef* -- bound to determine 'multiple' for *etamxf* (default is 2).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2048,7 +2062,7 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
 
 
 
-.. c:function:: int ARKodeSetStabilityFn(void* arkode_mem, ARKExpStabFn EStab, void *estab_data)
+.. c:function:: int ARKodeSetStabilityFn(void* arkode_mem, ARKExpStabFn EStab, void* estab_data)
 
    Sets the problem-dependent function to estimate a stable
    time step size for the explicit portion of the ODE system.
@@ -2066,10 +2080,10 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
    
    **Notes:** This function should return an estimate of the absolute
    value of the maximum stable time step for the explicit portion of
-   the IMEX system.  It is not required, since accuracy-based
-   adaptivity may be sufficient at retaining stability, but this can
-   be quite useful for problems where the IMEX splitting may retain
-   stiff components in :math:`f_E(t,y)`. 
+   the ODE system.  It is not required, since accuracy-based
+   adaptivity may be sufficient for retaining stability, but this can
+   be quite useful for problems where the explicit right-hand side
+   function :math:`f_E(t,y)` may contain stiff terms.
 
 
 
@@ -2964,7 +2978,7 @@ Disabling inactive root warnings               :c:func:`ARKodeSetNoInactiveRootW
 
 
 
-.. c:function:: int ARKodeSetNoInactiveRootWarn(void *arkode_mem)
+.. c:function:: int ARKodeSetNoInactiveRootWarn(void* arkode_mem)
 
    Disables issuing a warning if some root function appears
    to be identically zero at the beginning of the integration.
@@ -4225,7 +4239,7 @@ re-scale the upcoming time step by the specified factor.  If a value
 
 
 
-.. c:function:: int ARKodeResize(void* arkode_mem, N_Vector ynew, realtype hscale, realtype t0, ARKVecResizeFn resize, void *resize_data)
+.. c:function:: int ARKodeResize(void* arkode_mem, N_Vector ynew, realtype hscale, realtype t0, ARKVecResizeFn resize, void* resize_data)
 
    Re-initializes ARKode with a different state vector but with
    comparable dynamical time scale.
