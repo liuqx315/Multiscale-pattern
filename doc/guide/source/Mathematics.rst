@@ -47,7 +47,7 @@ ARKode may be used to solve stiff, nonstiff and multi-rate problems.
 Roughly speaking, stiffness is characterized by the presence of at
 least one rapidly damped mode, whose time constant is small compared
 to the time scale of the solution itself.  In the implicit/explicit
-(IMEX) splitting above, these stiff components should be included in
+(ImEx) splitting above, these stiff components should be included in
 the right-hand side function :math:`f_I(t,y)`.
 
 In the sub-sections that follow, we elaborate on the numerical
@@ -381,11 +381,13 @@ only in the following circumstances:
 * when starting the problem,
 * when more than 20 steps have been taken since the last update (this
   value may be changed via the *msbp* argument to
-  :c:func:`ARKodeSetMaxStepsBetweenLSet()`), 
+  :c:func:`ARKodeSetMaxStepsBetweenLSet()`) or the *LSETUP_MSBP*
+  argument to :f:func:`FARKSETIIN()`, 
 * when the value :math:`\bar{\gamma}` of :math:`\gamma` at the last
   update satisfies :math:`\left|\gamma/\bar{\gamma} - 1\right| > 0.2`
   (this tolerance may be changed via the *dgmax* argument to 
-  :c:func:`ARKodeSetDeltaGammaMax()`), 
+  :c:func:`ARKodeSetDeltaGammaMax()`) or the *LSETUP_DGMAX*
+  argument to :f:func:`FARKSETRIN()`, 
 * when a non-fatal convergence failure just occurred, or
 * when an error test failure just occurred.
 
@@ -427,10 +429,10 @@ Choice of norm
 In the process of controlling errors at various levels (time
 integration, nonlinear solution, linear solution), ARKode uses a
 :index:`weighted root-mean-square norm`, denoted
-:math:`\|\cdot\|_{WRMS}`, for all error-like quantities,
+:math:`\|\cdot\|_\text{WRMS}`, for all error-like quantities,
 
 .. math::
-   \|v\|_{WRMS} = \left( \frac{1}{N} \sum_{i=1}^N \left(v_i\,
+   \|v\|_\text{WRMS} = \left( \frac{1}{N} \sum_{i=1}^N \left(v_i\,
    w_i\right)^2\right)^{1/2}. 
    :label: WRMS_NORM
 
@@ -493,7 +495,8 @@ z_i^{(m)} - z_i^{(m-1)}`, if :math:`m>1` we update :math:`R_i` as
    R_i \leftarrow \max\{ 0.3 R_i, \left\|\delta^{(m)}\right\| / \left\|\delta^{(m-1)}\right\| \}.
 
 where the factor 0.3 is user-modifiable as the *crdown* input to the
-the function :c:func:`ARKodeSetNonlinCRDown()`.  
+the function :c:func:`ARKodeSetNonlinCRDown()` or the *NEWT_CRDOWN*
+argument to :f:func:`FARKSETRIN()`.  
 
 Denoting the true time step solution as :math:`y_n`, and the computed
 time step solution (computed using the stage solutions
@@ -513,19 +516,23 @@ for each stage is
 
 where the factor :math:`\epsilon` has default value 0.1, and is
 user-modifiable as the *nlscoef* input to the the function
-:c:func:`ARKodeSetNonlinConvCoef()`.  We allow at most 3 nonlinear
-iterations (this may be modified through the function 
-:c:func:`ARKodeSetMaxNonlinIters()`).  We also declare the 
-nonlinear iteration to be divergent if any of the ratios
+:c:func:`ARKodeSetNonlinConvCoef()` or the *NLCONV_COEF* input to the
+function :f:func:`FARKSETRIN()`.  We allow at most 3 nonlinear
+iterations (modifiable through :c:func:`ARKodeSetMaxNonlinIters()`, or
+as the *MAX_NSTEPS* argument to :f:func:`FARKSETIIN()`).  We also
+declare the nonlinear iteration to be divergent if any of the ratios
 :math:`\|\delta^{(m)}\| / \|\delta^{(m-1)}\| > 2.3` with :math:`m>1`
-(the value 2.3 may be modified as the *rdiv* input to the function 
-:c:func:`ARKodeSetNonlinRDiv()`).  If convergence fails in the fixed
+(the value 2.3 may be modified as the *rdiv* input to 
+:c:func:`ARKodeSetNonlinRDiv()` or the *NEWT_RDIV* input to
+:f:func:`FARKSETRIN()`).  If convergence fails in the fixed 
 point iteration, or in the Newton iteration with :math:`J` or
 :math:`{\mathcal A}` current, we must then reduce the step size by a
 factor of 0.25 (modifiable via the *etacf* input to the
-:c:func:`ARKodeSetMaxCFailGrowth()` function).  The integration  
-is halted after 10 convergence failures (modifiable via the
-:c:func:`ARKodeSetMaxConvFails()` function).
+:c:func:`ARKodeSetMaxCFailGrowth()` function or the *ADAPT_ETACF*
+input to :f:func:`FARKSETRIN()`).  The integration is halted after 10
+convergence failures (modifiable via the
+:c:func:`ARKodeSetMaxConvFails()` function or the *MAX_CONVFAIL*
+argument to :f:func:`FARKSETIIN()`).
 
 
 
@@ -551,7 +558,8 @@ the preconditioned linear residual satisfies
 
 Here :math:`\epsilon` is the same value as that used above for the
 nonlinear error control.  The value 0.05 may be modified by the user
-through the :c:func:`ARKSpilsSetEpsLin()` function.
+through the :c:func:`ARKSpilsSetEpsLin()` function; it cannot
+currently be modified from Fortran applications.
 
 
 
@@ -702,7 +710,8 @@ Here, the function :math:`p_q(t)` is identical to the one used for
 interpolation of output solution values between time steps, i.e. for
 ":index:`dense output`" of :math:`y(t)` for :math:`t_{n-1} < t < t_n`.
 The order of this polynomial, :math:`q`, may be specified by the user
-with the function :c:func:`ARKodeSetDenseOrder()`.
+with the function :c:func:`ARKodeSetDenseOrder()` or with the
+*DENSE_ORDER* argument to :f:func:`FARKSETIIN()`.
 
 The interpolants generated are either of Lagrange or Hermite form, and
 use the data :math:`\left\{ y_{n-2}, f_{n-2}, y_{n-1}, f_{n-1}
@@ -772,7 +781,7 @@ assumption that the stage times are increasing, i.e. :math:`c_j < c_k`
 for :math:`j<k`:
 
 .. math::
-   q = \max\{ q_{max} - i,\; 1 \}.
+   q = \max\{ q_\text{max} - i,\; 1 \}.
 
 
 
@@ -787,7 +796,7 @@ interpolant to use for prediction:
 
 .. math::
    q = \begin{cases}
-      q_{max}, & \text{if}\quad \tau < \tfrac12,\\
+      q_\text{max}, & \text{if}\quad \tau < \tfrac12,\\
       1, & \text{otherwise}.
    \end{cases}
 
@@ -871,7 +880,8 @@ truncation error at the step :math:`n`,
 Here, :math:`\beta>0` is an error *bias* to help account for the error
 constant :math:`D`; the default value of this is :math:`\beta = 1.5`,
 and may be modified by the user through the function
-:c:func:`ARKodeSetErrorBias()`.  
+:c:func:`ARKodeSetErrorBias()` or through the input *ADAPT_BIAS* to
+:f:func:`FARKSETRIN()`.
 
 With this LTE estimate, the local error test is simply :math:`\|T_n\|
 < 1`, where we remind that this norm includes the user-specified
@@ -884,13 +894,16 @@ using the error control algorithms described in
 :ref:`Mathematics.Adaptivity.ErrorControl`.  A new attempt at the step
 is made, and the error test is repeated.  If it fails multiple times
 (as specified through the *small_nef* input to
-:c:func:`ARKodeSetSmallNumEFails()`, which defaults to 2), then
+:c:func:`ARKodeSetSmallNumEFails()` or the *ADAPT_SMALL_NEF* argument
+to :f:func:`FARKSETIIN()`, which defaults to 2), then
 :math:`h'/h` is limited above to 0.3 (this is modifiable via the
-*etamxf* argument to :c:func:`ARKodeSetMaxEFailGrowth()`), and
+*etamxf* argument to :c:func:`ARKodeSetMaxEFailGrowth()` or the
+*ADAPT_ETAMXF* argument to :f:func:`FARKSETRIN()`), and
 limited below to 0.1 after an additional step failure.  After
 seven error test failures (modifiable via the function
-:c:func:`ARKodeSetMaxErrTestFails()`), ARKode returns to the user
-with a give-up message.
+:c:func:`ARKodeSetMaxErrTestFails()` or the *MAX_ERRFAIL* argument to
+:f:func:`FARKSETIIN()`), ARKode returns to the user with a give-up
+message. 
 
 We define the step size ratio between a prospective step :math:`h'`
 and a completed step :math:`h` as :math:`\eta`, i.e.
@@ -898,12 +911,12 @@ and a completed step :math:`h` as :math:`\eta`, i.e.
 .. math::
    \eta = h' / h.
 
-This is bounded above by :math:`\eta_{max}` to ensure that step size
+This is bounded above by :math:`\eta_\text{max}` to ensure that step size
 adjustments are not overly aggressive.  This value is modified
 according to the step and history,
 
 .. math::
-   \eta_{max} = \begin{cases}
+   \eta_\text{max} = \begin{cases}
      \text{etamx1}, & \quad\text{on the first step (default is 10000)}, \\
      \text{growth}, & \quad\text{on general steps (default is 20)}, \\
      1, & \quad\text{if the previous step had an error test failure}.
@@ -911,7 +924,9 @@ according to the step and history,
 
 Here, the values of *etamx1* and *growth* may be modified by the user
 in the functions :c:func:`ARKodeSetMaxFirstGrowth()` and
-:c:func:`ARKodeSetMaxGrowth()`, respectively.
+:c:func:`ARKodeSetMaxGrowth()`, respectively, or through the inputs
+*ADAPT_ETAMX1* and *ADAPT_GROWTH* to the function
+:f:func:`FARKSETRIN()`. 
 
 A flowchart detailing how the time steps are modified at each
 iteration to ensure solver convergence and successful steps is given
@@ -937,13 +952,15 @@ seriously hindered through use of a somewhat incorrect
 when :math:`\eta \in [\eta_L, \eta_U]`.  The default values for these
 parameters are :math:`\eta_L = 1` and :math:`\eta_U = 1.5`, though
 these are modifiable through the function
-:c:func:`ARKodeSetFixedStepBounds()`. 
+:c:func:`ARKodeSetFixedStepBounds()` or through the input
+*ADAPT_BOUNDS* to the function :f:func:`FARKSETRIN()`.
 
 The user may supply external bounds on the step sizes within ARKode,
 through defining the values :math:`h_\text{min}` and :math:`h_\text{max}` with
 the functions :c:func:`ARKodeSetMinStep()` and
-:c:func:`ARKodeSetMaxStep()`, respectively.  These default to
-:math:`h_\text{min}=0` and :math:`h_\text{max}=\infty`.  
+:c:func:`ARKodeSetMaxStep()`, or through the inputs *MIN_STEP* and
+*MAX_STEP* to the function :f:func:`FARKSETRIN()`, respectively. 
+These default to :math:`h_\text{min}=0` and :math:`h_\text{max}=\infty`.  
 
 Normally, ARKode takes steps until a user-defined output value
 :math:`t = t_\text{out}` is overtaken, and then it computes
@@ -953,7 +970,8 @@ routines described in the section
 is available, where control returns to the calling program after each
 step. There are also options to force ARKode not to integrate past a
 given stopping point :math:`t = t_\text{stop}`, through the function
-:c:func:`ARKodeSetStopTime()`.  
+:c:func:`ARKodeSetStopTime()` or through the input *STOP_TIME* to
+:f:func:`FARKSETRIN()`. 
 
 
 
@@ -999,7 +1017,8 @@ derives from those found in [KC2003]_, [S1998]_, [S2003]_ and
 
 where the constants :math:`k_1`, :math:`k_2` and :math:`k_3` default
 to 0.58, 0.21 and 0.1, respectively, though each may be changed via a
-call to the function :c:func:`ARKodeSetAdaptivityMethod()`.  In this
+call to the C/C++ function :c:func:`ARKodeSetAdaptivityMethod()`, or
+to the Fortran function :f:func:`FARKSETADAPTIVITYMETHOD()`.  In this
 estimate, a floor of :math:`\varepsilon > 10^{-10}` is enforced to
 avoid division-by-zero errors.  
 
@@ -1020,10 +1039,10 @@ algorithm,
 
 Here, the default values of :math:`k_1` and :math:`k_2` default
 to 0.8 and 0.31, respectively, though they may be changed via a
-call to the function :c:func:`ARKodeSetAdaptivityMethod()`.  As with
-the previous controller, at initialization :math:`k_1 = k_2 = 1.0` and
-the floor of :math:`10^{-10}` is enforced on the local error
-estimates.  
+call to :c:func:`ARKodeSetAdaptivityMethod()` or
+:f:func:`FARKSETADAPTIVITYMETHOD()`.  As with the previous controller,
+at initialization :math:`k_1 = k_2 = 1.0` and the floor of
+:math:`10^{-10}` is enforced on the local error estimates.  
 
 
 
@@ -1041,7 +1060,8 @@ estimate,
    h' \;=\; h_n\; \varepsilon_n^{-k_1/p}.
 
 By default, :math:`k_1=1`, but that may be overridden by the user with
-the function :c:func:`ARKodeSetAdaptivityMethod()`.
+the function :c:func:`ARKodeSetAdaptivityMethod()` or the function
+:f:func:`FARKSETADAPTIVITYMETHOD()`. 
 
 
 
@@ -1065,8 +1085,8 @@ Using the notation of our earlier controllers, it has the form
    :label: expGus
 
 The default values of :math:`k_1` and :math:`k_2` are 0.367 and 0.268,
-respectively, which may be changed via the function
-:c:func:`ARKodeSetAdaptivityMethod()`.
+respectively, which may be changed bhy calling either 
+:c:func:`ARKodeSetAdaptivityMethod()` or :f:func:`FARKSETADAPTIVITYMETHOD()`.
 
 
 
@@ -1090,17 +1110,17 @@ methods was introduced in [G1994]_, and has the form
 
 The algorithm parameters default to :math:`k_1 = 0.98` and 
 :math:`k_2 = 0.95`, but may be modified by the user with
-:c:func:`ARKodeSetAdaptivityMethod()`. 
+:c:func:`ARKodeSetAdaptivityMethod()` or :f:func:`FARKSETADAPTIVITYMETHOD()`. 
 
 
 
 
 .. _Mathematics.Adaptivity.ErrorControl.ieGus:
 
-IMEX Gustafsson controller
+ImEx Gustafsson controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An IMEX version of these two preceding controllers is available in
+An ImEx version of these two preceding controllers is available in
 ARKode.  This approach computes the estimates :math:`h'_1` arising from
 equation :eq:`expGus` and the estimate :math:`h'_2` arising from
 equation :eq:`impGus`, and selects 
@@ -1112,7 +1132,8 @@ Here, equation :eq:`expGus` uses :math:`k_1` and
 :math:`k_2` with default values of 0.367 and 0.268, while equation
 :eq:`impGus` sets both parameters to the input :math:`k_3` that
 defaults to 0.95.  All three of these parameters may be modified with
-the function :c:func:`ARKodeSetAdaptivityMethod()`. 
+the C/C++ function :c:func:`ARKodeSetAdaptivityMethod()` or the
+Fortran function :f:func:`FARKSETADAPTIVITYMETHOD()`. 
 
 
 
@@ -1127,7 +1148,8 @@ adaptivity function,
 .. math::
    h' = H(y, t, h_n, h_{n-1}, h_{n-2}, \varepsilon_n, \varepsilon_{n-1}, \varepsilon_{n-2}, q, p),
 
-via a call to :c:func:`ARKodeSetAdaptivityFn()`.
+via a call to the C/C++ routine :c:func:`ARKodeSetAdaptivityFn()` or
+the Fortran routine :f:func:`FARKADAPTSET()`.
 
 
 
@@ -1138,50 +1160,54 @@ via a call to :c:func:`ARKodeSetAdaptivityFn()`.
 Explicit stability
 ======================
 
-For problems that involve an explicit component in :math:`f_E(t,y)`,
-explicit and additive Runge-Kutta methods may benefit from addition
-user-supplied information regarding the explicit stability region.
-All of the methods in ARKode utilize step adaptivity based on
-estimates of the local error.  It is often the case that such local
-error control will automatically adapt the steps such that the method
-remains stable (since unstable steps will typically exceed the error
-control tolerances).  However, for problems in which :math:`f_E(t,y)`
-includes some moderately stiff components, and especially for
-higher-order integration methods, it is quite likely that a
-significant number of attempted steps will exceed the error
-tolerances.  In these scenarios, a stability-based time step
-controller may also be useful.
+For problems that involve a nonzero explicit component,
+:math:`f_E(t,y) \ne 0`, explicit and ImEx Runge-Kutta methods may 
+benefit from addition user-supplied information regarding the explicit
+stability region.  All ARKode adaptivity methods utilize estimates of
+the local error.  It is often the case that such local error control
+will be sufficient for method stability, since unstable steps will
+typically exceed the error control tolerances.  However, for problems
+in which :math:`f_E(t,y)` includes even moderately stiff components,
+and especially for higher-order integration methods, it may occur that
+a significant number of attempted steps will exceed the error
+tolerances.  While these steps will automatically be recomputed, such
+trial-and-error may be costlier than desired.  In these scenarios, a
+stability-based time step controller may also be useful.
 
-Since the explicit stability region for any method is highly
-problem-dependent, as it results from the eigenvalues of the
+Since the explicit stability region for any method depends on the
+problem under consideration, as it results from the eigenvalues of the
 linearized operator :math:`\frac{\partial f_E}{\partial y}`,
 information on the maximum stable step size is not computed internally
-within ARKode.  However, for many applications such information is
-readily available.  For example, in an advection-diffusion calculation
+within ARKode.  However, for many problems such information is
+readily available.  For example, in an advection-diffusion calculation,
 :math:`f_I` may contain the stiff diffusive components and
 :math:`f_E` may contain the comparably nonstiff advection terms.  In
-this scenario, an explicitly stable step :math:`h_{exp}` would be
+this scenario, an explicitly stable step :math:`h_\text{exp}` would be
 predicted as one satisfying the Courant-Friedrichs-Lewy (CFL)
 stability condition,
 
 .. math::
-   |h_{exp}| < \frac{\Delta x}{|\lambda|}
+   |h_\text{exp}| < \frac{\Delta x}{|\lambda|}
 
 where :math:`\Delta x` is the spatial mesh size and :math:`\lambda` is
 the fastest advective wave speed.
 
-In the case that a user has supplied a routine to predict these
-explicitly stable step sizes (by calling the function
-:c:func:`ARKodeSetStabilityFn()`), the value :math:`|h_{exp}|` is
-compared against that resulting from the local error adaptivity,
-:math:`|h_{acc}|`, and the step used by ARKode will satisfy 
+In these scenarios, a user may supply a routine to predict this
+maximum explicitly stable step size, :math:`|h_\text{exp}|`, by calling the
+C/C++ function :c:func:`ARKodeSetStabilityFn()` or the Fortran
+function :f:func:`FARKEXPSTABSET()`.  If a value for
+:math:`|h_\text{exp}|` is supplied, it is compared against the value
+resulting from the local error controller, :math:`|h_\text{acc}|`, and
+the step used by ARKode will satisfy  
 
 .. math::
-   h' = \frac{h}{|h|}\min\{c\, |h_{exp}|,\, |h_{acc}|\},
+   h' = \frac{h}{|h|}\min\{c\, |h_\text{exp}|,\, |h_\text{acc}|\}.
 
-where the explicit stability step factor :math:`c>0` may be modified
-through the function :c:func:`ARKodeSetCFLFraction()`, and has a
-default value of :math:`1/2`.
+Here the explicit stability step factor (often called the "CFL
+factor") :math:`c>0` may be modified through the function
+:c:func:`ARKodeSetCFLFraction()` or through the input *ADAPT_CFL* to
+the function :f:func:`FARKSETRIN()`, and has a default value of
+:math:`1/2`. 
 
 
 
@@ -1191,38 +1217,40 @@ default value of :math:`1/2`.
 Mass matrix solver
 =======================
 
-Within the approach described above, there are three locations where a
+Within the algorithms described above, there are three locations where a
 linear solve of the form
 
 .. math::
    M x = b
 
-is required: in constructing the time-evolved solution :math:`y_n`, in
-estimating the local temporal truncation error, and in constructing
-predictors for the implicit solver iteration (see section
-:ref:`Mathematics.Predictors.Max`).  Specifically, to construct the
-time-evolved solution :math:`y_n` we must solve
+is required: (a) in constructing the time-evolved solution
+:math:`y_n`, (b) in estimating the local temporal truncation error,
+and (c) in constructing predictors for the implicit solver iteration
+(see section :ref:`Mathematics.Predictors.Max`).  Specifically, to
+construct the time-evolved solution :math:`y_n` from equation
+:eq:`ARK` we must solve
 
 .. math::
-   &M y_n \ = \ M y_{n-1} + h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
-                 + f_I(t_{n-1} + c_i h_n, z_i)\right), \\
+   &M y_n \ = \ M y_{n-1} + h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n,i}, z_i) 
+                 + f_I(t_{n,i}, z_i)\right), \\
    \Leftrightarrow \qquad & \\
-   &M (y_n -y_{n-1}) \ = \ h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
-                 + f_I(t_{n-1} + c_i h_n, z_i)\right), \\
+   &M (y_n -y_{n-1}) \ = \ h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n,i}, z_i) 
+                 + f_I(t_{n,i}, z_i)\right), \\
    \Leftrightarrow \qquad & \\
-   &M \nu \ = \ h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n-1} + c_i h_n, z_i) 
-                 + f_I(t_{n-1} + c_i h_n, z_i)\right),
+   &M \nu \ = \ h_n \sum_{i=0}^{s} b_i \left(f_E(t_{n,i}, z_i) 
+                 + f_I(t_{n,i}, z_i)\right),
 
 for the update :math:`\nu = y_n - y_{n-1}`.  Similarly, in computing
-the local temporal error estimate :math:`T_n` we must solve systems of
-the form 
+the local temporal error estimate :math:`T_n` from equation :eq:`LTE`
+we must solve systems of the form 
 
 .. math::
    M\, T_n = h \sum_{i=0}^{s} \left(b_i - \tilde{b}_i\right) 
-   \left(f_E(t_{n-1} + c_i h_n, z_i) + f_I(t_{n-1} + c_i h_n, z_i)\right).
+   \left(f_E(t_{n,i}, z_i) + f_I(t_{n,i}, z_i)\right).
 
-Lastly, in constructing implicit predictors of order 2 or higher, we
-must compute the derivative information :math:`f_k` from the equation
+Lastly, in constructing dense output and implicit predictors of order
+2 or higher (as in the section :ref:`Mathematics.Predictors.Max` above),
+we must compute the derivative information :math:`f_k` from the equation 
 
 .. math::
    M f_k = f_E(t_k, y_k) + f_I(t_k, y_k).
@@ -1230,14 +1258,30 @@ must compute the derivative information :math:`f_k` from the equation
 Of course, for problems in which :math:`M=I` these solves are not
 required; however for problems with non-identity :math:`M`, ARKode may
 use either an iterative linear solver or a dense linear solver, in the
-same manner as described in section :ref:`Mathematics.ARK` for solving
+same manner as described in the section :ref:`Mathematics.Linear` for solving
 the linear Newton systems.  We note that at present, the matrix
 :math:`M` may depend on time :math:`t` but must be independent of the
 solution :math:`y`, since we assume that each of the above systems are
 linear.
 
-**[Continue with documentation here]**
+At present, for DIRK and ARK problems using the Newton nonlinear
+iterations, the type of linear solver (dense, band, or iterative) for
+the Newton systems :math:`{\mathcal A}\delta = -G` must match the type
+of linear solver used for these mass-matrix systems, since :math:`M`
+is included inside :math:`{\mathcal A}`.  When direct methods (dense
+and band) are employed, the user must supply a routine to compute
+:math:`M` in either dense or band form to match the structure of
+:math:`{\mathcal A}`, using either the routine
+:c:func:`ARKDlsDenseMassFn()` or :c:func:`ARKDlsBandMassFn()`.  When
+iterative methods are used, a routine must be supplied to perform the
+mass-matrix-vector product, :math:`Mv`, through a call to the routine
+:c:func:`ARKSpilsMassTimesVecFn()`.  As with iterative solvers for the
+Newton systems, preconditioning may be applied to aid in solution of
+the mass matrix systems :math:`Mx=b`.
 
+We further note that non-identity mass matrices, :math:`M\ne I`, are
+only supported by the C and C++ ARKode interfaces, although Fortran
+support is planned for the near future.
 
 
 
@@ -1281,20 +1325,20 @@ that the values of all :math:`g_i` are nonzero at some past value of
 
 At any given time in the course of the time-stepping, after suitable
 checking and adjusting has been done, ARKode has an interval
-:math:`(t_{lo}, t_{hi}]` in which roots of the :math:`g_i(t)` are to
-be sought, such that :math:`t_{hi}` is further ahead in the direction
-of integration, and all :math:`g_i(t_{lo}) \ne 0`. The endpoint
-:math:`t_{hi}` is either :math:`t_n`, the end of the time step last
-taken, or the next requested output time :math:`t_{out}` if this comes 
-sooner. The endpoint :math:`t_{lo}` is either :math:`t_{n-1}`, or the
-last output time :math:`t_{out}` (if this occurred within the last
+:math:`(t_\text{lo}, t_\text{hi}]` in which roots of the :math:`g_i(t)` are to
+be sought, such that :math:`t_\text{hi}` is further ahead in the direction
+of integration, and all :math:`g_i(t_\text{lo}) \ne 0`. The endpoint
+:math:`t_\text{hi}` is either :math:`t_n`, the end of the time step last
+taken, or the next requested output time :math:`t_\text{out}` if this comes 
+sooner. The endpoint :math:`t_\text{lo}` is either :math:`t_{n-1}`, or the
+last output time :math:`t_\text{out}` (if this occurred within the last
 step), or the last root location (if a root was just located within
 this step), possibly adjusted slightly toward :math:`t_n` if an exact 
-zero was found. The algorithm checks :math:`g(t_{hi})` for zeros, and
-it checks for sign changes in :math:`(t_{lo}, t_{hi})`. If no sign
+zero was found. The algorithm checks :math:`g(t_\text{hi})` for zeros, and
+it checks for sign changes in :math:`(t_\text{lo}, t_\text{hi})`. If no sign
 changes are found, then either a root is reported (if some
-:math:`g_i(t_{hi}) = 0`) or we proceed to the next time interval
-(starting at :math:`t_{hi}`). If one or more sign changes were found,
+:math:`g_i(t_\text{hi}) = 0`) or we proceed to the next time interval
+(starting at :math:`t_\text{hi}`). If one or more sign changes were found,
 then a loop is entered to locate the root to within a rather tight
 tolerance, given by 
 
@@ -1304,36 +1348,42 @@ tolerance, given by
 Whenever sign changes are seen in two or more root functions, the one
 deemed most likely to have its root occur first is the one with the
 largest value of 
-:math:`\left|g_i(t_{hi})\right| / \left| g_i(t_{hi}) - g_i(t_{lo})\right|`, 
-corresponding to the closest to :math:`t_{lo}` of the secant method
-values. At each pass through the loop, a new value :math:`t_{mid}` is
+:math:`\left|g_i(t_\text{hi})\right| / \left| g_i(t_\text{hi}) - g_i(t_\text{lo})\right|`, 
+corresponding to the closest to :math:`t_\text{lo}` of the secant method
+values. At each pass through the loop, a new value :math:`t_\text{mid}` is
 set, strictly within the search interval, and the values of
-:math:`g_i(t_{mid})` are checked. Then either :math:`t_{lo}` or
-:math:`t_{hi}` is reset to :math:`t_{mid}` according to which
+:math:`g_i(t_\text{mid})` are checked. Then either :math:`t_\text{lo}` or
+:math:`t_\text{hi}` is reset to :math:`t_\text{mid}` according to which
 subinterval is found to have the sign change. If there is none in
-:math:`(t_{lo}, t_{mid})` but some :math:`g_i(t_{mid}) = 0`, then that
-root is reported. The loop continues until :math:`\left|t_{hi} -
-t_{lo} \right| < \tau`, and then the reported root location is
-:math:`t_{hi}`.  In the loop to locate the root of :math:`g_i(t)`, the
-formula for :math:`t_{mid}` is 
+:math:`(t_\text{lo}, t_\text{mid})` but some :math:`g_i(t_\text{mid}) = 0`, then that
+root is reported. The loop continues until :math:`\left|t_\text{hi} -
+t_\text{lo} \right| < \tau`, and then the reported root location is
+:math:`t_\text{hi}`.  In the loop to locate the root of :math:`g_i(t)`, the
+formula for :math:`t_\text{mid}` is 
 
 .. math::
-   t_{mid} = t_{hi} - 
-   \frac{g_i(t_{hi}) (t_{hi} - t_{lo})}{g_i(t_{hi}) - \alpha g_i(t_{lo})} ,
+   t_\text{mid} = t_\text{hi} - 
+   \frac{g_i(t_\text{hi}) (t_\text{hi} - t_\text{lo})}{g_i(t_\text{hi}) - \alpha g_i(t_\text{lo})} ,
 
 where :math:`\alpha` is a weight parameter. On the first two passes
-through the loop, :math:`\alpha` is set to 1, making :math:`t_{mid}`
+through the loop, :math:`\alpha` is set to 1, making :math:`t_\text{mid}`
 the secant method value. Thereafter, :math:`\alpha` is reset according
 to the side of the subinterval (low vs high, i.e. toward
-:math:`t_{lo}` vs toward :math:`t_{hi}`) in which the sign change was
+:math:`t_\text{lo}` vs toward :math:`t_\text{hi}`) in which the sign change was
 found in the previous two passes. If the two sides were opposite,
 :math:`\alpha` is set to 1. If the two sides were the same, :math:`\alpha` 
 is halved (if on the low side) or doubled (if on the high side). The
-value of :math:`t_{mid}` is closer to :math:`t_{lo}` when
-:math:`\alpha < 1` and closer to :math:`t_{hi}` when :math:`\alpha > 1`. 
-If the above value of :math:`t_{mid}` is within :math:`\tau /2` of
-:math:`t_{lo}` or :math:`t_{hi}`, it is adjusted inward, such that its
+value of :math:`t_\text{mid}` is closer to :math:`t_\text{lo}` when
+:math:`\alpha < 1` and closer to :math:`t_\text{hi}` when :math:`\alpha > 1`. 
+If the above value of :math:`t_\text{mid}` is within :math:`\tau /2` of
+:math:`t_\text{lo}` or :math:`t_\text{hi}`, it is adjusted inward, such that its
 fractional distance from the endpoint (relative to the interval size)
 is between 0.1 and 0.5 (with 0.5 being the midpoint), and the actual
 distance from the endpoint is at least :math:`\tau/2`. 
 
+Finally, we note that when running in parallel, the ARKode rootfinding
+module assumes that the entire set of root defining functions
+:math:`g_i(t,y)` is replicated on every MPI task.  Since in these
+cases the vector :math:`y` is distributed across tasks, it is the
+user's responsibility to perform any necessary inter-task
+communication to ensure that :math:`g_i(t,y)` is identical on each task.
