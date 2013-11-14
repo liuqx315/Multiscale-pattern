@@ -118,9 +118,9 @@ Error weight function
 As an alternative to providing the relative and absolute tolerances,
 the user may provide a function of type :c:func:`ARKEwtFn()` to compute a
 vector `ewt` containing the weights in the WRMS norm
-:math:`\|v\|_{WRMS} = \left(\frac{1}{n} \sum_{i=1}^n \left(ewt_i * v_i\right)^2
+:math:`\|v\|_{WRMS} = \left(\frac{1}{n} \sum_{i=1}^n \left(ewt_i\; v_i\right)^2
 \right)^{1/2}`.  These weights will be used in place of those defined
-in the section :ref:`Mathematics`.
+in the section :ref:`Mathematics.Error.Norm`.
 
 
 
@@ -143,6 +143,45 @@ in the section :ref:`Mathematics`.
    **Notes:** Allocation of memory for `ewt` is handled within ARKode.
    
    The error weight vector must have all components positive.  It is
+   the user's responsibility to perform this test and return -1 if it
+   is not satisfied.
+
+
+
+.. _CInterface.ResidualWeight:
+
+Residual weight function
+--------------------------------------
+
+As an alternative to providing the scalar or vector absolute residual
+tolerances (when the IVP units differ from the solution units), the
+user may provide a function of type :c:func:`ARKRwtFn()` to compute a 
+vector `rwt` containing the weights in the WRMS norm
+:math:`\|v\|_{WRMS} = \left(\frac{1}{n} \sum_{i=1}^n \left(rwt_i\; v_i\right)^2
+\right)^{1/2}`.  These weights will be used in place of those defined
+in the section :ref:`Mathematics.Error.Norm`.
+
+
+
+.. c:function:: typedef int (*ARKRwtFn)(N_Vector y, N_Vector rwt, void *user_data)
+
+   This function computes the WRMS residual weights for the vector
+   :math:`y`.
+   
+   **Arguments:**
+      * `y` -- the dependent variable vector at which the
+        weight vector is to be computed.
+      * `rwt` -- the output vector containing the residual weights.
+      * `user_data` -- a pointer to user data, the same as the
+        `user_data` parameter that was passed to :c:func:`ARKodeSetUserData()`.
+   
+   **Return value:** 
+   An ARKRwtFn function must return 0 if it
+   successfully set the residual weights, and -1 otherwise.
+   
+   **Notes:** Allocation of memory for `rwt` is handled within ARKode.
+   
+   The residual weight vector must have all components positive.  It is
    the user's responsibility to perform this test and return -1 if it
    is not satisfied.
 
