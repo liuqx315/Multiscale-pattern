@@ -14,30 +14,35 @@
 FARKODE optional output
 ==============================
 
-The optional inputs to FARKODE have already been described in the
-section :ref:`FInterface.OptionalInputs`.  
+We note that the optional inputs to FARKODE have already been
+described in the section :ref:`FInterface.OptionalInputs`.
+
 
 
 IOUT and ROUT arrays
 ----------------------------
 
-The optional outputs from the :c:func:`ARKode()` solver are accessed
-not through individual functions, but rather through a pair of arrays,
-IOUT (``long int`` type) of dimension at least 22, and ROUT
-(``realtype`` type) of dimension at least 6. These arrays are owned
-(and allocated) by the user and are passed as arguments to
-:f:func:`FARKMALLOC()`. 
+In the Fortran interface, the optional outputs from the
+:f:func:`FARKODE()` solver are accessed not through individual
+functions, but rather through a pair of user-allocated arrays, *IOUT*
+(having ``long int`` type) of dimension at least 22, and *ROUT*
+(having ``realtype`` type) of dimension at least 6.  These arrays must
+be allocated by the user program that calls :f:func:`FARKODE()`, that
+passes them through the Fortran interface as arguments to
+:f:func:`FARKMALLOC()`.  Following this call, :f:func:`FARKODE()` will
+modify the entries of these arrays to contain all optional output
+values provided to a Fortran user.
 
-:ref:`FInterface.IOUTTable` and
-:ref:`FInterface.ROUTTable` list the entries in these
-arrays associated with the main ARKode solver, along with the
-relevant ARKode function that is actually called to extract the
-optional output.  Similarly,
-:ref:`FInterface.DlsIOUTTable` lists the IOUT
-entries associated with the main ARKDENSE and ARKBAND direct
-linear solvers, and :ref:`FInterface.SpilsIOUTTable`
-lists the IOUT entries associated with the main ARKSPGMR,
-ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG iterative linear solvers.
+In the following tables, :ref:`FInterface.IOUTTable` and
+:ref:`FInterface.ROUTTable`, we list the entries in these
+arrays by index, naming them according to their role with the main
+ARKode solver, and list the relevant ARKode C/C++ function that is
+actually called to extract the output value.  Similarly, optional
+integer output values that are specific to the ARKDENSE and ARKBAND
+linear solvers are listed in :ref:`FInterface.DlsIOUTTable`,  while
+integer optional output values specific to the ARKSPGMR,
+ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG iterative linear solvers
+are listed in :ref:`FInterface.SpilsIOUTTable`.
 
 For more details on the optional inputs and outputs to ARKode, see
 the sections :ref:`CInterface.OptionalInputs` and
@@ -52,23 +57,23 @@ Table: Optional FARKODE integer outputs
 
 .. cssclass:: table-bordered
 
-==============  ===============  =====================================================
-IOUT Index      Optional output  ARKode function
-==============  ===============  =====================================================
+==============  ===============  =========================================================
+*IOUT* Index    Optional output  ARKode function
+==============  ===============  =========================================================
 1               LENRW            :c:func:`ARKodeGetWorkSpace()`
 2               LENIW            :c:func:`ARKodeGetWorkSpace()`
 3               NST              :c:func:`ARKodeGetNumSteps()`
 4               NST_STB          :c:func:`ARKodeGetNumExpSteps()`
 5               NST_ACC          :c:func:`ARKodeGetNumAccSteps()`
 6               NST_ATT          :c:func:`ARKodeGetNumStepAttempts()`
-7               NFE              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_E` calls)
-8               NFI              :c:func:`ARKodeGetNumRhsEvals()` (:math:`f_I` calls)
+7               NFE              :c:func:`ARKodeGetNumRhsEvals()` (num :math:`f_E` calls)
+8               NFI              :c:func:`ARKodeGetNumRhsEvals()` (num :math:`f_I` calls)
 9               NSETUPS          :c:func:`ARKodeGetNumLinSolvSetups()`
 10              NETF             :c:func:`ARKodeGetNumErrTestFails()`
 11              NNI              :c:func:`ARKodeGetNumNonlinSolvIters()`
 12              NCFN             :c:func:`ARKodeGetNumNonlinSolvConvFails()`
 13              NGE              :c:func:`ARKodeGetNumGEvals()`
-==============  ===============  =====================================================
+==============  ===============  =========================================================
 
 
 
@@ -79,16 +84,16 @@ Table: Optional FARKODE real outputs
 
 .. cssclass:: table-bordered
 
-==============  ===============  ===================================================
-ROUT Index      Optional output  ARKode function
-==============  ===============  ===================================================
+==============  ===============  ===============================================================
+*ROUT* Index    Optional output  ARKode function
+==============  ===============  ===============================================================
 1               H0U              :c:func:`ARKodeGetActualInitStep()`
 2               HU               :c:func:`ARKodeGetLastStep()`
 3               HCUR             :c:func:`ARKodeGetCurrentStep()`
 4               TCUR             :c:func:`ARKodeGetCurrentTime()`
 5               TOLSF            :c:func:`ARKodeGetTolScaleFactor()`
-6               UROUND           ``UNIT_ROUNDOFF`` (see :ref:`CInterface.DataTypes`)
-==============  ===============  ===================================================
+6               UROUND           ``UNIT_ROUNDOFF`` (see the section :ref:`CInterface.DataTypes`)
+==============  ===============  ===============================================================
 
 
 
@@ -100,7 +105,7 @@ Table: Optional ARKDENSE and ARKBAND outputs
 .. cssclass:: table-bordered
 
 ==============  ===============  ===================================================
-IOUT Index      Optional output  ARKode function
+*IOUT* Index    Optional output  ARKode function
 ==============  ===============  ===================================================
 14              LENRWLS          :c:func:`ARKDlsGetWorkSpace()`
 15              LENIWLS          :c:func:`ARKDlsGetWorkSpace()`
@@ -119,7 +124,7 @@ Table: Optional ARKSPGMR, ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG outputs
 .. cssclass:: table-bordered
 
 ==============  ===============  ===================================================
-IOUT Index      Optional output  ARKode function
+*IOUT* Index    Optional output  ARKode function
 ==============  ===============  ===================================================
 14              LENRWLS          :c:func:`ARKSpilsGetWorkSpace()`
 15              LENIWLS          :c:func:`ARKSpilsGetWorkSpace()`
@@ -134,18 +139,18 @@ IOUT Index      Optional output  ARKode function
 
 
 
+
 Additional optional output routines
 ---------------------------------------------
 
-
 In addition to the optional inputs communicated through FARKSET*
-calls and the optional outputs extracted from IOUT and ROUT,
-the following user-callable routines are available: 
+calls and the optional outputs extracted from *IOUT* and *ROUT*,
+the following user-callable routines are available.
 
-To obtain the error weight array EWT, containing the
-multiplicative error weights used the WRMS norms, the user may call
+
+To obtain the error weight array *EWT*, containing the
+multiplicative error weights used in the WRMS norms, the user may call 
 the routine :f:func:`FARKGETERRWEIGHTS()` as follows:
-
 
 
 .. f:subroutine:: FARKGETERRWEIGHTS(EWT, IER)
@@ -154,20 +159,20 @@ the routine :f:func:`FARKGETERRWEIGHTS()` as follows:
    with :c:func:`ARKodeGetErrWeights()`).
       
    **Arguments:** 
-      * EWT (``realtype``, output) -- array containing the error weight vector
-      * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+      * *EWT* (``realtype``, output) -- array containing the error
+	weight vector. 
+      * *IER*  (``int``, output) -- return flag  (0 if success,
+	:math:`\ne 0` if an error). 
       
    **Notes:**
-   The array EWT, of length NEQ if using NVECTOR_SERIAL or NLOCAL
-   if using NVECTOR_PARALLEL, must already have been declared by
-   the user.
+   The array *EWT* must have already been allocated by the user, of
+   the same size as the solution array *Y*.
 
 
 
-Similarly, to obtain the estimated local errors, following a
-successful call to :f:func:`FARKODE()`, the user may call the routine
-:f:func:`FARKGETESTLOCALERR()` as follows:
-
+Similarly, to obtain the estimated local truncation errors, following
+a successful call to :f:func:`FARKODE()`, the user may call the
+routine :f:func:`FARKGETESTLOCALERR()` as follows:
 
 
 .. f:subroutine:: FARKGETESTLOCALERR(ELE, IER)
@@ -176,11 +181,12 @@ successful call to :f:func:`FARKODE()`, the user may call the routine
    vector (interfaces with :c:func:`ARKodeGetEstLocalErrors()`).
       
    **Arguments:** 
-      * ELE (``realtype``, output) -- array with the estimated local error vector
-      * IER  (``int``, output) -- return flag  (0 if success, :math:`\ne 0` if an error)
+      * *ELE* (``realtype``, output) -- array with the estimated local
+	truncation error vector. 
+      * *IER*  (``int``, output) -- return flag  (0 if success,
+	:math:`\ne 0` if an error).
       
    **Notes:**
-   The array ELE, of length NEQ if using NVECTOR_SERIAL or NLOCAL
-   if using NVECTOR_PARALLEL, must already have been declared by
-   the user.  
+   The array *ELE* must have already been allocated by the user, of
+   the same size as the solution array *Y*.
 
