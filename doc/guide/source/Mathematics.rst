@@ -1264,14 +1264,14 @@ the linear Newton systems.  We note that at present, the matrix
 solution :math:`y`, since we assume that each of the above systems are
 linear.
 
-At present, for DIRK and ARK problems using the Newton nonlinear
-iterations, the type of linear solver (dense, band, or iterative) for
-the Newton systems :math:`{\mathcal A}\delta = -G` must match the type
-of linear solver used for these mass-matrix systems, since :math:`M`
-is included inside :math:`{\mathcal A}`.  When direct methods (dense
-and band) are employed, the user must supply a routine to compute
-:math:`M` in either dense or band form to match the structure of
-:math:`{\mathcal A}`, using either the routine
+At present, for DIRK and ARK problems using a dense or band solver for
+the Newton nonlinear iterations, the type of linear solver (dense or
+band) for the Newton systems :math:`{\mathcal A}\delta = -G` must
+match the type of linear solver used for these mass-matrix systems,
+since :math:`M` is included inside :math:`{\mathcal A}`.  When direct
+methods (dense and band) are employed, the user must supply a routine
+to compute :math:`M` in either dense or band form to match the
+structure of :math:`{\mathcal A}`, using either the routine
 :c:func:`ARKDlsDenseMassFn()` or :c:func:`ARKDlsBandMassFn()`.  When
 iterative methods are used, a routine must be supplied to perform the
 mass-matrix-vector product, :math:`Mv`, through a call to the routine

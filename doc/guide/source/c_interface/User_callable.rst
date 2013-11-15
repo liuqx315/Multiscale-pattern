@@ -704,24 +704,7 @@ must solve linear systems of the form
 
 The same solvers listed above in the section
 :ref:`CInterface.LinearSolvers` may be used for this purpose:
-DENSE, BAND, SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG.  A current
-requirement of ARKode is that the type of Newton and mass matrix
-solvers must match (dense, band or iterative).  Specifically, we allow
-the Newton and mass matrix solvers to be matched together according to
-the following table:
-
-
-.. cssclass:: table-bordered
-
-==================================  ==================================
-Newton matrix solver                Mass matrix solver
-==================================  ==================================
-DENSE (SUNDIALS or LAPACK)          DENSE (SUNDIALS or LAPACK)
-BAND (SUNDIALS or LAPACK)           BAND (SUNDIALS or LAPACK)
-SPGMR, SPBCG, SPTFQMR, SPFGMR, PCG  SPGMR, SPBCG, SPTFQMR, SPFGMR, PCG
-==================================  ==================================
-
-
+DENSE, BAND, SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG.  
 With any of the iterative solvers (SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG),
 preconditioning can be applied.  For the specification of a
 preconditioner, see the iterative linear solver portions of the sections
@@ -2097,6 +2080,11 @@ Explicit stability function                     :c:func:`ARKodeSetStabilityFn()`
 Optional inputs for implicit stage solves
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The mathematical explanation for ARKode's nonlinear solver strategies,
+including how each of the parameters below is used within the code, is
+provided in the section :ref:`Mathematics.Nonlinear`.
+
+
 .. cssclass:: table-bordered
 
 =============================================  ========================================  =========
@@ -2107,13 +2095,13 @@ Specify use of the Newton stage solver         :c:func:`ARKodeSetNewton()`      
 Specify linearly implicit :math:`f_I`          :c:func:`ARKodeSetLinear()`               ``FALSE``
 Specify nonlinearly implicit :math:`f_I`       :c:func:`ARKodeSetNonlinear()`            ``TRUE``
 Implicit predictor method                      :c:func:`ARKodeSetPredictorMethod()`      3
-Maximum no. of nonlinear iterations            :c:func:`ARKodeSetMaxNonlinIters()`       3
-Coefficient in the nonlinear convergence test  :c:func:`ARKodeSetNonlinConvCoef()`       0.2
+Maximum number of nonlinear iterations         :c:func:`ARKodeSetMaxNonlinIters()`       3
+Coefficient in the nonlinear convergence test  :c:func:`ARKodeSetNonlinConvCoef()`       0.1
 Nonlinear convergence rate constant            :c:func:`ARKodeSetNonlinCRDown()`         0.3
 Nonlinear residual divergence ratio            :c:func:`ARKodeSetNonlinRDiv()`           2.3
 Max change in step signaling new :math:`J`     :c:func:`ARKodeSetDeltaGammaMax()`        0.2
 Max steps between calls to new :math:`J`       :c:func:`ARKodeSetMaxStepsBetweenLSet()`  20
-Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`         10
+Maximum number of convergence failures         :c:func:`ARKodeSetMaxConvFails()`         10
 =============================================  ========================================  =========
 
 
@@ -2158,8 +2146,7 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** This is the default behavior of ARKode, so the function
-   ARKodeSetNewton is primarily useful to undo a previous call
-   to :c:func:`ARKodeSetFixedPoint()`. 
+   is primarily useful to undo a previous call to :c:func:`ARKodeSetFixedPoint()`.
 
 
 
@@ -2175,9 +2162,9 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** Tightens the linear solver tolerances and takes only a single
-   Newton iteration.  Only useful when used in combination with the
-   modified Newton iteration (not the fixed-point solver).
+   **Notes:** Tightens the linear solver tolerances and takes only a
+   single Newton iteration.  Only useful when used in combination with
+   the modified Newton iteration (not the fixed-point solver).
 
 
 
@@ -2194,16 +2181,13 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** This is the default behavior of ARKode, so the function
-   ARKodeSetNonlinear is primarily useful to undo a previous call
-   to :c:func:`ARKodeSetLinear()`. 
+   is primarily useful to undo a previous call to :c:func:`ARKodeSetLinear()`. 
 
 
 
 .. c:function:: int ARKodeSetPredictorMethod(void* arkode_mem, int method)
 
    Specifies the method to use for predicting implicit solutions.  
-   Non-default choices are {1,2,3,4}, all others will use default 
-   (trivial) predictor.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -2211,22 +2195,25 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
 
         * 0 is the trivial predictor, 
 
-        * 1 is the dense output predictor, 
+        * 1 is the maximum order (dense output) predictor, 
 
-	* 2 is the dense output predictor that decreases the
-	  polynomial degree for more distant RK stages, 
+	* 2 is the variable order predictor, that decreases the
+	  polynomial degree for more distant RK stages,
 
-        * 3 is the dense output predictor to max order for early RK
-	  stages, and a first-order predictor for distant RK stages, 
+        * 3 is the cutoff order predictor, that uses the maximum order
+	  for early RK stages, and a first-order predictor for distant
+	  RK stages,
 
-        * 4 is the bootstrap predictor.
+        * 4 is the bootstrap predictor, that uses a second-order
+	  predictor based on only information within the current step.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
-   **Notes:** This function is designed only for advanced ARKode usage.
+   **Notes:** The default value is 3.  If *method* is set to an
+   undefined value, the trivial predictor will be used.
 
 
 
@@ -2237,7 +2224,7 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *maxcor* -- maximum allowed solver iterations per stage :math:`(>0)`
+      * *maxcor* -- maximum allowed solver iterations per stage :math:`(>0)`.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2256,7 +2243,7 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nlscoef* -- coefficient in nonlinear solver convergence test :math:`(>0.0)`
+      * *nlscoef* -- coefficient in nonlinear solver convergence test :math:`(>0.0)`.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2270,11 +2257,11 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
 
 .. c:function:: int ARKodeSetNonlinCRDown(void* arkode_mem, realtype crdown)
 
-   Specifies the constant used in estimating the nonlinear convergence rate.
+   Specifies the constant used in estimating the nonlinear solver convergence rate.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *crdown* -- nonlinear convergence rate estimation constant (default is 0.3)
+      * *crdown* -- nonlinear convergence rate estimation constant (default is 0.3).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2293,7 +2280,7 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *rdiv* -- tolerance on nonlinear correction size ratio to
-	declare divergence (default is 2.3) 
+	declare divergence (default is 2.3).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2306,13 +2293,13 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
 
 .. c:function:: int ARKodeSetDeltaGammaMax(void* arkode_mem, realtype dgmax)
 
-   Specifies a scaled step size ratio tolerance beyond which the
+   Specifies a scaled step size ratio tolerance, beyond which the
    linear solver setup routine will be signaled.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *dgmax* -- tolerance on step size ratio change before calling
-        linear solver setup routine (default is 0.2)
+        linear solver setup routine (default is 0.2).
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2330,7 +2317,8 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *msbp* -- maximum no. of time steps between linear solver setup calls (default is 20)
+      * *msbp* -- maximum number of time steps between linear solver
+	setup calls (default is 20). 
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2344,12 +2332,13 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
 .. c:function:: int ARKodeSetMaxConvFails(void* arkode_mem, int maxncf)
 
    Specifies the maximum number of nonlinear solver
-   convergence failures permitted during one step.
+   convergence failures permitted during one step, before ARKode will
+   return with an error.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *maxncf* -- maximum allowed nonlinear solver convergence failures
-        per step :math:`(>0)`
+        per step :math:`(>0)`.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2357,11 +2346,12 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** The default value is 10; set *maxncf* :math:`\le 0`
-   to specify this default.  Upon each convergence failure,
-   ARKode will first call the Jacobian setup routine and try again;
-   if a convergence failure still occurs, the time step size is reduced
-   by the factor *etacf* (set within
-   :c:func:`ARKodeSetMaxCFailGrowth()`).
+   to specify this default.  
+
+   Upon each convergence failure, ARKode will first call the Jacobian
+   setup routine and try again (if a Newton method is used).  If a
+   convergence failure still occurs, the time step size is reduced by
+   the factor *etacf* (set within :c:func:`ARKodeSetMaxCFailGrowth()`).
 
 
 
@@ -2373,6 +2363,9 @@ Maximum no. of convergence failures            :c:func:`ARKodeSetMaxConvFails()`
 Direct linear solvers optional input functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The mathematical explanation of ARKode's dense linear solver methods
+is provided in the section :ref:`Mathematics.Linear`.
+
 
 Table: Optional inputs for ARKDLS
 """""""""""""""""""""""""""""""""""""
@@ -2383,42 +2376,38 @@ Table: Optional inputs for ARKDLS
 Optional input              Function name                     Default
 ==========================  ================================  =============
 Dense Jacobian function     :c:func:`ARKDlsSetDenseJacFn()`   ``DQ``
-Band Jacobian function      :c:func:`ARKDlsSetBandJacFn()`    ``DQ``
 Dense mass matrix function  :c:func:`ARKDlsSetDenseMassFn()`  none
+Band Jacobian function      :c:func:`ARKDlsSetBandJacFn()`    ``DQ``
 Band mass matrix function   :c:func:`ARKDlsSetBandMassFn()`   none
 ==========================  ================================  =============
 
 The ARKDENSE solver needs a function to compute a dense approximation
 to the Jacobian matrix :math:`J(t,y)`. This function must be of type
-:c:func:`ARKDlsDenseJacFn()`. The user can supply his/her own dense Jacobian
-function, or use the default internal difference quotient
-approximation that comes with the ARKDENSE solver. To specify a 
+:c:func:`ARKDlsDenseJacFn()`.  The user can supply a custom dense
+Jacobian function, or use the default internal difference quotient
+approximation that comes with the ARKDENSE solver.  To specify a 
 user-supplied Jacobian function *djac*, ARKDENSE provides the
 function :c:func:`ARKDlsSetDenseJacFn()`. The ARKDENSE solver
-passes the pointer user data to the dense Jacobian function. This
+passes the user data pointer to the dense Jacobian function. This
 allows the user to create an arbitrary structure with relevant problem
 data and access it during the execution of the user-supplied Jacobian
-function, without using global data in the program. The pointer user
-data may be specified through :c:func:`ARKodeSetUserData()`.
+function, without using global data in the program. The user
+data pointer may be specified through :c:func:`ARKodeSetUserData()`.
 
-If the ODE system involves a non-identity mass matrix, :math:`M\ne I`,
-the ARKDENSE solver needs a function to compute a dense approximation
-to the mass matrix :math:`M(t)`. This function must be of type
-:c:func:`ARKDlsDenseMassFn()`. The user must supply his/her own dense
-Jacobian function since there is no default value.  To specify this
-user-supplied Jacobian function *dmass*, ARKDENSE provides the
-function :c:func:`ARKDlsSetDenseMassFn()`. Alternatively, since the mass
-matrix systems must also be solved separately from the implicit stage
-systems, if a user chooses the ARKDENSE solver for these mass
-matrix-specific solves, then the mass matrix function will already be
-supplied to :c:func:`ARKMassDense()` or
-:c:func:`ARKMassLapackDense()`, and does not need to be specified
-again.  We note that the ARKDENSE solver passes the pointer user data
-to the dense mass matrix function. This allows the user to create an
-arbitrary structure with relevant problem data and access it during
-the execution of the user-supplied mass matrix function, without using 
-global data in the program. The pointer user data may be specified
-through :c:func:`ARKodeSetUserData()`.
+Similarly, if the ODE system involves a non-identity mass matrix,
+:math:`M\ne I`, the ARKDENSE solver needs a function to compute a
+dense approximation to the mass matrix :math:`M(t)`. If the Newton
+linear systems are solved using ARKDENSE and the mass matrix systems
+are not, then the user must supply his/her own dense mass matrix
+function, *dmass*, since there is no default value.  This function
+must be of type :c:func:`ARKDlsDenseMassFn()`, and should be set using
+the function :c:func:`ARKDlsSetDenseMassFn()`.  We note that the
+ARKDENSE solver passes the user data pointer to the dense mass matrix
+function. This allows the user to create an arbitrary structure with
+relevant problem data and access it during the execution of the
+user-supplied mass matrix function, without using global data in the
+program. The pointer user data may be specified through
+:c:func:`ARKodeSetUserData()`.
 
 
 
@@ -2437,9 +2426,7 @@ through :c:func:`ARKodeSetUserData()`.
       * *ARKDLS_LMEM_NULL* if the linear solver memory was ``NULL``
    
    **Notes:** By default, ARKDENSE uses an internal difference quotient
-   function.  
-   
-   If ``NULL`` is passed in for *djac*, this default is used.
+   function.  If ``NULL`` is passed in for *djac*, this default is used.
   
    The function type :c:func:`ARKDlsDenseJacFn()` is described in the section
    :ref:`CInterface.UserSupplied`.
@@ -2475,36 +2462,32 @@ through :c:func:`ARKodeSetUserData()`.
 
 Similarly, the ARKBAND solver needs a function to compute a banded
 approximation to the Jacobian matrix :math:`J(t,y)`. This function
-must be of type :c:func:`ARKDlsBandJacFn()`. The user can supply his/her own
-banded Jacobian approximation function, or use the default internal
-difference quotient approximation that comes with the ARKBAND
-solver. To specify a user-supplied Jacobian function *bjac*,
+must be of type :c:func:`ARKDlsBandJacFn()`. The user can supply a
+custom banded Jacobian approximation function, or use the default
+internal difference quotient approximation that comes with the ARKBAND 
+solver. To specify a user-supplied Jacobian function, *bjac*,
 ARKBAND provides the function :c:func:`ARKDlsSetBandJacFn()`. The
-ARKBAND solver passes the pointer user data to the banded Jacobian
+ARKBAND solver passes the user data pointer to the banded Jacobian
 approximation function.  This allows the user to create an arbitrary
 structure with relevant problem data and access it during the
 execution of the user-supplied Jacobian function, without using global
 data in the program. The pointer user data may be specified through
-:c:func:`ARKodeSetUserData()`. 
+:c:func:`ARKodeSetUserData()`.
 
-Moreover, if the ODE system involves a non-identity mass matrix,
-:math:`M\ne I`, the ARKBAND solver needs a function to compute a banded
-approximation to the mass matrix :math:`M(t)`. This function
-must be of type :c:func:`ARKDlsBandMassFn()`. The user must supply his/her own
-banded mass matrix approximation function, since there is no default.
-To specify this user-supplied mass matrix function *bmass*,
-ARKBAND provides the function :c:func:`ARKDlsSetBandMassFn()`. 
-Alternatively, since the mass matrix systems must also be solved
-separately from the implicit stage systems, if a user chooses the
-ARKBAND solver for these mass matrix-specific solves, then the mass
-matrix function will already be supplied to :c:func:`ARKMassBand()` or
-:c:func:`ARKMassLapackBand()`, and does not need to be specified
-again.  We note that the ARKBAND solver passes the pointer user data
-to the banded mass matrix approximation function.  This allows the
-user to create an arbitrary structure with relevant problem data and
-access it during the execution of the user-supplied mass matrix
-function, without using global data in the program. The pointer user
-data may be specified through :c:func:`ARKodeSetUserData()`. 
+Similarly, if the ODE system involves a non-identity mass matrix,
+:math:`M\ne I`, the ARKBAND solver needs a function to compute a
+band approximation to the mass matrix :math:`M(t)`. If the Newton
+linear systems are solved using ARKBAND and the mass matrix systems
+are not, then the user must supply his/her own band mass matrix
+function, *bmass*, since there is no default value.  This function
+must be of type :c:func:`ARKDlsBandMassFn()`, and should be set using
+the function :c:func:`ARKDlsSetBandMassFn()`.  We note that the
+ARKBAND solver passes the user data pointer to the band mass matrix
+function. This allows the user to create an arbitrary structure with
+relevant problem data and access it during the execution of the
+user-supplied mass matrix function, without using global data in the
+program. The pointer user data may be specified through
+:c:func:`ARKodeSetUserData()`.
 
 
 
@@ -2523,9 +2506,7 @@ data may be specified through :c:func:`ARKodeSetUserData()`.
       * *ARKDLS_LMEM_NULL* if the linear solver memory was ``NULL``
    
    **Notes:** By default, ARKBAND uses an internal difference quotient
-   function.
-   
-   If ``NULL`` is passed in for *bjac*, this default is used.
+   function.  If ``NULL`` is passed in for *bjac*, this default is used.
    
    The function type :c:func:`ARKDlsBandJacFn()` is described in the section
    :ref:`CInterface.UserSupplied`.
@@ -2552,7 +2533,7 @@ data may be specified through :c:func:`ARKodeSetUserData()`.
    :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
    :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
    :c:func:`ARKMassPcg()`. 
-   
+
    The function type :c:func:`ARKDlsBandMassFn()` is described in the section
    :ref:`CInterface.UserSupplied`.
 
@@ -2563,52 +2544,55 @@ data may be specified through :c:func:`ARKodeSetUserData()`.
 Iterative linear solvers optional input functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If any preconditioning is to be done within one of the ARKSPILS
-linear solvers, then the user must supply a preconditioner solve
-function *psolve* and specify its name in a call to
-:c:func:`ARKSpilsSetPreconditioner()`. The evaluation and preprocessing
-of any Jacobian-related data needed by the user's preconditioner solve
-function is done in the optional user-supplied function
-*psetup*. Both of these functions are fully specified in the section
-:ref:`CInterface.UserSupplied`. If used, the *psetup* function
-should also be specified in the call to
-:c:func:`ARKSpilsSetPreconditioner()`. The pointer user data received
-through :c:func:`ARKodeSetUserData()` (or a pointer to ``NULL`` if user
-data was not specified) is passed to the preconditioner *psetup* and
-*psolve* functions. This allows the user to create an arbitrary
+As described in the section :ref:`Mathematics.Linear`, when using one
+of the ARKSPILS iterative linear solvers, a user may supply a
+preconditioning operator to aid in solution of the system.  This
+operator consists of two user-supplied functions, *psetup* and
+*psolve*, that are supplied to ARKode using either the function
+:c:func:`ARKSpilsSetPreconditioner()` (for preconditioning the
+Newton system), or the function
+:c:func:`ARKSpilsSetMassPreconditioner()` (for preconditioning the
+mass matrix system).  The *psetup* function should handle evaluation
+and preprocessing of any Jacobian or mass-matrix data needed by the
+user's preconditioner solve function, *psolve*.  The user data pointer
+received through :c:func:`ARKodeSetUserData()` (or a pointer to
+``NULL`` if user data was not specified) is passed to the *psetup* and
+*psolve* functions.  This allows the user to create an arbitrary
 structure with relevant problem data and access it during the
 execution of the user-supplied preconditioner functions without using
-global data in the program. 
+global data in the program.  If preconditioning is supplied for both
+the Newton and mass matrix linear systems, it is expected that the
+user will supply different *psetup* and *psolve* function for each.
 
-The ARKSPILS solvers require a function to compute an
-approximation to the product between the Jacobian matrix
-:math:`J(t,y)` and a vector :math:`v`. The user can supply his/her own
-Jacobian-times-vector approximation function, or use the default
-internal difference quotient function that comes with the ARKSPILS
-solvers. A user-defined Jacobian-vector function must be of type
-:c:func:`ARKSpilsJacTimesVecFn()` and can be specified through a call to
-:c:func:`ARKSpilsSetJacTimesVecFn()` (see the section
-:ref:`CInterface.UserSupplied` for specification details). As with the
+Additionally, when solving the Newton linear systems, the ARKSPILS
+solvers require a *jtimes* function to compute an approximation to the
+product between the Jacobian matrix :math:`J(t,y)` and a vector
+:math:`v`. The user can supply a custom Jacobian-times-vector
+approximation function, or use the default internal difference
+quotient function that comes with the ARKSPILS solvers.  A
+user-defined Jacobian-vector function must be of type
+:c:func:`ARKSpilsJacTimesVecFn()` and can be specified through a call
+to :c:func:`ARKSpilsSetJacTimesVecFn()` (see the section
+:ref:`CInterface.UserSupplied` for specification details).  As with the
 preconditioner user-supplied functions, a pointer to the user-defined
 data structure, *user_data*, specified through
-:c:func:`ARKodeSetUserData()` (or a ``NULL`` pointer otherwise) is
+:c:func:`ARKodeSetUserData()` (or a ``NULL`` pointer otherwise) is 
 passed to the Jacobian-times-vector function *jtimes* each time it
 is called.
 
 Similarly, if a problem involves a non-identity mass matrix,
-:math:`M\ne I`, then the ARKSPILS solvers require a function to
-compute an approximation to the product between the mass matrix
-:math:`M(t)` and a vector :math:`v`.  This function must be
-user-supplied, and must be of type :c:func:`ARKSpilsMassTimesVecFn()`,
-and can be specified through a call to 
-:c:func:`ARKSpilsSetMassTimesVecFn()`.  Alternatively, since the mass
-matrix systems must also be solved separately from the implicit stage
-systems, if a user chooses an ARKSPILS solver for these mass matrix
-systems then the mass matrix vector product function must be supplied
-when setting up that linear solver module in any of the functions
+:math:`M\ne I`, then the ARKSPILS solvers require a *mtimes* function
+to compute an approximation to the product between the mass matrix
+:math:`M(t)` and a vector :math:`v`.  This function must be 
+user-supplied, since there is no default value.  *mtimes* must be 
+of type :c:func:`ARKSpilsMassTimesVecFn()`.  and can be specified
+through a call to  :c:func:`ARKSpilsSetMassTimesVecFn()`.
+If an ARKSPILS solver is also used for the mass matrix linear systems,
+then the *mtimes* function will already be provided in the call to 
 :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
 :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassPcg()` or
-:c:func:`ARKMassSpfgmr()`. 
+:c:func:`ARKMassSpfgmr()`, so it does not need to be supplied a second
+time.
 
 
 .. _CInterface.ARKSpilsInputTable:
@@ -2618,27 +2602,28 @@ Table: Optional inputs for ARKSPILS
 
 .. cssclass:: table-bordered
 
-==============================================  =========================================  ==================
-Optional input                                  Function name                              Default
-==============================================  =========================================  ==================
-Jacobian-times-vector function                  :c:func:`ARKSpilsSetJacTimesVecFn()`       ``DQ``
-Mass matrix-times-vector function               :c:func:`ARKSpilsSetMassTimesVecFn()`      none
-Maximum Krylov subspace size *(b)*              :c:func:`ARKSpilsSetMaxl()`                5
-Max mass matrix Krylov subspace size *(b)*      :c:func:`ARKSpilsSetMassMaxl()`            5
-Type of Gram-Schmidt orthogonalization *(a)*    :c:func:`ARKSpilsSetGSType()`              classical GS
-Type of mass matrix Gram-Schmidt orthog. *(a)*  :c:func:`ARKSpilsSetMassGSType()`          classical GS
-Preconditioning type                            :c:func:`ARKSpilsSetPrecType()`            none
-Mass matrix preconditioning type                :c:func:`ARKSpilsSetMassPrecType()`        none
-Preconditioner functions                        :c:func:`ARKSpilsSetPreconditioner()`      ``NULL``, ``NULL``
-Mass matrix preconditioner functions            :c:func:`ARKSpilsSetMassPreconditioner()`  ``NULL``, ``NULL``
-Ratio between linear and nonlinear tolerances   :c:func:`ARKSpilsSetEpsLin()`              0.05
-Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()`          0.05
-==============================================  =========================================  ==================
+==================================================  =========================================  ==================
+Optional input                                      Function name                              Default
+==================================================  =========================================  ==================
+:math:`Jv` function (*jtimes*)                      :c:func:`ARKSpilsSetJacTimesVecFn()`       ``DQ``
+Newton linear and nonlinear tolerance ratio         :c:func:`ARKSpilsSetEpsLin()`              0.05
+Newton Krylov subspace size *(a)*                   :c:func:`ARKSpilsSetMaxl()`                5
+Newton Gram-Schmidt orthogonalization type *(b)*    :c:func:`ARKSpilsSetGSType()`              classical GS
+Newton preconditioning functions                    :c:func:`ARKSpilsSetPreconditioner()`      ``NULL``, ``NULL``
+Newton preconditioning type                         :c:func:`ARKSpilsSetPrecType()`            none
+:math:`Mv` function (*mtimes*)                      :c:func:`ARKSpilsSetMassTimesVecFn()`      none
+Mass matrix linear and nonlinear tolerance ratio    :c:func:`ARKSpilsSetMassEpsLin()`          0.05
+Mass matrix Krylov subspace size *(a)*              :c:func:`ARKSpilsSetMassMaxl()`            5
+Mass matrix Gram-Schmidt orthog. type *(b)*         :c:func:`ARKSpilsSetMassGSType()`          classical GS
+Mass matrix preconditioning functions               :c:func:`ARKSpilsSetMassPreconditioner()`  ``NULL``, ``NULL``
+Mass matrix preconditioning type                    :c:func:`ARKSpilsSetMassPrecType()`        none
+==================================================  =========================================  ==================
 
 
-*(a)* Only for ARKSPGMR and ARKSPFGMR
+*(a)* Only for ARKSPBCG, ARMSPTFQMR and ARKPCG
 
-*(b)* Only for ARKSPBCG, ARMSPTFQMR and ARKPCG
+*(b)* Only for ARKSPGMR and ARKSPFGMR
+
 
 
 
@@ -2657,46 +2642,38 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
 
    **Notes:** The default is to use an internal finite difference
-   approximation routine.  If ``NULL`` is passed to *jtimes*, this
-   default function is used.
+   quotient.  If ``NULL`` is passed to *jtimes*, this default function is used.
    
    The function type :c:func:`ARKSpilsJacTimesVecFn()` is described in the
    section :ref:`CInterface.UserSupplied`.
 
 
 
-.. c:function:: int ARKSpilsSetMassTimesVecFn(void* arkode_mem, ARKSpilsMassTimesVecFn mtimes)
+.. c:function:: int ARKSpilsSetEpsLin(void* arkode_mem, realtype eplifac)
 
-   Specifies the mass matrix-times-vector function. 
+   Specifies the factor by which the tolerance on the nonlinear
+   iteration is multiplied to get a tolerance on the linear
+   iteration. 
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *mtimes* -- user-defined mass matrix-vector product function.
+      * *eplifac* -- linear convergence safety factor :math:`(\ge 0.0)`.
    
    **Return value:** 
       * *ARKSPILS_SUCCESS* if successful.
       * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
-      * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
-
-   **Notes:** This function must be called *after* the mass matrix
-   solver has been initialized, through a call to one of
-   :c:func:`ARKMassDense()`, :c:func:`ARKMassLapackDense()`,
-   :c:func:`ARKMassBand()`, :c:func:`ARKMassLapackBand()`,
-   :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
-   :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
-   :c:func:`ARKMassPcg()`. 
    
-   The function type :c:func:`ARKSpilsMassTimesVecFn()` is described
-   in the section :ref:`CInterface.UserSupplied`.
+   **Notes:** Passing a value *eplifac* of 0.0 indicates to use the default value of 0.05.
 
 
 
 .. c:function:: int ARKSpilsSetMaxl(void* arkode_mem, int maxl)
 
-   Resets the maximum Krylov subspace size, *maxl*, from
-   the value previously set, when using the Bi-CGStab, TFQMR or PCG linear
-   solver methods.
+   Resets the maximum Krylov subspace size, *maxl*, from the value
+   previously set, when using the Bi-CGStab, TFQMR or PCG linear
+   solver methods. 
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
@@ -2708,35 +2685,7 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
       * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** The maximum subspace dimension is initially specified in the
-   call to the linear solver specification function (see the section
-   :ref:`CInterface.LinearSolvers`).  This function call is needed
-   only if *maxl* is being changed from its previous value.
-  
-   An input value *maxl* :math:`\le 0`, gives the default value, 5.
-   
-   This option is available only for the ARKSPBCG, ARKSPTFQMR and
-   ARKPCG linear solvers. 
-
-
-
-.. c:function:: int ARKSpilsSetMassMaxl(void* arkode_mem, int maxl)
-
-   Resets the maximum mass matrix Krylov subspace size, *maxl*, from
-   the value previously set, when using the Bi-CGStab, TFQMR or PCG linear
-   solver methods.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *maxl* -- maximum dimension of the mass matrix Krylov subspace.
-   
-   **Return value:** 
-      * *ARKSPILS_SUCCESS* if successful.
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
-      * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
-      * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
-   
-   **Notes:** The maximum subspace dimension is initially specified in the
+   **Notes:** The maximum subspace dimension is initially set in the
    call to the linear solver specification function (see the section
    :ref:`CInterface.LinearSolvers`).  This function call is needed
    only if *maxl* is being changed from its previous value.
@@ -2767,37 +2716,35 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
       * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** The default value is MODIFIED_GS.
+   **Notes:** The default value is *MODIFIED_GS*.
    
    This option is available only for the ARKSPGMR and ARKSPFGMR linear
    solvers. 
 
 
 
-.. c:function:: int ARKSpilsSetMassGSType(void* arkode_mem, int gstype)
+.. c:function:: int ARKSpilsSetPreconditioner(void* arkode_mem, ARKSpilsPrecSetupFn psetup, ARKSpilsPrecSolveFn psolve)
 
-   Specifies the type of Gram-Schmidt orthogonalization to
-   be used with the ARKSPGMR or ARKSPFGMR linear mass matrix
-   solvers. This must be one of the two enumeration constants
-   *MODIFIED_GS* or *CLASSICAL_GS* defined in ``sundials_iterative.h``
-   (already included by ``arkode_spgmr.h`` and
-   ``arkode_spfgmr.h``). These correspond to using modified
-   Gram-Schmidt and classical Gram-Schmidt, respectively. 
+   Specifies the user-supplied preconditioner setup and solve functions.  
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *gstype* -- type of Gram-Schmidt orthogonalization.
+      * *psetup* -- user defined preconditioner setup function.  Pass
+        ``NULL`` if no setup is needed.
+      * *psolve* -- user-defined preconditioner solve function.
    
    **Return value:** 
       * *ARKSPILS_SUCCESS* if successful.
       * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
-      * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** The default value is MODIFIED_GS.
-   
-   This option is available only for the ARKSPGMR and ARKSPFGMR linear
-   solvers. 
+   **Notes:** The default is ``NULL`` for both arguments (i.e. no
+   preconditioning).
+
+   Both of the function types :c:func:`ARKSpilsPrecSetupFn()` and
+   :c:func:`ARKSpilsPrecSolveFn()` are described in the section
+   :ref:`CInterface.UserSupplied`. 
 
 
 
@@ -2823,14 +2770,44 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
 
 
 
-.. c:function:: int ARKSpilsSetMassPrecType(void* arkode_mem, int pretype)
+.. c:function:: int ARKSpilsSetMassTimesVecFn(void* arkode_mem, ARKSpilsMassTimesVecFn mtimes)
 
-   Resets the type of mass matrix preconditioner, *pretype*, from the value previously set.
+   Specifies the mass matrix-times-vector function. 
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *pretype* -- the type of preconditioning to use, must be one of
-        *PREC_NONE*, *PREC_LEFT*, *PREC_RIGHT* or *PREC_BOTH*. 
+      * *mtimes* -- user-defined mass matrix-vector product function.
+   
+   **Return value:** 
+      * *ARKSPILS_SUCCESS* if successful.
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
+      * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
+      * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
+
+   **Notes:** This function must be called *after* the mass matrix
+   solver has been initialized, through a call to one of
+   :c:func:`ARKMassDense()`, :c:func:`ARKMassLapackDense()`,
+   :c:func:`ARKMassBand()` or :c:func:`ARKMassLapackBand()`.  It is
+   only required if the mass matrix solver is not iterative, since
+   *mtimes* will already be supplied to one of
+   :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
+   :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
+   :c:func:`ARKMassPcg()`. 
+   
+   The function type :c:func:`ARKSpilsMassTimesVecFn()` is described
+   in the section :ref:`CInterface.UserSupplied`.
+
+
+
+.. c:function:: int ARKSpilsSetMassEpsLin(void* arkode_mem, realtype eplifac)
+
+   Specifies the factor by which the tolerance on the nonlinear
+   iteration is multiplied to get a tolerance on the mass matrix
+   linear iteration. 
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *eplifac* -- linear convergence safety factor :math:`(\ge 0.0)`.
    
    **Return value:** 
       * *ARKSPILS_SUCCESS* if successful.
@@ -2838,35 +2815,80 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
       * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** The preconditioning type is initially set in the call to
-   the mass matrix solver's specification function (see the section
-   :ref:`CInterface.LinearSolvers`).  This function call is needed
-   only if *pretype* is being changed from its original value.
+   **Notes:** This must be called *after* the iterative mass matrix
+   solver has been initialized, through a call to one of
+   :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
+   :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
+   :c:func:`ARKMassPcg()`. 
+
+   Passing a value *eplifac* of 0.0 indicates to use the default value
+   of 0.05.
+
+   
 
 
 
-.. c:function:: int ARKSpilsSetPreconditioner(void* arkode_mem, ARKSpilsPrecSetupFn psetup, ARKSpilsPrecSolveFn psolve)
+.. c:function:: int ARKSpilsSetMassMaxl(void* arkode_mem, int maxl)
 
-   Specifies the preconditioner setup and solve functions.  
+   Resets the maximum mass matrix Krylov subspace size, *maxl*, from
+   the value previously set, when using the Bi-CGStab, TFQMR or PCG linear
+   solver methods.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *psetup* -- user defined preconditioner setup function.  Pass
-        ``NULL`` if no setup is to be done.
-      * *psolve* -- user-defined preconditioner solve function.
+      * *maxl* -- maximum dimension of the mass matrix Krylov subspace.
    
    **Return value:** 
       * *ARKSPILS_SUCCESS* if successful.
       * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
+      * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** The default is ``NULL`` for both arguments (i.e. no
-   preconditioning).
-    
-   Both of the function types :c:func`ARKSpilsPrecSetupFn()` and
-   c:func:`ARKSpilsPrecSolveFn()` are described in the section
-   :ref:`CInterface.UserSupplied`. 
+   **Notes:** This must be called *after* the iterative mass matrix
+   solver has been initialized, through a call to one of
+   :c:func:`ARKMassSpbcg()`, :c:func:`ARKMassSptfqmr()` or
+   :c:func:`ARKMassPcg()`. 
+
+   The maximum subspace dimension is initially set in the
+   call to the linear mass matrix solver specification function.  This
+   function call is needed only if *maxl* is being changed from its
+   previous value.
+  
+   An input value *maxl* :math:`\le 0`, gives the default value, 5.
+   
+   This option is available only for the ARKSPBCG, ARKSPTFQMR and
+   ARKPCG linear solvers. 
+
+
+
+.. c:function:: int ARKSpilsSetMassGSType(void* arkode_mem, int gstype)
+
+   Specifies the type of Gram-Schmidt orthogonalization to
+   be used with the ARKSPGMR or ARKSPFGMR linear mass matrix
+   solvers. This must be one of the two enumeration constants
+   *MODIFIED_GS* or *CLASSICAL_GS* defined in ``sundials_iterative.h``
+   (already included by ``arkode_spgmr.h`` and
+   ``arkode_spfgmr.h``). These correspond to using modified
+   Gram-Schmidt and classical Gram-Schmidt, respectively. 
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *gstype* -- type of Gram-Schmidt orthogonalization.
+   
+   **Return value:** 
+      * *ARKSPILS_SUCCESS* if successful.
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
+      * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
+      * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
+   
+   **Notes:** This must be called *after* the iterative mass matrix
+   solver has been initialized, through a call to one of
+   :c:func:`ARKMassSpgmr()` or :c:func:`ARKMassSpfgmr()`. 
+
+   The default value is *MODIFIED_GS*.
+   
+   This option is available only for the ARKSPGMR and ARKSPFGMR linear
+   solvers. 
 
 
 
@@ -2886,43 +2908,29 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
       * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** The default is ``NULL`` for both arguments (i.e. no
+   **Notes:** This function must be called *after* the iterative mass
+   matrix solver has been initialized, through a call to one of
+   :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`, 
+   :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
+   :c:func:`ARKMassPcg()`. 
+
+   The default is ``NULL`` for both arguments (i.e. no
    preconditioning).
     
-   Both of the function types :c:func`ARKSpilsMassPrecSetupFn()` and
-   c:func:`ARKSpilsMassPrecSolveFn()` are described in the section
+   Both of the function types :c:func:`ARKSpilsMassPrecSetupFn()` and
+   :c:func:`ARKSpilsMassPrecSolveFn()` are described in the section
    :ref:`CInterface.UserSupplied`. 
 
 
 
-.. c:function:: int ARKSpilsSetEpsLin(void* arkode_mem, realtype eplifac)
+.. c:function:: int ARKSpilsSetMassPrecType(void* arkode_mem, int pretype)
 
-   Specifies the factor by which the tolerance on the
-   nonlinear iteration is multiplied to get a tolerance on the linear iteration.
+   Resets the type of mass matrix preconditioner, *pretype*, from the value previously set.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *eplifac* -- linear convergence safety factor :math:`(\ge 0.0)`.
-   
-   **Return value:** 
-      * *ARKSPILS_SUCCESS* if successful.
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``.
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``.
-      * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
-   
-   **Notes:** Passing a value *eplifac* of 0.0 indicates to use the default value of 0.05.
-
-
-
-.. c:function:: int ARKSpilsSetMassEpsLin(void* arkode_mem, realtype eplifac)
-
-   Specifies the factor by which the tolerance on the
-   nonlinear iteration is multiplied to get a tolerance on the mass
-   matrix linear iteration.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *eplifac* -- linear convergence safety factor :math:`(\ge 0.0)`.
+      * *pretype* -- the type of preconditioning to use, must be one of
+        *PREC_NONE*, *PREC_LEFT*, *PREC_RIGHT* or *PREC_BOTH*. 
    
    **Return value:** 
       * *ARKSPILS_SUCCESS* if successful.
@@ -2930,7 +2938,17 @@ Ratio between mass matrix and nonlinear tols    :c:func:`ARKSpilsSetMassEpsLin()
       * *ARKSPILS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``.
       * *ARKSPILS_ILL_INPUT* if an input has an illegal value.
    
-   **Notes:** Passing a value *eplifac* of 0.0 indicates to use the default value of 0.05.
+   **Notes:** This function must be called *after* the iterative mass
+   matrix solver has been initialized, through a call to one of
+   :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`, 
+   :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
+   :c:func:`ARKMassPcg()`. 
+
+   The preconditioning type is initially set in the call to
+   the mass matrix solver's specification function.  This function
+   call is needed only if *pretype* is being changed from its original
+   value. 
+
 
 
 
@@ -2940,33 +2958,34 @@ Rootfinding optional input functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following functions can be called to set optional inputs to
-control the rootfinding algorithm.
+control the rootfinding algorithm, the mathematics of which are
+described in the section :ref:`Mathematics.Rootfinding`.
+
 
 .. cssclass:: table-bordered
 
-=============================================  =======================================  ==================
-Optional input                                 Function name                            Default
-=============================================  =======================================  ==================
-Direction of zero-crossings to monitor         :c:func:`ARKodeSetRootDirection()`       both
-Disabling inactive root warnings               :c:func:`ARKodeSetNoInactiveRootWarn()`  warning
-=============================================  =======================================  ==================
+======================================  =======================================  ==================
+Optional input                          Function name                            Default
+======================================  =======================================  ==================
+Direction of zero-crossings to monitor  :c:func:`ARKodeSetRootDirection()`       both
+Disable inactive root warnings          :c:func:`ARKodeSetNoInactiveRootWarn()`  enabled
+======================================  =======================================  ==================
 
 
 
-.. c:function:: int ARKodeSetRootDirection(void* arkode_mem, int *rootdir)
+.. c:function:: int ARKodeSetRootDirection(void* arkode_mem, int* rootdir)
 
-   Specifies the direction of zero-crossings to be located
-   and returned.
+   Specifies the direction of zero-crossings to be located and returned.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *rootdir* -- state array of length *nrtfn*, the number of root
         functions :math:`g_i`, as specified in the call to the function
-        :c:func:`ARKodeRootInit()`. A value of 0 for ``rootdir[i]``
-        indicates that crossing in either direction for :math:`g_i` should
-        be reported.  A value of +1 or -1 indicates that the solver should
-        report only zero-crossings where :math:`g_i` is increasing or
-        decreasing, respectively.
+        :c:func:`ARKodeRootInit()`.  If ``rootdir[i] == 0`` then
+	crossing in either direction for :math:`g_i` should be
+	reported.  A value of +1 or -1 indicates that the solver
+	should report only zero-crossings where :math:`g_i` is
+	increasing or decreasing, respectively.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -2994,8 +3013,8 @@ Disabling inactive root warnings               :c:func:`ARKodeSetNoInactiveRootW
    possible zero-crossing (assuming that one or more components
    :math:`g_i` are zero at the initial time).  However, if it appears
    that some :math:`g_i` is identically zero at the initial time
-   (i.e., :math:`g_i` is zero at the initial time and after the first
-   step), ARKode will issue a warning which can be disabled with
+   (i.e., :math:`g_i` is zero at the initial time *and* after the
+   first step), ARKode will issue a warning which can be disabled with
    this optional input function. 
 
 
@@ -3009,45 +3028,49 @@ Interpolated output function
 
 An optional function :c:func:`ARKodeGetDky()` is available to obtain
 additional output values.  This function should only be called after a
-successful return from :c:func:`ARKode()` as it provides interpolated
+successful return from :c:func:`ARKode()`, as it provides interpolated
 values either of :math:`y` or of its derivatives (up to the 3rd
 derivative) interpolated to any value of :math:`t` in the last
-internal step taken by :c:func:`ARKode()`. 
+internal step taken by :c:func:`ARKode()`.  Internally, this *dense
+output* algorithm is identical to the algorithm used for the maximum
+order implicit predictors, described in the section
+:ref:`Mathematics.Predictors.Max`, except that derivatives of the
+polynomial model may be evaluated upon request.
 
 
 
 .. c:function:: int ARKodeGetDky(void* arkode_mem, realtype t, int k, N_Vector dky)
 
-   Computes the `k`-th derivative of the function
-   :math:`y` at the time *t*, i.e. :math:`\frac{d^(k)y}{dt^(k)}`,
-   where :math:`t_n-h_n \le t \le t_n`, :math:`t_n` denotes the
-   current internal time reached, and :math:`h_n` is the last internal
-   step size successfully used by the solver.  The user may request
-   *k* in the range 0,1,2,3.  This routine uses an interpolating
-   polynomial of degree *max(dord, k)*, where *dord* is the
-   argument provided to :c:func:`ARKodeSetDenseOrder()`, i.e. it will
-   form a polynomial of the degree requested by the user through
-   *dord*, unless higher-order derivatives are requested.
+   Computes the *k*-th derivative of the function
+   :math:`y` at the time *t*,
+   i.e. :math:`\frac{d^{(k)}}{dt^{(k)}}y(t)`, for values of the
+   independent variable satisfying :math:`t_n-h_n \le t \le t_n`, with
+   :math:`t_n` as current internal time reached, and :math:`h_n` is
+   the last internal step size successfully used by the solver.  The
+   user may request *k* in the range {0,1,2,3}.  This routine uses an
+   interpolating polynomial of degree *max(dord, k)*, where *dord* is the
+   argument provided to :c:func:`ARKodeSetDenseOrder()`.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *t* -- the value of the independent variable at which the
-        derivative is to be evaluated
-      * *k* -- the derivative order requested
-      * *dky* -- vector containing the derivative.  This vector must be
-        allocated by the user.
+        derivative is to be evaluated.
+      * *k* -- the derivative order requested.
+      * *dky* -- output vector (must be allocated by the user).
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
-      * *ARK_BAD_K* if *k* is not in the range 0,1,2,3.
+      * *ARK_BAD_K* if *k* is not in the range {0,1,2,3}.
       * *ARK_BAD_T* if *t* is not in the interval :math:`[t_n-h_n, t_n]`
-      * *ARK_BAD_DKY* if the *dky* argument was ``NULL``
+      * *ARK_BAD_DKY* if the *dky* vector was ``NULL``
       * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
    
    **Notes:** It is only legal to call this function after a successful
-   return from :c:func:`ARKode()`.  See :c:func:`ARKodeGetCurrentTime()`
-   and :c:func:`ARKodeGetLastStep()` in the next section for access to
-   :math:`t_n` and :math:`h_n`, respectively.
+   return from :c:func:`ARKode()`.  
+
+   A user may access the values :math:`t_n` and :math:`h_n` via the
+   functions :c:func:`ARKodeGetCurrentTime()` and
+   :c:func:`ARKodeGetLastStep()`, respectively.
 
 
 
@@ -3058,47 +3081,72 @@ Optional output functions
 ------------------------------
 
 ARKode provides an extensive set of functions that can be used to
-obtain solver performance information. In the tables 
-:ref:`CInterface.ARKodeOutputTable`,
-:ref:`CInterface.ARKodeRootOutputTable`,
-:ref:`CInterface.ARKDlsOutputTable` and
-:ref:`CInterface.ARKSpilsOutputTable`, we list all of the optional
-output functions in ARKode, which are then described in detail in
-the remainder of this section. 
+obtain solver performance information.  We organize these into four
+groups:
+
+1. General ARKode output routines are in the subsection
+   :ref:`CInterface.ARKodeMainOutputs`, 
+2. ARKode implicit solver output routines are in the subsection
+   :ref:`CInterface.ARKodeImplicitSolverOutputs`, 
+3. Output routines regarding root-finding results are in the subsection
+   :ref:`CInterface.ARKodeRootOutputs`, 
+4. Dense linear solver output routines are in the subsection
+   :ref:`CInterface.ARKDlsOutputs` and 
+5. Iterative linear solver output routines are in the subsection
+   :ref:`CInterface.ARKSpilsOutputs`.
+
+Following each table, we elaborate on each function.
 
 Some of the optional outputs, especially the various counters, can be
-very useful in determining how successful the :c:func:`ARKode()` solver
-is in doing its job.  For example, the counters *nsteps*,
-*nfe_evals* and *nfi_evals* provide a rough measure of the overall
-cost of a given run, and can be compared among runs with differing
-input options to suggest which set of options is most efficient.  The
-ratio *nniters*/*nsteps* measures the performance of the nonlinear
-iteration in solving the nonlinear systems at each stage; 
-typical values for this range from 1.1 to 1.8.  The ratio
-*njevals*/*nniters* (in the case of a direct linear solver), and
-the ratio *npevals*/*nniters* (in the case of an iterative linear
-solver) measure the overall degree of nonlinearity in these systems,
-and also the quality of the approximate Jacobian or preconditioner
-being used.  Thus, for example, *njevals*/*nniters* can indicate
-if a user-supplied Jacobian is inaccurate, if this ratio is larger
-than for the case of the corresponding internal Jacobian.  The ratio
-*nliters*/*nniters* measures the performance of the Krylov
-iterative linear solver, and thus (indirectly) the quality of the
-preconditioner.
+very useful in determining the efficiency of various methods inside
+the :c:func:`ARKode()` solver.  For example:
 
-Similarly, the ratio of explicit stability-limited steps to
-accuracy-limited steps can measure the quality of the ImEx splitting
-used (with a higher-quality splitting dominated by accuracy-limited
-steps). 
+* The counters *nsteps*, *nfe_evals* and *nfi_evals* provide a rough
+  measure of the overall cost of a given run, and can be compared
+  between runs with different solver options to suggest which set of
+  options is the most efficient. 
 
+* The ratio *nniters*/*nsteps* measures the performance of the
+  nonlinear iteration in solving the nonlinear systems at each stage,
+  providing a measure of the degree of nonlinearity in the problem.
+  Typical values of this for a Newton solver on a general problem
+  range from 1.1 to 1.8.
+
+* When using a Newton nonlinear solver, the ratio *njevals*/*nniters*
+  (in the case of a direct linear solver), and the ratio
+  *npevals*/*nniters* (in the case of an iterative linear solver)
+  can measure the overall degree of nonlinearity in the problem,
+  since these are updated infrequently, unless the Newton method
+  convergence slows.
+
+* When using a Newton nonlinear solver, the ratio *njevals*/*nniters*
+  (when using a direct linear solver), and the ratio
+  *nliters*/*nniters* (when using an iterative linear solver) can
+  indicate the quality of the approximate Jacobian or preconditioner being
+  used.  For example, if this ratio is larger for a user-supplied
+  Jacobian or Jacobian-vector product routine than for the
+  difference-quotient routine, it can indicate that the user-supplied
+  Jacobian is inaccurate. 
+
+* The ratio *expsteps*/*accsteps* can measure the quality of the ImEx
+  splitting used, since a higher-quality splitting will be dominated
+  by accuracy-limited steps.
+
+* The ratio *nsteps*/*step_attempts* can measure the quality of the
+  time step adaptivity algorithm, since a poor algorithm will result
+  in more failed steps, and hence a lower ratio.
+
+It is therefore recommended that users retrieve and output these
+statistics following each run, and take some time to investigate
+alternate solver options that will be more optimal for their
+particular problem of interest.
+ 
+
+
+.. _CInterface.ARKodeMainOutputs:
 
 Main solver optional output functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. _CInterface.ARKodeOutputTable:
-
-Table: Optional outputs for ARKode
-"""""""""""""""""""""""""""""""""""""""
 
 .. cssclass:: table-bordered
 
@@ -3111,8 +3159,6 @@ No. of explicit stability-limited steps              :c:func:`ARKodeGetNumExpSte
 No. of accuracy-limited steps                        :c:func:`ARKodeGetNumAccSteps()`
 No. of attempted steps                               :c:func:`ARKodeGetNumStepAttempts()`
 No. of calls to *fe* and *fi* functions              :c:func:`ARKodeGetNumRhsEvals()`
-No. of calls to linear solver setup function         :c:func:`ARKodeGetNumLinSolvSetups()`
-No. of calls to mass matrix solver                   :c:func:`ARKodeGetNumMassSolves()`
 No. of local error test failures that have occurred  :c:func:`ARKodeGetNumErrTestFails()`
 Actual initial time step size used                   :c:func:`ARKodeGetActualInitStep()`
 Step size used for the last successful step          :c:func:`ARKodeGetLastStep()`
@@ -3123,16 +3169,13 @@ Suggested factor for tolerance scaling               :c:func:`ARKodeGetTolScaleF
 Error weight vector for state variables              :c:func:`ARKodeGetErrWeights()`
 Estimated local truncation error vector              :c:func:`ARKodeGetEstLocalErrors()`
 Single accessor to many statistics at once           :c:func:`ARKodeGetIntegratorStats()`
-No. of nonlinear solver iterations                   :c:func:`ARKodeGetNumNonlinSolvIters()`
-No. of nonlinear solver convergence failures         :c:func:`ARKodeGetNumNonlinSolvConvFails()`
-Single accessor to all nonlinear solver statistics   :c:func:`ARKodeGetNonlinSolvStats()`
 Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFlagName()`
 ===================================================  ============================================ 
 
 
 
 
-.. c:function:: int ARKodeGetWorkSpace(void* arkode_mem, long int *lenrw, long int *leniw)
+.. c:function:: int ARKodeGetWorkSpace(void* arkode_mem, long int* lenrw, long int* leniw)
 
    Returns the ARKode real and integer workspace sizes.
    
@@ -3147,7 +3190,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumSteps(void* arkode_mem, long int *nsteps)
+.. c:function:: int ARKodeGetNumSteps(void* arkode_mem, long int* nsteps)
 
    Returns the cumulative number of internal steps taken by
    the solver (so far).
@@ -3162,7 +3205,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumExpSteps(void* arkode_mem, long int *expsteps)
+.. c:function:: int ARKodeGetNumExpSteps(void* arkode_mem, long int* expsteps)
 
    Returns the cumulative number of stability-limited steps
    taken by the solver (so far).
@@ -3177,7 +3220,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumAccSteps(void* arkode_mem, long int *accsteps)
+.. c:function:: int ARKodeGetNumAccSteps(void* arkode_mem, long int* accsteps)
 
    Returns the cumulative number of accuracy-limited steps
    taken by the solver (so far).
@@ -3192,7 +3235,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumStepAttempts(void* arkode_mem, long int *step_attempts)
+.. c:function:: int ARKodeGetNumStepAttempts(void* arkode_mem, long int* step_attempts)
 
    Returns the cumulative number of steps attempted by the solver (so far).
    
@@ -3206,7 +3249,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumRhsEvals(void* arkode_mem, long int *nfe_evals, long int *nfi_evals)
+.. c:function:: int ARKodeGetNumRhsEvals(void* arkode_mem, long int* nfe_evals, long int* nfi_evals)
 
    Returns the number of calls to the user's right-hand
    side functions, :math:`f_E` and :math:`f_I` (so far).
@@ -3225,43 +3268,14 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumLinSolvSetups(void* arkode_mem, long int *nlinsetups)
-
-   Returns the number of calls made to the linear solver's
-   setup routine (so far).
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nlinsetups* -- number of linear solver setup calls made.
-   
-   **Return value:**  
-      * *ARK_SUCCESS* if successful
-      * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
-
-
-
-.. c:function:: int ARKodeGetNumMassSolves(void* arkode_mem, long int *nMassSolves)
-
-   Returns the number of calls made to the mass matrix solver (so far).
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nMassSolves* -- number of mass matrix solves made.
-   
-   **Return value:**  
-      * *ARK_SUCCESS* if successful
-      * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
-
-
-
-.. c:function:: int ARKodeGetNumErrTestFails(void* arkode_mem, long int *netfails)
+.. c:function:: int ARKodeGetNumErrTestFails(void* arkode_mem, long int* netfails)
 
    Returns the number of local error test failures that
    have occured (so far).
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *netfails* -- number of error test failures
+      * *netfails* -- number of error test failures.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3269,13 +3283,13 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetActualInitStep(void* arkode_mem, realtype *hinused)
+.. c:function:: int ARKodeGetActualInitStep(void* arkode_mem, realtype* hinused)
 
    Returns the value of the integration step size used on the first step.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *hinused* -- actual value of initial step size
+      * *hinused* -- actual value of initial step size.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3291,13 +3305,14 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetLastStep(void* arkode_mem, realtype *hlast)
+.. c:function:: int ARKodeGetLastStep(void* arkode_mem, realtype* hlast)
 
-   Returns the integration step size taken on the last successful internal step.
+   Returns the integration step size taken on the last successful
+   internal step. 
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *hlast* -- step size taken on the last internal step
+      * *hlast* -- step size taken on the last internal step.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3305,13 +3320,13 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetCurrentStep(void* arkode_mem, realtype *hcur)
+.. c:function:: int ARKodeGetCurrentStep(void* arkode_mem, realtype* hcur)
 
    Returns the integration step size to be attempted on the next internal step.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *hcur* -- step size to be attempted on the next internal step
+      * *hcur* -- step size to be attempted on the next internal step.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3319,13 +3334,13 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetCurrentTime(void* arkode_mem, realtype *tcur)
+.. c:function:: int ARKodeGetCurrentTime(void* arkode_mem, realtype* tcur)
 
    Returns the current internal time reached by the solver.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *tcur* -- current internal time reached
+      * *tcur* -- current internal time reached.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3333,7 +3348,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetCurrentButcherTables(void* arkode_mem, int *s, int *q, int *p, realtype *Ai, realtype *Ae, realtype *c, realtype *b, realtype *bembed)
+.. c:function:: int ARKodeGetCurrentButcherTables(void* arkode_mem, int* s, int* q, int* p, realtype* Ai, realtype* Ae, realtype* c, realtype* b, realtype* bembed)
 
    Returns the explicit and implicit Butcher tables
    currently in use by the solver.
@@ -3355,11 +3370,11 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
    
    **Notes:**  The user must allocate space for *Ae* and *Ai* of size
    ``ARK_S_MAX*ARK_S_MAX``, and for *c*, *b* and *bembed* of size
-   ``ARK_S_MAX``. 
+   ``ARK_S_MAX`` prior to calling this function. 
 
 
 
-.. c:function:: int ARKodeGetTolScaleFactor(void* arkode_mem, realtype *tolsfac)
+.. c:function:: int ARKodeGetTolScaleFactor(void* arkode_mem, realtype* tolsfac)
 
    Returns a suggested factor by which the user's
    tolerances should be scaled when too much accuracy has been
@@ -3387,7 +3402,8 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
    
-   **Notes:** The user must allocate space for *eweight*.
+   **Notes:** The user must allocate space for *eweight*, that will be
+   filled in by this function.
 
 
 
@@ -3404,7 +3420,8 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
    
-   **Notes:**  The user must allocate space for *ele*.
+   **Notes:**  The user must allocate space for *ele*, that will be
+   filled in by this function.
    
    The values returned in *ele* are valid only if :c:func:`ARKode()`
    returned a non-negative value.
@@ -3420,7 +3437,7 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetIntegratorStats(void* arkode_mem, long int *nsteps, long int *expsteps, long int *accsteps, long int *step_attempts, long int *nfe_evals, long int *nfi_evals, long int *nlinsetups, long int *netfails, realtype *hinused, realtype *hlast, realtype *hcur, realtype *tcur)
+.. c:function:: int ARKodeGetIntegratorStats(void* arkode_mem, long int* nsteps, long int* expsteps, long int* accsteps, long int* step_attempts, long int* nfe_evals, long int* nfi_evals, long int* nlinsetups, long int* netfails, realtype* hinused, realtype* hlast, realtype* hcur, realtype* tcur)
 
    Returns many of the most useful integrator statistics in a single call.
    
@@ -3445,7 +3462,69 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumNonlinSolvIters(void* arkode_mem, long int *nniters)
+.. c:function:: char *ARKodeGetReturnFlagName(long int flag)
+
+   Returns the name of the ARKode constant corresponding to *flag*.
+   
+   **Arguments:**
+      * *flag* -- a return flag from an ARKode function.
+   
+   **Return value:**  
+   The return value is a string containing the name of
+   the corresponding constant. 
+
+
+
+.. _CInterface.ARKodeImplicitSolverOutputs:
+
+Implicit solver optional output functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. cssclass:: table-bordered
+
+===================================================  ============================================
+Optional output                                      Function name
+===================================================  ============================================
+No. of calls to linear solver setup function         :c:func:`ARKodeGetNumLinSolvSetups()`
+No. of calls to mass matrix solver                   :c:func:`ARKodeGetNumMassSolves()`
+No. of nonlinear solver iterations                   :c:func:`ARKodeGetNumNonlinSolvIters()`
+No. of nonlinear solver convergence failures         :c:func:`ARKodeGetNumNonlinSolvConvFails()`
+Single accessor to all nonlinear solver statistics   :c:func:`ARKodeGetNonlinSolvStats()`
+===================================================  ============================================ 
+
+
+
+
+.. c:function:: int ARKodeGetNumLinSolvSetups(void* arkode_mem, long int* nlinsetups)
+
+   Returns the number of calls made to the linear solver's
+   setup routine (so far).
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *nlinsetups* -- number of linear solver setup calls made.
+   
+   **Return value:**  
+      * *ARK_SUCCESS* if successful
+      * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
+
+
+
+.. c:function:: int ARKodeGetNumMassSolves(void* arkode_mem, long int* nMassSolves)
+
+   Returns the number of calls made to the mass matrix solver (so far).
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *nMassSolves* -- number of mass matrix solves made.
+   
+   **Return value:**  
+      * *ARK_SUCCESS* if successful
+      * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
+
+
+
+.. c:function:: int ARKodeGetNumNonlinSolvIters(void* arkode_mem, long int* nniters)
 
    Returns the number of nonlinear solver iterations
    performed (so far).
@@ -3460,14 +3539,14 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNumNonlinSolvConvFails(void* arkode_mem, long int *nncfails)
+.. c:function:: int ARKodeGetNumNonlinSolvConvFails(void* arkode_mem, long int* nncfails)
 
    Returns the number of nonlinear solver convergence
    failures that have occurred (so far).
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nncfails* -- number of nonlinear convergence failures
+      * *nncfails* -- number of nonlinear convergence failures.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3475,14 +3554,14 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: int ARKodeGetNonlinSolvStats(void* arkode_mem, long int *nniters, long int *nncfails)
+.. c:function:: int ARKodeGetNonlinSolvStats(void* arkode_mem, long int* nniters, long int* nncfails)
 
    Returns all of the nonlinear solver statistics in a single call.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *nniters* -- number of nonlinear iterations performed.
-      * *nncfails* -- number of nonlinear convergence failures
+      * *nncfails* -- number of nonlinear convergence failures.
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
@@ -3490,26 +3569,11 @@ Name of constant associated with a return flag       :c:func:`ARKodeGetReturnFla
 
 
 
-.. c:function:: char *ARKodeGetReturnFlagName(long int flag)
 
-   Returns the name of the ARKode constant corresponding to *flag*.
-   
-   **Arguments:**
-      * *flag* -- a return flag from an ARKode function.
-   
-   **Return value:**  
-   The return value is a string containing the name of
-   the corresponding constant. 
-
-
+.. _CInterface.ARKodeRootOutputs:
 
 Rootfinding optional output functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. _CInterface.ARKodeRootOutputTable:
-
-Table: Optional rootfinding outputs
-"""""""""""""""""""""""""""""""""""""
 
 .. cssclass:: table-bordered
 
@@ -3522,7 +3586,7 @@ No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals
 
 
 
-.. c:function:: int ARKodeGetRootInfo(void* arkode_mem, int *rootsfound)
+.. c:function:: int ARKodeGetRootInfo(void* arkode_mem, int* rootsfound)
 
    Returns an array showing which functions were found to
    have a root.
@@ -3530,14 +3594,16 @@ No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *rootsfound* -- array of length *nrtfn* with the indices of the
-        user functions :math:`g_i` found to have a root.  For :math:`i = 0 \ldots` *nrtfn*-1, 
-        ``rootsfound[i]`` is nonzero if :math:`g_i` has a root, and 0 if not.
+        user functions :math:`g_i` found to have a root.  For 
+	:math:`i = 0 \ldots` *nrtfn*-1, ``rootsfound[i]`` is nonzero
+        if :math:`g_i` has a root, and 0 if not. 
    
    **Return value:**  
       * *ARK_SUCCESS* if successful
       * *ARK_MEM_NULL* if the ARKode memory was ``NULL``
    
-   **Notes:** The user must allocate space for *rootsfound*. 
+   **Notes:** The user must allocate space for *rootsfound* prior to
+   calling this function. 
    
    For the components of :math:`g_i` for which a root was found, the
    sign of ``rootsfound[i]`` indicates the direction of
@@ -3546,7 +3612,7 @@ No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals
 
 
 
-.. c:function:: int ARKodeGetNumGEvals(void* arkode_mem, long int *ngevals)
+.. c:function:: int ARKodeGetNumGEvals(void* arkode_mem, long int* ngevals)
 
    Returns the cumulative number of calls made to the
    user's root function :math:`g`.
@@ -3562,6 +3628,8 @@ No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals
 
 
 
+.. _CInterface.ARKDlsOutputs:
+
 Direct linear solvers optional output functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -3576,18 +3644,13 @@ Linear Solver) or MLS (for Mass Linear Solver) has been added here
 (e.g. *lenrwLS*).  
 
 
-.. _CInterface.ARKDlsOutputTable:
-
-Table: Optional outputs for ARKDLS
-""""""""""""""""""""""""""""""""""""""
-
 .. cssclass:: table-bordered
 
 ===================================================  ===================================
 Optional output                                      Function name
 ===================================================  ===================================
 Size of real and integer workspaces                  :c:func:`ARKDlsGetWorkSpace()`
-Size of real and integer workspaces                  :c:func:`ARKDlsGetMassWorkSpace()`
+Size of mass real and integer workspaces             :c:func:`ARKDlsGetMassWorkSpace()`
 No. of Jacobian evaluations                          :c:func:`ARKDlsGetNumJacEvals()`
 No. of mass matrix evaluations                       :c:func:`ARKDlsGetNumMassEvals()`
 No. of `fi` calls for finite diff. Jacobian evals    :c:func:`ARKDlsGetNumRhsEvals()`
@@ -3599,7 +3662,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
     
-.. c:function:: int ARKDlsGetWorkSpace(void* arkode_mem, long int *lenrwLS, long int *leniwLS)
+.. c:function:: int ARKDlsGetWorkSpace(void* arkode_mem, long int* lenrwLS, long int* leniwLS)
 
    Returns the real and integer workspace used by the
    ARKDLS linear solver (ARKDENSE or ARKBAND).
@@ -3626,7 +3689,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 
-.. c:function:: int ARKDlsGetMassWorkSpace(void* arkode_mem, long int *lenrwMLS, long int *leniwMLS)
+.. c:function:: int ARKDlsGetMassWorkSpace(void* arkode_mem, long int* lenrwMLS, long int* leniwMLS)
 
    Returns the real and integer workspace used by the
    ARKDLS mass matrix linear solver (ARKDENSE or ARKBAND).
@@ -3653,7 +3716,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 
-.. c:function:: int ARKDlsGetNumJacEvals(void* arkode_mem, long int *njevals)
+.. c:function:: int ARKDlsGetNumJacEvals(void* arkode_mem, long int* njevals)
 
    Returns the number of calls made to the ARKDLS
    (dense or band) Jacobian approximation routine.
@@ -3669,7 +3732,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 
-.. c:function:: int ARKDlsGetNumMassEvals(void* arkode_mem, long int *nmevals)
+.. c:function:: int ARKDlsGetNumMassEvals(void* arkode_mem, long int* nmevals)
 
    Returns the number of calls made to the ARKDLS
    (dense or band) mass matrix construction routine.
@@ -3685,7 +3748,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 
-.. c:function:: int ARKDlsGetNumRhsEvals(void* arkode_mem, long int *nfevalsLS)
+.. c:function:: int ARKDlsGetNumRhsEvals(void* arkode_mem, long int* nfevalsLS)
 
    Returns the number of calls made to the user-supplied
    :math:`f_I` routine due to the finite difference (dense or band)
@@ -3701,12 +3764,12 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
       * *ARKDLS_MEM_NULL* if the ARKode memory was ``NULL``
       * *ARKDLS_LMEM_NULL* if the linear solver memory was ``NULL``
    
-   **Notes:** The value of *nfevalsLS* is incremented only if hte default
+   **Notes:** The value of *nfevalsLS* is incremented only if the default
    internal difference quotient function is used.
 
 
 
-.. c:function:: int ARKDlsGetLastFlag(void* arkode_mem, long int *lsflag)
+.. c:function:: int ARKDlsGetLastFlag(void* arkode_mem, long int* lsflag)
 
    Returns the last return value from an ARKDLS routine.
    
@@ -3720,7 +3783,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
       * *ARKDLS_LMEM_NULL* if the linear solver memory was ``NULL``
    
    **Notes:** If the ARKDENSE setup function failed
-   (i.e. :c:func:`ARKode()` returned ARK_LSETUP_FAIL), then the
+   (i.e. :c:func:`ARKode()` returned *ARK_LSETUP_FAIL*), then the
    value of *lsflag* is equal to the column index (numbered from
    one) at which a zero diagonal element was encountered during the LU
    factorization of the (dense or banded) Jacobian matrix.  For all
@@ -3728,7 +3791,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 
-.. c:function:: int ARKDlsGetLastMassFlag(void* arkode_mem, long int *mlsflag)
+.. c:function:: int ARKDlsGetLastMassFlag(void* arkode_mem, long int* mlsflag)
 
    Returns the last return value from an ARKDLS mass matrix solve routine.
    
@@ -3743,7 +3806,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
       * *ARKDLS_LMEM_NULL* if the linear solver memory was ``NULL``
    
    **Notes:** If the ARKDENSE setup function failed
-   (i.e. :c:func:`ARKode()` returned ARK_LSETUP_FAIL), then the
+   (i.e. :c:func:`ARKode()` returned *ARK_LSETUP_FAIL*), then the
    value of *lsflag* is equal to the column index (numbered from
    one) at which a zero diagonal element was encountered during the LU
    factorization of the (dense or banded) mass matrix.  For all
@@ -3765,6 +3828,7 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
 
 
 
+.. _CInterface.ARKSpilsOutputs:
 
 Iterative linear solvers optional output functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3782,30 +3846,25 @@ optional output from the main solver, a suffix LS (for Linear Solver)
 or MLS (for Mass Linear Solver) has been added here (e.g. *lenrwLS*). 
 
 
-.. _CInterface.ARKSpilsOutputTable:
-
-Table: Optional outputs for ARKSPILS
-""""""""""""""""""""""""""""""""""""""""""""
-
 .. cssclass:: table-bordered
 
 ===========================================================  ======================================== 
 Optional output                                              Function name
 ===========================================================  ========================================
 Size of real and integer workspaces                          :c:func:`ARKSpilsGetWorkSpace()`
-Size of real and integer mass matrix solve workspaces        :c:func:`ARKSpilsGetMassWorkSpace()`
 No. of preconditioner evaluations                            :c:func:`ARKSpilsGetNumPrecEvals()`
-No. of mass matrix preconditioner evaluations                :c:func:`ARKSpilsGetNumMassPrecEvals()`
 No. of preconditioner solves                                 :c:func:`ARKSpilsGetNumPrecSolves()`
-No. of mass matrix preconditioner solves                     :c:func:`ARKSpilsGetNumMassPrecSolves()`
 No. of linear iterations                                     :c:func:`ARKSpilsGetNumLinIters()`
-No. of mass matrix linear iterations                         :c:func:`ARKSpilsGetNumMassIters()`
 No. of linear convergence failures                           :c:func:`ARKSpilsGetNumConvFails()`
-No. of mass matrix solver convergence failures               :c:func:`ARKSpilsGetNumMassConvFails()`
 No. of Jacobian-vector product evaluations                   :c:func:`ARKSpilsGetNumJtimesEvals()`
-No. of mass-matrix-vector product evaluations                :c:func:`ARKSpilsGetNumMtimesEvals()`
 No. of *fi* calls for finite diff. Jacobian-vector evals.    :c:func:`ARKSpilsGetNumRhsEvals()`
 Last return from a linear solver function                    :c:func:`ARKSpilsGetLastFlag()`
+Size of real and integer mass matrix solver workspaces       :c:func:`ARKSpilsGetMassWorkSpace()`
+No. of mass matrix preconditioner evaluations                :c:func:`ARKSpilsGetNumMassPrecEvals()`
+No. of mass matrix preconditioner solves                     :c:func:`ARKSpilsGetNumMassPrecSolves()`
+No. of mass matrix linear iterations                         :c:func:`ARKSpilsGetNumMassIters()`
+No. of mass matrix solver convergence failures               :c:func:`ARKSpilsGetNumMassConvFails()`
+No. of mass-matrix-vector product evaluations                :c:func:`ARKSpilsGetNumMtimesEvals()`
 Last return from a mass matrix solver function               :c:func:`ARKSpilsGetLastMassFlag()`
 Name of constant associated with a return flag               :c:func:`ARKSpilsGetReturnFlagName()`
 ===========================================================  ========================================
@@ -3813,7 +3872,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetWorkSpace(void* arkode_mem, long int *lenrwLS, long int *leniwLS)
+.. c:function:: int ARKSpilsGetWorkSpace(void* arkode_mem, long int* lenrwLS, long int* leniwLS)
 
    Returns the global sizes of the ARKSPILS real and integer workspaces.
    
@@ -3840,7 +3899,195 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetMassWorkSpace(void* arkode_mem, long int *lenrwMLS, long int *leniwMLS)
+.. c:function:: int ARKSpilsGetNumPrecEvals(void* arkode_mem, long int* npevals)
+
+   Returns the total number of preconditioner evaluations,
+   i.e. the number of calls made to *psetup* with *jok* = ``FALSE``.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *npevals* -- the current number of calls to *psetup*.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSpilsGetNumPrecSolves(void* arkode_mem, long int* npsolves)
+
+   Returns the number of calls made to the preconditioner
+   solve function, *psolve*.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *npsolves* -- the number of calls to *psolve*.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSpilsGetNumLinIters(void* arkode_mem, long int* nliters)
+
+   Returns the cumulative number of linear iterations.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *nliters* -- the current number of linear iterations.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSpilsGetNumConvFails(void* arkode_mem, long int* nlcfails)
+
+   Returns the cumulative number of linear convergence failures.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *nlcfails* -- the current number of linear convergence failures.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSpilsGetNumJtimesEvals(void* arkode_mem, long int* njvevals)
+
+   Returns the cumulative number of calls made to the
+   Jacobian-vector function, *jtimes*.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *njvevals* -- the current number of calls to *jtimes*.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSpilsGetNumRhsEvals(void* arkode_mem, long int* nfevalsLS)
+
+   Returns the number of calls to the user-supplied implicit
+   right-hand side function :math:`f_I` for finite difference
+   Jacobian-vector product approximation. 
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *nfevalsLS* -- the number of calls to the user implicit
+        right-hand side function.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+   
+   **Notes:** The value *nfevalsLS* is incremented only if the default
+   internal difference quotient function is used.
+
+
+
+.. c:function:: int ARKSpilsGetLastFlag(void* arkode_mem, long int* lsflag)
+
+   Returns the last return value from an ARKSPILS routine.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *lsflag* -- the value of the last return flag from an
+        ARKSPILS function.
+   
+   **Return value:**  
+      * *ARKSPILS_SUCCESS* if successful
+      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
+   
+   **Notes:** If the ARKSPILS setup function failed (:c:func:`ARKode()`
+   returned *ARK_LSETUP_FAIL*), then *lsflag* will be
+   *SPGMR_PSET_FAIL_UNREC*, *SPBCG_PSET_FAIL_UNREC*,
+   *SPTFQMR_PSET_FAIL_UNREC*, *SPFGMR_PSET_FAIL_UNREC*, or
+   *PCG_PSET_FAIL_UNREC*.  
+   
+   If the ARKSPGMR solve function failed (:c:func:`ARKode()`
+   returned *ARK_LSOLVE_FAIL*), then *lsflag* contains the error
+   return flag from SpgmrSolve and will be one of:
+   *SPGMR_MEM_NULL*, indicating that the SPGMR memory is
+   ``NULL``; *SPGMR_ATIMES_FAIL_UNREC*, indicating an unrecoverable
+   failure in the :math:`J*v` function; *SPGMR_PSOLVE_FAIL_UNREC*,
+   indicating that the preconditioner solve function *psolve* failed
+   unrecoverably; *SPGMR_GS_FAIL*, indicating a failure in the
+   Gram-Schmidt procedure; or *SPGMR_QRSOL_FAIL*, indicating that
+   the matrix :math:`R` was found to be singular during the QR solve
+   phase. 
+  
+   If the ARKSPBCG solve function failed (:c:func:`ARKode()`
+   returned *ARK_LSOLVE_FAIL*), then *lsflag* contains the error
+   return flag from SpbcgSolve and will be one of:
+   *SPBCG_MEM_NULL*, indicating that the SPBCG memory is
+   ``NULL``; *SPBCG_ATIMES_FAIL_UNREC*, indicating an unrecoverable
+   failure in the :math:`J*v` function; or
+   *SPBCG_PSOLVE_FAIL_UNREC*, indicating that the preconditioner
+   solve function *psolve* failed unrecoverably. 
+   
+   If the ARKSPTFQMR solve function failed (:c:func:`ARKode()`
+   returned *ARK_LSOLVE_FAIL*), then *lsflag* contains the error
+   return flag from SptfqmrSolve and will be one of:
+   *SPTFQMR_MEM_NULL*, indicating that the SPTFQMR memory is
+   ``NULL``; *SPTFQMR_ATIMES_FAIL_UNREC*, indicating an
+   unrecoverable failure in the :math:`J*v` function; or
+   *SPTFQMR_PSOLVE_FAIL_UNREC*, indicating that the preconditioner
+   solve function *psolve* failed unrecoverably.
+
+   If the ARKSPFGMR solve function failed (:c:func:`ARKode()`
+   returned *ARK_LSOLVE_FAIL*), then *lsflag* contains the error
+   return flag from SpfgmrSolve and will be one of:
+   *SPFGMR_MEM_NULL*, indicating that the SPFGMR memory is
+   ``NULL``; *SPFGMR_ATIMES_FAIL_UNREC*, indicating an unrecoverable
+   failure in the :math:`J*v` function; *SPFGMR_PSOLVE_FAIL_UNREC*,
+   indicating that the preconditioner solve function *psolve* failed
+   unrecoverably; *SPFGMR_GS_FAIL*, indicating a failure in the
+   Gram-Schmidt procedure; or *SPFGMR_QRSOL_FAIL*, indicating that
+   the matrix :math:`R` was found to be singular during the QR solve
+   phase. 
+  
+   If the ARKPCG solve function failed (:c:func:`ARKode()`
+   returned *ARK_LSOLVE_FAIL*), then *lsflag* contains the error
+   return flag from PcgSolve and will be one of:
+   *PCG_MEM_NULL*, indicating that the PCG memory is
+   ``NULL``; *PCG_ATIMES_FAIL_UNREC*, indicating an unrecoverable
+   failure in the :math:`J*v` function; or
+   *PCG_PSOLVE_FAIL_UNREC*, indicating that the preconditioner
+   solve function *psolve* failed unrecoverably. 
+
+
+
+
+.. c:function:: char *ARKSpilsGetReturnFlagName(long int lsflag)
+
+   Returns the name of the ARKSPILS constant
+   corresponding to *lsflag*.
+   
+   **Arguments:**
+      * *lsflag* -- a return flag from an ARKSPILS function.
+   
+   **Return value:**  
+   The return value is a string containing the name of
+   the corresponding constant.
+   
+
+
+
+.. c:function:: int ARKSpilsGetMassWorkSpace(void* arkode_mem, long int* lenrwMLS, long int* leniwMLS)
 
    Returns the global sizes of the ARKSPILS real and integer workspaces.
    
@@ -3867,23 +4114,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetNumPrecEvals(void* arkode_mem, long int *npevals)
-
-   Returns the total number of preconditioner evaluations,
-   i.e. the number of calls made to *psetup* with *jok* = ``FALSE``.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *npevals* -- the current number of calls to *psetup*.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-
-
-
-.. c:function:: int ARKSpilsGetNumMassPrecEvals(void* arkode_mem, long int *nmpevals)
+.. c:function:: int ARKSpilsGetNumMassPrecEvals(void* arkode_mem, long int* nmpevals)
 
    Returns the total number of mass matrix preconditioner evaluations,
    i.e. the number of calls made to *psetup*.
@@ -3899,23 +4130,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetNumPrecSolves(void* arkode_mem, long int *npsolves)
-
-   Returns the number of calls made to the preconditioner
-   solve function, *psolve*.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *npsolves* -- the number of calls to *psolve*.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-
-
-
-.. c:function:: int ARKSpilsGetNumMassPrecSolves(void* arkode_mem, long int *nmpsolves)
+.. c:function:: int ARKSpilsGetNumMassPrecSolves(void* arkode_mem, long int* nmpsolves)
 
    Returns the number of calls made to the mass matrix preconditioner
    solve function, *psolve*.
@@ -3931,22 +4146,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetNumLinIters(void* arkode_mem, long int *nliters)
-
-   Returns the cumulative number of linear iterations.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nliters* -- the current number of linear iterations.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-
-
-
-.. c:function:: int ARKSpilsGetNumMassIters(void* arkode_mem, long int *nmiters)
+.. c:function:: int ARKSpilsGetNumMassIters(void* arkode_mem, long int* nmiters)
 
    Returns the cumulative number of mass matrix solver iterations.
    
@@ -3961,22 +4161,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetNumConvFails(void* arkode_mem, long int *nlcfails)
-
-   Returns the cumulative number of linear convergence failures.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nlcfails* -- the current number of linear convergence failures.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-
-
-
-.. c:function:: int ARKSpilsGetNumMassConvFails(void* arkode_mem, long int *nmcfails)
+.. c:function:: int ARKSpilsGetNumMassConvFails(void* arkode_mem, long int* nmcfails)
 
    Returns the cumulative number of mass matrix solver convergence failures.
    
@@ -3991,23 +4176,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetNumJtimesEvals(void* arkode_mem, long int *njvevals)
-
-   Returns the cumulative number of calls made to the
-   Jacobian-vector function, *jtimes*.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *njvevals* -- the current number of calls to *jtimes*.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-
-
-
-.. c:function:: int ARKSpilsGetNumMtimesEvals(void* arkode_mem, long int *nmvevals)
+.. c:function:: int ARKSpilsGetNumMtimesEvals(void* arkode_mem, long int* nmvevals)
 
    Returns the cumulative number of calls made to the
    mass-matrix-vector product function, *mtimes*.
@@ -4023,102 +4192,7 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: int ARKSpilsGetNumRhsEvals(void* arkode_mem, long int *nfevalsLS)
-
-   Returns the number of calls to the user-supplied
-   implicit right-hand side function :math:`f_I` for finite difference
-   Jacobian-vector product approximation.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *nfevalsLS* -- the number of calls to the user implicit
-        right-hand side function.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-   
-   **Notes:** The value *nfevalsLS* is incremented only if the default
-   ARKSpilsDQJtimes difference quotient function is used.
-
-
-
-.. c:function:: int ARKSpilsGetLastFlag(void* arkode_mem, long int *lsflag)
-
-   Returns the last return value from an ARKSPILS routine.
-   
-   **Arguments:**
-      * *arkode_mem* -- pointer to the ARKode memory block.
-      * *lsflag* -- the value of the last return flag from an
-        ARKSPILS function.
-   
-   **Return value:**  
-      * *ARKSPILS_SUCCESS* if successful
-      * *ARKSPILS_MEM_NULL* if the ARKode memory was ``NULL``
-      * *ARKSPILS_LMEM_NULL* if the linear solver memory was ``NULL``
-   
-   **Notes:** If the ARKSPILS setup function failed (:c:func:`ARKode()`
-   returned ARK_LSETUP_FAIL), then *lsflag* will be
-   SPGMR_PSET_FAIL_UNREC, SPBCG_PSET_FAIL_UNREC,
-   SPTFQMR_PSET_FAIL_UNREC, SPFGMR_PSET_FAIL_UNREC, or
-   PCG_PSET_FAIL_UNREC.  
-   
-   If the ARKSPGMR solve function failed (:c:func:`ARKode()`
-   returned ARK_LSOLVE_FAIL), then *lsflag* contains the error
-   return flag from SpgmrSolve and will be one of:
-   SPGMR_MEM_NULL, indicating that the SPGMR memory is
-   ``NULL``; SPGMR_ATIMES_FAIL_UNREC, indicating an unrecoverable
-   failure in the :math:`J*v` function; SPGMR_PSOLVE_FAIL_UNREC,
-   indicating that the preconditioner solve function *psolve* failed
-   unrecoverably; SPGMR_GS_FAIL, indicating a failure in the
-   Gram-Schmidt procedure; or SPGMR_QRSOL_FAIL, indicating that
-   the matrix :math:`R` was found to be singular during the QR solve
-   phase. 
-  
-   If the ARKSPBCG solve function failed (:c:func:`ARKode()`
-   returned ARK_LSOLVE_FAIL), then *lsflag* contains the error
-   return flag from SpbcgSolve and will be one of:
-   SPBCG_MEM_NULL, indicating that the SPBCG memory is
-   ``NULL``; SPBCG_ATIMES_FAIL_UNREC, indicating an unrecoverable
-   failure in the :math:`J*v` function; or
-   SPBCG_PSOLVE_FAIL_UNREC, indicating that the preconditioner
-   solve function *psolve* failed unrecoverably. 
-   
-   If the ARKSPTFQMR solve function failed (:c:func:`ARKode()`
-   returned ARK_LSOLVE_FAIL), then *lsflag* contains the error
-   return flag from SptfqmrSolve and will be one of:
-   SPTFQMR_MEM_NULL, indicating that the SPTFQMR memory is
-   ``NULL``; SPTFQMR_ATIMES_FAIL_UNREC, indicating an
-   unrecoverable failure in the :math:`J*v` function; or
-   SPTFQMR_PSOLVE_FAIL_UNREC, indicating that the preconditioner
-   solve function *psolve* failed unrecoverably.
-
-   If the ARKSPFGMR solve function failed (:c:func:`ARKode()`
-   returned ARK_LSOLVE_FAIL), then *lsflag* contains the error
-   return flag from SpfgmrSolve and will be one of:
-   SPFGMR_MEM_NULL, indicating that the SPFGMR memory is
-   ``NULL``; SPFGMR_ATIMES_FAIL_UNREC, indicating an unrecoverable
-   failure in the :math:`J*v` function; SPFGMR_PSOLVE_FAIL_UNREC,
-   indicating that the preconditioner solve function *psolve* failed
-   unrecoverably; SPFGMR_GS_FAIL, indicating a failure in the
-   Gram-Schmidt procedure; or SPFGMR_QRSOL_FAIL, indicating that
-   the matrix :math:`R` was found to be singular during the QR solve
-   phase. 
-  
-   If the ARKPCG solve function failed (:c:func:`ARKode()`
-   returned ARK_LSOLVE_FAIL), then *lsflag* contains the error
-   return flag from PcgSolve and will be one of:
-   PCG_MEM_NULL, indicating that the PCG memory is
-   ``NULL``; PCG_ATIMES_FAIL_UNREC, indicating an unrecoverable
-   failure in the :math:`J*v` function; or
-   PCG_PSOLVE_FAIL_UNREC, indicating that the preconditioner
-   solve function *psolve* failed unrecoverably. 
-   
-
-
-
-.. c:function:: int ARKSpilsGetLastMassFlag(void* arkode_mem, long int *msflag)
+.. c:function:: int ARKSpilsGetLastMassFlag(void* arkode_mem, long int* msflag)
 
    Returns the last return value from an ARKSPILS mass matrix solver routine.
    
@@ -4138,20 +4212,6 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 
 
 
-.. c:function:: char *ARKSpilsGetReturnFlagName(long int lsflag)
-
-   Returns the name of the ARKSPILS constant
-   corresponding to *lsflag*.
-   
-   **Arguments:**
-      * *lsflag* -- a return flag from an ARKSPILS function.
-   
-   **Return value:**  
-   The return value is a string containing the name of
-   the corresponding constant.
-
-
-
 
 
 .. _CInterface.Reinitialization:
@@ -4159,39 +4219,38 @@ Name of constant associated with a return flag               :c:func:`ARKSpilsGe
 ARKode reinitialization function
 -------------------------------------
 
-The function :c:func:`ARKodeReInit()` reinitializes the main ARKode solver
-for the solution of a problem, where a prior call to
-:c:func:`ARKodeInit()` been made. The new problem must have the same
-size as the previous one. ARKodeReInit performs the same input
-checking and initializations that :c:func:`ARKodeInit()` does, but does
-no memory allocation as it assumes that the existing internal memory
-is sufficient for the new problem. 
+The function :c:func:`ARKodeReInit()` reinitializes the main ARKode
+solver for the solution of a problem, where a prior call to
+:c:func:`ARKodeInit()` has been made. The new problem must have the
+same size as the previous one.  :c:func:`ARKodeReInit()` performs the
+same input checking and initializations that :c:func:`ARKodeInit()`
+does, but does no memory allocation as it assumes that the existing
+internal memory is sufficient for the new problem. 
 
-The use of ARKodeReInit requires that the number of Runge Kutta
-stages, denoted by *s*, be no larger for the new problem than for
-the previous problem.  This condition is automatically fulfilled if
-the method order *q* and the problem type (explicit, implicit, ImEx)
-are left unchanged.  If there are changes to the linear solver
-specifications, make the appropriate ARK*Set* calls, as described
-in the section :ref:`CInterface.LinearSolvers`.
+The use of :c:func:`ARKodeReInit()` requires that the number of Runge
+Kutta stages, denoted by *s*, be no larger for the new problem than
+for the previous problem.  This condition is automatically fulfilled
+if the method order *q* and the problem type (explicit, implicit,
+ImEx) are left unchanged.  If there are changes to the linear solver
+specifications, the user should make the appropriate ARK*Set* calls,
+as described in the section :ref:`CInterface.LinearSolvers`.
 
 
 
 .. c:function:: int ARKodeReInit(void* arkode_mem, ARKRhsFn fe, ARKRhsFn fi, realtype t0, N_Vector y0)
 
-   Provides required problem specifications and
-   reinitializes ARKode.
+   Provides required problem specifications and reinitializes ARKode.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *fe* -- the name of the C function (of type :c:func:`ARKRhsFn()`)
         defining the explicit portion of the right-hand side function in 
-        :math:`\dot{y} = f_E(t,y) + f_I(t,y)` 
+        :math:`\dot{y} = f_E(t,y) + f_I(t,y)`.
       * *fi* -- the name of the C function (of type :c:func:`ARKRhsFn()`)
         defining the implicit portion of the right-hand side function in 
-        :math:`\dot{y} = f_E(t,y) + f_I(t,y)`
-      * *t0* -- the initial value of :math:`t`
-      * *y0* -- the initial condition vector :math:`y(t_0)`
+        :math:`\dot{y} = f_E(t,y) + f_I(t,y)`.
+      * *t0* -- the initial value of :math:`t`.
+      * *y0* -- the initial condition vector :math:`y(t_0)`.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful
@@ -4211,30 +4270,31 @@ ARKode system resize function
 -------------------------------------
 
 For simulations involving changes to the number of equations and
-unknowns in the ODE system (e.g. when using spatially-adaptive finite
-elements), the ARKode integrator may be "resized" between integration
-steps, through calls to the :c:func:`ARKodeResize()` function.
-This function modifies ARKode's internal memory structures to
-use the new problem size, without destruction of the temporal
-adaptivity heuristics.  It is assumed that the dynamical time scales
-before and after the vector resize will be comparable, so that all
-time-stepping heuristics prior to calling :c:func:`ARKodeResize()`
-remain valid after the call.  If instead the dynamics should be
-re-calibrated, the ARKode memory structure should be deleted with a
-call to :c:func:`ARKodeFree()`, and re-created with calls to
-:c:func:`ARKodeCreate()` and :c:func:`ARKodeInit()`. 
+unknowns in the ODE system (e.g. when using spatially-adaptive
+PDE simulations under a method-of-lines approach), the ARKode
+integrator may be "resized" between integration steps, through calls
+to the :c:func:`ARKodeResize()` function. This function modifies
+ARKode's internal memory structures to use the new problem size,
+without destruction of the temporal adaptivity heuristics.  It is
+assumed that the dynamical time scales before and after the vector
+resize will be comparable, so that all time-stepping heuristics prior
+to calling :c:func:`ARKodeResize()` remain valid after the call.  If
+instead the dynamics should be recomputed from scratch, the ARKode
+memory structure should be deleted with a call to
+:c:func:`ARKodeFree()`, and recreated with calls to
+:c:func:`ARKodeCreate()` and :c:func:`ARKodeInit()`.  
 
-To aid in the vector-resize operation, the user can supply a vector
+To aid in the vector resize operation, the user can supply a vector
 resize function that will take as input a vector with the previous
 size, and transform it in-place to return a corresponding vector of
 the new size.  If this function (of type :c:func:`ARKVecResizeFn()`)
 is not supplied (i.e. is set to ``NULL``), then all existing vectors
-internal to ARKode will be destroyed and re-cloned from the input
+internal to ARKode will be destroyed and re-cloned from the new input
 vector. 
 
 In the case that the dynamical time scale should be modified slightly
 from the previous time scale, an input *hscale* is allowed, that will
-re-scale the upcoming time step by the specified factor.  If a value
+rescale the upcoming time step by the specified factor.  If a value
 *hscale* :math:`\le 0` is specified, the default of 1.0 will be used.
 
 
@@ -4249,7 +4309,7 @@ re-scale the upcoming time step by the specified factor.  If a value
       * *ynew* -- the newly-sized solution vector, holding the current
 	dependent variable values :math:`y(t_0)`. 
       * *hscale* -- the desired scaling factor for the dynamical time
-	scale (i.e. the next step will be of size *h\*hscale*)
+	scale (i.e. the next step will be of size *h\*hscale*).
       * *t0* -- the current value of the independent variable
 	:math:`t_0` (this must be consistent with *ynew*.
       * *resize* -- the user-supplied vector resize function (of type
@@ -4267,6 +4327,7 @@ re-scale the upcoming time step by the specified factor.  If a value
    message to the error handler function.
 
 
+
 Resizing the linear solver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4282,7 +4343,7 @@ destroy the solver-specific memory prior to re-allocation.
 If any user-supplied routines are provided to aid the linear solver
 (e.g. Jacobian construction, Jacobian-vector product,
 mass-matrix-vector product, preconditioning), then the corresponding
-"Set" routines must be called again **following** the solver
+"set" routines must be called again **following** the solver
 re-specification.
 
 
@@ -4297,7 +4358,7 @@ call to :c:func:`ARKodeResize()` through a new call to
 
 If scalar-valued tolerances or a tolerance function was specified
 through either :c:func:`ARKodeSStolerances()` or
-:c:func:`ARKodeWFtolerances()`, then these will remain valid so no
+:c:func:`ARKodeWFtolerances()`, then these will remain valid. and no
 further action is necessary. 
 
 
