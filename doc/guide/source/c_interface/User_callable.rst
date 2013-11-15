@@ -1024,10 +1024,14 @@ call the following function:
       * *ARK_MEM_FAIL*  if there was a memory allocation failure
       * *ARK_ILL_INPUT* if *nrtfn* is greater than zero but *g* = ``NULL``.
    
-   **Notes:** If a new IVP is to be solved with a call to
+   **Notes:** To disable the rootfinding feature after it has already
+   been initialized, or to free memory associated with ARKode's
+   rootfinding module, call *ARKodeRootInit* with *nrtfn = 0*.  
+
+   Similarly, if a new IVP is to be solved with a call to
    :c:func:`ARKodeReInit()`, where the new IVP has no rootfinding
-   problem but the prior one did, then call ARKodeRootInit with
-   *nrtfn* = 0.
+   problem but the prior one did, then call *ARKodeRootInit* with
+   *nrtfn = 0*.
 
 
 
