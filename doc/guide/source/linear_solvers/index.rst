@@ -15,14 +15,15 @@ Linear Solvers in ARKode
 ========================
 
 In this section, we describe the generic linear solver code modules
-that are included in ARKode.  While these may be used in conjunction
-with ARKode, they may also be used separately as generic packages in
-themselves.  These generic linear solver modules in SUNDIALS are
-organized in two families of solvers, the DLS family, which includes 
-direct linear solvers appropriate for sequential computations; and the
+from SUNDIALS that are included in ARKode.  While these may be used in
+conjunction with ARKode, they may also be used separately as generic
+packages in themselves.  These generic linear solver modules are
+organized in two families of solvers, the DLS family, which includes
+direct linear solvers appropriate for sequential computations; and the 
 SPILS family, which includes scaled preconditioned iterative (Krylov)
 linear solvers. The solvers in each family share common data
 structures and functions. 
+
 
 The :ref:`DLS <LinearSolvers.DLS>` family contains the following two
 generic linear solvers: 
@@ -37,6 +38,7 @@ generic linear solvers:
 We further note that this family also includes the BLAS/LAPACK linear
 solvers (dense and band) available to the SUNDIALS solvers, but these
 are not discussed here. 
+
 
 The :ref:`SPILS <LinearSolvers.SPILS>` family contains the following
 generic linear solvers: 
@@ -61,7 +63,7 @@ For the sake of space, the functions for the DENSE and BAND modules
 that work with a matrix type and the functions in the SPGMR, SPBCG,
 SPTFQMR, SPFGMR and PCG modules are only summarized briefly, since
 they are less likely to be of direct use in connection with a SUNDIALS
-solver. However, the functions for dense matrices treated as simple
+solver.  However, the functions for dense matrices treated as simple
 arrays are fully described, because we anticipate that they will be 
 useful in the implementation of preconditioners used with the
 combination of one of the SUNDIALS solvers and one of the SPILS linear 
