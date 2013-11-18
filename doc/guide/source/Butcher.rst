@@ -15,14 +15,15 @@
 Appendix: Butcher tables
 =========================
 
-Here we catalogue the full set of Butcher tables included in ARKode.
+Here we catalog the full set of Butcher tables included in ARKode.
 We group these into three categories: *explicit*, *implicit* and
 *additive*.  However, since the methods that comprise an additive
 Runge Kutta method are themselves explicit and implicit, their
-component Butcher tables are listed both within their separate
+component Butcher tables are listed within their separate
 sections, but are referenced together in the additive section.
 
-In each of the following tables, we use the following notation:
+In each of the following tables, we use the following notation (shown
+for a 3-stage method):
 
 .. math::
 
@@ -40,6 +41,21 @@ where here the method and embedding share stage :math:`A` and
 the coefficients :math:`b` and :math:`\tilde{b}` to generate methods
 of orders :math:`q` (the main method) and :math:`p` (the embedding,
 typically :math:`q = p+1`).
+
+Method authors often use different naming conventions to categorize
+their methods.  For each of the methods below, we follow a uniform
+naming convention:
+
+.. code-block:: text
+
+   NAME-S-P-Q
+
+where here
+
+* ``NAME`` is the author (if applicable),
+* ``S`` is the number of stages in the method,
+* ``P`` is the global order of accuracy for the embedding,
+* ``Q`` is the global order of accuracy for the method.
 
 Additionally, for each method we provide a plot of the linear
 stability region in the complex plane.  These have been computed via
@@ -59,22 +75,23 @@ and step size.  The stability region
 
 .. math::
 
-   S = \{ \eta\in\mathbb{C}\; |\; |R(\eta)| \le 1\}
+   S = \{ \eta\in\mathbb{C}\; :\; |R(\eta)| \le 1\}
 
 is typically given by an enclosed region of the complex plane, so it
 is standard to search for the border of that region in order to
 understand the method.  Since all complex numbers with unit magnitude
-may be written as :math:`e^{i\theta}` for some value of :math:`theta`,
+may be written as :math:`e^{i\theta}` for some value of :math:`\theta`,
 we perform the following algorithm to trace out this boundary.
 
-1. efine an array of values ``Theta``.  Since we wish for a
+1. Define an array of values ``Theta``.  Since we wish for a
    smooth curve, and since we wish to trace out the entire boundary,
    we choose 10,000 linearly-spaced points from 0 to :math:`16\pi`.
    Since some angles will correspond to multiple locations on the
    stability boundary, by going beyond :math:`2\pi` we ensure that all
    boundary locations are plotted, and by using such a fine
-   discretization the Newton method is more likely to converge to the
-   root closest to the previous boundary point, ensuring a smooth plot.
+   discretization the Newton method (next step) is more likely to
+   converge to the root closest to the previous boundary point,
+   ensuring a smooth plot.
 
 2. For each value :math:`\theta \in` ``Theta``, we solve the nonlinear
    equation 
@@ -115,10 +132,11 @@ orders 1 through 5.
 
 .. _Butcher.Heun_Euler:
 
-Heun-Euler
-^^^^^^^^^^^^
+Heun-Euler-2-1-2
+^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 0 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 0 <Heun-Euler-2-1-2 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the default 2nd order explicit method.
 
 .. math::
@@ -142,10 +160,11 @@ the default 2nd order explicit method.
 
 .. _Butcher.Bogacki_Shampine:
 
-Bogacki-Shampine
-^^^^^^^^^^^^^^^^^^
+Bogacki-Shampine-4-2-3
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 1 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 1 <Bogacki-Shampine-4-2-3 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the default 3rd order explicit method.
 
 .. math::
@@ -169,12 +188,14 @@ the default 3rd order explicit method.
 
 
 
-.. _Butcher.ARK_3_2_E:
 
-ARK3(2)4L[2]SA (explicit)
+.. _Butcher.ARK_4_2_3_E:
+
+ARK-4-2-3 (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 2 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 2 <ARK-4-2-3 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the explicit portion of the default 3rd order additive method.
 
 .. math::
@@ -193,17 +214,20 @@ the explicit portion of the default 3rd order additive method.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the explicit ARK3(2)4L[2]SA method.  The method's
+   Linear stability region for the explicit ARK-4-2-3 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
 .. _Butcher.Zonneveld:
 
-Zonneveld
-^^^^^^^^^^^^
+Zonneveld-5-3-4
+^^^^^^^^^^^^^^^^^
 
-Butcher table number 3 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 3 <Zonneveld-5-3-4 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the default 4th order explicit method.
 
 .. math::
@@ -228,12 +252,15 @@ the default 4th order explicit method.
 
 
 
-.. _Butcher.ARK_4_3_E:
 
-ARK4(3)6L[2]SA (explicit)
+
+.. _Butcher.ARK_6_3_4_E:
+
+ARK-6-3-4 (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 4 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 4 <ARK-6-3-4 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the explicit portion of the default 4th order additive method.
 
 .. math::
@@ -254,17 +281,19 @@ the explicit portion of the default 4th order additive method.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the explicit ARK4(3)6L[2]SA method.  The method's
+   Linear stability region for the explicit ARK-6-3-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
 
 
 
 .. _Butcher.Sayfy_Aburub:
 
-Sayfy-Aburub-4-3
+Sayfy-Aburub-6-3-4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 5 for :func:`ARKodeSetERKTableNum()`.
+:index:`Butcher table number 5 <Sayfy-Aburub-6-3-4 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.
 
 .. math::
 
@@ -284,18 +313,20 @@ Butcher table number 5 for :func:`ARKodeSetERKTableNum()`.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Sayfy-Aburub-4-3 method.  The method's
+   Linear stability region for the Sayfy-Aburub-6-3-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
 
 
 
 
 .. _Butcher.Cash-Karp:
 
-Cash-Karp
-^^^^^^^^^^^^
+Cash-Karp-6-4-5
+^^^^^^^^^^^^^^^^
 
-Butcher table number 6 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 6 <Cash-Karp-6-4-5 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the default 5th order explicit method.
 
 .. math::
@@ -323,12 +354,15 @@ the default 5th order explicit method.
 
 
 
+
+
 .. _Butcher.Fehlberg:
 
-Fehlberg
-^^^^^^^^^^^^
+Fehlberg-6-4-5
+^^^^^^^^^^^^^^^^
 
-Butcher table number 7 for :func:`ARKodeSetERKTableNum()`.
+:index:`Butcher table number 7 <Fehlberg-6-4-5 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.
 
 .. math::
 
@@ -354,12 +388,14 @@ Butcher table number 7 for :func:`ARKodeSetERKTableNum()`.
 
 
 
+
 .. _Butcher.Dormand_Prince:
 
-Dormand-Prince
-^^^^^^^^^^^^^^^^^
+Dormand-Prince-7-4-5
+^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 8 for :func:`ARKodeSetERKTableNum()`.
+:index:`Butcher table number 8 <Dormand-Prince-7-4-5 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.
 
 .. math::
 
@@ -386,12 +422,14 @@ Butcher table number 8 for :func:`ARKodeSetERKTableNum()`.
 
 
 
-.. _Butcher.ARK_5_4_E:
 
-ARK5(4)8L[2]SA (explicit)
+.. _Butcher.ARK_8_4_5_E:
+
+ARK-8-4-5 (explicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 9 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 9 <ARK-8-4-5 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the explicit portion of the default 5th order additive method.
 
 .. math::
@@ -414,8 +452,9 @@ the explicit portion of the default 5th order additive method.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the explicit ARK5(4)8L[2]SA method.  The method's
+   Linear stability region for the explicit ARK-8-4-5 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -423,10 +462,11 @@ the explicit portion of the default 5th order additive method.
 
 .. _Butcher.Verner-6-5:
 
-Verner-6-5
+Verner-8-5-6
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 10 for :func:`ARKodeSetERKTableNum()`.  This is
+:index:`Butcher table number 10 <Verner-8-5-6 ERK method>`
+for :c:func:`ARKodeSetERKTableNum()`.  This is
 the default 6th order explicit method.
 
 .. math::
@@ -449,7 +489,7 @@ the default 6th order explicit method.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Verner-6-5 method.  The method's
+   Linear stability region for the Verner-8-5-6 method.  The method's
    region is outlined in blue; the embedding's region is in red.
 
 
@@ -467,20 +507,22 @@ includes methods that have orders 2 through 5, with embeddings that are of
 orders 1 through 4.
 
 
+
 .. _Butcher.SDIRK-2-1:
 
-SDIRK 2(1)
+SDIRK-2-1-2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 11 for :func:`ARKodeSetIRKTableNum()`.  This is
+:index:`Butcher table number 11 <SDIRK-2-1-2 method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  This is
 the default 2nd order implicit method.  Both the method and embedding
 are A- and B-stable.
 
 .. math::
 
    \begin{array}{r|cc}
-     0 & 1 & 0 \\
-     1 & -1 & 1 \\
+     1 & 1 & 0 \\
+     0 & -1 & 1 \\
      \hline
      2 & 1/2 & 1/2 \\
      1 & 1 & 0
@@ -490,18 +532,21 @@ are A- and B-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the SDIRK 2(1) method.  The method's
+   Linear stability region for the SDIRK-2-1-2 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
 
 .. _Butcher.Billington:
 
-Billington
+Billington-3-2-3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 12 for :func:`ARKodeSetIRKTableNum()`.  Here, the
+:index:`Butcher table number 12 <Billington-3-2-3 SDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  Here, the
 higher-order method is less stable than the lower-order embedding.
 
 .. math::
@@ -526,12 +571,14 @@ higher-order method is less stable than the lower-order embedding.
 
 
 
+
 .. _Butcher.TRBDF2:
 
-TRBDF2
+TRBDF2-3-2-3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 13 for :func:`ARKodeSetIRKTableNum()`.  As with
+:index:`Butcher table number 13 <TRBDF2-3-2-3 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  As with
 Billington, here the higher-order method is less stable than the
 lower-order embedding.  
 
@@ -557,12 +604,14 @@ lower-order embedding.
 
 
 
+
 .. _Butcher.Kvaerno_4_2_3:
 
-Kvaerno(4,2,3)
+Kvaerno-4-2-3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 14 for :func:`ARKodeSetIRKTableNum()`.  Both the
+:index:`Butcher table number 14 <Kvaerno-4-2-3 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  Both the
 method and embedding are A-stable; additionally the method is L-stable.
 
 .. math::
@@ -581,18 +630,21 @@ method and embedding are A-stable; additionally the method is L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Kvaerno(4,2,3) method.  The method's
+   Linear stability region for the Kvaerno-4-2-3 method.  The method's
    region is outlined in blue; the embedding's region is in red.
 
 
 
 
-.. _Butcher.ARK_3_2_I:
 
-ARK3(2)4L[2]SA (implicit)
+
+.. _Butcher.ARK_4_2_3_I:
+
+ARK-4-2-3 (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 15 for :func:`ARKodeSetIRKTableNum()`.  This is
+:index:`Butcher table number 15 <ARK-4-2-3 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  This is
 the default 3rd order implicit method, and the implicit portion of the
 default 3rd order additive method.  Both the method and embedding are
 A-stable; additionally the method is L-stable.
@@ -613,8 +665,10 @@ A-stable; additionally the method is L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the implicit ARK3(2)4L[2]SA method.  The method's
+   Linear stability region for the implicit ARK-4-2-3 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -622,10 +676,11 @@ A-stable; additionally the method is L-stable.
 
 .. _Butcher.Cash_5_2_4:
 
-Cash(5,2,4)
+Cash-5-2-4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 16 for :func:`ARKodeSetIRKTableNum()`.  Both the
+:index:`Butcher table number 16 <Cash-5-2-4 SDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  Both the
 method and embedding are A-stable; additionally the method is L-stable.  
 
 .. math::
@@ -645,8 +700,9 @@ method and embedding are A-stable; additionally the method is L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Cash(5,2,4) method.  The method's
+   Linear stability region for the Cash-5-2-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -654,10 +710,11 @@ method and embedding are A-stable; additionally the method is L-stable.
 
 .. _Butcher.Cash_5_3_4:
 
-Cash(5,3,4)
+Cash-5-3-4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 17 for :func:`ARKodeSetIRKTableNum()`.  Both the
+:index:`Butcher table number 17 <Cash-5-3-4 SDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  Both the
 method and embedding are A-stable; additionally the method is L-stable.  
 
 .. math::
@@ -677,18 +734,20 @@ method and embedding are A-stable; additionally the method is L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Cash(5,3,4) method.  The method's
+   Linear stability region for the Cash-5-3-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
 
 
 
 
 .. _Butcher.SDIRK-5-4:
 
-SDIRK 5(4)
+SDIRK-5-3-4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 18 for :func:`ARKodeSetIRKTableNum()`.  This is
+:index:`Butcher table number 18 <SDIRK-5-3-4 method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  This is
 the default 4th order implicit method.  Here, the method is both A-
 and L-stable, although the embedding has reduced stability.
 
@@ -709,8 +768,10 @@ and L-stable, although the embedding has reduced stability.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the SDIRK 5(4) method.  The method's
+   Linear stability region for the SDIRK-5-3-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
+
 
 
 
@@ -719,10 +780,11 @@ and L-stable, although the embedding has reduced stability.
 
 .. _Butcher.Kvaerno_5_3_4:
 
-Kvaerno(5,3,4)
+Kvaerno-5-3-4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 19 for :func:`ARKodeSetIRKTableNum()`.  Both the
+:index:`Butcher table number 19 <Kvaerno-5-3-4 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  Both the
 method and embedding are A-stable.  
 
 .. math::
@@ -742,19 +804,21 @@ method and embedding are A-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Kvaerno(5,3,4) method.  The method's
+   Linear stability region for the Kvaerno-5-3-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
 
 
 
 
 
-.. _Butcher.ARK_4_3_I:
 
-ARK4(3)6L[2]SA (implicit)
+.. _Butcher.ARK_6_3_4_I:
+
+ARK-6-3-4 (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 20 for :func:`ARKodeSetIRKTableNum()`.  This is
+:index:`Butcher table number 20 <ARK-6-3-4 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  This is
 the implicit portion of the default 4th order additive method.  Both
 the method and embedding are A-stable; additionally the method is
 L-stable. 
@@ -777,8 +841,9 @@ L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the implicit ARK4(3)6L[2]SA method.  The method's
+   Linear stability region for the implicit ARK-6-3-4 method.  The method's
    region is outlined in blue; the embedding's region is in red.
+
 
 
 
@@ -786,10 +851,11 @@ L-stable.
 
 .. _Butcher.Kvaerno_7_4_5:
 
-Kvaerno(7,4,5)
+Kvaerno-7-4-5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 21 for :func:`ARKodeSetIRKTableNum()`.  Both the
+:index:`Butcher table number 21 <Kvaerno-7-4-5 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  Both the
 method and embedding are A-stable; additionally the method is
 L-stable.
 
@@ -812,19 +878,22 @@ L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the Kvaerno(7,4,5) method.  The method's
+   Linear stability region for the Kvaerno-7-4-5 method.  The method's
    region is outlined in blue; the embedding's region is in red.
 
 
 
 
 
-.. _Butcher.ARK_5_4_I:
 
-ARK5(4)8L[2]SA (implicit)
+
+.. _Butcher.ARK_8_4_5_I:
+
+ARK-8-4-5 (implicit)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Butcher table number 22 for :func:`ARKodeSetIRKTableNum()`.  This is
+:index:`Butcher table number 22 <ARK-8-4-5 ESDIRK method>`
+for :c:func:`ARKodeSetIRKTableNum()`.  This is
 the default 5th order implicit method, and the implicit portion of the
 default 5th order additive method.  Both the method and embedding are
 A-stable; additionally the method is L-stable.   
@@ -849,7 +918,7 @@ A-stable; additionally the method is L-stable.
    :scale: 50 %
    :align: center
    
-   Linear stability region for the implicit ARK5(4)8L[2]SA method.  The method's
+   Linear stability region for the implicit ARK-8-4-5 method.  The method's
    region is outlined in blue; the embedding's region is in red.
 
 
@@ -868,15 +937,18 @@ explicit calculations, ARKode includes methods that have orders 3
 through 5, with embeddings that are of orders 2 through 4.  These
 Butcher table pairs are as follows:
 
-* 3rd-order pair:  :ref:`Butcher.ARK_3_2_E` with
-  :ref:`Butcher.ARK_3_2_I`, corresponding to Butcher
-  tables 2 and 15 for :func:`ARKodeSetARKTableNum()`.
+* :index:`3rd-order pair <ARK-4-2-3 ARK method>`:
+  :ref:`Butcher.ARK_4_2_3_E` with :ref:`Butcher.ARK_4_2_3_I`,
+  corresponding to Butcher tables 2 and 15 for
+  :c:func:`ARKodeSetARKTableNum()`.
 
-* 4th-order pair:  :ref:`Butcher.ARK_4_3_E` with
-  :ref:`Butcher.ARK_4_3_I`, corresponding to Butcher 
-  tables 4 and 20 for :func:`ARKodeSetARKTableNum()`. 
+* :index:`4th-order pair <ARK-6-3-4 ARK method>`:  
+  :ref:`Butcher.ARK_6_3_4_E` with :ref:`Butcher.ARK_6_3_4_I`,
+  corresponding to Butcher tables 4 and 20 for
+  :c:func:`ARKodeSetARKTableNum()`.  
 
-* 5th-order pair:  :ref:`Butcher.ARK_5_4_E` with
-  :ref:`Butcher.ARK_5_4_I`, corresponding to Butcher
-  tables 9 and 22 for :func:`ARKodeSetARKTableNum()`
+* :index:`5th-order pair <ARK-8-4-5 ARK method>`:  
+  :ref:`Butcher.ARK_8_4_5_E` with :ref:`Butcher.ARK_8_4_5_I`,
+  corresponding to Butcher tables 9 and 22 for
+  :c:func:`ARKodeSetARKTableNum()`.
 
