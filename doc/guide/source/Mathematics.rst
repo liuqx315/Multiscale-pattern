@@ -114,6 +114,8 @@ For multi-rate problems, a user should provide both of the functions
 :math:`f_E` and :math:`f_I` that define the IVP system.  For such
 problems, ARKode currently implements the ARK methods proposed in
 [KC2003]_, allowing for methods having order :math:`q = \{3,4,5\}`.
+The tables for these methods are given in the section
+:ref:`Butcher.additive`.
 
 For nonstiff problems, a user may specify that :math:`f_I = 0`,
 i.e. the equation :eq:`IVP` reduces to the non-split IVP 
@@ -126,8 +128,10 @@ In this scenario, the Butcher table :math:`A^I=0` in :eq:`ARK`, and
 the ARK methods reduce to classical :index:`explicit Runge-Kutta
 methods` (ERK).  For these classes of methods, ARKode allows orders of
 accuracy :math:`q = \{2,3,4,5,6\}`, with embeddings of orders :math:`p
-= \{1,2,3,4,5\}`.  These default to the Heun-Euler, Bogacki-Shampine,
-Zonneveld, Cash-Karp and Verner methods, respectively.
+= \{1,2,3,4,5\}`.  These default to the :ref:`Butcher.Heun_Euler`,
+:ref:`Butcher.Bogacki_Shampine`, :ref:`Butcher.Zonneveld`,
+:ref:`Butcher.Cash-Karp` and :ref:`Butcher.Verner-6-5` methods,
+respectively. 
 
 Finally, for stiff problems the user may specify that :math:`f_E = 0`,
 so the equation :eq:`IVP` reduces to the non-split IVP 
@@ -141,8 +145,9 @@ Similarly to ERK methods, in this scenario the Butcher table
 :index:`diagonally-implicit Runge-Kutta methods` (DIRK).  For these
 classes of methods, ARKode allows orders of accuracy :math:`q =
 \{2,3,4,5\}`, with embeddings of orders :math:`p = \{1,2,3,4\}`.
-These default to the SDIRK 2(1), ARK3(2)4L[2]SA, SDIRK 5(4) and
-ARK5(4)8L[2]SA methods, respectively. 
+These default to the :ref:`Butcher.SDIRK-2-1`,
+:ref:`Butcher.ARK_4_2_3_I`, :ref:`Butcher.SDIRK-5-4` and 
+:ref:`Butcher.ARK_8_4_5_I` methods, respectively. 
 
 
 

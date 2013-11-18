@@ -35,7 +35,18 @@ Due to its similarities in both function and design with the CVODE
 package, a significant portion of this documentation has been directly
 adapted from the CVODE documentation [HS2012]_. 
 
-Documentation sections:
+ARKode is developed by `Southern Methodist University
+<http://www.smu.edu>`_, with support by the `US Department of Energy
+<http://www.doe.gov>`_ through the `FASTMath
+<http://www.fastmath-scidac.org/>`_ SciDAC Institute, under subcontract
+B598130 from `Lawrence Livermore National Laboratory
+<http://www.llnl.gov>`_. 
+
+
+
+.. only:: html
+
+   Documentation sections:
 
 .. toctree::
    :maxdepth: 1
@@ -47,7 +58,7 @@ Documentation sections:
    f_interface/index.rst
    nvectors/index.rst
    linear_solvers/index.rst
-   install/index.rst
+   Install
    Constants
    Butcher
    References
@@ -56,13 +67,5 @@ Documentation sections:
 
    * :ref:`genindex`
    * :ref:`search`
-
-
-ARKode is developed by `Southern Methodist University
-<http://www.smu.edu>`_, with support by the `US Department of Energy
-<http://www.doe.gov>`_ through the `FASTMath
-<http://www.fastmath-scidac.org/>`_ SciDAC Institute, under subcontract
-B598130 from `Lawrence Livermore National Laboratory
-<http://www.llnl.gov>`_. 
 
 

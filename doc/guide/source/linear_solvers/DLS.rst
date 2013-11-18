@@ -291,7 +291,7 @@ DENSE package. For full details, see the header files
 
    Copies one dense matrix to another.
 
-.. c:function:: DenseScale(realtype c, DlsMat A)
+.. c:function:: void DenseScale(realtype c, DlsMat A)
 
    Scales a dense matrix by a scalar.
 
@@ -387,7 +387,7 @@ arrays outside of the :c:type:`DlsMat` structure:
    Increments the square :math:`n \times n` dense matrix *a* by the
    identity matrix :math:`I_n`.
 
-.. c:function:: denseGETRF(realtype** a, long int m, long int n, long int* p)
+.. c:function:: long int denseGETRF(realtype** a, long int m, long int n, long int* p)
 
    Factors the :math:`m \times n` dense matrix *a*, using Gaussian
    elimination with row pivoting. It overwrites the elements of *a*
@@ -439,7 +439,7 @@ arrays outside of the :c:type:`DlsMat` structure:
    in the lower triangular part of *a* by a successful call to
    :c:func:`densePOTRF(m)`. 
 
-.. c:function:: denseGEQRF(realtype** a, long int m, long int n, realtype* beta, realtype* v)
+.. c:function:: int denseGEQRF(realtype** a, long int m, long int n, realtype* beta, realtype* v)
 
    Calculates the QR decomposition of the :math:`m \times n` matrix
    *a* (:math:`m \ge n`) using Householder reflections.  On exit, the
@@ -449,7 +449,7 @@ arrays outside of the :c:type:`DlsMat` structure:
    :math:`Q` as a product of elementary reflectors. The real array
    *wrk*, of length *m*, must be provided as temporary workspace. 
 
-.. c:function:: denseORMQR(realtype** a, long int m, long int n, realtype* beta, realtype* v, realtype* w, realtype* wrk)
+.. c:function:: int denseORMQR(realtype** a, long int m, long int n, realtype* beta, realtype* v, realtype* w, realtype* wrk)
 
    Calculates the product :math:`w = Qv` for a given vector *v* of
    length *n*, where the orthogonal matrix :math:`Q` is encoded in the
@@ -581,7 +581,7 @@ outside of the :c:type:`DlsMat` structure:
    Scales every element in the :math:`n \times n` band matrix *a* by
    *c*. 
 
-.. c:function:: bandAddIdentity(realtype** a, long int n, long int smu)
+.. c:function:: void bandAddIdentity(realtype** a, long int n, long int smu)
 
    Increments the :math:`n \times n` band matrix *a* by the identity
    matrix. 
