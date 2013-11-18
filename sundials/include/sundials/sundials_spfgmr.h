@@ -242,7 +242,7 @@ SUNDIALS_EXPORT int SpfgmrSolve(SpfgmrMem mem, void *A_data,
 #define SPFGMR_MEM_NULL          -1  /* mem argument is NULL          */
 #define SPFGMR_ATIMES_FAIL_UNREC -2  /* atimes returned failure flag  */
 #define SPFGMR_PSOLVE_FAIL_UNREC -3  /* psolve failed unrecoverably   */
-#define SPFGMR_GS_FAIL           -4  /* Gram-Schmidt routine faiuled  */        
+#define SPFGMR_GS_FAIL           -4  /* Gram-Schmidt routine failed   */        
 #define SPFGMR_QRSOL_FAIL        -5  /* QRsol found singular R        */
 #define SPFGMR_PSET_FAIL_UNREC   -6  /* pset failed unrecoverably     */
 
