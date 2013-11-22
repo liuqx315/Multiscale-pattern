@@ -9,6 +9,12 @@
 :tocdepth: 3
 
 
+.. _serial_f90:
+
+====================================
+Serial Fortran 90 example problems
+====================================
+
 
 .. _ark_bruss:
 

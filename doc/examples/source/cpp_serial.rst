@@ -9,6 +9,13 @@
 :tocdepth: 3
 
 
+.. _serial_cpp:
+
+====================================
+Serial C++ example problems
+====================================
+
+
 .. _ark_analytic_sys:
 
 ark_analytic_sys
