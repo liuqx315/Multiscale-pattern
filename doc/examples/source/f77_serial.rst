@@ -9,15 +9,21 @@
 :tocdepth: 3
 
 
+.. _serial_f77:
 
-.. _ark_diurnal_kry_bbd_p:
+====================================
+Serial Fortran 77 example problems
+====================================
 
-ark_diurnal_kry_bbd_p
+
+
+.. _fark_diurnal_kry_bp:
+
+fark_diurnal_kry_bp
 ===================================================
 
-
 This problem is an ARKode clone of the CVODE problem,
-``cv_diurnal_kry_bbd_p``.  This test problem models a two-species
+``fcv_diurnal_kry_bp``.  This test problem models a two-species
 diurnal kinetics advection-diffusion PDE system in two spatial
 dimensions,
 
@@ -49,8 +55,8 @@ We enforce the initial conditions
 
 .. math::
 
-   c_1(x,y) &=  10^6 \chi(x)\eta(y) \\
-   c_2(x,y) &=  10^{12} \chi(x)\eta(y) \\
+   c^1(x,y) &=  10^6 \chi(x)\eta(y) \\
+   c^2(x,y) &=  10^{12} \chi(x)\eta(y) \\
    \chi(x) &= 1 - \sqrt{\frac{x - 10}{10}} + \frac12 \sqrt[4]{\frac{x - 10}{10}} \\
    \eta(y) &= 1 - \sqrt{\frac{y - 40}{10}} + \frac12 \sqrt[4]{\frac{x - 10}{10}}.
 
@@ -66,24 +72,69 @@ system of ODEs.  To this end, the spatial derivatives are computed
 using second-order centered differences, with the data distributed
 over :math:`Mx*My` points on a uniform spatial grid.  Resultingly, ARKode
 approaches the problem as one involving :math:`2*Mx*My` coupled ODEs.
-
-The problem is decomposed in parallel into uniformly-sized subdomains,
-with two subdomains in each direction (four in total), and where each
-subdomain has five points in each direction (i.e. :math:`Mx=My=10`).
+In this problem, we use a relatively coarse uniform mesh with
+:math:`Mx=My=10`. 
 
 This program solves the problem with a DIRK method, using a Newton
 iteration with the preconditioned ARKSPGMR iterative linear solver.
 
-The preconditioner matrix used is block-diagonal, with banded blocks,
-constructed using the ARKBBDPRE module.  Each block is generated using
-difference quotients, with half-bandwidths ``mudq = mldq = 10``, but
-the retained banded blocks have half-bandwidths ``mukeep = mlkeep = 2``.
-A copy of the approximate Jacobian is saved and conditionally reused
-within the preconditioner routine. 
-
-Two runs are made for this problem, first with left and then with
-right preconditioning.
+The left preconditioner used is a banded matrix, constructed using
+the ARKBP module.  The preconditioner matrix is generated using
+difference quotients, with half-bandwidths ``mu = ml = 2``.
 
 Performance data and sampled solution values are printed at
 selected output times, and all performance counters are printed
 on completion.
+
+
+
+
+
+
+.. _fark_roberts_dnsL:
+
+fark_roberts_dnsL
+===================================================
+
+This problem is an ARKode clone of the CVODE problem,
+``fcv_roberts_dnsL``.  This test problem models the kinetics of a
+three-species autocatalytic reaction.  This is an ODE system with 3
+components, :math:`Y = [y_1,\, y_2,\, y_3]^T`, satisfying the equations,
+
+.. math::
+
+   \frac{d y_1}{dt} &= -0.04 y_1 + 10^4 y_2 y_3, \\
+   \frac{d y_2}{dt} &= 0.04 y_1 - 10^4 y_2 y_3 - 3\cdot10^7 y_2^2, \\
+   \frac{d y_3}{dt} &= 3\cdot10^7 y_2^2.
+
+We integrate over the interval :math:`0\le t\le 4\cdot10^{10}`, with initial
+conditions  :math:`Y(0) = [1,\, 0,\, 0]^T`. 
+
+Additionally, we supply the following two root-finding equations:
+
+.. math::
+
+   g_1(u) = u - 10^{-4}, \\
+   g_2(w) = w - 10^{-2}.
+
+While these are not inherently difficult nonlinear equations, they
+easily serve the purpose of determining the times at which our
+solutions attain desired target values.
+
+
+Numerical method
+----------------
+
+This program solves the problem with a DIRK method, using a Newton
+iteration with the dense LAPACK linear solver module.
+
+As with the :ref:`ark_robertson_root` problem, we enable ARKode's
+rootfinding module to find the times at which
+either :math:`u=10^{-4}` or :math:`w=10^{-2}`.
+
+Performance data and solution values are printed at
+selected output times, along with additional output at rootfinding
+events.  All performance counters are printed on completion.
+
+
+

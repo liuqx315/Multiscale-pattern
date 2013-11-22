@@ -9,6 +9,12 @@
 :tocdepth: 3
 
 
+.. _parallel_f90:
+
+====================================
+Parallel Fortran 90 example problems
+====================================
+
 
 .. _fark_heat2D:
 

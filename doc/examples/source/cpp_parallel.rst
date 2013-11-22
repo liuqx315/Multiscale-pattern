@@ -9,6 +9,13 @@
 :tocdepth: 3
 
 
+.. _parallel_cpp:
+
+====================================
+Parallel C++ example problems
+====================================
+
+
 
 .. _ark_heat2D:
 
