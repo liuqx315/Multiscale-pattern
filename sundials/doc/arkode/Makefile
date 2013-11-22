@@ -1,4 +1,8 @@
 # Makefile for Sphinx LaTeX output
+ARK_UG = ARKode.pdf
+ARK_EX = ARKode_example.pdf
+SHARED_DOC = ../sundials
+HTML_DIR = ../../html/documentation
 
 ALLDOCS = $(basename $(wildcard *.tex))
 ALLPDF = $(addsuffix .pdf,$(ALLDOCS))
@@ -8,6 +12,31 @@ ALLDVI = $(addsuffix .dvi,$(ALLDOCS))
 ARCHIVEPRREFIX =
 # Additional LaTeX options
 LATEXOPTS =
+
+usage:
+	@echo "Usage:"
+	@echo "  make ug     - compile LaTeX files to generate PDF file for ARKode User's Guide"
+	@echo "  make ex     - compile LaTeX files to generate PDF file for ARKode Examples Guide"
+	@echo "  make clean  - remove all temporary files"
+	@echo "  make purge  - remove temporary files + PDF files"
+
+ug: ug_pdf
+
+ug_pdf: $(ARK_UG)
+
+ex: ex_pdf
+
+ex_pdf: $(ARK_EX)
+
+purge: clean
+	rm -f $(ARK_UG)
+	rm -f $(ARK_EX)
+
+install: ug_pdf ex_pdf
+	cp $(ARK_UG) $(HTML_DIR)
+	cp $(ARK_EX) $(HTML_DIR)
+
+
 
 all: $(ALLPDF)
 all-pdf: $(ALLPDF)
@@ -59,7 +88,7 @@ bz2: tar
 	pdflatex $(LATEXOPTS) '$<'
 
 clean:
-	rm -f *.dvi *.log *.ind *.aux *.toc *.syn *.idx *.out *.ilg *.pla
+	rm -f *.dvi *.log *.ind *.aux *.toc *.syn *.idx *.out *.ilg *.pla *~
 
 .PHONY: all all-pdf all-dvi all-ps clean
 .PHONY: all-pdf-ja
