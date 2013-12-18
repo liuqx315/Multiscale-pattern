@@ -6,10 +6,15 @@
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, Carol Woodward,
  *                and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the main KINSol solver.
  * It is independent of the KINSol linear solver in use.
@@ -42,7 +47,6 @@
  *     KINPicardAA
  *   Stopping tests
  *     KINStop
- *     PicardStop
  *     KINForcingTerm
  *   Norm functions
  *     KINScFNorm
@@ -184,13 +188,12 @@ static int  KINFP(KINMem kin_mem, long int *iter, realtype *R,
 		  realtype *gamma, realtype *fmax);
 
 static int  KINLinSolDrv(KINMem kinmem);
-static int  KINPicardFcnEval(KINMem kin_mem, N_Vector gval, N_Vector uval, N_Vector fval1);
+static int  KINPicardFcnEval(KINMem kin_mem, N_Vector gval, N_Vector uval, 
+			     N_Vector fval1);
 static realtype KINScFNorm(KINMem kin_mem, N_Vector v, N_Vector scale);
 static realtype KINScSNorm(KINMem kin_mem, N_Vector v, N_Vector u);
 static int KINStop(KINMem kin_mem, booleantype maxStepTaken, 
 		   int sflag);
-static int PicardStop(KINMem kin_mem, booleantype maxStepTaken, 
-		      int sflag, realtype fmax);
 static int AndersenAcc(KINMem kin_mem, N_Vector gval, N_Vector fv, N_Vector x, 
 		       N_Vector x_old, int iter, realtype *R, realtype *gamma);
 
@@ -1131,13 +1134,7 @@ static int KINSolInit(KINMem kin_mem)
   nfe = nnilset = nnilset_sub = nni = nbcf = nbktrk = 0;
 
   /* see if the initial guess uu satisfies the nonlinear system */
-  if ( strategy == KIN_PICARD ) {
-    N_VScale(ONE, uu, vtemp1);
-    retval = func(vtemp1, fval, user_data); nfe++;
-  }
-  else {
-    retval = func(uu, fval, user_data); nfe++;
-  }
+  retval = func(uu, fval, user_data); nfe++;
 
   if (retval < 0) {
     KINProcessError(kin_mem, KIN_SYSFUNC_FAIL, "KINSOL", "KINSolInit", 
@@ -2171,7 +2168,7 @@ static int KINPicardAA(KINMem kin_mem, long int *iterp, realtype *R, realtype *g
   booleantype fOK;
   int retval, ret; 
   long int iter;
-  realtype fmax;
+  realtype fmax, epsmin, fnormp;
   N_Vector delta, gval;
   
   delta = kin_mem->kin_vtemp1;
@@ -2180,19 +2177,31 @@ static int KINPicardAA(KINMem kin_mem, long int *iterp, realtype *R, realtype *g
   fOK = TRUE;
   fmax = fnormtol + ONE;
   iter = 0;
+  epsmin = ZERO;
+  fnormp = -ONE;
 
   N_VConst(ZERO, gval);
+
+  /* if eps is to be bounded from below, set the bound */
+  if (inexact_ls && !noMinEps) epsmin = POINT01 * fnormtol;
 
   while (ret == CONTINUE_ITERATIONS) {
 
     iter++;
 
+    /* Update the forcing term for the inexact linear solves */
+    if (inexact_ls) {
+      eps = (eta + uround) * fnorm;
+      if(!noMinEps) eps = MAX(epsmin, eps);
+    }
+
     /* evaluate g = uu - L^{-1}func(u) and return if failed.  
-       For Picard, assume that the fval vecctor has been filled 
+       For Picard, assume that the fval vector has been filled 
        with an eval of the nonlinear residual prior to this call. */
     retval = KINPicardFcnEval(kin_mem, gval, uu, fval);
-
-    if (retval < 0) {
+    if (retval == 0) {
+      fOK = TRUE;
+    } else if (retval < 0) {
       fOK = FALSE;
       ret = KIN_SYSFUNC_FAIL;
       break;
@@ -2208,13 +2217,22 @@ static int KINPicardAA(KINMem kin_mem, long int *iterp, realtype *R, realtype *g
 
     /* Fill the Newton residual based on the new solution iterate */
     retval = func(unew, fval, user_data); nfe++;
-    fmax = KINScFNorm(kin_mem, fval, fscale); /* measure  || F(x) || */
+    if (retval == 0) {
+      fOK = TRUE;
+    }
+    else if (retval < 0) {
+      ret = KIN_SYSFUNC_FAIL;
+      break;
+    }
 
-    if (printfl > 1) 
-      KINPrintInfo(kin_mem, PRNT_FMAX, "KINSOL", "KINPicardAA", INFO_FMAX, fmax);
-    
+    /* Evaluate function norms */
+    fnormp = N_VWL2Norm(fval,fscale);
+    fmax = KINScFNorm(kin_mem, fval, fscale); /* measure  || F(x) ||_max */
     fnorm = fmax;
     *fmaxptr = fmax;
+    
+    if (printfl > 1) 
+      KINPrintInfo(kin_mem, PRNT_FMAX, "KINSOL", "KINPicardAA", INFO_FMAX, fmax);
 
     /* print the current iter, fnorm, and nfe values if printfl > 0 */
     if (printfl>0)
@@ -2231,6 +2249,8 @@ static int KINPicardAA(KINMem kin_mem, long int *iterp, realtype *R, realtype *g
     if (ret == CONTINUE_ITERATIONS) { 
       /* Only update solution if taking a next iteration.  */
       N_VScale(ONE, unew, uu);
+      /* evaluate eta by calling the forcing term routine */
+      if (callForcingTerm) KINForcingTerm(kin_mem, fnormp);
     }
 
     fflush(errfp);
@@ -2280,13 +2300,14 @@ static int KINPicardFcnEval(KINMem kin_mem, N_Vector gval, N_Vector uval, N_Vect
       if (retval != 0) return(KIN_LSETUP_FAIL);
     }
 
-    /* call the generic 'lsolve' routine to solve the system Lx = fval
+    /* call the generic 'lsolve' routine to solve the system Lx = -fval
        Note that we are using gval to hold x. */
+    N_VScale(-ONE, fval1, fval1);
     retval = lsolve(kin_mem, gval, fval1, &sJpnorm, &sFdotJp);
 
     if (retval == 0) {
-      /* Update gval = uval - gval since gval = L^{-1}F(uu)  */
-      N_VLinearSum(ONE, uval, -ONE, gval, gval);
+      /* Update gval = uval + gval since gval = -L^{-1}F(uu)  */
+      N_VLinearSum(ONE, uval, ONE, gval, gval);
       return(KIN_SUCCESS);
     }
     else if (retval < 0)                      return(KIN_LSOLVE_FAIL);
@@ -2390,34 +2411,6 @@ static int KINFP(KINMem kin_mem, long int *iterp,
  * Stopping tests
  * -----------------------------------------------------------------
  */
-
-/*
- * PicardStop
- *
- * This routine checks the current iterate unew to see if the
- * system func(unew) = 0 is satisfied 
- *
- * strategy is KIN_PICARD
- * sflag    is one of KIN_SUCCESS, KIN_MAXITER_REACHED
- */
-
-static int PicardStop(KINMem kin_mem, booleantype maxStepTaken, 
-		      int sflag, realtype fmax)
-{
-
-  /* Check tolerance on scaled function norm at the current iterate */
-
-  if (printfl > 1) 
-    KINPrintInfo(kin_mem, PRNT_FMAX, "KINSOL", "PicardStop", INFO_FMAX, fmax);
-    
-  if (fmax <= fnormtol) return(KIN_SUCCESS);
-    
-  /* Check if the maximum number of iterations is reached */
-
-  if (nni >= mxiter) return(KIN_MAXITER_REACHED);
-
-  return(CONTINUE_ITERATIONS);
-}
 
 
 /*

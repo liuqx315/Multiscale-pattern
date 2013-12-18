@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
+ * LLNS Copyright Start
  * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the IDASuperLUMT linear solver module.
  * -----------------------------------------------------------------
@@ -17,13 +22,12 @@
 #ifndef _IDASSUPERLUMT_H
 #define _IDASSUPERLUMT_H
 
+#include "idas/idas_sparse.h"
+#include "sundials/sundials_sparse.h"
+
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-
-#include <idas/idas_sparse.h>
-#include <sundials/sundials_sparse.h>
-
 /*
  * -----------------------------------------------------------------
  * Function : IDASuperLUMT
@@ -64,6 +68,27 @@ extern "C" {
   SUNDIALS_EXPORT int IDASuperLUMTB(void *ida_mem, int num_threads, 
 				    int which, int mB, int nB, int nnzB);
 
+
+
+
+/* 
+ * -----------------------------------------------------------------
+ * Optional Input Specification Functions
+ * -----------------------------------------------------------------
+ *
+ * IDASuperLUMTSetOrdering sets the ordering used by SuperLUMT for 
+ * reducing fill.
+ * Options are: 
+ * 0 for natural ordering
+ * 1 for minimal degree ordering on A'*A
+ * 2 for minimal degree ordering on A'+A
+ * 3 for approximate minimal degree ordering for unsymmetric matrices
+ * The default used in SUNDIALS is 3 for COLAMD.
+ * -----------------------------------------------------------------
+ */
+
+  SUNDIALS_EXPORT int IDASuperLUMTSetOrdering(void *kin_mem, 
+					      int ordering_choice); 
 
 
   

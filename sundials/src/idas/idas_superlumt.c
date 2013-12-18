@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2013, Lawrence Livermroe National Security
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the IDASSUPERLUMT linear solver.
  * -----------------------------------------------------------------
@@ -17,11 +22,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sundials/sundials_math.h>
+#include "sundials/sundials_math.h"
+#include "sundials/sundials_superlumt_impl.h"
 
 #include "idas_impl.h"
 #include "idas_sparse_impl.h"
-#include "idas_superlumt_impl.h"
 
 /* Constants */
 
@@ -201,6 +206,12 @@ int IDASuperLUMT(void *ida_mem, int num_threads, int m, int n, int nnz)
 		       SLU_DN, SLU_D, SLU_GE);
   slumt_data->s_B = B;
 
+  /* Set ordering to COLAMD as the kinsol default use.
+     Users can set a different value with IDASuperLUMTSetOrdering,
+     and the user-set value is loaded before any call to factorize the
+     matrix in IDASuperLUMTSetup.  */
+  slumt_data->s_ordering = 3;
+
   /* Attach linear solver memory to the integrator memory */
   idasls_mem->s_solver_data = (void *) slumt_data;
   IDA_mem->ida_lmem = idasls_mem;
@@ -222,7 +233,7 @@ int IDASuperLUMT(void *ida_mem, int num_threads, int m, int n, int nnz)
 
 static int IDASuperLUMTInit(IDAMem IDA_mem)
 {
-  int retval, num_threads, n;
+  int num_threads, n;
   IDASlsMem idasls_mem;
   SLUMTData slumt_data;
 
@@ -474,6 +485,53 @@ static int IDASuperLUMTFree(IDAMem IDA_mem)
 
   return(IDASLS_SUCCESS);
 }
+
+/* 
+ * -----------------------------------------------------------------
+ * Optional Input Specification Functions
+ * -----------------------------------------------------------------
+ *
+ * IDASuperLUMTSetOrdering sets the ordering used by SuperLUMT for reducing fill.
+ * Options are: 
+ * 0 for natural ordering
+ * 1 for minimal degree ordering on A'*A
+ * 2 for minimal degree ordering on A'+A
+ * 3 for approximate minimal degree ordering for unsymmetric matrices
+ * The default used in SUNDIALS is 3 for COLAMD.
+ * -----------------------------------------------------------------
+ */
+
+int IDASuperLUMTSetOrdering(void *ida_mem_v, int ordering_choice)
+{
+  IDAMem ida_mem;
+  IDASlsMem idasls_mem;
+  SLUMTData slumt_data;
+
+ /* Return immediately if ida_mem is NULL */
+  if (ida_mem_v == NULL) {
+    IDAProcessError(NULL, IDASLS_MEM_NULL, "IDASLS", "IDASuperLUMTSetOrdering",
+		    MSGSP_IDAMEM_NULL);
+    return(IDASLS_MEM_NULL);
+  }
+  ida_mem = (IDAMem) ida_mem_v;
+  idasls_mem = (IDASlsMem) ida_mem->ida_lmem;
+
+ /* Return if ordering choice argument is not valid */
+  if ( (ordering_choice != 0) && (ordering_choice != 1) && 
+       (ordering_choice != 2) && (ordering_choice != 3) ) {
+    IDAProcessError(NULL, IDASLS_ILL_INPUT, "IDASLS", "IDASuperLUMTSetOrdering",
+		    MSGSP_ILL_INPUT);
+    return(IDASLS_ILL_INPUT);
+  }
+
+  slumt_data = (SLUMTData) idasls_mem->s_solver_data;
+
+  slumt_data->s_ordering = ordering_choice;
+
+  return(IDASLS_SUCCESS);
+}
+
+
 
 /* 
  * ================================================================

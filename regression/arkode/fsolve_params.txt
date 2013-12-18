@@ -21,7 +21,7 @@
   crdown = 0,
   rdiv = 0,
   dgmax = 0,
-  predictor = 0,
+  predictor = 4,
   msbp = 0,
   fixedpt = 0,
   m_aa = 0,

@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Steven Smith @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2013, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for nvector examples
 
@@ -24,22 +29,33 @@ INCLUDE_DIRECTORIES(. ..)
 # generate them) based on the value of the variable LINK_LIBRARY_TYPE
 
 IF(LINK_LIBRARY_TYPE MATCHES "static")
-  SET(CVODE_LIB sundials_cvode_static)
   SET(NVECS_LIB sundials_nvecserial_static)
 ELSE(LINK_LIBRARY_TYPE MATCHES "static")
-  SET(CVODE_LIB sundials_cvode_shared)
   SET(NVECS_LIB sundials_nvecserial_shared)
 ENDIF(LINK_LIBRARY_TYPE MATCHES "static")
 
 # Set-up linker flags and link libraries
 
-SET(SUNDIALS_LIBS ${CVODE_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
+SET(SUNDIALS_LIBS ${NVECS_LIB} ${EXTRA_LINK_LIBS})
 
 # Add the build and install targets for each nvector example
 
 FOREACH(example ${nvector_serial_examples})
-  ADD_EXECUTABLE(${example} ${example}.c ../test_nvector.c)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+
+  IF(WIN32)
+    # This is used to get around DLL linkage issue since we are
+    # manually including sundials_nvector.c here, which is normally in
+    # a library that is included.  If this is not set build system
+    # thinks nvector is externally linked.
+    ADD_DEFINITIONS(-DBUILD_SUNDIALS_LIBRARY)
+  ENDIF(WIN32)
+
+  ADD_EXECUTABLE(${example} ${example}.c ../test_nvector.c ../../../src/sundials/sundials_nvector.c)
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+
+  SUNDIALS_ADD_TEST( ${example}_1000_0 ${example} TEST_ARGS 1000 0)
+  SUNDIALS_ADD_TEST( ${example}_10000_0 ${example} TEST_ARGS 10000 0)
+
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
 
   IF(EXAMPLES_INSTALL)
@@ -53,8 +69,6 @@ IF(EXAMPLES_INSTALL)
   INSTALL(FILES DESTINATION ${EXAMPLES_INSTALL_PATH}/nvector/serial)
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
-  SET(SOLVER "CVODE")
-  SET(SOLVER_LIB "sundials_cvode")
   LIST2STRING(nvector_serial_examples EXAMPLES)
 
   # Regardless of the platform we're on, we will generate and install 

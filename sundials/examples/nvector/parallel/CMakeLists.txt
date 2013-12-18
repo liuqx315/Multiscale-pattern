@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Steven Smith @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2013, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for nvector examples
 
@@ -24,16 +29,14 @@ INCLUDE_DIRECTORIES(. ..)
 # generate them) based on the value of the variable LINK_LIBRARY_TYPE
 
 IF(LINK_LIBRARY_TYPE MATCHES "static")
-  SET(CVODE_LIB sundials_cvode_static)
   SET(NVECS_LIB sundials_nvecparallel_static)
 ELSE(LINK_LIBRARY_TYPE MATCHES "static")
-  SET(CVODE_LIB sundials_cvode_shared)
   SET(NVECS_LIB sundials_nvecparallel_shared)
 ENDIF(LINK_LIBRARY_TYPE MATCHES "static")
 
 # Set-up linker flags and link libraries
 
-SET(SUNDIALS_LIBS ${CVODE_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
+SET(SUNDIALS_LIBS ${NVECS_LIB} ${EXTRA_LINK_LIBS})
 
 IF(MPI_MPICC)
   # use MPI_MPICC as the compiler
@@ -47,8 +50,26 @@ ENDIF(MPI_MPICC)
 # Add the build and install targets for each nvector example
 
 FOREACH(example ${nvector_parallel_examples})
-  ADD_EXECUTABLE(${example} ${example}.c ../test_nvector.c)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+
+  ADD_EXECUTABLE(${example} ${example}.c ../test_nvector.c ../../../src/sundials/sundials_nvector.c)
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+
+  # Run sequentially
+  SUNDIALS_ADD_TEST("${example}" ${example})
+
+  # Run sequentially with arguments
+  SUNDIALS_ADD_TEST("${example}_1000_0" ${example} TEST_ARGS 1000 0)
+
+  # Run in parallel on 4 procs
+  SUNDIALS_ADD_TEST("${example}_4" ${example} MPI_NPROCS 4)
+  
+  # Parallel with additional arguments and supplying an answer file
+  SUNDIALS_ADD_TEST("${example}_4_1000_0" ${example} MPI_NPROCS 4 TEST_ARGS 1000 0 ANSWER_FILE ${example})
+
+  # Specify floating point precision and integer percentage for comparison
+  SUNDIALS_ADD_TEST("${example}_precision" ${example} MPI_NPROCS 4 TEST_ARGS 1000 0 ANSWER_FILE ${example}
+    FLOAT_PRECISION 5 INTEGER_PERCENTAGE 0)
+  
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
 
   IF(EXAMPLES_INSTALL)
@@ -62,8 +83,6 @@ IF(EXAMPLES_INSTALL)
   INSTALL(FILES DESTINATION ${EXAMPLES_INSTALL_PATH}/nvector/parallel)
 
   # Prepare substitution variables for Makefile and/or CMakeLists templates
-  SET(SOLVER "CVODE")
-  SET(SOLVER_LIB "sundials_cvode")
   LIST2STRING(nvector_parallel_examples EXAMPLES)
 
   # Regardless of the platform we're on, we will generate and install 

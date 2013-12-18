@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for CPODES serial examples
 
@@ -57,6 +62,7 @@ ENDIF(LAPACK_FOUND)
 
 FOREACH(example ${CPODES_examples})
   ADD_EXECUTABLE(${example} ${example}.c)
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
   #ADD_TEST(${example} ${TESTRUNNER} ${example})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   FILE(GLOB example_out ${example}.out*)
@@ -71,6 +77,7 @@ ENDFOREACH(example ${CPODES_examples})
 IF(LAPACK_FOUND)
   FOREACH(example ${CPODES_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     FILE(GLOB example_out ${example}.out*)
     IF(EXAMPLES_INSTALL)
