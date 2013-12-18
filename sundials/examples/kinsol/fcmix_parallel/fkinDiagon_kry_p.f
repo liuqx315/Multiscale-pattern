@@ -31,7 +31,7 @@ c
       integer ier, size, globalstrat, rank, mype, npes
       integer maxl, maxlrst
 c The following declaration specification should match C type long int.
-      integer*4 neq, nlocal, iout(15), msbpre
+      integer*8 neq, nlocal, iout(15), msbpre
       double precision rout(2)
       double precision pp, fnormtol, scsteptol
       double precision uu(localsize), scale(localsize)
@@ -175,7 +175,7 @@ c     function with the following name and form.
       implicit none
 
 c The following declaration specification should match C type long int.
-      integer*4 nlocal
+      integer*8 nlocal
       integer ier, mype, npes, baseadd, i
       integer localsize
       parameter(localsize=32)
@@ -186,6 +186,8 @@ c The following declaration specification should match C type long int.
 
       do 10 i = 1, nlocal
  10      fval(i) = uu(i) * uu(i) - (i + baseadd) * (i + baseadd)
+      
+      ier = 0
       
       return
       end
@@ -202,7 +204,7 @@ c     to it.  The argument list must also be as illustrated below:
       implicit none
 
 c The following declaration specification should match C type long int.
-      integer*4 nlocal
+      integer*8 nlocal
       integer ier, mype, npes, baseadd, i
       integer localsize
       parameter(localsize=32)
@@ -232,7 +234,7 @@ c     to it.  The argument list must also be as illustrated below:
       implicit none
 
 c The following declaration specification should match C type long int.
-      integer*4 nlocal
+      integer*8 nlocal
       integer ier, mype, npes, baseadd, i
       integer localsize
       parameter(localsize=32)

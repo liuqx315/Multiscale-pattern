@@ -6,10 +6,15 @@
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * KINSOL solver module header file
  * -----------------------------------------------------------------
@@ -456,7 +461,7 @@ SUNDIALS_EXPORT int KINSetInfoHandlerFn(void *kinmem, KINInfoHandlerFn ihfun, vo
 SUNDIALS_EXPORT int KINSetInfoFile(void *kinmem, FILE *infofp);
 SUNDIALS_EXPORT int KINSetUserData(void *kinmem, void *user_data);
 SUNDIALS_EXPORT int KINSetPrintLevel(void *kinmemm, int printfl);
-SUNDIALS_EXPORT int KINSetMAA(void *kinmem, long int maa, booleantype aamem);
+SUNDIALS_EXPORT int KINSetMAA(void *kinmem, long int maa);
 SUNDIALS_EXPORT int KINSetAAStopCrit(void *kinmem, booleantype setstop);
 SUNDIALS_EXPORT int KINSetNumMaxIters(void *kinmem, long int mxiter);
 SUNDIALS_EXPORT int KINSetNoInitSetup(void *kinmem, booleantype noInitSetup);

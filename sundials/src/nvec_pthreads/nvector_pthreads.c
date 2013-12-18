@@ -10,10 +10,15 @@
  *                   Hindmarsh, Radu Serban, and Aaron Collier 
  *                   @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for a POSIX Threads (Pthreads)
  * implementation of the NVECTOR package using a LOCAL array of 
@@ -473,7 +478,7 @@ void N_VSetArrayPointer_Pthreads(realtype *v_data, N_Vector v)
 
 void N_VLinearSum_Pthreads(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z)
 {
-  realtype c, *xd, *yd, *zd;
+  realtype c;
   N_Vector v1, v2;
   booleantype test;
 
@@ -483,8 +488,6 @@ void N_VLinearSum_Pthreads(realtype a, N_Vector x, realtype b, N_Vector y, N_Vec
   Pthreads_Data *thread_data;
 
   pthread_attr_t attr;
-
-  xd = yd = zd = NULL;
 
   if ((b == ONE) && (z == y)) {    /* BLAS usage: axpy y <- ax+y */
     Vaxpy_Pthreads(a,x,y);

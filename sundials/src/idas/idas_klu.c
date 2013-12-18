@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2013, Lawrence Livermroe National Security
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the IDASKLU linear solver.
  * -----------------------------------------------------------------
@@ -17,11 +22,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sundials/sundials_math.h>
-
 #include "idas_impl.h"
 #include "idas_sparse_impl.h"
-#include "idas_klu_impl.h"
+#include "sundials/sundials_klu_impl.h"
+#include "sundials/sundials_math.h"
 
 /* Constants */
 
@@ -66,11 +70,7 @@ static void IDAKLUFreeB(IDABMem IDAB_mem);
  * IDAKLUSolve, NULL, and IDAKLUFree, respectively.
  * It allocates memory for a structure of type IDAkluMemRec and sets
  * the ida_lmem field in (*IDA_mem) to the address of this structure.
- * It sets setupNonNull in (*IDA_mem) to TRUE, sets the d_jdata field
- * in the IDAkluMemRec structure to be the input parameter jdata,
- * and sets the d_jac field to be:
- *   (1) the input parameter djac, if djac != NULL, or                
- *   (2) throws an error, if djac == NULL.                             
+ * It sets setupNonNull in (*IDA_mem) to TRUE.
  * Finally, it allocates memory for KLU.
  * The return value is IDASLS_SUCCESS = 0, IDASLS_LMEM_FAIL = -1,
  * or IDASLS_ILL_INPUT = -2.
@@ -153,9 +153,19 @@ int IDAKLU(void *ida_mem, int n, int nnz)
   klu_data->s_Numeric = (klu_numeric *)malloc(sizeof(klu_numeric));
 
   /* Set default parameters for KLU */
-  klu_defaults(&klu_data->s_Common);
-  /* Set ordering as COLAMD.  The default is AMD, ordering 0. */
-  klu_data->s_Common.ordering = 1;
+  flag = klu_defaults(&klu_data->s_Common);
+  if (flag == 0) {
+    IDAProcessError(IDA_mem, IDASLS_PACKAGE_FAIL, "IDASSLS", "IDAKLU", 
+		    MSGSP_PACKAGE_FAIL);
+    return(IDASLS_PACKAGE_FAIL);
+  }
+
+  /* Set ordering to COLAMD as the idas default use.
+     Users can set a different value with IDAKLUSetOrdering,
+     and the user-set value is loaded before any call to klu_analyze in
+     IDAKLUSetup.  */
+  klu_data->s_ordering = 1;
+  klu_data->s_Common.ordering = klu_data->s_ordering;
 
   /* Attach linear solver memory to the integrator memory */
   idasls_mem->s_solver_data = (void *) klu_data;
@@ -180,30 +190,12 @@ int IDAKLU(void *ida_mem, int n, int nnz)
 
 static int IDAKLUInit(IDAMem IDA_mem)
 {
-  int retval, n;
   IDASlsMem idasls_mem;
-  KLUData klu_data;
 
   idasls_mem = (IDASlsMem)IDA_mem->ida_lmem;
-  klu_data = (KLUData) idasls_mem->s_solver_data;
 
   idasls_mem->s_nje = 0;
   idasls_mem->s_first_factorize = 1;
-
-  /* ------------------------------------------------------------
-     Allocate storage and initialize statistics variables. 
-     ------------------------------------------------------------*/
-  n = idasls_mem->s_JacMat->N;
-
-  retval = klu_defaults(&(klu_data->s_Common));
-  if (retval == 0) {
-    IDAProcessError(IDA_mem, IDASLS_PACKAGE_FAIL, "IDASSLS", "IDAKLUInit", 
-		    MSGSP_PACKAGE_FAIL);
-    return(IDASLS_PACKAGE_FAIL);
-  }
-
-  /* Use the COLAMD ordering, although this should get changed to a user option */
-  klu_data->s_Common.ordering = 1;
 
   idasls_mem->s_last_flag = 0;
   return(0);
@@ -271,8 +263,12 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
     /* ------------------------------------------------------------
        Get the symbolic factorization
        ------------------------------------------------------------*/ 
-    klu_data->s_Symbolic = klu_analyze(JacMat->N, JacMat->colptrs, JacMat->rowvals, 
-				     &(klu_data->s_Common));
+    /* Update the ordering option with any user-updated values from 
+       calls to IDAKLUSetOrdering */
+    klu_data->s_Common.ordering = klu_data->s_ordering;
+
+    klu_data->s_Symbolic = klu_analyze(JacMat->N, JacMat->colptrs, 
+				       JacMat->rowvals, &(klu_data->s_Common));
     if (klu_data->s_Symbolic == NULL) {
       IDAProcessError(IDA_mem, IDASLS_PACKAGE_FAIL, "IDASSLS", "IDAKLUSetup", 
 		      MSGSP_PACKAGE_FAIL);
@@ -309,7 +305,7 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
 static int IDAKLUSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight,
 		       N_Vector ycur, N_Vector ypcur, N_Vector rrcur)
 {
-  int last_flag;
+  int last_flag, flag;
   realtype cjratio;
   IDASlsMem idasls_mem;
   KLUData klu_data;
@@ -326,8 +322,13 @@ static int IDAKLUSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight,
   bd = N_VGetArrayPointer(b);
 
   /* Call KLU to solve the linear system */
-  klu_solve(klu_data->s_Symbolic, klu_data->s_Numeric, JacMat->N, 1, bd, 
+  flag = klu_solve(klu_data->s_Symbolic, klu_data->s_Numeric, JacMat->N, 1, bd, 
 	    &(klu_data->s_Common));
+  if (flag == 0) {
+    IDAProcessError(IDA_mem, IDASLS_PACKAGE_FAIL, "IDASSLS", "IDAKLUSolve", 
+		    MSGSP_PACKAGE_FAIL);
+    return(IDASLS_PACKAGE_FAIL);
+  }
 
   /* Scale the correction to account for change in cj. */
   if (cjratio != ONE) N_VScale(TWO/(ONE + cjratio), b, b);
@@ -359,10 +360,7 @@ static int IDAKLUFree(IDAMem IDA_mem)
   }
 
   free(klu_data); 
-  klu_data = NULL;
- 
   free(IDA_mem->ida_lmem); 
-  IDA_mem->ida_lmem = NULL;
 
   return(IDASLS_SUCCESS);
 }
@@ -461,3 +459,44 @@ static void IDAKLUFreeB(IDABMem IDAB_mem)
   free(idaslsB_mem);
 }
 
+
+/* 
+ * -----------------------------------------------------------------
+ * Optional Input Specification Functions
+ * -----------------------------------------------------------------
+ *
+ * IDAKLUSetOrdering sets the ordering used by KLU for reducing fill.
+ * Options are: 0 for AMD, 1 for COLAMD, and 2 for the natural ordering.
+ * The default used in IDAS is 1 for COLAMD.
+ * -----------------------------------------------------------------
+ */
+
+int IDAKLUSetOrdering(void *ida_mem_v, int ordering_choice)
+{
+  IDAMem ida_mem;
+  IDASlsMem idasls_mem;
+  KLUData klu_data;
+
+ /* Return immediately if ida_mem_v is NULL */
+  if (ida_mem_v == NULL) {
+    IDAProcessError(NULL, IDASLS_MEM_NULL, "IDASLS", "IDAKLUSetOrdering",
+		    MSGSP_IDAMEM_NULL);
+    return(IDASLS_MEM_NULL);
+  }
+  ida_mem = (IDAMem) ida_mem_v;
+
+ /* Return if ordering choice argument is not valid */
+  if ( (ordering_choice != 0) && (ordering_choice != 1) && 
+       (ordering_choice != 2) ) {
+    IDAProcessError(NULL, IDASLS_ILL_INPUT, "IDASLS", "IDAKLUSetOrdering",
+		    MSGSP_ILL_INPUT);
+    return(IDASLS_ILL_INPUT);
+  }
+
+  idasls_mem = (IDASlsMem) ida_mem->ida_lmem;
+  klu_data = (KLUData) idasls_mem->s_solver_data;
+
+  klu_data->s_ordering = ordering_choice;
+
+  return(IDASLS_SUCCESS);
+}

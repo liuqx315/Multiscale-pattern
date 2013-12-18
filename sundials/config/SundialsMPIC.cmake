@@ -13,6 +13,11 @@
 #
 # 
 
+# make sure valid mpi_run_command. If not, then warn and return
+If(MPI_RUN_COMMAND AND NOT MPI_RUN_COMMAND STREQUAL "mpirun" AND NOT MPI_RUN_COMMAND STREQUAL "srun")
+    PRINT_WARNING("Unknown mpi run command: ${MPI_RUN_COMMAND}" "Please enter mpirun or srun")
+ENDIF(MPI_RUN_COMMAND AND NOT MPI_RUN_COMMAND STREQUAL "mpirun" AND NOT MPI_RUN_COMMAND STREQUAL "srun")
+
 set(MPIC_FOUND FALSE)
 set(MPIC_MPI2 FALSE)
 
@@ -112,7 +117,7 @@ if(MPIC_PERFORM_TEST)
     "}\n")
   # Use TRY_COMPILE to make the target "mpictest"
   try_compile(MPITEST_OK ${MPITest_DIR} ${MPITest_DIR}
-    mpitest OUTPUT_VARIABLE MY_OUTPUT)
+    mpictest OUTPUT_VARIABLE MY_OUTPUT)
   # To ensure we do not use stuff from the previous attempts, 
   # we must remove the CMakeFiles directory.
   file(REMOVE_RECURSE ${MPITest_DIR}/CMakeFiles)

@@ -4,38 +4,48 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for CVODES serial examples
 
 
-# Add variable CVODES_examples with the names of the serial CVODES examples
 
-SET(CVODES_examples
-  cvsAdvDiff_ASAi_bnd
-  cvsAdvDiff_bnd
-  cvsAdvDiff_FSA_non
-  cvsDirectDemo_ls
-  cvsDiurnal_FSA_kry
-  cvsDiurnal_kry_bp
-  cvsDiurnal_kry
-  cvsFoodWeb_ASAi_kry
-  cvsFoodWeb_ASAp_kry
-  cvsHessian_ASA_FSA
-  cvsKrylovDemo_ls
-  cvsKrylovDemo_prec
-  cvsRoberts_ASAi_dns
-  cvsRoberts_dns
-  cvsRoberts_dns_uw
-  cvsRoberts_FSA_dns
+
+
+# Add variable CVODES_examples with the names of the serial CVODES examples
+# This is a list of tuples, first element is example name.
+# Optional second argument is test arguments
+SET(CVODES_examples 
+   cvsAdvDiff_ASAi_bnd
+   cvsAdvDiff_bnd
+  "cvsAdvDiff_FSA_non\;-sensi stg t"
+  "cvsAdvDiff_FSA_non\;-sensi sim t"
+   cvsDirectDemo_ls
+  "cvsDiurnal_FSA_kry\;-sensi stg t"
+  "cvsDiurnal_FSA_kry\;-sensi sim t"
+   cvsDiurnal_kry_bp
+   cvsDiurnal_kry
+   cvsFoodWeb_ASAi_kry
+   cvsFoodWeb_ASAp_kry
+   cvsHessian_ASA_FSA
+   cvsKrylovDemo_ls
+   cvsKrylovDemo_prec
+   cvsRoberts_ASAi_dns
+   cvsRoberts_dns
+   cvsRoberts_dns_uw
+   "cvsRoberts_FSA_dns\;-sensi stg1 t"
   )
 
 # Add variable CVODES_examples_BL with the names of the serial CVODES examples
 # that use Lapack
-
 SET(CVODES_examples_BL
   cvsAdvDiff_bndL
   cvsRoberts_dnsL
@@ -62,15 +72,35 @@ ENDIF(LAPACK_FOUND)
 
 # Add the build and install targets for each CVODES example
 
-FOREACH(example ${CVODES_examples})
-  ADD_EXECUTABLE(${example} ${example}.c)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+# SGS is there a way to query CMAKE variable to get added executables 
+# rather than keeping our own list?
+SET(ADDED_EXECUTABLES "")
+FOREACH(example_tuple ${CVODES_examples})
+  LIST(GET example_tuple 0 example)
+
+  # Only need to add the executable once
+  LIST(FIND ADDED_EXECUTABLES ${example} index)
+  IF(index EQUAL -1)
+    LIST(APPEND ADDED_EXECUTABLES ${example})
+    ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  ENDIF(index EQUAL -1)
+
+  LIST(LENGTH example_tuple n)
+  IF(n EQUAL 2)
+    LIST(GET example_tuple 1 test_args)
+    STRING(REGEX REPLACE " " "_" test_name ${example}_${test_args})
+    SUNDIALS_ADD_TEST(${test_name} ${example} TEST_ARGS ${test_args})
+  ELSE()
+    SUNDIALS_ADD_TEST(${example} ${example})
+  ENDIF()
+
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   FILE(GLOB example_out ${example}.out*)
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.c ${example_out} DESTINATION ${EXAMPLES_INSTALL_PATH}/cvodes/serial)
   ENDIF(EXAMPLES_INSTALL)
-ENDFOREACH(example ${CVODES_examples})
+ENDFOREACH(example_tuple ${CVODES_examples})
 
 # If Lapack support is enabled, add the build and install targets for
 # the examples using Lapack
@@ -78,6 +108,7 @@ ENDFOREACH(example ${CVODES_examples})
 IF(LAPACK_FOUND)
   FOREACH(example ${CVODES_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     FILE(GLOB example_out ${example}.out*)
     IF(EXAMPLES_INSTALL)

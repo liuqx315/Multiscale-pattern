@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for the FKINSOL parallel examples
 
@@ -15,7 +20,7 @@
 # Add variable kinsol_examples with the names of the parallel KINSOL examples
 
 SET(FKINSOL_examples
-  fkinDiagon_kry_p
+  "fkinDiagon_kry_p\;1\;4"
   )
 
 # Check whether we use MPI compiler scripts.
@@ -55,11 +60,20 @@ IF(LAPACK_FOUND)
   SET(SUNDIALS_LIBS "${SUNDIALS_LIBS} ${LAPACK_LIBRARIES}")
 ENDIF(LAPACK_FOUND)
 
+IF(KLU_FOUND)
+  LIST(APPEND SUNDIALS_LIBS ${KLU_LIBRARIES})
+ENDIF(KLU_FOUND)
+
 # Add the build and install targets for each KINSOL example
 
-FOREACH(example ${FKINSOL_examples})
+FOREACH(example_tuple ${FKINSOL_examples})
+  list(GET example_tuple 0 example)
+  list(GET example_tuple 1 number_of_nodes)
+  list(GET example_tuple 2 number_of_tasks)
+  # first item is example
   ADD_EXECUTABLE(${example} ${example}.f)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  SUNDIALS_ADD_TEST(${example} ${example} MPI_NPROCS ${number_of_tasks})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(NOT MPI_MPIF77)
     TARGET_LINK_LIBRARIES(${example} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARIES})
@@ -67,7 +81,7 @@ FOREACH(example ${FKINSOL_examples})
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/kinsol/fcmix_parallel)
   ENDIF(EXAMPLES_INSTALL)
-ENDFOREACH(example ${FKINSOL_examples})
+ENDFOREACH(example_tuple ${FKINSOL_examples})
 
 IF(EXAMPLES_INSTALL)
 
@@ -78,7 +92,10 @@ IF(EXAMPLES_INSTALL)
   SET(SOLVER "KINSOL")
   SET(SOLVER_LIB "sundials_kinsol")
   SET(SOLVER_FLIB "sundials_fkinsol")
-  LIST2STRING(FKINSOL_examples EXAMPLES)
+  FOREACH(example_tuple ${FKINSOL_examples})
+    list(GET example_tuple 0 example)
+    LIST2STRING(example EXAMPLES)
+  ENDFOREACH(example_tuple ${FKINSOL_examples})
 
   # Regardless of the platform we're on, we will generate and install 
   # CMakeLists.txt file for building the examples. This file  can then 
