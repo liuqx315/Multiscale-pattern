@@ -28,13 +28,14 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
 INCS = -I../../install_opt/include/
-LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecserial -lsundials_nvecparallel -lsundials_nvecparallelgrid
+LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecserial -lsundials_nvecparallel -lm
 
 # listing of all test routines
 TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
-        nvector_parallel_grid_test.exe \
-        pcg_tester.exe 
+        pcg_tester.exe \
+        fgmres_tester.exe \
+        gmres_tester.exe 
 
 # target to build all test executables
 all : ${TESTS}
