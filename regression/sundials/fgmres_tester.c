@@ -38,15 +38,14 @@ typedef struct {
 int main() {
 
   /* local variables */
-  int i, j, k, iret, nli, nps;
+  int i, j, iret, nli, nps;
   realtype res_norm;
 
   /* test problem parameters */
   long int N = 1000;
   int ndeltas = 6;
-  realtype deltas[] = {RCONST(1e-2), RCONST(1e-4),  RCONST(1e-6), 
-		       RCONST(1e-8), RCONST(1e-10), RCONST(1e-12)};
-  int GStypes[] = {CLASSICAL_GS, MODIFIED_GS};
+  realtype deltas[] = {RCONST(1e-1), RCONST(1e-3),  RCONST(1e-5), 
+		       RCONST(1e-7), RCONST(1e-9), RCONST(1e-11)};
   int lmem = 100;
   int nrestarts = 0;
 
@@ -77,113 +76,77 @@ int main() {
     udata->A[i][i] += 2.0 + 1.0*i/N;
   }
   N_VConst(1e2, s);
+  for (i=0; i<N/2; i++)  NV_Ith_S(s,i) = 1.0;
   ATimes((void *) udata, xtrue, b);
 
   /* Call SpfgmrMalloc to create the solver memory */
   spfgmr_mem = SpfgmrMalloc(lmem, x);
 
+  printf("\nRunning FGMRES tests:\n");
+
   /* Loop over tolerances */
   for (j=0; j<ndeltas; j++) {
 
-    /* Loop over orthogonalization types, calling various solvers */
-    for (k=0; k<2; k++) {
+    printf("\nTol %g\n", deltas[j]);
 
-      /* Call solver with preconditioner disabled */
-      for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
-      printf("\nCalling solver with P disabled, tol = %g\n", deltas[j]);
-      iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_NONE, 
-			 GStypes[k], deltas[j], nrestarts, lmem, 
-			 (void *) udata, s, s, ATimes, PSolve, &res_norm, 
-			 &nli, &nps);
-      if (iret < 0)  printf("  SpfgmrSolve Error = %i\n", iret);
-      else           printf("  SpfgmrSolve Success = %i\n", iret);
-      printf("  res_norm = %g\n", res_norm);
-      printf("  nli = %i\n", nli);
-      printf("  nps = %i\n", nps);
-      N_VLinearSum(1.0, x, -1.0, xtrue, error);
-      printf("  error norm = %g\n", RSqrt(N_VDotProd(error,error)));
+    /* Call solver with preconditioner disabled */
+    for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
+    printf("No P  ...");
+    iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_NONE, 
+		       MODIFIED_GS, deltas[j], nrestarts, lmem, 
+		       (void *) udata, s, s, ATimes, PSolve, &res_norm, 
+		       &nli, &nps);
+    if (iret < 0)  printf("  Error %i\n", iret);
+    else           printf("  Success\n");
+    printf("  nli %i,  nps %i,", nli, nps);
+    N_VLinearSum(1.0, x, -1.0, xtrue, error);
+    printf("  res norm %.16g,  error norm %.16g\n", 
+	   res_norm, RSqrt(N_VDotProd(error,error)));
 
-      /* Call solver with no preconditioning */
-      for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
-      udata->pchoice = 0;
-      printf("\nCalling solver with no P, tol = %g\n", deltas[j]);
-      iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_LEFT, 
-			 GStypes[k], deltas[j], nrestarts, lmem, 
-			 (void *) udata, s, s, ATimes, PSolve, &res_norm, 
-			 &nli, &nps);
-      if (iret < 0)  printf("  SpfgmrSolve Error = %i\n", iret);
-      else           printf("  SpfgmrSolve Success = %i\n", iret);
-      printf("  res_norm = %g\n", res_norm);
-      printf("  nli = %i\n", nli);
-      printf("  nps = %i\n", nps);
-      N_VLinearSum(1.0, x, -1.0, xtrue, error);
-      printf("  error norm = %g\n", RSqrt(N_VDotProd(error,error)));
+    /* Call solver with no preconditioning */
+    for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
+    udata->pchoice = 0;
+    printf("Identity P  ...");
+    iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_RIGHT, 
+		       MODIFIED_GS, deltas[j], nrestarts, lmem, 
+		       (void *) udata, s, s, ATimes, PSolve, &res_norm, 
+		       &nli, &nps);
+    if (iret < 0)  printf("  Error %i\n", iret);
+    else           printf("  Success\n");
+    printf("  nli %i,  nps %i,", nli, nps);
+    N_VLinearSum(1.0, x, -1.0, xtrue, error);
+    printf("  res norm %.16g,  error norm %.16g\n", 
+	   res_norm, RSqrt(N_VDotProd(error,error)));
 
-      /* Call solver with scaled left preconditioning */
-      for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
-      udata->pchoice = 1;
-      printf("\nCalling solver with scaled left P, tol = %g\n", deltas[j]);
-      iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_LEFT, 
-			 GStypes[k], deltas[j], nrestarts, lmem, 
-			 (void *) udata, s, s, ATimes, PSolve, &res_norm, 
-			 &nli, &nps);
-      if (iret < 0)  printf("  SpfgmrSolve Error = %i\n", iret);
-      else           printf("  SpfgmrSolve Success = %i\n", iret);
-      printf("  res_norm = %g\n", res_norm);
-      printf("  nli = %i\n", nli);
-      printf("  nps = %i\n", nps);
-      N_VLinearSum(1.0, x, -1.0, xtrue, error);
-      printf("  error norm = %g\n", RSqrt(N_VDotProd(error,error)));
+    /* Call solver with scaled right preconditioning */
+    for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
+    udata->pchoice = 1;
+    printf("Scaling P  ...");
+    iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_RIGHT, 
+		       MODIFIED_GS, deltas[j], nrestarts, lmem, 
+		       (void *) udata, s, s, ATimes, PSolve, &res_norm, 
+		       &nli, &nps);
+    if (iret < 0)  printf("  Error %i\n", iret);
+    else           printf("  Success\n");
+    printf("  nli %i,  nps %i,", nli, nps);
+    N_VLinearSum(1.0, x, -1.0, xtrue, error);
+    printf("  res norm %.16g,  error norm %.16g\n", 
+	   res_norm, RSqrt(N_VDotProd(error,error)));
 
-      /* Call solver with Jacobi left preconditioning */
-      for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
-      udata->pchoice = 2;
-      printf("\nCalling solver with Jacobi left P, tol = %g\n", deltas[j]);
-      iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_LEFT, 
-			 GStypes[k], deltas[j], nrestarts, lmem, 
-			 (void *) udata, s, s, ATimes, PSolve, &res_norm, 
-			 &nli, &nps);
-      if (iret < 0)  printf("  SpfgmrSolve Error = %i\n", iret);
-      else           printf("  SpfgmrSolve Success = %i\n", iret);
-      printf("  res_norm = %g\n", res_norm);
-      printf("  nli = %i\n", nli);
-      printf("  nps = %i\n", nps);
-      N_VLinearSum(1.0, x, -1.0, xtrue, error);
-      printf("  error norm = %g\n", RSqrt(N_VDotProd(error,error)));
-
-      /* Call solver with scaled right preconditioning */
-      for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
-      udata->pchoice = 1;
-      printf("\nCalling solver with scaled right P, tol = %g\n", deltas[j]);
-      iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_RIGHT, 
-			 GStypes[k], deltas[j], nrestarts, lmem, 
-			 (void *) udata, s, s, ATimes, PSolve, &res_norm, 
-			 &nli, &nps);
-      if (iret < 0)  printf("  SpfgmrSolve Error = %i\n", iret);
-      else           printf("  SpfgmrSolve Success = %i\n", iret);
-      printf("  res_norm = %g\n", res_norm);
-      printf("  nli = %i\n", nli);
-      printf("  nps = %i\n", nps);
-      N_VLinearSum(1.0, x, -1.0, xtrue, error);
-      printf("  error norm = %g\n", RSqrt(N_VDotProd(error,error)));
-
-      /* Call solver with Jacobi right preconditioning */
-      for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
-      udata->pchoice = 2;
-      printf("\nCalling solver with Jacobi right P, tol = %g\n", deltas[j]);
-      iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_RIGHT, 
-			 GStypes[k], deltas[j], nrestarts, lmem, 
-			 (void *) udata, s, s, ATimes, PSolve, &res_norm, 
-			 &nli, &nps);
-      if (iret < 0)  printf("  SpfgmrSolve Error = %i\n", iret);
-      else           printf("  SpfgmrSolve Success = %i\n", iret);
-      printf("  res_norm = %g\n", res_norm);
-      printf("  nli = %i\n", nli);
-      printf("  nps = %i\n", nps);
-      N_VLinearSum(1.0, x, -1.0, xtrue, error);
-      printf("  error norm = %g\n", RSqrt(N_VDotProd(error,error)));
-
-    } /* for k */
+    /* Call solver with Jacobi right preconditioning */
+    for (i=0; i<N; i++)  NV_Ith_S(x,i) = 0.0;
+    udata->pchoice = 2;
+    printf("Jacobi P  ...");
+    iret = SpfgmrSolve(spfgmr_mem, (void *) udata, x, b, PREC_RIGHT, 
+		       MODIFIED_GS, deltas[j], nrestarts, lmem, 
+		       (void *) udata, s, s, ATimes, PSolve, &res_norm, 
+		       &nli, &nps);
+    if (iret < 0)  printf("  Error %i\n", iret);
+    else           printf("  Success\n");
+    printf("  nli %i,  nps %i,", nli, nps);
+    N_VLinearSum(1.0, x, -1.0, xtrue, error);
+    printf("  res norm %.16g,  error norm %.16g\n", 
+	   res_norm, RSqrt(N_VDotProd(error,error)));
   
   } /* for j */
   
