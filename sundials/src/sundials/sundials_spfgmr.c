@@ -51,11 +51,11 @@ SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
     N_VDestroyVectorArray(Z, l_max+1);
     return(NULL);
   }
-  for (k = 0; k <= l_max; k++) {
+  for (k=0; k<=l_max; k++) {
     Hes[k] = NULL;
     Hes[k] = (realtype *) malloc(l_max*sizeof(realtype));
     if (Hes[k] == NULL) {
-      for (i = 0; i < k; i++) {free(Hes[i]); Hes[i] = NULL;}
+      for (i=0; i<k; i++) {free(Hes[i]); Hes[i] = NULL;}
       free(Hes); Hes = NULL;
       N_VDestroyVectorArray(V, l_max+1);
       N_VDestroyVectorArray(Z, l_max+1);
@@ -67,7 +67,7 @@ SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
   givens = NULL;
   givens = (realtype *) malloc(2*l_max*sizeof(realtype));
   if (givens == NULL) {
-    for (i = 0; i <= l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
+    for (i=0; i<=l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
     free(Hes); Hes = NULL;
     N_VDestroyVectorArray(V, l_max+1);
     N_VDestroyVectorArray(Z, l_max+1);
@@ -78,7 +78,7 @@ SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
   xcor = N_VClone(vec_tmpl);
   if (xcor == NULL) {
     free(givens); givens = NULL;
-    for (i = 0; i <= l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
+    for (i=0; i<=l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
     free(Hes); Hes = NULL;
     N_VDestroyVectorArray(V, l_max+1);
     N_VDestroyVectorArray(Z, l_max+1);
@@ -91,7 +91,7 @@ SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
   if (yg == NULL) {
     N_VDestroy(xcor);
     free(givens); givens = NULL;
-    for (i = 0; i <= l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
+    for (i=0; i<=l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
     free(Hes); Hes = NULL;
     N_VDestroyVectorArray(V, l_max+1);
     N_VDestroyVectorArray(Z, l_max+1);
@@ -104,7 +104,7 @@ SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
     free(yg); yg = NULL;
     N_VDestroy(xcor);
     free(givens); givens = NULL;
-    for (i = 0; i <= l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
+    for (i=0; i<=l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
     free(Hes); Hes = NULL;
     N_VDestroyVectorArray(V, l_max+1);
     N_VDestroyVectorArray(Z, l_max+1);
@@ -119,7 +119,7 @@ SpfgmrMem SpfgmrMalloc(int l_max, N_Vector vec_tmpl)
     free(yg); yg = NULL;
     N_VDestroy(xcor);
     free(givens); givens = NULL;
-    for (i = 0; i <= l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
+    for (i=0; i<=l_max; i++) {free(Hes[i]); Hes[i] = NULL;}
     free(Hes); Hes = NULL;
     N_VDestroyVectorArray(V, l_max+1);
     N_VDestroyVectorArray(Z, l_max+1);
@@ -153,12 +153,11 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
   realtype **Hes, *givens, *yg;
   realtype beta, rotation_product, r_norm, s_product, rho;
   booleantype preOnRight, scale1, scale2, converged;
-  int i, j, k, l, l_plus_1, l_max, krydim, ier, ntries;
+  int i, j, k, l, l_max, krydim, ier, ntries;
 
   if (mem == NULL) return(SPFGMR_MEM_NULL);
 
   /* Initialize some variables */
-  l_plus_1 = 0;
   krydim = 0;
 
   /* Make local copies of mem variables. */
@@ -180,7 +179,8 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
   /* Check for legal value of max_restarts */
   if (max_restarts < 0)  max_restarts = 0;
 
-  /* Set preconditioning flag (enabling any preconditioner implies right preconditioning) */
+  /* Set preconditioning flag (enabling any preconditioner implies right 
+     preconditioning, since FGMRES does not support left preconditioning) */
   preOnRight = ((pretype == PREC_RIGHT) || (pretype == PREC_BOTH) || (pretype == PREC_LEFT));
 
   /* Set scaling flags */
@@ -231,7 +231,7 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
       
       (*nli)++;
       
-      krydim = l_plus_1 = l + 1;
+      krydim = l + 1;
       
       /* Generate A-tilde V[l], where A-tilde = s1 A P_inv s2_inv. */
 
@@ -239,10 +239,10 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
       if (scale2) N_VDiv(V[l], s2, vtemp);
       else N_VScale(ONE, V[l], vtemp);
       
-      /*   Apply right preconditioner: Z[l] = P_inv s2_inv V[l]. */ 
+      /*   Apply right preconditioner: vtemp = Z[l] = P_inv s2_inv V[l]. */ 
       if (preOnRight) {
-        N_VScale(ONE, vtemp, V[l_plus_1]);
-        ier = psolve(P_data, V[l_plus_1], vtemp, PREC_RIGHT);
+        N_VScale(ONE, vtemp, V[l+1]);
+        ier = psolve(P_data, V[l+1], vtemp, PREC_RIGHT);
         (*nps)++;
         if (ier != 0)
           return((ier < 0) ? SPFGMR_PSOLVE_FAIL_UNREC : SPFGMR_PSOLVE_FAIL_REC);
@@ -250,20 +250,20 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
       N_VScale(ONE, vtemp, Z[l]);
       
       /*   Apply A: V[l+1] = A P_inv s2_inv V[l]. */
-      ier = atimes(A_data, vtemp, V[l_plus_1] );
+      ier = atimes(A_data, vtemp, V[l+1]);
       if (ier != 0)
         return((ier < 0) ? SPFGMR_ATIMES_FAIL_UNREC : SPFGMR_ATIMES_FAIL_REC);
 
       /*   Apply left scaling: V[l+1] = s1 A P_inv s2_inv V[l]. */
-      if (scale1)  N_VProd(s1, V[l_plus_1], V[l_plus_1]);
+      if (scale1)  N_VProd(s1, V[l+1], V[l+1]);
       
       /* Orthogonalize V[l+1] against previous V[i]: V[l+1] = w_tilde. */
       if (gstype == CLASSICAL_GS) {
-        if (ClassicalGS(V, Hes, l_plus_1, l_max, &(Hes[l_plus_1][l]),
+        if (ClassicalGS(V, Hes, l+1, l_max, &(Hes[l+1][l]),
                         vtemp, yg) != 0)
           return(SPFGMR_GS_FAIL);
       } else {
-        if (ModifiedGS(V, Hes, l_plus_1, l_max, &(Hes[l_plus_1][l])) != 0) 
+        if (ModifiedGS(V, Hes, l+1, l_max, &(Hes[l+1][l])) != 0) 
           return(SPFGMR_GS_FAIL);
       }
       
@@ -277,7 +277,7 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
       if (rho <= delta) { converged = TRUE; break; }
       
       /* Normalize V[l+1] with norm value from the Gram-Schmidt routine. */
-      N_VScale(ONE/Hes[l_plus_1][l], V[l_plus_1], V[l_plus_1]);
+      N_VScale(ONE/Hes[l+1][l], V[l+1], V[l+1]);
     }
     
     /* Inner loop is done.  Compute the new correction vector xcor. */
@@ -315,10 +315,10 @@ int SpfgmrSolve(SpfgmrMem mem, void *A_data, N_Vector x,
       yg[i] *= r_norm;
     r_norm = ABS(r_norm);
     
-    /* Multiply yg by Z_(krydim+1) to get last residual vector; restart. */
+    /* Multiply yg by V_(krydim+1) to get last residual vector; restart. */
     N_VScale(yg[0], V[0], V[0]);
     for (k=1; k<=krydim; k++)
-      N_VLinearSum(yg[k], Z[k], ONE, V[0], V[0]);
+      N_VLinearSum(yg[k], V[k], ONE, V[0], V[0]);
     
   }
   
