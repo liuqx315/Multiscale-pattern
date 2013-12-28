@@ -1,9 +1,10 @@
 /*----------------------------------------------------------------
- $Revision: $
- $Date: $
- -----------------------------------------------------------------
  Programmer(s): Daniel R. Reynolds @ SMU
- -----------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  PCG test routine:
  
  The following test sets up and solves a symmetric linear system 

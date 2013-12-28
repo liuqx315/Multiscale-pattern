@@ -1,13 +1,14 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  This file contains implementations of the banded difference
  quotient Jacobian-based preconditioner and solver routines for
  use with the ARKSPILS linear solvers..
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -402,7 +403,8 @@ static int ARKBandPDQJac(ARKBandPrecData pdata,
 
   /* Set minimum increment based on uround and norm of f. */
   srur = RSqrt(ark_mem->ark_uround);
-  fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt);
+  /* fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt); */
+  fnorm = N_VWrmsNorm(fy, ark_mem->ark_rwt);
   minInc = (fnorm != ZERO) ?
     (MIN_INC_MULT * ABS(ark_mem->ark_h) * ark_mem->ark_uround * pdata->N * fnorm) : ONE;
 

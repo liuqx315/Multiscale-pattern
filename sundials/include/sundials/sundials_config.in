@@ -49,6 +49,11 @@
  */
 @GENERIC_MATH_LIB@
 
+/* Use POSIX timers if available.
+ *     #define SUNDIALS_HAVE_POSIX_TIMERS
+ */
+@SUNDIALS_HAVE_POSIX_TIMERS@
+
 /* Blas/Lapack available
  * If working libraries for Blas/lapack support were found, then
  *     #define SUNDIALS_BLAS_LAPACK 1
@@ -63,7 +68,15 @@
  * otherwise
  *     #define SUNDIALS_SUPERLU 0
  */
-#define SUNDIALS_SUPERLU 0
+/* @SUPERLU_MACRO@ */
+
+/* KLU available
+ * If working libraries for KLU support were found, then
+ *     #define SUNDIALS_KLU 1
+ * otherwise
+ *     #define SUNDIALS_KLU 0
+ */
+/* @KLU_MACRO@ */
 
 /* FNVECTOR: Allow user to specify different MPI communicator
  * If it was found that the MPI implementation supports MPI_Comm_f2c, then

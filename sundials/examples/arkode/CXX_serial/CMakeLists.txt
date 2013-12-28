@@ -1,14 +1,10 @@
 # ---------------------------------------------------------------
-# $Revision: 1.7 $
-# $Date: 2012-09-18 23:01:37 $
+# Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
-# Programmer:  Radu Serban @ LLNL
-# ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2013, Southern Methodist University.
 # All rights reserved.
 # For details, see the LICENSE file.
-# ---------------------------------------------------------------
+# -----------------------------------------------------------------
 # CMakeLists.txt file for ARKODE serial examples
 
 # Add variable ARKODE_examples with the names of the serial ARKODE examples
@@ -52,7 +48,8 @@ ENDIF(LAPACK_FOUND)
 
 FOREACH(example ${ARKODE_examples})
   ADD_EXECUTABLE(${example} ${example}.cpp)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  SUNDIALS_ADD_TEST(${example} ${example})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.cpp ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/CXX_serial)
@@ -64,6 +61,7 @@ ENDFOREACH(example ${ARKODE_examples})
 IF(LAPACK_FOUND)
   FOREACH(example ${ARKODE_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.cpp)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
       INSTALL(FILES ${example}.cpp ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/CXX_serial)

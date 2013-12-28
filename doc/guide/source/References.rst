@@ -1,3 +1,11 @@
+..
+   Programmer(s): Daniel R. Reynolds @ SMU
+   ----------------------------------------------------------------
+   Copyright (c) 2013, Southern Methodist University.
+   All rights reserved.
+   For details, see the LICENSE file.
+   ----------------------------------------------------------------
+
 :tocdepth: 3
 
 .. _References:
@@ -24,6 +32,10 @@
 .. [G1994] K. Gustafsson.  Control-theoretic techniques for stepsize
 	   selection in implicit Runge-Kutta methods. *ACM
 	   Trans. Math. Soft.* 20:496-512, 1994. 
+
+.. [HW1993] E. Hairer, S. Norsett and G. Wanner.  Solving Ordinary
+	    Differential Equations I. *Springer Series in
+	    Computational Mathematics*, vol. 8, 1993.
 
 .. [HS1980] K.L. Hiebert and L.F. Shampine.  Implicitly Defined Output
 	    Points for Solutions of ODEs.  Technical Report

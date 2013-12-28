@@ -1,8 +1,9 @@
 !-----------------------------------------------------------------
-! $Revision: $
-! $Date: $
-!-----------------------------------------------------------------
 ! Programmer(s): Daniel R. Reynolds @ SMU
+!-----------------------------------------------------------------
+! Copyright (c) 2013, Southern Methodist University.
+! All rights reserved.
+! For details, see the LICENSE file.
 !-----------------------------------------------------------------
 ! Example problem:
 ! 
@@ -50,21 +51,20 @@ program driver
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> unused
   !    rpar(1) -> "a" parameter
-  !    rpar(2) -> "b" parameter
+  !    rpar(2) -> "b" parameter 
   !    rpar(3) -> "ep" parameter
-  integer :: ipar
-  real*8  :: rpar(3)
+  integer*8 :: ipar
+  real*8    :: rpar(3)
 
   ! solver parameters
-  integer :: order, adapt_method, maxcor
-  real*8  :: nlscoef
+  integer*8 :: order, adapt_method
+  real*8    :: nlscoef
 
   !-----------------------
   ! set some solver parameters
-  order = 4          ! 4th order method
-  adapt_method = 2   ! I-controller
-  maxcor = 8         ! up to 8 Newton iterations
-  nlscoef = 1.d-8    ! Newton solver tolerance coefficient
+  order = 3          ! 4th order method
+  adapt_method = 0   ! PID-controller
+  nlscoef = 1.d-2    ! Newton solver tolerance coefficient
 
   ! time-stepping information
   dTout = (Tf-T0)/10.d0    ! output time interval
@@ -74,8 +74,8 @@ program driver
   y(1) = 3.9d0     ! u0
   y(2) = 1.1d0     ! v0
   y(3) = 2.8d0     ! w0
-  rpar(1) = 1.2    ! a
-  rpar(2) = 2.5    ! b
+  rpar(1) = 1.2d0  ! a
+  rpar(2) = 2.5d0  ! b
   rpar(3) = 1.d-5  ! ep
 
   ! set tolerances according to problem specifications
@@ -103,24 +103,14 @@ program driver
      write(0,*) 'Error in FARKSetIin = ',ier
      stop
   endif
-  call FARKSetIin('ADAPT_METHOD', adapt_method, ier)
-  if (ier < 0) then
-     write(0,*) 'Error in FARKSetIin = ',ier
-     stop
-  endif
-  call FARKSetIin('MAX_NITERS', maxcor, ier)
-  if (ier < 0) then
-     write(0,*) 'Error in FARKSetIin = ',ier
-     stop
-  endif
   call FARKSetRin('NLCONV_COEF', nlscoef, ier)
   if (ier < 0) then
      write(0,*) 'Error in FARKSetIin = ',ier
      stop
   endif
-  call FARKSetIin('MAX_NSTEPS', 1000, ier)
+  call FARKSetAdaptivityMethod(adapt_method, 1, 0, 0, ier)
   if (ier < 0) then
-     write(0,*) 'Error in FARKSetIin = ',ier
+     write(0,*) 'Error in FARKSetAdaptMethod = ',ier
      stop
   endif
 
@@ -200,11 +190,11 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(3)
-  integer, intent(in)  :: ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(3)
-  real*8,  intent(out) :: ydot(3)
+  real*8,    intent(in)  :: t, rpar(3)
+  integer*8, intent(in)  :: ipar(1)
+  integer,   intent(out) :: ier
+  real*8,    intent(in)  :: y(3)
+  real*8,    intent(out) :: ydot(3)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
@@ -235,11 +225,11 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(3)
-  integer, intent(in)  :: ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(3)
-  real*8,  intent(out) :: ydot(3)
+  real*8,    intent(in)  :: t, rpar(3)
+  integer*8, intent(in)  :: ipar(1)
+  integer,   intent(out) :: ier
+  real*8,    intent(in)  :: y(3)
+  real*8,    intent(out) :: ydot(3)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
@@ -270,11 +260,11 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(3)
-  integer, intent(in)  :: neq, ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,    intent(in)  :: t, h, rpar(3)
+  integer*8, intent(in)  :: neq, ipar(1)
+  integer,   intent(out) :: ier
+  real*8,    intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
+  real*8,    intent(out) :: DJac(neq,neq)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep

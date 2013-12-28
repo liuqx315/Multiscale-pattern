@@ -1,7 +1,10 @@
 ###################################################################
-#  Daniel R. Reynolds, SMU Mathematics
-#  Copyright 2013; all rights reserved
-#
+#  Programmer(s):  Daniel R. Reynolds @ SMU
+###################################################################
+#  Copyright (c) 2013, Southern Methodist University.
+#  All rights reserved.
+#  For details, see the LICENSE file.
+###################################################################
 #  Regression directory Makefile: assumes that SUNDIALS+ARKode
 #  has been built in this same source repository, with the 
 #  directory structure:
@@ -24,14 +27,15 @@ CFLAGS = -O2
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecserial -lsundials_nvecparallel -lsundials_nvecparallelgrid
+INCS = -I../../install_opt/include/
+LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecserial -lsundials_nvecparallel -lm
 
 # listing of all test routines
 TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
-        nvector_parallel_grid_test.exe \
-        pcg_tester.exe 
+        pcg_tester.exe \
+        fgmres_tester.exe \
+        gmres_tester.exe 
 
 # target to build all test executables
 all : ${TESTS}

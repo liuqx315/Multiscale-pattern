@@ -1,12 +1,13 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  This is the implementation file for the preconditioned conjugate 
  gradient solver in SUNDIALS.
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sundials/sundials_pcg.h>
@@ -176,7 +177,7 @@ int PcgSolve(PcgMem mem, void *A_data, N_Vector x, N_Vector b,
     rz_old = rz;
     rz = N_VDotProd(r, z);
     
-    // Calculate beta = <r,z> / <r_old,z_old>
+    /* Calculate beta = <r,z> / <r_old,z_old> */
     beta = rz / rz_old;
 
     /* Update p = z + beta*p */

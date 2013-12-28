@@ -1,15 +1,16 @@
 /*---------------------------------------------------------------
-  $Revision: 1.0 $
-  $Date: $
- ---------------------------------------------------------------- 
-  Programmer(s): Daniel R. Reynolds @ SMU
+ Programmer(s): Daniel R. Reynolds @ SMU
  ----------------------------------------------------------------
-  This is the implementation file for the Fortran interface to
-  the ARKODE package.  See farkode.h for usage.
-  NOTE: some routines are necessarily stored elsewhere to avoid
-  linking problems.  Therefore, see also farkpreco.c, farkpsol.c,
-  farkjtimes.c, farkadapt.c and farkexpstab.c for all the 
-  available options.
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
+ This is the implementation file for the Fortran interface to
+ the ARKODE package.  See farkode.h for usage.
+ NOTE: some routines are necessarily stored elsewhere to avoid
+ linking problems.  Therefore, see also farkpreco.c, farkpsol.c,
+ farkjtimes.c, farkadapt.c and farkexpstab.c for all the 
+ available options.
  --------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -64,9 +65,9 @@ void FARK_MALLOC(realtype *t0, realtype *y0, int *imex,
 		 long int *iout, realtype *rout, 
 		 long int *ipar, realtype *rpar, int *ier)
 {
-  int lmm, iter;
   N_Vector Vatol;
   FARKUserData ARK_userdata;
+  realtype reltol, abstol;
 
   *ier = 0;
 
@@ -140,7 +141,8 @@ void FARK_MALLOC(realtype *t0, realtype *y0, int *imex,
   }
 
   /* Set tolerances -- if <= 0, keep as defaults */
-  realtype reltol=1.e-4, abstol=1.e-9;
+  reltol=1.e-4;
+  abstol=1.e-9;
   if (*rtol > 0.0)  reltol = *rtol;
   switch (*iatol) {
   case 1:
@@ -191,6 +193,7 @@ void FARK_REINIT(realtype *t0, realtype *y0, int *imex,
                 int *ier)
 {
   N_Vector Vatol;
+  realtype reltol, abstol;
   *ier = 0;
 
   /* Initialize all pointers to NULL */
@@ -225,7 +228,8 @@ void FARK_REINIT(realtype *t0, realtype *y0, int *imex,
   }
 
   /* Set tolerances */
-  realtype reltol=1.e-4, abstol=1.e-9;
+  reltol=1.e-4;
+  abstol=1.e-9;
   if (*rtol > 0.0)  reltol = *rtol;
   switch (*iatol) {
   case 1:
@@ -463,11 +467,15 @@ void FARK_SETARKTABLES(int *s, int *q, int *p, realtype *c,
    farkode.h for further details */
 void FARK_SETDIAGNOSTICS(char fname[], int *flen, int *ier)
 {
-  char *filename=NULL;   /* copy fname into array of specified length */
-  filename = (char *) malloc((*flen)*sizeof(char));
+  char *filename=NULL;
+  FILE *DFID=NULL;
   int i;
+
+  /* copy fname into array of specified length */
+  filename = (char *) malloc((*flen)*sizeof(char));
   for (i=0; i<*flen; i++)  filename[i] = fname[i];
-  FILE *DFID=NULL;       /* open diagnostics output file */
+
+  /* open diagnostics output file */
   DFID = fopen(filename,"w");
   if (DFID == NULL) {
     *ier = 1;

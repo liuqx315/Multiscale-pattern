@@ -1,25 +1,21 @@
 # ---------------------------------------------------------------
-# $Revision: 1.7 $
-# $Date: 2012-09-18 23:01:34 $
+# Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
-# Programmer:  Radu Serban @ LLNL
-# ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2013, Southern Methodist University.
 # All rights reserved.
 # For details, see the LICENSE file.
-# ---------------------------------------------------------------
+# -----------------------------------------------------------------
 # CMakeLists.txt file for the ARKODE parallel F90 examples
 
 
 # Add variable FARKODE_examples with the names of the parallel ARKODE examples
 
 SET(FARKODE_examples
-  fark_heat2D
+  "fark_heat2D\;1\;2"
   )
 
 # Add variable ARKODE_extras with the names of auxiliary files to install
-
+# "name\;nodes\;tasks"
 SET(ARKODE_extras
   plot_heat2D.py
   )
@@ -63,9 +59,14 @@ ENDIF(LAPACK_FOUND)
 
 # Add the build and install targets for each ARKODE example
 
-FOREACH(example ${FARKODE_examples})
+FOREACH(example_tuple ${FARKODE_examples})
+  list(GET example_tuple 0 example)
+  list(GET example_tuple 1 number_of_nodes)
+  list(GET example_tuple 2 number_of_tasks)
+  # first item is example
   ADD_EXECUTABLE(${example} ${example}.f90)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  SUNDIALS_ADD_TEST(${example} ${example} MPI_NPROCS ${number_of_tasks})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(NOT MPI_MPIF90)
     TARGET_LINK_LIBRARIES(${example} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARIES})
@@ -73,7 +74,7 @@ FOREACH(example ${FARKODE_examples})
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.f90 ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F90_parallel)
   ENDIF(EXAMPLES_INSTALL)
-ENDFOREACH(example ${FARKODE_examples})
+ENDFOREACH(example_tuple ${FARKODE_examples})
 
 IF(EXAMPLES_INSTALL)
 

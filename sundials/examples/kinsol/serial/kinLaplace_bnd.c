@@ -7,7 +7,7 @@
  * -----------------------------------------------------------------
  * This example solves a 2D elliptic PDE
  *
- *    d^2 u / dx^2 + d^2 u / dy^2 = u^3 - u + 2.0
+ *    d^2 u / dx^2 + d^2 u / dy^2 = u^3 - u - 2.0
  *
  * subject to homogeneous Dirichelt boundary conditions.
  * The PDE is discretized on a uniform NX+2 by NY+2 grid with
@@ -122,7 +122,7 @@ int main()
    * Attach band linear solver 
    * ------------------------- */
 
-  flag = KINBand(kmem, NEQ, NY, NY);
+  flag = KINBand(kmem, NEQ, NX, NX);
   if (check_flag(&flag, "KINBand", 1)) return(1);
 
   /* ------------------------------
@@ -156,7 +156,7 @@ int main()
   /* Call main solver */
   flag = KINSol(kmem,           /* KINSol memory block */
                 y,              /* initial guess on input; solution vector */
-                KIN_LINESEARCH, /* global stragegy choice */
+                KIN_LINESEARCH, /* global strategy choice */
                 scale,          /* scaling vector, for the variable cc */
                 scale);         /* scaling vector for function values fval */
   if (check_flag(&flag, "KINSol", 1)) return(1);
@@ -268,7 +268,7 @@ static void PrintOutput(N_Vector u)
 #if defined(SUNDIALS_EXTENDED_PRECISION)
       printf("%-8.5Lf ", x);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-      printf("%-8.5lf ", x);
+      printf("%-8.5f ", x);
 #else
       printf("%-8.5f ", x);
 #endif
@@ -280,7 +280,7 @@ static void PrintOutput(N_Vector u)
 #if defined(SUNDIALS_EXTENDED_PRECISION)
       printf("%-8.5Lf    ", y);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-      printf("%-8.5lf    ", y);
+      printf("%-8.5f    ", y);
 #else
       printf("%-8.5f    ", y);
 #endif
@@ -288,7 +288,7 @@ static void PrintOutput(N_Vector u)
 #if defined(SUNDIALS_EXTENDED_PRECISION)
       printf("%-8.5Lf ", IJth(udata,i,j));
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-      printf("%-8.5lf ", IJth(udata,i,j));
+      printf("%-8.5f ", IJth(udata,i,j));
 #else
       printf("%-8.5f ", IJth(udata,i,j));
 #endif

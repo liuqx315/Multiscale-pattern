@@ -1,3 +1,11 @@
+..
+   Programmer(s): Daniel R. Reynolds @ SMU
+   ----------------------------------------------------------------
+   Copyright (c) 2013, Southern Methodist University.
+   All rights reserved.
+   For details, see the LICENSE file.
+   ----------------------------------------------------------------
+
 :tocdepth: 3
 
 .. _Organization:
@@ -25,9 +33,9 @@ solver packages presently available:
   :math:`\dot{y} = f(t,y)`;
 - CVODES, a linear multistep solver for stiff and nonstiff ODEs with
   sensitivity analysis capabilities;
-- IDA, a solver for differential-algebraic systems
+- IDA, a linear multistep solver for differential-algebraic systems
   :math:`F(t,y,\dot{y}) = 0`; 
-- IDAS, a solver for differential-algebraic systems with sensitivity
+- IDAS, a linear multistep solver for differential-algebraic systems with sensitivity
   analysis capabilities; 
 - KINSOL, a solver for nonlinear algebraic systems :math:`F(u) = 0`.
 
@@ -42,21 +50,23 @@ knowledge of this structure is not necessary for its use.
 The overall organization of the ARKode package is as follows.  The 
 central integration module, implemented in the files ``arkode.h``,
 ``arkode_impl.h`` and ``arkode.c``, deals with the evaluation of
-integration stages, the nonlinear solver (if :math:`f_I(t,y)` is
-nonzero), estimation of the local truncation error, selection of step
-size, and interpolation to user output points, among other issues.
-ARKode currently supports modified Newton, inexact Newton, and
+integration stages, the nonlinear solver :math:`(\text{if}\;
+f_I(t,y)\ne 0)`, estimation of the local truncation error, selection
+of step size, and interpolation to user output points, among other
+issues.  ARKode currently supports modified Newton, inexact Newton, and
 accelerated fixed-point solvers for these implicit problems.  However,
-when using the Newton-based iterations, ARKode has flexibility in the
-choice of method used to solve the linear sub-systems that arise.
-Therefore, for any user problem invoking the Newton solvers, one of
-the linear system solver modules should be specified by the user,
-which is then invoked as needed during the integration process. 
+when using the Newton-based iterations, or when using a non-identity
+mass matrix :math:`M\ne I`, ARKode has flexibility in the choice of
+method used to solve the linear sub-systems that arise.  Therefore,
+for any user problem invoking the Newton solvers, or any user problem
+with :math:`M\ne I`, one (or more) of the linear system solver modules
+should be specified by the user, which is then invoked as needed
+during the integration process.
 
-For Newton-basedp problems, ARKode presently includes the following
-linear algebra modules, organized into two families.  The *direct* family of
-linear solvers provides methods for the direct solution of linear
-systems with dense or banded matrices and includes:
+For solving these linear systems, ARKode presently includes the
+following linear algebra modules, organized into two families.  The
+*direct* family of linear solvers provides methods for the direct
+solution of linear systems with dense or banded matrices and includes:
 
 - ARKDENSE: LU factorization and backsolving with dense matrices
   (using either an internal implementation or BLAS/LAPACK);
@@ -75,24 +85,23 @@ linear solvers and includes:
 The set of linear solver modules distributed with ARKode is
 intended to be expanded in the future as new algorithms are developed,
 and may additionally be expanded through user-supplied linear solver
-modules, as will be described later.
+modules, further described in the section :ref:`LinearSolvers.custom`.
 
-In the case of the direct methods ARKDENSE and ARKBAND, the
-package includes an algorithm for approximation of the Jacobian by
-difference quotients, but the user also has the option of supplying
-the Jacobian (or an approximation to it) directly.  In the case of the
-Krylov iterative methods ARKSPGMR, ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and
-ARKPCG, the package includes an algorithm for the approximation by
-difference quotients of the product between the Jacobian matrix and a
-vector of appropriate length.  Again, the user has the option of
-supplying a routine for this operation.  For the Krylov methods,
-preconditioning must be supplied by the user, in two phases: *setup*
-(preprocessing of Jacobian data) and *solve*.  While there is no
-default choice of preconditioner analagous to the difference-quotient
-approximation in the direct case, the references [BH1989]_ and
-[B1992]_, together with the example and demonstration programs
-included with ARKode and CVODE, offer considerable assistance in
-building preconditioners. 
+In the case of the direct methods (ARKDENSE and ARKBAND), ARKode
+includes an algorithm to approximate the Jacobian using difference
+quotients, but the user also has the option of supplying the Jacobian
+(or an approximation to it) directly.  In the case of the Krylov
+iterative methods (ARKSPGMR, ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and
+ARKPCG), ARKode includes an algorithm to approximate the product
+between the Jacobian matrix and a vector, also using difference
+quotients.  Again, the user has the option of supplying a routine for
+this operation.  For the Krylov methods, preconditioning must be
+supplied by the user, in two phases: *setup* (preprocessing of
+Jacobian data) and *solve*.  While there is no default choice of
+preconditioner analagous to the difference-quotient approximation in
+the direct case, the references [BH1989]_ and [B1992]_, together with
+the example and demonstration programs included with ARKode and CVODE,
+offer considerable assistance in building simple preconditioners. 
 
 Each ARKode linear solver module consists of four routines,
 devoted to 
@@ -125,12 +134,12 @@ ARKode also provides two rudimentary preconditioner modules, for
 use with any of the Krylov iterative linear solvers.  The first,
 ARKBANDPRE is intended to be used with the serial vector data
 structure, NVECTOR_SERIAL, and provides a banded
-difference-quotient Jacobian-based preconditioner, with corresponding
-setup and solve routines.  The second preconditioner module,
-ARKBBDPRE, is intended to work with the parallel vector data
-structure, NVECTOR_PARALLEL, and generates a preconditioner that
-is a block-diagonal matrix with each block being a band matrix owned
-by a single processor.
+difference-quotient approximation to the Jacobian as the
+preconditioner, with corresponding setup and solve routines.  The
+second preconditioner module, ARKBBDPRE, is intended to work with the
+parallel vector data structure, NVECTOR_PARALLEL, and generates a
+preconditioner that is a block-diagonal matrix with each block being a
+band matrix owned by a single processor.
 
 All state information used by ARKode to solve a given problem is
 saved in a single opaque memory structure, and a pointer to that

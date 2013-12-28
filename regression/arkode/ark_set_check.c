@@ -1,9 +1,10 @@
 /*---------------------------------------------------------------
- $Revision: $
- $Date: $
------------------------------------------------------------------
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  Set routine checking routine:
  
  Runs through all possible "set" routines in ARKODE to see 
@@ -312,7 +313,7 @@ int main() {
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
   /* IRK table num */
-  flag = ARKodeSetIRKTableNum(arkode_mem, 24);
+  flag = ARKodeSetIRKTableNum(arkode_mem, 18);
   if (check_flag(&flag, "ARKodeSetIRKTableNum", 1)) return 1;
   if (ark_mem->ark_stages == 0) {
     printf("Error in ARKodeSetIRKTableNum: did not set ark_stages\n");
@@ -322,7 +323,7 @@ int main() {
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
   /* ARK table num */
-  flag = ARKodeSetARKTableNum(arkode_mem, 22, 6);
+  flag = ARKodeSetARKTableNum(arkode_mem, 20, 4);
   if (check_flag(&flag, "ARKodeSetARKTableNum", 1)) return 1;
   if (ark_mem->ark_stages == 0) {
     printf("Error in ARKodeSetARKTableNum: did not set ark_stages\n");

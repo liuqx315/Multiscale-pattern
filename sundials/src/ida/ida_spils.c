@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmers: Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California  
- * Produced at the Lawrence Livermore National Laboratory
- * All rights reserved
- * For details, see the LICENSE file
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
+ * Produced at the Lawrence Livermore National Laboratory.
+ * All rights reserved.
+ * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the common implementation file for the IDA Scaled              
  * Preconditioned Linear Solver modules.
@@ -588,7 +593,7 @@ int IDASpilsDQJtimes(realtype tt,
   IDAMem IDA_mem;
   IDASpilsMem idaspils_mem;
   N_Vector y_tmp, yp_tmp;
-  realtype sig, siginv;
+  realtype sig=ZERO, siginv;
   int iter, retval;
 
   /* data is ida_mem */

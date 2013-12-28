@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2006, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This file contains implementations of the banded difference
  * quotient Jacobian-based preconditioner and solver routines for
@@ -104,7 +109,7 @@ int CPBandPrecInit(void *cpode_mem, int N, int mu, int ml)
   CPSpilsMem cpspils_mem;
   CPBandPrecData pdata;
   int mup, mlp, storagemu;
-  int flag;
+  int flag=0;
 
   if (cpode_mem == NULL) {
     cpProcessError(NULL, CPSPILS_MEM_NULL, "CPBANDPRE", "CPBandPrecInit", MSGBP_CPMEM_NULL);
@@ -163,7 +168,7 @@ int CPBandPrecInit(void *cpode_mem, int N, int mu, int ml)
 
   /* Allocate memory for pivot array. */
   pdata->pivots = NULL;
-  pdata->pivots = NewIntArray(N);
+  pdata->pivots = NewLintArray(N);
   if (pdata->savedJ == NULL) {
     DestroyMat(pdata->savedP);
     DestroyMat(pdata->savedJ);

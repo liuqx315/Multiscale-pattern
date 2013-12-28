@@ -1,15 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2010/12/01 22:43:33 $
+ * $Revision: $
+ * $Date: $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the optional input and output
  * functions for the KINSOL solver.
@@ -189,7 +194,7 @@ int KINSetUserData(void *kinmem, void *user_data)
  * -----------------------------------------------------------------
  */
 
-int KINSetMAA(void *kinmem, long int maa, booleantype aamem )
+int KINSetMAA(void *kinmem, long int maa)
 {
   KINMem kin_mem;
 
@@ -198,18 +203,18 @@ int KINSetMAA(void *kinmem, long int maa, booleantype aamem )
     return(KIN_MEM_NULL);
   }
 
+  kin_mem = (KINMem) kinmem;
+
   if (maa < 0) {
     KINProcessError(NULL, KIN_ILL_INPUT, "KINSOL", "KINSetMAA", MSG_BAD_MAA);
     return(KIN_ILL_INPUT);
   }
-  else if (maa == 0 && !aamem ) {
-    KINProcessError(NULL, KIN_ILL_INPUT, "KINSOL", "KINSetMAA", MSG_ZERO_MAA);
-    return(KIN_ILL_INPUT);
-  }
+
+  if (maa > kin_mem->kin_mxiter) maa = kin_mem->kin_mxiter;
 
   kin_mem = (KINMem) kinmem;
   kin_mem->kin_m_aa = maa;
-  kin_mem->kin_aamem_aa = aamem;
+  kin_mem->kin_aamem_aa = (maa == 0) ? FALSE : TRUE;
 
   return(KIN_SUCCESS);
 }
@@ -599,9 +604,9 @@ int KINSetMaxNewtonStep(void *kinmem, realtype mxnewtstep)
   }
 
   /* Note: passing a value of 0.0 will use the default
-     value (computed in KINSolinit) */
+     value (computed in KINSolInit) */
 
-  kin_mem->kin_mxnewtstep = mxnewtstep;
+  kin_mem->kin_mxnstepin = mxnewtstep;
 
   return(KIN_SUCCESS);
 }

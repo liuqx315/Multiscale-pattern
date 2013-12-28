@@ -1,11 +1,12 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  This is the implementation file for the ARKDLS linear solvers
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,6 +99,76 @@ int ARKDlsSetBandJacFn(void *arkode_mem, ARKDlsBandJacFn jac)
 
 
 /*---------------------------------------------------------------
+ ARKDlsSetDenseMassFn specifies the dense mass matrix function.
+---------------------------------------------------------------*/
+int ARKDlsSetDenseMassFn(void *arkode_mem, ARKDlsDenseMassFn mass)
+{
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsSetDenseMassFn", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_mass_mem == NULL) {
+    arkProcessError(ark_mem, ARKDLS_MASSMEM_NULL, "ARKDLS", 
+		    "ARKDlsSetDenseMassFn", MSGD_MASSMEM_NULL);
+    return(ARKDLS_MASSMEM_NULL);
+  }
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  if (mass != NULL) {
+    arkdls_mem->d_dmass = mass;
+  } else {
+    arkProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKDLS", 
+		    "ARKDlsSetDenseMassFn", "DenseMassFn must be non-NULL");
+    return(ARKDLS_ILL_INPUT);
+  }
+
+  return(ARKDLS_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKDlsSetBandMassFn specifies the band mass matrix function.
+---------------------------------------------------------------*/
+int ARKDlsSetBandMassFn(void *arkode_mem, ARKDlsBandMassFn mass)
+{
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsSetBandMassFn", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_mass_mem == NULL) {
+    arkProcessError(ark_mem, ARKDLS_MASSMEM_NULL, "ARKDLS", 
+		    "ARKDlsSetBandMassFn", MSGD_MASSMEM_NULL);
+    return(ARKDLS_MASSMEM_NULL);
+  }
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  if (mass != NULL) {
+    arkdls_mem->d_bmass = mass;
+  } else {
+    arkProcessError(ark_mem, ARKDLS_ILL_INPUT, "ARKDLS", 
+		    "ARKDlsSetBandMassFn", "BandMassFn must be non-NULL");
+    return(ARKDLS_MASSMEM_NULL);
+  }
+
+  return(ARKDLS_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKDlsGetWorkSpace returns the length of workspace allocated for 
  the ARKDLS linear solver.
 ---------------------------------------------------------------*/
@@ -134,6 +205,43 @@ int ARKDlsGetWorkSpace(void *arkode_mem, long int *lenrwLS, long int *leniwLS)
 
 
 /*---------------------------------------------------------------
+ ARKDlsGetMassWorkSpace returns the length of workspace allocated 
+ for the ARKDLS mass matrix linear solver.
+---------------------------------------------------------------*/
+int ARKDlsGetMassWorkSpace(void *arkode_mem, long int *lenrwMLS, 
+			   long int *leniwMLS)
+{
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetMassWorkSpace", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_mass_mem == NULL) {
+    arkProcessError(ark_mem, ARKDLS_MASSMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetMassWorkSpace", MSGD_MASSMEM_NULL);
+    return(ARKDLS_MASSMEM_NULL);
+  }
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  if (arkdls_mem->d_type == SUNDIALS_DENSE) {
+    *lenrwMLS = 2*arkdls_mem->d_n*arkdls_mem->d_n;
+    *leniwMLS = arkdls_mem->d_n;
+  } else if (arkdls_mem->d_type == SUNDIALS_BAND) {
+    *lenrwMLS = arkdls_mem->d_n*(arkdls_mem->d_smu + arkdls_mem->d_mu + 2*arkdls_mem->d_ml + 2);
+    *leniwMLS = arkdls_mem->d_n;
+  }
+
+  return(ARKDLS_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
  ARKDlsGetNumJacEvals returns the number of Jacobian evaluations.
 ---------------------------------------------------------------*/
 int ARKDlsGetNumJacEvals(void *arkode_mem, long int *njevals)
@@ -157,6 +265,35 @@ int ARKDlsGetNumJacEvals(void *arkode_mem, long int *njevals)
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
 
   *njevals = arkdls_mem->d_nje;
+
+  return(ARKDLS_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKDlsGetNumMassEvals returns the number of mass matrix evaluations.
+---------------------------------------------------------------*/
+int ARKDlsGetNumMassEvals(void *arkode_mem, long int *nmevals)
+{
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetNumMassEvals", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_mass_mem == NULL) {
+    arkProcessError(ark_mem, ARKDLS_MASSMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetNumMassEvals", MSGD_MASSMEM_NULL);
+    return(ARKDLS_MASSMEM_NULL);
+  }
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
+
+  *nmevals = arkdls_mem->d_nme;
 
   return(ARKDLS_SUCCESS);
 }
@@ -212,6 +349,9 @@ char *ARKDlsGetReturnFlagName(long int flag)
   case ARKDLS_LMEM_NULL:
     sprintf(name,"ARKDLS_LMEM_NULL");
     break;
+  case ARKDLS_MASSMEM_NULL:
+    sprintf(name,"ARKDLS_MASSMEM_NULL");
+    break;
   case ARKDLS_ILL_INPUT:
     sprintf(name,"ARKDLS_ILL_INPUT");
     break;
@@ -254,6 +394,36 @@ int ARKDlsGetLastFlag(void *arkode_mem, long int *flag)
     return(ARKDLS_LMEM_NULL);
   }
   arkdls_mem = (ARKDlsMem) ark_mem->ark_lmem;
+
+  *flag = arkdls_mem->d_last_flag;
+
+  return(ARKDLS_SUCCESS);
+}
+
+
+/*---------------------------------------------------------------
+ ARKDlsGetLastMassFlag returns the last flag set in a ARKDLS mass
+  matrix function.
+---------------------------------------------------------------*/
+int ARKDlsGetLastMassFlag(void *arkode_mem, long int *flag)
+{
+  ARKodeMem ark_mem;
+  ARKDlsMassMem arkdls_mem;
+
+  /* Return immediately if arkode_mem is NULL */
+  if (arkode_mem == NULL) {
+    arkProcessError(NULL, ARKDLS_MEM_NULL, "ARKDLS", 
+		    "ARKDlsGetLastMassFlag", MSGD_ARKMEM_NULL);
+    return(ARKDLS_MEM_NULL);
+  }
+  ark_mem = (ARKodeMem) arkode_mem;
+
+  if (ark_mem->ark_mass_mem == NULL) {
+    arkProcessError(ark_mem, ARKDLS_MASSMEM_NULL, "ARKDLS", 
+		    "ARKDlsGetLastMassFlag", MSGD_MASSMEM_NULL);
+    return(ARKDLS_MASSMEM_NULL);
+  }
+  arkdls_mem = (ARKDlsMassMem) ark_mem->ark_mass_mem;
 
   *flag = arkdls_mem->d_last_flag;
 
@@ -307,7 +477,8 @@ int arkDlsDenseDQJac(long int N, realtype t, N_Vector y,
 
   /* Set minimum increment based on uround and norm of f */
   srur = RSqrt(ark_mem->ark_uround);
-  fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt);
+  /* fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt); */
+  fnorm = N_VWrmsNorm(fy, ark_mem->ark_rwt);
   minInc = (fnorm != ZERO) ?
            (MIN_INC_MULT * ABS(ark_mem->ark_h) * ark_mem->ark_uround * N * fnorm) : ONE;
 
@@ -383,7 +554,8 @@ int arkDlsBandDQJac(long int N, long int mupper, long int mlower,
 
   /* Set minimum increment based on uround and norm of f */
   srur = RSqrt(ark_mem->ark_uround);
-  fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt);
+  /* fnorm = N_VWrmsNorm(fy, ark_mem->ark_ewt); */
+  fnorm = N_VWrmsNorm(fy, ark_mem->ark_rwt);
   minInc = (fnorm != ZERO) ?
            (MIN_INC_MULT * ABS(ark_mem->ark_h) * ark_mem->ark_uround * N * fnorm) : ONE;
 

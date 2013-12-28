@@ -1,3 +1,11 @@
+..
+   Programmer(s): Daniel R. Reynolds @ SMU
+   ----------------------------------------------------------------
+   Copyright (c) 2013, Southern Methodist University.
+   All rights reserved.
+   For details, see the LICENSE file.
+   ----------------------------------------------------------------
+
 :tocdepth: 3
 
 
@@ -7,12 +15,11 @@ A skeleton of the user's main program
 ============================================
 
 The following is a skeleton of the user's main program (or calling
-program) for the integration of an ODE IVP.  Some steps are
-independent of the NVECTOR implementation used; where this is not
-the case, usage specifications are given for the two implementations
-provided with ARKode: steps marked [P] correspond to
-NVECTOR_PARALLEL, while steps marked [S] correspond to
-NVECTOR_SERIAL. 
+program) for the integration of an IVP.  Some steps are independent of
+the NVECTOR implementation used.  Where this is not the case, usage
+specifications are given for the two implementations provided with
+ARKode: steps marked [P] correspond to NVECTOR_PARALLEL, while steps
+marked [S] correspond to NVECTOR_SERIAL. 
 
 1. [P] Initialize MPI 
  
@@ -24,8 +31,8 @@ NVECTOR_SERIAL.
 
    [P] Set ``Nlocal``, the local vector length (the sub-vector length
    for this process); ``N``, the global vector length (the problem size
-   :math:`n`, and the sum of all the values of ``Nlocal``); and the
-   active set of processes. 
+   :math:`N`, equaling the sum of all the values of ``Nlocal`` on the
+   active set of processes). 
 
 3. Set vector of initial values
 
@@ -44,14 +51,14 @@ NVECTOR_SERIAL.
 
    [P] ``y0 = N_VNew_Parallel(comm, Nlocal, N);``
 
-   and load initial values into the structure defined by: 
+   and load initial values into the array accessed by: 
 
    [S] ``NV_DATA_S(y0)``
 
    [P] ``NV_DATA_P(y0)``
 
    Here ``comm`` is the MPI communicator containing the set of active
-   processes to be used (may be ``MPI_COMM_WORLD``). 
+   processes to be used (may be the MPI default, ``MPI_COMM_WORLD``). 
 
 4. Create ARKode object
 
@@ -86,9 +93,10 @@ NVECTOR_SERIAL.
 
 8. Attach linear solver module
 
-   If an implicit solve is required, initialize the linear solver
-   module with one of the following calls (for details see the section
-   :ref:`CInterface.LinearSolvers`):  
+   If an implicit solve is required and a Newton-based iteration is
+   chosen for the solver, initialize the linear solver module with one
+   of the following calls (for details see the section
+   :ref:`CInterface.LinearSolvers`):
 
    [S] ``ier = ARKDense(...);``
 
@@ -114,7 +122,37 @@ NVECTOR_SERIAL.
    change optional inputs specific to that linear solver. See the section
    :ref:`CInterface.OptionalInputs` for details. 
 
-10. Specify rootfinding problem
+10. Attach mass matrix linear solver module 
+
+    If a non-identity mass matrix solve is required, initialize the
+    linear mass matrix solver module with one of the following calls
+    (for details see the section :ref:`CInterface.LinearSolvers`):
+
+    [S] ``ier = ARKMassDense(...);``
+
+    [S] ``ier = ARKMassBand(...);``
+
+    [S] ``ier = ARKMassLapackDense(...);`` 
+
+    [S] ``ier = ARKMassLapackBand(...);``
+
+    ``ier = ARKMassSpgmr(...);``
+
+    ``ier = ARKMassSpbcg(...);``
+
+    ``ier = ARKMassSptfqmr(...);``
+
+    ``ier = ARKMassSpfgmr(...);``
+
+    ``ier = ARKMassPcg(...);``
+
+11. Set mass matrix linear solver optional inputs 
+
+    Call ``ARK*Set*`` functions from the selected mass matrix linear
+    solver module to change optional inputs specific to that linear
+    solver. See the section :ref:`CInterface.OptionalInputs` for details. 
+
+12. Specify rootfinding problem
 
     Optionally, call :c:func:`ARKodeRootInit()` to initialize a rootfinding
     problem to be solved during the integration of the ODE system. See
@@ -122,23 +160,27 @@ NVECTOR_SERIAL.
     the section :ref:`CInterface.OptionalInputs` for relevant optional
     input calls. 
 
-11. Advance solution in time
+13. Advance solution in time
 
     For each point at which output is desired, call 
 
     ``ier = ARKode(arkode_mem, tout, yout, &tret, itask)``
 
     Here, :c:func:`ARKode()` requires that ``itask``
-    specify the return mode. The vector ``y`` (which can be the same as
-    the vector ``y0`` above) will contain :math:`y(t)`. See the section
+    specify the return mode. The vector ``yout`` (which can be the same as
+    the vector ``y0`` above) will contain :math:`y(t_\text{out})`. See the section
     :ref:`CInterface.Integration` for details. 
 
-12. Get optional outputs 
+14. Get optional outputs 
 
     Call ``ARK*Get*`` functions to obtain optional output. See
-    the section :ref:`CInterface.OptionalInputs` for details.  
+    the section :ref:`CInterface.OptionalOutputs` for details.  
 
-13. Deallocate memory for solution vector 
+15. Free solver memory 
+
+    Call ``ARKodeFree(&arkode_mem)`` to free the memory allocated for ARKode. 
+
+16. Deallocate memory for solution vector 
 
     Upon completion of the integration, deallocate memory for the
     vector ``y`` by calling the destructor function defined by the
@@ -148,10 +190,6 @@ NVECTOR_SERIAL.
 
     [P] ``N_VDestroy_Parallel(y);`` 
 
-14. Free solver memory 
-
-    Call ``ARKodeFree(&arkode_mem)`` to free the memory allocated for ARKode. 
-
-15. [P] Finalize MPI 
+17. [P] Finalize MPI 
 
     Call ``MPI_Finalize`` to terminate MPI.

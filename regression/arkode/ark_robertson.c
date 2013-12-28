@@ -1,9 +1,10 @@
 /*---------------------------------------------------------------
- $Revision: $
- $Date: $
------------------------------------------------------------------
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  Example problem:
  
  The following test simulates the Robertson problem, 
@@ -155,6 +156,16 @@ int main()
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
   flag = ARKodeSetMaxNumSteps(arktrue_mem, 100000);
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
+
+  /* Tighten inner solver tolerances for this problem */
+  flag = ARKodeSetNonlinConvCoef(arkode_mem, 1.e-3);
+  if (check_flag(&flag, "ARKodeSetNonlinConvCoef", 1)) return 1;
+  flag = ARKodeSetNonlinConvCoef(arktrue_mem, 1.e-3);
+  if (check_flag(&flag, "ARKodeSetNonlinConvCoef", 1)) return 1;
+  flag = ARKodeSetMaxNonlinIters(arkode_mem, 8);
+  if (check_flag(&flag, "ARKodeSetMaxNonlinIters", 1)) return 1;
+  flag = ARKodeSetMaxNonlinIters(arktrue_mem, 8);
+  if (check_flag(&flag, "ARKodeSetMaxNonlinIters", 1)) return 1;
 
   /* Call ARKodeSStolerances to specify the scalar relative and absolute
      tolerances */

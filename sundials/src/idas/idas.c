@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the main IDAS solver.
  * It is independent of the linear solver in use.
@@ -2778,7 +2783,7 @@ int IDAGetQuadDky(void *ida_mem, realtype t, int k, N_Vector dkyQ)
 int IDAGetSens(void *ida_mem, realtype *ptret, N_Vector *yySout)
 {
   IDAMem IDA_mem;
-  int is, ierr;
+  int is, ierr=0;
 
   /* Check ida_mem */
   if (ida_mem == NULL) {
@@ -2817,7 +2822,7 @@ int IDAGetSens(void *ida_mem, realtype *ptret, N_Vector *yySout)
  */
 int IDAGetSensDky(void *ida_mem, realtype t, int k, N_Vector *dkySout)
 {
-  int is, ier;
+  int is, ier=0;
   IDAMem IDA_mem;
 
   /* Check all inputs for legality */
@@ -2984,7 +2989,7 @@ int IDAGetSensDky1(void *ida_mem, realtype t, int k, int is, N_Vector dkyS)
 int IDAGetQuadSens(void *ida_mem, realtype *ptret, N_Vector *yyQSout)
 {
   IDAMem IDA_mem;
-  int is, ierr;
+  int is, ierr=0;
 
   /* Check ida_mem */
   if (ida_mem == NULL) {
@@ -3023,7 +3028,7 @@ int IDAGetQuadSens(void *ida_mem, realtype *ptret, N_Vector *yyQSout)
  */
 int IDAGetQuadSensDky(void *ida_mem, realtype t, int k, N_Vector *dkyQSout)
 {
-  int is, ier;
+  int is, ier=0;
   IDAMem IDA_mem;
 
   /* Check all inputs for legality */

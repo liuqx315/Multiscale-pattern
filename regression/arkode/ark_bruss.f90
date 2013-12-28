@@ -1,8 +1,9 @@
 !-----------------------------------------------------------------
-! $Revision: $
-! $Date: $
-!-----------------------------------------------------------------
 ! Programmer(s): Daniel R. Reynolds @ SMU
+!-----------------------------------------------------------------
+! Copyright (c) 2013, Southern Methodist University.
+! All rights reserved.
+! For details, see the LICENSE file.
 !-----------------------------------------------------------------
 ! Example problem:
 ! 
@@ -54,8 +55,8 @@ program driver
   !    rpar(1) -> "a" parameter
   !    rpar(2) -> "b" parameter 
   !    rpar(3) -> "ep" parameter
-  integer :: ipar
-  real*8  :: rpar(3)
+  integer*8 :: ipar
+  real*8    :: rpar(3)
 
   ! solver parameters
   logical :: denseout
@@ -86,8 +87,8 @@ program driver
   y(1) = 3.9d0     ! u0
   y(2) = 1.1d0     ! v0
   y(3) = 2.8d0     ! w0
-  rpar(1) = 1.2    ! a
-  rpar(2) = 2.5    ! b
+  rpar(1) = 1.2d0  ! a
+  rpar(2) = 2.5d0  ! b
   rpar(3) = 1.d-5  ! ep
 
   ! set final solution
@@ -96,7 +97,7 @@ program driver
   ytrue(3) = 2.4999733761419733
 
   ! set tolerances according to problem specifications
-  atol = 1.d-10
+  atol = 1.d-9
   rtol = 1.d-6
   
   ! initialize vector module
@@ -245,11 +246,11 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(3)
-  integer, intent(in)  :: ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(3)
-  real*8,  intent(out) :: ydot(3)
+  real*8,  intent(in)   :: t, rpar(3)
+  integer*8, intent(in) :: ipar(1)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(3)
+  real*8,  intent(out)  :: ydot(3)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
@@ -287,11 +288,11 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(3)
-  integer, intent(in)  :: ipar(1)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(3)
-  real*8,  intent(out) :: ydot(3)
+  real*8,  intent(in)   :: t, rpar(3)
+  integer*8, intent(in) :: ipar(1)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(3)
+  real*8,  intent(out)  :: ydot(3)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep
@@ -329,11 +330,11 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(3)
-  integer, intent(in)  :: neq, ipar(1)
-  integer, intent(out) :: ier
+  real*8,  intent(in)   :: t, h, rpar(3)
+  integer*8, intent(in) :: neq, ipar(1)
+  integer, intent(out)  :: ier
   real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,  intent(out)  :: DJac(neq,neq)
 
   ! temporary variables
   real*8 :: u, v, w, a, b, ep

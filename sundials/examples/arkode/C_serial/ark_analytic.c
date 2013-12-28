@@ -1,27 +1,28 @@
-/* -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
- * -----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
- * -----------------------------------------------------------------
- * Example problem:
- * 
- * The following is a simple example problem with analytical 
- * solution,
- *    dy/dt = lamda*y + 1/(1+t^2) - lamda*atan(t)
- * for t in the interval [0.0, 10.0], with initial condition: y=0. 
- * 
- * The stiffness of the problem is directly proportional to the 
- * value of "lamda".  The value of lamda should be negative to
- * result in a well-posed ODE; for values with magnitude larger 
- * than 100 the problem becomes quite stiff.
- * 
- * This program solves the problem with the DIRK method,
- * Newton iteration with the ARKDENSE dense linear solver, and a
- * user-supplied Jacobian routine.
- * Output is printed every 1.0 units of time (10 total).
- * Run statistics (optional outputs) are printed at the end.
- * -----------------------------------------------------------------*/
+/*-----------------------------------------------------------------
+ Programmer(s): Daniel R. Reynolds @ SMU
+ -----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
+ Example problem:
+ 
+ The following is a simple example problem with analytical 
+ solution,
+    dy/dt = lamda*y + 1/(1+t^2) - lamda*atan(t)
+ for t in the interval [0.0, 10.0], with initial condition: y=0. 
+ 
+ The stiffness of the problem is directly proportional to the 
+ value of "lamda".  The value of lamda should be negative to
+ result in a well-posed ODE; for values with magnitude larger 
+ than 100 the problem becomes quite stiff.
+ 
+ This program solves the problem with the DIRK method,
+ Newton iteration with the ARKDENSE dense linear solver, and a
+ user-supplied Jacobian routine.
+ Output is printed every 1.0 units of time (10 total).
+ Run statistics (optional outputs) are printed at the end.
+ -----------------------------------------------------------------*/
 
 /* Header files */
 #include <stdio.h>
@@ -58,6 +59,9 @@ int main()
   int flag;                       /* reusable error-checking flag */
   N_Vector y = NULL;              /* empty vector for storing solution */
   void *arkode_mem = NULL;        /* empty ARKode memory structure */
+  FILE *UFID;
+  realtype t, tout;
+  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
 
   /* Initial diagnostics output */
   printf("\nAnalytical ODE test problem:\n");
@@ -92,7 +96,7 @@ int main()
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
   /* Open output stream for results, output comment line */
-  FILE *UFID = fopen("solution.txt","w");
+  UFID = fopen("solution.txt","w");
   fprintf(UFID,"# t u\n");
 
   /* output initial condition to disk */
@@ -100,8 +104,8 @@ int main()
 
   /* Main time-stepping loop: calls ARKode to perform the integration, then
      prints results.  Stops when the final time has been reached */
-  realtype t = T0;
-  realtype tout = T0+dTout;
+  t = T0;
+  tout = T0+dTout;
   printf("        t           u\n");
   printf("   ---------------------\n");
   while (Tf - t > 1.0e-15) {
@@ -122,7 +126,6 @@ int main()
   fclose(UFID);
 
   /* Get/print some final statistics on how the solve progressed */
-  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);

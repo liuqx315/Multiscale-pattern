@@ -1,11 +1,12 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  Implementation header file for the main ARKODE integrator.
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 
 #ifndef _ARKODE_IMPL_H
 #define _ARKODE_IMPL_H
@@ -52,28 +53,29 @@ extern "C" {
 
 /* Time step controller default values */
 #define CFLFAC    RCONST(0.5);
-#define SAFETY    RCONST(0.96); /* CVODE uses 1.0  */
-#define BIAS      RCONST(1.5)   /* CVODE uses 6.0  */
-#define GROWTH    RCONST(20.0); /* CVODE uses 10.0 */
-#define HFIXED_LB RCONST(1.0);  /* CVODE uses 1.0  */
-#define HFIXED_UB RCONST(1.5);  /* CVODE uses 1.5  */
-#define AD0_K1    RCONST(0.58);
+#define SAFETY    RCONST(0.96);  /* CVODE uses 1.0  */
+#define BIAS      RCONST(1.5)    /* CVODE uses 6.0  */
+#define GROWTH    RCONST(20.0);  /* CVODE uses 10.0 */
+#define HFIXED_LB RCONST(1.0);   /* CVODE uses 1.0  */
+#define HFIXED_UB RCONST(1.5);   /* CVODE uses 1.5  */
+#define AD0_K1    RCONST(0.58);  /* PID controller constants */
 #define AD0_K2    RCONST(0.21);
 #define AD0_K3    RCONST(0.1);
-#define AD1_K1    RCONST(0.8);
+#define AD1_K1    RCONST(0.8);   /* PI controller constants */
 #define AD1_K2    RCONST(0.31);
-#define AD2_K1    RCONST(1.0);
-#define AD3_K1    RCONST(0.4);
-#define AD3_K2    RCONST(0.33);
-#define AD4_K1    RCONST(0.98);
+#define AD2_K1    RCONST(1.0);   /* I controller constants */
+#define AD3_K1    RCONST(0.367); /* explicit Gustafsson controller */
+#define AD3_K2    RCONST(0.268);
+#define AD4_K1    RCONST(0.98);  /* implicit Gustafsson controller */
 #define AD4_K2    RCONST(0.95);
-#define AD5_K1    RCONST(0.4);
-#define AD5_K2    RCONST(0.25);
+#define AD5_K1    RCONST(0.367); /* imex Gustafsson controller */
+#define AD5_K2    RCONST(0.268);
 #define AD5_K3    RCONST(0.95);
 
 /* Default solver tolerance factor */
 /* #define NLSCOEF   RCONST(0.003);   /\* Hairer & Wanner constant *\/ */
-#define NLSCOEF   RCONST(0.2);
+/* #define NLSCOEF   RCONST(0.2);     /\* CVODE constant *\/ */
+#define NLSCOEF   RCONST(0.1);
 
 /* Control constants for tolerances */
 #define ARK_SS  0
@@ -209,12 +211,20 @@ typedef struct ARKodeMemRec {
   int          ark_itol;       /* itol = ARK_SS (scalar, default), 
                                          ARK_SV (vector),
                                          ARK_WF (user weight function)  */
+  int          ark_ritol;      /* itol = ARK_SS (scalar, default), 
+                                         ARK_SV (vector),
+                                         ARK_WF (user weight function)  */
   realtype     ark_reltol;     /* relative tolerance                    */
-  realtype     ark_Sabstol;    /* scalar absolute tolerance             */
-  N_Vector     ark_Vabstol;    /* vector absolute tolerance             */
+  realtype     ark_Sabstol;    /* scalar absolute solution tolerance    */
+  N_Vector     ark_Vabstol;    /* vector absolute solution tolerance    */
+  realtype     ark_SRabstol;   /* scalar absolute residual tolerance    */
+  N_Vector     ark_VRabstol;   /* vector absolute residual tolerance    */
   booleantype  ark_user_efun;  /* TRUE if user sets efun                */
   ARKEwtFn     ark_efun;       /* function to set ewt                   */
   void        *ark_e_data;     /* user pointer passed to efun           */
+  booleantype  ark_user_rfun;  /* TRUE if user sets rfun                */
+  ARKRwtFn     ark_rfun;       /* function to set rwt                   */
+  void        *ark_r_data;     /* user pointer passed to rfun           */
   booleantype  ark_linear;     /* TRUE if implicit problem is linear    */
   booleantype  ark_explicit;   /* TRUE if implicit problem is disabled  */
   booleantype  ark_implicit;   /* TRUE if explicit problem is disabled  */
@@ -229,6 +239,8 @@ typedef struct ARKodeMemRec {
     other vectors of length N 
     -------------------------*/
   N_Vector ark_ewt;     /* error weight vector                               */
+  N_Vector ark_rwt;     /* residual weight vector                            */
+  booleantype ark_rwt_is_ewt;     /* TRUE if rwt is a pointer to ewt         */
   N_Vector ark_y;       /* y is used as temporary storage by the solver
 			   The memory is provided by the user to ARKode
 			   where the vector is named yout.                   */
@@ -348,6 +360,7 @@ typedef struct ARKodeMemRec {
   long int ark_nfe;          /* number of fe calls                         */
   long int ark_nfi;          /* number of fi calls                         */
   long int ark_ncfn;         /* number of corrector convergence failures   */
+  long int ark_nmassfails;   /* number of mass matrix solver failures      */
   long int ark_netf;         /* number of error test failures              */
   long int ark_nni;          /* number of Newton iterations performed      */
   long int ark_nsetups;      /* number of setup calls                      */
@@ -395,7 +408,26 @@ typedef struct ARKodeMemRec {
   int (*ark_lsolve)(struct ARKodeMemRec *ark_mem, N_Vector b, N_Vector weight,
 		    N_Vector ycur, N_Vector fcur);
   void (*ark_lfree)(struct ARKodeMemRec *ark_mem);
-  void *ark_lmem;           
+  void *ark_lmem;
+  int ark_lsolve_type;   /* linear solver type: 0=iterative; 1=dense; 
+                                                2=band; 3=custom */
+
+  /*-----------------------
+    Mass Matrix Solver Data 
+    -----------------------*/
+  booleantype ark_mass_matrix;   /* flag denoting use of a non-identity M  */
+  long int ark_mass_solves;      /* number of mass matrix solve calls      */
+  long int ark_mass_mult;        /* number of mass matrix product calls    */
+  ARKMTimesFn ark_mtimes;        /* mass-matrix-vector product routine     */
+  void *ark_mtimes_data;         /* user pointer passed to mtimes          */
+  int (*ark_minit)(struct ARKodeMemRec *ark_mem);
+  int (*ark_msetup)(struct ARKodeMemRec *ark_mem, N_Vector vtemp1, 
+		    N_Vector vtemp2, N_Vector vtemp3); 
+  int (*ark_msolve)(struct ARKodeMemRec *ark_mem, N_Vector b, N_Vector weight);
+  void (*ark_mfree)(struct ARKodeMemRec *ark_mem);
+  void *ark_mass_mem;
+  int ark_msolve_type;   /* mass matrix type: 0=iterative; 1=dense; 
+			                      2=band; 3=custom */
 
   /*------------
     Saved Values
@@ -406,8 +438,10 @@ typedef struct ARKodeMemRec {
   realtype    ark_hold;         /* last successful h value used               */
   booleantype ark_jcur;         /* is Jacobian info. for lin. solver current? */
   realtype    ark_tolsf;        /* tolerance scale factor                     */
-  booleantype ark_setupNonNull; /* does setup do anything?                    */
+  booleantype ark_setupNonNull; /* does ark_lsetup do anything?               */
+  booleantype ark_MassSetupNonNull; /* does ark_msetup do anything?           */
   booleantype ark_VabstolMallocDone;
+  booleantype ark_VRabstolMallocDone;
   booleantype ark_MallocDone;  
   booleantype ark_resized;      /* denotes first step after ARKodeResize      */
   booleantype ark_firststage;   /* denotes first stage in simulation          */
@@ -543,16 +577,17 @@ typedef struct ARKodeMemRec {
 
 /*---------------------------------------------------------------
  int (*ark_lsolve)(ARKodeMem ark_mem, N_Vector b, N_Vector weight,
-                  N_Vector ycur, N_Vector fcur);
+                   N_Vector ycur, N_Vector fcur);
 -----------------------------------------------------------------
  ark_lsolve must solve the linear equation P x = b, where
- P is some approximation to (I - gamma J), J = (df/dy)(tn,ycur)
- and the RHS vector b is input. The N-vector ycur contains
- the solver's current approximation to y(tn) and the vector
- fcur contains the N_Vector f(tn,ycur). The solution is to be
- returned in the vector b. ark_lsolve returns a positive value
- for a recoverable error and a negative value for an
- unrecoverable error. Success is indicated by a 0 return value.
+ P is some approximation to (M - gamma J), M is the system mass
+ matrix, J = (df/dy)(tn,ycur), and the RHS vector b is input. The 
+ N-vector ycur contains the solver's current approximation to 
+ y(tn) and the vector fcur contains the N_Vector f(tn,ycur). The 
+ solution is to be returned in the vector b. ark_lsolve returns 
+ a positive value for a recoverable error and a negative value 
+ for an unrecoverable error. Success is indicated by a 0 return 
+ value.
 ---------------------------------------------------------------*/
 
 /*---------------------------------------------------------------
@@ -563,6 +598,60 @@ typedef struct ARKodeMemRec {
  completed and the linear solver is no longer needed.
 ---------------------------------------------------------------*/
 
+
+
+/*---------------------------------------------------------------
+ int (*ark_minit)(ARKodeMem ark_mem);
+-----------------------------------------------------------------
+ The purpose of ark_minit is to complete initializations for a
+ specific mass matrix linear solver, such as counters and 
+ statistics. An function of this type should return 0 if it has 
+ successfully initialized the mass matrix linear solver and a 
+ negative value otherwise.  If an error does occur, an 
+ appropriate message should be sent to the error handler function.
+---------------------------------------------------------------*/
+  
+/*---------------------------------------------------------------
+ int (*ark_msetup)(ARKodeMem ark_mem, N_Vector vtemp1, 
+                   N_Vector vtemp2, N_Vector vtemp3);
+ -----------------------------------------------------------------
+ The job of ark_msetup is to prepare the mass matrix solver for
+ subsequent calls to ark_msolve. It may recompute mass matrix
+ related data is it deems necessary. Its parameters are as
+ follows:
+
+ ark_mem - problem memory pointer of type ARKodeMem. See the
+          typedef earlier in this file.
+
+ vtemp1 - temporary N_Vector provided for use by ark_lsetup.
+
+ vtemp3 - temporary N_Vector provided for use by ark_lsetup.
+
+ vtemp3 - temporary N_Vector provided for use by ark_lsetup.
+
+ The ark_msetup routine should return 0 if successful, and a 
+ negative value for an unrecoverable error.
+---------------------------------------------------------------*/
+
+/*---------------------------------------------------------------
+ int (*ark_msolve)(ARKodeMem ark_mem, N_Vector b, N_Vector weight);
+-----------------------------------------------------------------
+ ark_msolve must solve the linear equation M x = b, where
+ M is the system mass matrix, and the RHS vector b is input. The
+ solution is to be returned in the vector b.  The ark_msolve
+ routine returns a positive value for a recoverable error and 
+ a negative value for an unrecoverable error. Success is 
+ indicated by a 0 return value.
+---------------------------------------------------------------*/
+
+/*---------------------------------------------------------------
+ void (*ark_mfree)(ARKodeMem ark_mem);
+-----------------------------------------------------------------
+ ark_mfree should free up any memory allocated by the mass matrix
+ solver. This routine is called once a problem has been
+ completed and the solver is no longer needed.
+---------------------------------------------------------------*/
+
   
 /*===============================================================
    ARKODE PROTOTYPE FUNCTIONS (MAY BE REPLACED BY USER)
@@ -570,6 +659,9 @@ typedef struct ARKodeMemRec {
 
 /* Prototype of internal ewtSet function */
 int arkEwtSet(N_Vector ycur, N_Vector weight, void *data);
+
+/* Prototype of internal rwtSet function */
+int arkRwtSet(N_Vector ycur, N_Vector weight, void *data);
 
 /* Prototype of internal errHandler function */
 void arkErrHandler(int error_code, const char *module, 
@@ -629,6 +721,8 @@ void arkProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_BAD_RELTOL    "reltol < 0 illegal."
 #define MSGARK_BAD_ABSTOL    "abstol has negative component(s) (illegal)."
 #define MSGARK_NULL_ABSTOL   "abstol = NULL illegal."
+#define MSGARK_BAD_RABSTOL   "rabstol has negative component(s) (illegal)."
+#define MSGARK_NULL_RABSTOL  "rabstol = NULL illegal."
 #define MSGARK_NULL_Y0       "y0 = NULL illegal."
 #define MSGARK_NULL_F        "Must specify at least one of fe, fi (both NULL)."
 #define MSGARK_NULL_G        "g = NULL illegal."
@@ -644,11 +738,15 @@ void arkProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_TRET_NULL      "tret = NULL illegal."
 #define MSGARK_BAD_EWT        "Initial ewt has component(s) equal to zero (illegal)."
 #define MSGARK_EWT_NOW_BAD    "At " MSG_TIME ", a component of ewt has become <= 0."
+#define MSGARK_BAD_RWT        "Initial rwt has component(s) equal to zero (illegal)."
+#define MSGARK_RWT_NOW_BAD    "At " MSG_TIME ", a component of rwt has become <= 0."
 #define MSGARK_BAD_ITASK      "Illegal value for itask."
 #define MSGARK_BAD_H0         "h0 and tout - t0 inconsistent."
 #define MSGARK_BAD_TOUT       "Trouble interpolating at " MSG_TIME_TOUT ". tout too far back in direction of integration"
 #define MSGARK_EWT_FAIL       "The user-provide EwtSet function failed."
 #define MSGARK_EWT_NOW_FAIL   "At " MSG_TIME ", the user-provide EwtSet function failed."
+#define MSGARK_RWT_FAIL       "The user-provide RwtSet function failed."
+#define MSGARK_RWT_NOW_FAIL   "At " MSG_TIME ", the user-provide RwtSet function failed."
 #define MSGARK_LINIT_FAIL     "The linear solver's init routine failed."
 #define MSGARK_LFREE_FAIL     "The linear solver's free routine failed."
 #define MSGARK_HNIL_DONE      "The above warning has been issued mxhnil times and will not be issued again for this problem."
@@ -672,6 +770,10 @@ void arkProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_MISSING_FI     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 #define MSGARK_MISSING_F      "Cannot specify that method is ImEx without providing function pointers to fi(t,y) and fe(t,y)."
 #define MSGARK_RESIZE_FAIL    "Error in user-supplied resize() function."
+#define MSGARK_MASSINIT_FAIL  "The mass matrix solver's init routine failed."
+#define MSGARK_MASSSOLVE_NULL "The mass matrix solver's solve routine is NULL."
+#define MSGARK_MASSSOLVE_FAIL "The mass matrix solver failed."
+#define MSGARK_MASSFREE_FAIL  "The mass matrixsolver's free routine failed."
 
 #ifdef __cplusplus
 }

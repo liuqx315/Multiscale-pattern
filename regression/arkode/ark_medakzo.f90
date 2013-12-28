@@ -1,8 +1,9 @@
 !-----------------------------------------------------------------
-! $Revision: $
-! $Date: $
-!-----------------------------------------------------------------
 ! Programmer(s): Daniel R. Reynolds @ SMU
+!-----------------------------------------------------------------
+! Copyright (c) 2013, Southern Methodist University.
+! All rights reserved.
+! For details, see the LICENSE file.
 !-----------------------------------------------------------------
 ! Example problem:
 ! 
@@ -41,8 +42,8 @@ program driver
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
   !    ipar(2) -> imex flag
-  integer :: ipar(2)
-  real*8  :: rpar(1)
+  integer*8 :: ipar(2)
+  real*8    :: rpar(1)
 
   ! solver parameters
   integer*8 :: order, dense_order, imex, btable, adapt_method, &
@@ -154,6 +155,9 @@ program driver
   call FARKSetIin('PREDICT_METHOD',  predictor, ier)
   if (fixedpt > 0)  &
        call FARKSetIin('FIXEDPOINT', m_aa, ier)
+
+  maxcor = max(8,maxcor)
+  nlscoef = 1.d-3
   call FARKSetIin('MAX_NITERS',      maxcor, ier)
   call FARKSetRin('NLCONV_COEF',     nlscoef, ier)
   call FARKSetIin('MAX_NSTEPS',      5000, ier)
@@ -243,20 +247,24 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(1)
-  integer, intent(in)  :: ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(ipar(1))
-  real*8,  intent(out) :: ydot(ipar(1))
+  real*8,  intent(in)   :: t, rpar(1)
+  integer*8, intent(in) :: ipar(2)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(ipar(1))
+  real*8,  intent(out)  :: ydot(ipar(1))
 
   ! temporary variables
   real*8 :: tmp(ipar(1))
+  integer :: i_par(2)
+
+  ! convert long int inputs to normal ints
+  i_par = ipar
 
   ! if fully implicit call feval, otherwise call feval_i
   if (ipar(2) == 0) then
-     call feval(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
+     call feval(i_par(1), t, y, tmp, ydot, ier, rpar, i_par)
   else 
-     call feval_i(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
+     call feval_i(i_par(1), t, y, tmp, ydot, ier, rpar, i_par)
   end if
   ier = 0
   
@@ -273,20 +281,24 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(1)
-  integer, intent(in)  :: ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(ipar(1))
-  real*8,  intent(out) :: ydot(ipar(1))
+  real*8,  intent(in)   :: t, rpar(1)
+  integer*8, intent(in) :: ipar(2)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(ipar(1))
+  real*8,  intent(out)  :: ydot(ipar(1))
 
   ! temporary variables
   real*8 :: tmp(ipar(1))
+  integer :: i_par(2)
+
+  ! convert long int inputs to normal ints
+  i_par = ipar
 
   ! if fully explicit call feval, otherwise call feval_e
   if (ipar(2) == 1) then
-     call feval(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
+     call feval(i_par(1), t, y, tmp, ydot, ier, rpar, i_par)
   else 
-     call feval_e(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
+     call feval_e(i_par(1), t, y, tmp, ydot, ier, rpar, i_par)
   end if
   ier = 0
   
@@ -310,11 +322,18 @@ subroutine farkbjac(neq, mu, ml, mdim, t, y, fy, BJac, &
   real*8,    intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
   real*8,    intent(out) :: BJac(mdim,ipar(1))
 
+  ! temporary variables
+  integer :: m_dim, i_par(2)
+
+  ! convert long int inputs to normal ints
+  m_dim = mdim
+  i_par = ipar
+
   ! if fully implicit call jeval, otherwise call jeval_i
   if (ipar(2) == 0) then
-     call jeval(mdim, ipar(1), t, y, fy, BJac, ier, rpar, ipar)
+     call jeval(m_dim, i_par(1), t, y, fy, BJac, ier, rpar, i_par)
   else 
-     call jeval_i(mdim, ipar(1), t, y, fy, BJac, ier, rpar, ipar)
+     call jeval_i(m_dim, i_par(1), t, y, fy, BJac, ier, rpar, i_par)
   end if
   ier = 0
   

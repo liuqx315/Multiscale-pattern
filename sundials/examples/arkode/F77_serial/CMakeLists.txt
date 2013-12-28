@@ -1,14 +1,10 @@
 # ---------------------------------------------------------------
-# $Revision: 1.0 $
-# $Date: $
-# ---------------------------------------------------------------
 # Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2013, Southern Methodist University.
 # All rights reserved.
 # For details, see the LICENSE file.
-# ---------------------------------------------------------------
+# -----------------------------------------------------------------
 # CMakeLists.txt file for the FARKODE F77 serial examples
 
 
@@ -18,7 +14,7 @@ SET(FARKODE_examples
   fark_diurnal_kry_bp
   )
 
-# Add variable fcvode_bl_examples with the names of the serial FARKODE examples
+# Add variable FARKODE_bl_examples with the names of the serial FARKODE examples
 # that use Lapack
 
 SET(FARKODE_examples_BL
@@ -59,7 +55,8 @@ ENDIF(LAPACK_FOUND)
 
 FOREACH(example ${FARKODE_examples})
   ADD_EXECUTABLE(${example} ${example}.f)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  SUNDIALS_ADD_TEST(${example} ${example})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)
@@ -71,6 +68,7 @@ ENDFOREACH(example ${FARKODE_examples})
 IF(LAPACK_FOUND)
   FOREACH(example ${FARKODE_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.f)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
       INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/F77_serial)

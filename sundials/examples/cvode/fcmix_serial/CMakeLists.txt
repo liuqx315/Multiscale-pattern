@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for the FCVODE serial examples
 
@@ -57,7 +62,8 @@ ENDIF(LAPACK_FOUND)
 
 FOREACH(example ${FCVODE_examples})
   ADD_EXECUTABLE(${example} ${example}.f)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+  SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  SUNDIALS_ADD_TEST(${example} ${example})
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/cvode/fcmix_serial)
@@ -69,6 +75,7 @@ ENDFOREACH(example ${FCVODE_examples})
 IF(LAPACK_FOUND)
   FOREACH(example ${FCVODE_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.f)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
       INSTALL(FILES ${example}.f ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/cvode/fcmix_serial)

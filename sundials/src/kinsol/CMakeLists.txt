@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for the KINSOL library
 
@@ -20,12 +25,18 @@ SET(kinsol_SOURCES
   kinsol_direct.c
   kinsol_band.c
   kinsol_dense.c
+  kinsol_sparse.c
   kinsol_spils.c
   kinsol_spbcgs.c
+  kinsol_spfgmr.c
   kinsol_spgmr.c
   kinsol_sptfqmr.c
   kinsol_bbdpre.c
   )
+
+IF(KLU_FOUND)
+    LIST(APPEND kinsol_SOURCES kinsol_klu.c)
+ENDIF()
 
 # Add variable shared_SOURCES with the common SUNDIALS sources which will
 # also be included in the KINSOL library
@@ -36,7 +47,9 @@ SET(shared_SOURCES
   sundials_band.c
   sundials_dense.c
   sundials_iterative.c
+  sundials_sparse.c
   sundials_spbcgs.c
+  sundials_spfgmr.c
   sundials_spgmr.c
   sundials_sptfqmr.c
   )
@@ -51,10 +64,13 @@ SET(kinsol_HEADERS
   kinsol_dense.h
   kinsol_direct.h
   kinsol.h
+  kinsol_klu.h
   kinsol_spbcgs.h
+  kinsol_spfgmr.h
   kinsol_spgmr.h
   kinsol_spils.h
   kinsol_sptfqmr.h
+  kinsol_superlumt.h
   )
 
 # Add prefix with complete path to the KINSOL header files
@@ -70,6 +86,15 @@ ELSE(LAPACK_FOUND)
   SET(kinsol_BL_HEADERS "")
 ENDIF(LAPACK_FOUND)
 
+IF(SUPERLU_FOUND)
+  SET(kinsol_SLU_SOURCES kinsol_superlumt.c)
+  SET(kinsol_SLU_HEADERS kinsol_superlumt.h)
+  ADD_PREFIX(${sundials_SOURCE_DIR}/include/kinsol/ kinsol_SLU_HEADERS)
+ELSE(SUPERLU_FOUND)
+  SET(kinsol_SLU_SOURCES "")
+  SET(kinsol_SLU_HEADERS "")
+ENDIF(SUPERLU_FOUND)
+
 # Add source directories to include directories for access to
 # implementation only header files.
 INCLUDE_DIRECTORIES(.)
@@ -83,7 +108,7 @@ IF(BUILD_STATIC_LIBS)
 
   # Add the build target for the static KINSOL library
   ADD_LIBRARY(sundials_kinsol_static STATIC
-    ${kinsol_SOURCES} ${kinsol_BL_SOURCES} ${shared_SOURCES})
+    ${kinsol_SOURCES} ${kinsol_BL_SOURCES} ${kinsol_SLU_SOURCES} ${shared_SOURCES})
 
   # Set the library name and make sure it is not deleted
   SET_TARGET_PROPERTIES(sundials_kinsol_static
@@ -99,7 +124,7 @@ IF(BUILD_SHARED_LIBS)
 
   # Add the build target for the KINSOL library
   ADD_LIBRARY(sundials_kinsol_shared SHARED
-    ${kinsol_SOURCES} ${kinsol_BL_SOURCES} ${shared_SOURCES})
+    ${kinsol_SOURCES} ${kinsol_BL_SOURCES} ${kinsol_SLU_SOURCES} ${shared_SOURCES})
 
   # Set the library name and make sure it is not deleted
   SET_TARGET_PROPERTIES(sundials_kinsol_shared
@@ -115,7 +140,7 @@ IF(BUILD_SHARED_LIBS)
 ENDIF(BUILD_SHARED_LIBS)
 
 # Install the KINSOL header files
-INSTALL(FILES ${kinsol_HEADERS} ${kinsol_BL_HEADERS} DESTINATION include/kinsol)
+INSTALL(FILES ${kinsol_HEADERS} ${kinsol_BL_HEADERS} ${kinsol_SLU_HEADERS} DESTINATION include/kinsol)
 
 # Install the KINSOL implementation header file
 INSTALL(FILES kinsol_impl.h DESTINATION include/kinsol)

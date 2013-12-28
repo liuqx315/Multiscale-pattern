@@ -1,7 +1,10 @@
 ###################################################################
-#  Daniel R. Reynolds, SMU Mathematics
-#  Copyright 2013; all rights reserved
-#
+#  Programmer(s):  Daniel R. Reynolds @ SMU
+###################################################################
+#  Copyright (c) 2013, Southern Methodist University.
+#  All rights reserved.
+#  For details, see the LICENSE file.
+###################################################################
 #  Regression directory Makefile: assumes that SUNDIALS+ARKode
 #  has been built in this same source repository, with the 
 #  directory structure:
@@ -29,9 +32,9 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
-FLIBS = -L../../install/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
+INCS = -I../../install_opt/include/
+LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
+FLIBS = -L../../install_opt/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
@@ -39,8 +42,11 @@ TESTS = ark_analytic.exe \
         ark_analytic_nonlin.exe \
         ark_analytic_nonlin_back.exe \
         ark_brusselator.exe \
+        ark_brusselator_M.exe \
         ark_brusselator1D.exe \
+        ark_brusselator1D_FEM.exe \
         ark_heat1D.exe \
+        ark_heat1D_adapt.exe \
         ark_heat2D.exe \
         ark_robertson.exe \
         ark_robertson_root.exe \
@@ -92,7 +98,7 @@ ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
 	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
 clean :
-	\rm -f *.o *.exe
+	\rm -f *.o *.exe diags_*.txt bruss_*.txt heat*.txt output.txt
 
 
 ####### End of Makefile #######

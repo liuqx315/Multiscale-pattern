@@ -5,10 +5,15 @@
  * -----------------------------------------------------------------
  * Programmer: Carol Woodward @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2013, 
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for operations on teh SUNDIALS
  * sparse matrix structure.
@@ -27,7 +32,6 @@
 SlsMat NewSparseMat(int M, int N, int NNZ)
 {
   SlsMat A;
-  int j;
 
   if ( (M <= 0) || (N <= 0) ) return(NULL);
 
@@ -117,7 +121,7 @@ void PrintSparseMat(SlsMat A)
 #if defined(SUNDIALS_EXTENDED_PRECISION)
       printf("%d  %12Lg  ", A->rowvals[i], A->data[i]);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-      printf("%d  %12lg  ", A->rowvals[i], A->data[i]);
+      printf("%d  %12g  ", A->rowvals[i], A->data[i]);
 #else
       printf("%d  %12g  ", A->rowvals[i], A->data[i]);
 #endif

@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2006, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the CPBAND linear solver.
  * -----------------------------------------------------------------
@@ -193,7 +198,7 @@ int CPBand(void *cpode_mem, int N, int mupper, int mlower)
     free(cpdls_mem);
     return(CPDLS_MEM_FAIL);
   }  
-  pivots = NewIntArray(N);
+  pivots = NewLintArray(N);
   if (pivots == NULL) {
     cpProcessError(cp_mem, CPDLS_MEM_FAIL, "CPBAND", "CPBand", MSGD_MEM_FAIL);
     DestroyMat(M);

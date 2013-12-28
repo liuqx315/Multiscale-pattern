@@ -4,24 +4,31 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for the CVODES parallel examples
 
 
 # Add variable CVODES_examples with the names of the parallel CVODES examples
-
+# "name\;nodes\;tasks"
 SET(CVODES_examples
-  cvsAdvDiff_ASAp_non_p
-  cvsAdvDiff_FSA_non_p
-  cvsAdvDiff_non_p
-  cvsAtmDisp_ASAi_kry_bbd_p
-  cvsDiurnal_FSA_kry_p
-  cvsDiurnal_kry_bbd_p
-  cvsDiurnal_kry_p
+  "cvsAdvDiff_ASAp_non_p\;2\;2"
+  "cvsAdvDiff_FSA_non_p\;2\;2\;-sensi stg t"
+  "cvsAdvDiff_FSA_non_p\;2\;2\;-sensi sim t"
+  "cvsAdvDiff_non_p\;2\;2"
+  "cvsAtmDisp_ASAi_kry_bbd_p\;2\;4"
+  "cvsDiurnal_FSA_kry_p\;2\;4\;-sensi stg t"
+  "cvsDiurnal_FSA_kry_p\;2\;4\;-sensi sim t"
+  "cvsDiurnal_kry_bbd_p\;2\;4"
+  "cvsDiurnal_kry_p\;2\;4"
   )
 
 # Check whether we use MPI compiler scripts.
@@ -57,9 +64,33 @@ ENDIF(LAPACK_FOUND)
 
 # Add the build and install targets for each CVODES example
 
-FOREACH(example ${CVODES_examples})
-  ADD_EXECUTABLE(${example} ${example}.c)
-  ADD_TEST(${example} ${TESTRUNNER} ${example})
+# SGS is there a way to query CMAKE variable to get added executables 
+# rather than keeping our own list?
+SET(ADDED_EXECUTABLES "")
+FOREACH(example_tuple ${CVODES_examples})
+  # first item is example
+  list(GET example_tuple 0 example)
+  list(GET example_tuple 1 number_of_nodes)
+  list(GET example_tuple 2 number_of_tasks)
+
+  # Only need to add the executable once
+  LIST(FIND ADDED_EXECUTABLES ${example} index)
+  IF(index EQUAL -1)
+    LIST(APPEND ADDED_EXECUTABLES ${example})
+    ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+  ENDIF(index EQUAL -1)
+
+  # Optional 4th element is test arguments
+  LIST(LENGTH example_tuple n)
+  IF(n EQUAL 4)
+    LIST(GET example_tuple 3 test_args)
+    STRING(REGEX REPLACE " " "_" test_name ${example}_${test_args})
+    SUNDIALS_ADD_TEST(${test_name} ${example} MPI_NPROCS ${number_of_tasks} TEST_ARGS ${test_args})
+  ELSE()
+    SUNDIALS_ADD_TEST(${example} ${example} MPI_NPROCS ${number_of_tasks})
+  ENDIF()
+
   TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
   IF(NOT MPI_MPICC)
     TARGET_LINK_LIBRARIES(${example} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARIES})
@@ -68,7 +99,7 @@ FOREACH(example ${CVODES_examples})
   IF(EXAMPLES_INSTALL)
     INSTALL(FILES ${example}.c ${example_out} DESTINATION ${EXAMPLES_INSTALL_PATH}/cvodes/parallel)
   ENDIF(EXAMPLES_INSTALL)
-ENDFOREACH(example ${CVODES_examples})
+ENDFOREACH(example_tuple ${CVODES_examples})
 
 IF(EXAMPLES_INSTALL)
 

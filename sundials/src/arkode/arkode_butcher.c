@@ -1,12 +1,13 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  This is the implementation file for the known Butcher tables 
  for the ARKODE solver.
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@
     10    Verner-6-5          ERK   8   6   5   -   - 
           Fehlberg-8-7        ERK   13  8   7   -   - 
     11    SDIRK-2-1         SDIRK   2   2   1   X   - 
-    12    Billington        SDIRK   3   3   2   -   - *not recommended
+    12    Billington        SDIRK   3   3   2   -   -
     13    TRBDF2           ESDIRK   3   3   2   -   - *not recommended
     14    Kvaerno(4,2,3)   ESDIRK   4   3   2   X   X 
     15*   ARK3(2)4L[2]SA   ESDIRK   4   3   2   X   X 
@@ -67,6 +68,12 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
 {
 
   int i, j;
+  realtype one = RCONST(1.0);
+  realtype two = RCONST(2.0);
+  realtype three = RCONST(3.0);
+  realtype four = RCONST(4.0);
+  realtype six = RCONST(6.0);
+  realtype sqrt2 = RSqrt(two);
 
   /* initialize output tables to zero */
   for (i=0; i<ARK_S_MAX; i++) {
@@ -611,12 +618,6 @@ int ARKodeLoadButcherTable(int imethod, int *s, int *q, int *p,
     *q = 3;
     *p = 2;
 
-    realtype one = RCONST(1.0);
-    realtype two = RCONST(2.0);
-    realtype three = RCONST(3.0);
-    realtype four = RCONST(4.0);
-    realtype six = RCONST(6.0);
-    realtype sqrt2 = RSqrt(two);
     ARK_A(A,1,0) = (two-sqrt2)/two;
     ARK_A(A,1,1) = (two-sqrt2)/two;
     ARK_A(A,2,0) = sqrt2/four;

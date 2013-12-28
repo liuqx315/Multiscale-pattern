@@ -4,10 +4,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# LLNS Copyright Start
+# Copyright (c) 2013, Lawrence Livermore National Security
+# This work was performed under the auspices of the U.S. Department 
+# of Energy by Lawrence Livermore National Laboratory in part under 
+# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
+# LLNS Copyright End
 # ---------------------------------------------------------------
 # Top level CMakeLists.txt for SUNDIALS (for cmake build system)
 
@@ -18,7 +23,7 @@
 
 # Require a fairly recent cmake version
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.1)
 
 # Set CMake policy to allow examples to build
 if(COMMAND cmake_policy)
@@ -36,6 +41,9 @@ SET(PACKAGE_NAME "SUNDIALS")
 SET(PACKAGE_STRING "SUNDIALS 2.5.0")
 SET(PACKAGE_TARNAME "sundials")
 SET(PACKAGE_VERSION "2.5.0")
+
+# 
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Prohibit in-source build
 
@@ -251,6 +259,21 @@ IF(UNIX)
   ENDIF(USE_GENERIC_MATH)
 ENDIF(UNIX)
 
+## clock-monotonic, see if we need to link with rt
+include(CheckSymbolExists)
+set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
+set(CMAKE_REQUIRED_LIBRARIES rt)
+CHECK_SYMBOL_EXISTS(_POSIX_TIMERS "unistd.h;time.h" SUNDIALS_POSIX_TIMERS)
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
+if(SUNDIALS_POSIX_TIMERS)
+  find_library(SUNDIALS_RT_LIBRARY NAMES rt)
+  mark_as_advanced(SUNDIALS_RT_LIBRARY)
+  if(SUNDIALS_RT_LIBRARY)
+    SET(SUNDIALS_HAVE_POSIX_TIMERS "#define SUNDIALS_HAVE_POSIX_TIMERS")
+    set(EXTRA_LINK_LIBS ${EXTRA_LINK_LIBS} ${SUNDIALS_RT_LIBRARY})
+  endif()
+endif()
+
 # -------------------------------------------------------------
 # Enable Fortran support?
 # -------------------------------------------------------------
@@ -315,6 +338,17 @@ IF(NOT SUPERLU_ENABLE)
 ENDIF(NOT SUPERLU_ENABLE)
 
 # -------------------------------------------------------------
+# Enable KLU support?
+# -------------------------------------------------------------
+
+OPTION(KLU_ENABLE "Enable KLU support" OFF)
+
+IF(NOT KLU_ENABLE)
+  HIDE_VARIABLE(KLU_LIBRARY_DIR)
+  HIDE_VARIABLE(KLU_INCLUDE_DIR)
+ENDIF(NOT KLU_ENABLE)
+
+# -------------------------------------------------------------
 # Enable MPI support?
 # -------------------------------------------------------------
 
@@ -329,6 +363,36 @@ IF(NOT MPI_ENABLE)
   HIDE_VARIABLE(MPI_MPIF77)
   HIDE_VARIABLE(MPI_MPIF90)
 ENDIF(NOT MPI_ENABLE)
+
+# -------------------------------------------------------------
+# Enable OpenMP support?
+# -------------------------------------------------------------
+
+OPTION(OPENMP_ENABLE "Enable OpenMP support" OFF)
+
+IF(OPENMP_ENABLE)
+  FIND_PACKAGE(OpenMP)
+  IF(NOT OPENMP_FOUND)
+    message(STATUS "Disabling OpenMP support, could not determine compiler flags")
+  ENDIF(NOT OPENMP_FOUND)
+ENDIF(OPENMP_ENABLE)
+
+# -------------------------------------------------------------
+# Enable Pthread support?
+# -------------------------------------------------------------
+
+OPTION(PTHREAD_ENABLE "Enable Pthreads support" OFF)
+
+IF(PTHREAD_ENABLE)
+  FIND_PACKAGE(Threads)
+  IF(CMAKE_USE_PTHREADS_INIT)
+    message(STATUS "Using Pthreads")
+    SET(PTHREADS_FOUND TRUE)
+    # SGS    
+  ELSE()
+    message(STATUS "Disabling Pthreads support, could not determine compiler flags")
+  endif()
+ENDIF(PTHREAD_ENABLE)
 
 # -------------------------------------------------------------
 # Enable examples?
@@ -605,10 +669,44 @@ ELSE(SUPERLU_ENABLE)
 ENDIF(SUPERLU_ENABLE)
 
 # -------------------------------------------------------------
+# Find (and test) the KLU libraries
+# -------------------------------------------------------------
+
+# If KLU is requested, first try to find the appropriate libraries to
+# link against them.
+
+# Macro to be inserted in sundials_config.h 
+SET(KLU_MACRO "#define SUNDIALS_KLU 0")
+
+IF(KLU_ENABLE)
+
+  SHOW_VARIABLE(KLU_INCLUDE_DIR STRING "KLU include directory"
+    "${KLU_INCLUDE_DIR}") 
+  SHOW_VARIABLE(KLU_LIBRARY_DIR STRING
+    "Klu library directory" "${KLU_LIBRARY_DIR}")
+
+  INCLUDE(SundialsKLU)
+
+  IF(KLU_FOUND) 
+    SET(KLU_MACRO "#define SUNDIALS_KLU 1")
+    INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})
+  ENDIF(KLU_FOUND)
+
+  IF(KLU_LIBRARIES AND NOT KLU_FOUND) 
+    PRINT_WARNING("KLU not functional - support will not be provided" 
+      "Double check spelling specified libraries (search is case sensitive)")
+  ENDIF(KLU_LIBRARIES AND NOT KLU_FOUND)
+
+ENDIF(KLU_ENABLE)
+
+# -------------------------------------------------------------
 # Decide how to compile MPI codes.
 # -------------------------------------------------------------
 
 IF(MPI_ENABLE)
+  # get run command for mpi (openmpi or OpenMP or Pthreads(default))
+  SET(MPI_RUN_COMMAND "mpirun" CACHE STRING "mpirun or srun")
+  SHOW_VARIABLE(MPI_RUN_COMMAND STRING "MPI run command: mpirun or srun" "${MPI_RUN_COMMAND}")
   INCLUDE(SundialsMPIC)
   IF(NOT MPIC_FOUND)
     PRINT_WARNING("MPI not functional"
@@ -667,9 +765,15 @@ ADD_SUBDIRECTORY(src/sundials)
 ADD_SUBDIRECTORY(src/nvec_ser)
 IF(MPIC_FOUND)
   ADD_SUBDIRECTORY(src/nvec_par)
-  ADD_SUBDIRECTORY(src/nvec_spcpar)
-  ADD_SUBDIRECTORY(src/nvec_pargrid)
 ENDIF(MPIC_FOUND)
+
+IF(OPENMP_FOUND)
+  ADD_SUBDIRECTORY(src/nvec_openmp)	
+ENDIF(OPENMP_FOUND)
+
+IF(PTHREADS_FOUND)
+  ADD_SUBDIRECTORY(src/nvec_pthreads)	
+ENDIF(PTHREADS_FOUND)
 
 # ARKODE library
 
@@ -734,9 +838,10 @@ ENDIF(BUILD_CPODES)
 # Also, if we will generate exported example Makefiles, set 
 # variables needed in generating them from templates.
 
+INCLUDE(SundialsAddTest)
+
 IF(EXAMPLES_ENABLE)
   ENABLE_TESTING()
-  FIND_PROGRAM(TESTRUNNER testRunner PATHS test)
 
   IF(EXAMPLES_INSTALL)
     SET(SHELL "sh")
@@ -874,6 +979,12 @@ IF(EXAMPLES_ENABLE)
     ADD_SUBDIRECTORY(examples/ida/serial)
     IF(FCMIX_ENABLE AND F77_FOUND)
       ADD_SUBDIRECTORY(examples/ida/fcmix_serial)
+      IF(OPENMP_FOUND)
+	ADD_SUBDIRECTORY(examples/ida/fcmix_openmp)
+      ENDIF(OPENMP_FOUND)
+      IF(PTHREADS_FOUND)
+	ADD_SUBDIRECTORY(examples/ida/fcmix_pthreads)
+      ENDIF(PTHREADS_FOUND)
     ENDIF(FCMIX_ENABLE AND F77_FOUND)
     IF(MPIC_FOUND)
       ADD_SUBDIRECTORY(examples/ida/parallel)
@@ -909,6 +1020,21 @@ IF(EXAMPLES_ENABLE)
       ADD_SUBDIRECTORY(examples/cpodes/parallel)
     ENDIF(MPIC_FOUND)
   ENDIF(BUILD_CPODES)
+
+  # Always add the nvector sieral examples
+  ADD_SUBDIRECTORY(examples/nvector/serial)
+
+  IF(MPIC_FOUND)
+      ADD_SUBDIRECTORY(examples/nvector/parallel)
+  ENDIF(MPIC_FOUND)
+
+  IF(PTHREADS_FOUND)
+      ADD_SUBDIRECTORY(examples/nvector/pthreads)
+  ENDIF(PTHREADS_FOUND)
+
+  IF(OPENMP_FOUND)
+      ADD_SUBDIRECTORY(examples/nvector/openmp)
+  ENDIF(OPENMP_FOUND)
   
 ENDIF(EXAMPLES_ENABLE)
 

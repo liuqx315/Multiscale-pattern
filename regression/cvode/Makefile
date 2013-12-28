@@ -1,7 +1,10 @@
 ###################################################################
-#  Daniel R. Reynolds, SMU Mathematics
-#  Copyright 2013; all rights reserved
-#
+#  Programmer(s):  Daniel R. Reynolds @ SMU
+###################################################################
+#  Copyright (c) 2013, Southern Methodist University.
+#  All rights reserved.
+#  For details, see the LICENSE file.
+###################################################################
 #  Regression directory Makefile: assumes that SUNDIALS+ARKode
 #  has been built in this same source repository, with the 
 #  directory structure:
@@ -24,8 +27,8 @@ CFLAGS = -O2
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install/include/
-LIBS = -L../../install/lib -lsundials_cvode -lsundials_nvecserial
+INCS = -I../../install_opt/include/
+LIBS = -L../../install_opt/lib -lsundials_cvode -lsundials_nvecserial
 
 # listing of all test routines
 TESTS = cv_analytic.exe \

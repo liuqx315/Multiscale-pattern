@@ -1,8 +1,9 @@
 !-----------------------------------------------------------------
-! $Revision: $
-! $Date: $
-!-----------------------------------------------------------------
 ! Programmer(s): Daniel R. Reynolds @ SMU
+!-----------------------------------------------------------------
+! Copyright (c) 2013, Southern Methodist University.
+! All rights reserved.
+! For details, see the LICENSE file.
 !-----------------------------------------------------------------
 ! Example problem:
 ! 
@@ -40,8 +41,8 @@ program driver
 
   ! real/integer parameters to pass through to supplied functions
   !    ipar(1) -> problem size
-  integer :: ipar(1)
-  real*8  :: rpar(1)
+  integer*8 :: ipar(1)
+  real*8    :: rpar(1)
 
   ! solver parameters
   integer*8 :: order, dense_order, imex, btable, adapt_method, &
@@ -252,17 +253,21 @@ subroutine farkifun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(1)
-  integer, intent(in)  :: ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(ipar(1))
-  real*8,  intent(out) :: ydot(ipar(1))
+  real*8,  intent(in)   :: t, rpar(1)
+  integer*8, intent(in) :: ipar(2)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(ipar(1))
+  real*8,  intent(out)  :: ydot(ipar(1))
 
   ! temporary variables
   real*8 :: tmp(ipar(1))
+  integer :: i_par(2)
+
+  ! convert long int inputs to normal ints
+  i_par = ipar
 
   ! fully implicit solver only, so just call feval
-  call feval(ipar(1), t, y, tmp, ydot, ier, rpar, ipar)
+  call feval(i_par(1), t, y, tmp, ydot, ier, rpar, i_par)
 
   ier = 0
   
@@ -279,14 +284,11 @@ subroutine farkefun(t, y, ydot, ipar, rpar, ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, rpar(1)
-  integer, intent(in)  :: ipar(2)
-  integer, intent(out) :: ier
-  real*8,  intent(in)  :: y(ipar(1))
-  real*8,  intent(out) :: ydot(ipar(1))
-
-  ! temporary variables
-  real*8 :: tmp(ipar(1))
+  real*8,  intent(in)   :: t, rpar(1)
+  integer*8, intent(in) :: ipar(2)
+  integer, intent(out)  :: ier
+  real*8,  intent(in)   :: y(ipar(1))
+  real*8,  intent(out)  :: ydot(ipar(1))
 
   ! fully implicit solver only, return error flag
   ydot = 0.d0
@@ -305,14 +307,20 @@ subroutine farkdjac(neq,t,y,fy,DJac,h,ipar,rpar,wk1,wk2,wk3,ier)
   implicit none
 
   ! Arguments
-  real*8,  intent(in)  :: t, h, rpar(1)
-  integer, intent(in)  :: neq, ipar(2)
-  integer, intent(out) :: ier
+  real*8,  intent(in)   :: t, h, rpar(1)
+  integer*8, intent(in) :: neq, ipar(2)
+  integer, intent(out)  :: ier
   real*8,  intent(in), dimension(neq) :: y, fy, wk1, wk2, wk3
-  real*8,  intent(out) :: DJac(neq,neq)
+  real*8,  intent(out)  :: DJac(neq,neq)
+
+  ! local variables
+  integer :: i_par(2)
+
+  ! convert between integer types for call to fortran routine
+  i_par = ipar
 
   ! fully implicit only, call jeval
-  call jeval(ipar(1), ipar(1), t, y, fy, DJac, ier, rpar, ipar)
+  call jeval(i_par(1), i_par(1), t, y, fy, DJac, ier, rpar, i_par)
   ier = 0
   
   

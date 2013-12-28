@@ -1,5 +1,11 @@
+#------------------------------------------------------------
+# Programmer(s):  Daniel R. Reynolds @ SMU
+#------------------------------------------------------------
+# Copyright (c) 2013, Southern Methodist University.
+# All rights reserved.
+# For details, see the LICENSE file.
+#------------------------------------------------------------
 # analysis functions for running ARKODE tests with various parameters
-# Daniel R. Reynolds, reynolds@smu.edu
 
 # imports
 import sys
@@ -122,7 +128,7 @@ def run_test(testname,keep_output):
             nJe = int(txt[6]);
         elif (("nonlinear" in txt) and ("iterations" in txt)):
             nnewt = int(txt[6]);
-        elif (("convergence" in txt) and ("Total" in txt)):
+        elif (("convergence" in txt) and ("nonlinear" in txt) and ("Total" in txt)):
             ncf = int(txt[8]);
         elif (("error" in txt) and ("test" in txt)):
             nef = int(txt[7]);

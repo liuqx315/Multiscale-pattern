@@ -1,15 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009/03/29 23:28:01 $
+ * $Revision: $
+ * $Date: $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * KINSOL solver module header file (private version)
  * -----------------------------------------------------------------
@@ -99,6 +104,7 @@ typedef struct KINMemRec {
 				       algorithm)                              */
 
   realtype kin_mxnewtstep;     /* maximum allowable scaled step length         */
+  realtype kin_mxnstepin;      /* input (or preset) value for mxnewtstep       */
   realtype kin_sqrt_relfunc;   /* relative error bound for func(u)             */
   realtype kin_stepl;          /* scaled length of current step                */
   realtype kin_stepmul;        /* step scaling factor                          */
@@ -138,6 +144,10 @@ typedef struct KINMemRec {
   N_Vector kin_fval;        /* vector containing result of nonlinear system
 			       function evaluated at a given iterate
 			       (fval = func(uu))                               */
+  N_Vector kin_gval;        /* vector containing result of the fixed point 
+			       function evaluated at a given iterate; 
+			       used in KIN_PICARD strategy only.
+			       (gval = uu - L^{-1}fval(uu))                    */
   N_Vector kin_uscale;      /* iterate scaling vector                          */
   N_Vector kin_fscale;      /* fval scaling vector                             */
   N_Vector kin_pp;          /* incremental change vector (pp = unew-uu)        */
@@ -178,7 +188,7 @@ typedef struct KINMemRec {
   int (*kin_lsetup)(struct KINMemRec *kin_mem);
 
   int (*kin_lsolve)(struct KINMemRec *kin_mem, N_Vector xx, N_Vector bb, 
-		    realtype *res_norm );
+		    realtype *sJpnorm, realtype *sFdotJp);
 
   void (*kin_lfree)(struct KINMemRec *kin_mem);
 
@@ -191,11 +201,10 @@ typedef struct KINMemRec {
 
   realtype kin_fnorm;     /* value of L2-norm of fscale*fval                   */
   realtype kin_f1norm;    /* f1norm = 0.5*(fnorm)^2                            */
-  realtype kin_res_norm;  /* value of L2-norm of residual (set by the linear
-			     solver)                                           */
-  realtype kin_sfdotJp;   /* value of scaled func(u) vector (fscale*fval)
-			     dotted with scaled J(u)*pp vector                 */
-  realtype kin_sJpnorm;   /* value of L2-norm of fscale*(J(u)*pp)              */
+  realtype kin_sFdotJp;   /* value of scaled F(u) vector (fscale*fval)
+                             dotted with scaled J(u)*pp vector (set by lsolve) */
+  realtype kin_sJpnorm;   /* value of L2-norm of fscale*(J(u)*pp)
+                             (set by lsolve)                                   */
 
   realtype kin_fnorm_sub; /* value of L2-norm of fscale*fval (subinterval)     */
   booleantype kin_eval_omega; /* flag indicating that omega must be evaluated. */
@@ -210,7 +219,7 @@ typedef struct KINMemRec {
   /*
    * -----------------------------------------------------------------
    * Note: The KINLineSearch subroutine scales the values of the
-   * variables sfdotJp and sJpnorm by a factor rl (lambda) that is
+   * variables sFdotJp and sJpnorm by a factor rl (lambda) that is
    * chosen by the line search algorithm such that the sclaed Newton
    * step satisfies the following conditions:
    *
@@ -292,7 +301,7 @@ typedef struct KINMemRec {
 /*
  * -----------------------------------------------------------------
  * Function : int (*kin_lsolve)(KINMem kin_mem, N_Vector xx,
- *                              N_Vector bb, realtype *res_norm)
+ *                N_Vector bb, realtype *sJpnorm, realtype *sFdotJp)
  * -----------------------------------------------------------------
  * kin_lsolve interfaces with the subroutine implementing the
  * numerical method to be used to solve the linear system J*xx = bb,
@@ -313,8 +322,11 @@ typedef struct KINMemRec {
  *      value of the system function evaluated at the current
  *      iterate) by KINLinSolDrv before kin_lsolve is called
  *
- *  res_norm  holds the value of the L2-norm (Euclidean norm) of
- *            the residual vector upon return
+ *  sJpnorm  holds the value of the L2-norm (Euclidean norm) of
+ *           fscale*(J(u)*pp) upon return
+ *
+ *  sFdotJp  holds the value of the scaled F(u) (fscale*F) dotted
+ *           with the scaled J(u)*pp vector upon return
  *
  * If successful, the kin_lsolve routine should return 0 (zero).
  * Otherwise it should return a positive value if a re-evaluation
@@ -403,6 +415,7 @@ void KINInfoHandler(const char *module, const char *function,
 #define MSG_USCALE_NONPOSITIVE "uscale has nonpositive elements."
 #define MSG_BAD_FSCALE         "fscale = NULL illegal."
 #define MSG_FSCALE_NONPOSITIVE "fscale has nonpositive elements."
+#define MSG_CONSTRAINTS_NOTOK  "Constraints not allowed with fixed point or Picard iterations"
 #define MSG_INITIAL_CNSTRNT    "Initial guess does NOT meet constraints."
 #define MSG_LINIT_FAIL         "The linear solver's init routine failed."
 

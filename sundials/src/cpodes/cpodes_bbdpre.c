@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2006, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This file contains implementations of routines for a
  * band-block-diagonal preconditioner, i.e. a block-diagonal
@@ -109,7 +114,7 @@ int CPBBDPrecInit(void *cpode_mem, int Nlocal,
   CPBBDPrecData pdata;
   N_Vector tmp4;
   int muk, mlk, storage_mu;
-  int flag;
+  int flag=0;
 
   if (cpode_mem == NULL) {
     cpProcessError(NULL, CPSPILS_MEM_NULL, "CPBBDPRE", "CPBBDPrecInit", MSGBBD_CPMEM_NULL);
@@ -184,7 +189,7 @@ int CPBBDPrecInit(void *cpode_mem, int Nlocal,
 
   /* Allocate memory for pivots */
   pdata->pivots = NULL;
-  pdata->pivots = NewIntArray(Nlocal);
+  pdata->pivots = NewLintArray(Nlocal);
   if (pdata->savedJ == NULL) {
     DestroyMat(pdata->savedP);
     DestroyMat(pdata->savedJ);

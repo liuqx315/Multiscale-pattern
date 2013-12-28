@@ -5,10 +5,15 @@
  * -----------------------------------------------------------------
  * Programmer: Radu Serban  @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2006, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the main CPODES integrator.
  * It is independent of the CPODES linear solver in use.
@@ -2218,7 +2223,7 @@ static int cpInitialSetup(CPodeMem cp_mem)
 static int cpHin(CPodeMem cp_mem, realtype tout)
 {
   int sign, retval;
-  realtype hlb, hub, hg, h0;
+  realtype hlb, hub, hg, h0=ZERO;
   realtype tdiff, tdist, tround;
 
   /* If tout is too close to tn, give up */

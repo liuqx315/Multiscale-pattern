@@ -1,3 +1,11 @@
+..
+   Programmer(s): Daniel R. Reynolds @ SMU
+   ----------------------------------------------------------------
+   Copyright (c) 2013, Southern Methodist University.
+   All rights reserved.
+   For details, see the LICENSE file.
+   ----------------------------------------------------------------
+
 :tocdepth: 3
 
 
@@ -59,91 +67,91 @@ or into a larger user code.
 
 
 
-.. _DlsMat:
-
 DlsMat
 --------------------
 
-The type :ref:`DlsMat`, defined in ``sundials_direct.h`` is a
+The type :c:type:`DlsMat`, defined in ``sundials_direct.h`` is a
 pointer to a structure defining a generic matrix, and is used with all
 linear solvers in the DLS family: 
 
-.. code-block:: c
+.. c:type:: DlsMat
 
-   typedef struct _DlsMat {
-     int type;
-     long int M;
-     long int N;
-     long int ldim;
-     long int mu;
-     long int ml;
-     long int s_mu;
-     realtype *data;
-     long int ldata;
-     realtype **cols;
-   } *DlsMat;
+   .. code-block:: c
+
+      typedef struct _DlsMat {
+        int type;
+        long int M;
+        long int N;
+        long int ldim;
+        long int mu;
+        long int ml;
+        long int s_mu;
+        realtype *data;
+        long int ldata;
+        realtype **cols;
+      } *DlsMat;
 
 For the DENSE module, the relevant fields of this structure are as
-follows. Note that a dense matrix of type :ref:`DlsMat` need not be
+follows. Note that a dense matrix of type :c:type:`DlsMat` need not be
 square. 
 
-  :type: -- ``SUNDIALS_DENSE`` (=1)
-  :M: -- number of rows
-  :N: --  number of columns
-  :ldim: -- leading dimension (:math:`\ge M`)
-  :data: -- pointer to a contiguous block of ``realtype`` variables 
-  :ldata: -- length of the data array (:math:`= ldim*N`). The
-    ``(i,j)`` element of a dense matrix ``A`` of type ``DlsMat`` (with
-    :math:`0 \le i < M` and :math:`0 \le j < N`) is given by the
-    expression ``(A->data)[0][j*M+i]`` 
-  :cols: -- array of pointers. ``cols[j]`` points to the first element
-    of the ``j``-th column of the matrix in the array data. The
-    ``(i,j)`` element of a dense matrix ``A`` of type ``DlsMat`` (with
-    :math:`0 \le i < M` and :math:`0 \le j < N`) is given by the
-    expression ``(A->cols)[j][i]`` 
+:type: -- ``SUNDIALS_DENSE`` (=1)
+:M: -- number of rows
+:N: --  number of columns
+:ldim: -- leading dimension (:math:`\ge M`)
+:data: -- pointer to a contiguous block of ``realtype`` variables 
+:ldata: -- length of the data array (:math:`= ldim*N`). The
+  ``(i,j)`` element of a dense matrix ``A`` of type ``DlsMat`` (with
+  :math:`0 \le i < M` and :math:`0 \le j < N`) is given by the
+  expression ``(A->data)[0][j*M+i]`` 
+:cols: -- array of pointers. ``cols[j]`` points to the first element
+  of the ``j``-th column of the matrix in the array data. The
+  ``(i,j)`` element of a dense matrix ``A`` of type ``DlsMat`` (with
+  :math:`0 \le i < M` and :math:`0 \le j < N`) is given by the
+  expression ``(A->cols)[j][i]`` 
 
 For the BAND module, the relevant fields of this structure are as
 follows (see Figure :ref:`DLS Diagram <DLS_figure>` for a diagram of
 the underlying data representation in a banded matrix of type
-:ref:`DlsMat`). Note that only square band matrices are allowed.
+:c:type:`DlsMat`). Note that only square band matrices are allowed.
 
-  :type: -- ``SUNDIALS_BAND`` (=2)
-  :M: -- number of rows
-  :N: -- number of columns (:math:`N = M`)
-  :mu: -- upper half-bandwidth, :math:`0 \le mu < min(M,N)`
-  :ml: -- lower half-bandwidth, :math:`0 \le ml < min(M,N)`
-  :s_mu: -- storage upper bandwidth, :math:`mu \le s_mu < N`. The LU
-     decomposition routine writes the LU factors into the storage for
-     :math:`A`. The upper triangular factor :math:`U`, however, may
-     have an upper bandwidth as big as :math:`min(N-1,mu+ml)` because
-     of partial pivoting. The ``s_mu`` field holds the upper
-     half-bandwidth allocated for :math:`A`. 
-  :ldim: -- leading dimension (:math:`ldim \ge s_mu`)
-  :data: -- pointer to a contiguous block of ``realtype``
-     variables. The elements of a banded matrix of type
-     :ref:`DlsMat` are stored columnwise (i.e. columns are stored
-     one on top of the other in memory). Only elements within the
-     specified half-bandwidths are stored. ``data`` is a pointer to
-     ``ldata`` contiguous locations which hold the elements within the
-     band of :math:`A`. 
-  :ldata: -- length of the ``data`` array (:math:`= ldim*(s_mu+ml+1)`)
-  :cols: -- array of pointers. ``cols[j]`` is a pointer to the
-     uppermost element within the band in the ``j``-th column. This
-     pointer may be treated as an array indexed from ``s_mu-mu`` (to
-     access the uppermost element within the band in the ``j``-th
-     column) to ``s_mu+ml`` (to access the lowest element within the
-     band in the ``j``-th column). Indices from 0 to ``s_mu-mu-1`` give
-     access to extra storage elements required by the LU decomposition
-     function. Finally, ``cols[j][i-j+s_mu]`` is the ``(i,j)``-th
-     element, :math:`j-mu \le i \le j+ml`.
+:type: -- ``SUNDIALS_BAND`` (=2)
+:M: -- number of rows
+:N: -- number of columns (:math:`N = M`)
+:mu: -- upper half-bandwidth, :math:`0 \le mu < min(M,N)`
+:ml: -- lower half-bandwidth, :math:`0 \le ml < min(M,N)`
+:s_mu: -- storage upper bandwidth, :math:`mu \le s\_mu < N`. The LU
+   decomposition routine writes the LU factors into the storage for
+   :math:`A`. The upper triangular factor :math:`U`, however, may
+   have an upper bandwidth as big as :math:`min(N-1,mu+ml)` because
+   of partial pivoting. The ``s_mu`` field holds the upper
+   half-bandwidth allocated for :math:`A`. 
+:ldim: -- leading dimension (:math:`ldim \ge s\_mu`)
+:data: -- pointer to a contiguous block of ``realtype``
+   variables. The elements of a banded matrix of type
+   :c:type:`DlsMat` are stored columnwise (i.e. columns are stored
+   one on top of the other in memory). Only elements within the
+   specified half-bandwidths are stored. ``data`` is a pointer to
+   ``ldata`` contiguous locations which hold the elements within the
+   band of :math:`A`. 
+:ldata: -- length of the ``data`` array (:math:`= ldim*(s\_mu+ml+1)`)
+:cols: -- array of pointers. ``cols[j]`` is a pointer to the
+   uppermost element within the band in the ``j``-th column. This
+   pointer may be treated as an array indexed from ``s_mu-mu`` (to
+   access the uppermost element within the band in the ``j``-th
+   column) to ``s_mu+ml`` (to access the lowest element within the
+   band in the ``j``-th column). Indices from 0 to ``s_mu-mu-1`` give
+   access to extra storage elements required by the LU decomposition
+   function. Finally, ``cols[j][i-j+s_mu]`` is the ``(i,j)``-th
+   element, :math:`j-mu \le i \le j+ml`.
 
 
 .. _DLS_figure:
 
 .. figure:: figs/dls_diagram.png
 
-   DLS Diagram: Storage for a banded matrix of type :ref:`DlsMat`. Here
-   ``A`` is an :math:`N \times N` band matrix of type :ref:`DlsMat`
+   DLS Diagram: Storage for a banded matrix of type :c:type:`DlsMat`. Here
+   ``A`` is an :math:`N \times N` band matrix of type :c:type:`DlsMat`
    with upper and lower half-bandwidths ``mu`` and ``ml``,
    respectively. The rows and columns of ``A`` are numbered from
    :math:`0` to :math:`N-1` and the ``(i,j)``-th element of ``A`` is
@@ -166,14 +174,14 @@ the :c:macro:`DENSE_COL` or :c:macro:`BAND_COL` macros. Users should use these
 macros whenever possible. 
 
 The following two macros are defined by the DENSE module to provide
-access to data in the :ref:`DlsMat` type:
+access to data in the :c:type:`DlsMat` type:
 
 .. c:macro:: DENSE_ELEM
 
    **Usage:** ``DENSE_ELEM(A,i,j) = a_ij;``  or  ``a_ij = DENSE_ELEM(A,i,j);``
 
    This macro references the :math:`(i,j)`-th element of the :math:`M \times N`
-   :ref:`DlsMat` :math:`A`, :math:`0 \le i < M` , :math:`0 \le j < N`.
+   :c:type:`DlsMat` :math:`A`, :math:`0 \le i < M` , :math:`0 \le j < N`.
 
 
 .. c:macro:: DENSE_COL
@@ -181,7 +189,7 @@ access to data in the :ref:`DlsMat` type:
    **Usage:** ``col_j = DENSE_COL(A,j);``
 
    This macro references the :math:`j`-th column of the :math:`M \times N`
-   :ref:`DlsMat` :math:`A`, :math:`0 \le j < N`. The type of the
+   :c:type:`DlsMat` :math:`A`, :math:`0 \le j < N`. The type of the
    expression ``DENSE_COL(A,j)`` is ``realtype *`` . After the 
    assignment in the usage above, ``col_j`` may be treated as an
    array indexed from 0 to :math:`M-1`. The :math:`(i,j)`-th
@@ -190,7 +198,7 @@ access to data in the :ref:`DlsMat` type:
 
 
 The following three macros are defined by the BAND module to provide
-access to data in the :ref:`DlsMat` type:
+access to data in the :c:type:`DlsMat` type:
 
 .. c:macro:: BAND_ELEM
 
@@ -225,12 +233,13 @@ access to data in the :ref:`DlsMat` type:
 
 
 
+
 Functions in the DENSE module
 -------------------------------------------
 
 The DENSE module defines two sets of functions with corresponding
 names. The first set contains functions (with names starting with a
-capital letter) that act on dense matrices of type :ref:`DlsMat`. The
+capital letter) that act on dense matrices of type :c:type:`DlsMat`. The
 second set contains functions (with names starting with a lower case
 letter) that act on matrices represented as simple arrays.
 
@@ -238,164 +247,215 @@ The following functions for DlsMat dense matrices are available in the
 DENSE package. For full details, see the header files
 ``sundials_direct.h`` and ``sundials_dense.h``.
 
-* ``NewDenseMat``: allocation of a :ref:`DlsMat` dense matrix;
-* ``DestroyMat``: free memory for a :ref:`DlsMat` matrix;
-* ``PrintMat``: print a :ref:`DlsMat` matrix to standard output.
-* ``NewLintArray``: allocation of an array of ``long int`` integers
-  for use as pivots with ``DenseGETRF`` and ``DenseGETRS``;
-* ``NewIntArray``: allocation of an array of ``int`` integers for use
-  as pivots with the LAPACK dense solvers;
-* ``NewRealArray``: allocation of an array of ``realtype`` for use as
-  right-hand side with ``DenseGETRS``; 
-* ``DestroyArray``: free memory for an array;
-* ``SetToZero``: load a matrix with zeros;
-* ``AddIdentity``: increment a square matrix by the identity matrix;
-* ``DenseCopy``: copy one matrix to another;
-* ``DenseScale``: scale a matrix by a scalar;
-* ``DenseGETRF``: LU factorization with partial pivoting;
-* ``DenseGETRS``: solution of :math:`Ax = b` using LU factorization
-  (for square matrices :math:`A`); 
-* ``DensePOTRF``: Cholesky factorization of a real symmetric positive matrix;
-* ``DensePOTRS``: solution of :math:`Ax = b` using the Cholesky
-  factorization of :math:`A`; 
-* ``DenseGEQRF``: QR factorization of an :math:`m \times n` matrix,
-  with :math:`m \ge n`;
-* ``DenseORMQR``: compute the product :math:`w = Qv`, with :math:`Q`
-  calculated using ``DenseGEQRF``; 
+
+.. c:function:: DlsMat NewDenseMat(long int M, long int N)
+   
+   Allocates a :c:type:`DlsMat` dense matrix.
+
+.. c:function:: void DestroyMat(DlsMat A)
+
+   Frees memory for a :c:type:`DlsMat` matrix
+
+.. c:function:: void PrintMat(DlsMat A)
+
+   Prints a :c:type:`DlsMat` matrix to standard output.
+
+.. c:function:: long int* NewLintArray(long int N) 
+   
+   Allocates an array of ``long int`` integers for use as pivots with
+   :c:func:`DenseGETRF()` and :c:func:`DenseGETRS()`. 
+
+.. c:function:: int* NewIntArray(int N)
+
+   Allocates an array of ``int`` integers for use as pivots with the
+   LAPACK dense solvers.
+
+.. c:function:: realtype* NewRealArray(long int N)
+   
+   Allocates an array of type ``realtype`` for use as right-hand side
+   with :c:func:`DenseGETRS()`.
+
+.. c:function:: void DestroyArray(void* p)
+
+   Frees memory for an array.
+
+.. c:function:: void SetToZero(DlsMat A)
+
+   Loads a matrix with zeros.
+
+.. c:function:: void AddIdentity(DlsMat A)
+
+   Increments a square matrix by the identity matrix.
+
+.. c:function:: void DenseCopy(DlsMat A, DlsMat B)
+
+   Copies one dense matrix to another.
+
+.. c:function:: void DenseScale(realtype c, DlsMat A)
+
+   Scales a dense matrix by a scalar.
+
+.. c:function:: long int DenseGETRF(DlsMat A, long int* p)
+
+   LU factorization with partial pivoting of a dense matrix.
+
+.. c:function:: long int denseGETRF(realtype** a, long int m, long int n, long int* p)
+
+   Solves :math:`Ax = b` using LU factorization (for square matrices
+   :math:`A`), using the factorization resulting from :c:func:`DenseGETRF()`.
+
+.. c:function:: long int DensePOTRF(DlsMat A)
+
+   Cholesky factorization of a real symmetric positive definite dense matrix.
+
+.. c:function:: void DensePOTRS(DlsMat A, realtype* b)
+
+   Solves :math:`Ax = b` using the Cholesky factorization of :math:`A`
+   resulting from a call to :c:func:`DensePOTRF()`.
+
+.. c:function:: int DenseGEQRF(DlsMat A, realtype* beta, realtype* wrk)
+
+   QR factorization of an :math:`m \times n` dense matrix, with :math:`m \ge n`.
+
+.. c:function:: int DenseORMQR(DlsMat A, realtype* beta, realtype* vn, realtype* vm, realtype* wrk)
+
+   Computes the product :math:`w = Qv`, with :math:`Q` calculated
+   using :c:func:`DenseGEQRF()`.  
+
+
+
 
 The following functions for small dense matrices are available in the
-DENSE package:
+DENSE package.  These functions primarily replicate those defined above
+for :c:type:`DlsMat` dense matrices, but act on the individual data
+arrays outside of the :c:type:`DlsMat` structure:
 
-* ``newDenseMat``
+.. c:function:: realtype** newDenseMat(long int m, long int n)
 
-  ``newDenseMat(m,n)`` allocates storage for an :math:`m \times n`
-  dense matrix. It returns a pointer to the newly allocated storage if
-  successful. If the memory request cannot be satisfied, then
-  ``newDenseMat`` returns ``NULL``. The underlying type of the dense
-  matrix returned is ``realtype**``. If we allocate a dense matrix
-  ``realtype** a`` by ``a = newDenseMat(m,n)``, then ``a[j][i]``
-  references the :math:`(i,j)`-th element of the matrix ``a``,
-  :math:`0 \le i < m`, :math:`0 \le j < n`, and ``a[j]`` is a pointer
-  to the first element in the :math:`j`-th column of ``a``. The
-  location ``a[0]`` contains a pointer to :math:`m \times n`
-  contiguous locations which contain the elements of ``a``.
+   Allocates storage for an :math:`m \times n` dense matrix. It
+   returns a pointer to the newly allocated storage if successful. If
+   the memory request cannot be satisfied, then the function returns
+   ``NULL``.  The underlying type of the dense matrix returned is
+   ``realtype**``. If we allocate a dense matrix ``realtype** a`` by
+   ``a = newDenseMat(m,n)``, then ``a[j][i]`` references the row ``i``,
+   column ``j`` element of the matrix ``a``, :math:`0 \le i < m`,
+   :math:`0 \le j < n`, and ``a[j]`` is a pointer to the first element
+   in the :math:`j`-th column of ``a``. The location ``a[0]`` contains
+   a pointer to :math:`m \times n` contiguous locations which contain
+   the elements of ``a``.
 
-* ``destroyMat``
+.. c:function:: void destroyMat(realtype** a)
 
-  ``destroyMat(a)`` frees the dense matrix ``a`` allocated by ``newDenseMat``;
+   Frees the dense matrix *a* allocated by :c:func:`newDenseMat()`.
 
-* ``newLintArray``
+.. c:function:: long int* newLintArray(long int n)
 
-  ``newLintArray(n)`` allocates an array of ``n`` integers, all ``long
-  int``. It returns a pointer to the first element in the array if
-  successful. It returns ``NULL`` if the memory request could not be
-  satisfied. 
+   Allocates an array of *n* integers of ``long int`` type.  It
+   returns a pointer to the first element in the array if
+   successful. It returns ``NULL`` if the memory request could not be
+   satisfied.  
 
-* ``newIntArray``
+.. c:function:: int* newIntArray(int n)
 
-  ``newIntArray(n)`` allocates an array of ``n`` integers, all
-  ``int``. It returns a pointer to the first element in the array if
-  successful. It returns ``NULL`` if the memory request could not be
-  satisfied. 
+   Allocates an array of *n* integers of type ``int``.  It returns a
+   pointer to the first element in the array if successful. It returns
+   ``NULL`` if the memory request could not be satisfied. 
 
-* ``newRealArray``
+.. c:function:: realtype* newRealArray(long int m)
 
-  ``newRealArray(n)`` allocates an array of ``n`` ``realtype``
-  values. It returns a pointer to the first element in the array if
-  successful. It returns ``NULL`` if the memory request could not be
-  satisfied. 
+   Allocates an array of *n* ``realtype`` values. It returns a pointer
+   to the first element in the array if successful. It returns
+   ``NULL`` if the memory request could not be satisfied. 
 
-* ``destroyArray``
+.. c:function:: void destroyArray(void* v)
 
-  ``destroyArray(p)`` frees the array ``p`` allocated by
-  ``newLintArray``, ``newIntArray``, or ``newRealArray``; 
+   Frees the array *v* allocated by :c:func:`newLintArray()`,
+   :c:func:`newIntArray()`, or :c:func:`newRealArray()`. 
 
-* ``denseCopy``
+.. c:function:: void denseCopy(realtype** a, realtype** b, long int m, long int n)
 
-  ``denseCopy(a,b,m,n)`` copies the :math:`m \times n` dense matrix
-  ``a`` into the :math:`m \times n` dense matrix ``b``; 
+   Copies the :math:`m \times n` dense matrix *a* into the :math:`m
+   \times n` dense matrix *b*. 
 
-* ``denseScale``
+.. c:function:: void denseScale(realtype c, realtype** a, long int m, long int n)
 
-  ``denseScale(c,a,m,n)`` scales every element in the :math:`m \times
-  n` dense matrix ``a`` by the scalar ``c``; 
+   Scales every element in the :math:`m \times n` dense matrix *a* by
+   the scalar *c*. 
 
-* ``denseAddIdentity``
+.. c:function:: void denseAddIdentity(realtype** a, long int n)
 
-  ``denseAddIdentity(a,n)`` increments the square :math:`n \times n`
-  dense matrix ``a`` by the identity matrix :math:`I_n`;
+   Increments the square :math:`n \times n` dense matrix *a* by the
+   identity matrix :math:`I_n`.
 
-* ``denseGETRF``
+.. c:function:: long int denseGETRF(realtype** a, long int m, long int n, long int* p)
 
-  ``denseGETRF(a,m,n,p)`` factors the :math:`m \times n` dense matrix
-  ``a``, using Gaussian elimination with row pivoting. It overwrites
-  the elements of ``a`` with its LU factors and keeps track of the
-  pivot rows chosen in the pivot array ``p``.
+   Factors the :math:`m \times n` dense matrix *a*, using Gaussian
+   elimination with row pivoting. It overwrites the elements of *a*
+   with its LU factors and keeps track of the pivot rows chosen in the
+   pivot array *p*.
 
-  A successful LU factorization leaves the matrix ``a`` and the pivot
-  array ``p`` with the following information:
+   A successful LU factorization leaves the matrix *a* and the pivot
+   array *p* with the following information:
 
-  1. ``p[k]`` contains the row number of the pivot element chosen at
-     the beginning of elimination step :math:`k, k = 0, 1, \ldots,
-     n-1`.
+   1. ``p[k]`` contains the row number of the pivot element chosen at
+      the beginning of elimination step :math:`k, k = 0, 1, \ldots,
+      n-1`.
 
-  2. If the unique LU factorization of ``a`` is given by :math:`P a =
-     LU`, where :math:`P` is a permutation matrix, :math:`L` is a
-     :math:`m \times n` lower trapezoidal matrix with all diagonal
-     elements equal to 1, and :math:`U` is a :math:`n \times n` upper
-     triangular matrix, then the upper triangular part of ``a``
-     (including its diagonal) contains :math:`U` and the strictly
-     lower trapezoidal part of ``a`` contains the multipliers,
-     :math:`I-L`. If ``a`` is square, :math:`L` is a unit lower
-     triangular matrix. 
+   2. If the unique LU factorization of *a* is given by :math:`P a =
+      LU`, where :math:`P` is a permutation matrix, :math:`L` is a
+      :math:`m \times n` lower trapezoidal matrix with all diagonal
+      elements equal to 1, and :math:`U` is a :math:`n \times n` upper
+      triangular matrix, then the upper triangular part of *a*
+      (including its diagonal) contains :math:`U` and the strictly
+      lower trapezoidal part of *a* contains the multipliers,
+      :math:`I-L`. If *a* is square, :math:`L` is a unit lower
+      triangular matrix. 
 
-     ``denseGETRF`` returns 0 if successful. Otherwise it encountered
-     a zero diagonal element during the factorization, indicating that
-     the matrix a does not have full column rank. In this case it
-     returns the column index (numbered from one) at which it
-     encountered the zero. 
+      :c:func:`denseGETRF()` returns 0 if successful. Otherwise it
+      encountered a zero diagonal element during the factorization,
+      indicating that the matrix a does not have full column rank. In
+      this case it returns the column index (numbered from one) at
+      which it encountered the zero.
 
-* ``denseGETRS``
+.. c:function:: void denseGETRS(realtype** a, long int n, long int* p, realtype* b)
 
-  ``denseGETRS(a,n,p,b)`` solves the :math:`n \times n` linear system
-  :math:`ax = b`. It assumes that ``a`` (of size :math:`n \times n`)
-  has been LU-factored and the pivot array ``p`` has been set by
-  a successful call to ``denseGETRF(a,n,n,p)``. The solution ``x`` is
-  written into the ``b`` array. 
+   Solves the :math:`n \times n` linear system :math:`ax = b`. It
+   assumes that *a* (of size :math:`n \times n`) has been LU-factored
+   and the pivot array *p* has been set by a successful call to
+   :c:func:`denseGETRF()`. The solution *x* is written into the *b*
+   array. 
 
-* ``densePOTRF``
+.. c:function:: long int densePOTRF(realtype** a, long int m)
 
-  ``densePOTRF(a,m)`` calculates the Cholesky decomposition of the
-  :math:`m \times m` dense matrix ``a``, assumed to be symmetric
-  positive definite. Only the lower triangle of ``a`` is accessed and
-  overwritten with the Cholesky factor. 
+   Calculates the Cholesky decomposition of the :math:`m \times m`
+   dense matrix *a*, assumed to be symmetric positive definite.  Only
+   the lower triangle of *a* is accessed and overwritten with the
+   Cholesky factor.
 
-* ``densePOTRS``
+.. c:function:: void densePOTRS(realtype** a, long int m, realtype* b)
 
-  ``densePOTRS(a,m,b)`` solves the :math:`m \times m` linear system
-  :math:`ax = b`. It assumes that the Cholesky factorization of ``a``
-  has been calculated in the lower triangular part of ``a`` by a
-  successful call to ``densePOTRF(a,m)``.
+   Solves the :math:`m \times m` linear system :math:`ax = b`.  It
+   assumes that the Cholesky factorization of *a* has been calculated
+   in the lower triangular part of *a* by a successful call to
+   :c:func:`densePOTRF(m)`. 
 
-* ``denseGEQRF``
+.. c:function:: int denseGEQRF(realtype** a, long int m, long int n, realtype* beta, realtype* v)
 
-  ``denseGEQRF(a,m,n,beta,wrk)`` calculates the QR decomposition of
-  the :math:`m \times n` matrix ``a`` (:math:`m \ge n`) using
-  Householder reflections. On exit, the elements on and above the
-  diagonal of ``a`` contain the :math:`n \times n` upper triangular
-  matrix :math:`R`; the elements below the diagonal, with the array
-  ``beta``, represent the orthogonal matrix :math:`Q` as a product of
-  elementary reflectors. The real array ``wrk``, of length ``m``, must
-  be provided as temporary workspace. 
+   Calculates the QR decomposition of the :math:`m \times n` matrix
+   *a* (:math:`m \ge n`) using Householder reflections.  On exit, the
+   elements on and above the diagonal of *a* contain the :math:`n
+   \times n` upper triangular matrix :math:`R`; the elements below the
+   diagonal, with the array *beta*, represent the orthogonal matrix
+   :math:`Q` as a product of elementary reflectors. The real array
+   *wrk*, of length *m*, must be provided as temporary workspace. 
 
-* ``denseORMQR``
+.. c:function:: int denseORMQR(realtype** a, long int m, long int n, realtype* beta, realtype* v, realtype* w, realtype* wrk)
 
-  ``denseORMQR(a,m,n,beta,v,w,wrk)`` calculates the product :math:`w =
-  Qv` for a given vector ``v`` of length ``n``, where the orthogonal
-  matrix :math:`Q` is encoded in the :math:`m \times n` matrix ``a``
-  and the vector ``beta`` of length ``n``, after a successful call to
-  ``denseGEQRF(a,m,n,beta,wrk)``. The real array ``wrk``, of length 
-  ``m``, must be provided as temporary workspace.
+   Calculates the product :math:`w = Qv` for a given vector *v* of
+   length *n*, where the orthogonal matrix :math:`Q` is encoded in the
+   :math:`m \times n` matrix *a* and the vector *beta* of length *n*,
+   after a successful call to :c:func:`denseGEQRF()`. The real array
+   *wrk*, of length *m*, must be provided as temporary workspace.
 
 
 
@@ -405,96 +465,138 @@ Functions in the BAND module
 
 The BAND module defines two sets of functions with corresponding
 names. The first set contains functions (with names starting with a
-capital letter) that act on band matrices of type :ref:`DlsMat`. The
+capital letter) that act on band matrices of type :c:type:`DlsMat`. The
 second set contains functions (with names starting with a lower case
 letter) that act on matrices represented as simple arrays.
 
-The following functions for :ref:`DlsMat` banded matrices are
+The following functions for :c:type:`DlsMat` banded matrices are
 available in the BAND package. For full details, see the header files
-``sundials_direct.h`` and ``sundials_band.h``.
+``sundials_direct.h`` and ``sundials_band.h``.  A number of these are
+shared with routines from the DENSE package, but are listed again here
+for completeness.
 
-* ``NewBandMat``: allocation of a :ref:`DlsMat` band matrix;
-* ``DestroyMat``: free memory for a :ref:`DlsMat` matrix;
-* ``PrintMat``: print a :ref:`DlsMat` matrix to standard output.
-* ``NewLintArray``: allocation of an array of ``long int`` integers for use
-  as pivots with ``BandGBRF`` and ``BandGBRS``;
-* ``NewIntArray``: allocation of an array of ``int`` integers for use
-  as pivots with the LAPACK band solvers;
-* ``NewRealArray``: allocation of an array of type ``realtype`` for
-  use as right-hand side with ``BandGBRS``; 
-* ``DestroyArray``: free memory for an array;
-* ``SetToZero``: load a matrix with zeros;
-* ``AddIdentity``: increment a square matrix by the identity matrix;
-* ``BandCopy``: copy one matrix to another;
-* ``BandScale``: scale a matrix by a scalar;
-* ``BandGBTRF``: LU factorization with partial pivoting;
-* ``BandGBTRS``: solution of :math:`Ax = b` using LU factorization;
+
+.. c:function:: DlsMat NewBandMat(long int N, long int mu, long int ml, long int smu)
+
+   Allocates a :c:type:`DlsMat` band matrix
+
+.. c:function:: void DestroyMat(DlsMat A)
+
+   Frees memory for a :c:type:`DlsMat` matrix
+
+.. c:function:: void PrintMat(DlsMat A)
+
+   Prints a :c:type:`DlsMat` matrix to standard output.
+
+.. c:function:: long int* NewLintArray(long int N) 
+   
+   Allocates an array of ``long int`` integers for use as pivots with
+   :c:func:`BandGBRF()` and :c:func:`BandGBRS()`. 
+
+.. c:function:: int* NewIntArray(int N)
+
+   Allocates an array of ``int`` integers for use as pivots with the
+   LAPACK band solvers.
+
+.. c:function:: realtype* NewRealArray(long int N)
+   
+   Allocates an array of type ``realtype`` for use as right-hand side
+   with :c:func:`BandGBRS()`.
+
+.. c:function:: void DestroyArray(void* p)
+
+   Frees memory for an array.
+
+.. c:function:: void SetToZero(DlsMat A)
+
+   Loads a matrix with zeros.
+
+.. c:function:: void AddIdentity(DlsMat A)
+
+   Increments a square matrix by the identity matrix.
+
+.. c:function:: void BandCopy(DlsMat A, DlsMat B, long int copymu, long int copyml)
+
+   Copies one band matrix to another.
+
+.. c:function:: void BandScale(realtype c, DlsMat A)
+
+   Scales a band matrix by a scalar.
+
+.. c:function:: long int BandGBTRF(DlsMat A, long int* p)
+
+   LU factorization with partial pivoting.
+
+.. c:function:: void BandGBTRS(DlsMat A, long int* p, realtype* b)
+
+   Solves :math:`Ax = b` using LU factorization resulting from
+   :c:func:`BandGBTRF()`. 
+
+
 
 The following functions for small band matrices are available in the
-BAND package:
+BAND package.  These functions primarily replicate those defined above
+for :c:type:`DlsMat` banded matrices, but act on the individual data arrays
+outside of the :c:type:`DlsMat` structure:
 
-* ``newBandMat``
-  ``newBandMat(n, smu, ml)`` allocates storage for a :math:`n \times
-  n` band matrix with lower half-bandwidth ``ml``.
+.. c:function:: realtype** newBandMat(long int n, long int smu, long int ml)
 
-* ``destroyMat``
+   Allocates storage for a :math:`n \times n` band matrix with lower
+   half-bandwidth *ml*. 
 
-  ``destroyMat(a)`` frees the band matrix ``a`` allocated by ``newBandMat``;
-
-* ``newLintArray``
-
-  ``newLintArray(n)`` allocates an array of ``n`` integers, all ``long
-  int``. It returns a pointer to the first element in the array if
-  successful. It returns ``NULL`` if the memory request could not be
-  satisfied. 
-
-* ``newIntArray``
-
-  ``newIntArray(n)`` allocates an array of ``n`` integers, all
-  ``int``. It returns a pointer to the first element in the array if
-  successful. It returns ``NULL`` if the memory request could not be
-  satisfied. 
-
-* ``newRealArray``
-
-  ``newRealArray(n)`` allocates an array of ``n`` ``realtype``
-  values. It returns a pointer to the first element in the array if
-  successful. It returns ``NULL`` if the memory request could not be
-  satisfied. 
-
-* ``destroyArray``
-
-  ``destroyArray(p)`` frees the array ``p`` allocated by
-  ``newLintArray``, ``newIntArray``, or ``newRealArray``; 
-
-* ``bandCopy``
-
-  ``bandCopy(a, b, n, a_smu, b_smu, copymu, copyml)`` copies the
-  :math:`n \times n` band matrix ``a`` into the :math:`n \times n`
-  band matrix ``b``; 
-
-* ``bandScale``
-
-  ``bandScale(c, a, n, mu, ml, smu)`` scales every element in the
-  :math:`n \times n` band matrix ``a`` by ``c``;
-
-* ``bandAddIdentity``
-
-  ``bandAddIdentity(a,n,smu)`` increments the :math:`n \times n` band
-  matrix ``a`` by the identity matrix; 
-
-* ``bandGETRF``
+.. c:function:: void destroyMat(realtype** a)
  
-  ``bandGETRF(a, n, mu, ml, smu, p)`` factors the :math:`n \times n`
-  band matrix ``a``, using Gaussian elimination with row pivoting. It
-  overwrites the elements of ``a`` with its LU factors and keeps track of
-  the pivot rows chosen in the pivot array ``p``.
+   Frees the band matrix *a* allocated by :c:func:`newBandMat()`.
 
-* ``bandGETRS``
+.. c:function:: long int* newLintArray(long int n)
 
-  ``bandGETRS(a, n, smu, ml, p, b)`` solves the :math:`n \times n`
-  linear system :math:`ax = b`. It assumes that ``a`` (of size
-  :math:`n \times n`) has been LU-factored and the pivot array ``p``
-  has been set by a successful call to
-  ``bandGETRF(a,n,mu,ml,smu,p)``. The solution ``x`` is written into
-  the ``b`` array. 
+   Allocates an array of *n* integers of type ``long int``. It returns
+   a pointer to the first element in the array if successful.  It
+   returns ``NULL`` if the memory request could not be satisfied. 
+
+.. c:function:: int* newIntArray(int n)
+
+   Allocates an array of *n* integers of type ``int``. It returns a
+   pointer to the first element in the array if successful. It returns
+   ``NULL`` if the memory request could not be satisfied. 
+
+.. c:function:: realtype* newRealArray(long int m)
+
+   Allocates an array of *n* ``realtype`` values. It returns a pointer
+   to the first element in the array if successful. It returns
+   ``NULL`` if the memory request could not be satisfied. 
+
+.. c:function:: void destroyArray(void* v)
+
+   Frees the array *v* allocated by :c:func:`newLintArray()`,
+   :c:func:`newIntArray()`, or :c:func:`newRealArray()`. 
+
+.. c:function:: void bandCopy(realtype** a, realtype** b, long int n, long int a_smu, long int b_smu, long int copymu, long int copyml)
+
+   Copies the :math:`n \times n` band matrix *a* into the :math:`n
+   \times n` band matrix *b*. 
+
+.. c:function:: void bandScale(realtype c, realtype** a, long int n, long int mu, long int ml, long int smu)
+
+   Scales every element in the :math:`n \times n` band matrix *a* by
+   *c*. 
+
+.. c:function:: void bandAddIdentity(realtype** a, long int n, long int smu)
+
+   Increments the :math:`n \times n` band matrix *a* by the identity
+   matrix. 
+
+.. c:function:: long int bandGBTRF(realtype** a, long int n, long int mu, long int ml, long int smu, long int* p)
+ 
+   Factors the :math:`n \times n` band matrix *a*, using Gaussian
+   elimination with row pivoting. It overwrites the elements of *a*
+   with its LU factors and keeps track of the pivot rows chosen in the
+   pivot array *p*. 
+
+.. c:function:: void bandGBTRS(realtype** a, long int n, long int smu, long int ml, long int* p, realtype* b)
+
+   Solves the :math:`n \times n` linear system :math:`ax = b`. It
+   assumes that *a* (of size :math:`n \times n`) has been LU-factored
+   and the pivot array *p* has been set by a successful call to
+   :c:func:`bandGETRF()`. The solution *x* is written into the *b*
+   array. 

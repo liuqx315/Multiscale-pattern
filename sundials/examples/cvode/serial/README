@@ -10,12 +10,6 @@ List of serial CVODE examples
   cvRoberts_dns      : dense example
   cvRoberts_dnsL     : dense example (Lapack)
   cvRoberts_dns_uw   : dense example with user ewt function
-  cv_VanderPol       : stiff ODE system
-  cv_analytic        : stiff linear ODE 
-  cv_analytic_nonlin : nonstiff nonlinear ODE system
-  cv_analytic_sys    : stiff linear ODE system
-  cv_brusselator     : stiff nonlinear ODE system
-  cv_brusselator1D   : stiff nonlinear PDE system
 
 Sample results:
 

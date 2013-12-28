@@ -5,10 +5,15 @@
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * Copyright (c) 2002, The Regents of the University of California.
+ * LLNS Copyright Start
+ * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the KINSOL scaled,
  * preconditioned GMRES linear solver, KINSpgmr.
@@ -45,7 +50,7 @@
 static int KINSpgmrInit(KINMem kin_mem);
 static int KINSpgmrSetup(KINMem kin_mem);
 static int KINSpgmrSolve(KINMem kin_mem, N_Vector xx, 
-                         N_Vector bb, realtype *res_norm);
+                         N_Vector bb, realtype *sJpnorm, realtype *sFdotJp);
 static void KINSpgmrFree(KINMem kin_mem);
 
 /*
@@ -72,8 +77,6 @@ static void KINSpgmrFree(KINMem kin_mem);
 #define sqrt_relfunc   (kin_mem->kin_sqrt_relfunc)
 #define jacCurrent     (kin_mem->kin_jacCurrent)
 #define eps            (kin_mem->kin_eps)
-#define sJpnorm        (kin_mem->kin_sJpnorm)
-#define sfdotJp        (kin_mem->kin_sfdotJp)
 #define errfp          (kin_mem->kin_errfp)
 #define infofp         (kin_mem->kin_infofp)
 #define setupNonNull   (kin_mem->kin_setupNonNull)
@@ -323,11 +326,12 @@ static int KINSpgmrSetup(KINMem kin_mem)
  */
 
 static int KINSpgmrSolve(KINMem kin_mem, N_Vector xx, N_Vector bb, 
-                         realtype *res_norm)
+                         realtype *sJpnorm, realtype *sFdotJp)
 {
   KINSpilsMem kinspils_mem;
   SpgmrMem spgmr_mem;
   int ret, nli_inc, nps_inc;
+  realtype res_norm;
   
   kinspils_mem = (KINSpilsMem) lmem;
 
@@ -345,7 +349,7 @@ static int KINSpgmrSolve(KINMem kin_mem, N_Vector xx, N_Vector bb,
 
   ret = SpgmrSolve(spgmr_mem, kin_mem, xx, bb, pretype, gstype, eps, 
                    maxlrst, kin_mem, fscale, fscale, KINSpilsAtimes,
-                   KINSpilsPSolve, res_norm, &nli_inc, &nps_inc);
+                   KINSpilsPSolve, &res_norm, &nli_inc, &nps_inc);
 
   /* increment counters nli, nps, and ncfl 
      (nni is updated in the KINSol main iteration loop) */
@@ -357,57 +361,60 @@ static int KINSpgmrSolve(KINMem kin_mem, N_Vector xx, N_Vector bb,
     KINPrintInfo(kin_mem, PRNT_NLI, "KINSPGMR", "KINSpgmrSolve", INFO_NLI, nli_inc);
 
   if (ret != 0) ncfl++;
-
-  /* Compute the terms sJpnorm and sfdotJp for use in the global strategy
-     routines and in KINForcingTerm. Both of these terms are subsequently
-     corrected if the step is reduced by constraints or the line search.
-
-     sJpnorm is the norm of the scaled product (scaled by fscale) of
-     the current Jacobian matrix J and the step vector p.
-
-     sfdotJp is the dot product of the scaled f vector and the scaled
-     vector J*p, where the scaling uses fscale. */
-
-  ret = KINSpilsAtimes(kin_mem, xx, bb);
-  if (ret == 0)     ret = SPGMR_SUCCESS;
-  else if (ret > 0) ret = SPGMR_ATIMES_FAIL_REC;
-  else if (ret < 0) ret = SPGMR_ATIMES_FAIL_UNREC;
-
-  sJpnorm = N_VWL2Norm(bb,fscale);
-  N_VProd(bb, fscale, bb);
-  N_VProd(bb, fscale, bb);
-  sfdotJp = N_VDotProd(fval, bb);
-
-  if (printfl > 2)
-    KINPrintInfo(kin_mem, PRNT_EPS, "KINSPGMR", "KINSpgmrSolve", INFO_EPS, *res_norm, eps);
-
-  /* Interpret return value from SpgmrSolve */
-
   last_flag = ret;
 
-  switch(ret) {
+  if ( (ret != 0) && (ret != SPGMR_RES_REDUCED) ) {
 
-  case SPGMR_SUCCESS:
-  case SPGMR_RES_REDUCED:
-    return(0);
-    break;
-  case SPGMR_PSOLVE_FAIL_REC:
-  case SPGMR_ATIMES_FAIL_REC:
-    return(1);
-    break;
-  case SPGMR_CONV_FAIL:
-  case SPGMR_QRFACT_FAIL:
-  case SPGMR_MEM_NULL:
-  case SPGMR_GS_FAIL:
-  case SPGMR_QRSOL_FAIL:
-  case SPGMR_ATIMES_FAIL_UNREC:
-  case SPGMR_PSOLVE_FAIL_UNREC:
-    return(-1);
-    break;
+    /* Handle all failure returns from SpgmrSolve */
+
+    switch(ret) {
+    case SPGMR_PSOLVE_FAIL_REC:
+    case SPGMR_ATIMES_FAIL_REC:
+      return(1);
+      break;
+    case SPGMR_CONV_FAIL:
+    case SPGMR_QRFACT_FAIL:
+    case SPGMR_MEM_NULL:
+    case SPGMR_GS_FAIL:
+    case SPGMR_QRSOL_FAIL:
+    case SPGMR_ATIMES_FAIL_UNREC:
+    case SPGMR_PSOLVE_FAIL_UNREC:
+      return(-1);
+      break;
+    }
   }
 
-  return(0);
+  /*  SpgmrSolve returned either SPGMR_SUCCESS or SPGMR_RES_REDUCED.
 
+     Compute the terms sJpnorm and sFdotJp for use in the linesearch
+     routine and in KINForcingTerm.  Both of these terms are subsequently
+     corrected if the step is reduced by constraints or the linesearch.
+
+     sJpnorm is the norm of the scaled product (scaled by fscale) of the
+     current Jacobian matrix J and the step vector p (= solution vector xx).
+
+     sFdotJp is the dot product of the scaled f vector and the scaled
+     vector J*p, where the scaling uses fscale.                            */
+
+  ret = KINSpilsAtimes(kin_mem, xx, bb);
+  if (ret > 0) {
+    last_flag = SPGMR_ATIMES_FAIL_REC;
+    return(1);
+  }      
+  else if (ret < 0) {
+    last_flag = SPGMR_ATIMES_FAIL_UNREC;
+    return(-1);
+  }
+
+  *sJpnorm = N_VWL2Norm(bb, fscale);
+  N_VProd(bb, fscale, bb);
+  N_VProd(bb, fscale, bb);
+  *sFdotJp = N_VDotProd(fval, bb);
+
+  if (printfl > 2) KINPrintInfo(kin_mem, PRNT_EPS, "KINSPGMR",
+                     "KINSpgmrSolve", INFO_EPS, res_norm, eps);
+
+  return(0);
 }
 
 /*

@@ -5,10 +5,15 @@
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
+ * LLNS Copyright Start
  * Copyright (c) 2013, Lawrence Livermore National Security
+ * This work was performed under the auspices of the U.S. Department 
+ * of Energy by Lawrence Livermore National Laboratory in part under 
+ * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
  * For details, see the LICENSE file.
+ * LLNS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the Sparse linear solver module in IDAS.
  * -----------------------------------------------------------------
@@ -42,11 +47,12 @@ extern "C" {
 #define IDASLS_ILL_INPUT        -3
 #define IDASLS_MEM_FAIL         -4
 #define IDASLS_JAC_NOSET        -5
+#define IDASLS_PACKAGE_FAIL     -6
 
 /* Additional last_flag values */
 
-#define IDASLS_JACFUNC_UNRECVR  -6
-#define IDASLS_JACFUNC_RECVR    -7
+#define IDASLS_JACFUNC_UNRECVR  -7
+#define IDASLS_JACFUNC_RECVR    -8
 
 /* Return values for the adjoint module */
 #define IDASLS_NO_ADJ           -101

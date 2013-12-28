@@ -87,8 +87,7 @@ static int func(N_Vector u, N_Vector f, void *user_data);
 static void SetInitialGuess1(N_Vector u, UserData data);
 static void SetInitialGuess2(N_Vector u, UserData data);
 static int SolveIt(void *kmem, N_Vector u, N_Vector s, int glstr, int mset);
-static void PrintHeader(int globalstrategy, realtype fnormtol,
-                        realtype scsteptol);
+static void PrintHeader(realtype fnormtol, realtype scsteptol);
 static void PrintOutput(N_Vector u);
 static void PrintFinalStats(void *kmem);
 static int check_flag(void *flagvalue, char *funcname, int opt);
@@ -111,7 +110,6 @@ int main()
   s = c = NULL;
   kmem = NULL;
   data = NULL;
-  glstr = KIN_NONE;
 
   /* User data */
 
@@ -171,7 +169,7 @@ int main()
   if (check_flag(&flag, "KINDense", 1)) return(1);
 
   /* Print out the problem size, solution parameters, initial guess. */
-  PrintHeader(glstr, fnormtol, scsteptol);
+  PrintHeader(fnormtol, scsteptol);
 
   /* --------------------------- */
 
@@ -393,8 +391,7 @@ static void SetInitialGuess2(N_Vector u, UserData data)
  * Print first lines of output (problem description)
  */
 
-static void PrintHeader(int globalstrategy, realtype fnormtol,
-                        realtype scsteptol)
+static void PrintHeader(realtype fnormtol, realtype scsteptol)
 {
   printf("\nFerraris and Tronconi test problem\n");
   printf("Tolerance parameters:\n");
@@ -402,7 +399,7 @@ static void PrintHeader(int globalstrategy, realtype fnormtol,
   printf("  fnormtol  = %10.6Lg\n  scsteptol = %10.6Lg\n",
          fnormtol, scsteptol);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-  printf("  fnormtol  = %10.6lg\n  scsteptol = %10.6lg\n",
+  printf("  fnormtol  = %10.6g\n  scsteptol = %10.6g\n",
          fnormtol, scsteptol);
 #else
   printf("  fnormtol  = %10.6g\n  scsteptol = %10.6g\n",
@@ -419,7 +416,7 @@ static void PrintOutput(N_Vector u)
 #if defined(SUNDIALS_EXTENDED_PRECISION)
     printf(" %8.6Lg  %8.6Lg\n", Ith(u,1), Ith(u,2));
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-    printf(" %8.6lg  %8.6lg\n", Ith(u,1), Ith(u,2));
+    printf(" %8.6g  %8.6g\n", Ith(u,1), Ith(u,2));
 #else
     printf(" %8.6g  %8.6g\n", Ith(u,1), Ith(u,2));
 #endif

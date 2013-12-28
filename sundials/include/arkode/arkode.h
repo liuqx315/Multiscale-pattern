@@ -1,18 +1,19 @@
 /*---------------------------------------------------------------
- $Revision: 1.0 $
- $Date:  $
------------------------------------------------------------------ 
  Programmer(s): Daniel R. Reynolds @ SMU
------------------------------------------------------------------
+ ----------------------------------------------------------------
+ Copyright (c) 2013, Southern Methodist University.
+ All rights reserved.
+ For details, see the LICENSE file.
+ ----------------------------------------------------------------
  This is the interface file for the main ARKODE integrator.
------------------------------------------------------------------
+ ----------------------------------------------------------------
  ARKODE is used to solve numerically the ordinary initial value
  problem:
               M(t)*y' = f(t,y),
                 y(t0) = y0,
  where t0, y0 in R^N, M(t)*y: R x R^N -> R^N, and 
  f: R x R^N -> R^N are given.
----------------------------------------------------------------*/
+ --------------------------------------------------------------*/
 
 #ifndef _ARKODE_H
 #define _ARKODE_H
@@ -82,6 +83,11 @@ extern "C" {
 #define ARK_UNREC_RHSFUNC_ERR    -11
 #define ARK_RTFUNC_FAIL          -12
 #define ARK_LFREE_FAIL           -13
+#define ARK_MASSINIT_FAIL        -14
+#define ARK_MASSSETUP_FAIL       -15
+#define ARK_MASSSOLVE_FAIL       -16
+#define ARK_MASSFREE_FAIL        -17
+#define ARK_MASSMULT_FAIL        -18
 
 #define ARK_MEM_FAIL             -20
 #define ARK_MEM_NULL             -21
@@ -163,6 +169,28 @@ typedef int (*ARKRootFn)(realtype t, N_Vector y,
  successfuly set and a non-zero value otherwise.
 ---------------------------------------------------------------*/
 typedef int (*ARKEwtFn)(N_Vector y, N_Vector ewt, void *user_data);
+
+/*---------------------------------------------------------------
+ Type : ARKRwtFn
+-----------------------------------------------------------------
+ A function r, which sets the residual weight vector rwt, must 
+ have type ARKRwtFn.  The function r takes as input the current 
+ dependent variable y.  It must set the vector of residual 
+ weights used in the WRMS norm:
+ 
+   ||v||_WRMS = sqrt [ 1/N * sum ( rwt_i * v_i)^2 ]
+
+ Typically, the vector rwt has components:
+ 
+   rwt_i = 1 / (reltol * |(M*y)_i| + rabstol_i)
+
+ The user_data parameter is the same as that passed by the user
+ to the ARKodeSetUserData routine.  This user-supplied pointer 
+ is passed to the user's r function every time it is called.
+ A ARKRwtFn e must return 0 if the residual weight vector has 
+ been successfuly set and a non-zero value otherwise.
+---------------------------------------------------------------*/
+typedef int (*ARKRwtFn)(N_Vector y, N_Vector rwt, void *user_data);
 
 /*---------------------------------------------------------------
  Type : ARKErrHandlerFn
@@ -260,6 +288,30 @@ typedef int (*ARKExpStabFn)(N_Vector y, realtype t,
 ---------------------------------------------------------------*/
 typedef int (*ARKVecResizeFn)(N_Vector y, N_Vector ytemplate, 
 			      void *user_data);
+
+
+/*---------------------------------------------------------------
+ Type: ARKMTimesFn
+
+ The user-supplied function mtimes is to generate the product
+ M*v for given v, where M is the mass matrix, or an 
+ approximation to it, and v is a given vector. It should return 
+ 0 if successful or a negative value for an unrecoverable failure.
+
+ A function mtimes must have the prototype given below. Its
+ parameters are as follows:
+
+   v        is the N_Vector to be multiplied by M.
+
+   Mv       is the output N_Vector containing M*v.
+
+   t        is the current value of the independent variable.
+
+   user_data   is a pointer to user data, the same as the user_data
+            parameter passed to the ARKodeSetUserData function.
+---------------------------------------------------------------*/
+typedef int (*ARKMTimesFn)(N_Vector v, N_Vector Mv, 
+			   realtype t, void *user_data);
 
 
 /*===============================================================
@@ -814,6 +866,59 @@ SUNDIALS_EXPORT int ARKodeWFtolerances(void *arkode_mem,
 				       ARKEwtFn efun);
 
 /*---------------------------------------------------------------
+ Functions : ARKodeResStolerance
+             ARKodeResVtolerance
+             ARKodeResFtolerance
+-----------------------------------------------------------------
+ These functions specify the absolute residual tolerance. 
+ Specification of the absolute residual tolerance is only 
+ necessary for problems with non-identity mass matrices in which
+ the units of the solution vector y dramatically differ from the 
+ units of My, where M is the user-supplied mass matrix.  If this
+ occurs, one of these routines SHOULD be called before the first 
+ call to ARKode; otherwise the default value of rabstol=1e-9 will 
+ be used, which may be entirely incorrect for a specific problem.
+
+ ARKodeResStolerances specifies a scalar residual tolerance.
+
+ ARKodeResVtolerances specifies a vector residual tolerance 
+  (a potentially different absolute residual tolerance for 
+   each vector component).
+
+ ARKodeResFtolerances specifies a user-provides function (of 
+   type ARKRwtFn) which will be called to set the residual 
+   weight vector.
+
+ The tolerances reltol (defined for both the solution and 
+ residual) and rabstol define a vector of residual weights, 
+ rwt, with components
+   rwt[i] = 1/(reltol*abs(My[i]) + abstol)     (in S case), or
+   rwt[i] = 1/(reltol*abs(My[i]) + abstol[i])  (in V case).
+ This vector is used in all solver convergence tests, which
+ use a weighted RMS norm on all residual-like vectors v:
+    WRMSnorm(v) = sqrt( (1/N) sum(i=1..N) (v[i]*rwt[i])^2 ),
+ where N is the problem dimension.
+
+ The return value of these functions is equal to ARK_SUCCESS=0 
+ if there were no errors; otherwise it is a negative int equal 
+ to:
+   ARK_MEM_NULL     indicating arkode_mem was NULL (i.e.,
+                    ARKodeCreate has not been called).
+   ARK_NO_MALLOC    indicating that arkode_mem has not been
+                    allocated (i.e., ARKodeInit has not been
+                    called).
+   ARK_ILL_INPUT    indicating an input argument was illegal
+                    (e.g. a negative tolerance)
+ In case of an error return, an error message is also printed.
+---------------------------------------------------------------*/
+SUNDIALS_EXPORT int ARKodeResStolerance(void *arkode_mem, 
+					realtype rabstol);
+SUNDIALS_EXPORT int ARKodeResVtolerance(void *arkode_mem, 
+					N_Vector rabstol);
+SUNDIALS_EXPORT int ARKodeResFtolerance(void *arkode_mem, 
+					ARKRwtFn rfun);
+
+/*---------------------------------------------------------------
  Function : ARKodeRootInit
 -----------------------------------------------------------------
  ARKodeRootInit initializes a rootfinding problem to be solved
@@ -1012,6 +1117,12 @@ SUNDIALS_EXPORT int ARKodeGetDky(void *arkode_mem, realtype t,
  ARKodeGetNumLinSolvSetups returns the number of calls made to
                            the linear solver's setup routine
 
+ ARKodeGetNumMassSolves returns the number of calls made to
+                           the mass matrix solve routine
+
+ ARKodeGetNumMassMultiplies returns the number of calls made to
+                            the mass matrix times vector routine
+
  ARKodeGetNumErrTestFails returns the number of local error test
                           failures that have occured
 
@@ -1071,6 +1182,10 @@ SUNDIALS_EXPORT int ARKodeGetNumRhsEvals(void *arkode_mem,
 					 long int *nfi_evals);
 SUNDIALS_EXPORT int ARKodeGetNumLinSolvSetups(void *arkode_mem, 
 					      long int *nlinsetups);
+SUNDIALS_EXPORT int ARKodeGetNumMassSolves(void *arkode_mem, 
+					   long int *nMassSolves);
+SUNDIALS_EXPORT int ARKodeGetNumMassMultiplies(void *arkode_mem, 
+					       long int *nMassMult);
 SUNDIALS_EXPORT int ARKodeGetNumErrTestFails(void *arkode_mem, 
 					     long int *netfails);
 SUNDIALS_EXPORT int ARKodeGetActualInitStep(void *arkode_mem, 
