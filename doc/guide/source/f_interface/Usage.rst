@@ -247,6 +247,8 @@ Key                      ARKode routine
 ``DENSE_ORDER``          :c:func:`ARKodeSetDenseOrder()`
 ``LINEAR``               :c:func:`ARKodeSetLinear()`
 ``NONLINEAR``            :c:func:`ARKodeSetNonlinear()`
+``FIXEDPOINT``           :c:func:`ARKodeSetFixedPoint()`
+``NEWTON``               :c:func:`ARKodeSetNewton()`
 ``EXPLICIT``             :c:func:`ARKodeSetExplicit()`
 ``IMPLICIT``             :c:func:`ARKodeSetImplicit()`
 ``IMEX``                 :c:func:`ARKodeSetImEx()`
@@ -288,26 +290,26 @@ Table: Keys for setting FARKODE real optional inputs
 
 .. cssclass:: table-bordered
 
-================  =========================================
-Key               ARKode routine
-================  =========================================
-``INIT_STEP``     :c:func:`ARKodeSetInitStep()`
-``MAX_STEP``      :c:func:`ARKodeSetMaxStep()`
-``MIN_STEP``      :c:func:`ARKodeSetMinStep()`
-``STOP_TIME``     :c:func:`ARKodeSetStopTime()`
-``NLCONV_COEF``   :c:func:`ARKodeSetNonlinConvCoef()`
-``ADAPT_CFL``     :c:func:`ARKodeSetCFLFraction()`
-``ADAPT_SAFETY``  :c:func:`ARKodeSetSafetyFactor()`
-``ADAPT_BIAS``    :c:func:`ARKodeSetErrorBias()`
-``ADAPT_GROWTH``  :c:func:`ARKodeSetMaxGrowth()`
-``ADAPT_ETAMX1``  :c:func:`ARKodeSetMaxFirstGrowth()`
-``ADAPT_BOUNDS``  :c:func:`ARKodeSetFixedStepBounds()`
-``ADAPT_ETAMXF``  :c:func:`ARKodeSetMaxEFailGrowth()`
-``ADAPT_ETACF``   :c:func:`ARKodeSetMaxCFailGrowth()`
-``NEWT_CRDOWN``   :c:func:`ARKodeSetNonlinCRDown()`
-``NEWT_RDIV``     :c:func:`ARKodeSetNonlinRDiv()`
-``LSETUP_DGMAX``  :c:func:`ARKodeSetDeltaGammaMax()`
-================  =========================================
+=================  =========================================
+Key                ARKode routine
+=================  =========================================
+``INIT_STEP``      :c:func:`ARKodeSetInitStep()`
+``MAX_STEP``       :c:func:`ARKodeSetMaxStep()`
+``MIN_STEP``       :c:func:`ARKodeSetMinStep()`
+``STOP_TIME``      :c:func:`ARKodeSetStopTime()`
+``NLCONV_COEF``    :c:func:`ARKodeSetNonlinConvCoef()`
+``ADAPT_CFL``      :c:func:`ARKodeSetCFLFraction()`
+``ADAPT_SAFETY``   :c:func:`ARKodeSetSafetyFactor()`
+``ADAPT_BIAS``     :c:func:`ARKodeSetErrorBias()`
+``ADAPT_GROWTH``   :c:func:`ARKodeSetMaxGrowth()`
+``ADAPT_ETAMX1``   :c:func:`ARKodeSetMaxFirstGrowth()`
+``ADAPT_BOUNDS``   :c:func:`ARKodeSetFixedStepBounds()`
+``ADAPT_ETAMXF``   :c:func:`ARKodeSetMaxEFailGrowth()`
+``ADAPT_ETACF``    :c:func:`ARKodeSetMaxCFailGrowth()`
+``NONLIN_CRDOWN``  :c:func:`ARKodeSetNonlinCRDown()`
+``NONLIN_RDIV``    :c:func:`ARKodeSetNonlinRDiv()`
+``LSETUP_DGMAX``   :c:func:`ARKodeSetDeltaGammaMax()`
+=================  =========================================
 
 
 
