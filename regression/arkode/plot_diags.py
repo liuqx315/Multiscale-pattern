@@ -16,13 +16,19 @@ import diag_tools as diags
 fname = sys.argv[len(sys.argv)-1];
 
 # load the time step data 
-Tdiags = diags.load_diags(fname);
+try:
+    Tdiags = diags.load_diags(fname);
+except ValueError:
+    # if no command-line argument provided, return with an error
+    sys.exit("\nCalling syntax error: filename containing diagnostics must be provided, e.g.\n    $ plot_ark_diags.py fname.txt\n")
 
 # generate plots 
 diags.plot_h_vs_t(Tdiags,'h_vs_t.png');
 diags.plot_h_vs_iter(Tdiags,'h_vs_iter.png');
 diags.plot_work_vs_t(Tdiags,'work_vs_t.png');
 diags.plot_work_vs_h(Tdiags,'work_vs_h.png');
+diags.plot_krylov_vs_t(Tdiags,'krylov_vs_t.png');
+diags.plot_krylov_vs_h(Tdiags,'krylov_vs_h.png');
 diags.plot_oversolve_vs_t(Tdiags,'oversolve_vs_t.png');
 
 # print solve statistics to screen
