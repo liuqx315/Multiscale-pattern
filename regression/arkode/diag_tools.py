@@ -127,7 +127,8 @@ class NonlinSolve:
             self.iters += 1;
         for i in range(len(self.KSolves)):
             self.liniters += self.KSolves[i].iters;
-        self.dcon = self.steps[-1].dcon;
+        if (len(self.steps) > 0):
+            self.dcon = self.steps[-1].dcon;
         if (self.dcon < 1.0):
             self.nonconv = 0;
         else:
