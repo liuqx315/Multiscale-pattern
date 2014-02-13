@@ -11,9 +11,11 @@
 #### Data Structures ####
 
 class ErrorTest:
-    """ For each error test performed, we keep track of the time step """
-    """ index, the time step size, the estimate of the local error    """
-    """ error, and a flag denoting whether the error test failed.     """
+    """ An ErrorTest object stores, for each error test performed: """
+    """    index    -- the time step index """
+    """    h        -- the time step size """
+    """    estimate -- the estimate of the local error """
+    """    errfail  -- a flag denoting whether the error test failed """
     def __init__(self, step, h, dsm):
         self.index    = step;
         self.h        = h;
@@ -29,14 +31,15 @@ class ErrorTest:
 
 ##########
 class AdaptH:
-    """ For each time step adaptivity calculation, we keep track of the """
-    """ biased error history array (eh0, eh1 and eh2), the raw accuracy """
-    """ and stability time step estimates prior to placing bounds and   """
-    """ safety factors on them (h_accuracy0 and h_stability0), the same """
-    """ estimates after bounds and safety factors have been enforced    """
-    """ (h_accuracy1 and h_stability1), a flag denoting whether the     """
-    """ step was limited by the stability estimate (stab_restrict),     """
-    """ and the resulting time step growth factor (eta).                """
+    """ An AdaptH object stores, for each time step adaptivity calculation: """
+    """    eh[0,1,2]        -- the biased error history array """
+    """    hh[0,1,2]        -- the time step history array """
+    """    h_accuracy[0,1]  -- the accuracy step estimates, before  """
+    """                        and after applying step size bounds """
+    """    h_stability[0,1] -- the stability step estimates, before """
+    """                        and after applying cfl & stability bounds """
+    """    stab_restrict    -- flag whether step was stability-limited """
+    """    eta              -- the final time step growth factor """
     def __init__(self, eh0, eh1, eh2, hh0, hh1, hh2, ha0, hs0, ha1, hs1, eta):
         self.eh0 = eh0;
         self.eh1 = eh1;
@@ -57,9 +60,39 @@ class AdaptH:
         print '  AdaptH: errhist =',self.eh0,self.eh1,self.eh2,', stephist =',self.hh0,self.hh1,self.hh2,', ha0 =',self.h_accuracy0,', hs0 =',self.h_stability0,', ha1 =',self.h_accuracy1,', hs1 =',self.h_stability1,', stabrestrict =',self.stabrestrict,', eta =',self.eta
 
 ##########
+class KrylovSolve:
+    """ A KrylovSolve object stores, for each Krylov solve: """
+    """    bnorm   -- the norm of the right-hand side"""
+    """    resnorm -- the final linear residual norm"""
+    """    iters   -- the total number of steps taken """
+    """    psolves -- the total number of preconditioner solves taken """
+    def __init__(self, bnorm, resnorm, iters, psolves):
+        self.bnorm   = bnorm;    # container for KrylovSolve objects
+        self.resnorm = resnorm;  # post-processing statistics
+        self.iters   = iters;
+        self.psolves = psolves;
+    def Write(self):
+        print '      KSolve: iters =',self.iters,', psolves =',self.psolves,', bnorm =',self.bnorm,', resnorm =',self.resnorm
+
+##########
+class MassSolve:
+    """ A MassSolve object stores, for each Krylov mass-matrix solve: """
+    """    resnorm -- the final linear residual norm"""
+    """    iters   -- the total number of steps taken """
+    """    psolves -- the total number of preconditioner solves taken """
+    def __init__(self, resnorm, iters, psolves):
+        self.resnorm = resnorm;  # container for MassSolve objects
+        self.iters   = iters;    # post-processing statistics
+        self.psolves = psolves;
+    def Write(self):
+        print '      Msolve: iters =',self.iters,', psolves =',self.psolves,', resnorm =',self.resnorm
+
+##########
 class NonlinStep:
-    """ Each nonlinear step holds the step iteration, the WRMS norm of """
-    """ the nonlinear update (delta), and the convergence test (dcon). """
+    """ A NonlinStep object stores, for each nonlinear iteration: """
+    """    iter  -- the step iteration """
+    """    delta -- the WRMS norm of the nonlinear update """
+    """    dcon  -- the convergence test value"""
     def __init__(self, iter, delta, dcon):
         self.iter = iter;
         self.delta = delta;
@@ -69,84 +102,119 @@ class NonlinStep:
 
 ##########
 class NonlinSolve:
-    """ Each nonlinear solve holds the total number of steps taken     """
-    """ (iters), an array of the nonlinear steps themselves (steps, of """
-    """ type NonlinStep), and a flag denoting whether the solve failed """
-    """ (nonconv).                                                     """
+    """ A NonlinSolve object stores, for each nonlinear solve: """
+    """    iters    -- the total number of steps taken """
+    """    steps    -- array of nonlinear steps taken (of type NonlinStep) """
+    """    KSolves  -- array of linear solves taken (of type KrylovSolve) """
+    """    liniters -- the total number of linear steps taken """ 
+    """    nonconv  -- a flag denoting whether the solve failed """
+    """    dcon     -- the final convergence test value """
     def __init__(self):
-        self.steps   = [];    # container for NonlinStep objects
-        self.iters   = -1;    # post-processing statistics
-        self.nonconv = -1;
-        self.dcon    = 0.0;
+        self.steps    = [];
+        self.KSolves  = [];
+        self.iters    = -1;
+        self.liniters = -1;
+        self.nonconv  = -1;
+        self.dcon     = 0.0;
     def AddStep(self, NonlinStep):
         self.steps.append(NonlinStep);
+    def AddKrylov(self, KrylovSolve):
+        self.KSolves.append(KrylovSolve);
     def Cleanup(self):
         self.iters = 0;
+        self.liniters = 0;
         for i in range(len(self.steps)):
             self.iters += 1;
+        for i in range(len(self.KSolves)):
+            self.liniters += self.KSolves[i].iters;
         self.dcon = self.steps[-1].dcon;
         if (self.dcon < 1.0):
             self.nonconv = 0;
         else:
             self.nonconv = 1;
     def Write(self):
-        print '    Nsolve: iters =',self.iters,', dcon =',self.dcon,', nonconv =',self.nonconv
+        print '    Nsolve: iters =',self.iters,', liniters =',self.liniters,', dcon =',self.dcon,', nonconv =',self.nonconv
         for i in range(len(self.steps)):
             self.steps[i].Write();
+        for i in range(len(self.KSolves)):
+            self.KSolves[i].Write();
 
 ##########
 class StageStep:
-    """ For every RK stage of every time step, we keep track of the time  """
-    """ step index (step), the time step size (h), the stage index        """
-    """ (stage), the stage time (tn), each nonlinear solve used for       """
-    """ calculation of the stage solution (NonlinSolves -- we can have    """
-    """ more than one if the first fails and lsetup is called), the total """
-    """ number of nonlinear iterations required for convergence,          """
-    """ (NonlinIters), and the number of lsetups that occured within the  """
-    """ step (lsetups). """
+    """ A StageStep object stores, for each RK stage of every time step: """
+    """    step         -- the time step index """
+    """    h            -- the time step size """
+    """    stage        -- the stage index """
+    """    tn           -- the stage time """
+    """    NonlinSolves -- array of nonlinear solves used for stage """
+    """                    solution (of type NonlinSolves); we can have  """
+    """                    multiple if the first fails and lsetup is called) """
+    """    NonlinIters  -- the total number of nonlinear iterations """
+    """    NonlinDcon   -- the final nonlinear convergence test value """
+    """    lsetups      -- the number of lsetups that occured within the step """
+    """    KrylovIters  -- the total number of Krylov iterations """
+    """    conv_fails   -- the number of nonlinear convergence failures """
     def __init__(self, step, h, stage, tn):
         self.step  = step;
         self.h     = h;
         self.stage = stage;
         self.tn    = tn;
         self.NonlinSolves = [];
-        self.NonlinIters = 0;
+        self.NonlinSolves.append(NonlinSolve());  # create first nonlinear solver
+        self.NSolveData = False;            # set flag that solve data not set
+        self.NonlinIters = -1;
+        self.KrylovIters = -1;
         self.NonlinDcon = 0.0;
         self.lsetups = 0;
         self.conv_fails = 0;
     def AddLSetup(self):
         self.lsetups += 1;
     def AddNonlin(self, NStep):
-        if (NStep.iter == 0):    # create empty solve object
+        if (NStep.iter == 0 and self.NSolveData): # add new solve if starting over
             self.NonlinSolves.append(NonlinSolve());
+        self.NSolveData = True                # update flag
         self.NonlinSolves[-1].AddStep(NStep);
+    def AddKrylov(self, KSolve):
+        self.NonlinSolves[-1].AddKrylov(KSolve);  # add to newest nonlinear solver
     def Cleanup(self):
         self.NonlinIters  = 0;
+        self.KrylovIters  = 0;
         self.conv_fails = 0;
         for i in range(len(self.NonlinSolves)):
             self.NonlinSolves[i].Cleanup();
             self.NonlinIters  += self.NonlinSolves[i].iters;
+            self.KrylovIters  += self.NonlinSolves[i].liniters;
             self.NonlinDcon    = self.NonlinSolves[i].dcon;
             self.conv_fails += self.NonlinSolves[i].nonconv;
     def Write(self):
-        print '  StageStep: step =',self.step,', h =',self.h,', stage =',self.stage,', tn =',self.tn,', conv_fails =',self.conv_fails,', lsetups =',self.lsetups,', NonlinDcon =',self.NonlinDcon,', NonlinIters =',self.NonlinIters
+        print '  StageStep: step =',self.step,', h =',self.h,', stage =',self.stage,', tn =',self.tn,', conv_fails =',self.conv_fails,', lsetups =',self.lsetups,', NonlinDcon =',self.NonlinDcon,', NonlinIters =',self.NonlinIters,', KrylovIters =',self.KrylovIters
         for i in range(len(self.NonlinSolves)):
             self.NonlinSolves[i].Write();
 
 ##########
 class TimeStep:
-    """ For every time step, we keep track of the time step index (step),  """
-    """ the different time step sizes that were attempted (h_attempts --   """
-    """ typically only one, unless convergence or error test failures      """
-    """ occur), the final successful time step size (h_final), and we      """
-    """ store all StageSteps that comprised the time step.                 """
+    """ A TimeStep object stores, for every time step: """
+    """    StageSteps  -- array of StageStep objects comprising the step"""
+    """    MassSolve   -- MassSolve object used to finish the step """
+    """    h_attempts  -- array of step sizes attempted (typically only one, """
+    """                   unless convergence or error failures occur) """
+    """    step        -- the time step index """
+    """    tn          -- maximum stage time in step """
+    """    h_final     -- the final successful time step size """
+    """    NonlinIters -- total nonlinear iters for step """
+    """    lsetups     -- total lsetup calls in step """
+    """    ErrTest     -- an ErrorTest object for the step """
+    """    err_fails   -- total error test failures in step """
+    """    conv_fails  -- total number of convergence failures in step """
     def __init__(self):
         self.StageSteps  = [];
+        self.MassSolve   = 0;
         self.h_attempts  = [];
         self.step        = -1;
         self.tn          = -1.0;
         self.h_final     = -1.0;
         self.NonlinIters = -1;
+        self.KrylovIters = -1;
         self.lsetups     = -1;
         self.err_fails   =  0;
         self.conv_fails  = -1;
@@ -156,7 +224,7 @@ class TimeStep:
             self.h_final = Stage.h;
             self.h_attempts.append(Stage.h);
         self.StageSteps.append(Stage);
-        self.tn = max(self.tn,Stage.tn);   # store maximum stage time in tn
+        self.tn = max(self.tn,Stage.tn);
     def AddErrorTest(self, ETest):
         self.ErrTest = ETest;
         self.err_fails += ETest.errfail;
@@ -166,19 +234,28 @@ class TimeStep:
         self.StageSteps[stage].AddLSetup();
     def AddNonlin(self, stage, NStep):
         self.StageSteps[stage].AddNonlin(NStep);
+    def AddKrylov(self, stage, KSolve):
+        self.StageSteps[stage].AddKrylov(KSolve);
+    def AddMass(self, MSolve):
+        self.MassSolve = MSolve;
     def Cleanup(self):
         self.NonlinIters = 0;
+        self.KrylovIters = 0;
         self.lsetups     = 0;
         self.conv_fails  = 0;
         for i in range(len(self.StageSteps)):
             self.StageSteps[i].Cleanup();
             self.NonlinIters += self.StageSteps[i].NonlinIters;
+            self.KrylovIters += self.StageSteps[i].KrylovIters;
             self.lsetups += self.StageSteps[i].lsetups;
             self.conv_fails += self.StageSteps[i].conv_fails;
     def Write(self):
-        print 'TimeStep: step =',self.step,', tn =',self.tn,', h_attempts =',self.h_attempts,', h_final =',self.h_final,', NonlinIters =',self.NonlinIters,', lsetups =',self.lsetups,', err_fails =',self.err_fails,', conv_fails =',self.conv_fails
+        print 'TimeStep: step =',self.step,', tn =',self.tn,', h_attempts =',self.h_attempts,', h_final =',self.h_final,', NonlinIters =',self.NonlinIters,', KrylovIters =',self.KrylovIters,', lsetups =',self.lsetups,', err_fails =',self.err_fails,', conv_fails =',self.conv_fails
         for i in range(len(self.StageSteps)):
             self.StageSteps[i].Write();
+        if (self.MassSolve != 0):
+            self.MassSolve.Write();
+
 
 #### Utility functions ####
 
@@ -229,6 +306,19 @@ def load_line(line):
         hs1 = float(txt[10]);
         eta = float(txt[11]);
         entry = AdaptH(eh0, eh1, eh2, hh0, hh1, hh2, ha0, hs0, ha1, hs1, eta);
+    elif ("kry" in txt):
+        linetype = 5;
+        bnorm = float(txt[1]);
+        resnorm = float(txt[2]);
+        iters = int(txt[3]);
+        psolves = int(txt[4]);
+        entry = KrylovSolve(bnorm, resnorm, iters, psolves);
+    elif ("mass" in txt):
+        linetype = 6;
+        resnorm = float(txt[1]);
+        iters = int(txt[2]);
+        psolves = int(txt[3]);
+        entry = MassSolve(resnorm, iters, psolves);
     else:
         linetype = -1;
         entry = 0;
@@ -259,6 +349,10 @@ def load_diags(fname):
             TimeSteps[step].AddErrorTest(entry);
         elif (linetype == 4):   # h adaptivity
             TimeSteps[step].AddHAdapt(entry);
+        elif (linetype == 5):   # Krylov solve
+            TimeSteps[step].AddKrylov(stage,entry);
+        elif (linetype == 6):   # mass Krylov solve
+            TimeSteps[step].AddMass(entry);
     f.close()
     for i in range(len(TimeSteps)):
         TimeSteps[i].Cleanup();
@@ -323,7 +417,7 @@ def plot_h_vs_t(TimeSteps,fname):
     plt.xlabel('time')
     plt.ylabel('step size')
     plt.title('Step size versus time')
-    plt.legend(('successful','error fails','conv. fails'), loc='upper left', shadow=True)
+    plt.legend(('successful','error fails','conv. fails'), loc='lower right', shadow=True)
     plt.grid()
     plt.savefig(fname)
 
@@ -378,7 +472,7 @@ def plot_h_vs_iter(TimeSteps,fname):
     plt.xlabel('time step')
     plt.ylabel('step size')
     plt.title('Step size versus iteration')
-    plt.legend(('successful','error fails','conv. fails'), loc='upper left', shadow=True)
+    plt.legend(('successful','error fails','conv. fails'), loc='lower right', shadow=True)
     plt.grid()
     plt.savefig(fname)
 
@@ -435,9 +529,9 @@ def plot_work_vs_t(TimeSteps,fname):
     plt.ylabel('Nonlinear iters')
     plt.title('Nonlinear iterations per step versus time')
     if (len(lN) > 0):
-        plt.legend(('successful','conv. fails','lsetups'), loc='upper left', shadow=True)
+        plt.legend(('successful','conv. fails','lsetups'), loc='lower right', shadow=True)
     else:
-        plt.legend(('successful','conv. fails'), loc='upper left', shadow=True)
+        plt.legend(('successful','conv. fails'), loc='lower right', shadow=True)
     plt.grid()
     plt.savefig(fname)
 
@@ -486,7 +580,73 @@ def plot_work_vs_h(TimeSteps,fname):
     plt.xlabel('step size')
     plt.ylabel('Nonlinear iters')
     plt.title('Nonlinear iterations per step versus step size')
-    plt.legend(('successful','conv. fails'), loc='upper left', shadow=True)
+    plt.legend(('successful','conv. fails'), loc='lower right', shadow=True)
+    plt.grid()
+    plt.savefig(fname)
+
+
+##########
+def plot_krylov_vs_t(TimeSteps,fname):
+    """ This routine takes in the array of TimeSteps (returned from  """
+    """ load_diags), and plots the total number of Krylov            """
+    """ iterations as a function of the simulation time t.           """
+    """                                                              """
+    """ The resulting plot is stored in the file <fname>, that       """
+    """ should include an extension appropriate for the matplotlib   """
+    """ 'savefig' command.                                           """
+    import pylab as plt
+    import numpy as np
+    Kvals   = [];
+    tvals   = [];
+    for istep in range(len(TimeSteps)):
+        
+        # store nonlinear iterations and time
+        Kvals.append(TimeSteps[istep].KrylovIters);
+        tvals.append(TimeSteps[istep].tn);
+
+    # convert data to numpy arrays
+    K = np.array(Kvals);
+    t = np.array(tvals);
+
+    # generate plot
+    plt.figure()
+    plt.plot(t,K,'b-')
+    plt.xlabel('time')
+    plt.ylabel('Krylov iters')
+    plt.title('Krylov iterations per step versus time')
+    plt.grid()
+    plt.savefig(fname)
+
+
+##########
+def plot_krylov_vs_h(TimeSteps,fname):
+    """ This routine takes in the array of TimeSteps (returned from  """
+    """ load_diags), and plots the total number of Krylov            """
+    """ iterations as a function of the time step size h.            """
+    """                                                              """
+    """ The resulting plot is stored in the file <fname>, that       """
+    """ should include an extension appropriate for the matplotlib   """
+    """ 'savefig' command.                                           """
+    import pylab as plt
+    import numpy as np
+    Kvals   = [];
+    hvals   = [];
+    for istep in range(len(TimeSteps)):
+        
+        # store nonlinear iterations and time
+        Kvals.append(TimeSteps[istep].KrylovIters);
+        hvals.append(TimeSteps[istep].h_final);
+
+    # convert data to numpy arrays
+    K = np.array(Kvals);
+    h = np.array(hvals);
+
+    # generate plot
+    plt.figure()
+    plt.semilogx(h,K,'b.')
+    plt.xlabel('step size')
+    plt.ylabel('Krylov iters')
+    plt.title('Krylov iterations per step versus step size')
     plt.grid()
     plt.savefig(fname)
 
@@ -613,12 +773,15 @@ def solver_stats(TimeSteps,fptr):
     """ to fptr (either the result of 'open' or sys.stdout).         """
     import numpy as np
     nonlinits = 0;
+    krylovits = 0;
     stages  = 0;
     nonlinfails = 0;
     lsetups = 0;
     dcon_final = [];
-    for istep in range(len(TimeSteps)):
+    nsteps = len(TimeSteps)
+    for istep in range(nsteps):
         nonlinits += TimeSteps[istep].NonlinIters;
+        krylovits += TimeSteps[istep].KrylovIters;
         stages += len(TimeSteps[istep].StageSteps);
         nonlinfails += TimeSteps[istep].conv_fails;
         lsetups += TimeSteps[istep].lsetups;
@@ -629,20 +792,35 @@ def solver_stats(TimeSteps,fptr):
     dcon = np.array(dcon_final);
     if (lsetups == 0):
         nonlin_per_lsetup = 0;
+        krylov_per_lsetup = 0;
     else:
         nonlin_per_lsetup = (1.0*nonlinits/lsetups)
+        krylov_per_lsetup = (1.0*krylovits/lsetups)
 
-    fptr.write("\n")
-    fptr.write("Simulation took %i steps with %i stages\n" % (len(TimeSteps),stages))
-    fptr.write("    Avg Nonlinear / step  = %g\n" % (1.0*nonlinits/len(TimeSteps)))
-    fptr.write("    Avg Nonlinear / stage = %g\n" % (1.0*nonlinits/stages))
-    fptr.write("    Total Nonlinear failures = %i\n" % (nonlinfails))
-    fptr.write("    Average Nonlinear / lsetup = %g\n" % (nonlin_per_lsetup))
-    fptr.write("  Nonlinear convergence tests (dcon):\n")
-    fptr.write("       min = %g\n" % (np.min(dcon)))
-    fptr.write("       max = %g\n" % (np.max(dcon)))
-    fptr.write("       avg = %g\n" % (np.mean(dcon)))
-    fptr.write("     gmean = %g\n" % (np.prod(np.power(dcon,1.0/len(dcon)))))
+    fptr.write("\nSimulation stats:\n")
+    fptr.write("   steps = %i\n" % (nsteps))
+    fptr.write("   stages = %i\n" % (stages))
+    fptr.write("   nonlinear iterations = %i\n" % (nonlinits))
+    fptr.write("   Krylov iterations = %i\n" % (krylovits))
+    fptr.write("   LSetup calls = %i\n" % (lsetups))
+
+    fptr.write("\nNonlinear stats:\n")
+    fptr.write("   Avg Nonlinear / step  = %g\n" % (1.0*nonlinits/nsteps))
+    fptr.write("   Avg Nonlinear / stage = %g\n" % (1.0*nonlinits/stages))
+    fptr.write("   Total Nonlinear failures = %i\n" % (nonlinfails))
+    fptr.write("   Average Nonlinear / lsetup = %g\n" % (nonlin_per_lsetup))
+
+    if (krylovits > 0):
+        fptr.write("\nKrylov stats:\n")
+        fptr.write("   Avg Krylov / step  = %g\n" % (1.0*krylovits/nsteps))
+        fptr.write("   Avg Krylov / stage = %g\n" % (1.0*krylovits/stages))
+        fptr.write("   Average Krylov / lsetup = %g\n" % (krylov_per_lsetup))
+
+    fptr.write("\nNonlinear convergence tests (dcon):\n")
+    fptr.write("     min = %g\n" % (np.min(dcon)))
+    fptr.write("     max = %g\n" % (np.max(dcon)))
+    fptr.write("     avg = %g\n" % (np.mean(dcon)))
+    fptr.write("   gmean = %g\n" % (np.prod(np.power(dcon,1.0/len(dcon)))))
     fptr.write("\n")
     
    
