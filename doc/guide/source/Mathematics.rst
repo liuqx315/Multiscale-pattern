@@ -500,7 +500,7 @@ z_i^{(m)} - z_i^{(m-1)}`, if :math:`m>1` we update :math:`R_i` as
    R_i \leftarrow \max\{ 0.3 R_i, \left\|\delta^{(m)}\right\| / \left\|\delta^{(m-1)}\right\| \}.
 
 where the factor 0.3 is user-modifiable as the *crdown* input to the
-the function :c:func:`ARKodeSetNonlinCRDown()` or the *NEWT_CRDOWN*
+the function :c:func:`ARKodeSetNonlinCRDown()` or the *NONLIN_CRDOWN*
 argument to :f:func:`FARKSETRIN()`.  
 
 Denoting the true time step solution as :math:`y_n`, and the computed
@@ -528,7 +528,7 @@ as the *MAX_NSTEPS* argument to :f:func:`FARKSETIIN()`).  We also
 declare the nonlinear iteration to be divergent if any of the ratios
 :math:`\|\delta^{(m)}\| / \|\delta^{(m-1)}\| > 2.3` with :math:`m>1`
 (the value 2.3 may be modified as the *rdiv* input to 
-:c:func:`ARKodeSetNonlinRDiv()` or the *NEWT_RDIV* input to
+:c:func:`ARKodeSetNonlinRDiv()` or the *NONLIN_RDIV* input to
 :f:func:`FARKSETRIN()`).  If convergence fails in the fixed 
 point iteration, or in the Newton iteration with :math:`J` or
 :math:`{\mathcal A}` current, we must then reduce the step size by a
