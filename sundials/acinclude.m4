@@ -313,7 +313,7 @@ if test "X${enableval}" = "Xno"; then
 fi
 ],
 [
-if test -d ${srcdir}/src/nvec_par || test -d ${srcdir}/src/nvec_spcpar || test -d ${srcdir}/src/nvec_pargrid; then
+if test -d ${srcdir}/src/nvec_par || test -d ${srcdir}/src/nvec_pargrid; then
   MPI_ENABLED="yes"
 else
   MPI_ENABLED="no"
@@ -2443,11 +2443,6 @@ fi
 if test -d ${srcdir}/src/nvec_par && test "X${MPI_C_COMP_OK}" = "Xyes"; then
   SLV_MODULES="${SLV_MODULES} src/nvec_par"
   SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} src/nvec_par/Makefile"
-fi
-
-if test -d ${srcdir}/src/nvec_spcpar && test "X${MPI_C_COMP_OK}" = "Xyes"; then
-  SLV_MODULES="${SLV_MODULES} src/nvec_spcpar"
-  SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} src/nvec_spcpar/Makefile"
 fi
 
 if test -d ${srcdir}/src/nvec_pargrid && test "X${MPI_C_COMP_OK}" = "Xyes"; then
