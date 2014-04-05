@@ -1,0 +1,94 @@
+ARKode Documentation README
+=============================
+
+The ARKode documentation is in the subdirectories of this directory:
+* guide -- the main ARKode documentation
+* examples -- documentation of the ARKode examples
+
+Both sets of documentation are written using the ReST [1] formatting,
+which is parsed into final formats using the Sphinx formatting engine
+[2].
+
+Some benefits of using ReST + Sphinx include:
+
+- ReST is very readable in its raw form. It has minimal mark-up
+  and is in plain text.
+- Since the document sources are included in the ARKode mecurial
+  repository, all the documents are included with the code, and may
+  therefore be rebuilt and accessed even without the internet.
+- Sphinx can parse the documents into many convenient formats, most
+  notably HTML and a PDF.
+
+
+To build both forms of documentation, however, a number of packages
+must be installed on your system.  These are detailed below.
+
+
+Prerequisites:
+--------------
+
+To build the docs, you must first have Sphinx [2] installed (version
+1.1 or newer), as well as Python [3] (version 2.5 or newer), and the
+Sphinx Fortran "domain" extension [4].  To build the HTML version of
+the documentation, you'll also need to install the Bootstrap Sphinx
+Theme [5].
+
+1. It is assumed that Python (version >= 2.5) is already installed on
+   your system.
+
+2. Installing Sphinx:
+
+   a. The simplest way to install Sphinx is via the Python
+      "easy_install" utility, if it is installed on your system:
+
+      $ easy_install -U Sphinx
+
+   b. The source code is also provided in the
+      extra_packages/Sphinx-1.2b1.tgz file in the main
+      arkode/doc directory.  Unpack that directory and install with
+      the command
+
+      $ sudo python ./setup.py install 
+
+3. Installing the Sphinx Fortran "domain": 
+
+   The source code is provided in the
+   extra_packages/sphinx-fortran-extension.tgz file in the
+   main arkode/doc directory.  Unpack that directory and install with
+   the command 
+
+      $ sudo python ./setup.py install 
+
+4. Installing the Bootstrap Sphinx theme:
+
+   a. The simplest way to install this package is via the Python
+      "pip" utility, if it is installed on your system:
+
+      $ pip install sphinx_bootstrap_theme
+
+   b. The source code is also provided in the
+      extra_packages/sphinx-bootstrap-theme.tgz file in the main
+      arkode/doc directory.  Unpack that directory and install with
+      the command
+
+      $ sudo python ./setup.py install 
+
+5. The manual installation approach for steps 2-4 may be automatically
+   performed on an OSX or Linux system using the provided
+   extra_packages/install_extensions.sh script in this directory.
+   This script assumes that you have sudo permissions on a Linux or
+   OSX system.  From within the extra_packages subdirectory,
+   run the script via
+
+      $ sudo ./install_extensions.sh
+
+
+References:
+-----------
+
+[1] http://docutils.sourceforge.net/rst.html
+[2] http://sphinx.pocoo.org/
+[3] http://www.python.org/
+[4] https://github.com/paulromano/sphinx-fortran-extension
+[5] https://github.com/ryan-roemer/sphinx-bootstrap-theme
+[6] http://www.tug.org/applications/pdftex/
