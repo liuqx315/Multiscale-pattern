@@ -131,9 +131,6 @@ SUNDIALS_EXPORT="#define SUNDIALS_EXPORT"
 
 # Initialize enable status of various modules, options, and features
 # to their default values
-#
-# NOTE: when CPODES is released, change its default to enabled.
-#
 ARKODE_ENABLED="yes"
 CVODE_ENABLED="yes"
 CVODES_ENABLED="yes"
@@ -143,9 +140,6 @@ KINSOL_ENABLED="yes"
 LAPACK_ENABLED="yes"
 FCMIX_ENABLED="yes"
 MPI_ENABLED="yes"
-#
-CPODES_ENABLED="no"
-#
 EXAMPLES_ENABLED="no"
 F77_EXAMPLES_ENABLED="no"
 
@@ -283,23 +277,6 @@ if test -d ${srcdir}/src/kinsol ; then
   KINSOL_ENABLED="yes"
 else
   KINSOL_ENABLED="no"
-fi
-])
-
-# Check if user wants to disable CPODES module
-# If not, then make certain source directory actually exists
-AC_ARG_ENABLE(cpodes,
-[AC_HELP_STRING([--disable-cpodes],[disable configuration of CPODES])],
-[
-if test "X${enableval}" = "Xno"; then
-  CPODES_ENABLED="no"
-fi
-],
-[
-if test -d ${srcdir}/src/cpodes ; then
-  CPODES_ENABLED="yes"
-else
-  CPODES_ENABLED="no"
 fi
 ])
 
@@ -2690,26 +2667,6 @@ if test "X${KINSOL_ENABLED}" = "Xyes"; then
 
 fi
 
-# CPODES module
-if test "X${CPODES_ENABLED}" = "Xyes"; then
-
-  SLV_MODULES="${SLV_MODULES} src/cpodes"
-  SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} src/cpodes/Makefile"
-
-  if test "X${SERIAL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/cpodes/serial ; then
-    EXS_MODULES="${EXS_MODULES} examples/cpodes/serial"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/cpodes/serial/Makefile"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/cpodes/serial/Makefile_ex:examples/templates/makefile_serial_C_ex.in"
-  fi
-
-  if test "X${PARALLEL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/cpodes/parallel ; then
-    EXS_MODULES="${EXS_MODULES} examples/cpodes/parallel"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/cpodes/parallel/Makefile"
-    SUNDIALS_MAKEFILES="${SUNDIALS_MAKEFILES} examples/cpodes/parallel/Makefile_ex:examples/templates/makefile_parallel_C_ex.in"
-  fi
-
-fi
-
 # Add Fortran update script to the list of additional files to be generated
 if test "X${BUILD_F77_UPDATE_SCRIPT}" = "Xyes"; then
   SUNDIALS_CONFIGFILES="${SUNDIALS_CONFIGFILES} bin/fortran-update.sh:bin/fortran-update.in"
@@ -3254,50 +3211,6 @@ if test "X${KINSOL_ENABLED}" = "Xyes"; then
 fi
 
 
-# CPODES module
-if test "X${CPODES_ENABLED}" = "Xyes"; then
-
-  if test "X${SERIAL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/cpodes/serial ; then
-     if test "X${LAPACK_ENABLED}" = "Xyes"; then
-       AC_CONFIG_COMMANDS([cpodes_ser_ex_bl],
-       [
-       IN_FILE="examples/cpodes/serial/Makefile_ex"
-       SOLVER="CPODES"
-       SOLVER_LIB="sundials_cpodes"
-       SOLVER_FLIB=""
-       EXAMPLES="cpsAdvDiff_bnd cpsAdvDiff_non cpsNewtCrd_dns cpsPend_dns cpsRoberts_dns cpsVanDPol_non"
-       EXAMPLES_BL="cpsAdvDiff_bndL cpsPend_dnsL cpsRoberts_dnsL"
-       ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
-       ])
-     else
-       AC_CONFIG_COMMANDS([cpodes_ser_ex],
-       [
-       IN_FILE="examples/cpodes/serial/Makefile_ex"
-       SOLVER="CPODES"
-       SOLVER_LIB="sundials_cpodes"
-       SOLVER_FLIB=""
-       EXAMPLES="cpsAdvDiff_bnd cpsAdvDiff_non cpsNewtCrd_dns cpsPend_dns cpsRoberts_dns cpsVanDPol_non"
-       EXAMPLES_BL=""
-       ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
-       ])
-     fi
-  fi
-
-  if test "X${PARALLEL_C_EXAMPLES}" = "Xyes" && test -d ${srcdir}/examples/cpodes/parallel ; then
-     AC_CONFIG_COMMANDS([cpodes_par_ex],
-     [
-     IN_FILE="examples/cpodes/parallel/Makefile_ex"
-     SOLVER="CPODES"
-     SOLVER_LIB="sundials_cpodes"
-     SOLVER_FLIB=""
-     EXAMPLES="cpsHeat2D_kry_bbd_p"
-     EXAMPLES_BL=""
-     ${SHELL} bin/makefile-update.sh "${IN_FILE}" "${SOLVER}" "${EXAMPLES}" "${EXAMPLES_BL}" "${SOLVER_LIB}" "${SOLVER_FLIB}"
-     ])
-  fi
-
-fi
-
 ]) dnl END SUNDIALS_POST_PROCESSING
 
 #------------------------------------------------------------------
@@ -3432,11 +3345,6 @@ if test "X${KINSOL_ENABLED}" = "Xyes"; then
   if test "X${FCMIX_ENABLED}" = "Xyes"; then
     THIS_LINE="${THIS_LINE} FKINSOL"
   fi
-  echo "  ${THIS_LINE}"
-fi
-
-if test "X${CPODES_ENABLED}" = "Xyes"; then
-  THIS_LINE="CPODES"
   echo "  ${THIS_LINE}"
 fi
 
