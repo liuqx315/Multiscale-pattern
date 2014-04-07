@@ -12,7 +12,7 @@
 The ARKode Solver 
 ===================
 
-ARKode is a solver for stiff, nonstiff and multi-rate systems of
+ARKode is a solver for stiff, nonstiff and mixed systems of
 ordinary differential equations (ODEs) given in explicit form,
 
 .. math::
@@ -45,11 +45,11 @@ ARKode is written in C, with C++ and Fortran interfaces.
 News:
 -------
 
-:7/23/2013:
+:2/25/2014:
    ARKode is currently in beta-testing, undergoing optimization
    enhancements, documentation upgrades, and development of new
    features. An official release as part of the SUNDIALS suite is
-   planned for Fall 2013, but the public source code repository is now
+   planned for Spring 2014, but the public source code repository is now
    open (see the :ref:`Downloads` page).
 
 
@@ -75,6 +75,7 @@ from `Lawrence Livermore National Laboratory <http://www.llnl.gov>`_.
    Description
    Download
    Documentation
+   Publications
    Regression
 
 
