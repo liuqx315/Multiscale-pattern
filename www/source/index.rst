@@ -70,12 +70,11 @@ Institute <http://fastmath-scidac.org>`_, under subcontract B598130
 from `Lawrence Livermore National Laboratory <http://www.llnl.gov>`_.
 
 .. toctree::
-   :hidden:
 
    Description
    Download
    Documentation
-   Publications
+   Publications <Publications>
    Regression
 
 
