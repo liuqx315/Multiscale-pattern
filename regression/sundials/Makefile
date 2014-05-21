@@ -21,7 +21,8 @@ SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
             -DSUNDIALS_DOUBLE_PRECISION
 
 # compilation flags 
-CFLAGS = -O2
+#CFLAGS = -O2
+CFLAGS = -O0 -g
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
@@ -35,7 +36,8 @@ TESTS = nvector_serial_test.exe \
         nvector_parallel_test.exe \
         pcg_tester.exe \
         fgmres_tester.exe \
-        gmres_tester.exe 
+        gmres_tester.exe \
+        sparse_tester.exe
 
 # target to build all test executables
 all : ${TESTS}
