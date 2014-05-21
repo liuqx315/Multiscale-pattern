@@ -87,7 +87,7 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-  SUNDIALS_EXPORT int IDASuperLUMTSetOrdering(void *kin_mem, 
+  SUNDIALS_EXPORT int IDASuperLUMTSetOrdering(void *ida_mem, 
 					      int ordering_choice); 
 
 
