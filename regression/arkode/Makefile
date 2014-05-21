@@ -26,6 +26,9 @@ SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
 CFLAGS = -O2
 FFLAGS = -O2
 CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+# CFLAGS = -O0 -g
+# FFLAGS = -O0 -g
+# CXXFLAGS = -O0 -g -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
@@ -35,6 +38,11 @@ CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 INCS = -I../../install_opt/include/
 LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
 FLIBS = -L../../install_opt/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
+KLULIBS = -L/usr/local/klu-1.2.0/gnu -lklu
+# INCS = -I../../install_dbg/include/
+# LIBS = -L../../install_dbg/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
+# FLIBS = -L../../install_dbg/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
+# KLULIBS = -L/usr/local/klu-1.2.0/gnu_debug -lklu
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
@@ -45,10 +53,12 @@ TESTS = ark_analytic.exe \
         ark_brusselator_M.exe \
         ark_brusselator1D.exe \
         ark_brusselator1D_FEM.exe \
+        ark_brusselator1D_klu.exe \
         ark_heat1D.exe \
         ark_heat1D_adapt.exe \
         ark_heat2D.exe \
         ark_robertson.exe \
+        ark_robertson_klu.exe \
         ark_robertson_root.exe \
         ark_set_check.exe \
         ark_bruss.exe \
@@ -64,12 +74,14 @@ TESTS = ark_analytic.exe \
 # target to build all test executables
 all : ${TESTS}
 
-%.exe : %.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+# specific build rules for C programs linking with KLU
+ark_robertson_klu.exe : ark_robertson_klu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
 
-%.exe : %.cpp init_from_file.c
-	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+ark_brusselator1D_klu.exe : ark_brusselator1D_klu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
 
+# specific build rules for Fortran programs
 ark_bruss.exe : ark_bruss.f90
 	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
 
@@ -96,6 +108,14 @@ ark_vdpol.exe : ark_vdpol.f90 vdpol.f
 
 ark_vdpolm.exe : ark_vdpolm.f90 vdpolm.f
 	${F90} ${FFLAGS} $^ ${FLIBS} ${LDFLAGS} -o $@
+
+# general build rules for C programs
+%.exe : %.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+# general build rules for C++ programs
+%.exe : %.cpp init_from_file.c
+	${CXX} ${CXXFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
 clean :
 	\rm -f *.o *.exe diags_*.txt bruss_*.txt heat*.txt output.txt
