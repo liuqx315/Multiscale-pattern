@@ -152,6 +152,26 @@ SUNDIALS_EXPORT void bandScale(realtype c, realtype **a, long int n, long int mu
 
 SUNDIALS_EXPORT void bandAddIdentity(realtype **a, long int n, long int smu);
 
+
+/*
+ * -----------------------------------------------------------------
+ * Function: BandMatvec
+ * -----------------------------------------------------------------
+ * BandMatvec computes the matrix-vector product y = A*x, where A 
+ * is an N-by-N matrix, x is a vector of length N, and y is a vector
+ * of length N (since all BAND matrices are a-priori assumed to be 
+ * square).  No error checking is performed on the length of the 
+ * arrays x and y.  Only y is modified in this routin.
+ *
+ * BandMatvec is a wrapper around bandMatvec which performs the 
+ * actual product by accessing the data in the DlsMat A.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT void BandMatvec(DlsMat A, realtype *x, realtype *y);
+SUNDIALS_EXPORT void bandMatvec(realtype **a, realtype *x, realtype *y, long int n, long int mu, long int ml, long int smu);
+
+
 #ifdef __cplusplus
 }
 #endif
