@@ -201,10 +201,39 @@ Completed components:
     they aren't so haphazard (and so numerous in one place).  Within
     each group, alphebetize based on name of "set" routine.
 [X] Optimize fixed-point solver.
+[X] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
+    logic to account for this in step solution & embedding.  Update
+    time step solution/embedding routine to now do solves to compute
+    these. 
+[X] Consider whether a non-identity matrix M will change how
+    linear system scaling or tolerances should be performed.  This
+    does indeed introduce different solution vs equation "units," so
+    our error weight array does not work (it encodes solution units).
+    Instead, I introduced a new residual weight array that is used in
+    measuring nonlinear/linear solver equation norms.  If M=I, this
+    just points to ewt.
 
 
 
 Remaining components to build:
+[ ] Add interfaces to new KLU and SuperLU_MT solvers for serial ARKode
+    problems.  Add corresponding regression/example problems.
+[ ] Investigate whether I still need the Krylov solver initial guess
+    to be unit roundoff (instead of zero), since this results in one
+    additional matvec to compute the residual.  I added this in when
+    introducing non-identity mass matrices, but I think that my use of
+    a "residual weight vector" fixes the problem that I'd been seeing.
+[ ] Optimize fixed-point solver (currently results in too much ODE
+    error).  On this topic, it turns out that the "better" solution is
+    not the one returned by the fixed-point solver to the integrator,
+    and instead the preceding FP guess is returned (Carol did this in
+    KINSOL to ensure that it matches with the most-recent call to the
+    fixed-point function).  However, I stop the iteration based on my
+    expectation of the error in the current iterate, not the measured
+    error in the preceding iterate, so these don't currently match
+    up.  I should just return the newer guess, but I want to wait
+    until after the initial release so that this is a "new feature"
+    since our ParaDiS paper results use the current approach.
 [ ] For non-identity mass matrices, come up with an alternate strategy
     for estimating the initial step size if it is not supplied by the
     user.  The current approach performs a finite difference on f(t,y)
@@ -214,13 +243,6 @@ Remaining components to build:
     methods, since in those the higher-order method is not A-stable
     whereas the embedding is A-stable; i.e. here the method would be
     order 2 and the embedding order 3.
-[ ] Optimize fixed-point solver (currently results in too much ODE error).
-[ ] User-defined non-identity mass-matrix operator M : R^n -> R^n, and
-    logic to account for this in step solution & embedding.  Update
-    time step solution/embedding routine to now do solves to compute
-    these. 
-[ ] Consider whether a non-identity matrix M will change how
-    linear system scaling or tolerances should be performed.
 [ ] Consider whether changes to gamma may have more/less effect with a
     non-identity mass matrix.
 [ ] Determine optimal input parameters for a user to control how often
@@ -234,8 +256,8 @@ Remaining components to build:
     communication preceding a call to fI for an ImEx problem.  A call
     preceding fI would be more useful than one preceding fE, since fI
     should be called more often throughout the solve. 
-[ ] Tune solver parameters for increased efficiency on all
-    test problems.
+[ ] Tune solver parameters for increased efficiency on all test
+    problems. 
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
