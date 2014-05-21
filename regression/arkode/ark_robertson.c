@@ -118,13 +118,13 @@ int main()
   flag = init_from_file(arkode_mem, "solve_params.txt", f, fe, fi, T0, 
 			y, &imex, &dense_order, &fixedpt, &rtol, &atol);
   if (check_flag(&flag, "init_from_file", 1)) return 1;
-  rtol = 1.e-4;      /* Update tolerances */
-  atol = 1.e-8;
+  rtol = RCONST(1.e-4);      /* Update tolerances */
+  atol = RCONST(1.e-8);
   realtype reltol = rtol;
   realtype abstol = atol;
-  realtype reltol2 = reltol*1.0e-3;
-  realtype abstol2 = abstol*1.0e-3;
-  h0 = 1.e-4 * reltol;
+  realtype reltol2 = reltol*RCONST(1.0e-3);
+  realtype abstol2 = abstol*RCONST(1.0e-3);
+  h0 = RCONST(1.e-4) * reltol;
 
   /* If (dense_order == -1), tell integrator to use tstop */
   if (dense_order == -1) {
@@ -158,9 +158,9 @@ int main()
   if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) return 1;
 
   /* Tighten inner solver tolerances for this problem */
-  flag = ARKodeSetNonlinConvCoef(arkode_mem, 1.e-3);
+  flag = ARKodeSetNonlinConvCoef(arkode_mem, RCONST(1.e-3));
   if (check_flag(&flag, "ARKodeSetNonlinConvCoef", 1)) return 1;
-  flag = ARKodeSetNonlinConvCoef(arktrue_mem, 1.e-3);
+  flag = ARKodeSetNonlinConvCoef(arktrue_mem, RCONST(1.e-3));
   if (check_flag(&flag, "ARKodeSetNonlinConvCoef", 1)) return 1;
   flag = ARKodeSetMaxNonlinIters(arkode_mem, 8);
   if (check_flag(&flag, "ARKodeSetMaxNonlinIters", 1)) return 1;
@@ -237,7 +237,7 @@ int main()
     printf("  %10.3e  %12.5e  %12.5e  %12.5e  %12.5e  %12.5e  %12.5e\n", 
 	   t, u, v, w, uerr, verr, werr);
   }
-  err2 = sqrt(err2 / 3.0 / Nt);
+  err2 = sqrt(err2 / RCONST(3.0) / Nt);
   printf("   ----------------------------------------------------------------------------------------------\n");
 
   /* Print some final statistics */
@@ -301,13 +301,13 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype w = NV_Ith_S(y,2);
 
   /* du/dt = -0.04*u + 1.e4*v*w */
-  NV_Ith_S(ydot,0) = -0.04*u + 1.e4*v*w;
+  NV_Ith_S(ydot,0) = -RCONST(0.04)*u + RCONST(1.e4)*v*w;
 
   /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
-  NV_Ith_S(ydot,1) = 0.04*u - 1.e4*v*w - 3.e7*v*v;
+  NV_Ith_S(ydot,1) = RCONST(0.04)*u - RCONST(1.e4)*v*w - RCONST(3.e7)*v*v;
 
   /* dw/dt = 3.e7*v*v */
-  NV_Ith_S(ydot,2) = 3.e7*v*v;
+  NV_Ith_S(ydot,2) = RCONST(3.e7)*v*v;
 
   return 0;
 }
@@ -318,13 +318,13 @@ static int fe(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype u = NV_Ith_S(y,0);
 
   /* du/dt = -0.04*u */
-  NV_Ith_S(ydot,0) = -0.04*u;
+  NV_Ith_S(ydot,0) = -RCONST(0.04)*u;
 
   /* dv/dt = 0.04*u */
-  NV_Ith_S(ydot,1) = 0.04*u;
+  NV_Ith_S(ydot,1) = RCONST(0.04)*u;
 
   /* dw/dt = 0.0 */
-  NV_Ith_S(ydot,2) = 0.0;
+  NV_Ith_S(ydot,2) = RCONST(0.0);
 
   return 0;
 }
@@ -336,13 +336,13 @@ static int fi(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   realtype w = NV_Ith_S(y,2);
 
   /* du/dt = 1.e4*v*w */
-  NV_Ith_S(ydot,0) = 1.e4*v*w;
+  NV_Ith_S(ydot,0) = RCONST(1.e4)*v*w;
 
   /* dv/dt = - 1.e4*v*w - 3.e7*v*v */
-  NV_Ith_S(ydot,1) = 1.e4*v*w - 3.e7*v*v;
+  NV_Ith_S(ydot,1) = RCONST(1.e4)*v*w - RCONST(3.e7)*v*v;
 
   /* dw/dt = 3.e7*v*v */
-  NV_Ith_S(ydot,2) = 3.e7*v*v;
+  NV_Ith_S(ydot,2) = RCONST(3.e7)*v*v;
 
   return 0;
 }
@@ -357,17 +357,17 @@ static int Jac(long int N, realtype t,
   SetToZero(J);
 
   /* du/dt = -0.04*u + 1.e4*v*w */
-  DENSE_ELEM(J,0,0) = -0.04;
-  DENSE_ELEM(J,0,1) = 1.e4*w;
-  DENSE_ELEM(J,0,2) = 1.e4*v;
+  DENSE_ELEM(J,0,0) = -RCONST(0.04);
+  DENSE_ELEM(J,0,1) = RCONST(1.e4)*w;
+  DENSE_ELEM(J,0,2) = RCONST(1.e4)*v;
 
   /* dv/dt = 0.04*u - 1.e4*v*w - 3.e7*v*v */
-  DENSE_ELEM(J,1,0) = 0.04;
-  DENSE_ELEM(J,1,1) = -1.e4*w - 6.e7*v;
-  DENSE_ELEM(J,1,2) = -1.e4*v;
+  DENSE_ELEM(J,1,0) = RCONST(0.04);
+  DENSE_ELEM(J,1,1) = -RCONST(1.e4)*w - RCONST(6.e7)*v;
+  DENSE_ELEM(J,1,2) = -RCONST(1.e4)*v;
 
   /* dw/dt = 3.e7*v*v */
-  DENSE_ELEM(J,2,1) = 6.e7*v;
+  DENSE_ELEM(J,2,1) = RCONST(6.e7)*v;
 
   return 0;
 }
@@ -382,15 +382,15 @@ static int JacI(long int N, realtype t,
   SetToZero(J);
 
   /* du/dt = 1.e4*v*w */
-  DENSE_ELEM(J,0,1) = 1.e4*w;
-  DENSE_ELEM(J,0,2) = 1.e4*v;
+  DENSE_ELEM(J,0,1) = RCONST(1.e4)*w;
+  DENSE_ELEM(J,0,2) = RCONST(1.e4)*v;
 
   /* dv/dt = -1.e4*v*w - 3.e7*v*v */
-  DENSE_ELEM(J,1,1) = -1.e4*w - 6.e7*v;
-  DENSE_ELEM(J,1,2) = -1.e4*v;
+  DENSE_ELEM(J,1,1) = -RCONST(1.e4)*w - RCONST(6.e7)*v;
+  DENSE_ELEM(J,1,2) = -RCONST(1.e4)*v;
 
   /* dw/dt = 3.e7*v*v */
-  DENSE_ELEM(J,2,1) = 6.e7*v;
+  DENSE_ELEM(J,2,1) = RCONST(6.e7)*v;
 
   return 0;
 }
