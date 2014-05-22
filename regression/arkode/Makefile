@@ -38,11 +38,11 @@ CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 INCS = -I../../install_opt/include/
 LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
 FLIBS = -L../../install_opt/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
-KLULIBS = -L/usr/local/klu-1.2.0/gnu -lklu
+KLULIBS = -L/usr/local/klu-1.2.0/gnu/lib -lklu -lcolamd -lamd -lbtf
 # INCS = -I../../install_dbg/include/
 # LIBS = -L../../install_dbg/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
 # FLIBS = -L../../install_dbg/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
-# KLULIBS = -L/usr/local/klu-1.2.0/gnu_debug -lklu
+# KLULIBS = -L/usr/local/klu-1.2.0/gnu_debug/lib -lklu
 
 # listing of all test routines
 TESTS = ark_analytic.exe \

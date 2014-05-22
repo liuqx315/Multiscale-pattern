@@ -216,7 +216,9 @@ Completed components:
 
 
 Remaining components to build:
-[ ] Add interfaces to new KLU and SuperLU_MT solvers for serial ARKode
+[ ] Add Fortran interface to new KLU solver for serial ARKode
+    problems.  Add corresponding example problems.
+[ ] Add interfaces to new SuperLU_MT solver for serial ARKode
     problems.  Add corresponding regression/example problems.
 [ ] Investigate whether I still need the Krylov solver initial guess
     to be unit roundoff (instead of zero), since this results in one
