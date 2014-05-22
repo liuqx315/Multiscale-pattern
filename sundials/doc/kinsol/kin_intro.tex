@@ -1,0 +1,331 @@
+%===================================================================================
+\chapter{Introduction}\label{s:intro}
+%===================================================================================
+
+{\kinsol} is part of a software family called {\sundials}: SUite
+of Nonlinear and DIfferential/ALgebraic equation Solvers. This
+suite consists of {\cvode}, {\kinsol}, and {\ida}, and variants of
+these.
+%
+{\kinsol}\index{KINSOL@{\kinsol}!brief description of} is a
+general-purpose nonlinear system solver based on Newton-Krylov
+solver technology.
+
+%---------------------------------
+\section{Historical Background}\label{ss:history}
+%---------------------------------
+
+\index{KINSOL@{\kinsol}!relationship to NKSOL}  The first
+nonlinear solver packages based on Newton-Krylov methods were
+written in {\F}.  In particular, the NKSOL package, written at
+LLNL, was the first Newton-Krylov solver package written for
+solution of systems arising in the solution of partial differential
+equations~\cite{BrSa:90}.  This {\F} code made use of Newton's
+method to solve the discrete nonlinear systems and applied a
+preconditioned Krylov linear solver for solution of the Jacobian
+system at each nonlinear iteration.  The key to the Newton-Krylov
+method was that the matrix-vector multiplies required by the
+Krylov method could effectively be approximated by a finite
+difference of the nonlinear system-defining function, avoiding a
+requirement for the formation of the actual Jacobian matrix.
+Significantly less memory was required for the solver as a result.
+
+In the late 1990's, there was a push at LLNL to rewrite the
+nonlinear solver in {\C} and port it to distributed memory
+parallel machines.  Both Newton and Krylov methods are easily
+implemented in parallel, and this effort gave rise to the
+{\kinsol} package. {\kinsol} is similar to NKSOL in functionality,
+except that it provides for more options in the choice of linear
+system methods and tolerances, and has a more modular design to provide
+flexibility for future enhancements.
+\index{KINSOL@{\kinsol}!relationship to NKSOL}
+
+At present, {\kinsol} contains three Krylov methods: the GMRES
+(Generalized Minimal RESidual)~\cite{SaSc:86}, Bi-CGStab
+(Bi-Conjugate Gradient Stabilized)~\cite{Van:92}, and TFQMR
+(Transpose-Free Quasi-Minimal Residual)~\cite{Fre:93} linear
+iterative methods. As Krylov methods, these require almost no
+matrix storage as compared to direct methods. However, the
+algorithms allow for a user-supplied preconditioner matrix,
+and for most problems preconditioning is essential for an
+efficient solution. For very large nonlinear algebraic systems,
+the Krylov methods are preferable over direct linear solver methods,
+and are often the only feasible choice. Among the three Krylov
+methods in {\kinsol}, we recommend GMRES as the best overall
+choice. However, users are encouraged to compare all three,
+especially if encountering convergence failures with GMRES.
+Bi-CGStab and TFQMR have an advantage in storage requirements,
+in that the number of workspace vectors they require is fixed,
+while that number for GMRES depends on the desired Krylov
+subspace size.
+
+For the sake of completeness in functionality, direct linear
+systems are now included in {\kinsol}.  These include methods
+for both dense and banded linear systems, with Jacobians that
+are either user-supplied or generated internally by difference
+quotients.
+
+In the process of translating NKSOL into {\C}, the overall
+{\kinsol} organization has been changed considerably. One key
+feature of the {\kinsol} organization is that a separate module
+devoted to vector operations has been created.  This module
+facilitated extension to multiprosessor environments with minimal
+impact on the rest of the solver. The new vector module design is
+shared across the {\sundials} suite. This {\nvector} module is
+written in terms of abstract vector operations with the actual
+routines attached by a particular implementation (such as serial
+or parallel) of {\nvector}. This allows writing the {\sundials}
+solvers in a manner independent of the actual {\nvector}
+implementation (which can be user-supplied), as well as allowing
+more than one {\nvector} module linked into an executable file.
+
+\index{KINSOL@{\kinsol}!motivation for writing in C|(} There are
+several motivations for choosing the {\C} language for {\kinsol}.
+First, a general movement away from {\F} and toward {\C} in
+scientific computing is apparent. Second, the pointer, structure,
+and dynamic memory allocation features in C are extremely useful
+in software of this complexity, with the great variety of method
+options offered. Finally, we prefer {\C} over {\CPP} for {\kinsol}
+because of the wider availability of {\C} compilers, the
+potentially greater efficiency of {\C}, and the greater ease of
+interfacing the solver to applications written in {\F}.
+\index{KINSOL@{\kinsol}!motivation for writing in C|)}
+
+\section{Changes from previous versions}
+
+\subsection*{Changes in v2.8.0}
+
+Two major additions were made to the globalization strategy options
+(\id{KINSol} argument \id{strategy}).  One is fixed-point iteration,
+and the other is Picard iteration.  Both can be accelerated by use
+of the Anderson acceleration method.  See the relevant paragraphs in
+Chapter \ref{s:math}.
+
+Two major additions were made to the linear system solvers that are
+available for use with the {\kinsol} solver.  First, in the serial case,
+an interface to the sparse direct solver KLU was added.
+Second, an interface to SuperLU\_MT, the multi-threaded version of
+SuperLU, was added as a thread-parallel sparse direct solver option,
+to be used with the serial version of the NVECTOR module.
+As part of these additions, a sparse matrix (CSC format) structure 
+was added to {\kinsol}.
+
+Otherwise, only relatively minor modifications were made to {\kinsol}:
+
+In function \id{KINStop}, two return values were corrected to make the values
+of \id{uu} and \id{fval} consistent.
+
+A bug involving initialization of \id{mxnewtstep} was fixed.  
+The error affects the case of repeated user calls to \id{KINSol} with no
+intervening call to \id{KINSetMaxNewtonStep}.
+
+A bug in the increments for difference quotient Jacobian approximations
+was fixed in function \id{kinDlsBandDQJac}.
+
+In \id{KINLapackBand}, the line \id{smu = MIN(N-1,mu+ml)} was changed to
+\id{smu = mu + ml} to correct an illegal input error for \id{DGBTRF/DGBTRS}.
+
+In the FKINSOL module, an incorrect return value \id{ier} in \id{FKINfunc}
+was fixed.
+
+In the FKINSOL optional input routines \id{FKINSETIIN}, \id{FKINSETRIN}, and
+\id{FKINSETVIN}, the optional fourth argument \id{key\_length} was removed,
+with hardcoded key string lengths passed to all \id{strncmp} tests.
+
+In all FKINSOL examples, integer declarations were revised so that
+those which must match a C type \id{long int} are declared \id{INTEGER*8},
+and a comment was added about the type match.  All other integer
+declarations are just \id{INTEGER}.  Corresponding minor corrections were
+made to the user guide.
+
+Two new {\nvector} modules have been added for parallel computing
+environments --- one for openMP, denoted \id{NVECTOR\_OPENMP},
+and one for Pthreads, denoted \id{NVECTOR\_PTHREADS}.
+
+With this version of {\sundials}, support and documentation of the
+Autotools mode of installation is being dropped, in favor of the
+CMake mode, which is considered more widely portable.
+
+\subsection*{Changes in v2.7.0}
+
+One significant design change was made with this release: The problem
+size and its relatives, bandwidth parameters, related internal indices,
+pivot arrays, and the optional output \id{lsflag} have all been
+changed from type \id{int} to type \id{long int}, except for the
+problem size and bandwidths in user calls to routines specifying
+BLAS/LAPACK routines for the dense/band linear solvers.  The function
+\id{NewIntArray} is replaced by a pair \id{NewIntArray}/\id{NewLintArray},
+for \id{int} and \id{long int} arrays, respectively.
+
+A large number of errors have been fixed.
+Three major logic bugs were fixed -- involving updating the solution
+vector, updating the linesearch parameter, and a missing error return.
+Three minor errors were fixed -- involving setting \id{etachoice} in the
+Matlab/{\kinsol} interface, a missing error case in \id{KINPrintInfo},
+and avoiding an exponential overflow in the evaluation of \id{omega}.
+In each linear solver interface function, the linear solver memory is
+freed on an error return, and the \id{**Free} function now includes a
+line setting to NULL the main memory pointer to the linear solver memory.
+In the installation files, we modified the treatment of the macro
+SUNDIALS\_USE\_GENERIC\_MATH, so that the parameter GENERIC\_MATH\_LIB is
+either defined (with no value) or not defined.
+
+\subsection*{Changes in v2.6.0}
+
+This release introduces a new linear solver module, based on Blas and Lapack 
+for both dense and banded matrices.
+
+The user interface has been further refined. Some of the API changes involve:
+(a) a reorganization of all linear solver modules into two families (besides 
+the already present family of scaled preconditioned iterative linear solvers,
+the direct solvers, including the new Lapack-based ones, were also organized 
+into a {\em direct} family); (b) maintaining a single pointer to user data,
+optionally specified through a \id{Set}-type function; (c) a general 
+streamlining of the band-block-diagonal preconditioner module distributed 
+with the solver.
+
+\subsection*{Changes in v2.5.0}
+
+The main changes in this release involve a rearrangement of the entire 
+{\sundials} source tree (see \S\ref{ss:sun_org}). At the user interface 
+level, the main impact is in the mechanism of including {\sundials} header
+files which must now include the relative path (e.g. \id{\#include <cvode/cvode.h>}).
+Additional changes were made to the build system: all exported header files are
+now installed in separate subdirectories of the installation {\em include} directory.
+
+The functions in the generic dense linear solver (\id{sundials\_dense} and
+\id{sundials\_smalldense}) were modified to work for rectangular $m \times n$
+matrices ($m \le n$), while the factorization and solution functions were
+renamed to \id{DenseGETRF}/\id{denGETRF} and \id{DenseGETRS}/\id{denGETRS}, 
+respectively.
+The factorization and solution functions in the generic band linear solver were 
+renamed \id{BandGBTRF} and \id{BandGBTRS}, respectively.
+
+\subsection*{Changes in v2.4.0}
+
+{\kinspbcg}, {\kinsptfqmr}, {\kindense}, and {\kinband} modules have been
+added to interface with the Scaled Preconditioned Bi-CGStab ({\spbcg}),
+Scaled Preconditioned Transpose-Free Quasi-Minimal Residual ({\sptfqmr}),
+{\dense}, and {\band} linear solver modules, respectively.  (For details
+see Chapter \ref{c:usage}.) Corresponding additions were made to the {\F}
+interface module {\fkinsol}. At the same time, function type names for
+Scaled Preconditioned Iterative Linear Solvers were added for the
+user-supplied Jacobian-times-vector and preconditioner setup and solve
+functions.
+
+Regarding the {\F} interface module {\fkinsol}, optional inputs are now
+set using \id{FKINSETIIN} (integer inputs), \id{FKINSETRIN} (real inputs),
+and \id{FKINSETVIN} (vector inputs). Optional outputs are still obtained
+from the \id{IOUT} and \id{ROUT} arrays which are owned by the user
+and passed as arguments to \id{FKINMALLOC}.
+
+The {\kindense} and {\kinband} linear solver modules include support for
+nonlinear residual monitoring which can be used to control Jacobian
+updating.
+
+To reduce the possibility of conflicts, the names of all header files have
+been changed by adding unique prefixes (\id{kinsol\_} and \id{sundials\_}).
+When using the default installation procedure, the header files are exported
+under various subdirectories of the target \id{include} directory. For more
+details see Appendix \ref{c:install}.
+
+\subsection*{Changes in v2.3.0}
+
+The user interface has been further refined. Several functions used
+for setting optional inputs were combined into a single one.
+Additionally, to resolve potential variable scope issues, all
+SUNDIALS solvers release user data right after its use. The build
+system has been further improved to make it more robust.
+
+\subsection*{Changes in v2.2.1}
+
+The changes in this minor {\sundials} release affect only the build system.
+
+\subsection*{Changes in v2.2.0}
+
+The major changes from the previous version involve a redesign of
+the user interface across the entire {\sundials} suite. We have
+eliminated the mechanism of providing optional inputs and
+extracting optional statistics from the solver through the
+\id{iopt} and \id{ropt} arrays. Instead, {\kinsol} now provides a
+set of routines (with prefix \id{KINSet}) to change the default
+values for various quantities controlling the solver and a set of
+extraction routines (with prefix \id{KINGet}) to extract
+statistics after return from the main solver routine. Similarly,
+each linear solver module provides its own set of {\id{Set}-} and
+{\id{Get}-type} routines. For more details see Chapter \ref{c:usage}.
+
+Additionally, the interfaces to several user-supplied routines
+(such as those providing Jacobian-vector products and
+preconditioner information) were simplified by reducing the number
+of arguments. The same information that was previously accessible
+through such arguments can now be obtained through {\id{Get}-type}
+functions.
+
+Installation of {\kinsol} (and all of {\sundials}) has been completely 
+redesigned and is now based on configure scripts.
+
+\section{Reading this User Guide}\label{ss:reading}
+
+This user guide is a combination of general usage instructions and specific
+examples. We expect that some readers will want to concentrate on the general
+instructions, while others will refer mostly to the examples, and the
+organization is intended to accommodate both styles.
+
+There are different possible levels of usage of {\kinsol}. The most casual
+user, with a small nonlinear system, can get by with reading all of 
+Chapter~\ref{s:math}, then Chapter~\ref{c:usage} through \S\ref{sss:kinsol} only, and
+looking at examples in~\cite{kinsol_ex}. In a different direction, a
+more expert user with a nonlinear system may want to (a) use a package
+preconditioner (\S\ref{sss:kinbbdpre}), (b) supply his/her own Jacobian or
+preconditioner routines (\S\ref{ss:user_fct_sol}), (c) supply a new
+{\nvector} module (Chapter~\ref{s:nvector}), or even (d) supply a different
+linear solver module (\S\ref{ss:kinsol_org} and Chapter~\ref{s:new_linsolv}).
+
+The structure of this document is as follows:
+\begin{itemize}
+\item
+  In Chapter \ref{s:math}, we provide short descriptions of the numerical
+  methods implemented by {\kinsol} for the solution of nonlinear systems.
+\item
+  The following chapter describes the structure of the {\sundials} suite
+  of solvers (\S\ref{ss:sun_org}) and the software organization of the {\kinsol}
+  solver (\S\ref{ss:kinsol_org}).
+\item
+  Chapter \ref{c:usage} is the main usage document for {\kinsol} for {\C} applications.
+  It includes a complete description of the user interface for the solution
+  of nonlinear algebraic systems.
+\item
+  In Chapter \ref{s:fcmix}, we describe {\fkinsol}, an interface module for the
+  use of {\kinsol} with {\F} applications.
+\item
+  Chapter \ref{s:nvector} gives a brief overview of the generic {\nvector} module
+  shared among the various components of {\sundials}, and details on the two
+  {\nvector} implementations provided with {\sundials}: a serial implementation
+  (\S\ref{ss:nvec_ser}) and a parallel implementation based on {\mpi} \index{MPI}
+  (\S\ref{ss:nvec_par}).
+\item
+  Chapter \ref{s:new_linsolv} describes the interfaces to the linear solver
+  modules, so that a user can provide his/her own such module.
+\item
+  Chapter \ref{s:gen_linsolv} describes in detail the generic linear solvers
+  shared by all {\sundials} solvers.
+\item
+  Finally, in the appendices, we provide detailed instructions for the installation
+  of {\kinsol}, within the structure of {\sundials} (Appendix \ref{c:install}), as well
+  as a list of all the constants used for input to and output from {\kinsol} functions
+  (Appendix \ref{c:constants}).
+\end{itemize}
+
+Finally, the reader should be aware of the following notational
+conventions in this user guide:  program listings and identifiers
+(such as \id{KINInit}) within textual explanations appear in
+typewriter type style; fields in {\C} structures (such as {\em
+content}) appear in italics; and packages or modules are written
+in all capitals.
+Usage and installation instructions that constitute important warnings
+are marked with a triangular symbol {\warn} in the margin.
+
+\paragraph{Acknowledgments.}
+We wish to acknowledge the contributions to previous versions of the
+{\kinsol} code and user guide by Allan G. Taylor.
