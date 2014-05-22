@@ -20,6 +20,9 @@
 #include "arkode_impl.h"
 #include <arkode/arkode_band.h>
 #include <arkode/arkode_dense.h>
+#include <arkode/arkode_lapack.h>
+#include <arkode/arkode_klu.h>
+#include <arkode/arkode_superlumt.h>
 #include <arkode/arkode_spgmr.h>
 #include <arkode/arkode_spbcgs.h>
 #include <arkode/arkode_sptfqmr.h>
@@ -530,6 +533,56 @@ void FARK_BAND(long int *neq, long int *mupper, long int *mlower, int *ier)
 
 /*=============================================================*/
 
+#ifdef USE_LAPACK
+/* Fortran interface to C routine ARKLapackDense; see farkode.h for 
+   further details */
+void FARK_LAPACKDENSE(int *neq, int *ier)
+{
+  *ier = ARKLapackDense(ARK_arkodemem, *neq);
+  ARK_ls = ARK_LS_LAPACKDENSE;
+  return;
+}
+
+/*=============================================================*/
+
+/* Fortran interface to C routine ARKLapackBand; see farkode.h for 
+   further details */
+void FARK_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier)
+{
+  *ier = ARKLapackBand(ARK_arkodemem, *neq, *mupper, *mlower);
+  ARK_ls = ARK_LS_LAPACKBAND;
+  return;
+}
+#endif
+
+/*=============================================================*/
+
+#ifdef USE_KLU
+/* Fortran interface to C routine ARKKLU; see farkode.h for 
+   further details */
+void FARK_KLU(int *neq, int *nnz, int *ier)
+{
+  *ier = ARKKLU(ARK_arkodemem, *neq, *nnz);
+  ARK_ls = ARK_LS_KLU;
+  return;
+}
+#endif
+
+/*=============================================================*/
+
+#ifdef USE_SUPERLUMT
+/* Fortran interface to C routine ARKSuperLUMT; see farkode.h for 
+   further details */
+void FARK_SUPERLUMT(int *nthreads, int *neq, int *nnz, int *ier)
+{
+  *ier = ARKSuperLUMT(ARK_arkodemem, *nthreads, *neq, *neq, *nnz);
+  ARK_ls = ARK_LS_SUPERLUMT;
+  return;
+}
+#endif
+
+/*=============================================================*/
+
 /* Fortran interface to C routine ARKSpgmr and it's associated 
    "set" routines; see farkode.h for further details */
 void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier)
@@ -766,6 +819,11 @@ void FARK_ARKODE(realtype *tout, realtype *t, realtype *y,
     ARKDlsGetWorkSpace(ARK_arkodemem, &ARK_iout[13], &ARK_iout[14]);  /* LENRWLS, LENIWLS */
     ARKDlsGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                  /* LSTF  */
     ARKDlsGetNumRhsEvals(ARK_arkodemem, &ARK_iout[16]);               /* NFELS */
+    ARKDlsGetNumJacEvals(ARK_arkodemem, &ARK_iout[17]);               /* NJE   */
+    break;
+  case ARK_LS_KLU:
+  case ARK_LS_SUPERLUMT:
+    ARKDlsGetLastFlag(ARK_arkodemem, &ARK_iout[15]);                  /* LSTF  */
     ARKDlsGetNumJacEvals(ARK_arkodemem, &ARK_iout[17]);               /* NJE   */
     break;
   case ARK_LS_SPGMR:
