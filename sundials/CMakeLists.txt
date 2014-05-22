@@ -1021,7 +1021,7 @@ IF(EXAMPLES_ENABLE)
     ENDIF(MPIC_FOUND)
   ENDIF(BUILD_CPODES)
 
-  # Always add the nvector sieral examples
+  # Always add the nvector serial examples
   ADD_SUBDIRECTORY(examples/nvector/serial)
 
   IF(MPIC_FOUND)
