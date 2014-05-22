@@ -53,6 +53,9 @@
 
    FARKLAPACKBAND             ARKLapackBand
 
+   FARKKLU                    ARKKLU
+   FARKSUPERLUMT              ARKSuperLUMT
+
    FARKSPGMR                  ARKSpgmr and ARKSpilsSet*
    FARKSPGMRREINIT            ARKSpilsSet*
 
@@ -90,6 +93,7 @@
    FARKEFUN           FARKfe                   ARKRhsFn
    FARKDJAC           FARKDenseJac             ARKDlsDenseJacFn
    FARKBJAC           FARKBandJac              ARKDlsBandJacFn
+   FARKSPJAC          FARKSparseJac            ARKSlsSparseJacFn
    FARKPSOL           FARKPSol                 ARKSpilsPrecSolveFn
    FARKPSET           FARKPSet                 ARKSpilsPrecSetupFn
    FARKJTIMES         FARKJtimes               ARKSpilsJacTimesVecFn
@@ -248,8 +252,48 @@
                  >0 if a recoverable error occurred,
                  <0 if an unrecoverable error ocurred.
  
+ (4s) User-supplied sparse Jacobian approximation routine: FARKSPJAC
 
- (4) Optional user-supplied Jacobian-vector product routine: FARKJTIMES
+     Required when using the ARKKLU or ARKSuperLUMT linear solvers, the 
+     user may supply a routine that computes a compressed-sparse-column 
+     approximation of the system Jacobian J = dfi(t,y)/dy.  If supplied, 
+     it must have the following form:
+
+       SUBROUTINE FARKSPJAC(T, Y, FY, N, NNZ, JDATA, JRVALS, 
+      &                     JCPTRS, H, IPAR, RPAR, WK1, WK2, WK3, IER)
+
+     Typically this routine will use only M, N, NNZ, JDATA, JRVALS and 
+     JCPTRS. It must load the N by N compressed sparse column matrix 
+     with storage for NNZ nonzeros, stored in the arrays JDATA (nonzero
+     values), JRVALS (row indices for each nonzero), JCOLPTRS (indices 
+     for start of each column), with the Jacobian matrix at the current
+     (t,y) in CSC form.
+
+     The arguments are:
+         T    -- current time [realtype, input]
+         Y    -- array containing state variables [realtype, input]
+         FY   -- array containing state derivatives [realtype, input]
+         N    -- number of matrix rows/columns in Jacobian [int, input]
+         NNZ  -- allocated length of nonzero storage [int, input]
+        JDATA -- nonzero values in Jacobian
+                 [realtype of length NNZ, output]
+       JRVALS -- row indices for each nonzero in Jacobian
+                  [int of length NNZ, output]
+       JCPTRS -- pointers to each Jacobian column in preceding arrays
+                 [int of length N+1, output]
+         H    -- current step size [realtype, input]
+         IPAR -- array containing integer user data that was passed to
+                 FARKMALLOC [long int, input]
+         RPAR -- array containing real user data that was passed to
+                 FARKMALLOC [realtype, input]
+         WK*  -- array containing temporary workspace of same size as Y 
+                 [realtype, input]
+         IER  -- return flag [int, output]:
+                    0 if successful, 
+                   >0 if a recoverable error occurred,
+                   <0 if an unrecoverable error ocurred.
+ 
+ (5) Optional user-supplied Jacobian-vector product routine: FARKJTIMES
 
      As an option when using the SP* linear solver, the user may supply a
      routine that computes the product of the system Jacobian 
@@ -279,7 +323,7 @@
                   0 if successful, 
                   nonzero if an error.
  
- (5) Optional user-supplied error weight vector routine: FARKEWT
+ (6) Optional user-supplied error weight vector routine: FARKEWT
  
      As an option to providing the relative and absolute tolerances, the user
      may supply a routine that computes the weights used in the WRMS norms.
@@ -300,7 +344,7 @@
                   0 if successful, 
                   nonzero if an error.
 
- (6) Optional user-supplied error weight vector routine: FARKADAPT
+ (7) Optional user-supplied error weight vector routine: FARKADAPT
  
      As an option to providing the time step adaptivity, the user
      may supply a routine that computes the new time step for ARKode to 
@@ -332,7 +376,7 @@
                   0 if successful, 
                   nonzero if an error.
 
- (7) Optional user-supplied explicitly stable time step routine: FARKEXPSTAB
+ (8) Optional user-supplied explicitly stable time step routine: FARKEXPSTAB
  
      As an option, the user may provide a routine to return the maximum stable 
      time step size for the explicit ODE RHS function.  If supplied, it must 
@@ -356,9 +400,9 @@
 
  -----------------------------------------------------------------------------
 
- (8) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT, FARKRESIZE
+ (9) Initialization:  FNVINITS / FNVINITP, FARKMALLOC, FARKREINIT, FARKRESIZE
  
- (8.1s) To initialize the serial vector specification, the user must make the
+ (9.1s) To initialize the serial vector specification, the user must make the
      following call:
 
         CALL FNVINITS(4, NEQ, IER)
@@ -370,7 +414,7 @@
 	          0 = success, 
 		 -1 = failure.
  
- (8.1p) To initialize the parallel machine environment, the user must make 
+ (9.1p) To initialize the parallel machine environment, the user must make 
      the following call:
 
         CALL FNVINITP(COMM, 4, NLOCAL, NGLOBAL, IER)
@@ -388,7 +432,7 @@
      MPI_COMM_WORLD.  If not, this routine initializes MPI and sets the
      communicator equal to MPI_COMM_WORLD.
  
- (8.2) To set various problem and solution parameters and allocate
+ (9.2) To set various problem and solution parameters and allocate
      internal memory, make the following call:
 
        CALL FARKMALLOC(T0, Y0, IMEX, IATOL, RTOL, ATOL, IOUT, ROUT, 
@@ -446,7 +490,7 @@
            UROUND  = ROUT( 6) from UNIT_ROUNDOFF
      See the ARKODE manual for details. 
 
- (8.2a) If the user program includes the FARKEWT routine for the evaluation 
+ (9.2a) If the user program includes the FARKEWT routine for the evaluation 
      of the error weights, the following call must be made
 
        CALL FARKEWTSET(FLAG, IER)
@@ -454,7 +498,7 @@
      with the int argument FLAG = 1 to specify that FARKEWT is provided.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
- (8.2b) If the user program includes the FARKADAPT routine for performing 
+ (9.2b) If the user program includes the FARKADAPT routine for performing 
      step adaptivity, the following call must be made
 
        CALL FARKADAPTSET(FLAG, IER)
@@ -462,7 +506,7 @@
      with the int argument FLAG = 1 to specify that FARKADAPT is provided.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
- (8.2c) If the user program includes the FARKEXPSTAB routine for calculation of
+ (9.2c) If the user program includes the FARKEXPSTAB routine for calculation of
      the maximum explicitly stable step size, the following call must be made
 
        CALL FARKEXPSTABSET(FLAG, IER)
@@ -470,7 +514,7 @@
      with the int argument FLAG = 1 to specify that FARKEXPSTAB is provided.
      The int return flag IER is 0 if successful, and nonzero otherwise.
 
- (8.3) To re-initialize the ARKODE solver for the solution of a new problem
+ (9.3) To re-initialize the ARKODE solver for the solution of a new problem
      of the same size as one already solved, make the following call:
 
        CALL FARKREINIT(T0, Y0, IMEX, IATOL, RTOL, ATOL, IER)
@@ -481,7 +525,7 @@
      the previous FARKMALLOC call.  The subsequent call to specify the linear 
      system solution method may or may not be needed; see paragraph (9) below.
  
- (8.4) To re-initialize the ARKODE solver for the solution of a new problem
+ (9.4) To re-initialize the ARKODE solver for the solution of a new problem
      of a different size as one already solved, but with the same dynamical 
      time scale and method choice, make the following call:
 
@@ -512,7 +556,7 @@
      system solution method is required, since its internal memory 
      structures will no longer be the correct size.; see paragraph (9) below.
  
- (8.5) To set various integer optional inputs, make the folowing call:
+ (9.5) To set various integer optional inputs, make the folowing call:
 
        CALL FARKSETIIN(KEY, VALUE, IER)
 
@@ -609,7 +653,7 @@
        B2 = array of length S containing the embedding coefficients
            [realtype, input]
 
- (8.6) To set a solver diagnostics output file, make the folowing call:
+ (9.6) To set a solver diagnostics output file, make the folowing call:
 
        CALL FARKSETDIAGNOSTICS(FNAME, FLEN, IER)
 
@@ -618,7 +662,7 @@
      the length (in characters) of FNAME (for portability).  The int return 
      flag IER is 0 if successful (able to open file), and nonzero otherwise.
 
- (8.7) To close the solver diagnostics output file, make the folowing call:
+ (9.7) To close the solver diagnostics output file, make the folowing call:
 
        CALL FARKSTOPDIAGNOSTICS(IER)
 
@@ -628,7 +672,7 @@
 
  -----------------------------------------------------------------------------
 
- (9) Specification of linear system solution method.
+ (10) Specification of linear system solution method.
 
      In the case of using either an implicit or ImEx method and a Newton 
      iteration, the solution of each Runge-Kutta stage may involve the 
@@ -640,7 +684,7 @@
      specification routines must be called again to set up the linear solver
      memory.
 
- (9.1s) DENSE treatment of the linear system.
+ (10.1s) DENSE treatment of the linear system.
 
      The user must make the call
 
@@ -671,7 +715,7 @@
         NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
  
- (9.2s) BAND treatment of the linear system
+ (10.2s) BAND treatment of the linear system
 
      The user must make the call
 
@@ -701,7 +745,7 @@
         NJED    = IOUT(18) from ARKDlsGetNumJacEvals
      See the ARKODE manual for descriptions.
 
- (9.3s) LAPACK dense treatment of the linear system
+ (10.3s) LAPACK dense treatment of the linear system
 
      The user must make the call
 
@@ -719,7 +763,7 @@
      The optional outputs when using FARKLAPACKDENSE match those from 
      FARKDENSE.
 
- (9.4s) LAPACK band treatment of the linear system
+ (10.4s) LAPACK band treatment of the linear system
 
      The user must make the call
 
@@ -736,7 +780,52 @@
 
      The optional outputs when using FARKLAPACKBAND match those from FARKBAND.
 
- (9.5) SPGMR treatment of the linear systems.
+ (10.5s) SPARSE treatment of the linear system using the KLU solver.
+
+     The user must make the call
+
+       CALL FARKKLU(NEQ, NNZ, IER)
+
+     The arguments are:
+        NEQ = the problem size [int; input]
+        NNZ = the maximum number of nonzeros [int; input]
+	IER = error return flag [int, output]: 
+	         0 = success, 
+		 negative = error.
+ 
+     When using FARKKLU, the user is required to supply the FARKSPJAC 
+     routine for the evaluation of the sparse approximation to the 
+     Jacobian, as discussed above with the other user-supplied routines.
+ 
+     Optional outputs specific to the KLU case are:
+        LSTF    = IOUT(16) from ARKSlsGetLastFlag
+        NJES    = IOUT(18) from ARKSlsGetNumJacEvals
+     See the ARKODE manual for descriptions.
+ 
+ (10.6s) SPARSE treatment of the linear system using the SuperLUMT solver.
+
+     The user must make the call
+
+       CALL FARKSUPERLUMT(NTHREADS, NEQ, NNZ, IER)
+
+     The arguments are:
+        NTHREADS = desired number of threads to use [int; input]
+        NEQ = the problem size [int; input]
+        NNZ = the maximum number of nonzeros [int; input]
+	IER = error return flag [int, output]: 
+	         0 = success, 
+		 negative = error.
+ 
+     When using FARKSUPERLUMT, the user is required to supply the FARKSPJAC 
+     routine for the evaluation of the sparse approximation to the 
+     Jacobian, as discussed above with the other user-supplied routines.
+ 
+     Optional outputs specific to the SUPERLUMT case are:
+        LSTF    = IOUT(16) from ARKSlsGetLastFlag
+        NJES    = IOUT(18) from ARKSlsGetNumJacEvals
+     See the ARKODE manual for descriptions.
+ 
+ (10.7) SPGMR treatment of the linear systems.
 
      For the Scaled Preconditioned GMRES solution of the linear systems,
      the user must make the following call:
@@ -785,7 +874,7 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKSPGMR 
      must be called again. 
  
- (9.6) SPBCG treatment of the linear systems.
+ (10.8) SPBCG treatment of the linear systems.
 
      For the Scaled Preconditioned Bi-CGSTAB solution of the linear systems,
      the user must make the following call:
@@ -829,7 +918,7 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKSPBCG 
      must be called again. 
 
- (9.7) SPTFQMR treatment of the linear systems.
+ (10.9) SPTFQMR treatment of the linear systems.
 
      For the Scaled Preconditioned TFQMR solution of the linear systems, the
      user must make the following call:
@@ -873,7 +962,7 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKSPTFQMR 
      must be called again. 
 
- (9.8) SPFGMR treatment of the linear systems.
+ (10.10) SPFGMR treatment of the linear systems.
 
      For the Scaled Preconditioned Flexible GMRES solution of the linear 
      systems, the user must make the following call:
@@ -922,7 +1011,7 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKSPFGMR 
      must be called again. 
  
- (9.9) PCG treatment of the linear systems.
+ (10.11) PCG treatment of the linear systems.
 
      For the Preconditioned Conjugate Gradient solution of the linear systems,
      the user must make the following call:
@@ -966,7 +1055,7 @@
      Note: if the problem has been resized using FARKRESIZE, then FARKPCG
      must be called again. 
 
- (9.10) Usage of user-supplied routines for the Krylov solvers
+ (10.12) Usage of user-supplied routines for the Krylov solvers
 
      If the user program includes the FARKJTIMES routine for the evaluation of
      the Jacobian vector product, then after specifying the linear solver 
@@ -1054,7 +1143,7 @@
 
  -----------------------------------------------------------------------------
 
- (10) The integrator: FARKODE
+ (11) The integrator: FARKODE
 
      Carrying out the integration is accomplished by making calls as follows:
 
@@ -1082,7 +1171,7 @@
  
  -----------------------------------------------------------------------------
 
- (11) Computing solution derivatives: FARKDKY
+ (12) Computing solution derivatives: FARKDKY
 
      To obtain a derivative of the solution, of order up to the method order,
      make the following call:
@@ -1098,7 +1187,7 @@
  
  -----------------------------------------------------------------------------
 
- (12) Get the current weight vector: FARKGETERRWEIGHTS
+ (13) Get the current weight vector: FARKGETERRWEIGHTS
 
      To obtain the current weight vector, make the following call:
 
@@ -1110,7 +1199,7 @@
  
  -----------------------------------------------------------------------------
 
- (13) Get an estimate of the local error: FARKGETESTLOCALERR
+ (14) Get an estimate of the local error: FARKGETESTLOCALERR
 
      To obtain the current error estimate vector, make the following call:
 
@@ -1122,7 +1211,7 @@
  
  -----------------------------------------------------------------------------
 
- (14) Memory freeing: FARKFREE 
+ (15) Memory freeing: FARKFREE 
 
      To free the internal memory created by the calls to FARKMALLOC and
      FNVINITS or FNVINITP, make the call
@@ -1141,6 +1230,7 @@ extern "C" {
 /* header files  */
 #include <arkode/arkode.h>
 #include <sundials/sundials_direct.h>  /* definition of type DlsMat   */
+#include <sundials/sundials_sparse.h>  /* definition of type SlsMat   */
 #include <sundials/sundials_nvector.h> /* definition of type N_Vector */
 #include <sundials/sundials_types.h>   /* definition of type realtype */
 
@@ -1164,6 +1254,8 @@ extern "C" {
 #define FARK_BANDSETJAC          SUNDIALS_F77_FUNC(farkbandsetjac,          FARKBANDSETJAC)
 #define FARK_LAPACKDENSE         SUNDIALS_F77_FUNC(farklapackdense,         FARKLAPACKDENSE)
 #define FARK_LAPACKBAND          SUNDIALS_F77_FUNC(farklapackband,          FARKLAPACKBAND)
+#define FARK_KLU                 SUNDIALS_F77_FUNC(farkklu,                 FARKKLU)
+#define FARK_SUPERLUMT           SUNDIALS_F77_FUNC(farksuperlumt,           FARKSUPERLUMT)
 #define FARK_SPTFQMR             SUNDIALS_F77_FUNC(farksptfqmr,             FARKSPTFQMR)
 #define FARK_SPTFQMRREINIT       SUNDIALS_F77_FUNC(farksptfqmrreinit,       FARKSPTFQMRREINIT)
 #define FARK_SPBCG               SUNDIALS_F77_FUNC(farkspbcg,               FARKSPBCG)
@@ -1216,6 +1308,8 @@ extern "C" {
 #define FARK_BANDSETJAC          farkbandsetjac_
 #define FARK_LAPACKDENSE         farklapackdense_
 #define FARK_LAPACKBAND          farklapackband_
+#define FARK_KLU                 farkklu_
+#define FARK_SUPERLUMT           farksuperlumt_
 #define FARK_SPTFQMR             farksptfqmr_
 #define FARK_SPTFQMRREINIT       farksptfqmrreinit_
 #define FARK_SPBCG               farkspbcg_
@@ -1295,6 +1389,9 @@ extern "C" {
   void FARK_LAPACKDENSE(int *neq, int *ier);
   void FARK_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier);
 
+  void FARK_KLU(int *neq, int *nnz, int *ier);
+  void FARK_SUPERLUMT(int *nthreads, int *neq, int *nnz, int *ier);
+
   void FARK_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier);
   void FARK_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier);
 
@@ -1341,6 +1438,10 @@ extern "C" {
 		  DlsMat J, void *user_data,
 		  N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
   
+  int FARKSparseJac(realtype t, N_Vector y, N_Vector fy, 
+		    SlsMat J, void *user_data, N_Vector vtemp1, 
+		    N_Vector vtemp2, N_Vector vtemp3);
+  
   int FARKPSet(realtype tn, N_Vector y,N_Vector fy, booleantype jok,
 	       booleantype *jcurPtr, realtype gamma, void *user_data,
 	       N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
@@ -1376,11 +1477,13 @@ extern "C" {
 	 ARK_LS_BAND        = 2, 
          ARK_LS_LAPACKDENSE = 3, 
 	 ARK_LS_LAPACKBAND  = 4,
-	 ARK_LS_SPGMR       = 5, 
-	 ARK_LS_SPBCG       = 6, 
-	 ARK_LS_SPTFQMR     = 7, 
-	 ARK_LS_SPFGMR      = 8, 
-	 ARK_LS_PCG         = 9 };
+	 ARK_LS_KLU         = 5, 
+	 ARK_LS_SUPERLUMT   = 6, 
+	 ARK_LS_SPGMR       = 7, 
+	 ARK_LS_SPBCG       = 8, 
+	 ARK_LS_SPTFQMR     = 9, 
+	 ARK_LS_SPFGMR      = 10, 
+	 ARK_LS_PCG         = 12 };
 
 #ifdef __cplusplus
 }
