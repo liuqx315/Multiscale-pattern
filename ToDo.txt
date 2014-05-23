@@ -219,9 +219,7 @@ Remaining components to build:
 [ ] Add interfaces to new SuperLU_MT solver for serial ARKode
     problems.  Add corresponding regression/example problems.
 [ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
-    and LAPACKKLU solvers -- this must wait until we can robustly
-    build SUNDIALS' Fortran interfaces with/without these optional
-    libraries.
+    and LAPACKKLU solvers.
 [ ] Investigate whether I still need the Krylov solver initial guess
     to be unit roundoff (instead of zero), since this results in one
     additional matvec to compute the residual.  I added this in when
