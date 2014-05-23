@@ -50,8 +50,10 @@
    FARKBANDSETJAC             ARKDlsSetBandJacFn
 
    FARKLAPACKDENSE            ARKLapackDense
+   FARKLAPACKDENSESETJAC      ARKDlsSetDenseJacFn
 
    FARKLAPACKBAND             ARKLapackBand
+   FARKLAPACKBANDSETJAC       ARKDlsSetBandJacFn
 
    FARKKLU                    ARKKLU
    FARKSUPERLUMT              ARKSuperLUMT
@@ -756,7 +758,7 @@
 
      Following the call to FARKLAPACKDENSE, the user may optionally call
 
-       CALL FARKDENSESETJAC(FLAG, IER)
+       CALL FARKLAPACKDENSESETJAC(FLAG, IER)
        
      with the int FLAG=1 if the user provides the function FARKDJAC. 
 
@@ -774,7 +776,7 @@
 
      Following the call to FARKLAPACKBAND, the user may optionally call
 
-       CALL FARKBANDSETJAC(FLAG, IER)
+       CALL FARKLAPACKBANDSETJAC(FLAG, IER)
 
      with the int FLAG=1 if the user provides the function FARKBJAC. 
 
@@ -1253,7 +1255,9 @@ extern "C" {
 #define FARK_BAND                SUNDIALS_F77_FUNC(farkband,                FARKBAND)
 #define FARK_BANDSETJAC          SUNDIALS_F77_FUNC(farkbandsetjac,          FARKBANDSETJAC)
 #define FARK_LAPACKDENSE         SUNDIALS_F77_FUNC(farklapackdense,         FARKLAPACKDENSE)
+#define FARK_LAPACKDENSESETJAC   SUNDIALS_F77_FUNC(farklapackdensesetjac,   FARKLAPACKDENSESETJAC)
 #define FARK_LAPACKBAND          SUNDIALS_F77_FUNC(farklapackband,          FARKLAPACKBAND)
+#define FARK_LAPACKBANDSETJAC    SUNDIALS_F77_FUNC(farklapackbandsetjac,    FARKLAPACKBANDSETJAC)
 #define FARK_KLU                 SUNDIALS_F77_FUNC(farkklu,                 FARKKLU)
 #define FARK_SUPERLUMT           SUNDIALS_F77_FUNC(farksuperlumt,           FARKSUPERLUMT)
 #define FARK_SPTFQMR             SUNDIALS_F77_FUNC(farksptfqmr,             FARKSPTFQMR)
@@ -1307,7 +1311,9 @@ extern "C" {
 #define FARK_BAND                farkband_
 #define FARK_BANDSETJAC          farkbandsetjac_
 #define FARK_LAPACKDENSE         farklapackdense_
+#define FARK_LAPACKDENSESETJAC   farklapackdensesetjac_
 #define FARK_LAPACKBAND          farklapackband_
+#define FARK_LAPACKBANDSETJAC    farklapackbandsetjac_
 #define FARK_KLU                 farkklu_
 #define FARK_SUPERLUMT           farksuperlumt_
 #define FARK_SPTFQMR             farksptfqmr_
@@ -1387,7 +1393,10 @@ extern "C" {
   void FARK_BANDSETJAC(int *flag, int *ier);
 
   void FARK_LAPACKDENSE(int *neq, int *ier);
+  void FARK_LAPACKDENSESETJAC(int *flag, int *ier);
+
   void FARK_LAPACKBAND(int *neq, int *mupper, int *mlower, int *ier);
+  void FARK_LAPACKBANDSETJAC(int *flag, int *ier);
 
   void FARK_KLU(int *neq, int *nnz, int *ier);
   void FARK_SUPERLUMT(int *nthreads, int *neq, int *nnz, int *ier);
