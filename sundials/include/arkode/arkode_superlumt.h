@@ -30,9 +30,7 @@ extern "C" {
 
  num_threads is the number of hardware threads to use
 
- m is the number of rows in the linear system
-
- n is the number of columns in the linear system
+ n is the number of rows in the linear system
 
  nnz is the maximum number of nonzeros in the sparse matrix
      A = M + gamma*J
@@ -51,7 +49,7 @@ extern "C" {
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKSuperLUMT(void *arkode_mem, 
 				 int num_threads,
-				 int m, int n, int nnz); 
+				 int n, int nnz); 
 
 
 /*---------------------------------------------------------------
@@ -65,9 +63,7 @@ SUNDIALS_EXPORT int ARKSuperLUMT(void *arkode_mem,
 
  num_threads is the number of hardware threads to use
 
- m is the number of rows in the sparse mass matrix
-
- n is the number of columns in the sparse mass matrix
+ n is the number of rows in the sparse mass matrix
 
  nnz is the maximum number of nonzeros in the sparse mass matrix
 
@@ -87,7 +83,7 @@ SUNDIALS_EXPORT int ARKSuperLUMT(void *arkode_mem,
 ---------------------------------------------------------------*/
 SUNDIALS_EXPORT int ARKMassSuperLUMT(void *arkode_mem, 
 				     int num_threads,
-				     int m, int n, int nnz,
+				     int n, int nnz,
 				     ARKSlsSparseMassFn smass); 
 
 

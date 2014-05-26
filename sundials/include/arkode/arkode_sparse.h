@@ -189,7 +189,7 @@ SUNDIALS_EXPORT int ARKSlsGetNumMassEvals(void *arkode_mem,
 					  long int *nmevals);
 SUNDIALS_EXPORT int ARKSlsGetLastFlag(void *arkode_mem, 
 				      long int *flag);
-SUNDIALS_EXPORT int ARKSlsGetLastMASSFlag(void *arkode_mem, 
+SUNDIALS_EXPORT int ARKSlsGetLastMassFlag(void *arkode_mem, 
 					  long int *flag);
 
 /*---------------------------------------------------------------
