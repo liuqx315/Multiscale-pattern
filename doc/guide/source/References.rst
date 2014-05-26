@@ -54,6 +54,9 @@
 	    schemes for convection-diffusion-reaction
 	    equations. *Appl. Numer. Math.*, 44:139-181, 2003. 
 
+.. [KLU] `KLU Sparse Matrix Factorization Library
+	 <https://www.cise.ufl.edu/research/sparse/klu/>`_. 
+
 .. [R2013] D.R. Reynolds. ARKode Example Documentation. Technical
 	   Report, Southern Methodist University Center for Scientific
 	   Computation, 2013.
@@ -67,6 +70,9 @@
 .. [S2006] G. Soderlind. Time-step selection algorithms: Adaptivity,
 	   control and signal processing. *Appl. Numer. Math.*,
 	   56:488-502, 2006.  
+
+.. [SuperLUMT] `SuperLU_MT Threaded Sparse Matrix Factorization Library
+               <http://crd-legacy.lbl.gov/~xiaoye/SuperLU/>`_. 
 
 .. [WN2011] H.F. Walker and P. Ni. Anderson acceleration for
             fixed-point iterations. *SIAM J. Numer. Anal.*,
