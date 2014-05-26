@@ -1263,6 +1263,7 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``sundials/sundials_math.h``,       |
 |                  |              | ``sundials/sundials_nvector.h``,    |
 |                  |              | ``sundials/sundials_pcg.h``,        |
+|                  |              | ``sundials/sundials_sparse.h``,     |
 |                  |              | ``sundials/sundials_spbcgs.h``,     |
 |                  |              | ``sundials/sundials_spfgmr.h``,     |
 |                  |              | ``sundials/sundials_spgmr.h``,      |
@@ -1273,6 +1274,11 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``libsundials_fnvecserial.a``       |
 +------------------+--------------+-------------------------------------+
 | Serial NVECTOR   | Header files | ``nvector/nvector_serial.h``        |
++------------------+--------------+-------------------------------------+
+| Threaded NVECTOR | Libraries    | ``libsundials_nvecpthreads.LIB``,   |
+|                  |              | ``libsundials_fnvecpthreads.a``     |
++------------------+--------------+-------------------------------------+
+| Threaded NVECTOR | Header files | ``nvector/nvector_pthreads.h``      |
 +------------------+--------------+-------------------------------------+
 | Parallel NVECTOR | Libraries    | ``libsundials_nvecparallel.LIB``,   |
 |                  |              | ``libsundials_fnvecparallel.a``     |
@@ -1289,13 +1295,16 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``arkode/arkode_dense.h``,          |
 |                  |              | ``arkode/arkode_direct.h``,         |
 |                  |              | ``arkode/arkode_impl.h``,           |
+|                  |              | ``arkode/arkode_klu.h``,            |
 |                  |              | ``arkode/arkode_lapack.h``,         |
 |                  |              | ``arkode/arkode_pcg.h``,            |
+|                  |              | ``arkode/arkode_sparse.h``,         |
 |                  |              | ``arkode/arkode_spbcgs.h``,         |
 |                  |              | ``arkode/arkode_spfgmr.h``,         |
 |                  |              | ``arkode/arkode_spgmr.h``,          |
 |                  |              | ``arkode/arkode_spils.h``,          |
-|                  |              | ``arkode/arkode_sptfqmr.h``         |
+|                  |              | ``arkode/arkode_sptfqmr.h``,        |
+|                  |              | ``arkode/arkode_superlumt.h``       |
 +------------------+--------------+-------------------------------------+
 | CVODE            | Libraries    | ``libsundials_cvode.LIB``,          |
 |                  |              | ``libsundials_fcvoce.a``            |
@@ -1308,11 +1317,14 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``cvode/cvode_diag.h``,             |
 |                  |              | ``cvode/cvode_direct.h``,           |
 |                  |              | ``cvode/cvode_impl.h``,             |
+|                  |              | ``cvode/cvode_klu.h``,              |
 |                  |              | ``cvode/cvode_lapack.h``,           |
+|                  |              | ``cvode/cvode_sparse.h``,           |
 |                  |              | ``cvode/cvode_spbcgs.h``,           |
 |                  |              | ``cvode/cvode_spgmr.h``,            |
 |                  |              | ``cvode/cvode_spils.h``,            |
-|                  |              | ``cvode/cvode_sptfqmr.h``           |
+|                  |              | ``cvode/cvode_sptfqmr.h``,          |
+|                  |              | ``cvode/cvode_superlumt.h``         |
 +------------------+--------------+-------------------------------------+
 | CVODES           | Libraries    | ``libsundials_cvodes.LIB``          |
 +------------------+--------------+-------------------------------------+
@@ -1320,15 +1332,18 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``cvodes/cvodes_band.h``,           |
 |                  |              | ``cvodes/cvodes_bandpre.h``,        |
 |                  |              | ``cvodes/cvodes_bbdpre.h``,         |
-|                  |              | ``cvodes/cvodes_direct.h``,         |
-|                  |              | ``cvodes/cvodes_diag.h``,           |
 |                  |              | ``cvodes/cvodes_dense.h``,          |
+|                  |              | ``cvodes/cvodes_diag.h``,           |
+|                  |              | ``cvodes/cvodes_direct.h``,         |
 |                  |              | ``cvodes/cvodes_impl.h``,           |
+|                  |              | ``cvodes/cvodes_klu.h``,            |
 |                  |              | ``cvodes/cvodes_lapack.h``,         |
+|                  |              | ``cvodes/cvodes_sparse.h``,         |
 |                  |              | ``cvodes/cvodes_spbcgs.h``,         |
 |                  |              | ``cvodes/cvodes_spgmr.h``,          |
 |                  |              | ``cvodes/cvodes_spils.h``,          |
-|                  |              | ``cvodes/cvodes_sptfqmr.h``         |
+|                  |              | ``cvodes/cvodes_sptfqmr.h``,        |
+|                  |              | ``cvodes/cvodes_superlumt.h``       |
 +------------------+--------------+-------------------------------------+
 | IDA              | Libraries    | ``libsundials_ida.LIB``,            |
 |                  |              | ``libsundials_fida.a``              |
@@ -1336,14 +1351,17 @@ Table: SUNDIALS libraries and header files
 | IDA              | Header files | ``ida/ida.h``,                      |
 |                  |              | ``ida/ida_band.h``,                 |
 |                  |              | ``ida/ida_bbdpre.h``,               |
-|                  |              | ``ida/ida_direct.h``,               |
 |                  |              | ``ida/ida_dense.h``,                |
+|                  |              | ``ida/ida_direct.h``,               |
 |                  |              | ``ida/ida_impl.h``,                 |
+|                  |              | ``ida/ida_klu.h``,                  |
 |                  |              | ``ida/ida_lapack.h``,               |
+|                  |              | ``ida/ida_sparse.h``,               |
 |                  |              | ``ida/ida_spbcgs.h``,               |
-|                  |              | ``ida/ida_spils.h``,                |
 |                  |              | ``ida/ida_spgmr.h``,                |
-|                  |              | ``ida/ida_sptfqmr.h``               |
+|                  |              | ``ida/ida_spils.h``,                |
+|                  |              | ``ida/ida_sptfqmr.h``,              |
+|                  |              | ``ida/ida_superlumt.h``             |
 +------------------+--------------+-------------------------------------+
 | IDAS             | Libraries    | ``libsundials_idas.LIB``            |
 +------------------+--------------+-------------------------------------+
@@ -1353,11 +1371,14 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``idas/idas_dense.h``,              |
 |                  |              | ``idas/idas_direct.h``,             |
 |                  |              | ``idas/idas_impl.h``,               |
+|                  |              | ``idas/idas_klu.h``,                |
 |                  |              | ``idas/idas_lapack.h``,             |
+|                  |              | ``idas/idas_sparse.h``,             |
 |                  |              | ``idas/idas_spbcgs.h``,             |
 |                  |              | ``idas/idas_spgmr.h``,              |
 |                  |              | ``idas/idas_spils.h``,              |
-|                  |              | ``idas/idas_sptfqmr.h``             |
+|                  |              | ``idas/idas_sptfqmr.h``,            |
+|                  |              | ``idas/idas_superlumt.h``           |
 +------------------+--------------+-------------------------------------+
 | KINSOL           | Libraries    | ``libsundials_kinsol.LIB``,         |
 |                  |              | ``libsundials_fkinsol.a``           |
@@ -1368,11 +1389,15 @@ Table: SUNDIALS libraries and header files
 |                  |              | ``kinsol/kinsol_dense.h``,          |
 |                  |              | ``kinsol/kinsol_direct.h``,         |
 |                  |              | ``kinsol/kinsol_impl.h``,           |
+|                  |              | ``kinsol/kinsol_klu.h``,            |
 |                  |              | ``kinsol/kinsol_lapack.h``,         |
+|                  |              | ``kinsol/kinsol_sparse.h``,         |
 |                  |              | ``kinsol/kinsol_spbcgs.h``,         |
+|                  |              | ``kinsol/kinsol_spfgmr.h``,         |
 |                  |              | ``kinsol/kinsol_spgmr.h``,          |
 |                  |              | ``kinsol/kinsol_spils.h``,          |
-|                  |              | ``kinsol/kinsol_sptfqmr.h``         |
+|                  |              | ``kinsol/kinsol_sptfqmr.h``,        |
+|                  |              | ``kinsol/kinsol_superlumt.h``       |
 +------------------+--------------+-------------------------------------+
 
 

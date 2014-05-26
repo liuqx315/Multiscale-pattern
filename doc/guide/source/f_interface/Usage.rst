@@ -562,7 +562,7 @@ must have the following form:
 .. f:subroutine:: FARKDJAC(NEQ, T, Y, FY, DJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
    
    Interface to provide a user-supplied dense Jacobian approximation
-   function (of type :c:func:`ARKDenseJacFn()`), to be used by the
+   function (of type :c:func:`ARKDlsDenseJacFn()`), to be used by the
    :f:func:`FARKDENSE()` solver. 
       
    **Arguments:** 
@@ -601,7 +601,7 @@ must call the routine :f:func:`FARKDENSESETJAC()`:
 
 .. f:subroutine:: FARKDENSESETJAC(FLAG, IER)
    
-   Interface to the :c:func:`ARKDenseSetJacFn()` function, specifying
+   Interface to the :c:func:`ARKDlsSetDenseJacFn()` function, specifying
    to use the user-supplied routine :f:func:`FARKDJAC()` for the
    Jacobian approximation. 
       
@@ -662,7 +662,7 @@ supplied, it must have the following form:
 .. f:subroutine:: FARKBJAC(NEQ, MU, ML, MDIM, T, Y, FY, BJAC, H, IPAR, RPAR, WK1, WK2, WK3, IER)
    
    Interface to provide a user-supplied band Jacobian approximation
-   function (of type :c:func:`ARKBandJacFn()`), to be used by the
+   function (of type :c:func:`ARKDlsBandJacFn()`), to be used by the
    :f:func:`FARKBAND()` solver. 
      
    **Arguments:** 
@@ -709,7 +709,7 @@ user must call the routine :f:func:`FARKBANDSETJAC()`.
 
 .. f:subroutine:: FARKBANDSETJAC(FLAG, IER)
    
-   Interface to the :c:func:`ARKBandSetJacFn()` function, specifying
+   Interface to the :c:func:`ARKDlsSetBandJacFn()` function, specifying
    to use the user-supplied routine :f:func:`FARKBJAC()` for the
    Jacobian approximation. 
       
@@ -720,6 +720,97 @@ user must call the routine :f:func:`FARKBANDSETJAC()`.
 	:math:`\ne 0` if an error occurred).
 
 
+
+
+[**S**] Sparse treatment of the linear system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To use the sparse direct linear solver interface to the KLU library,
+the user must call the :f:func:`FARKKLU()` routine:  
+
+
+.. f:subroutine:: FARKKLU(NEQ, NNZ, IER)
+   
+   Interfaces with the :c:func:`ARKKLU()` function to
+   specify use of the sparse direct linear solver.
+      
+   **Arguments:** 
+      * *NEQ* (``int``, input) -- size of the ODE system.
+      * *NNZ* (``int``, input) -- maximum number of nonzeros in
+	the sparse Jacobian.
+      * *IER* (``int``, output) -- return flag (0 if success, -1 if a
+	memory allocation error occurred, -2 for an illegal input).
+
+
+Alteratively, to use the SuperLU_MT-based threaded sparse direct
+linear solver, a user must call the similar :f:func:`FARKSUPERLUMT()`
+routine:
+
+.. f:subroutine:: FARKSUPERLUMT(NTHREADS, NEQ, NNZ, IER)
+   
+   Interfaces with the :c:func:`ARKSuperLUMT()` function
+   to specify use of the SuperLU_MT threaded sparse direct linear solver.
+      
+   **Arguments:** 
+      * *NTHREADS* (``int``, input) -- number of threads to use in
+	factorization and solution of the Jacobian systems.
+      * *NEQ* (``int``, input) -- size of the ODE system.
+      * *NNZ* (``int``, input) -- maximum number of nonzeros in
+	the sparse Jacobian.
+      * *IER* (``int``, output) -- return flag (0 if success, -1 if a
+	memory allocation error occurred, -2 for an illegal input).
+
+
+When using either of these sparse direct linear solvers, the user must
+supply a routine that computes a compressed-sparse-column
+approximation of the system Jacobian :math:`J = \frac{\partial
+f_I}{\partial y}`, having the following form:
+
+
+.. f:subroutine:: FARKSPJAC(T, Y, FY, N, NNZ, JDATA, JRVALS, JCPTRS, H, IPAR, RPAR, WK1, WK2, WK3, IER)
+   
+   Interface to provide a user-supplied sparse Jacobian approximation
+   function (of type :c:func:`ARKSlsSparseJacFn()`), to be used by the
+   :f:func:`FARKKLU()` or :f:func:`FARKSUPERLUMT()` solver. 
+      
+   **Arguments:** 
+      * *T* (``realtype``, input) -- current value of the independent variable.
+      * *Y* (``realtype``, input) -- array containing values of the dependent state variables.
+      * *FY* (``realtype``, input) -- array containing values of the dependent state derivatives.
+      * *N* (``int``, input) -- number of matrix rows in Jacobian.
+      * *NNZ* (``int``, input) -- allocated length of nonzero storage in Jacobian.
+      * *JDATA* (``realtype`` of size NNZ, output) -- nonzero values in Jacobian.
+      * *JRVALS* (``int`` of size NNZ, output) -- row indices for each
+	nonzero Jacobian entry.
+      * *JCPTRS* (``int`` of size N+1, output) -- indices of where
+	each column's nonzeros begin in data array; last entry points
+	just past end of data values.
+      * *H* (``realtype``, input) -- current step size.
+      * *IPAR* (``long int``, input) -- array containing integer user data that was passed to
+        :f:func:`FARKMALLOC()`.
+      * *RPAR* (``realtype``, input) -- array containing real user data that was passed to
+        :f:func:`FARKMALLOC()`.
+      * *WK1*, *WK2*, *WK3*  (``realtype``, input) -- array containing temporary workspace
+        of same size as *Y*.
+      * *IER* (``int``, output) -- return flag (0 if success, >0 if a recoverable error
+        occurred, <0 if an unrecoverable error occurred).
+      
+   **Notes:** Due to the format of both the KLU and SuperLU_MT
+   solvers, the number of matrix rows, number of matrix nonzeros, and
+   row index array are all of type ``int`` and not ``long int``.
+  
+
+If the above routine uses difference quotient approximations to
+compute the nonzero entries, it may need to access the error weight
+array *EWT* in the calculation of suitable increments. The array *EWT*
+can be obtained by calling :f:func:`FARKGETERRWEIGHTS()` using one of
+the work arrays as temporary storage for *EWT*.  It may also need the
+unit roundoff, which can be obtained as the optional output *ROUT(6)*,
+passed from the calling program to this routine using either *RPAR* or
+a common block.
+
+
+   
 
 
 [**S**][**P**] SPGMR treatment of the linear systems

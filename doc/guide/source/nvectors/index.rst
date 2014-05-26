@@ -40,6 +40,8 @@ a user-supplied NVECTOR module, the following links are provided:
 
    NVector_Serial
    NVector_Parallel
+   NVector_OpenMP
+   NVector_Pthreads
    ARKode_requirements
 
 

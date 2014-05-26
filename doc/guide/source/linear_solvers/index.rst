@@ -40,6 +40,15 @@ solvers (dense and band) available to the SUNDIALS solvers, but these
 are not discussed here. 
 
 
+The :ref:`SLS <LinearSolvers.SLS>` family contains the following two
+sparse direct linear solvers: 
+
+* The KLU package, a linear solver for compressed-sparse-column
+  matrices, [KLU]_.
+* The SUPERLUMT package, a threaded linear solver for
+  compressed-sparse-column matrices, [SuperLUMT]_.
+
+
 The :ref:`SPILS <LinearSolvers.SPILS>` family contains the following
 generic linear solvers: 
 
@@ -56,8 +65,8 @@ generic linear solvers:
 
 For reasons related to installation, the names of the files involved
 in these generic solvers begin with the prefix SUNDIALS. But despite
-this, each of the solvers is in fact generic, in that it is usable
-completely independently of SUNDIALS. 
+this, each of the DLS and SPILS solvers is in fact generic, in that
+they are usable completely independently of SUNDIALS. 
 
 For the sake of space, the functions for the DENSE and BAND modules
 that work with a matrix type and the functions in the SPGMR, SPBCG,
@@ -84,5 +93,6 @@ sub-sections:
    :maxdepth: 1
 
    DLS
+   SLS
    SPILS
    custom

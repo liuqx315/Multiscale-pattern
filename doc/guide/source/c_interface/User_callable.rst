@@ -386,9 +386,9 @@ where
 .. math::
     {\mathcal A} \approx M - \gamma J, \qquad J = \frac{\partial f_I}{\partial y}.
 
-There are seven ARKode linear solvers currently available for this
-task: ARKDENSE, ARKBAND, ARKSPGMR, ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and
-ARKPCG. 
+There are nine ARKode linear solvers currently available for this
+task: ARKDENSE, ARKBAND, ARKKLU, ARKSUPERLUMT, ARKSPGMR, ARKSPBCG,
+ARKSPTFQMR, ARKSPFGMR and ARKPCG. 
 
 The first two linear solvers are direct solvers based on Gaussian
 elimination, and derive their names from the type of storage used for
@@ -398,6 +398,16 @@ SUNDIALS suite includes both internal implementations of these two
 linear solvers and interfaces to LAPACK implementations. Together,
 these linear solvers are referred to as *ARKDLS* (which stands for
 ARKode Direct Linear Solvers).
+
+The second two linear solvers are sparse direct solvers based on
+Gaussian elimination, and require user-supplied routines to construct
+:math:`J` (and possibly :math:`M`) in compressed-sparse-column
+format.  The SUNDIALS suite does not include internal implementations
+of these solver libraries, instead requiring compilation of SUNDIALS
+to link with existing installations of these libraries (if either is
+missing, SUNDIALS will install without the corresponding interface
+routines).  Together, these linear solvers are referred to as *ARKSLS*
+(which stands for ARKode Sparse Linear Solvers).
 
 The last five ARKode linear solvers, ARKSPGMR, ARKSPBCG, ARKSPTFQMR,
 ARKSPFGMR and ARKPCG, are Krylov iterative solvers, which use scaled
@@ -425,6 +435,7 @@ To specify a ARKode linear solver, after the call to
 the user's program must call one of the functions
 :c:func:`ARKDense()`/:c:func:`ARKLapackDense()`,
 :c:func:`ARKBand()`/:c:func:`ARKLapackBand()`, 
+:c:func:`ARKKLU()`, :c:func:`ARKSuperLUMT()`, 
 :c:func:`ARKSpgmr()`, :c:func:`ARKSpbcg()`, :c:func:`ARKSptfqmr()`,
 :c:func:`ARKSpfgmr()` or :c:func:`ARKPcg()` as documented below. The
 first argument passed to these functions is the ARKode memory pointer
@@ -438,11 +449,12 @@ to be needed in the user code. These are available in the
 corresponding header file associated with the linear solver, as
 specified below.
 
-In each case except the LAPACK direct solvers, the linear solver
-module used by ARKode is actually built on top of a generic linear
-system solver, which may be of interest in itself.  These generic
-solvers, denoted DENSE, BAND, SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG,
-are described separately in the section :ref:`LinearSolvers`.
+In each case except the LAPACK, KLU and SuperLU_MT direct solvers, the
+linear solver module used by ARKode is actually built on top of a
+generic linear system solver, which may be of interest in itself.
+These generic solvers, denoted DENSE, BAND, SPGMR, SPBCG, SPTFQMR,
+SPFGMR and PCG, are described separately in the section
+:ref:`LinearSolvers`.
 
 
 
@@ -539,6 +551,60 @@ are described separately in the section :ref:`LinearSolvers`.
    **Notes:** Here, each of *N*, *mupper* and *mlower* are restricted
    to be of type ``int``, because of the corresponding type restriction
    in the LAPACK solvers.
+
+
+
+.. c:function:: int ARKKLU(void* arkode_mem, int N, int NNZ)
+
+   This function links the main ARKode integrator with the ARKKLU
+   linear solver.  It's use requires inclusion of the header file
+   ``arkode_klu.h``, as well as a user-supplied sparse Jacobian
+   construction routine, specified through a call to
+   :c:func:`ARKSlsSetSparseJacFn`.
+
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *N* -- the number of components in the ODE system.
+      * *NNZ* -- the maximum number of nonzero entries in the system
+	Jacobian.
+   
+   **Return value:** 
+       * *ARKSLS_SUCCESS*   if successful
+       * *ARKSLS_MEM_NULL*  if the ARKode memory was ``NULL``
+       * *ARKSLS_MEM_FAIL*  if there was a memory allocation failure
+       * *ARKSLS_ILL_INPUT* if a required vector operation is missing
+   
+   **Notes:**  The ARKKLU linear solver is not compatible with
+   all implementations of the NVECTOR module.  Of the two nvector
+   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+
+
+
+.. c:function:: int ARKSuperLUMT(void* arkode_mem, int num_threads, int N, int NNZ)
+
+   This function links the main ARKode integrator with the ARKSUPERLUMT
+   linear solver.  It's use requires inclusion of the header file
+   ``arkode_superlumt.h``, as well as a user-supplied sparse Jacobian
+   construction routine, specified through a call to
+   :c:func:`ARKSlsSetSparseJacFn`.
+
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *num_threads* -- the number of threads to use when
+	factoring/solving the ODE system.
+      * *N* -- the number of components in the ODE system.
+      * *NNZ* -- the maximum number of nonzero entries in the system
+	Jacobian.
+   
+   **Return value:** 
+       * *ARKSLS_SUCCESS*   if successful
+       * *ARKSLS_MEM_NULL*  if the ARKode memory was ``NULL``
+       * *ARKSLS_MEM_FAIL*  if there was a memory allocation failure
+       * *ARKSLS_ILL_INPUT* if a required vector operation is missing
+   
+   **Notes:**  The ARKSUPERLUMT linear solver is not compatible with
+   all implementations of the NVECTOR module.  Of the two nvector
+   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
 
 
 
@@ -704,7 +770,7 @@ must solve linear systems of the form
 
 The same solvers listed above in the section
 :ref:`CInterface.LinearSolvers` may be used for this purpose:
-DENSE, BAND, SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG.  
+DENSE, BAND, KLU, SUPERLUMT, SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG.  
 With any of the iterative solvers (SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG),
 preconditioning can be applied.  For the specification of a
 preconditioner, see the iterative linear solver portions of the sections
@@ -719,6 +785,7 @@ To specify a mass matrix solver, after the call to
 the user's program must call one of the functions
 :c:func:`ARKMassDense()`/:c:func:`ARKMassLapackDense()`,
 :c:func:`ARKMassBand()`/:c:func:`ARKMassLapackBand()`, 
+:c:func:`ARKMassKLU()`, :c:func:`ARKMassSuperLUMT()`,
 :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
 :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
 :c:func:`ARKMassPcg()` as documented below. The first argument passed
@@ -841,6 +908,56 @@ modules.
    band structure to the Jacobian matrix.  While this is typical of
    finite-element problems, if this is not true for a specific problem
    it can be handled by manually zero-padding the mass matrix. 
+
+
+
+.. c:function:: int ARKMassKLU(void* arkode_mem, int N, int NNZ, ARKSlsSparseMassFn smass)
+
+   This function links the mass matrix solve with the ARKKLU linear
+   solver module, and specifies the sparse mass matrix function.  It's
+   use requires inclusion of the header file ``arkode_klu.h``.
+
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *N* -- the number of components in the ODE system.
+      * *NNZ* -- the maximum number of nonzeros in the mass matrix.
+      * *smass* -- name of user-supplied sparse mass matrix function.
+   
+   **Return value:** 
+       * *ARKSLS_SUCCESS*   if successful
+       * *ARKSLS_MEM_NULL*  if the ARKode memory was ``NULL``
+       * *ARKSLS_MEM_FAIL*  if there was a memory allocation failure
+       * *ARKSLS_ILL_INPUT* if a required vector operation is missing
+   
+   **Notes:**  The ARKKLU linear solver is not compatible with all
+   implementations of the NVECTOR module. Of the two nvector modules
+   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+
+
+
+.. c:function:: int ARKMassSuperLUMT(void* arkode_mem, int num_threads, int N, int NNZ, ARKSlsSparseMassFn smass)
+
+   This function links the mass matrix solve with the ARKSUPERLUMT
+   linear solver module.  It's use requires inclusion of the header
+   file ``arkode_superlumt.h``.
+
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *num_threads* -- the number of threads to use when
+	factoring/solving the ODE system.
+      * *N* -- the number of components in the ODE system.
+      * *NNZ* -- the maximum number of nonzeros in the mass matrix.
+      * *smass* -- name of user-supplied sparse mass matrix function.
+   
+   **Return value:** 
+       * *ARKSLS_SUCCESS*   if successful
+       * *ARKSLS_MEM_NULL*  if the ARKode memory was ``NULL``
+       * *ARKSLS_MEM_FAIL*  if there was a memory allocation failure
+       * *ARKSLS_ILL_INPUT* if a required vector operation is missing
+   
+   **Notes:**  The ARKSUPERLUMT linear solver is not compatible with all
+   implementations of the NVECTOR module. Of the two nvector modules
+   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
 
 
 
@@ -1168,7 +1285,8 @@ The optional inputs are grouped into the following categories:
 * IVP method solver options (:ref:`CInterface.ARKodeMethodInputTable`), 
 * Step adaptivity solver options (:ref:`CInterface.ARKodeAdaptivityInputTable`), 
 * Implicit stage solver options (:ref:`CInterface.CInterface.ARKodeSolverInputTable`), 
-* Dense linear solver options (:ref:`CInterface.ARKDlsInputs`),
+* Direct linear solver options (:ref:`CInterface.ARKDlsInputs`),
+* Sparse linear solver options (:ref:`CInterface.ARKSlsInputs`),
 * Iterative linear solver options (:ref:`CInterface.ARKSpilsInputs`).  
 
 For the most casual use of ARKode, relying on the default set of
@@ -2364,8 +2482,8 @@ Maximum number of convergence failures         :c:func:`ARKodeSetMaxConvFails()`
 .. _CInterface.ARKDlsInputs:
 
 
-Direct linear solvers optional input functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dense direct linear solvers optional input functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The mathematical explanation of ARKode's dense linear solver methods
 is provided in the section :ref:`Mathematics.Linear`.
@@ -2540,6 +2658,107 @@ program. The pointer user data may be specified through
 
    The function type :c:func:`ARKDlsBandMassFn()` is described in the section
    :ref:`CInterface.UserSupplied`.
+
+
+
+.. _CInterface.ARKSlsInputs:
+
+
+Sparse direct linear solvers optional input functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The mathematical explanation of ARKode's sparse linear solver methods
+is provided in the section :ref:`Mathematics.Linear`.
+
+
+Table: Optional inputs for ARKSLS
+"""""""""""""""""""""""""""""""""""""
+
+.. cssclass:: table-bordered
+
+===========================  =================================  =============
+Optional input               Function name                      Default
+===========================  =================================  =============
+Sparse Jacobian function     :c:func:`ARKSlsSetSparseJacFn()`   none
+Sparse mass matrix function  :c:func:`ARKSlsSetSparseMassFn()`  none
+===========================  =================================  =============
+
+The ARKSPARSE solvers need a function to compute a
+compressed-sparse-column approximation to the Jacobian matrix
+:math:`J(t,y)`. This function must be of type
+:c:func:`ARKSlsSparseJacFn()`.  The user must supply a custom sparse 
+Jacobian function since a difference-quotient approximation would not
+leverage the underlying sparse matrix structure of the problem.  To
+specify a user-supplied Jacobian function *sjac*, ARKSPARSE provides
+the function :c:func:`ARKSlsSetSparseJacFn()`. The ARKSPARSE solvers 
+pass the user data pointer to the sparse Jacobian function.  This
+allows the user to create an arbitrary structure with relevant problem
+data and access it during the execution of the user-supplied Jacobian
+function, without using global data in the program. The user
+data pointer may be specified through :c:func:`ARKodeSetUserData()`.
+
+Similarly, if the ODE system involves a non-identity mass matrix,
+:math:`M\ne I`, the ARKSPARSE solver needs a function to compute a
+compressed-sparsec-column approximation to the mass matrix
+:math:`M(t)`.  If the Newton linear systems are solved using ARKSPARSE
+and the mass matrix systems are not, then the user must supply his/her
+own sparse mass matrix function, *smass*, since there is no default
+value.  This function must be of type :c:func:`ARKSlsSparseMassFn()`,
+and should be set using the function
+:c:func:`ARKSlsSetSparseMassFn()`.  We note that the ARKSPARSE solvers
+pass the user data pointer to the sparse mass matrix function. This
+allows the user to create an arbitrary structure with relevant problem
+data and access it during the execution of the user-supplied mass
+matrix function, without using global data in the program. The pointer
+user data may be specified through :c:func:`ARKodeSetUserData()`.
+
+
+
+.. c:function:: int ARKSlsSetSparseJacFn(void* arkode_mem, ARKSlsSparseJacFn sjac)
+
+   Specifies the sparse Jacobian approximation routine to
+   be used for a direct sparse linear solver. 
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *sjac* -- name of user-supplied sparse Jacobian approximation function.
+   
+   **Return value:** 
+      * *ARKSLS_SUCCESS*  if successful
+      * *ARKSLS_MEM_NULL*  if the ARKode memory was ``NULL``
+      * *ARKSLS_LMEM_NULL* if the linear solver memory was ``NULL``
+   
+   **Notes:** The function type :c:func:`ARKSlsSparseJacFn()` is
+   described in the section :ref:`CInterface.UserSupplied`.
+
+
+
+.. c:function:: int ARKSlsSetSparseMassFn(void* arkode_mem, ARKSlsSparseMassFn smass)
+
+   Specifies the sparse mass matrix approximation routine to
+   be used for a direct sparse linear solver. 
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *smass* -- name of user-supplied sparse mass matrix approximation function.
+   
+   **Return value:** 
+      * *ARKSLS_SUCCESS*  if successful
+      * *ARKSLS_MEM_NULL*  if the ARKode memory was ``NULL``
+      * *ARKSLS_MASSMEM_NULL* if the mass matrix solver memory was ``NULL``
+   
+   **Notes:** This routine must be called after the mass matrix solver
+   has been initialized through a call to one of
+   :c:func:`ARKMassDense()`, :c:func:`ARKMassLapackDense()`, 
+   :c:func:`ARKMassBand()`, :c:func:`ARKMassLapackBand()`,
+   :c:func:`ARKMassKLU()`, :c:func:`ARKMassSuperLUMT()`,
+   :c:func:`ARKMassSpgmr()`, :c:func:`ARKMassSpbcg()`,
+   :c:func:`ARKMassSptfqmr()`, :c:func:`ARKMassSpfgmr()` or
+   :c:func:`ARKMassPcg()`. 
+   
+   The function type :c:func:`ARKSlsSparseMassFn()` is described in the section
+   :ref:`CInterface.UserSupplied`.
+
 
 
 
@@ -3096,7 +3315,9 @@ groups:
    :ref:`CInterface.ARKodeRootOutputs`, 
 4. Dense linear solver output routines are in the subsection
    :ref:`CInterface.ARKDlsOutputs` and 
-5. Iterative linear solver output routines are in the subsection
+5. Sparse linear solver output routines are in the subsection
+   :ref:`CInterface.ARKSlsOutputs` and 
+6. Iterative linear solver output routines are in the subsection
    :ref:`CInterface.ARKSpilsOutputs`.
 
 Following each table, we elaborate on each function.
@@ -3634,8 +3855,8 @@ No. of calls to user root function                   :c:func:`ARKodeGetNumGEvals
 
 .. _CInterface.ARKDlsOutputs:
 
-Direct linear solvers optional output functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dense direct linear solvers optional output functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following optional outputs are available from the ARKDLS
 modules: workspace requirements, number of calls to the Jacobian
@@ -3829,6 +4050,113 @@ Name of constant associated with a return flag       :c:func:`ARKDlsGetReturnFla
    **Return value:**  The return value is a string containing the name of
    the corresponding constant. If 1 :math:`\le` `lsflag` :math:`\le
    n` (LU factorization failed), this routine returns "NONE". 
+
+
+
+.. _CInterface.ARKSlsOutputs:
+
+Sparse direct linear solvers optional output functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following optional outputs are available from the ARKSLS
+modules: number of calls to the Jacobian
+routine, number of calls to the mass matrix routine, and last return
+value from an ARKSLS function.  Note that, where the name of an output
+would otherwise conflict with the name of an optional output from the
+main solver, a suffix LS (for Linear Solver) or MLS (for Mass Linear
+Solver) has been added here (e.g. *lenrwLS*).  
+
+
+.. cssclass:: table-bordered
+
+===================================================  ===================================
+Optional output                                      Function name
+===================================================  ===================================
+No. of Jacobian evaluations                          :c:func:`ARKSlsGetNumJacEvals()`
+No. of mass matrix evaluations                       :c:func:`ARKSlsGetNumMassEvals()`
+Last return flag from a linear solver function       :c:func:`ARKSlsGetLastFlag()`
+Last return flag from a mass matrix solver function  :c:func:`ARKSlsGetLastMassFlag()`
+Name of constant associated with a return flag       :c:func:`ARKSlsGetReturnFlagName()`
+===================================================  =================================== 
+
+
+
+    
+.. c:function:: int ARKSlsGetNumJacEvals(void* arkode_mem, long int* njevals)
+
+   Returns the number of calls made to the ARKSLS
+   sparse Jacobian approximation routine.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *njevals* -- number of calls to the Jacobian function.
+   
+   **Return value:**  
+      * *ARKSLS_SUCCESS* if successful
+      * *ARKSLS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSLS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSlsGetNumMassEvals(void* arkode_mem, long int* nmevals)
+
+   Returns the number of calls made to the ARKSLS sparse
+   mass matrix construction routine.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *nmevals* -- number of calls to the mass matrix function.
+   
+   **Return value:**  
+      * *ARKSLS_SUCCESS* if successful
+      * *ARKSLS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSLS_LMEM_NULL* if the linear solver memory was ``NULL``
+
+
+
+.. c:function:: int ARKSlsGetLastFlag(void* arkode_mem, long int* lsflag)
+
+   Returns the last return value from an ARKSLS routine.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *lsflag* -- the value of the last return flag from an ARKSLS function.
+   
+   **Return value:**  
+      * *ARKSLS_SUCCESS* if successful
+      * *ARKSLS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSLS_LMEM_NULL* if the linear solver memory was ``NULL``
+   
+
+
+
+.. c:function:: int ARKSlsGetLastMassFlag(void* arkode_mem, long int* mlsflag)
+
+   Returns the last return value from an ARKSLS mass matrix solve routine.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *mlsflag* -- the value of the last return flag from an ARKSLS
+	mass matrix solver function.
+   
+   **Return value:**  
+      * *ARKSLS_SUCCESS* if successful
+      * *ARKSLS_MEM_NULL* if the ARKode memory was ``NULL``
+      * *ARKSLS_LMEM_NULL* if the linear solver memory was ``NULL``
+   
+
+
+.. c:function:: char *ARKSlsGetReturnFlagName(long int lsflag)
+
+   Returns the name of the ARKSLS constant
+   corresponding to *lsflag*.
+   
+   **Arguments:**
+      * *lsflag* -- a return flag from an ARKSLS function.
+   
+   **Return value:**  The return value is a string containing the name of
+   the corresponding constant. 
+
 
 
 
@@ -4339,8 +4667,8 @@ When using any of the built-in linear solver modules, the linear
 solver memory structures must also be resized.  At present, none of
 these include a solver-specific 'resize' function, so the linear
 solver memory must be destroyed and re-allocated **following** each
-call to :c:func:`ARKodeResize()`.  For each of the built-in ARKDLS and
-ARKSPILS linear solvers, the specification call itself
+call to :c:func:`ARKodeResize()`.  For each of the built-in ARKDLS,
+ARKSLS and ARKSPILS linear solvers, the specification call itself
 (e.g. :c:func:`ARKDense()` or :c:func:`ARKSpgmr()`) will internally
 destroy the solver-specific memory prior to re-allocation.   
 

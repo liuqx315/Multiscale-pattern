@@ -106,6 +106,10 @@ marked [S] correspond to NVECTOR_SERIAL.
 
    [S] ``ier = ARKLapackBand(...);``
 
+   [S] ``ier = ARKKLU(...);``
+
+   [S] ``ier = ARKSuperLUMT(...);``
+
    ``ier = ARKSpgmr(...);``
 
    ``ier = ARKSpbcg(...);``
@@ -135,6 +139,10 @@ marked [S] correspond to NVECTOR_SERIAL.
     [S] ``ier = ARKMassLapackDense(...);`` 
 
     [S] ``ier = ARKMassLapackBand(...);``
+
+    [S] ``ier = ARKMassKLU(...);``
+
+    [S] ``ier = ARKMassSuperLUMT(...);``
 
     ``ier = ARKMassSpgmr(...);``
 

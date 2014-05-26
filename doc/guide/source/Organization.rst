@@ -66,12 +66,19 @@ during the integration process.
 For solving these linear systems, ARKode presently includes the
 following linear algebra modules, organized into two families.  The
 *direct* family of linear solvers provides methods for the direct
-solution of linear systems with dense or banded matrices and includes:
+solution of linear systems with dense, banded or sparse matrices and
+includes: 
 
 - ARKDENSE: LU factorization and backsolving with dense matrices
   (using either an internal implementation or BLAS/LAPACK);
 - ARKBAND: LU factorization and backsolving with banded matrices
   (using either an internal implementation or BLAS/LAPACK).
+- ARKKLU: LU factorization and backsolving with
+  compressed-sparse-column (CSC) matrices using the KLU linear solver
+  library [KLU]_.
+- ARKSUPERLUMT: LU factorization and backsolving with
+  compressed-sparse-column (CSC) matrices using the threaded
+  SuperLU_MT linear solver library [SuperLUMT]_.
 
 The *spils* family of linear solvers provides scaled preconditioned
 linear solvers and includes:
@@ -87,21 +94,25 @@ intended to be expanded in the future as new algorithms are developed,
 and may additionally be expanded through user-supplied linear solver
 modules, further described in the section :ref:`LinearSolvers.custom`.
 
-In the case of the direct methods (ARKDENSE and ARKBAND), ARKode
+In the case of the dense direct methods (ARKDENSE and ARKBAND), ARKode
 includes an algorithm to approximate the Jacobian using difference
 quotients, but the user also has the option of supplying the Jacobian
-(or an approximation to it) directly.  In the case of the Krylov
-iterative methods (ARKSPGMR, ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and
-ARKPCG), ARKode includes an algorithm to approximate the product
-between the Jacobian matrix and a vector, also using difference
-quotients.  Again, the user has the option of supplying a routine for
-this operation.  For the Krylov methods, preconditioning must be
-supplied by the user, in two phases: *setup* (preprocessing of
-Jacobian data) and *solve*.  While there is no default choice of
-preconditioner analagous to the difference-quotient approximation in
-the direct case, the references [BH1989]_ and [B1992]_, together with
-the example and demonstration programs included with ARKode and CVODE,
-offer considerable assistance in building simple preconditioners. 
+(or an approximation to it) directly.  When using the sparse direct
+linear solvers (ARKKLU and ARKSUPERLUMT), the user must supply a
+routine for the Jacobian (or an approximation), since difference
+quotient approximations do not leverage the inherent sparsity of the
+problem.  In the case of the Krylov iterative methods (ARKSPGMR,
+ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG), ARKode includes an
+algorithm to approximate the product between the Jacobian matrix and a
+vector, also using difference quotients.  Again, the user has the
+option of supplying a routine for this operation.  For the Krylov
+methods, preconditioning must be supplied by the user, in two phases:
+*setup* (preprocessing of Jacobian data) and *solve*.  While there is
+no default choice of preconditioner analagous to the
+difference-quotient approximation in the direct case, the references
+[BH1989]_ and [B1992]_, together with the example and demonstration
+programs included with ARKode and CVODE, offer considerable assistance
+in building simple preconditioners.  
 
 Each ARKode linear solver module consists of four routines,
 devoted to 
@@ -119,9 +130,9 @@ associated functions is fixed, thus allowing the central module to be
 completely independent of the linear system method.
 
 These modules are also decomposed in another way.  With the exception
-of the modules interfacing to LAPACK linear solvers,
-each of the modules ARKDENSE, ARKBAND, ARKSPGMR, ARKSPBCG, ARKSPTFQMR,
-ARKSPFGMR and ARKPCG is a set of interface routines built 
+of the modules interfacing to the LAPACK, KLU and SuperLU_MT linear
+solvers, each of the modules ARKDENSE, ARKBAND, ARKSPGMR, ARKSPBCG,
+ARKSPTFQMR, ARKSPFGMR and ARKPCG is a set of interface routines built 
 on top of a generic solver module, named DENSE, BAND,
 SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG, respectively.  The interfaces
 deal with the use of these methods in the ARKode context, whereas
