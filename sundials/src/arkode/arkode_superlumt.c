@@ -66,8 +66,7 @@ static int arkMassSuperLUMTMultiply(N_Vector v, N_Vector Mv,
        internal representation by checking that the function 
        N_VGetArrayPointer exists.
 ---------------------------------------------------------------*/
-int ARKSuperLUMT(void *arkode_mem, int num_threads, int m, 
-		 int n, int nnz)
+int ARKSuperLUMT(void *arkode_mem, int num_threads, int n, int nnz)
 {
   ARKodeMem ark_mem;
   ARKSlsMem arksls_mem;
@@ -126,7 +125,7 @@ int ARKSuperLUMT(void *arkode_mem, int num_threads, int m,
 
   /* Allocate memory for the sparse Jacobian */
   arksls_mem->s_A = NULL;
-  arksls_mem->s_A = NewSparseMat(m, n, nnz);
+  arksls_mem->s_A = NewSparseMat(n, n, nnz);
   if (arksls_mem->s_A == NULL) {
     arkProcessError(ark_mem, ARKSLS_MEM_FAIL, "ARKSLS", 
 		    "ARKSuperLUMT", MSGSP_MEM_FAIL);
@@ -137,7 +136,7 @@ int ARKSuperLUMT(void *arkode_mem, int num_threads, int m,
 
   /* Allocate memory for saved sparse Jacobian */
   arksls_mem->s_savedJ = NULL;
-  arksls_mem->s_savedJ = NewSparseMat(m, n, nnz);
+  arksls_mem->s_savedJ = NewSparseMat(n, n, nnz);
   if (arksls_mem->s_savedJ == NULL) {
     arkProcessError(ark_mem, ARKSLS_MEM_FAIL, "ARKSLS", 
 		    "ARKSuperLUMT", MSGSP_MEM_FAIL);
@@ -149,7 +148,7 @@ int ARKSuperLUMT(void *arkode_mem, int num_threads, int m,
 
   /* Set up memory for the permutations */
   perm_r = NULL;
-  perm_r = (int *) malloc(m*sizeof(int));
+  perm_r = (int *) malloc(n*sizeof(int));
   if (perm_r == NULL) {
     arkProcessError(ark_mem, ARKSLS_MEM_FAIL, "ARKSLS", 
 		    "ARKSuperLUMT", MSGSP_MEM_FAIL);
@@ -201,7 +200,7 @@ int ARKSuperLUMT(void *arkode_mem, int num_threads, int m,
   nrhs = 1;
   bd = NULL;
   B = (SuperMatrix *) malloc(sizeof(SuperMatrix));
-  dCreate_Dense_Matrix(B, m, nrhs, bd, m, 
+  dCreate_Dense_Matrix(B, n, nrhs, bd, n, 
 		       SLU_DN, SLU_D, SLU_GE);
   slumt_data->s_B = B;
 
@@ -534,7 +533,7 @@ static void arkSuperLUMTFree(ARKodeMem ark_mem)
        N_Vector internal representation by checking that the 
        function N_VGetArrayPointer exists.
 ---------------------------------------------------------------*/
-int ARKMassSuperLUMT(void *arkode_mem, int num_threads, int m, 
+int ARKMassSuperLUMT(void *arkode_mem, int num_threads, 
 		     int n, int nnz, ARKSlsSparseMassFn smass)
 {
   ARKodeMem ark_mem;
@@ -597,7 +596,7 @@ int ARKMassSuperLUMT(void *arkode_mem, int num_threads, int m,
 
   /* Allocate memory for M and M_lu */
   arksls_mem->s_M = NULL;
-  arksls_mem->s_M = NewSparseMat(m, n, nnz);
+  arksls_mem->s_M = NewSparseMat(n, n, nnz);
   if (arksls_mem->s_M == NULL) {
     arkProcessError(ark_mem, ARKSLS_MEM_FAIL, "ARKSLS", 
 		    "ARKMassSuperLUMT", MSGSP_MEM_FAIL);
@@ -606,7 +605,7 @@ int ARKMassSuperLUMT(void *arkode_mem, int num_threads, int m,
     return(ARKSLS_MEM_FAIL);
   }
   arksls_mem->s_M_lu = NULL;
-  arksls_mem->s_M_lu = NewSparseMat(m, n, nnz);
+  arksls_mem->s_M_lu = NewSparseMat(n, n, nnz);
   if (arksls_mem->s_M_lu == NULL) {
     arkProcessError(ark_mem, ARKSLS_MEM_FAIL, "ARKSLS", 
 		    "ARKMassSuperLUMT", MSGSP_MEM_FAIL);
@@ -618,7 +617,7 @@ int ARKMassSuperLUMT(void *arkode_mem, int num_threads, int m,
 
   /* Set up memory for the permutations */
   perm_r = NULL;
-  perm_r = (int *) malloc(m*sizeof(int));
+  perm_r = (int *) malloc(n*sizeof(int));
   if (perm_r == NULL) {
     arkProcessError(ark_mem, ARKSLS_MEM_FAIL, "ARKSLS", 
 		    "ARKMassSuperLUMT", MSGSP_MEM_FAIL);
@@ -670,7 +669,7 @@ int ARKMassSuperLUMT(void *arkode_mem, int num_threads, int m,
   nrhs = 1;
   bd = NULL;
   B = (SuperMatrix *) malloc(sizeof(SuperMatrix));
-  dCreate_Dense_Matrix(B, m, nrhs, bd, m, 
+  dCreate_Dense_Matrix(B, n, nrhs, bd, n, 
 		       SLU_DN, SLU_D, SLU_GE);
   slumt_data->s_B = B;
 
