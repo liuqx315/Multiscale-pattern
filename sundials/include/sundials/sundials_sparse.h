@@ -3,7 +3,8 @@
  * $Revision:  $
  * $Date:  $
  * -----------------------------------------------------------------
- * Programmer: Carol Woodward @ LLNL
+ * Programmer: Carol Woodward @ LLNL,
+ *             Daniel R. Reynolds @ SMU.
  * -----------------------------------------------------------------
  * For details, see the LICENSE file.
  * -----------------------------------------------------------------
