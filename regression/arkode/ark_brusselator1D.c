@@ -55,7 +55,7 @@
 #include <arkode/arkode_sptfqmr.h>
 #include <sundials/sundials_types.h>
 
-#define NO_USE_ITERATIVE
+/* #define USE_ITERATIVE */
 /* #define USE_SPGMR */
 /* #define USE_SPBCG */
 /* #define USE_SPTFQMR */

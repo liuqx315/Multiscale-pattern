@@ -159,7 +159,7 @@ int main()
 
   /* open solver diagnostics output file for writing */
   FILE *DFID;
-  DFID=fopen("diags_ark_bruss1D.txt","w");
+  DFID=fopen("diags_ark_bruss1D_klu.txt","w");
   
   /* set total allocated vector length */
   NEQ = Nvar*udata->N;
@@ -376,7 +376,7 @@ int main()
     
 
   /* Print some final statistics */
-  long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf, nli, nlcf, nJv;
+  long int nst, nst_a, nfe, nfi, nsetups, nje, nni, ncfn, netf, nli, nlcf;
   flag = ARKodeGetNumSteps(arkode_mem, &nst);
   check_flag(&flag, "ARKodeGetNumSteps", 1);
   flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
@@ -617,7 +617,7 @@ static int Jac(realtype t, N_Vector y, N_Vector fy,
     return 1;
   }
 
-  /* Add in the Jacobian of the reaction terms matrix */
+  /* Create empty reaction Jacobian matrix (if not done already) */
   if (udata->R == NULL) {
     udata->R = NewSparseMat(J->M, J->N, J->NNZ);
     if (udata->R == NULL) {
