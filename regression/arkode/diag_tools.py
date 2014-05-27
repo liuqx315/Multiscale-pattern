@@ -188,7 +188,13 @@ class StageStep:
             self.NonlinDcon    = self.NonlinSolves[i].dcon;
             self.conv_fails += self.NonlinSolves[i].nonconv;
     def Write(self):
-        print '  StageStep: step =',self.step,', h =',self.h,', stage =',self.stage,', tn =',self.tn,', conv_fails =',self.conv_fails,', lsetups =',self.lsetups,', NonlinDcon =',self.NonlinDcon,', NonlinIters =',self.NonlinIters,', KrylovIters =',self.KrylovIters
+        print '  StageStep: step =',self.step,', stage =',self.stage
+        print '    h =',self.h,', tn =',self.tn
+        print '    conv_fails =',self.conv_fails
+        print '    lsetups =',self.lsetups
+        print '    NonlinDcon =',self.NonlinDcon
+        print '    NonlinIters =',self.NonlinIters
+        print '    KrylovIters =',self.KrylovIters
         for i in range(len(self.NonlinSolves)):
             self.NonlinSolves[i].Write();
 
@@ -251,7 +257,18 @@ class TimeStep:
             self.lsetups += self.StageSteps[i].lsetups;
             self.conv_fails += self.StageSteps[i].conv_fails;
     def Write(self):
-        print 'TimeStep: step =',self.step,', tn =',self.tn,', h_attempts =',self.h_attempts,', h_final =',self.h_final,', NonlinIters =',self.NonlinIters,', KrylovIters =',self.KrylovIters,', lsetups =',self.lsetups,', err_fails =',self.err_fails,', conv_fails =',self.conv_fails
+        print 'TimeStep: step =',self.step,', tn =',self.tn
+        print '  h_attempts =',self.h_attempts
+        print '  h_final =',self.h_final
+        print '  NonlinIters =',self.NonlinIters
+        print '  KrylovIters =',self.KrylovIters
+        if (MassSolve != 0):
+            print '  MassSolve resnorm =',self.MassSolve.resnorm
+            print '  MassSolve iters =',self.MassSolve.iters
+            print '  MassSolve psolves =',self.MassSolve.psolves
+        print '  lsetups =',self.lsetups
+        print '  err_fails =',self.err_fails
+        print '  conv_fails =',self.conv_fails
         for i in range(len(self.StageSteps)):
             self.StageSteps[i].Write();
         if (self.MassSolve != 0):
@@ -353,7 +370,8 @@ def load_diags(fname):
         elif (linetype == 5):   # Krylov solve
             TimeSteps[step].AddKrylov(stage,entry);
         elif (linetype == 6):   # mass Krylov solve
-            TimeSteps[step].AddMass(entry);
+            if (step >= 0):     # skip mass solves at initialization
+                TimeSteps[step].AddMass(entry);
     f.close()
     for i in range(len(TimeSteps)):
         TimeSteps[i].Cleanup();
@@ -479,7 +497,7 @@ def plot_h_vs_iter(TimeSteps,fname):
 
 
 ##########
-def plot_work_vs_t(TimeSteps,fname):
+def plot_nonlin_vs_t(TimeSteps,fname):
     """ This routine takes in the array of TimeSteps (returned from  """
     """ load_diags), and plots the total number of nonlinear         """
     """ iterations as a function of the simulation time t.  Solves   """
@@ -538,7 +556,7 @@ def plot_work_vs_t(TimeSteps,fname):
 
 
 ##########
-def plot_work_vs_h(TimeSteps,fname):
+def plot_nonlin_vs_h(TimeSteps,fname):
     """ This routine takes in the array of TimeSteps (returned from  """
     """ load_diags), and plots the total number of nonlinear         """
     """ iterations as a function of the time step size h.  Solves    """
@@ -648,6 +666,86 @@ def plot_krylov_vs_h(TimeSteps,fname):
     plt.xlabel('step size')
     plt.ylabel('Krylov iters')
     plt.title('Krylov iterations per step versus step size')
+    plt.grid()
+    plt.savefig(fname)
+
+
+##########
+def plot_mass_vs_t(TimeSteps,fname):
+    """ This routine takes in the array of TimeSteps (returned from  """
+    """ load_diags), and plots the total number of mass solver       """
+    """ iterations as a function of the simulation time t.           """
+    """                                                              """
+    """ The resulting plot is stored in the file <fname>, that       """
+    """ should include an extension appropriate for the matplotlib   """
+    """ 'savefig' command.                                           """
+    """                                                              """
+    """ If no iterative mass matrix solver was used, the plot is     """
+    """ omitted.                                                     """
+    import pylab as plt
+    import numpy as np
+    Mvals   = [];
+    tvals   = [];
+    for istep in range(len(TimeSteps)):
+        
+        # check that a mass matrix solver was used, otherwise return
+        if (TimeSteps[istep].MassSolve == 0):
+            return
+
+        # store iterations and time
+        Mvals.append(TimeSteps[istep].MassSolve.iters);
+        tvals.append(TimeSteps[istep].tn);
+
+    # convert data to numpy arrays
+    M = np.array(Mvals);
+    t = np.array(tvals);
+
+    # generate plot
+    plt.figure()
+    plt.plot(t,M,'b-')
+    plt.xlabel('time')
+    plt.ylabel('Mass solver iters')
+    plt.title('Mass solver iterations per step versus time')
+    plt.grid()
+    plt.savefig(fname)
+
+
+##########
+def plot_mass_vs_h(TimeSteps,fname):
+    """ This routine takes in the array of TimeSteps (returned from  """
+    """ load_diags), and plots the total number of mass solver       """
+    """ iterations as a function of the time step size h.            """
+    """                                                              """
+    """ The resulting plot is stored in the file <fname>, that       """
+    """ should include an extension appropriate for the matplotlib   """
+    """ 'savefig' command.                                           """
+    """                                                              """
+    """ If no iterative mass matrix solver was used, the plot is     """
+    """ omitted.                                                     """
+    import pylab as plt
+    import numpy as np
+    Mvals   = [];
+    hvals   = [];
+    for istep in range(len(TimeSteps)):
+        
+        # check that a mass matrix solver was used, otherwise return
+        if (TimeSteps[istep].MassSolve == 0):
+            return
+
+        # store iterations and time
+        Mvals.append(TimeSteps[istep].MassSolve.iters);
+        hvals.append(TimeSteps[istep].h_final);
+
+    # convert data to numpy arrays
+    M = np.array(Mvals);
+    h = np.array(hvals);
+
+    # generate plot
+    plt.figure()
+    plt.semilogx(h,M,'b.')
+    plt.xlabel('step size')
+    plt.ylabel('Mass solver iters')
+    plt.title('Mass solver iterations per step versus step size')
     plt.grid()
     plt.savefig(fname)
 
