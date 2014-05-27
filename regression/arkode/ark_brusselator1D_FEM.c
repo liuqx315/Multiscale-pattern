@@ -67,13 +67,13 @@
 #include <arkode/arkode_pcg.h>
 #include <sundials/sundials_types.h>
 
-#define USE_ITERATIVE
-#define USE_SPGMR
+/* #define USE_ITERATIVE */
+/* #define USE_SPGMR */
 /* #define USE_SPBCG */
 /* #define USE_SPTFQMR */
 
-#define MASS_USE_ITERATIVE
-#define MASS_USE_SPGMR
+/* #define MASS_USE_ITERATIVE */
+/* #define MASS_USE_SPGMR */
 /* #define MASS_USE_PCG */
 /* #define MASS_USE_SPBCG */
 /* #define MASS_USE_SPTFQMR */
@@ -164,8 +164,7 @@ int main() {
 
   /* general problem parameters */
   realtype T0 = RCONST(0.0);
-  /* realtype Tf = RCONST(10.0); */
-  realtype Tf = RCONST(0.0001);
+  realtype Tf = RCONST(10.0);
   int Nt = 10;
   int Nvar = 3;
   UserData udata = NULL;
@@ -1183,6 +1182,9 @@ static int LaplaceMatrix(DlsMat L, UserData udata)
 {
   /* set shortcuts, local variables */
   long int N = udata->N;
+  realtype du = udata->du;
+  realtype dv = udata->dv;
+  realtype dw = udata->dw;
   long int i;
   realtype xl, xr;
   booleantype left, right;
@@ -1190,36 +1192,48 @@ static int LaplaceMatrix(DlsMat L, UserData udata)
   /* iterate over intervals, filling in Laplace matrix entries */
   for (i=0; i<N-1; i++) {
 
-    /* set mesh shortcuts */
-    xl = udata->x[i];
-    xr = udata->x[i+1];
-
     /* set booleans to determine whether equations exist on the left/right */
     left  = (i==0)     ? FALSE : TRUE;
     right = (i==(N-2)) ? FALSE : TRUE;
 
-    /*    left basis and test functions */
+    /* set mesh shortcuts */
+    xl = udata->x[i];
+    xr = udata->x[i+1];
+
+    /* left test function */
     if (left) {
-      BAND_ELEM(L,IDX(i,0),IDX(i,0)) += ChiL_x(xl,xr) * ChiL_x(xl,xr);
-      BAND_ELEM(L,IDX(i,1),IDX(i,1)) += ChiL_x(xl,xr) * ChiL_x(xl,xr);
-      BAND_ELEM(L,IDX(i,2),IDX(i,2)) += ChiL_x(xl,xr) * ChiL_x(xl,xr);
+      BAND_ELEM(L,IDX(i,0),IDX(i,0)) += (-du) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                * ChiL_x(xl,xr) * ChiL_x(xl,xr);
+      BAND_ELEM(L,IDX(i,0),IDX(i+1,0)) += (-du) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                  * ChiL_x(xl,xr) * ChiR_x(xl,xr);
+
+      BAND_ELEM(L,IDX(i,1),IDX(i,1)) += (-dv) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                * ChiL_x(xl,xr) * ChiL_x(xl,xr);
+      BAND_ELEM(L,IDX(i,1),IDX(i+1,1)) += (-dv) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                  * ChiL_x(xl,xr) * ChiR_x(xl,xr);
+
+      BAND_ELEM(L,IDX(i,2),IDX(i,2)) += (-dw) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                * ChiL_x(xl,xr) * ChiL_x(xl,xr);
+      BAND_ELEM(L,IDX(i,2),IDX(i+1,2)) += (-dw) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                  * ChiL_x(xl,xr) * ChiR_x(xl,xr);
     }
 
-    /*    right basis and test functions */
+    /* right test function */
     if (right) {
-      BAND_ELEM(L,IDX(i+1,0),IDX(i+1,0)) += ChiR_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i+1,1),IDX(i+1,1)) += ChiR_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i+1,2),IDX(i+1,2)) += ChiR_x(xl,xr) * ChiR_x(xl,xr);
-    }
+      BAND_ELEM(L,IDX(i+1,0),IDX(i+1,0)) += (-du) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                    * ChiR_x(xl,xr) * ChiR_x(xl,xr);
+      BAND_ELEM(L,IDX(i+1,0),IDX(i,0)) += (-du) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                  * ChiL_x(xl,xr) * ChiR_x(xl,xr);
 
-    /*    left and right basis and test functions */
-    if (left && right) {
-      BAND_ELEM(L,IDX(i,0),IDX(i+1,0)) += ChiL_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i,1),IDX(i+1,1)) += ChiL_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i,2),IDX(i+1,2)) += ChiL_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i+1,0),IDX(i,0)) += ChiL_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i+1,1),IDX(i,1)) += ChiL_x(xl,xr) * ChiR_x(xl,xr);
-      BAND_ELEM(L,IDX(i+1,2),IDX(i,2)) += ChiL_x(xl,xr) * ChiR_x(xl,xr);
+      BAND_ELEM(L,IDX(i+1,1),IDX(i+1,1)) += (-dv) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                    * ChiR_x(xl,xr) * ChiR_x(xl,xr);
+      BAND_ELEM(L,IDX(i+1,1),IDX(i,1)) += (-dv) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                  * ChiL_x(xl,xr) * ChiR_x(xl,xr);
+
+      BAND_ELEM(L,IDX(i+1,2),IDX(i+1,2)) += (-dw) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                    * ChiR_x(xl,xr) * ChiR_x(xl,xr);
+      BAND_ELEM(L,IDX(i+1,2),IDX(i,2)) += (-dw) * Quad(ONE,ONE,ONE,xl,xr) 
+	                                  * ChiL_x(xl,xr) * ChiR_x(xl,xr);
     }
 
   }
@@ -1242,8 +1256,8 @@ static int ReactionJac(N_Vector y, DlsMat Jac, UserData udata)
   long int i;
   realtype ep = udata->ep;
   realtype ul, ur, vl, vr, wl, wr;
-  realtype u1, u2, u3, v1, v2, v3, w1, w2, w3, chi1, chi2, chi3;
-  realtype u, v, w, xl, xr, f1, f2, f3;
+  realtype u1, u2, u3, v1, v2, v3, w1, w2, w3, xl, xr, df1, df2, df3;
+  realtype dQdf1, dQdf2, dQdf3, ChiL1, ChiL2, ChiL3, ChiR1, ChiR2, ChiR3;
   booleantype left, right;
   
   /* iterate over intervals, filling in reaction Jacobian */
@@ -1260,240 +1274,245 @@ static int ReactionJac(N_Vector y, DlsMat Jac, UserData udata)
     ur = Ydata[IDX(i+1,0)];
     vr = Ydata[IDX(i+1,1)];
     wr = Ydata[IDX(i+1,2)];
+    u1 = Eval(ul,ur,xl,xr,X1(xl,xr));
+    v1 = Eval(vl,vr,xl,xr,X1(xl,xr));
+    w1 = Eval(wl,wr,xl,xr,X1(xl,xr));
+    u2 = Eval(ul,ur,xl,xr,X2(xl,xr));
+    v2 = Eval(vl,vr,xl,xr,X2(xl,xr));
+    w2 = Eval(wl,wr,xl,xr,X2(xl,xr));
+    u3 = Eval(ul,ur,xl,xr,X3(xl,xr));
+    v3 = Eval(vl,vr,xl,xr,X3(xl,xr));
+    w3 = Eval(wl,wr,xl,xr,X3(xl,xr));
 
     /* set mesh shortcuts */
     xl = udata->x[i];
     xr = udata->x[i+1];
 
+    /* set partial derivative shortcuts */
+    dQdf1 = Quad(ONE, ZERO, ZERO, xl, xr);
+    dQdf2 = Quad(ZERO, ONE, ZERO, xl, xr);
+    dQdf3 = Quad(ZERO, ZERO, ONE, xl, xr);
+    ChiL1 = ChiL(xl,xr,X1(xl,xr));
+    ChiL2 = ChiL(xl,xr,X2(xl,xr));
+    ChiL3 = ChiL(xl,xr,X3(xl,xr));
+    ChiR1 = ChiR(xl,xr,X1(xl,xr));
+    ChiR2 = ChiR(xl,xr,X2(xl,xr));
+    ChiR3 = ChiR(xl,xr,X3(xl,xr));
+
     /* evaluate dR/dy on this subinterval */
 
-    /* left basis function, evaluated at all quadrature nodes */
+    /* left test function */
     if (left) {
-      u1 = ul * ChiL(xl,xr,X1(xl,xr));
-      v1 = vl * ChiL(xl,xr,X1(xl,xr));
-      w1 = wl * ChiL(xl,xr,X1(xl,xr));
-      u2 = ul * ChiL(xl,xr,X2(xl,xr));
-      v2 = vl * ChiL(xl,xr,X2(xl,xr));
-      w2 = wl * ChiL(xl,xr,X2(xl,xr));
-      u3 = ul * ChiL(xl,xr,X3(xl,xr));
-      v3 = vl * ChiL(xl,xr,X3(xl,xr));
-      w3 = wl * ChiL(xl,xr,X3(xl,xr));
-    } else {
-      u1 = u2 = u3 = v1 = v2 = v3 = w1 = w2 = w3 = 0.0;
+
+      /* R_u = (a - (w+ONE)*u + v*u*u) */
+      /*  dR_ul/dul */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiL1 * ChiL1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiL2 * ChiL2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ul/dur */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,0),IDX(i+1,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ul/dvl */
+      df1 = (u1*u1) * ChiL1 * ChiL1;
+      df2 = (u2*u2) * ChiL2 * ChiL2;
+      df3 = (u3*u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,0),IDX(i,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ul/dvr */
+      df1 = (u1*u1) * ChiL1 * ChiR1;
+      df2 = (u2*u2) * ChiL2 * ChiR2;
+      df3 = (u3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,0),IDX(i+1,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ul/dwl */
+      df1 = (-u1) * ChiL1 * ChiL1;
+      df2 = (-u2) * ChiL2 * ChiL2;
+      df3 = (-u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,0),IDX(i,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ul/dwr */
+      df1 = (-u1) * ChiL1 * ChiR1;
+      df2 = (-u2) * ChiL2 * ChiR2;
+      df3 = (-u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,0),IDX(i+1,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+
+      /* R_v = (w*u - v*u*u) */
+      /*  dR_vl/dul */
+      df1 = (w1 - TWO*v1*u1) * ChiL1 * ChiL1;
+      df2 = (w2 - TWO*v2*u2) * ChiL2 * ChiL2;
+      df3 = (w3 - TWO*v3*u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,1),IDX(i,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vl/dur */
+      df1 = (w1 - TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (w2 - TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (w3 - TWO*v3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,1),IDX(i+1,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vl/dvl */
+      df1 = (-u1*u1) * ChiL1 * ChiL1;
+      df2 = (-u2*u2) * ChiL2 * ChiL2;
+      df3 = (-u3*u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,1),IDX(i,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vl/dvr */
+      df1 = (-u1*u1) * ChiL1 * ChiR1;
+      df2 = (-u2*u2) * ChiL2 * ChiR2;
+      df3 = (-u3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,1),IDX(i+1,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vl/dwl */
+      df1 = (u1) * ChiL1 * ChiL1;
+      df2 = (u2) * ChiL2 * ChiL2;
+      df3 = (u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,1),IDX(i,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vl/dwr */
+      df1 = (u1) * ChiL1 * ChiR1;
+      df2 = (u2) * ChiL2 * ChiR2;
+      df3 = (u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,1),IDX(i+1,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+
+      /* R_w = ((b-w)/ep - w*u) */
+      /*  dR_wl/dul */
+      df1 = (-w1) * ChiL1 * ChiL1;
+      df2 = (-w2) * ChiL2 * ChiL2;
+      df3 = (-w3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,2),IDX(i,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_wl/dur */
+      df1 = (-w1) * ChiL1 * ChiR1;
+      df2 = (-w2) * ChiL2 * ChiR2;
+      df3 = (-w3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,2),IDX(i+1,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_wl/dwl */
+      df1 = (-ONE/ep - u1) * ChiL1 * ChiL1;
+      df2 = (-ONE/ep - u2) * ChiL2 * ChiL2;
+      df3 = (-ONE/ep - u3) * ChiL3 * ChiL3;
+      BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_wl/dwr */
+      df1 = (-ONE/ep - u1) * ChiL1 * ChiR1;
+      df2 = (-ONE/ep - u2) * ChiL2 * ChiR2;
+      df3 = (-ONE/ep - u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i,2),IDX(i+1,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
     }
 
-    /* left trial function, evaluated at all quadrature nodes */
-    if (left) {
-      chi1 = ChiL(xl,xr,X1(xl,xr));
-      chi2 = ChiL(xl,xr,X2(xl,xr));
-      chi3 = ChiL(xl,xr,X3(xl,xr));
-    } else {
-      chi1 = chi2 = chi3 = 0.0;
-    }
 
-    /* left basis, left trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    BAND_ELEM(Jac,IDX(i,2),IDX(i,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    BAND_ELEM(Jac,IDX(i,2),IDX(i,2)) += Quad(f1,f2,f3,xl,xr);
-
-
-    /* right trial function, evaluated at all quadrature nodes */
+    /* right test function */
     if (right) {
-      chi1 = ChiR(xl,xr,X1(xl,xr));
-      chi2 = ChiR(xl,xr,X2(xl,xr));
-      chi3 = ChiR(xl,xr,X3(xl,xr));
-    } else {
-      chi1 = chi2 = chi3 = 0.0;
+
+      /* R_u = (a - (w+ONE)*u + v*u*u) */
+      /*  dR_ur/dul */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,0),IDX(i,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ur/dur */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiR1 * ChiR1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiR2 * ChiR2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,0),IDX(i+1,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ur/dvl */
+      df1 = (u1*u1) * ChiL1 * ChiR1;
+      df2 = (u2*u2) * ChiL2 * ChiR2;
+      df3 = (u3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,0),IDX(i,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ur/dvr */
+      df1 = (u1*u1) * ChiR1 * ChiR1;
+      df2 = (u2*u2) * ChiR2 * ChiR2;
+      df3 = (u3*u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,0),IDX(i+1,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ur/dwl */
+      df1 = (-u1) * ChiL1 * ChiR1;
+      df2 = (-u2) * ChiL2 * ChiR2;
+      df3 = (-u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,0),IDX(i,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_ur/dwr */
+      df1 = (-u1) * ChiR1 * ChiR1;
+      df2 = (-u2) * ChiR2 * ChiR2;
+      df3 = (-u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,0),IDX(i+1,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+
+      /* R_v = (w*u - v*u*u) */
+      /*  dR_vr/dul */
+      df1 = (w1 - TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (w2 - TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (w3 - TWO*v3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,1),IDX(i,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vr/dur */
+      df1 = (w1 - TWO*v1*u1) * ChiR1 * ChiR1;
+      df2 = (w2 - TWO*v2*u2) * ChiR2 * ChiR2;
+      df3 = (w3 - TWO*v3*u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,1),IDX(i+1,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vr/dvl */
+      df1 = (-u1*u1) * ChiL1 * ChiR1;
+      df2 = (-u2*u2) * ChiL2 * ChiR2;
+      df3 = (-u3*u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,1),IDX(i,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vr/dvr */
+      df1 = (-u1*u1) * ChiR1 * ChiR1;
+      df2 = (-u2*u2) * ChiR2 * ChiR2;
+      df3 = (-u3*u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,1),IDX(i+1,1)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vr/dwl */
+      df1 = (u1) * ChiL1 * ChiR1;
+      df2 = (u2) * ChiL2 * ChiR2;
+      df3 = (u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,1),IDX(i,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_vr/dwr */
+      df1 = (u1) * ChiR1 * ChiR1;
+      df2 = (u2) * ChiR2 * ChiR2;
+      df3 = (u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,1),IDX(i+1,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+
+      /* R_w = ((b-w)/ep - w*u) */
+      /*  dR_wr/dul */
+      df1 = (-w1) * ChiL1 * ChiR1;
+      df2 = (-w2) * ChiL2 * ChiR2;
+      df3 = (-w3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,2),IDX(i,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_wr/dur */
+      df1 = (-w1) * ChiR1 * ChiR1;
+      df2 = (-w2) * ChiR2 * ChiR2;
+      df3 = (-w3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,2),IDX(i+1,0)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_wr/dwl */
+      df1 = (-ONE/ep - u1) * ChiL1 * ChiR1;
+      df2 = (-ONE/ep - u2) * ChiL2 * ChiR2;
+      df3 = (-ONE/ep - u3) * ChiL3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,2),IDX(i,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
+      /*  dR_wr/dwr */
+      df1 = (-ONE/ep - u1) * ChiR1 * ChiR1;
+      df2 = (-ONE/ep - u2) * ChiR2 * ChiR2;
+      df3 = (-ONE/ep - u3) * ChiR3 * ChiR3;
+      BAND_ELEM(Jac,IDX(i+1,2),IDX(i+1,2)) += dQdf1*df1 + dQdf2*df2 + dQdf3*df3;
+
     }
-
-    /* left basis, right trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    BAND_ELEM(Jac,IDX(i+1,0),IDX(i,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,0),IDX(i,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,0),IDX(i,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    BAND_ELEM(Jac,IDX(i+1,1),IDX(i,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,1),IDX(i,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,1),IDX(i,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,2),IDX(i,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    BAND_ELEM(Jac,IDX(i+1,2),IDX(i,2)) += Quad(f1,f2,f3,xl,xr);
-
-
-    /* right basis function, evaluated at all quadrature nodes */
-    if (left) {
-      u1 = ul * ChiR(xl,xr,X1(xl,xr));
-      v1 = vl * ChiR(xl,xr,X1(xl,xr));
-      w1 = wl * ChiR(xl,xr,X1(xl,xr));
-      u2 = ul * ChiR(xl,xr,X2(xl,xr));
-      v2 = vl * ChiR(xl,xr,X2(xl,xr));
-      w2 = wl * ChiR(xl,xr,X2(xl,xr));
-      u3 = ul * ChiR(xl,xr,X3(xl,xr));
-      v3 = vl * ChiR(xl,xr,X3(xl,xr));
-      w3 = wl * ChiR(xl,xr,X3(xl,xr));
-    } else {
-      u1 = u2 = u3 = v1 = v2 = v3 = w1 = w2 = w3 = 0.0;
-    }
-
-    /* right basis, right trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    BAND_ELEM(Jac,IDX(i+1,0),IDX(i+1,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,0),IDX(i+1,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,0),IDX(i+1,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    BAND_ELEM(Jac,IDX(i+1,1),IDX(i+1,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,1),IDX(i+1,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,1),IDX(i+1,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    BAND_ELEM(Jac,IDX(i+1,2),IDX(i+1,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    BAND_ELEM(Jac,IDX(i+1,2),IDX(i+1,2)) += Quad(f1,f2,f3,xl,xr);
-
-
-    /* left trial function, evaluated at all quadrature nodes */
-    if (left) {
-      chi1 = ChiL(xl,xr,X1(xl,xr));
-      chi2 = ChiL(xl,xr,X2(xl,xr));
-      chi3 = ChiL(xl,xr,X3(xl,xr));
-    } else {
-      chi1 = chi2 = chi3 = 0.0;
-    }
-
-    /* right basis, left trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i+1,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i+1,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,0),IDX(i+1,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i+1,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i+1,1)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    BAND_ELEM(Jac,IDX(i,1),IDX(i+1,2)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    BAND_ELEM(Jac,IDX(i,2),IDX(i+1,0)) += Quad(f1,f2,f3,xl,xr);
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    BAND_ELEM(Jac,IDX(i,2),IDX(i+1,2)) += Quad(f1,f2,f3,xl,xr);
 
   }
 
@@ -1507,8 +1526,12 @@ static int LaplaceProduct(N_Vector v, N_Vector Lv, UserData udata)
 {
   /* set shortcuts, local variables */
   long int N = udata->N;
+  realtype du = udata->du;
+  realtype dv = udata->dv;
+  realtype dw = udata->dw;
   long int i;
-  realtype xl, xr;
+  realtype ul, ur, vl, vr, wl, wr;
+  realtype xl, xr, f1;
   booleantype left, right;
   
   /* access v and Lv data arrays */
@@ -1520,38 +1543,47 @@ static int LaplaceProduct(N_Vector v, N_Vector Lv, UserData udata)
   /* iterate over intervals, filling in result */
   for (i=0; i<N-1; i++) {
 
-    /* set mesh shortcuts */
-    xl = udata->x[i];
-    xr = udata->x[i+1];
-
     /* set booleans to determine whether equations exist on the left/right */
     left  = (i==0)     ? FALSE : TRUE;
     right = (i==(N-2)) ? FALSE : TRUE;
 
-    /*    left basis and test functions */
+    /* set nodal value shortcuts (interval index aligns with left node) */
+    ul = Vdata[IDX(i,0)];
+    vl = Vdata[IDX(i,1)];
+    wl = Vdata[IDX(i,2)];
+    ur = Vdata[IDX(i+1,0)];
+    vr = Vdata[IDX(i+1,1)];
+    wr = Vdata[IDX(i+1,2)];
+
+    /* set mesh shortcuts */
+    xl = udata->x[i];
+    xr = udata->x[i+1];
+
+    /* evaluate L*v on this subinterval
+       NOTE: all f values are the same since constant on interval */
+    /*    left test function */
     if (left) {
-      LVdata[IDX(i,0)] += ChiL_x(xl,xr) * ChiL_x(xl,xr) * Vdata[IDX(i,0)];
-      LVdata[IDX(i,1)] += ChiL_x(xl,xr) * ChiL_x(xl,xr) * Vdata[IDX(i,1)];
-      LVdata[IDX(i,2)] += ChiL_x(xl,xr) * ChiL_x(xl,xr) * Vdata[IDX(i,2)];
+      f1 = -du * Eval_x(ul,ur,xl,xr) * ChiL_x(xl,xr);
+      LVdata[IDX(i,0)] += Quad(f1,f1,f1,xl,xr);;
+
+      f1 = -dv * Eval_x(vl,vr,xl,xr) * ChiL_x(xl,xr);
+      LVdata[IDX(i,1)] += Quad(f1,f1,f1,xl,xr);
+
+      f1 = -dw * Eval_x(wl,wr,xl,xr) * ChiL_x(xl,xr);
+      LVdata[IDX(i,2)] += Quad(f1,f1,f1,xl,xr);
     }
 
-    /*    right basis and test functions */
+    /*    right test function */
     if (right) {
-      LVdata[IDX(i+1,0)] += ChiR_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i+1,0)];
-      LVdata[IDX(i+1,1)] += ChiR_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i+1,1)];
-      LVdata[IDX(i+1,2)] += ChiR_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i+1,2)];
-    }
+      f1 = -du * Eval_x(ul,ur,xl,xr) * ChiR_x(xl,xr);
+      LVdata[IDX(i+1,0)] += Quad(f1,f1,f1,xl,xr);
 
-    /*    left and right basis and test functions */
-    if (left && right) {
-      LVdata[IDX(i,0)] += ChiL_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i+1,0)];
-      LVdata[IDX(i,1)] += ChiL_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i+1,1)];
-      LVdata[IDX(i,2)] += ChiL_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i+1,2)];
-      LVdata[IDX(i+1,0)] += ChiL_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i,0)];
-      LVdata[IDX(i+1,1)] += ChiL_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i,1)];
-      LVdata[IDX(i+1,2)] += ChiL_x(xl,xr) * ChiR_x(xl,xr) * Vdata[IDX(i,2)];
-    }
+      f1 = -dv * Eval_x(vl,vr,xl,xr) * ChiR_x(xl,xr);
+      LVdata[IDX(i+1,1)] += Quad(f1,f1,f1,xl,xr);
 
+      f1 = -dw * Eval_x(wl,wr,xl,xr) * ChiR_x(xl,xr);
+      LVdata[IDX(i+1,2)] += Quad(f1,f1,f1,xl,xr);
+    }
   }
 
   return 0;
@@ -1568,8 +1600,8 @@ static int ReactionProduct(N_Vector V, N_Vector Jv, N_Vector y, UserData udata)
   long int i;
   realtype ep = udata->ep;
   realtype ul, ur, vl, vr, wl, wr;
-  realtype u1, u2, u3, v1, v2, v3, w1, w2, w3, chi1, chi2, chi3;
-  realtype u, v, w, xl, xr, f1, f2, f3;
+  realtype u1, u2, u3, v1, v2, v3, w1, w2, w3, xl, xr, df1, df2, df3;
+  realtype dQdf1, dQdf2, dQdf3, ChiL1, ChiL2, ChiL3, ChiR1, ChiR2, ChiR3;
   booleantype left, right;
 
   /* access v and Lv data arrays */
@@ -1594,241 +1626,245 @@ static int ReactionProduct(N_Vector V, N_Vector Jv, N_Vector y, UserData udata)
     ur = Ydata[IDX(i+1,0)];
     vr = Ydata[IDX(i+1,1)];
     wr = Ydata[IDX(i+1,2)];
+    u1 = Eval(ul,ur,xl,xr,X1(xl,xr));
+    v1 = Eval(vl,vr,xl,xr,X1(xl,xr));
+    w1 = Eval(wl,wr,xl,xr,X1(xl,xr));
+    u2 = Eval(ul,ur,xl,xr,X2(xl,xr));
+    v2 = Eval(vl,vr,xl,xr,X2(xl,xr));
+    w2 = Eval(wl,wr,xl,xr,X2(xl,xr));
+    u3 = Eval(ul,ur,xl,xr,X3(xl,xr));
+    v3 = Eval(vl,vr,xl,xr,X3(xl,xr));
+    w3 = Eval(wl,wr,xl,xr,X3(xl,xr));
 
     /* set mesh shortcuts */
     xl = udata->x[i];
     xr = udata->x[i+1];
 
-    /* evaluate dR/dy on this subinterval */
+    /* set partial derivative shortcuts */
+    dQdf1 = Quad(ONE, ZERO, ZERO, xl, xr);
+    dQdf2 = Quad(ZERO, ONE, ZERO, xl, xr);
+    dQdf3 = Quad(ZERO, ZERO, ONE, xl, xr);
+    ChiL1 = ChiL(xl,xr,X1(xl,xr));
+    ChiL2 = ChiL(xl,xr,X2(xl,xr));
+    ChiL3 = ChiL(xl,xr,X3(xl,xr));
+    ChiR1 = ChiR(xl,xr,X1(xl,xr));
+    ChiR2 = ChiR(xl,xr,X2(xl,xr));
+    ChiR3 = ChiR(xl,xr,X3(xl,xr));
 
-    /* left basis function, evaluated at all quadrature nodes */
+    /* evaluate (dR/dy)*V on this subinterval */
+
+    /*    left test function */
     if (left) {
-      u1 = ul * ChiL(xl,xr,X1(xl,xr));
-      v1 = vl * ChiL(xl,xr,X1(xl,xr));
-      w1 = wl * ChiL(xl,xr,X1(xl,xr));
-      u2 = ul * ChiL(xl,xr,X2(xl,xr));
-      v2 = vl * ChiL(xl,xr,X2(xl,xr));
-      w2 = wl * ChiL(xl,xr,X2(xl,xr));
-      u3 = ul * ChiL(xl,xr,X3(xl,xr));
-      v3 = vl * ChiL(xl,xr,X3(xl,xr));
-      w3 = wl * ChiL(xl,xr,X3(xl,xr));
-    } else {
-      u1 = u2 = u3 = v1 = v2 = v3 = w1 = w2 = w3 = 0.0;
+
+      /* R_u = (a - (w+ONE)*u + v*u*u) */
+      /*  (dR_ul/dul)*V_ul */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiL1 * ChiL1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiL2 * ChiL2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,0)];
+
+      /*  (dR_ul/dur)*V_ur */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,0)];
+
+      /*  (dR_ul/dvl)*V_vl */
+      df1 = (u1*u1) * ChiL1 * ChiL1;
+      df2 = (u2*u2) * ChiL2 * ChiL2;
+      df3 = (u3*u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,1)];
+
+      /*  (dR_ul/dvr)*V_vr */
+      df1 = (u1*u1) * ChiL1 * ChiR1;
+      df2 = (u2*u2) * ChiL2 * ChiR2;
+      df3 = (u3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,1)];
+
+      /*  (dR_ul/dwl)*V_wl */
+      df1 = (-u1) * ChiL1 * ChiL1;
+      df2 = (-u2) * ChiL2 * ChiL2;
+      df3 = (-u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,2)];
+
+      /*  (dR_ul/dwr)*V_wr */
+      df1 = (-u1) * ChiL1 * ChiR1;
+      df2 = (-u2) * ChiL2 * ChiR2;
+      df3 = (-u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,2)];
+
+
+      /* R_v = (w*u - v*u*u) */
+      /*  (dR_vl/dul)/V_ul */
+      df1 = (w1 - TWO*v1*u1) * ChiL1 * ChiL1;
+      df2 = (w2 - TWO*v2*u2) * ChiL2 * ChiL2;
+      df3 = (w3 - TWO*v3*u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,0)];
+
+      /*  (dR_vl/dur)/V_ur */
+      df1 = (w1 - TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (w2 - TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (w3 - TWO*v3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,0)];
+
+      /*  (dR_vl/dvl)/V_vl */
+      df1 = (-u1*u1) * ChiL1 * ChiL1;
+      df2 = (-u2*u2) * ChiL2 * ChiL2;
+      df3 = (-u3*u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,1)];
+
+      /*  (dR_vl/dvr)/V_vr */
+      df1 = (-u1*u1) * ChiL1 * ChiR1;
+      df2 = (-u2*u2) * ChiL2 * ChiR2;
+      df3 = (-u3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,1)];
+
+      /*  (dR_vl/dwl)/V_wl */
+      df1 = (u1) * ChiL1 * ChiL1;
+      df2 = (u2) * ChiL2 * ChiL2;
+      df3 = (u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,2)];
+
+      /*  (dR_vl/dwr)/V_wr */
+      df1 = (u1) * ChiL1 * ChiR1;
+      df2 = (u2) * ChiL2 * ChiR2;
+      df3 = (u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,2)];
+
+
+      /* R_w = ((b-w)/ep - w*u) */
+      /*  (dR_wl/dul)/V_ul */
+      df1 = (-w1) * ChiL1 * ChiL1;
+      df2 = (-w2) * ChiL2 * ChiL2;
+      df3 = (-w3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,0)];
+
+      /*  (dR_wl/dur)/V_ur */
+      df1 = (-w1) * ChiL1 * ChiR1;
+      df2 = (-w2) * ChiL2 * ChiR2;
+      df3 = (-w3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,0)];
+
+      /*  (dR_wl/dwl)/V_wl */
+      df1 = (-ONE/ep - u1) * ChiL1 * ChiL1;
+      df2 = (-ONE/ep - u2) * ChiL2 * ChiL2;
+      df3 = (-ONE/ep - u3) * ChiL3 * ChiL3;
+      JVdata[IDX(i,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,2)];
+
+      /*  (dR_wl/dwr)/V_wr */
+      df1 = (-ONE/ep - u1) * ChiL1 * ChiR1;
+      df2 = (-ONE/ep - u2) * ChiL2 * ChiR2;
+      df3 = (-ONE/ep - u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,2)];
+
     }
 
-    /* left trial function, evaluated at all quadrature nodes */
-    if (left) {
-      chi1 = ChiL(xl,xr,X1(xl,xr));
-      chi2 = ChiL(xl,xr,X2(xl,xr));
-      chi3 = ChiL(xl,xr,X3(xl,xr));
-    } else {
-      chi1 = chi2 = chi3 = 0.0;
-    }
 
-    /* left basis, left trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    JVdata[IDX(i,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,0)];
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    JVdata[IDX(i,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,1)];
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    JVdata[IDX(i,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,2)];
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    JVdata[IDX(i,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,0)];
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    JVdata[IDX(i,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,1)];
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    JVdata[IDX(i,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,2)];
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    JVdata[IDX(i,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,0)];
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    JVdata[IDX(i,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,2)];
-
-
-    /* right trial function, evaluated at all quadrature nodes */
+    /* right test function */
     if (right) {
-      chi1 = ChiR(xl,xr,X1(xl,xr));
-      chi2 = ChiR(xl,xr,X2(xl,xr));
-      chi3 = ChiR(xl,xr,X3(xl,xr));
-    } else {
-      chi1 = chi2 = chi3 = 0.0;
+
+      /* R_u = (a - (w+ONE)*u + v*u*u) */
+      /*  (dR_ur/dul)*V_ul */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,0)];
+
+      /*  (dR_ur/dur)*V_ur */
+      df1 = (-(w1+ONE) + TWO*v1*u1) * ChiR1 * ChiR1;
+      df2 = (-(w2+ONE) + TWO*v2*u2) * ChiR2 * ChiR2;
+      df3 = (-(w3+ONE) + TWO*v3*u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,0)];
+
+      /*  (dR_ur/dvl)*V_vl */
+      df1 = (u1*u1) * ChiL1 * ChiR1;
+      df2 = (u2*u2) * ChiL2 * ChiR2;
+      df3 = (u3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,1)];
+
+      /*  (dR_ur/dvr)*V_vr */
+      df1 = (u1*u1) * ChiR1 * ChiR1;
+      df2 = (u2*u2) * ChiR2 * ChiR2;
+      df3 = (u3*u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,1)];
+
+      /*  (dR_ur/dwl)*V_wl */
+      df1 = (-u1) * ChiL1 * ChiR1;
+      df2 = (-u2) * ChiL2 * ChiR2;
+      df3 = (-u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,2)];
+
+      /*  (dR_ur/dwr)*V_wr */
+      df1 = (-u1) * ChiR1 * ChiR1;
+      df2 = (-u2) * ChiR2 * ChiR2;
+      df3 = (-u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,0)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,2)];
+
+
+      /* R_v = (w*u - v*u*u) */
+      /*  (dR_vr/dul)*V_ul */
+      df1 = (w1 - TWO*v1*u1) * ChiL1 * ChiR1;
+      df2 = (w2 - TWO*v2*u2) * ChiL2 * ChiR2;
+      df3 = (w3 - TWO*v3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,0)];
+
+      /*  (dR_vr/dur)*V_ur */
+      df1 = (w1 - TWO*v1*u1) * ChiR1 * ChiR1;
+      df2 = (w2 - TWO*v2*u2) * ChiR2 * ChiR2;
+      df3 = (w3 - TWO*v3*u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,0)];
+
+      /*  (dR_vr/dvl)*V_vl */
+      df1 = (-u1*u1) * ChiL1 * ChiR1;
+      df2 = (-u2*u2) * ChiL2 * ChiR2;
+      df3 = (-u3*u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,1)];
+
+      /*  (dR_vr/dvr)*V_vr */
+      df1 = (-u1*u1) * ChiR1 * ChiR1;
+      df2 = (-u2*u2) * ChiR2 * ChiR2;
+      df3 = (-u3*u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,1)];
+
+      /*  (dR_vr/dwl)*V_wl */
+      df1 = (u1) * ChiL1 * ChiR1;
+      df2 = (u2) * ChiL2 * ChiR2;
+      df3 = (u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,2)];
+
+      /*  (dR_vr/dwr)*V_wr */
+      df1 = (u1) * ChiR1 * ChiR1;
+      df2 = (u2) * ChiR2 * ChiR2;
+      df3 = (u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,1)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,2)];
+
+
+      /* R_w = ((b-w)/ep - w*u) */
+      /*  (dR_wr/dul)*V_ul */
+      df1 = (-w1) * ChiL1 * ChiR1;
+      df2 = (-w2) * ChiL2 * ChiR2;
+      df3 = (-w3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,0)];
+
+      /*  (dR_wr/dur)*V_ur */
+      df1 = (-w1) * ChiR1 * ChiR1;
+      df2 = (-w2) * ChiR2 * ChiR2;
+      df3 = (-w3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,0)];
+
+      /*  (dR_wr/dwl)*V_wl */
+      df1 = (-ONE/ep - u1) * ChiL1 * ChiR1;
+      df2 = (-ONE/ep - u2) * ChiL2 * ChiR2;
+      df3 = (-ONE/ep - u3) * ChiL3 * ChiR3;
+      JVdata[IDX(i+1,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i,2)];
+
+      /*  (dR_wr/dwr)*V_wr */
+      df1 = (-ONE/ep - u1) * ChiR1 * ChiR1;
+      df2 = (-ONE/ep - u2) * ChiR2 * ChiR2;
+      df3 = (-ONE/ep - u3) * ChiR3 * ChiR3;
+      JVdata[IDX(i+1,2)] += (dQdf1*df1 + dQdf2*df2 + dQdf3*df3)*Vdata[IDX(i+1,2)];
+
     }
-
-    /* left basis, right trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    JVdata[IDX(i+1,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,0)];
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    JVdata[IDX(i+1,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,1)];
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    JVdata[IDX(i+1,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,2)];
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    JVdata[IDX(i+1,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,0)];
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    JVdata[IDX(i+1,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,1)];
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    JVdata[IDX(i+1,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,2)];
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    JVdata[IDX(i+1,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,0)];
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    JVdata[IDX(i+1,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i,2)];
-
-
-    /* right basis function, evaluated at all quadrature nodes */
-    if (left) {
-      u1 = ul * ChiR(xl,xr,X1(xl,xr));
-      v1 = vl * ChiR(xl,xr,X1(xl,xr));
-      w1 = wl * ChiR(xl,xr,X1(xl,xr));
-      u2 = ul * ChiR(xl,xr,X2(xl,xr));
-      v2 = vl * ChiR(xl,xr,X2(xl,xr));
-      w2 = wl * ChiR(xl,xr,X2(xl,xr));
-      u3 = ul * ChiR(xl,xr,X3(xl,xr));
-      v3 = vl * ChiR(xl,xr,X3(xl,xr));
-      w3 = wl * ChiR(xl,xr,X3(xl,xr));
-    } else {
-      u1 = u2 = u3 = v1 = v2 = v3 = w1 = w2 = w3 = 0.0;
-    }
-
-    /* right basis, right trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    JVdata[IDX(i+1,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,0)];
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    JVdata[IDX(i+1,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,1)];
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    JVdata[IDX(i+1,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,2)];
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    JVdata[IDX(i+1,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,0)];
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    JVdata[IDX(i+1,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,1)];
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    JVdata[IDX(i+1,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,2)];
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    JVdata[IDX(i+1,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,0)];
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    JVdata[IDX(i+1,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,2)];
-
-
-    /* left trial function, evaluated at all quadrature nodes */
-    if (left) {
-      chi1 = ChiL(xl,xr,X1(xl,xr));
-      chi2 = ChiL(xl,xr,X2(xl,xr));
-      chi3 = ChiL(xl,xr,X3(xl,xr));
-    } else {
-      chi1 = chi2 = chi3 = 0.0;
-    }
-
-    /* right basis, left trial Jacobian entries */
-    /*   dR_u/du */
-    f1 = (TWO*u1*v1-(w1+ONE)) * chi1;
-    f2 = (TWO*u2*v2-(w2+ONE)) * chi2;
-    f3 = (TWO*u3*v3-(w3+ONE)) * chi3;
-    JVdata[IDX(i,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,0)];
-    /*   dR_u/dv */
-    f1 = u1 * u1 * chi1;
-    f2 = u2 * u2 * chi2;
-    f3 = u3 * u3 * chi3;
-    JVdata[IDX(i,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,1)];
-    /*   dR_u/dw */
-    f1 = -u1 * chi1;
-    f2 = -u2 * chi2;
-    f3 = -u3 * chi3;
-    JVdata[IDX(i,0)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,2)];
-    /*   dR_v/du */
-    f1 = (w1 - TWO*u1*v1) * chi1;
-    f2 = (w2 - TWO*u2*v2) * chi2;
-    f3 = (w3 - TWO*u3*v3) * chi3;
-    JVdata[IDX(i,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,0)];
-    /*   dR_v/dv */
-    f1 = -u1 * u1 * chi1;
-    f2 = -u2 * u2 * chi2;
-    f3 = -u3 * u3 * chi3;
-    JVdata[IDX(i,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,1)];
-    /*   dR_v/dw */
-    f1 = u1 * chi1;
-    f2 = u2 * chi2;
-    f3 = u3 * chi3;
-    JVdata[IDX(i,1)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,2)];
-    /*   dR_w/du */
-    f1 = -w1 * chi1;
-    f2 = -w2 * chi2;
-    f3 = -w3 * chi3;
-    JVdata[IDX(i,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,0)];
-    /*   dR_w/dw */
-    f1 = (-ONE/ep - u1) * chi1;
-    f2 = (-ONE/ep - u2) * chi2;
-    f3 = (-ONE/ep - u3) * chi3;
-    JVdata[IDX(i,2)] += Quad(f1,f2,f3,xl,xr) * Vdata[IDX(i+1,2)];
-
   }
 
   return 0;
