@@ -41,24 +41,24 @@ int main() {
 
   /* print current sparse matrices */
   printf("Just-created sparse matrices:\n");
-  printf("\nA:\n");
+  printf("\nA (%ix%i all zeros, %i nonzeros):\n",m,m,nz);
   A = NewSparseMat(m,m,nz);   /* square matrix */
   PrintSparseMat(A);
 
-  printf("\nB:\n");
+  printf("\nB (%ix%i all zeros, %i nonzeros):\n",m,m,nz);
   B = NewSparseMat(m,m,nz);   /* square matrix */
   PrintSparseMat(B);
 
-  printf("\nC:\n");
+  printf("\nC (%ix%i all zeros, %i nonzeros):\n",m,n,nz);
   C = NewSparseMat(m,n,nz);   /* rectangular matrix */
   PrintSparseMat(C);
 
-  printf("\nD:\n");
+  printf("\nD (%ix%i all zeros, %i nonzeros):\n",m,n,nz);
   D = NewSparseMat(m,n,nz);   /* rectangular matrix */
   PrintSparseMat(D);
 
   /* set values to zero and print */
-  printf("Zeroed-out sparse matrices:\n");
+  printf("Manually zeroed-out sparse matrices:\n");
   printf("\nA = 0:\n");
   SlsSetToZero(A);
   PrintSparseMat(A);
@@ -76,13 +76,14 @@ int main() {
   PrintSparseMat(D);
 
   /* fill some matrix values */
-  printf("\nA = I:\n");
+  printf("\nA = 2I:\n");
   AddIdentitySparseMat(A);     /* A = I */
+  AddIdentitySparseMat(A);     /* A = 2I */
   PrintSparseMat(A);
 
   printf("\nB = 5I:\n");
-  CopySparseMat(A,B);          /* B = 5I */
-  ScaleSparseMat(5.0,B);
+  CopySparseMat(A,B);          /* B = I */
+  ScaleSparseMat(2.5,B);       /* B = 5I */
   PrintSparseMat(B);
 
   printf("\nC has nontrivial shape/values:\n");
@@ -124,12 +125,15 @@ int main() {
   PrintSparseMat(C);
 
   printf("\nD = I:\n");
-  AddIdentitySparseMat(D);     /* D = 2*I + C */
+  AddIdentitySparseMat(D);     /* D = 2*I + 2*C */
   PrintSparseMat(D);
   printf("\nD = 2I:\n");
   ScaleSparseMat(2.0,D);
   PrintSparseMat(D);
   printf("\nD = 2I+C:\n");
+  SlsAddMat(D,C);
+  PrintSparseMat(D);
+  printf("\nD = 2I+2C:\n");
   SlsAddMat(D,C);
   PrintSparseMat(D);
 
