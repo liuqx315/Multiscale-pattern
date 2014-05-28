@@ -7,16 +7,16 @@ function [] = mcvsDecoupl_non_p(comm)
 %   See also: mpirun
 
 % Radu Serban <radu@llnl.gov>
-% LLNS Start Copyright
-% Copyright (c) 2013, Lawrence Livermore National Security
+% LLNS Copyright Start
+% Copyright (c) 2014, Lawrence Livermore National Security
 % This work was performed under the auspices of the U.S. Department 
 % of Energy by Lawrence Livermore National Laboratory in part under 
 % Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
 % Produced at the Lawrence Livermore National Laboratory.
 % All rights reserved.
 % For details, see the LICENSE file.
-% LLNS End Copyright
-% $Revision: 1.1 $Date: 2007/08/21 23:09:18 $
+% LLNS Copyright End
+% $Revision: 4075 $Date: 2007/08/21 23:09:18 $
 
 [status npes] = MPI_Comm_size(comm);
 [status mype] = MPI_Comm_rank(comm);

@@ -1,7 +1,7 @@
       program fkinDiagon_kry_p
 c     ----------------------------------------------------------------
-c     $Revision: 1.2 $
-c     $Date: 2009-09-30 23:42:12 $
+c     $Revision: 4074 $
+c     $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
 c     ----------------------------------------------------------------
 c     Programmer(s): Allan G. Taylor, Alan C. Hindmarsh and
 c                    Radu Serban @ LLNL

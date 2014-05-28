@@ -1,12 +1,12 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.26 $
- * $Date: 2010-12-01 22:39:19 $
+ * $Revision: 4081 $
+ * $Date: 2014-04-25 11:59:36 -0700 (Fri, 25 Apr 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban and Cosmin Petra @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -1868,6 +1868,7 @@ char *IDAGetReturnFlagName(long int flag)
     break;
   case IDA_QSRHS_FAIL:
     sprintf(name, "IDA_QSRHS_FAIL");
+    break;
 
     /* IDAA flags follow below. */
   case IDA_NO_ADJ:

@@ -1,12 +1,12 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
+ * $Revision: 4086 $
+ * $Date: 2014-04-30 16:04:45 -0700 (Wed, 30 Apr 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -15,7 +15,7 @@
  * For details, see the LICENSE file.
  * LLNS Copyright End
  * -----------------------------------------------------------------
- * This is the header file for the IDAKLU linear solver module.
+ * This is the header file for the CVKLU linear solver module.
  * -----------------------------------------------------------------
  */
 
