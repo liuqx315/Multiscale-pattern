@@ -1447,6 +1447,16 @@ extern "C" {
 		  DlsMat J, void *user_data,
 		  N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
   
+  int FARKLapackDenseJac(long int N, realtype t, 
+			 N_Vector y, N_Vector fy, 
+			 DlsMat J, void *user_data,
+			 N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+  
+  int FARKLapackBandJac(long int N, long int mupper, long int mlower,
+			realtype t, N_Vector y, N_Vector fy,
+			DlsMat J, void *user_data,
+			N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+  
   int FARKSparseJac(realtype t, N_Vector y, N_Vector fy, 
 		    SlsMat J, void *user_data, N_Vector vtemp1, 
 		    N_Vector vtemp2, N_Vector vtemp3);
