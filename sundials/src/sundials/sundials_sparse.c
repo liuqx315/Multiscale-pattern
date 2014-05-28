@@ -3,7 +3,8 @@
  * $Revision: $
  * $Date: $
  * -----------------------------------------------------------------
- * Programmer: Carol Woodward @ LLNL
+ * Programmers: Carol Woodward @ LLNL
+ *              Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
  * LLNS Copyright Start
  * Copyright (c) 2013, Lawrence Livermore National Security
@@ -191,19 +192,21 @@ situation in which B has fewer nonzeros than A.
 void CopySparseMat(SlsMat A, SlsMat B)
 {
   int i;
+  int A_nz = A->colptrs[A->N];
 
-  /* ensure that B is allocated with at least as much memory as A */
-  if (B->NNZ < A->NNZ) {
-    B->rowvals = realloc(B->rowvals, A->NNZ*sizeof(int));
-    B->data = realloc(B->data, A->NNZ*sizeof(realtype));
-    B->NNZ = A->NNZ;
+  /* ensure that B is allocated with at least as 
+     much memory as we have nonzeros in A */
+  if (B->NNZ < A_nz) {
+    B->rowvals = realloc(B->rowvals, A_nz*sizeof(int));
+    B->data = realloc(B->data, A_nz*sizeof(realtype));
+    B->NNZ = A_nz;
   }
 
   /* zero out B so that copy works correctly */
   SlsSetToZero(B);
 
   /* copy the data and row indices over */
-  for (i=0; i<A->NNZ; i++){
+  for (i=0; i<A_nz; i++){
     B->data[i] = A->data[i];
     B->rowvals[i] = A->rowvals[i];
   }
@@ -212,8 +215,7 @@ void CopySparseMat(SlsMat A, SlsMat B)
   for (i=0; i<A->N; i++) {
     B->colptrs[i] = A->colptrs[i];
   }
-  /* B->colptrs[A->N] = A->NNZ; */
-  B->colptrs[A->N] = A->colptrs[A->N];
+  B->colptrs[A->N] = A_nz;
 
 }
 
@@ -225,7 +227,7 @@ void ScaleSparseMat(realtype b, SlsMat A)
 {
   int i;
 
-  for (i=0; i<A->NNZ; i++){
+  for (i=0; i<A->colptrs[A->N]; i++){
     A->data[i] = b * (A->data[i]);
   }
 }
@@ -323,98 +325,131 @@ contain a value on the diagonal.
 */
 void AddIdentitySparseMat(SlsMat A)
 {
-  int j, i, p, nz;
+  int j, i, p, nz, newmat, found;
   int *w, *Ap, *Ai, *Cp, *Ci;
   realtype *x, *Ax, *Cx;
   SlsMat C;
 
-  /* create work arrays for row indices and nonzero values */
-  w = (int *) malloc(A->M * sizeof(int));
-  x = (realtype *) malloc(A->M * sizeof(realtype));
-
-  /* create new matrix for sum (overestimate nnz as sum of each) */
-  C = NewSparseMat(A->M, A->N, (A->NNZ) + MIN(A->M, A->N));
-
-  /* access data from CSR structures (return if failure) */
-  Cp = Ci = Ap = Ai = NULL;
-  Cx = Ax = NULL;
-  if (C->colptrs)  Cp = C->colptrs;
-  else  return;
-  if (C->rowvals)  Ci = C->rowvals;
-  else  return;
-  if (C->data)     Cx = C->data;
-  else  return;
-  if (A->colptrs)  Ap = A->colptrs;
-  else  return;
-  if (A->rowvals)  Ai = A->rowvals;
-  else  return;
-  if (A->data)     Ax = A->data;
-  else  return;
-
-  /* initialize total nonzero count */
-  nz = 0;
-
-  /* iterate through columns */
-  for (j=0; j<A->N; j++) {
-
-    /* set current column pointer to current # nonzeros */
-    Cp[j] = nz;
-
-    /* clear out temporary arrays for this column */
-    for (i=0; i<A->M; i++) {
-      w[i] = 0;
-      x[i] = 0.0;
-    }
-
-    /* iterate down column of A, collecting nonzeros */
-    for (p=Ap[j]; p<Ap[j+1]; p++) {
-      w[Ai[p]] += 1;       /* indicate that row is filled */
-      x[Ai[p]] = Ax[p];    /* collect value */
-    }
-
-    /* add identity to this column */
-    if (j < A->M) {
-      w[j] += 1;     /* indicate that row is filled */
-      x[j] += 1.0;   /* update value */
-    }
-
-    /* fill entries of C with this column's data */
-    for (i=0; i<A->M; i++) {
-      if ( w[i] > 0 ) { 
-	Ci[nz] = i;  
-	Cx[nz++] = x[i];
+  /* determine if A already contains values on the diagonal (hence 
+     memory allocation necessary)*/
+  newmat=0;
+  for (j=0; j < MIN(A->N,A->M); j++) {
+    /* scan column of A, searching for diagonal value */
+    found = 0;
+    for (i=A->colptrs[j]; i<A->colptrs[j+1]; i++)
+      if (A->rowvals[i] == j) {
+	found = 1;
+	break;
       }
+    /* if no diagonal found, signal new matrix */
+    if (!found) {
+      newmat=1;
+      break;
     }
   }
 
-  /* indicate end of data */
-  Cp[A->N] = nz;
+  /* perform operation */
 
-  /* update A's structure with C's values; nullify C's pointers */
-  A->NNZ = C->NNZ;
+  /*   case 1: A already contains a diagonal */
+  if (!newmat) {
 
-  if (A->data)
-    free(A->data);  
-  A->data = C->data;
-  C->data = NULL;
+    /* iterate through columns, adding 1.0 to diagonal */
+    for (j=0; j < MIN(A->N,A->M); j++) 
+      for (i=A->colptrs[j]; i<A->colptrs[j+1]; i++)
+	if (A->rowvals[i] == j) 
+	  A->data[i] += ONE;
 
-  if (A->rowvals)
-    free(A->rowvals);
-  A->rowvals = C->rowvals;
-  C->rowvals = NULL;
+  /*   case 2: A does not already contain a diagonal */
+  } else {
 
-  if (A->colptrs)
-    free(A->colptrs);
-  A->colptrs = C->colptrs;
-  C->colptrs = NULL;
+    /* create work arrays for row indices and nonzero column values */
+    w = (int *) malloc(A->M * sizeof(int));
+    x = (realtype *) malloc(A->M * sizeof(realtype));
 
-  /* clean up */
-  DestroySparseMat(C); 
-  free(w);
-  free(x);
+    /* create new matrix for sum (overestimate nnz as sum of each) */
+    C = NewSparseMat(A->M, A->N, (A->colptrs[A->N]) + MIN(A->M, A->N));
 
-  /* reallocate the new matrix to remove extra space */
-  ReallocSparseMat(A);
+    /* access data from CSR structures (return if failure) */
+    Cp = Ci = Ap = Ai = NULL;
+    Cx = Ax = NULL;
+    if (C->colptrs)  Cp = C->colptrs;
+    else  return;
+    if (C->rowvals)  Ci = C->rowvals;
+    else  return;
+    if (C->data)     Cx = C->data;
+    else  return;
+    if (A->colptrs)  Ap = A->colptrs;
+    else  return;
+    if (A->rowvals)  Ai = A->rowvals;
+    else  return;
+    if (A->data)     Ax = A->data;
+    else  return;
+
+    /* initialize total nonzero count */
+    nz = 0;
+
+    /* iterate through columns */
+    for (j=0; j<A->N; j++) {
+
+      /* set current column pointer to current # nonzeros */
+      Cp[j] = nz;
+
+      /* clear out temporary arrays for this column */
+      for (i=0; i<A->M; i++) {
+	w[i] = 0;
+	x[i] = 0.0;
+      }
+
+      /* iterate down column of A, collecting nonzeros */
+      for (p=Ap[j]; p<Ap[j+1]; p++) {
+	w[Ai[p]] += 1;       /* indicate that row is filled */
+	x[Ai[p]] = Ax[p];    /* collect value */
+      }
+
+      /* add identity to this column */
+      if (j < A->M) {
+	w[j] += 1;     /* indicate that row is filled */
+	x[j] += ONE;   /* update value */
+      }
+
+      /* fill entries of C with this column's data */
+      for (i=0; i<A->M; i++) {
+	if ( w[i] > 0 ) { 
+	  Ci[nz] = i;  
+	  Cx[nz++] = x[i];
+	}
+      }
+    }
+
+    /* indicate end of data */
+    Cp[A->N] = nz;
+
+    /* update A's structure with C's values; nullify C's pointers */
+    A->NNZ = C->NNZ;
+
+    if (A->data)
+      free(A->data);  
+    A->data = C->data;
+    C->data = NULL;
+
+    if (A->rowvals)
+      free(A->rowvals);
+    A->rowvals = C->rowvals;
+    C->rowvals = NULL;
+
+    if (A->colptrs)
+      free(A->colptrs);
+    A->colptrs = C->colptrs;
+    C->colptrs = NULL;
+
+    /* clean up */
+    DestroySparseMat(C); 
+    free(w);
+    free(x);
+
+    /* reallocate the new matrix to remove extra space */
+    ReallocSparseMat(A);
+  }
 
 }
 
@@ -426,7 +461,7 @@ matrices have different sparsity patterns.  Returns 0 if successful, and
 */
 int SlsAddMat(SlsMat A, SlsMat B)
 {
-  int j, i, p, nz;
+  int j, i, p, nz, newmat;
   int *w, *Ap, *Ai, *Bp, *Bi, *Cp, *Ci;
   realtype *x, *Ax, *Bx, *Cx;
   SlsMat C;
@@ -435,96 +470,150 @@ int SlsAddMat(SlsMat A, SlsMat B)
   if ((A->M != B->M) || (A->N != B->N))
     return(1);
 
-  /* create work arrays for row indices and nonzero values */
+  /* create work arrays for row indices and nonzero column values */
   w = (int *) malloc(A->M * sizeof(int));
   x = (realtype *) malloc(A->M * sizeof(realtype));
 
-  /* create new matrix for sum (overestimate nnz as sum of each) */
-  C = NewSparseMat(A->M, A->N, (A->NNZ)+(B->NNZ));
+  /* determine if A already contains the sparsity pattern of B */
+  newmat=0;
+  for (j=0; j<A->N; j++) {
 
-  /* access data from CSR structures (return if failure) */
-  Cp = Ci = Ap = Ai = Bp = Bi = NULL;
-  Cx = Ax = Bx = NULL;
-  if (C->colptrs)  Cp = C->colptrs;
-  else  return(1);
-  if (C->rowvals)  Ci = C->rowvals;
-  else  return(1);
-  if (C->data)     Cx = C->data;
-  else  return(1);
-  if (A->colptrs)  Ap = A->colptrs;
-  else  return(1);
-  if (A->rowvals)  Ai = A->rowvals;
-  else  return(1);
-  if (A->data)     Ax = A->data;
-  else  return(1);
-  if (B->colptrs)  Bp = B->colptrs;
-  else  return(1);
-  if (B->rowvals)  Bi = B->rowvals;
-  else  return(1);
-  if (B->data)     Bx = B->data;
-  else  return(1);
+    /* clear work array */
+    for (i=0; i<A->M; i++)  w[i] = 0;
 
-  /* initialize total nonzero count */
-  nz = 0;
+    /* scan column of A, incrementing w by one */
+    for (i=A->colptrs[j]; i<A->colptrs[j+1]; i++)
+      w[A->rowvals[i]] += 1;
 
-  /* iterate through columns */
-  for (j=0; j<C->N; j++) {
+    /* scan column of B, decrementing w by one */
+    for (i=B->colptrs[j]; i<B->colptrs[j+1]; i++)
+      w[B->rowvals[i]] -= 1;
 
-    /* set current column pointer to current # nonzeros */
-    Cp[j] = nz;
-
-    /* clear out temporary arrays for this column */
-    for (i=0; i<C->M; i++) {
-      w[i] = 0;
-      x[i] = 0.0;
-    }
-
-    /* iterate down column of A, collecting nonzeros */
-    for (p=Ap[j]; p<Ap[j+1]; p++) {
-      w[Ai[p]] += 1;       /* indicate that row is filled */
-      x[Ai[p]] = Ax[p];    /* collect value */
-    }
-
-    /* iterate down column of B, collecting nonzeros */
-    for (p=Bp[j]; p<Bp[j+1]; p++) {
-      w[Bi[p]] += 1;       /* indicate that row is filled */
-      x[Bi[p]] += Bx[p];   /* collect value */
-    }
-
-    /* fill entries of C with this column's data */
-    for (i=0; i<C->M; i++) {
-      if ( w[i] > 0 ) { 
-	Ci[nz] = i;  
-	Cx[nz++] = x[i];
+    /* if any entry of w is negative, A doesn't contain B's sparsity */
+    for (i=0; i<A->N; i++)
+      if (w[i] < 0) {
+	newmat = 1;
+	break;
       }
-    }
+    if (newmat) break;
+
   }
 
-  /* indicate end of data */
-  Cp[A->N] = nz;
+  /* perform operation */
 
-  /* update A's structure with C's values; nullify C's pointers */
-  A->NNZ = C->NNZ;
+  /*   case 1: A already contains sparsity pattern of B */
+  if (!newmat) {
 
-  free(A->data);  
-  A->data = C->data;
-  C->data = NULL;
+    /* iterate through columns, adding matrices */
+    for (j=0; j<A->N; j++) {
 
-  free(A->rowvals);
-  A->rowvals = C->rowvals;
-  C->rowvals = NULL;
+      /* clear work array */
+      for (i=0; i<A->M; i++)
+	x[i] = ZERO;
 
-  free(A->colptrs);
-  A->colptrs = C->colptrs;
-  C->colptrs = NULL;
+      /* scan column of B, updating work array */
+      for (i=B->colptrs[j]; i<B->colptrs[j+1]; i++)
+	x[B->rowvals[i]] = B->data[i];
+
+      /* scan column of A, updating entries appropriately array */
+      for (i=A->colptrs[j]; i<A->colptrs[j+1]; i++)
+	A->data[i] += x[A->rowvals[i]];
+
+    }
+
+  /*   case 2: A does not already contain B's sparsity */
+  } else {
+
+    /* create new matrix for sum (overestimate nnz as sum of each) */
+    C = NewSparseMat(A->M, A->N, (A->colptrs[A->N])+(B->colptrs[B->N]));
+
+    /* access data from CSR structures (return if failure) */
+    Cp = Ci = Ap = Ai = Bp = Bi = NULL;
+    Cx = Ax = Bx = NULL;
+    if (C->colptrs)  Cp = C->colptrs;
+    else  return(1);
+    if (C->rowvals)  Ci = C->rowvals;
+    else  return(1);
+    if (C->data)     Cx = C->data;
+    else  return(1);
+    if (A->colptrs)  Ap = A->colptrs;
+    else  return(1);
+    if (A->rowvals)  Ai = A->rowvals;
+    else  return(1);
+    if (A->data)     Ax = A->data;
+    else  return(1);
+    if (B->colptrs)  Bp = B->colptrs;
+    else  return(1);
+    if (B->rowvals)  Bi = B->rowvals;
+    else  return(1);
+    if (B->data)     Bx = B->data;
+    else  return(1);
+
+    /* initialize total nonzero count */
+    nz = 0;
+
+    /* iterate through columns */
+    for (j=0; j<C->N; j++) {
+
+      /* set current column pointer to current # nonzeros */
+      Cp[j] = nz;
+
+      /* clear out temporary arrays for this column */
+      for (i=0; i<C->M; i++) {
+	w[i] = 0;
+	x[i] = 0.0;
+      }
+
+      /* iterate down column of A, collecting nonzeros */
+      for (p=Ap[j]; p<Ap[j+1]; p++) {
+	w[Ai[p]] += 1;       /* indicate that row is filled */
+	x[Ai[p]] = Ax[p];    /* collect value */
+      }
+
+      /* iterate down column of B, collecting nonzeros */
+      for (p=Bp[j]; p<Bp[j+1]; p++) {
+	w[Bi[p]] += 1;       /* indicate that row is filled */
+	x[Bi[p]] += Bx[p];   /* collect value */
+      }
+
+      /* fill entries of C with this column's data */
+      for (i=0; i<C->M; i++) {
+	if ( w[i] > 0 ) { 
+	  Ci[nz] = i;  
+	  Cx[nz++] = x[i];
+	}
+      }
+    }
+
+    /* indicate end of data */
+    Cp[A->N] = nz;
+
+    /* update A's structure with C's values; nullify C's pointers */
+    A->NNZ = C->NNZ;
+
+    free(A->data);  
+    A->data = C->data;
+    C->data = NULL;
+
+    free(A->rowvals);
+    A->rowvals = C->rowvals;
+    C->rowvals = NULL;
+
+    free(A->colptrs);
+    A->colptrs = C->colptrs;
+    C->colptrs = NULL;
+
+    /* clean up */
+    DestroySparseMat(C); 
+
+    /* reallocate the new matrix to remove extra space */
+    ReallocSparseMat(A);
+
+  }
 
   /* clean up */
-  DestroySparseMat(C); 
   free(w);
   free(x);
-
-  /* reallocate the new matrix to remove extra space */
-  ReallocSparseMat(A);
 
   /* return success */
   return(0);
