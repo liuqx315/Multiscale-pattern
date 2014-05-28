@@ -1,6 +1,6 @@
 c     ----------------------------------------------------------------
-c     $Revision: 1.3 $
-c     $Date: 2010-12-01 23:04:14 $
+c     $Revision: 4074 $
+c     $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
 c     ----------------------------------------------------------------
 c     This simple example problem for FIDA, due to Robertson, is from 
 c     chemical kinetics, and consists of the following three equations:

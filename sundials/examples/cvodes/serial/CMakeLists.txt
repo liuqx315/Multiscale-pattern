@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------
-# $Revision: 1.9 $
-# $Date: 2012-09-18 23:01:39 $
+# $Revision: 4096 $
+# $Date: 2014-05-02 14:49:50 -0700 (Fri, 02 May 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
 # LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
+# Copyright (c) 2014, Lawrence Livermore National Security
 # This work was performed under the auspices of the U.S. Department 
 # of Energy by Lawrence Livermore National Laboratory in part under 
 # Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -51,6 +51,14 @@ SET(CVODES_examples_BL
   cvsRoberts_dnsL
   )
 
+SET(CVODE_examples_KLU
+  cvsRoberts_klu
+  )
+ 
+SET(CVODE_examples_SUPERLUMT
+  cvsRoberts_sps
+  )
+
 # Specify libraries to link against (through the target that was used to 
 # generate them) based on the value of the variable LINK_LIBRARY_TYPE
 
@@ -66,9 +74,16 @@ ENDIF(LINK_LIBRARY_TYPE MATCHES "static")
 
 SET(SUNDIALS_LIBS ${CVODES_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
 IF(LAPACK_FOUND)
-  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  SET(SUNDIALS_LIBS "${SUNDIALS_LIBS} ${LAPACK_LIBRARIES}")
+  LIST(APPEND SUNDIALS_LIBS ${LAPACK_LIBRARIES})
 ENDIF(LAPACK_FOUND)
+
+IF(KLU_FOUND)
+  LIST(APPEND SUNDIALS_LIBS ${KLU_LIBRARIES})
+ENDIF(KLU_FOUND)
+
+IF(SUPERLUMT_FOUND)
+  LIST(APPEND SUNDIALS_LIBS ${SUPERLUMT_LIBRARIES})
+ENDIF(SUPERLUMT_FOUND)
 
 # Add the build and install targets for each CVODES example
 
@@ -109,6 +124,7 @@ IF(LAPACK_FOUND)
   FOREACH(example ${CVODES_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.c)
     SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     FILE(GLOB example_out ${example}.out*)
     IF(EXAMPLES_INSTALL)
@@ -116,6 +132,34 @@ IF(LAPACK_FOUND)
     ENDIF(EXAMPLES_INSTALL)
   ENDFOREACH(example ${CVODES_examples_BL})
 ENDIF(LAPACK_FOUND)
+
+# If KLU support is enabled, add the build and install targets for
+# the examples using KLU
+IF(KLU_FOUND)
+  FOREACH(example ${CVODE_examples_KLU})
+    ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
+    TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
+    IF(EXAMPLES_INSTALL)
+      INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/cvode/serial)
+    ENDIF(EXAMPLES_INSTALL)
+  ENDFOREACH(example ${CVODE_examples_KLU})
+ENDIF(KLU_FOUND)
+
+# If SUPERLUMT support is enabled, add the build and install targets for
+# the examples using SUPERLUMT
+IF(SUPERLUMT_FOUND)
+  FOREACH(example ${CVODE_examples_SUPERLUMT})
+    ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
+    TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
+    IF(EXAMPLES_INSTALL)
+      INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/cvode/serial)
+    ENDIF(EXAMPLES_INSTALL)
+  ENDFOREACH(example ${CVODE_examples_SUPERLUMT})
+ENDIF(SUPERLUMT_FOUND)
 
 IF(EXAMPLES_INSTALL)
 

@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------
-# $Revision: 1.15 $
-# $Date: 2012-09-18 23:01:28 $
+# $Revision: 4112 $
+# $Date: 2014-05-22 18:02:13 -0700 (Thu, 22 May 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
 # LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
+# Copyright (c) 2014, Lawrence Livermore National Security
 # This work was performed under the auspices of the U.S. Department 
 # of Energy by Lawrence Livermore National Laboratory in part under 
 # Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -195,8 +195,9 @@ ELSE(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/kinsol")
   SET(BUILD_KINSOL OFF)
 ENDIF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/kinsol")
 
+# CPODES is alway OFF for now.
 IF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/cpodes")
-  OPTION(BUILD_CPODES  "Build the CPODES library"  ON)
+  OPTION(BUILD_CPODES  "Build the CPODES library"  OFF)
 ELSE(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/cpodes")
   SET(BUILD_CPODES OFF)
 ENDIF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/cpodes")
@@ -254,8 +255,8 @@ IF(UNIX)
   IF(USE_GENERIC_MATH)
     # executables will be linked against -lm 
     SET(EXTRA_LINK_LIBS -lm)
-    # prepare substitution variable GENERIC_MATH_LIB for sundials_config.h
-    SET(GENERIC_MATH_LIB "#define SUNDIALS_USE_GENERIC_MATH")
+    # prepare substitution variable for sundials_config.h
+    SET(SUNDIALS_USE_GENERIC_MATH TRUE)
   ENDIF(USE_GENERIC_MATH)
 ENDIF(UNIX)
 
@@ -269,7 +270,8 @@ if(SUNDIALS_POSIX_TIMERS)
   find_library(SUNDIALS_RT_LIBRARY NAMES rt)
   mark_as_advanced(SUNDIALS_RT_LIBRARY)
   if(SUNDIALS_RT_LIBRARY)
-    SET(SUNDIALS_HAVE_POSIX_TIMERS "#define SUNDIALS_HAVE_POSIX_TIMERS")
+    # sundials_config.h symbol
+    SET(SUNDIALS_HAVE_POSIX_TIMERS TRUE)
     set(EXTRA_LINK_LIBS ${EXTRA_LINK_LIBS} ${SUNDIALS_RT_LIBRARY})
   endif()
 endif()
@@ -605,18 +607,15 @@ ENDIF(F77SCHEME_FOUND)
 # If LAPACK is needed, first try to find the appropriate
 # libraries and linker flags needed to link against them.
 
-# Macro to be inserted in sundials_config.h
-SET(BLAS_LAPACK_MACRO "#define SUNDIALS_BLAS_LAPACK 0")
-
 IF(LAPACK_ENABLE)
 
+  # find BLAS and LAPACK Libraries
   INCLUDE(SundialsLapack)
 
   IF(LAPACK_FOUND)
-    SET(BLAS_LAPACK_MACRO "#define SUNDIALS_BLAS_LAPACK 1")
+    SET(SUNDIALS_LAPACK TRUE)
   ELSE(LAPACK_FOUND)
     SHOW_VARIABLE(LAPACK_LIBRARIES STRING "Lapack libraries" "${LAPACK_LIBRARIES}")
-    SHOW_VARIABLE(LAPACK_LINKER_FLAGS STRING "Lapack required linker flags" "${LAPACK_LINKER_FLAGS}")
   ENDIF(LAPACK_FOUND)
 
   IF(LAPACK_LIBRARIES AND NOT LAPACK_FOUND)
@@ -627,7 +626,6 @@ IF(LAPACK_ENABLE)
 ELSE(LAPACK_ENABLE)
 
   HIDE_VARIABLE(LAPACK_LIBRARIES)
-  HIDE_VARIABLE(LAPACK_LINKER_FLAGS)
 
 ENDIF(LAPACK_ENABLE)
 
@@ -637,9 +635,6 @@ ENDIF(LAPACK_ENABLE)
 
 # If SUPERLUMT is needed, first try to find the appropriate
 # libraries to link against them.
-
-# Macro to be inserted in sundials_config.h
-SET(SUPERLUMT_MACRO "#define SUNDIALS_SUPERLUMT 0")
 
 IF(SUPERLUMT_ENABLE)
 
@@ -652,7 +647,8 @@ IF(SUPERLUMT_ENABLE)
   INCLUDE(SundialsSuperLUMT)
 
   IF(SUPERLUMT_FOUND)
-    SET(SUPERLUMT_MACRO "#define SUNDIALS_SUPERLUMT 1")
+    # sundials_config.h symbol
+    SET(SUNDIALS_SUPERLUMT TRUE)
   ENDIF(SUPERLUMT_FOUND)
 
   IF(SUPERLUMT_LIBRARIES AND NOT SUPERLUMT_FOUND)
@@ -675,9 +671,6 @@ ENDIF(SUPERLUMT_ENABLE)
 # If KLU is requested, first try to find the appropriate libraries to
 # link against them.
 
-# Macro to be inserted in sundials_config.h 
-SET(KLU_MACRO "#define SUNDIALS_KLU 0")
-
 IF(KLU_ENABLE)
 
   SHOW_VARIABLE(KLU_INCLUDE_DIR STRING "KLU include directory"
@@ -688,7 +681,8 @@ IF(KLU_ENABLE)
   INCLUDE(SundialsKLU)
 
   IF(KLU_FOUND) 
-    SET(KLU_MACRO "#define SUNDIALS_KLU 1")
+    # sundials_config.h symbol
+    SET(SUNDIALS_KLU TRUE)
     INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})
   ENDIF(KLU_FOUND)
 
@@ -882,7 +876,6 @@ IF(EXAMPLES_ENABLE)
     ENDIF(SUPERLUMT_FOUND)
     IF(LAPACK_FOUND)
       LIST2STRING(LAPACK_LIBRARIES BLAS_LAPACK_LIBS)
-      SET(BLAS_LAPACK_LIBS "${LAPACK_LINKER_FLAGS} ${BLAS_LAPACK_LIBS}")
     ENDIF(LAPACK_FOUND)
     IF(MPIC_FOUND)
       IF(MPI_MPICC)
@@ -1021,7 +1014,7 @@ IF(EXAMPLES_ENABLE)
     ENDIF(MPIC_FOUND)
   ENDIF(BUILD_CPODES)
 
-  # Always add the nvector serial examples
+  # Always add the nvector sieral examples
   ADD_SUBDIRECTORY(examples/nvector/serial)
 
   IF(MPIC_FOUND)

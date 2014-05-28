@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------
-# $Revision: 1.8 $
-# $Date: 2012-09-18 23:01:43 $
+# $Revision: 4096 $
+# $Date: 2014-05-02 14:49:50 -0700 (Fri, 02 May 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
 # LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
+# Copyright (c) 2014, Lawrence Livermore National Security
 # This work was performed under the auspices of the U.S. Department 
 # of Energy by Lawrence Livermore National Laboratory in part under 
 # Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -15,6 +15,9 @@
 # LLNS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for IDA serial examples
+#
+# CSW 4/19/2014
+#    Added SUPERLUMT logic.
 
 
 # Add variable IDA_examples with the names of the serial IDA examples
@@ -26,6 +29,10 @@ SET(IDA_examples
   idaKrylovDemo_ls
   idaRoberts_dns
   idaSlCrank_dns
+  )
+
+SET(IDA_examples_SUPERLUMT
+  idaRoberts_sps
   )
 
 SET(IDA_examples_KLU
@@ -53,9 +60,12 @@ ENDIF(LINK_LIBRARY_TYPE MATCHES "static")
 
 SET(SUNDIALS_LIBS ${IDA_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
 IF(LAPACK_FOUND)
-  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  SET(SUNDIALS_LIBS "${SUNDIALS_LIBS} ${LAPACK_LIBRARIES}")
+  LIST(APPEND SUNDIALS_LIBS ${LAPACK_LIBRARIES})
 ENDIF(LAPACK_FOUND)
+
+IF(SUPERLUMT_FOUND)
+  LIST(APPEND SUNDIALS_LIBS ${SUPERLUMT_LIBRARIES})
+ENDIF(SUPERLUMT_FOUND)
 
 IF(KLU_FOUND)
   LIST(APPEND SUNDIALS_LIBS ${KLU_LIBRARIES})
@@ -80,12 +90,26 @@ IF(LAPACK_FOUND)
   FOREACH(example ${IDA_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.c)
     SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
       INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/ida/serial)
     ENDIF(EXAMPLES_INSTALL)
   ENDFOREACH(example ${IDA_examples_BL})
 ENDIF(LAPACK_FOUND)
+
+# If SUPERLUMT support is enabled, add the build and install targets for
+# the examples using SUPERLUMT
+IF(SUPERLUMT_FOUND)
+  FOREACH(example ${IDA_examples_SUPERLUMT})
+    ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
+    IF(EXAMPLES_INSTALL)
+      INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/ida/serial)
+    ENDIF(EXAMPLES_INSTALL)
+  ENDFOREACH(example ${IDA_examples_SUPERLUMT})
+ENDIF(SUPERLUMT_FOUND)
 
 # If KLU support is enabled, add the build and install targets for
 # the examples using KLU
