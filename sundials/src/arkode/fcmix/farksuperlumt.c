@@ -20,7 +20,7 @@
    further details */
 void FARK_SUPERLUMT(int *nthreads, int *neq, int *nnz, int *ier)
 {
-  *ier = ARKSuperLUMT(ARK_arkodemem, *nthreads, *neq, *neq, *nnz);
+  *ier = ARKSuperLUMT(ARK_arkodemem, *nthreads, *neq, *nnz);
   ARK_ls = ARK_LS_SUPERLUMT;
   return;
 }
