@@ -1,6 +1,6 @@
 Just-created sparse matrices:
 
-A:
+A (15x15 all zeros, 100 nonzeros):
 
 15 by 15 NNZ: 100 
   col 0 : locations 0 to -1
@@ -35,7 +35,7 @@ A:
 
 
 
-B:
+B (15x15 all zeros, 100 nonzeros):
 
 15 by 15 NNZ: 100 
   col 0 : locations 0 to -1
@@ -70,7 +70,7 @@ B:
 
 
 
-C:
+C (15x20 all zeros, 100 nonzeros):
 
 15 by 20 NNZ: 100 
   col 0 : locations 0 to -1
@@ -115,7 +115,7 @@ C:
 
 
 
-D:
+D (15x20 all zeros, 100 nonzeros):
 
 15 by 20 NNZ: 100 
   col 0 : locations 0 to -1
@@ -159,7 +159,7 @@ D:
   col 19 : locations 0 to -1
 
 
-Zeroed-out sparse matrices:
+Manually zeroed-out sparse matrices:
 
 A = 0:
 
