@@ -126,11 +126,6 @@ IF(EXAMPLES_INSTALL)
   ELSE(LAPACK_FOUND)
     SET(EXAMPLES_BL "")
   ENDIF(LAPACK_FOUND)
-  IF(KLU_FOUND)
-    LIST2STRING(ARKODE_examples_KLU EXAMPLES_KLU)
-  ELSE(KLU_FOUND)
-    SET(EXAMPLES_KLU "")
-  ENDIF(KLU_FOUND)
 
   # Regardless of the platform we're on, we will generate and install 
   # CMakeLists.txt file for building the examples. This file  can then 
