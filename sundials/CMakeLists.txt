@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4112 $
-# $Date: 2014-05-22 18:02:13 -0700 (Thu, 22 May 2014) $
+# $Revision: 4119 $
+# $Date: 2014-05-29 10:57:48 -0700 (Thu, 29 May 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -612,11 +612,7 @@ IF(LAPACK_ENABLE)
   # find BLAS and LAPACK Libraries
   INCLUDE(SundialsLapack)
 
-  IF(LAPACK_FOUND)
-    SET(SUNDIALS_LAPACK TRUE)
-  ELSE(LAPACK_FOUND)
-    SHOW_VARIABLE(LAPACK_LIBRARIES STRING "Lapack libraries" "${LAPACK_LIBRARIES}")
-  ENDIF(LAPACK_FOUND)
+  SHOW_VARIABLE(LAPACK_LIBRARIES STRING "Blas and Lapack libraries" "${LAPACK_LIBRARIES}")
 
   IF(LAPACK_LIBRARIES AND NOT LAPACK_FOUND)
     PRINT_WARNING("LAPACK not functional"
