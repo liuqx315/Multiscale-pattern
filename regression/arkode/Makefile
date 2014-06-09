@@ -36,13 +36,31 @@ CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
 INCS = -I../../install_opt/include/
-LIBS = -L../../install_opt/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
-FLIBS = -L../../install_opt/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
-KLULIBS = -L/usr/local/klu-1.2.0/gnu/lib -lklu -lcolamd -lamd -lbtf
+LIBS = ../../install_opt/lib/libsundials_arkode.a \
+       ../../install_opt/lib/libsundials_nvecparallel.a \
+       ../../install_opt/lib/libsundials_nvecserial.a \
+       -lm
+FLIBS = ../../install_opt/lib/libsundials_farkode.a \
+        ../../install_opt/lib/libsundials_fnvecserial.a \
+        ../../install_opt/lib/libsundials_arkode.a \
+        ../../install_opt/lib/libsundials_nvecserial.a
+KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
+          /usr/local/klu-1.2.0/gnu/lib/libcolamd.a \
+          /usr/local/klu-1.2.0/gnu/lib/libamd.a \
+          /usr/local/klu-1.2.0/gnu/lib/libbtf.a
 # INCS = -I../../install_dbg/include/
-# LIBS = -L../../install_dbg/lib -lsundials_arkode -lsundials_nvecparallel -lsundials_nvecserial -lm
-# FLIBS = -L../../install_dbg/lib -lsundials_farkode -lsundials_fnvecserial -lsundials_arkode -lsundials_nvecserial
-# KLULIBS = -L/usr/local/klu-1.2.0/gnu_debug/lib -lklu
+# LIBS = ../../install_dbg/lib/libsundials_arkode.a \
+#        ../../install_dbg/lib/libsundials_nvecparallel.a \
+#        ../../install_dbg/lib/libsundials_nvecserial.a \
+#        -lm
+# FLIBS = ../../install_dbg/lib/libsundials_farkode.a \
+#         ../../install_dbg/lib/libsundials_fnvecserial.a \
+#         ../../install_dbg/lib/libsundials_arkode.a \
+#         ../../install_dbg/lib/libsundials_nvecserial.a
+# KLULIBS = /usr/local/klu-1.2.0/gnu_debug/lib/libklu.a \
+#           /usr/local/klu-1.2.0/gnu_debug/lib/libcolamd.a \
+#           /usr/local/klu-1.2.0/gnu_debug/lib/libamd.a \
+#           /usr/local/klu-1.2.0/gnu_debug/lib/libbtf.a
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
