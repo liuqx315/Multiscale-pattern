@@ -23,44 +23,44 @@ SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
             -DSUNDIALS_DOUBLE_PRECISION
 
 # compilation flags 
-CFLAGS = -O2
-FFLAGS = -O2
-CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
-# CFLAGS = -O0 -g
-# FFLAGS = -O0 -g
-# CXXFLAGS = -O0 -g -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+# CFLAGS = -O2
+# FFLAGS = -O2
+# CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+CFLAGS = -O0 -g
+FFLAGS = -O0 -g
+CXXFLAGS = -O0 -g -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install_opt/include/
-LIBS = ../../install_opt/lib/libsundials_arkode.a \
-       ../../install_opt/lib/libsundials_nvecparallel.a \
-       ../../install_opt/lib/libsundials_nvecserial.a \
-       -lm
-FLIBS = ../../install_opt/lib/libsundials_farkode.a \
-        ../../install_opt/lib/libsundials_fnvecserial.a \
-        ../../install_opt/lib/libsundials_arkode.a \
-        ../../install_opt/lib/libsundials_nvecserial.a
-KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
-          /usr/local/klu-1.2.0/gnu/lib/libcolamd.a \
-          /usr/local/klu-1.2.0/gnu/lib/libamd.a \
-          /usr/local/klu-1.2.0/gnu/lib/libbtf.a
-# INCS = -I../../install_dbg/include/
-# LIBS = ../../install_dbg/lib/libsundials_arkode.a \
-#        ../../install_dbg/lib/libsundials_nvecparallel.a \
-#        ../../install_dbg/lib/libsundials_nvecserial.a \
+# INCS = -I../../install_opt/include/
+# LIBS = ../../install_opt/lib/libsundials_arkode.a \
+#        ../../install_opt/lib/libsundials_nvecparallel.a \
+#        ../../install_opt/lib/libsundials_nvecserial.a \
 #        -lm
-# FLIBS = ../../install_dbg/lib/libsundials_farkode.a \
-#         ../../install_dbg/lib/libsundials_fnvecserial.a \
-#         ../../install_dbg/lib/libsundials_arkode.a \
-#         ../../install_dbg/lib/libsundials_nvecserial.a
-# KLULIBS = /usr/local/klu-1.2.0/gnu_debug/lib/libklu.a \
-#           /usr/local/klu-1.2.0/gnu_debug/lib/libcolamd.a \
-#           /usr/local/klu-1.2.0/gnu_debug/lib/libamd.a \
-#           /usr/local/klu-1.2.0/gnu_debug/lib/libbtf.a
+# FLIBS = ../../install_opt/lib/libsundials_farkode.a \
+#         ../../install_opt/lib/libsundials_fnvecserial.a \
+#         ../../install_opt/lib/libsundials_arkode.a \
+#         ../../install_opt/lib/libsundials_nvecserial.a
+# KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
+#           /usr/local/klu-1.2.0/gnu/lib/libcolamd.a \
+#           /usr/local/klu-1.2.0/gnu/lib/libamd.a \
+#           /usr/local/klu-1.2.0/gnu/lib/libbtf.a
+INCS = -I../../install_dbg/include/
+LIBS = ../../install_dbg/lib/libsundials_arkode.a \
+       ../../install_dbg/lib/libsundials_nvecparallel.a \
+       ../../install_dbg/lib/libsundials_nvecserial.a \
+       -lm
+FLIBS = ../../install_dbg/lib/libsundials_farkode.a \
+        ../../install_dbg/lib/libsundials_fnvecserial.a \
+        ../../install_dbg/lib/libsundials_arkode.a \
+        ../../install_dbg/lib/libsundials_nvecserial.a
+KLULIBS = /usr/local/klu-1.2.0/gnu_debug/lib/libklu.a \
+          /usr/local/klu-1.2.0/gnu_debug/lib/libcolamd.a \
+          /usr/local/klu-1.2.0/gnu_debug/lib/libamd.a \
+          /usr/local/klu-1.2.0/gnu_debug/lib/libbtf.a
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
@@ -72,6 +72,7 @@ TESTS = ark_analytic.exe \
         ark_brusselator1D.exe \
         ark_brusselator1D_FEM.exe \
         ark_brusselator1D_klu.exe \
+        ark_brusselator1D_FEM_klu.exe \
         ark_heat1D.exe \
         ark_heat1D_adapt.exe \
         ark_heat2D.exe \
@@ -97,6 +98,9 @@ ark_robertson_klu.exe : ark_robertson_klu.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
 
 ark_brusselator1D_klu.exe : ark_brusselator1D_klu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
+
+ark_brusselator1D_FEM_klu.exe : ark_brusselator1D_FEM_klu.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
 
 # specific build rules for Fortran programs
