@@ -524,7 +524,7 @@ int ARKMassKLU(void *arkode_mem, int n, int nnz,
   }
 
   /* Initialize mass-matrix-related data */
-  arksls_mem->s_Meval = NULL;
+  arksls_mem->s_Meval = smass;
   arksls_mem->s_Mdata = ark_mem->ark_user_data;
   arksls_mem->s_last_flag = ARKSLS_SUCCESS;
   ark_mem->ark_MassSetupNonNull = TRUE;
