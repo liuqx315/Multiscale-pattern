@@ -82,9 +82,6 @@ SET(idaslib_SOVERSION "0")
 SET(kinsollib_VERSION "1.0.0")
 SET(kinsollib_SOVERSION "1")
 
-SET(cpodeslib_VERSION "0.0.0")
-SET(cpodeslib_SOVERSION "0")
-
 SET(nveclib_VERSION "0.0.2")
 SET(nveclib_SOVERSION "0")
 
@@ -194,13 +191,6 @@ IF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/kinsol")
 ELSE(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/kinsol")
   SET(BUILD_KINSOL OFF)
 ENDIF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/kinsol")
-
-# CPODES is alway OFF for now.
-IF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/cpodes")
-  OPTION(BUILD_CPODES  "Build the CPODES library"  OFF)
-ELSE(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/cpodes")
-  SET(BUILD_CPODES OFF)
-ENDIF(IS_DIRECTORY "${sundials_SOURCE_DIR}/src/cpodes")
 
 # -------------------------------------------------------------
 # Other configuration options
@@ -813,12 +803,6 @@ IF(BUILD_KINSOL)
   ENDIF(FCMIX_ENABLE AND F77_FOUND)
 ENDIF(BUILD_KINSOL)
 
-# CPODES library
-
-IF(BUILD_CPODES)	
-  ADD_SUBDIRECTORY(src/cpodes)
-ENDIF(BUILD_CPODES)
-
 # -------------------------------------------------------------
 # Include the subdirectories corresponding to various examples
 # -------------------------------------------------------------
@@ -1002,13 +986,6 @@ IF(EXAMPLES_ENABLE)
       ADD_SUBDIRECTORY(examples/kinsol/fcmix_parallel)
     ENDIF(MPIF_FOUND)
   ENDIF(BUILD_KINSOL)
-
-  IF(BUILD_CPODES)	
-    ADD_SUBDIRECTORY(examples/cpodes/serial)
-    IF(MPIC_FOUND)
-      ADD_SUBDIRECTORY(examples/cpodes/parallel)
-    ENDIF(MPIC_FOUND)
-  ENDIF(BUILD_CPODES)
 
   # Always add the nvector sieral examples
   ADD_SUBDIRECTORY(examples/nvector/serial)
