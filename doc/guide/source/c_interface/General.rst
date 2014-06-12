@@ -149,6 +149,10 @@ solver or for mass-matrix solves, are:
 - ``arkode_band.h``, which is used with the band direct linear solver;
 - ``arkode_lapack.h``, which is used with LAPACK implementations of dense
   or band direct linear solvers; 
+- ``arkode_klu.h``, which is used to interface with the KLU sparse
+  matrix solver library;
+- ``arkode_superlumt.h``, which is used to interface with the
+  SuperLU_MT threaded sparse matrix solver library;
 - ``arkode_spgmr.h``, which is used with the scaled, preconditioned GMRES
   Krylov linear solver SPGMR;
 - ``arkode_spbcgs.h``, which is used with the scaled, preconditioned
@@ -166,6 +170,12 @@ common functions.  This in turn includes a file (``sundials_direct.h``)
 which defines the matrix type for these direct linear solvers
 (``DlsMat``), as well as various functions and macros for acting on and
 accessing entries of such matrices. 
+
+The header files for the sparse linear solvers include the file
+``arkode_sparse.h``, which defines common functions.  This in turn
+includes a file (``sundials_sparse.h``) which defines the matrix type
+for these sparse linear solvers (``SlsMat``), as well as various
+functions and macros for acting on and manipulating such matrices. 
 
 The header files for the Krylov iterative solvers each include
 ``arkode_spils.h`` which defines common functions and which in turn

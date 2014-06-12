@@ -28,6 +28,13 @@ SET(ARKODE_examples
 SET(ARKODE_examples_BL
   )
 
+# Add variable ARKODE_examples_KLU with the names of the serial ARKODE examples
+# that use KLU
+
+SET(ARKODE_examples_KLU
+  ark_brusselator1D_klu
+  )
+
 # Add variable ARKODE_extras with the names of auxiliary files to install
 
 SET(ARKODE_extras
@@ -53,9 +60,16 @@ ENDIF(LINK_LIBRARY_TYPE MATCHES "static")
 
 SET(SUNDIALS_LIBS ${ARKODE_LIB} ${NVECS_LIB} ${EXTRA_LINK_LIBS})
 IF(LAPACK_FOUND)
-  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  SET(SUNDIALS_LIBS "${SUNDIALS_LIBS} ${LAPACK_LIBRARIES}")
+  LIST(APPEND SUNDIALS_LIBS ${LAPACK_LIBRARIES})
 ENDIF(LAPACK_FOUND)
+
+IF(KLU_FOUND)
+  LIST(APPEND SUNDIALS_LIBS ${KLU_LIBRARIES})
+ENDIF(KLU_FOUND)
+
+IF(SUPERLUMT_FOUND)
+  LIST(APPEND SUNDIALS_LIBS ${SUPERLUMT_LIBRARIES})
+ENDIF(SUPERLUMT_FOUND)
 
 # Add the build and install targets for each ARKODE example
 
@@ -75,12 +89,27 @@ IF(LAPACK_FOUND)
   FOREACH(example ${ARKODE_examples_BL})
     ADD_EXECUTABLE(${example} ${example}.c)
     SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
       INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/C_serial)
     ENDIF(EXAMPLES_INSTALL)
   ENDFOREACH(example ${ARKODE_examples_BL})
 ENDIF(LAPACK_FOUND)
+
+# If KLU support is enabled, add the build and install targets for 
+# the examples using KLU
+IF(KLU_FOUND)
+  FOREACH(example ${ARKODE_examples_KLU})
+    ADD_EXECUTABLE(${example} ${example}.c)
+    SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
+    TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
+    IF(EXAMPLES_INSTALL)
+      INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/arkode/C_serial)
+    ENDIF(EXAMPLES_INSTALL)
+  ENDFOREACH(example ${ARKODE_examples_KLU})
+ENDIF(KLU_FOUND)
 
 IF(EXAMPLES_INSTALL)
 

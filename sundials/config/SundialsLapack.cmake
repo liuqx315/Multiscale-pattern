@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 1.1 $
-# $Date: 2009-02-17 02:58:46 $
+# $Revision: 4096 $
+# $Date: 2014-05-02 14:49:50 -0700 (Fri, 02 May 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -29,13 +29,7 @@ if(NOT LAPACK_LIBRARIES)
       )
   endif(F77_FOUND)
 endif(NOT LAPACK_LIBRARIES)
-# If using a GNU C compiler, it is quite likely we'll want LAPACK_LINKER_FLAGS
-# to include -lg2c (if not already present)
-## DRR -- this is no longer true, since modern GNUCC installations use 
-## gfortran and no longer require the g2c library; I've commented this out
-#if(CMAKE_COMPILER_IS_GNUCC AND NOT LAPACK_LINKER_FLAGS MATCHES "g2c")
-#  set(LAPACK_LINKER_FLAGS "${LAPACK_LINKER_FLAGS} -lg2c")
-#endif(CMAKE_COMPILER_IS_GNUCC AND NOT LAPACK_LINKER_FLAGS MATCHES "g2c")
+
 # If we have the LAPACK libraries, test them
 if(LAPACK_LIBRARIES)
   message(STATUS "Looking for LAPACK libraries... OK")
@@ -53,7 +47,6 @@ if(LAPACK_LIBRARIES)
     "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"
     "SET(CMAKE_C_FLAGS_RELWITHDEBUGINFO \"${CMAKE_C_FLAGS_RELWITHDEBUGINFO}\")\n"
     "SET(CMAKE_C_FLAGS_MINSIZE \"${CMAKE_C_FLAGS_MINSIZE}\")\n"
-    "SET(CMAKE_EXE_LINKER_FLAGS \"\${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}\")\n"
     "ADD_EXECUTABLE(ltest ltest.c)\n"
     "TARGET_LINK_LIBRARIES(ltest ${LAPACK_LIBRARIES})\n")    
   # Create a C source file which calls a Blas function (dcopy) and an Lapack function (dgetrf)

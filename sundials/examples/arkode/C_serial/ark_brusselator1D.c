@@ -28,8 +28,8 @@
  centered differences, with the data distributed over N points 
  on a uniform spatial grid.
 
- This program solves the problem with the BDF method, using a
- Newton iteration with the CVBAND band linear solver, and a
+ This program solves the problem with the DIRK method, using a
+ Newton iteration with the ARKBAND band linear solver, and a
  user-supplied Jacobian routine.
 
  100 outputs are printed at equal intervals, and run statistics 
@@ -282,7 +282,7 @@ int main()
   printf("   Total RHS evals for setting up the linear system = %li\n", nfeLS);
   printf("   Total number of Jacobian evaluations = %li\n", nje);
   printf("   Total number of Newton iterations = %li\n", nni);
-  printf("   Total number of linear solver convergence failures = %li\n", ncfn);
+  printf("   Total number of nonlinear solver convergence failures = %li\n", ncfn);
   printf("   Total number of error test failures = %li\n\n", netf);
 
   /* Clean up and return with successful completion */

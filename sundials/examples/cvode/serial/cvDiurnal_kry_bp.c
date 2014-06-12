@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2010-12-01 22:51:32 $
+ * $Revision: 4102 $
+ * $Date: 2014-05-07 17:16:16 -0700 (Wed, 07 May 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @LLNL
@@ -206,8 +206,11 @@ int main()
       if(check_flag(&flag, "CVodeReInit", 1)) return(1);
 
       flag = CVSpilsSetPrecType(cvode_mem, PREC_RIGHT);
-      check_flag(&flag, "CVSpilsSetPrecType", 1);
-      
+      if(check_flag(&flag, "CVSpilsSetPrecType", 1)) return(1);
+
+      flag = CVBandPrecInit(cvode_mem, NEQ, mu, ml);
+      if(check_flag(&flag, "CVBandPrecInit", 0)) return(1);
+
       printf("\n\n-------------------------------------------------------");
       printf("------------\n");
     }

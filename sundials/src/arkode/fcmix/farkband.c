@@ -47,6 +47,7 @@ void FARK_BANDSETJAC(int *flag, int *ier)
   } else {
     *ier = ARKDlsSetBandJacFn(ARK_arkodemem, FARKBandJac);
   }
+  return;
 }
 
 /*=============================================================*/

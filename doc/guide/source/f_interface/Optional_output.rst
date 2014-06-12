@@ -39,7 +39,9 @@ arrays by index, naming them according to their role with the main
 ARKode solver, and list the relevant ARKode C/C++ function that is
 actually called to extract the output value.  Similarly, optional
 integer output values that are specific to the ARKDENSE and ARKBAND
-linear solvers are listed in :ref:`FInterface.DlsIOUTTable`,  while
+linear solvers are listed in :ref:`FInterface.DlsIOUTTable`, optional
+integer output values that are specific to the ARKKLU and ARKSUPERLUMT
+linear solvers are listed in :ref:`FInterface.SlsIOUTTable`, while
 integer optional output values specific to the ARKSPGMR,
 ARKSPBCG, ARKSPTFQMR, ARKSPFGMR and ARKPCG iterative linear solvers
 are listed in :ref:`FInterface.SpilsIOUTTable`.
@@ -112,6 +114,22 @@ Table: Optional ARKDENSE and ARKBAND outputs
 16              LSTF             :c:func:`ARKDlsGetLastFlag()`
 17              NFELS            :c:func:`ARKDlsGetNumRhsEvals()`
 18              NJE              :c:func:`ARKDlsGetNumJacEvals()`
+==============  ===============  ===================================================
+
+
+
+.. _FInterface.SlsIOUTTable:
+
+Table: Optional ARKKLU and ARKSUPERLUMT outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. cssclass:: table-bordered
+
+==============  ===============  ===================================================
+*IOUT* Index    Optional output  ARKode function
+==============  ===============  ===================================================
+16              LSTF             :c:func:`ARKSlsGetLastFlag()`
+18              NJE              :c:func:`ARKSlsGetNumJacEvals()`
 ==============  ===============  ===================================================
 
 

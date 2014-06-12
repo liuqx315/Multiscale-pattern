@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------
-# $Revision: 1.15 $
-# $Date: 2012-09-18 23:01:28 $
+# $Revision: 4119 $
+# $Date: 2014-05-29 10:57:48 -0700 (Thu, 29 May 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
 # LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
+# Copyright (c) 2014, Lawrence Livermore National Security
 # This work was performed under the auspices of the U.S. Department 
 # of Energy by Lawrence Livermore National Laboratory in part under 
 # Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -38,9 +38,9 @@ PROJECT(sundials C)
 
 SET(PACKAGE_BUGREPORT "woodward6@llnl.gov")
 SET(PACKAGE_NAME "SUNDIALS")
-SET(PACKAGE_STRING "SUNDIALS 2.5.0")
+SET(PACKAGE_STRING "SUNDIALS 2.6.0")
 SET(PACKAGE_TARNAME "sundials")
-SET(PACKAGE_VERSION "2.5.0")
+SET(PACKAGE_VERSION "2.6.0")
 
 # 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -245,8 +245,8 @@ IF(UNIX)
   IF(USE_GENERIC_MATH)
     # executables will be linked against -lm 
     SET(EXTRA_LINK_LIBS -lm)
-    # prepare substitution variable GENERIC_MATH_LIB for sundials_config.h
-    SET(GENERIC_MATH_LIB "#define SUNDIALS_USE_GENERIC_MATH")
+    # prepare substitution variable for sundials_config.h
+    SET(SUNDIALS_USE_GENERIC_MATH TRUE)
   ENDIF(USE_GENERIC_MATH)
 ENDIF(UNIX)
 
@@ -260,7 +260,8 @@ if(SUNDIALS_POSIX_TIMERS)
   find_library(SUNDIALS_RT_LIBRARY NAMES rt)
   mark_as_advanced(SUNDIALS_RT_LIBRARY)
   if(SUNDIALS_RT_LIBRARY)
-    SET(SUNDIALS_HAVE_POSIX_TIMERS "#define SUNDIALS_HAVE_POSIX_TIMERS")
+    # sundials_config.h symbol
+    SET(SUNDIALS_HAVE_POSIX_TIMERS TRUE)
     set(EXTRA_LINK_LIBS ${EXTRA_LINK_LIBS} ${SUNDIALS_RT_LIBRARY})
   endif()
 endif()
@@ -317,16 +318,16 @@ IF(NOT LAPACK_ENABLE)
 ENDIF(NOT LAPACK_ENABLE)
 
 # -------------------------------------------------------------
-# Enable SuperLU support?
+# Enable SUPERLUMT support?
 # -------------------------------------------------------------
 
-OPTION(SUPERLU_ENABLE "Enable SuperLU support" OFF)
+OPTION(SUPERLUMT_ENABLE "Enable SUPERLUMT support" OFF)
 
-IF(NOT SUPERLU_ENABLE)
-  HIDE_VARIABLE(SUPERLU_THREAD_TYPE)
-  HIDE_VARIABLE(SUPERLU_LIBRARY_DIR)
-  HIDE_VARIABLE(SUPERLU_INCLUDE_DIR)
-ENDIF(NOT SUPERLU_ENABLE)
+IF(NOT SUPERLUMT_ENABLE)
+  HIDE_VARIABLE(SUPERLUMT_THREAD_TYPE)
+  HIDE_VARIABLE(SUPERLUMT_LIBRARY_DIR)
+  HIDE_VARIABLE(SUPERLUMT_INCLUDE_DIR)
+ENDIF(NOT SUPERLUMT_ENABLE)
 
 # -------------------------------------------------------------
 # Enable KLU support?
@@ -596,19 +597,12 @@ ENDIF(F77SCHEME_FOUND)
 # If LAPACK is needed, first try to find the appropriate
 # libraries and linker flags needed to link against them.
 
-# Macro to be inserted in sundials_config.h
-SET(BLAS_LAPACK_MACRO "#define SUNDIALS_BLAS_LAPACK 0")
-
 IF(LAPACK_ENABLE)
 
+  # find BLAS and LAPACK Libraries
   INCLUDE(SundialsLapack)
 
-  IF(LAPACK_FOUND)
-    SET(BLAS_LAPACK_MACRO "#define SUNDIALS_BLAS_LAPACK 1")
-  ELSE(LAPACK_FOUND)
-    SHOW_VARIABLE(LAPACK_LIBRARIES STRING "Lapack libraries" "${LAPACK_LIBRARIES}")
-    SHOW_VARIABLE(LAPACK_LINKER_FLAGS STRING "Lapack required linker flags" "${LAPACK_LINKER_FLAGS}")
-  ENDIF(LAPACK_FOUND)
+  SHOW_VARIABLE(LAPACK_LIBRARIES STRING "Blas and Lapack libraries" "${LAPACK_LIBRARIES}")
 
   IF(LAPACK_LIBRARIES AND NOT LAPACK_FOUND)
     PRINT_WARNING("LAPACK not functional"
@@ -618,46 +612,43 @@ IF(LAPACK_ENABLE)
 ELSE(LAPACK_ENABLE)
 
   HIDE_VARIABLE(LAPACK_LIBRARIES)
-  HIDE_VARIABLE(LAPACK_LINKER_FLAGS)
 
 ENDIF(LAPACK_ENABLE)
 
 # -------------------------------------------------------------
-# Find (and test) the SuperLU libraries
+# Find (and test) the SUPERLUMT libraries
 # -------------------------------------------------------------
 
-# If SuperLU is needed, first try to find the appropriate
+# If SUPERLUMT is needed, first try to find the appropriate
 # libraries to link against them.
 
-# Macro to be inserted in sundials_config.h
-SET(SUPERLU_MACRO "#define SUNDIALS_SUPERLU 0")
+IF(SUPERLUMT_ENABLE)
 
-IF(SUPERLU_ENABLE)
+  # get thread type for SUPERLUMT (OpenMP or Pthreads(default))
+  SET(SUPERLUMT_THREAD_TYPE "Pthread" CACHE STRING "OpenMP or Pthread (leave blank for no threading)")
+  SHOW_VARIABLE(SUPERLUMT_THREAD_TYPE STRING "SUPERLUMT threading type: OpenMP or Pthread (blank for no threading)" "${SUPERLUMT_THREAD_TYPE}")
+  SHOW_VARIABLE(SUPERLUMT_INCLUDE_DIR STRING "SUPERLUMT include directory" "${SUPERLUMT_INCLUDE_DIR}")
+  SHOW_VARIABLE(SUPERLUMT_LIBRARY_DIR STRING "SUPERLUMT library directory" "${SUPERLUMT_LIBRARY_DIR}")
 
-  # get thread type for SuperLU (OpenMP or Pthreads(default))
-  SET(SUPERLU_THREAD_TYPE "Pthread" CACHE STRING "OpenMP or Pthread (leave blank for no threading)")
-  SHOW_VARIABLE(SUPERLU_THREAD_TYPE STRING "SuperLU threading type: OpenMP or Pthread (blank for no threading)" "${SUPERLU_THREAD_TYPE}")
-  SHOW_VARIABLE(SUPERLU_INCLUDE_DIR STRING "SuperLU include directory" "${SUPERLU_INCLUDE_DIR}")
-  SHOW_VARIABLE(SUPERLU_LIBRARY_DIR STRING "SuperLU library directory" "${SUPERLU_LIBRARY_DIR}")
+  INCLUDE(SundialsSuperLUMT)
 
-  INCLUDE(SundialsSuperLU)
+  IF(SUPERLUMT_FOUND)
+    # sundials_config.h symbol
+    SET(SUNDIALS_SUPERLUMT TRUE)
+  ENDIF(SUPERLUMT_FOUND)
 
-  IF(SUPERLU_FOUND)
-    SET(SUPERLU_MACRO "#define SUNDIALS_SUPERLU 1")
-  ENDIF(SUPERLU_FOUND)
-
-  IF(SUPERLU_LIBRARIES AND NOT SUPERLU_FOUND)
-    PRINT_WARNING("SuperLU not functional - support will not be provided"
+  IF(SUPERLUMT_LIBRARIES AND NOT SUPERLUMT_FOUND)
+    PRINT_WARNING("SUPERLUMT not functional - support will not be provided"
       "Double check spelling specified libraries (search is case sensitive)")
-  ENDIF(SUPERLU_LIBRARIES AND NOT SUPERLU_FOUND)
+  ENDIF(SUPERLUMT_LIBRARIES AND NOT SUPERLUMT_FOUND)
 
-ELSE(SUPERLU_ENABLE)
+ELSE(SUPERLUMT_ENABLE)
 
-  HIDE_VARIABLE(SUPERLU_THREAD_TYPE)
-  HIDE_VARIABLE(SUPERLU_INCLUDE_DIR)
-  HIDE_VARIABLE(SUPERLU_LIBRARY_DIR)
+  HIDE_VARIABLE(SUPERLUMT_THREAD_TYPE)
+  HIDE_VARIABLE(SUPERLUMT_INCLUDE_DIR)
+  HIDE_VARIABLE(SUPERLUMT_LIBRARY_DIR)
 
-ENDIF(SUPERLU_ENABLE)
+ENDIF(SUPERLUMT_ENABLE)
 
 # -------------------------------------------------------------
 # Find (and test) the KLU libraries
@@ -665,9 +656,6 @@ ENDIF(SUPERLU_ENABLE)
 
 # If KLU is requested, first try to find the appropriate libraries to
 # link against them.
-
-# Macro to be inserted in sundials_config.h 
-SET(KLU_MACRO "#define SUNDIALS_KLU 0")
 
 IF(KLU_ENABLE)
 
@@ -679,7 +667,8 @@ IF(KLU_ENABLE)
   INCLUDE(SundialsKLU)
 
   IF(KLU_FOUND) 
-    SET(KLU_MACRO "#define SUNDIALS_KLU 1")
+    # sundials_config.h symbol
+    SET(SUNDIALS_KLU TRUE)
     INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})
   ENDIF(KLU_FOUND)
 
@@ -740,11 +729,11 @@ CONFIGURE_FILE(
 
 # Add the include directory in the source tree and the one in
 # the binary tree (for the header file sundials_config.h)
-IF(SUPERLU_FOUND)
-  INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include ${SUPERLU_INCLUDE_DIR})
-ELSE(SUPERLU_FOUND)
+IF(SUPERLUMT_FOUND)
+  INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include ${SUPERLUMT_INCLUDE_DIR})
+ELSE(SUPERLUMT_FOUND)
   INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include)
-ENDIF(SUPERLU_FOUND)
+ENDIF(SUPERLUMT_FOUND)
 
 # -------------------------------------------------------------
 # Add selected modules to the build system
@@ -861,13 +850,12 @@ IF(EXAMPLES_ENABLE)
       SET(F90_LDFLAGS "${CMAKE_Fortran_FLAGS_RELEASE}")
       LIST2STRING(EXTRA_LINK_LIBS F90_LIBS)
     ENDIF(F90_FOUND)
-    IF(SUPERLU_FOUND)
-      LIST2STRING(SUPERLU_LIBRARIES SUPERLU_LIBS)
-      SET(SUPERLU_LIBS "${SUPERLU_LINKER_FLAGS} ${SUPERLU_LIBS}")
-    ENDIF(SUPERLU_FOUND)
+    IF(SUPERLUMT_FOUND)
+      LIST2STRING(SUPERLUMT_LIBRARIES SUPERLUMT_LIBS)
+      SET(SUPERLUMT_LIBS "${SUPERLUMT_LINKER_FLAGS} ${SUPERLUMT_LIBS}")
+    ENDIF(SUPERLUMT_FOUND)
     IF(LAPACK_FOUND)
       LIST2STRING(LAPACK_LIBRARIES BLAS_LAPACK_LIBS)
-      SET(BLAS_LAPACK_LIBS "${LAPACK_LINKER_FLAGS} ${BLAS_LAPACK_LIBS}")
     ENDIF(LAPACK_FOUND)
     IF(MPIC_FOUND)
       IF(MPI_MPICC)

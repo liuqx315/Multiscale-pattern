@@ -1,13 +1,13 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2010-12-01 22:46:56 $
+ * $Revision: 4115 $
+ * $Date: 2014-05-28 15:59:45 -0700 (Wed, 28 May 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -75,6 +75,11 @@ void DenseCopy(DlsMat A, DlsMat B)
 void DenseScale(realtype c, DlsMat A)
 {
   denseScale(c, A->cols, A->M, A->N);
+}
+
+void DenseMatvec(DlsMat A, realtype *x, realtype *y)
+{
+  denseMatvec(A->cols, x, y, A->M, A->N);
 }
 
 long int denseGETRF(realtype **a, long int m, long int n, long int *p)
@@ -376,3 +381,20 @@ void denseAddIdentity(realtype **a, long int n)
   
   for (i=0; i < n; i++) a[i][i] += ONE;
 }
+
+void denseMatvec(realtype **a, realtype *x, realtype *y, long int m, long int n)
+{
+  long int i, j;
+  realtype *col_j;
+
+  for (i=0; i<m; i++) {
+    y[i] = 0.0;
+  }
+
+  for (j=0; j<n; j++) {
+    col_j = a[j];
+    for (i=0; i<m; i++)
+      y[i] += col_j[i]*x[j];
+  }
+}
+

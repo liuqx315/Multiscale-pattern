@@ -397,7 +397,7 @@ the Jacobian approximation.
    The ``DlsMat`` type and accessor macros ``DENSE_ELEM`` and
    ``DENSE_COL`` are documented in the section :ref:`LinearSolvers`.
    
-   If the user's *ARKDenseJacFn* function uses difference quotient
+   If the user's *ARKDlsDenseJacFn* function uses difference quotient
    approximations, then it may need to access quantities not in the
    argument list. These include the current step size, the error
    weights, etc.  To obtain these, use the ARKodeGet* functions
@@ -490,7 +490,7 @@ Jacobian approximation.
    ``BAND_COL`` and ``BAND_COL_ELEM`` are documented in the section 
    :ref:`LinearSolvers`.
 
-   If the user's *ARKBandJacFn* function uses difference quotient
+   If the user's *ARKDlsBandJacFn* function uses difference quotient
    approximations, then it may need to access quantities not in the
    argument list.  These include the current step size, the error
    weights, etc.. To obtain these, use the ARKodeGet* functions
@@ -501,6 +501,68 @@ Jacobian approximation.
    For the sake of uniformity, the arguments *N*, *mlower*, and
    *mupper* are of type ``long int``, even in the case that the
    LAPACK band solver is to be used.  
+
+
+
+.. _CInterface.SparseJacobianFn:
+
+Jacobian information (direct method with sparse Jacobian)
+--------------------------------------------------------------
+
+If the direct linear solver with sparse treatment of the Jacobian is
+used (i.e., :c:func:`ARKKLU()` or :c:func:`ARKSuperLUMT()` is
+called in Step 8 of the section :ref:`CInterface.Skeleton`), the user
+must provide a function of type :c:func:`ARKSlsSparseJacFn()` to provide
+the Jacobian approximation. 
+
+
+
+.. c:function:: typedef int (*ARKSlsSparseJacFn)(realtype t, N_Vector y, N_Vector fy, SlsMat Jac, void* user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+
+   This function computes the sparse Jacobian :math:`J =
+   \frac{\partial f_I}{\partial y}` (or an approximation to it).
+   
+   **Arguments:**
+      * *t* -- the current value of the independent variable.
+      * *y* -- the current value of the dependent variable vector, namely
+        the predicted value of :math:`y(t)`.
+      * *fy* -- the current value of the vector :math:`f_I(t,y)`.
+      * *Jac* -- the output sparse Jacobian matrix (of type ``SlsMat``).
+      * *user_data* -- a pointer to user data, the same as the
+        *user_data* parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * *tmp1*, *tmp2*, *tmp3* -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used by an
+        ARKDlsDenseJacFn as temporary storage or work space.
+   
+   **Return value:** 
+   An *ARKSlsSparseJacFn* function should return 0 if
+   successful, a positive value if a recoverable error occurred (in
+   which case ARKode will attempt to correct, while ARKKLU or ARKSUPERLUMT
+   sets *last_flag* to *ARKSLS_JACFUNC_RECVR*), or a negative
+   value if it failed unrecoverably (in which case the integration is
+   halted, :c:func:`ARKode()` returns *ARK_LSETUP_FAIL* and
+   ARKKLU or ARKSUPERLUMT sets *last_flag* to *ARKSLS_JACFUNC_UNRECVR*). 
+   
+   **Notes:** A user-supplied sparse Jacobian function must load the
+   compressed-sparse-column matrix *Jac* with an approximation to the
+   Jacobian matrix :math:`J(t,y)` at the point :math:`(t,y)`.  Storage
+   for *Jac* already exists on entry to this function, although the
+   user should ensure that sufficient space is allocated in *Jac* to
+   hold the nonzero values to be set; if the existing space is
+   insufficient the user may reallocate the data and row index arrays
+   as needed.  The type of *Jac* is ``SlsMat``, and the amount of
+   allocated space is available within the ``SlsMat`` structure as
+   ``NNZ``. The ``SlsMat`` type is further documented in the section
+   :ref:`LinearSolvers`.
+   
+   If the user's *ARKSlsSparseJacFn* function uses difference quotient
+   approximations to set the specific matrix entries, then it may need
+   to access quantities not in the argument list.  These include the
+   current step size, the error weights, etc.  To obtain these, use
+   the ARKodeGet* functions listed in
+   :ref:`CInterface.OptionalOutputs`. The unit roundoff can be
+   accessed as ``UNIT_ROUNDOFF``, which is defined in the header file
+   ``sundials_types.h``.
 
 
 
@@ -790,6 +852,52 @@ the mass matrix approximation.
    For the sake of uniformity, the arguments *N*, *mlower*, and
    *mupper* are of type ``long int``, even in the case that the
    LAPACK band solver is to be used.
+
+
+
+.. _CInterface.SparseMassFn:
+
+Mass matrix information (direct method with sparse mass matrix)
+---------------------------------------------------------------
+
+If the direct linear solver with sparse treatment of the mass matrix
+is used (i.e., :c:func:`ARKMassKLU()` or :c:func:`ARKMassSuperLUMT()`
+is called in Step 10 of the section :ref:`CInterface.Skeleton`), the
+user may provide a function of type :c:func:`ARKSlsSparseMassFn()` to
+provide the mass matrix approximation. 
+
+
+
+.. c:function:: typedef int (*ARKSlsSparseMassFn)(realtype t, SlsMat M, void* user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+
+   This function computes the mass matrix :math:`M` (or an approximation to it).
+   
+   **Arguments:**
+      * *t* -- the current value of the independent variable.
+      * *M* -- the output sparse mass matrix (of type ``SlsMat``).
+      * *user_data* -- a pointer to user data, the same as the
+        *user_data* parameter that was passed to :c:func:`ARKodeSetUserData()`.
+      * *tmp1*, *tmp2*, *tmp3* -- pointers to memory allocated to
+        variables of type ``N_Vector`` which can be used by an
+        ARKDlsDenseMassFn as temporary storage or work space.
+   
+   **Return value:** 
+   An *ARKSlsSparseMassFn* function should return 0 if
+   successful, or a negative value if it failed unrecoverably (in
+   which case the integration is halted, :c:func:`ARKode()` returns
+   *ARK_MASSSETUP_FAIL* and ARKKLU or ARKSUPERLUMT sets *last_flag* to
+   *ARKSLS_MASSFUNC_UNRECVR*). 
+   
+   **Notes:** A user-supplied sparse mass matrix function must load the
+   compressed-sparse-column matrix *M* with an approximation to the
+   mass matrix :math:`M(t)`.  Storage for *M* already exists on entry
+   to this function, although the user should ensure that sufficient
+   space is allocated in *Jac* to hold the nonzero values to be set;
+   if the existing space is insufficient the user may reallocate the
+   data and row index arrays as needed.  The type of *Jac* is
+   ``SlsMat``, and the amount of allocated space is available within
+   the ``SlsMat`` structure as ``NNZ``.  The ``SlsMat`` type is
+   further documented in the section :ref:`LinearSolvers`.
 
 
 

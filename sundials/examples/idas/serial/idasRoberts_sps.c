@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
+ * $Revision: 4074 $
+ * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol Woodward @ LLNL  (based on idasRoberts_dns.c)
  * -----------------------------------------------------------------
@@ -363,8 +363,8 @@ static void PrintFinalStats(void *mem)
   check_flag(&retval, "IDAGetNumErrTestFails", 1);
   retval = IDAGetNumNonlinSolvConvFails(mem, &ncfn);
   check_flag(&retval, "IDAGetNumNonlinSolvConvFails", 1);
-  //  retval = IDASlsGetNumResEvals(mem, &nreLS);
-  //  check_flag(&retval, "IDASlsGetNumResEvals", 1);
+  /*  retval = IDASlsGetNumResEvals(mem, &nreLS); */
+  /*  check_flag(&retval, "IDASlsGetNumResEvals", 1); */
   nreLS = 0;
   retval = IDAGetNumGEvals(mem, &nge);
   check_flag(&retval, "IDAGetNumGEvals", 1);

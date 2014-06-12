@@ -4,8 +4,8 @@
 
 {\cvodes}~\cite{SeHi:05} is part of a software family called {\sundials}: 
 SUite of Nonlinear and DIfferential/ALgebraic equation Solvers~\cite{HBGLSSW:05}.  
-This suite consists of {\cvode}, {\kinsol} and {\ida}, and variants of these
-with sensitivity analysis capabilities.
+This suite consists of {\cvode}, {\arkode}, {\kinsol} and {\ida}, and variants
+of these with sensitivity analysis capabilities.
 %
 {\cvodes}\index{CVODES@{\cvodes}!brief description of} is a solver for
 stiff and nonstiff initial value problems (IVPs) for systems of
@@ -108,6 +108,57 @@ written in extended {\F}.  \index{CVODES@{\cvodes}!motivation for
 writing in C|)}
 
 \section{Changes from previous versions}
+
+\subsection*{Changes in v2.8.0}
+
+Two major additions were made to the linear system solvers that are
+available for use with the {\cvodes} solver.  First, in the serial case,
+an interface to the sparse direct solver KLU was added.
+Second, an interface to SuperLU\_MT, the multi-threaded version of
+SuperLU, was added as a thread-parallel sparse direct solver option,
+to be used with the serial version of the NVECTOR module.
+As part of these additions, a sparse matrix (CSC format) structure 
+was added to {\cvodes}.
+
+Otherwise, only relatively minor modifications were made to the
+{\cvodes} solver:
+
+In \id{cvRootfind}, a minor bug was corrected, where the input
+array \id{rootdir} was ignored, and a line was added to break out of
+root-search loop if the initial interval size is below the tolerance
+\id{ttol}.
+
+In \id{CVLapackBand}, the line \id{smu = MIN(N-1,mu+ml)} was changed to
+\id{smu = mu + ml} to correct an illegal input error for \id{DGBTRF/DGBTRS}.
+
+Some minor changes were made in order to minimize the differences
+between the sources for private functions in {\cvodes} and {\cvode} .
+
+An option was added in the case of Adjoint Sensitivity Analysis with
+dense or banded Jacobian:  With a call to \id{CVDlsSetDenseJacFnBS} or
+\id{CVDlsSetBandJacFnBS}, the user can specify a user-supplied Jacobian
+function of type \id{CVDls***JacFnBS}, for the case where the backward
+problem depends on the forward sensitivities.
+
+In \id{CVodeQuadSensInit}, the line \id{cv\_mem->cv\_fQS\_data = ...}
+was corrected (missing \id{Q}).
+
+In the User Guide, a paragraph was added in Section 6.2.1 on
+\id{CVodeAdjReInit}, and a paragraph was added in Section 6.2.9 on
+\id{CVodeGetAdjY}.  In the example \id{cvsRoberts\_ASAi\_dns}, the output
+was revised to include the use of \id{CVodeGetAdjY}.
+
+In the example \id{cvsHessian\_ASA\_FSA}, an error was corrected in the
+function \id{fB2}: \id{y2} in place of \id{y3} in the third term of
+\id{Ith(yBdot,6)}.
+
+Two new {\nvector} modules have been added for parallel computing
+environments --- one for openMP, denoted \id{NVECTOR\_OPENMP},
+and one for Pthreads, denoted \id{NVECTOR\_PTHREADS}.
+
+With this version of {\sundials}, support and documentation of the
+Autotools mode of installation is being dropped, in favor of the
+CMake mode, which is considered more widely portable.
 
 \subsection*{Changes in v2.7.0}
 

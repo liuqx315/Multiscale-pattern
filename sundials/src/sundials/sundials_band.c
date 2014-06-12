@@ -1,12 +1,12 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2010-12-01 22:46:56 $
+ * $Revision: 4115 $
+ * $Date: 2014-05-28 15:59:45 -0700 (Wed, 28 May 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -55,6 +55,11 @@ void BandCopy(DlsMat A, DlsMat B, long int copymu, long int copyml)
 void BandScale(realtype c, DlsMat A)
 {
   bandScale(c, A->cols, A->M, A->mu, A->ml, A->s_mu);
+}
+
+void BandMatvec(DlsMat A, realtype *x, realtype *y)
+{
+  bandMatvec(A->cols, x, y, A->M, A->mu, A->ml, A->s_mu);
 }
 
 /*
@@ -238,3 +243,22 @@ void bandAddIdentity(realtype **a, long int n, long int smu)
   for(j=0; j < n; j++)
     a[j][smu] += ONE;
 }
+
+void bandMatvec(realtype **a, realtype *x, realtype *y, long int n, 
+		long int mu, long int ml, long int smu)
+{
+  long int i, j, is, ie;
+  realtype *col_j;
+
+  for (i=0; i<n; i++)
+    y[i] = 0.0;
+
+  for(j=0; j<n; j++) {
+    col_j = a[j]+smu-mu;
+    is = (0 > j-mu) ? 0 : j-mu;
+    ie = (n-1 < j+ml) ? n-1 : j+ml;
+    for (i=is; i<=ie; i++)
+      y[i] += col_j[i-j+mu]*x[j];
+  }
+}
+

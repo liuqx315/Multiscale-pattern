@@ -1,12 +1,12 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: $
- * $Date: $
+ * $Revision: 4075 $
+ * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -73,7 +73,7 @@ extern "C" {
  *
  * IDAKLUSetOrdering sets the ordering used by KLU for reducing fill.
  * Options are: 0 for AMD, 1 for COLAMD, and 2 for the natural ordering.
- * The default used in KINSOL is 1 for COLAMD.
+ * The default used in IDA is 1 for COLAMD.
  * -----------------------------------------------------------------
  */
 

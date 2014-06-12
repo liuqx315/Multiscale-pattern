@@ -1,12 +1,12 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.0 $
- * $Date: $
+ * $Revision: 4075 $
+ * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -60,9 +60,8 @@ static void kinSuperLUMTFree(KINMem kin_mem);
  *
  * NOTE: The SuperLUMT linear solver assumes a serial implementation
  *       of the NVECTOR package. Therefore, KINSuperLUMT will first 
- *       test for a compatible N_Vector internal
- *       representation by checking that the functions N_VGetArrayPointer
- *       and N_VSetArrayPointer exist.
+ *       test for a compatible N_Vector internal representation
+ *       by checking that the function N_VGetArrayPointer exists.
  * -----------------------------------------------------------------
  */
 
@@ -85,8 +84,7 @@ int KINSuperLUMT(void *kin_mem_v, int num_threads, int m, int n, int nnz)
   kin_mem = (KINMem) kin_mem_v;
 
   /* Test if the NVECTOR package is compatible with the Direct solver */
-  if(kin_mem->kin_vtemp1->ops->nvgetarraypointer == NULL ||
-     kin_mem->kin_vtemp1->ops->nvsetarraypointer == NULL) {
+  if (kin_mem->kin_vtemp1->ops->nvgetarraypointer == NULL) {
     KINProcessError(kin_mem, KINSLS_ILL_INPUT, "KINSLS", "KINSuperLUMT", 
 		    MSGSP_BAD_NVECTOR);
     return(KINSLS_ILL_INPUT);

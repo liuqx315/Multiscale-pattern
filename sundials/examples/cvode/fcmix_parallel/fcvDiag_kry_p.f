@@ -1,6 +1,6 @@
 C     ----------------------------------------------------------------
-C     $Revision: 1.1 $
-C     $Date: 2009-03-11 23:17:13 $
+C     $Revision: 4074 $
+C     $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
 C     ----------------------------------------------------------------
 C     Diagonal ODE example. Stiff case, with BDF/SPGMR, diagonal
 C     preconditioner. Solved with preconditioning on left, then with

@@ -261,8 +261,8 @@ system, a linear system of equations must be solved at each nonlinear
 iteration.  For this solve ARKode provides several choices, including
 the option of a user-supplied linear solver module.  The linear solver
 modules distributed with ARKode are organized into two families: a
-*direct* family comprising direct linear solvers for dense or banded
-matrices, and a *spils* family comprising scaled, preconditioned,
+*direct* family comprising direct linear solvers for dense, banded or
+sparse matrices, and a *spils* family comprising scaled, preconditioned,
 iterative (Krylov) linear solvers.  The methods offered through these
 modules are as follows:
 
@@ -272,6 +272,9 @@ modules are as follows:
 * band direct solvers, using either an internal SUNDIALS
   implementation or a BLAS/LAPACK implementation (serial version
   only), 
+* sparse direct solvers, using either the KLU sparse matrix library
+  [KLU]_, or the PThreads-enabled SuperLU_MT sparse matrix library
+  [SuperLUMT]_ (serial or threaded vector modules only), 
 * SPGMR, a scaled, preconditioned GMRES (Generalized Minimal Residual)
   solver without restarts, 
 * SPBCG, a scaled, preconditioned Bi-CGStab (Bi-Conjugate Gradient
@@ -291,9 +294,9 @@ integration, nonlinear solver iteration, and Krylov (linear) iteration
 with a problem-specific treatment of the dominant sources of
 stiffness, in the form of a user-supplied preconditioner matrix
 [BH1989]_.  We note that the direct linear solvers
-provided by SUNDIALS (dense and band), as well as the direct linear
-solvers accessible through LAPACK, can only be used with the serial
-vector representations.
+provided by SUNDIALS (dense, band and sparse), as well as the direct
+linear solvers accessible through LAPACK, can only be used with the
+serial vector representations.
 
 
 .. index:: modified Newton iteration

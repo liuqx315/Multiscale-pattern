@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------
-# $Revision: 1.4 $
-# $Date: 2009-02-17 02:58:47 $
+# $Revision: 4075 $
+# $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
 # LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
+# Copyright (c) 2014, Lawrence Livermore National Security
 # This work was performed under the auspices of the U.S. Department 
 # of Energy by Lawrence Livermore National Laboratory in part under 
 # Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -30,9 +30,18 @@ SET(cvode_SOURCES
   cvode_spbcgs.c
   cvode_spgmr.c
   cvode_sptfqmr.c
+  cvode_sparse.c
   cvode_bandpre.c
   cvode_bbdpre.c
   )
+
+IF(KLU_FOUND)
+    LIST(APPEND cvode_SOURCES cvode_klu.c)
+ENDIF()
+
+IF(SUPERLUMT_FOUND)
+    LIST(APPEND cvode_SOURCES cvode_superlumt.c)
+ENDIF()
 
 # Add variable shared_SOURCES with the common SUNDIALS sources which will
 # also be included in the CVODE library
@@ -43,6 +52,7 @@ SET(shared_SOURCES
   sundials_band.c
   sundials_dense.c
   sundials_iterative.c
+  sundials_sparse.c
   sundials_spbcgs.c
   sundials_spgmr.c
   sundials_sptfqmr.c
@@ -60,6 +70,7 @@ SET(cvode_HEADERS
   cvode_diag.h
   cvode_direct.h
   cvode.h
+  cvode_sparse.h
   cvode_spbcgs.h
   cvode_spgmr.h
   cvode_spils.h

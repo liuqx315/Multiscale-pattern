@@ -92,6 +92,10 @@ Interface to the linear solver modules
 
 * :f:func:`FARKBANDSETJAC()` interfaces to :c:func:`ARKDlsSetBandJacFn()`.
 
+* :f:func:`FARKKLU()` interfaces to :c:func:`ARKKLU()`.
+
+* :f:func:`FARKSUPERLUMT()` interfaces to :c:func:`ARKSuperLUMT()`.
+
 * :f:func:`FARKSPGMR()` interfaces to :c:func:`ARKSpgmr()` and the SPGMR optional input
   functions (see :ref:`CInterface.ARKSpilsInputTable`).
 
@@ -158,7 +162,8 @@ may do nothing):
 In addition, as with the native C interface a user may provide
 additional routines to assist in the solution process.  Each of the
 following user-supplied routines is activated by calling the specified
-"activation" routine: 
+"activation" routine, with the exception of :f:func:`FARKSPJAC()`
+which is required whenever a sparse matrix solver is used: 
 
 .. cssclass:: table-bordered
 
@@ -169,6 +174,8 @@ following user-supplied routines is activated by calling the specified
 | :f:func:`FARKDJAC()`     | :c:func:`ARKDlsDenseJacFn()`      | :f:func:`FARKDENSESETJAC()`  |
 +--------------------------+-----------------------------------+------------------------------+
 | :f:func:`FARKBJAC()`     | :c:func:`ARKDlsBandJacFn()`       | :f:func:`FARKBANDSETJAC()`   |
++--------------------------+-----------------------------------+------------------------------+
+| :f:func:`FARKSPJAC()`    | :c:func:`ARKSlsSparseJacFn()`     |                              |
 +--------------------------+-----------------------------------+------------------------------+
 | :f:func:`FARKPSET()`     | :c:func:`ARKSpilsPrecSetupFn()`   | :f:func:`FARKSPILSSETPREC()` |
 +--------------------------+-----------------------------------+------------------------------+

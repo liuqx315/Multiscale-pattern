@@ -1,12 +1,12 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2010-12-01 22:17:18 $
+ * $Revision: 4115 $
+ * $Date: 2014-05-28 15:59:45 -0700 (Wed, 28 May 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
- * Copyright (c) 2013, Lawrence Livermore National Security
+ * Copyright (c) 2014, Lawrence Livermore National Security
  * This work was performed under the auspices of the U.S. Department 
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -184,6 +184,25 @@ SUNDIALS_EXPORT void denseScale(realtype c, realtype **a, long int m, long int n
  */
 
 SUNDIALS_EXPORT void denseAddIdentity(realtype **a, long int n);
+
+
+/*
+ * -----------------------------------------------------------------
+ * Function: DenseMatvec
+ * -----------------------------------------------------------------
+ * DenseMatvec computes the matrix-vector product y = A*x, where A 
+ * is an M-by-N matrix, x is a vector of length N, and y is a vector
+ * of length M.  No error checking is performed on the length of the
+ * arrays x and y.  Only y is modified in this routine.
+ *
+ * DenseMatvec is a wrapper around denseMatvec which performs the 
+ * actual product by accessing the data in the DlsMat A.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT void DenseMatvec(DlsMat A, realtype *x, realtype *y);
+SUNDIALS_EXPORT void denseMatvec(realtype **a, realtype *x, realtype *y, long int m, long int n);
+
 
 #ifdef __cplusplus
 }

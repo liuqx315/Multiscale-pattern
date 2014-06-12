@@ -171,6 +171,7 @@ ARKode main solver module
    each other.
 
 
+
 ARKDLS linear solver modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -183,7 +184,7 @@ ARKDLS linear solver modules
 :index:`ARKDLS_LMEM_NULL`  (-2): 
    The ARKDLS linear solver has not been initialized.
 
-:index:`AKRDLS_ILL_INPUT`  (-3): 
+:index:`ARKDLS_ILL_INPUT`  (-3): 
    The ARKDLS solver is not compatible with
    the current NVECTOR module.
 
@@ -205,6 +206,50 @@ ARKDLS linear solver modules
    unrecoverable manner.
 
 :index:`ARKDLS_MASSFUNC_RECVR`  (-9): 
+   The mass matrix function had a recoverable error.
+
+
+
+ARKSLS linear solver modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:index:`ARKSLS_SUCCESS`  (0): 
+   Successful function return.
+
+:index:`ARKSLS_MEM_NULL`  (-1): 
+   The ``arkode_mem`` argument was ``NULL``.
+
+:index:`ARKSLS_LMEM_NULL`  (-2): 
+   The ARKSLS linear solver has not been initialized.
+
+:index:`ARKSLS_ILL_INPUT`  (-3): 
+   The ARKSLS solver is not compatible with the current NVECTOR module.
+
+:index:`ARKSLS_MEM_FAIL`  (-4): 
+   A memory allocation request failed.
+
+:index:`ARKSLS_JAC_NOSET`  (-5): 
+   The sparse Jacobian evaluation routine has not been set.
+
+:index:`ARKSLS_MASS_NOSET`  (-6): 
+   The sparse mass matrix evaluation routine has not been set.
+
+:index:`ARKSLS_PACKAGE_FAIL`  (-7): 
+   A failure occurred in the sparse matrix library (KLU or SuperLU-MT).
+
+:index:`ARKSLS_MASSMEM_NULL`  (-8): 
+   The ARKSLS mass matrix solver has been used but not initialized.
+
+:index:`ARKSLS_JACFUNC_UNRECVR`  (-9): 
+   The Jacobian function failed in an unrecoverable manner.
+
+:index:`ARKSLS_JACFUNC_RECVR`  (-10): 
+   The Jacobian function had a recoverable error.
+
+:index:`ARKSLS_MASSFUNC_UNRECVR`  (-11): 
+   The mass matrix function failed in an unrecoverable manner.
+
+:index:`ARKSLS_MASSFUNC_RECVR`  (-12): 
    The mass matrix function had a recoverable error.
 
 

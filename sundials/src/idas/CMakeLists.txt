@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------
-# $Revision: 1.4 $
-# $Date: 2009-02-17 02:58:48 $
+# $Revision: 4075 $
+# $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
 # LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
+# Copyright (c) 2014, Lawrence Livermore National Security
 # This work was performed under the auspices of the U.S. Department 
 # of Energy by Lawrence Livermore National Laboratory in part under 
 # Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
@@ -87,14 +87,14 @@ ELSE(LAPACK_FOUND)
   SET(idas_BL_HEADERS "")
 ENDIF(LAPACK_FOUND)
 
-IF(SUPERLU_FOUND)
+IF(SUPERLUMT_FOUND)
   SET(idas_SLU_SOURCES idas_superlumt.c)
   SET(idas_SLU_HEADERS idas_superlumt.h)
   ADD_PREFIX(${sundials_SOURCE_DIR}/include/idas/ idas_SLU_HEADERS)
-ELSE(SUPERLU_FOUND)
+ELSE(SUPERLUMT_FOUND)
   SET(idas_SLU_SOURCES "")
   SET(idas_SLU_HEADERS "")
-ENDIF(SUPERLU_FOUND)
+ENDIF(SUPERLUMT_FOUND)
 
 # Add source directories to include directories for access to
 # implementation only header files.

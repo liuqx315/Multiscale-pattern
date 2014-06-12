@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2010-12-01 23:08:49 $
+ * $Revision: 4074 $
+ * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol S. Woodward @ LLNL.  Adapted from the file
  *    kinRoboKin_dns.c by Radu Serban @ LLNL
