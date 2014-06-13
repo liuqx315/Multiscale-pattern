@@ -117,7 +117,7 @@ def main():
             sys.stdout.write("%4i/%i:  %30s" % (itest, numtests, test.name))
 
             # run test
-            stats = test.Run(1)
+            stats = test.Run(0)
 
             # check results against gold standard
             result = stats.Compare(gold_standard[test.name], strict=strict)
