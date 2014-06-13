@@ -118,6 +118,11 @@ int ARKKLU(void *arkode_mem, int n, int nnz)
   arksls_mem->s_Jdata = ark_mem->ark_user_data;
   ark_mem->ark_setupNonNull = TRUE;
 
+  /* Initialize counters */
+  arksls_mem->s_nje = 0;
+  arksls_mem->s_first_factorize = 1;
+  arksls_mem->s_nstlj = 0;
+
   /* Allocate memory for the sparse Jacobian */
   arksls_mem->s_A = NULL;
   arksls_mem->s_A = NewSparseMat(n, n, nnz);
@@ -524,6 +529,8 @@ int ARKMassKLU(void *arkode_mem, int n, int nnz,
   }
 
   /* Initialize mass-matrix-related data */
+  arksls_mem->s_nme = 0;
+  arksls_mem->s_first_factorize = 1;
   arksls_mem->s_Meval = smass;
   arksls_mem->s_Mdata = ark_mem->ark_user_data;
   arksls_mem->s_last_flag = ARKSLS_SUCCESS;
