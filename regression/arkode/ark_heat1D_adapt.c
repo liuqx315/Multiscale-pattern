@@ -407,9 +407,9 @@ int main() {
 
   /* print some final statistics */
   printf(" Final solver statistics:\n");
-  printf("   Total number of time steps = %i\n", iout);
-  printf("   Total nonlinear iterations = %li\n", nni_tot);
-  printf("   Total linear iterations    = %li\n\n", nli_tot);
+  printf("   Internal solver steps = %i (attempted = %i)\n", iout, iout);
+  printf("   Total linear iterations = %li\n", nli_tot);
+  printf("   Total number of nonlinear iterations = %li\n\n", nni_tot);
 
   /* Clean up and return with successful completion */
   fclose(UFID);

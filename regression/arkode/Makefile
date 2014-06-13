@@ -68,7 +68,11 @@ TESTS = ark_analytic.exe \
         ark_analytic_nonlin.exe \
         ark_analytic_nonlin_back.exe \
         ark_brusselator.exe \
-        ark_brusselator_M.exe \
+        ark_brusselator_Ma.exe \
+        ark_brusselator_Mb.exe \
+        ark_brusselator_Mc.exe \
+        ark_brusselator_Md.exe \
+        ark_brusselator_Me.exe \
         ark_brusselator1D.exe \
         ark_brusselator1D_FEM.exe \
         ark_brusselator1D_klu.exe \
@@ -99,6 +103,21 @@ ark_robertson_klu.exe : ark_robertson_klu.c init_from_file.c
 
 ark_brusselator1D_klu.exe : ark_brusselator1D_klu.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
+
+ark_brusselator_Ma.exe : ark_brusselator_M.c init_from_file.c   # dense-dense
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
+
+ark_brusselator_Mb.exe : ark_brusselator_M.c init_from_file.c   # spgmr-spgmr
+	${CC} ${CFLAGS_} ${INCS} $^ -DUSE_ITERATIVE -DUSE_SPGMR -DMASS_USE_ITERATIVE -DMASS_USE_SPGMR ${LIBS} ${LDFLAGS} -o $@
+
+ark_brusselator_Mc.exe : ark_brusselator_M.c init_from_file.c   # spbcg-pcg
+	${CC} ${CFLAGS_} ${INCS} $^ -DUSE_ITERATIVE -DUSE_SPBCG -DMASS_USE_ITERATIVE -DMASS_USE_PCG ${LIBS} ${LDFLAGS} -o $@
+
+ark_brusselator_Md.exe : ark_brusselator_M.c init_from_file.c   # sptfqmr-spbcg
+	${CC} ${CFLAGS_} ${INCS} $^ -DUSE_ITERATIVE -DUSE_SPTFQMR -DMASS_USE_ITERATIVE -DMASS_USE_SPBCG ${LIBS} ${LDFLAGS} -o $@
+
+ark_brusselator_Me.exe : ark_brusselator_M.c init_from_file.c   # spgmr-dense
+	${CC} ${CFLAGS_} ${INCS} $^ -DUSE_ITERATIVE -DUSE_SPGMR ${LIBS} ${LDFLAGS} -o $@
 
 ark_brusselator1D_FEM_klu.exe : ark_brusselator1D_FEM_klu.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
