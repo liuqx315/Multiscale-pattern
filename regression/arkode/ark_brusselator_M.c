@@ -63,13 +63,13 @@
 #include <sundials/sundials_dense.h>
 #include <sundials/sundials_types.h>
 
-#define USE_ITERATIVE
-#define USE_SPGMR
+/* #define USE_ITERATIVE */
+/* #define USE_SPGMR */
 /* #define USE_SPBCG */
 /* #define USE_SPTFQMR */
 
-#define MASS_USE_ITERATIVE
-#define MASS_USE_SPGMR
+/* #define MASS_USE_ITERATIVE */
+/* #define MASS_USE_SPGMR */
 /* #define MASS_USE_PCG */
 /* #define MASS_USE_SPBCG */
 /* #define MASS_USE_SPTFQMR */
@@ -169,6 +169,35 @@ int main()
   /* Initial problem output */
   printf("\nBrusselator (mass matrix) ODE test problem:\n");
   printf("    initial conditions:  u0 = %g,  v0 = %g,  w0 = %g\n",u0,v0,w0);
+#ifdef USE_ITERATIVE
+#ifdef USE_SPGMR
+  printf("    SPGMR linear solver\n");
+#endif
+#ifdef USE_SPBCG
+  printf("    SPBCG linear solver\n");
+#endif
+#ifdef USE_SPTFQMR
+  printf("    SPTFQMR linear solver\n");
+#endif
+#else
+  printf("    DENSE linear solver\n");
+#endif
+#ifdef MASS_USE_ITERATIVE
+#ifdef MASS_USE_SPGMR
+  printf("    SPGMR mass matrix solver\n");
+#endif
+#ifdef MASS_USE_SPBCG
+  printf("    SPBCG mass matrix solver\n");
+#endif
+#ifdef MASS_USE_SPTFQMR
+  printf("    SPTFQMR mass matrix solver\n");
+#endif
+#ifdef MASS_USE_PCG
+  printf("    PCG mass matrix solver\n");
+#endif
+#else
+  printf("    DENSE mass matrix solver\n");
+#endif
   printf("    problem parameters:  a = %g,  b = %g,  ep = %g\n",a,b,ep);
   printf("    M:  %4g %4g %4g\n        %4g %4g %4g\n        %4g %4g %4g\n",
 	 M00, M01, M02, M10, M11, M12, M20, M21, M22);
