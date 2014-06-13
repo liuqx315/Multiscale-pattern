@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4128 $
+ * $Date: 2014-06-11 15:34:14 -0700 (Wed, 11 Jun 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh and
  *                Radu Serban @ LLNL
@@ -253,7 +253,7 @@ int main(void)
   /* Call KINSol and print output concentration profile */
   flag = KINSol(kmem,           /* KINSol memory block */
                 cc,             /* initial guess on input; solution vector */
-                globalstrategy, /* global stragegy choice */
+                globalstrategy, /* global strategy choice */
                 sc,             /* scaling vector, for the variable cc */
                 sc);            /* scaling vector for function values fval */
   if (check_flag(&flag, "KINSol", 1)) return(1);

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4129 $
+ * $Date: 2014-06-11 15:43:43 -0700 (Wed, 11 Jun 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol Woodward.
  *      Based on cvRoberts_dns.c and modified to use SUPERLU_MT.
@@ -20,7 +20,7 @@
  * While integrating the system, we also use the rootfinding
  * feature to find the points at which y1 = 1e-4 or at which
  * y3 = 0.01. This program solves the problem with the BDF method,
- * Newton iteration with the CVSUPERLUMT sparse dircet linear solver, and a
+ * Newton iteration with the CVSUPERLUMT sparse direct linear solver, and a
  * user-supplied Jacobian routine.
  * It uses a scalar relative tolerance and a vector absolute
  * tolerance. Output is printed in decades from t = .4 to t = 4.e10.
