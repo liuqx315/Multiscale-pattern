@@ -27,17 +27,17 @@ def check_tests(testlist,ovtol):
     iret = 0;
     for i in range(len(testlist)):
         tret = 0
-        [fail,nst,ast,nfe,nfi,lset,nfi_lset,nJe,nnewt,ncf,nef,merr,rerr,ov,rt] = ark.run_test(testlist[i],0); 
+        stats = ark.run_test(testlist[i],0); 
         # check for integration failure
-        if (fail == 1):
+        if (stats.errfail == 1):
             tret = 1;
             sys.stdout.write("\n  %s \033[91m integration failure\033[0m" % (testlist[i]))
         # check for oversolve >= ovtol (fits within allowable error)
-        if ((ov < ovtol) or (ov != ov)):
+        if ((stats.oversolve < ovtol) or (stats.oversolve != stats.oversolve)):
             tret = 1;
-            sys.stdout.write("\n  %s \033[91m failure (too much error: %g < %g)\033[94m [%.2g s]\033[0m" % (testlist[i], ov, ovtol, rt))
+            sys.stdout.write("\n  %s \033[91m failure (too much error: %g < %g)\033[94m [%.2g s]\033[0m" % (testlist[i], stats.oversolve, ovtol, stats.runtime))
         if (tret == 0):
-            sys.stdout.write("\n  %s \033[92m pass (steps: %i;  oversolve %g)\033[94m [%.2g s]\033[0m" % (testlist[i], nst, ov, rt))
+            sys.stdout.write("\n  %s \033[92m pass (steps: %i;  oversolve %g)\033[94m [%.2g s]\033[0m" % (testlist[i], stats.nsteps, stats.oversolve, stats.runtime))
         iret += tret;
     if (iret == 0):
 #        sys.stdout.write("  pass\n")
