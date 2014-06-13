@@ -48,6 +48,8 @@ KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
           /usr/local/klu-1.2.0/gnu/lib/libcolamd.a \
           /usr/local/klu-1.2.0/gnu/lib/libamd.a \
           /usr/local/klu-1.2.0/gnu/lib/libbtf.a
+SLULIBS = -L/usr/local/superlu-mt-2.1/gnu_pthread/lib -lsuperlu_mt \
+          -L/usr/lib/libblas -lblas
 # INCS = -I../../install_dbg/include/
 # LIBS = ../../install_dbg/lib/libsundials_arkode.a \
 #        ../../install_dbg/lib/libsundials_nvecparallel.a \
@@ -61,6 +63,8 @@ KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
 #           /usr/local/klu-1.2.0/gnu_debug/lib/libcolamd.a \
 #           /usr/local/klu-1.2.0/gnu_debug/lib/libamd.a \
 #           /usr/local/klu-1.2.0/gnu_debug/lib/libbtf.a
+# SLULIBS = -L/usr/local/superlu-mt-2.1/gnu_pthread_debug/lib -lsuperlu_mt \
+#           -L/usr/lib/libblas -lblas
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
@@ -75,13 +79,10 @@ TESTS = ark_analytic.exe \
         ark_brusselator_Me.exe \
         ark_brusselator1D.exe \
         ark_brusselator1D_FEM.exe \
-        ark_brusselator1D_klu.exe \
-        ark_brusselator1D_FEM_klu.exe \
         ark_heat1D.exe \
         ark_heat1D_adapt.exe \
         ark_heat2D.exe \
         ark_robertson.exe \
-        ark_robertson_klu.exe \
         ark_robertson_root.exe \
         ark_set_check.exe \
         ark_bruss.exe \
@@ -94,8 +95,24 @@ TESTS = ark_analytic.exe \
 	ark_vdpol.exe \
 	ark_vdpolm.exe
 
+KLUTESTS = ark_brusselator1D_klu.exe \
+           ark_brusselator1D_FEM_klu.exe \
+           ark_robertson_klu.exe
+
+SLUTESTS = ark_brusselator1D_slu.exe \
+           ark_brusselator1D_FEM_slu.exe \
+           ark_robertson_slu.exe
+
+
 # target to build all test executables
 all : ${TESTS}
+
+# target to build all SuperLU_MT test executables
+klu : ${KLUTESTS}
+
+# target to build all KLU test executables
+slu : ${SLUTESTS}
+
 
 # specific build rules for C programs linking with KLU
 ark_robertson_klu.exe : ark_robertson_klu.c init_from_file.c
@@ -104,6 +121,20 @@ ark_robertson_klu.exe : ark_robertson_klu.c init_from_file.c
 ark_brusselator1D_klu.exe : ark_brusselator1D_klu.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
 
+ark_brusselator1D_FEM_klu.exe : ark_brusselator1D_FEM_klu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
+
+# specific build rules for C programs linking with SuperLU_MT
+ark_robertson_slu.exe : ark_robertson_slu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${SLULIBS} ${LDFLAGS} -o $@
+
+ark_brusselator1D_slu.exe : ark_brusselator1D_slu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${SLULIBS} ${LDFLAGS} -o $@
+
+ark_brusselator1D_FEM_slu.exe : ark_brusselator1D_FEM_slu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${SLULIBS} ${LDFLAGS} -o $@
+
+# specific build rules for regression testing with different preprocessor directives
 ark_brusselator_Ma.exe : ark_brusselator_M.c init_from_file.c   # dense-dense
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${LDFLAGS} -o $@
 
@@ -118,9 +149,6 @@ ark_brusselator_Md.exe : ark_brusselator_M.c init_from_file.c   # sptfqmr-spbcg
 
 ark_brusselator_Me.exe : ark_brusselator_M.c init_from_file.c   # spgmr-dense
 	${CC} ${CFLAGS_} ${INCS} $^ -DUSE_ITERATIVE -DUSE_SPGMR ${LIBS} ${LDFLAGS} -o $@
-
-ark_brusselator1D_FEM_klu.exe : ark_brusselator1D_FEM_klu.c init_from_file.c
-	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${KLULIBS} ${LDFLAGS} -o $@
 
 # specific build rules for Fortran programs
 ark_bruss.exe : ark_bruss.f90
