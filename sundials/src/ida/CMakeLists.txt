@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4075 $
-# $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+# $Revision: 4138 $
+# $Date: 2014-06-15 13:50:39 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -74,11 +74,11 @@ SET(ida_HEADERS
   )
 
 IF(KLU_FOUND)
-    LIST(APPEND ida_HEADERS ida_klu.h)
+    LIST(APPEND ida_HEADERS ida_klu.h ida_sparse.h)
 ENDIF()
 
 IF(SUPERLUMT_FOUND)
-    LIST(APPEND ida_HEADERS ida_superlumt.h)
+    LIST(APPEND ida_HEADERS ida_superlumt.h ida_sparse.h)
 ENDIF()
 
 # Add prefix with complete path to the IDA header files
