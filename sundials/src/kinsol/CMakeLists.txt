@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4135 $
-# $Date: 2014-06-13 15:55:05 -0700 (Fri, 13 Jun 2014) $
+# $Revision: 4138 $
+# $Date: 2014-06-15 13:50:39 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -78,11 +78,11 @@ SET(kinsol_HEADERS
   )
 
 IF(KLU_FOUND)
-    LIST(APPEND kinsol_HEADERS kinsol_klu.h)
+    LIST(APPEND kinsol_HEADERS kinsol_klu.h kinsol_sparse.h)
 ENDIF()
 
 IF(SUPERLUMT_FOUND)
-    LIST(APPEND kinsol_HEADERS kinsol_superlumt.h)
+    LIST(APPEND kinsol_HEADERS kinsol_superlumt.h kinsol_sparse.h)
 ENDIF()
 
 # Add prefix with complete path to the KINSOL header files

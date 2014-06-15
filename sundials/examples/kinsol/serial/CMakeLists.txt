@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4096 $
-# $Date: 2014-05-02 14:49:50 -0700 (Fri, 02 May 2014) $
+# $Revision: 4138 $
+# $Date: 2014-06-15 13:50:39 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -122,10 +122,12 @@ IF(EXAMPLES_INSTALL)
   ENDIF(LAPACK_FOUND)
 
   IF(SUPERLUMT_FOUND)
-    LIST2STRING(KINSOL_examples_SUPERLUMT EXAMPLES_SUPERLUMT)
-  ELSE(SUPERLUMT_FOUND)
-    SET(EXAMPLES_SUPERLUMT "")
+    LIST(APPEND EXAMPLES " ")
+    LIST(APPEND EXAMPLES ${KINSOL_examples_SUPERLUMT})
   ENDIF(SUPERLUMT_FOUND)
+
+  STRING (REPLACE ";" " " TMP_STR ${EXAMPLES})
+  SET(EXAMPLES ${TMP_STR})
 
   # Regardless of the platform we're on, we will generate and install 
   # CMakeLists.txt file for building the examples. This file  can then 
