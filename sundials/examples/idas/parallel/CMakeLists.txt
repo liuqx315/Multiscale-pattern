@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4135 $
-# $Date: 2014-06-13 15:55:05 -0700 (Fri, 13 Jun 2014) $
+# $Revision: 4137 $
+# $Date: 2014-06-15 12:26:15 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -101,7 +101,7 @@ FOREACH(example_tuple ${IDAS_examples})
     TARGET_LINK_LIBRARIES(${example} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARIES})
   ENDIF(NOT MPI_MPICC)
   IF(EXAMPLES_INSTALL)
-    INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/cvode/parallel)
+    INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/idas/parallel)
   ENDIF(EXAMPLES_INSTALL)
 ENDFOREACH(example_tuple ${IDAS_examples})
 

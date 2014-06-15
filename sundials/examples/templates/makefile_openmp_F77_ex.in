@@ -1,15 +1,15 @@
 # -----------------------------------------------------------------
-# $Revision: 4137 $
-# $Date: 2014-06-15 12:26:15 -0700 (Sun, 15 Jun 2014) $
+# $Revision: 4074 $
+# $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
 # -----------------------------------------------------------------
-# Programmer: Radu Serban @ LLNL
+# Programmer: Daniel R. Reynolds @ SMU
 # -----------------------------------------------------------------
-# Copyright (c) 2007, The Regents of the University of California.
+# Copyright (c) 2014, The Regents of the University of California.
 # Produced at the Lawrence Livermore National Laboratory.
 # All rights reserved.
 # For details, see the LICENSE file.
 # -----------------------------------------------------------------
-# Makefile for @SOLVER@ Fortran serial examples
+# Makefile for @SOLVER@ Fortran OpenMP examples
 #
 # This file is generated from a template using various variables
 # set at configuration time. It can be used as a template for
@@ -36,8 +36,8 @@ includedir   = @includedir@
 libdir       = @libdir@
 
 F77         = @F77@
-FFLAGS      = @FFLAGS@
-F77_LNKR    = @F77_LNKR@
+FFLAGS      = @FFLAGS@ @OpenMP_F77_FLAGS@
+F77_LNKR    = @F77_LNKR@ @OpenMP_F77_FLAGS@
 F77_LDFLAGS = @F77_LDFLAGS@
 F77_LIBS    = @F77_LIBS@
 
