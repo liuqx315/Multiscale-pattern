@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
   /* if an argument supplied, set num_threads */
   num_threads = 1;
   if (argc > 1)
-    num_threads = (int) argv[1];
+    num_threads = strtol(argv[1], NULL, 0);
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
