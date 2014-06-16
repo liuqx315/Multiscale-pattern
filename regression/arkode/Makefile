@@ -29,6 +29,7 @@ CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
 # CFLAGS = -O0 -g
 # FFLAGS = -O0 -g
 # CXXFLAGS = -O0 -g -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+OMPFLAGS = -fopenmp
 
 # append problem and interface preprocessor defs to compilation defs.
 CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
@@ -103,6 +104,10 @@ SLUTESTS = ark_brusselator1D_slu.exe \
            ark_brusselator1D_FEM_slu.exe \
            ark_robertson_slu.exe
 
+OMPTESTS = ark_brusselator1D_omp.exe
+
+PTTESTS = ark_brusselator1D_pt_slu.exe
+
 
 # target to build all test executables
 all : ${TESTS}
@@ -112,6 +117,12 @@ klu : ${KLUTESTS}
 
 # target to build all KLU test executables
 slu : ${SLUTESTS}
+
+# target to build all OpenMP test executables
+omp : ${OMPTESTS}
+
+# target to build all Pthreads test executables
+pt : ${PTTESTS}
 
 
 # specific build rules for C programs linking with KLU
@@ -133,6 +144,14 @@ ark_brusselator1D_slu.exe : ark_brusselator1D_slu.c init_from_file.c
 
 ark_brusselator1D_FEM_slu.exe : ark_brusselator1D_FEM_slu.c init_from_file.c
 	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ${SLULIBS} ${LDFLAGS} -o $@
+
+ark_brusselator1D_pt_slu.exe : ark_brusselator1D_pt_slu.c init_from_file.c
+	${CC} ${CFLAGS_} ${INCS} $^ ${LIBS} ../../install_opt/lib/libsundials_nvecpthreads.a ${SLULIBS} ${LDFLAGS} -o $@
+
+# specific build rules for C programs using OpenMP
+ark_brusselator1D_omp.exe : ark_brusselator1D_omp.c init_from_file.c
+	${CC} ${OMPFLAGS} ${CFLAGS_} ${INCS} $^ ${LIBS} ../../install_opt/lib/libsundials_nvecopenmp.a ${LDFLAGS} -o $@
+
 
 # specific build rules for regression testing with different preprocessor directives
 ark_brusselator_Ma.exe : ark_brusselator_M.c init_from_file.c   # dense-dense
