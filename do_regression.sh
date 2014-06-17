@@ -62,9 +62,12 @@ make
 make install
 cd -
 
-# build and run arkode regression tests
+# build and run arkode regression tests, then clean up
 cd regression/arkode
 make clean
 make all klu omp
 ./regression_runner.py -q -l
+make clean
+hg revert solve_params.txt fsolve_params.txt
+\rm solve_params.txt.orig fsolve_params.txt.orig
 cd -

@@ -1668,7 +1668,7 @@ all_tests = list(y for x in AllTests for y in x)
 
 
 #### create test description file ####
-AllTests_file = open('regression_tests.txt','w')
+AllTests_file = open('local_reg_tests.txt','w')
 AllTests_file.write("# ARKode regression tests\n")
 AllTests_file.write("#\n")
 AllTests_file.write("# Each line indicates a separate test.  All lines have the format:\n")
