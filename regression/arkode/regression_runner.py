@@ -6,13 +6,18 @@
 # All rights reserved.
 # For details, see the LICENSE file.
 #------------------------------------------------------------
-# function to perform regression tests on ARKODE solvers.
+# Function to perform regression tests on ARKODE solvers.  If
+# a file local_standards.dat exists, it will load from those; 
+# otherwise it will load from the file 
+# regression_standards.dat.
 
 # main routine
 def main():
 
     # imports
     import sys
+    import os
+    import os.path
     from time import time
     import arkode_tools as ark
     import pickle
@@ -74,7 +79,12 @@ def main():
     tquick = 1.0
 
     # load standards dictionary from disk
-    gold_standard = pickle.load( open( "regression_standards.dat", "rb" ) )
+    if os.path.isfile("local_standards.dat") and os.access("local_standards.dat", os.R_OK):
+        print '\nReading reference results from: local_standards.dat'
+        gold_standard = pickle.load( open( "local_standards.dat", "rb" ) )
+    else:
+        print '\nReading reference results from: regression_standards.dat'
+        gold_standard = pickle.load( open( "regression_standards.dat", "rb" ) )
 
 
     # read in list of tests

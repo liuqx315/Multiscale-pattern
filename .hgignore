@@ -19,3 +19,5 @@ Make.machine
 www/build
 doc/guide/build
 doc/examples/build
+local_standards.dat
+
