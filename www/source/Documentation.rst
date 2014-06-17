@@ -1,7 +1,7 @@
 ..
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
-   Copyright (c) 2013, Southern Methodist University.
+   Copyright (c) 2014, Southern Methodist University.
    All rights reserved.
    For details, see the LICENSE file.
    ----------------------------------------------------------------
@@ -12,7 +12,9 @@
 Documentation
 ==================
 
-Documentation is available in both HTML and PDF formats:
+Documentation is available in both HTML and PDF formats, and is
+rebuild nightly with the current version from the ARKode development
+repository:
 
 ARKode Guide:
 
