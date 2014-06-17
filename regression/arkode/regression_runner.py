@@ -80,11 +80,11 @@ def main():
 
     # load standards dictionary from disk
     if os.path.isfile("local_standards.dat") and os.access("local_standards.dat", os.R_OK):
-        print '\nReading reference results from: local_standards.dat'
-        gold_standard = pickle.load( open( "local_standards.dat", "rb" ) )
+        ref = "local_standards.dat"
     else:
-        print '\nReading reference results from: regression_standards.dat'
-        gold_standard = pickle.load( open( "regression_standards.dat", "rb" ) )
+        ref = "regression_standards.dat"
+    print '\n\nReading reference results from: ',ref
+    gold_standard = pickle.load( open( ref, "rb" ) )
 
 
     # read in list of tests
