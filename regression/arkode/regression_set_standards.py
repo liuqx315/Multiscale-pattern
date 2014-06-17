@@ -1717,7 +1717,7 @@ tend = time()
 
 #### close test description file, write standards dictionary ####
 AllTests_file.close()
-pickle.dump( test_results, open( "regression_standards.dat", 'wb') )
+pickle.dump( test_results, open( "local_standards.dat", 'wb') )
 
 #### output final statistics ####
 sys.stdout.write("\nTest suite includes %i tests (%i failed/discarded); required %g seconds\n" 

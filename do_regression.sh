@@ -64,6 +64,7 @@ cd -
 
 # build and run arkode regression tests
 cd regression/arkode
-make all klu
+make clean
+make all klu omp
 ./regression_runner.py -q -l
 cd -
