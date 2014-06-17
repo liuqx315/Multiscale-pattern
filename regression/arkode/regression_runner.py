@@ -138,20 +138,7 @@ def main():
             result = stats.Compare(gold_standard[test.name], strict=strict)
 
             # output results to stdout (use color if available)
-            if os.environ["TERM"] == 'xterm':
-                if (result == 1):
-                    numsuccess += 1
-                    sys.stdout.write(" \033[92m pass  \033[94m(steps: %6i,  runtime: %.2g s)\033[0m\n" 
-                                     % (stats.nsteps, stats.runtime))
-                elif (result == 2):
-                    numsuccess += 1
-                    sys.stdout.write(" \033[93m warn  \033[94m(steps: %6i,  runtime: %.2g s)\033[0m\n" 
-                                     % (stats.nsteps, stats.runtime))
-                else:
-                    numfailed += 1
-                    failedtests.append(test.name)
-                    sys.stdout.write(" \033[91m fail  \033[94m(runtime: %.2g s)\033[0m\n" % (stats.runtime))
-            else:
+            if os.environ["TERM"] == 'jenkins':
                 if (result == 1):
                     numsuccess += 1
                     sys.stdout.write("  pass  (steps: %6i,  runtime: %.2g s)\n" 
@@ -164,6 +151,19 @@ def main():
                     numfailed += 1
                     failedtests.append(test.name)
                     sys.stdout.write("  fail  (runtime: %.2g s)\n" % (stats.runtime))
+            else:
+                if (result == 1):
+                    numsuccess += 1
+                    sys.stdout.write(" \033[92m pass  \033[94m(steps: %6i,  runtime: %.2g s)\033[0m\n" 
+                                     % (stats.nsteps, stats.runtime))
+                elif (result == 2):
+                    numsuccess += 1
+                    sys.stdout.write(" \033[93m warn  \033[94m(steps: %6i,  runtime: %.2g s)\033[0m\n" 
+                                     % (stats.nsteps, stats.runtime))
+                else:
+                    numfailed += 1
+                    failedtests.append(test.name)
+                    sys.stdout.write(" \033[91m fail  \033[94m(runtime: %.2g s)\033[0m\n" % (stats.runtime))
 
             
     tend = time()
