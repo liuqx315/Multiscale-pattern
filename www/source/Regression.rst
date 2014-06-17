@@ -1,7 +1,7 @@
 ..
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
-   Copyright (c) 2013, Southern Methodist University.
+   Copyright (c) 2014, Southern Methodist University.
    All rights reserved.
    For details, see the LICENSE file.
    ----------------------------------------------------------------
@@ -12,6 +12,11 @@
 Regression Testing
 ====================
 
-Automated nightly regression test results of the private development
-repository are available at `this site
-<http://runge.math.smu.edu/arkode_tests.html>`_.
+ARKode employs the `Jenkins <http://jenkins-ci.org/>`_ `continuous
+integration system
+<https://en.wikipedia.org/wiki/Continuous_integration>`_ to perform
+regression testing of all checkins and pull requests on the `ARKode
+development repository <https://bitbucket.org/drreynolds/arkode>`_.  
+The current status of the development repository, as well as results
+from all recent builds may be found at `this site
+<http://runge.math.smu.edu/jenkins>`_. 
