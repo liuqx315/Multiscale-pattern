@@ -13,6 +13,7 @@ hg pull
 hg up
 
 # create build directory
+\rm -rf build_opt examples_opt install_opt
 mkdir build_opt
 cd build_opt
 
