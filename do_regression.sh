@@ -36,13 +36,13 @@ cmake \
 -DMPI_MPICXX:FILEPATH="/usr/bin/mpicxx" \
 -DMPI_MPIF77:FILEPATH="/usr/bin/mpif77" \
 -DMPI_MPIF90:FILEPATH="/usr/bin/mpif90" \
--DCMAKE_C_FLAGS:STRING="-Wall -ansi -pedantic -O2" \
+-DCMAKE_C_FLAGS:STRING="-O2" \
 -DCMAKE_C_FLAGS_DEBUG:STRING="-g" \
 -DCMAKE_C_FLAGS_RELEASE:STRING="-O3 -DNDEBUG" \
--DCMAKE_CXX_FLAGS:STRING="-Wall -O2" \
+-DCMAKE_CXX_FLAGS:STRING="-O2" \
 -DCMAKE_CXX_FLAGS_DEBUG:STRING="-g" \
 -DCMAKE_CXX_FLAGS_RELEASE:STRING="-O3 -DNDEBUG" \
--DCMAKE_Fortran_FLAGS:STRING="-Wall -O2" \
+-DCMAKE_Fortran_FLAGS:STRING="-O2" \
 -DCMAKE_Fortran_FLAGS_DEBUG:STRING="-g" \
 -DCMAKE_Fortran_FLAGS_RELEASE:STRING="-O3" \
 -DOpenMP_C_FLAGS:STRING="-fopenmp" \
@@ -59,6 +59,7 @@ cmake \
 # build and install sundials
 make
 make install
+cd -
 
 # build regression tests
 #   arkode
