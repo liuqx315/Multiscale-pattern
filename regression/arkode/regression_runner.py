@@ -83,12 +83,17 @@ def main():
         ref = "local_standards.dat"
     else:
         ref = "regression_standards.dat"
-    print '\n\nReading reference results from: ',ref
+    print '\nReading reference results from: ',ref
     gold_standard = pickle.load( open( ref, "rb" ) )
 
 
     # read in list of tests
-    AllTests = ark.ReadTests('regression_tests.txt')
+    if os.path.isfile("local_reg_tests.txt") and os.access("local_reg_tests.txt", os.R_OK):
+        tst = "local_reg_tests.txt"
+    else:
+        tst = "regression_tests.txt"
+    print '\nReading regression test definitions from: ',tst
+    AllTests = ark.ReadTests(tst)
 
     print '\nRunning regression tests:'
     if strict:
