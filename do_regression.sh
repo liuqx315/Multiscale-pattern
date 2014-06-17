@@ -62,26 +62,8 @@ make
 make install
 cd -
 
-# build regression tests
-#   arkode
+# build and run arkode regression tests
 cd regression/arkode
 make all klu
-cd -
-#   cvode
-cd regression/cvode
-make 
-cd -
-#   ida
-cd regression/ida
-make 
-cd -
-#   sundials
-cd regression/sundials
-make 
-cd -
-
-
-# run arkode regression tests
-cd regression/arkode
 ./regression_runner.py -q -l
 cd -
