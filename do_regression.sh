@@ -69,5 +69,5 @@ make all klu omp
 ./regression_runner.py -q -l
 make clean
 hg revert solve_params.txt fsolve_params.txt
-\rm solve_params.txt.orig fsolve_params.txt.orig
+\rm -f solve_params.txt.orig fsolve_params.txt.orig
 cd -
