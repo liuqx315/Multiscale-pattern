@@ -72,8 +72,8 @@ For consistency with the existing ARKode linear solver modules, we
 recommend that the return value of the specification function be 0 for
 a successful return, and a negative value if an error occurs.
 Possible error conditions include: the pointer to the main ARKode
-memory block is ``NULL``, and input is illegal, the NVECTOR
-implementation is not compatible, or a memoryallocation fails. 
+memory block is ``NULL``, an input is illegal, the NVECTOR
+implementation is not compatible, or a memory allocation fails. 
 
 
 

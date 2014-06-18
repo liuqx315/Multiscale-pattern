@@ -18,9 +18,11 @@ Due to their reliance on only general vector operations (without need
 to directly access data), the iterative linear solvers in the SPILS
 family can be used with a relatively complete NVECTOR implementation
 (see the section :ref:`NVectors.ARKode` for a complete listing).
-We note that while both the :ref:`NVECTOR_SERIAL <NVectors.NVSerial>`
-and :ref:`NVECTOR_PARALLEL <NVectors.NVParallel>` modules provided
-with SUNDIALS meet these criteria, these criteria may also be easily met
+We note that while all of the vector modules provided with SUNDIALS
+(:ref:`NVECTOR_SERIAL <NVectors.NVSerial>`, :ref:`NVECTOR_OPENMP
+<NVectors.OpenMP>`, :ref:`NVECTOR_PTHREADS <NVectors.Pthreads>`, and
+:ref:`NVECTOR_PARALLEL <NVectors.NVParallel>` )
+meet these criteria, these criteria may also be easily met
 through a user-supplied vector implementation.
 
 In the subsections below, we discuss the iterative linear solvers

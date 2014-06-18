@@ -174,14 +174,14 @@ package structure.
 
 ARKode also provides two rudimentary preconditioner modules, for
 use with any of the Krylov iterative linear solvers.  The first,
-ARKBANDPRE is intended to be used with the serial vector data
-structure, NVECTOR_SERIAL, and provides a banded
-difference-quotient approximation to the Jacobian as the
-preconditioner, with corresponding setup and solve routines.  The
-second preconditioner module, ARKBBDPRE, is intended to work with the
-parallel vector data structure, NVECTOR_PARALLEL, and generates a
-preconditioner that is a block-diagonal matrix with each block being a
-band matrix owned by a single processor.
+ARKBANDPRE is intended to be used with the serial or threaded vector
+data structures (NVECTOR_SERIAL, NVECTOR_OPENMP and NVECTOR_PTHREADS),
+and provides a banded difference-quotient approximation to the
+Jacobian as the preconditioner, with corresponding setup and solve
+routines.  The second preconditioner module, ARKBBDPRE, is intended to
+work with the parallel vector data structure, NVECTOR_PARALLEL, and
+generates a preconditioner that is a block-diagonal matrix with each
+block being a band matrix owned by a single processor.
 
 All state information used by ARKode to solve a given problem is
 saved in a single opaque memory structure, and a pointer to that

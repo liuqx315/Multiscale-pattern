@@ -32,6 +32,12 @@ Interface to the NVECTOR modules
 * :f:func:`FNVINITS()` (defined by NVECTOR_SERIAL) interfaces to
   :c:func:`N_VNewEmpty_Serial()`.
 
+* :f:func:`FNVINITS_OPENMP()` (defined by NVECTOR_OPENMP) interfaces to
+  :c:func:`N_VNewEmpty_OpenMP()`.
+
+* :f:func:`FNVINITS_PTHREADS()` (defined by NVECTOR_PTHREADS) interfaces to
+  :c:func:`N_VNewEmpty_Pthreads()`.
+
 * :f:func:`FNVINITP()` (defined by NVECTOR_PARALLEL) interfaces to
   :c:func:`N_VNewEmpty_Parallel()`. 
 
