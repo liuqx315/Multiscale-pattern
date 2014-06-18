@@ -244,13 +244,13 @@ For problems that include nonzero implicit term $f_I(t,y)$, the
 resulting implicit system (assumed nonlinear) is solved approximately
 at each integration step, using a modified Newton method, an Inexact
 Newton method, or an accelerated fixed-point solver.  For implicit
-problems using a Newton-based solver and the serial NVECTOR module in
-SUNDIALS, ARKode provides both direct (dense, band and sparse) and
-preconditioned Krylov iterative (GMRES, BiCGStab, TFQMR, FGMRES, PCG)
-linear solvers.  When used with the parallel NVECTOR module or a
-user-provided vector data structure, only the Krylov solvers are
-available, although a user may supply their own linear solver for any
-data structures if desired.
+problems using a Newton-based solver and the serial or threaded
+NVECTOR modules in SUNDIALS, ARKode provides both direct (dense, band
+and sparse) and preconditioned Krylov iterative (GMRES, BiCGStab,
+TFQMR, FGMRES, PCG) linear solvers.  When used with the parallel
+NVECTOR module or a user-provided vector data structure, only the
+Krylov solvers are available, although a user may supply their own
+linear solver for any data structures if desired.
 
 The guide is separated into sections focused on the major aspects of
 the ARKode library.  In the next section we provide a thorough
@@ -537,7 +537,7 @@ stiffness, in the form of a user-supplied preconditioner matrix
 {\hyperref[References:bh1989]{{[}BH1989{]}}}.  We note that the direct linear solvers
 provided by SUNDIALS (dense, band and sparse), as well as the direct
 linear solvers accessible through LAPACK, can only be used with the
-serial vector representations.
+serial and threaded vector representations.
 
 \index{modified Newton iteration}
 In the case that a direct linear solver is used (dense or band),
@@ -1683,14 +1683,14 @@ package structure.
 
 ARKode also provides two rudimentary preconditioner modules, for
 use with any of the Krylov iterative linear solvers.  The first,
-ARKBANDPRE is intended to be used with the serial vector data
-structure, NVECTOR\_SERIAL, and provides a banded
-difference-quotient approximation to the Jacobian as the
-preconditioner, with corresponding setup and solve routines.  The
-second preconditioner module, ARKBBDPRE, is intended to work with the
-parallel vector data structure, NVECTOR\_PARALLEL, and generates a
-preconditioner that is a block-diagonal matrix with each block being a
-band matrix owned by a single processor.
+ARKBANDPRE is intended to be used with the serial or threaded vector
+data structures (NVECTOR\_SERIAL, NVECTOR\_OPENMP and NVECTOR\_PTHREADS),
+and provides a banded difference-quotient approximation to the
+Jacobian as the preconditioner, with corresponding setup and solve
+routines.  The second preconditioner module, ARKBBDPRE, is intended to
+work with the parallel vector data structure, NVECTOR\_PARALLEL, and
+generates a preconditioner that is a block-diagonal matrix with each
+block being a band matrix owned by a single processor.
 
 All state information used by ARKode to solve a given problem is
 saved in a single opaque memory structure, and a pointer to that
@@ -1725,8 +1725,9 @@ implementations.  For example, NVECTOR\_PARALLEL is not compatible with
 the direct dense or direct band linear solvers since these linear
 solver modules need to form the complete system Jacobian on a single
 processor.  Specifically, the following ARKode modules can only be
-used with NVECTOR\_SERIAL: ARKDENSE, ARKBAND (using either the internal
-or the LAPACK implementation) and ARKBANDPRE. Also, the preconditioner
+used with NVECTOR\_SERIAL, NVECTOR\_OPENMP or NVECTOR\_PTHREADS: ARKDENSE,
+ARKBAND (using either the internal or the LAPACK implementation),
+ARKKLU, ARKSUPERLUMT and ARKBANDPRE. Also, the preconditioner
 module ARKBBDPRE can only be used with NVECTOR\_PARALLEL.
 
 ARKode uses various constants for both input and output. These are
@@ -1851,7 +1852,7 @@ constants \code{FALSE} and \code{TRUE}, so a user program does not need to
 include \code{sundials\_types.h} directly.
 
 The calling program must also include an NVECTOR implementation
-header file (see the section {\hyperref[nvectors/index:nvectors]{\emph{Vector Data Structures}}} for details).  For the two
+header file (see the section {\hyperref[nvectors/index:nvectors]{\emph{Vector Data Structures}}} for details).  For the four
 NVECTOR implementations that are included in the ARKode package, the
 corresponding header files are:
 \begin{itemize}
@@ -1860,12 +1861,20 @@ corresponding header files are:
 NVECTOR\_SERIAL;
 
 \item {} 
+\code{nvector\_openmp.h}, which defines the OpenMP implementation
+NVECTOR\_OPENMP;
+
+\item {} 
+\code{nvector\_pthreads.h}, which defines the Pthreads implementation
+NVECTOR\_PTHREADS;
+
+\item {} 
 \code{nvector\_parallel.h}, which defines the parallel (MPI)
 implementation, NVECTOR\_PARALLEL.
 
 \end{itemize}
 
-Note that both these files in turn include the header file
+Note that all of these files in turn include the header file
 \code{sundials\_nvector.h} which defines the abstract \code{N\_Vector} data
 type.
 
@@ -1956,28 +1965,36 @@ preconditioning.
 The following is a skeleton of the user's main program (or calling
 program) for the integration of an IVP.  Some steps are independent of
 the NVECTOR implementation used.  Where this is not the case, usage
-specifications are given for the two implementations provided with
-ARKode: steps marked {[}P{]} correspond to NVECTOR\_PARALLEL, while steps
-marked {[}S{]} correspond to NVECTOR\_SERIAL.
+specifications are given for the four implementations provided with
+ARKode: steps marked {[}\textbf{S}{]} correspond to NVECTOR\_SERIAL, steps
+marked {[}\textbf{O}{]} correspond to NVECTOR\_OPENMP, steps marked {[}\textbf{T}{]}
+correspond to NVECTOR\_PTHREADS, and steps marked {[}\textbf{P}{]} correspond to
+NVECTOR\_PARALLEL.  Some steps may be marked with multiple codes,
+e.g. {[}\textbf{S}, \textbf{O}, \textbf{T}{]}.  Steps not marked apply to all NVECTOR
+implementations.
 \begin{enumerate}
 \item {} 
-{[}P{]} Initialize MPI
+{[}\textbf{P}{]} Initialize MPI
 
 Call \code{MPI\_Init} to initialize MPI if used by the user's program.
 
 \item {} 
 Set problem dimensions
 
-{[}S{]} Set \code{N}, the problem size $N$.
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} Set \code{N}, the problem size $N$.
 
-{[}P{]} Set \code{Nlocal}, the local vector length (the sub-vector length
+{[}\textbf{O}, \textbf{T}{]} Set \code{num\_threads}, the number of threads to use
+within the parallelized vector functions.
+
+{[}\textbf{P}{]} Set \code{Nlocal}, the local vector length (the sub-vector length
 for this process); \code{N}, the global vector length (the problem size
 $N$, equaling the sum of all the values of \code{Nlocal} on the
 active set of processes).
 
 \begin{notice}{note}{Note:}
 The variables \code{N} and \code{Nlocal} should be of type
-\code{long int}.
+\code{long int}.  The variable \code{num\_threads} should be of type
+\code{int}.
 \end{notice}
 
 \item {} 
@@ -1988,21 +2005,33 @@ functions defined by the particular NVECTOR implementation.  If a
 \code{realtype} array \code{ydata} containing the initial values of $y$
 already exists, then make the call:
 
-{[}S{]} \code{y0 = N\_VMake\_Serial(N, ydata);}
+{[}\textbf{S}{]} \code{y0 = N\_VMake\_Serial(N, ydata);}
 
-{[}P{]} \code{y0 = N\_VMake\_Parallel(comm, Nlocal, N, ydata);}
+{[}\textbf{O}{]} \code{y0 = N\_VMake\_OpenMP(N, num\_threads, ydata);}
+
+{[}\textbf{T}{]} \code{y0 = N\_VMake\_Pthreads(N, num\_threads, ydata);}
+
+{[}\textbf{P}{]} \code{y0 = N\_VMake\_Parallel(comm, Nlocal, N, ydata);}
 
 Otherwise, make the call:
 
-{[}S{]} \code{y0 = N\_VNew\_Serial(N);}
+{[}\textbf{S}{]} \code{y0 = N\_VNew\_Serial(N);}
 
-{[}P{]} \code{y0 = N\_VNew\_Parallel(comm, Nlocal, N);}
+{[}\textbf{O}{]} \code{y0 = N\_VNew\_OpenMP(N, num\_threads);}
+
+{[}\textbf{T}{]} \code{y0 = N\_VNew\_Pthreads(N, num\_threads);}
+
+{[}\textbf{P}{]} \code{y0 = N\_VNew\_Parallel(comm, Nlocal, N);}
 
 and load initial values into the array accessed by:
 
-{[}S{]} \code{NV\_DATA\_S(y0)}
+{[}\textbf{S}{]} \code{NV\_DATA\_S(y0)}
 
-{[}P{]} \code{NV\_DATA\_P(y0)}
+{[}\textbf{O}{]} \code{NV\_DATA\_OMP(y0)}
+
+{[}\textbf{T}{]} \code{NV\_DATA\_PT(y0)}
+
+{[}\textbf{P}{]} \code{NV\_DATA\_P(y0)}
 
 Here \code{comm} is the MPI communicator containing the set of active
 processes to be used (may be the MPI default, \code{MPI\_COMM\_WORLD}).
@@ -2050,17 +2079,17 @@ chosen for the solver, initialize the linear solver module with one
 of the following calls (for details see the section
 {\hyperref[c_interface/User_callable:cinterface-linearsolvers]{\emph{Linear solver specification functions}}}):
 
-{[}S{]} \code{ier = ARKDense(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKDense(...);}
 
-{[}S{]} \code{ier = ARKBand(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKBand(...);}
 
-{[}S{]} \code{ier = ARKLapackDense(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKLapackDense(...);}
 
-{[}S{]} \code{ier = ARKLapackBand(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKLapackBand(...);}
 
-{[}S{]} \code{ier = ARKKLU(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKKLU(...);}
 
-{[}S{]} \code{ier = ARKSuperLUMT(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKSuperLUMT(...);}
 
 \code{ier = ARKSpgmr(...);}
 
@@ -2086,17 +2115,17 @@ If a non-identity mass matrix solve is required, initialize the
 linear mass matrix solver module with one of the following calls
 (for details see the section {\hyperref[c_interface/User_callable:cinterface-linearsolvers]{\emph{Linear solver specification functions}}}):
 
-{[}S{]} \code{ier = ARKMassDense(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKMassDense(...);}
 
-{[}S{]} \code{ier = ARKMassBand(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKMassBand(...);}
 
-{[}S{]} \code{ier = ARKMassLapackDense(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKMassLapackDense(...);}
 
-{[}S{]} \code{ier = ARKMassLapackBand(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKMassLapackBand(...);}
 
-{[}S{]} \code{ier = ARKMassKLU(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKMassKLU(...);}
 
-{[}S{]} \code{ier = ARKMassSuperLUMT(...);}
+{[}\textbf{S}, \textbf{O}, \textbf{T}{]} \code{ier = ARKMassSuperLUMT(...);}
 
 \code{ier = ARKMassSpgmr(...);}
 
@@ -2154,12 +2183,16 @@ Upon completion of the integration, deallocate memory for the
 vector \code{y} by calling the destructor function defined by the
 NVECTOR implementation:
 
-{[}S{]} \code{N\_VDestroy\_Serial(y);}
+{[}\textbf{S}{]} \code{N\_VDestroy\_Serial(y);}
 
-{[}P{]} \code{N\_VDestroy\_Parallel(y);}
+{[}\textbf{O}{]} \code{N\_VDestroy\_OpenMP(y);}
+
+{[}\textbf{T}{]} \code{N\_VDestroy\_Pthreads(y);}
+
+{[}\textbf{P}{]} \code{N\_VDestroy\_Parallel(y);}
 
 \item {} 
-{[}P{]} Finalize MPI
+{[}\textbf{P}{]} Finalize MPI
 
 Call \code{MPI\_Finalize} to terminate MPI.
 
@@ -2778,8 +2811,10 @@ linear solver.  It's use requires inclusion of the header file
 \end{description}
 
 \textbf{Notes:}  The ARKDENSE linear solver is not compatible with
-all implementations of the NVECTOR module. Of the two nvector
-modules provided with SUNDIALS, only NVECTOR\_SERIAL is compatible.
+all implementations of the NVECTOR module. Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 \end{fulllineitems}
 
@@ -2863,9 +2898,10 @@ linear solver.  It's use requires inclusion of the header file
 \end{description}
 
 \textbf{Notes:} The ARKBAND linear solver is not compatible with all
-implementations of the NVECTOR module.  Of the two
-NVECTOR modules provided with SUNDIALS, only
-NVECTOR\_SERIAL is compatible.
+implementations of the NVECTOR module.  Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 The half-bandwidths are to be set such that the nonzero locations
 $(i, j)$ in the banded (approximate) Jacobian satisfy \emph{-mlower}
@@ -2960,8 +2996,10 @@ Jacobian.
 \end{description}
 
 \textbf{Notes:}  The ARKKLU linear solver is not compatible with
-all implementations of the NVECTOR module.  Of the two nvector
-modules provided with SUNDIALS, only NVECTOR\_SERIAL is compatible.
+all implementations of the NVECTOR module.  Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 \end{fulllineitems}
 
@@ -3010,8 +3048,10 @@ Jacobian.
 \end{description}
 
 \textbf{Notes:}  The ARKSUPERLUMT linear solver is not compatible with
-all implementations of the NVECTOR module.  Of the two nvector
-modules provided with SUNDIALS, only NVECTOR\_SERIAL is compatible.
+all implementations of the NVECTOR module.  Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 \end{fulllineitems}
 
@@ -3340,8 +3380,10 @@ use requires inclusion of the header file \code{arkode\_dense.h}.
 \end{description}
 
 \textbf{Notes:}  The ARKDENSE linear solver is not compatible with all
-implementations of the NVECTOR module. Of the two nvector modules
-provided with SUNDIALS, only NVECTOR\_SERIAL is compatible.
+implementations of the NVECTOR module. Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 \end{fulllineitems}
 
@@ -3431,11 +3473,12 @@ solver module.  It's use requires inclusion of the header file
 \end{description}
 
 \textbf{Notes:} The ARKBAND linear solver may not be compatible with the
-particular implementation of the NVECTOR module. Of the two
-NVECTOR modules provided with SUNDIALS, only
-NVECTOR\_SERIAL is compatible. The half-bandwidths are to be set
-such that the nonzero locations $(i, j)$ in the banded
-mass matrix satisfy \emph{-mlower} $\le j-i \le$ \emph{mupper}.
+particular implementation of the NVECTOR module. Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.  The half-bandwidths are
+to be set such that the nonzero locations $(i, j)$ in the
+banded mass matrix satisfy \emph{-mlower} $\le j-i \le$ \emph{mupper}.
 
 At present, it is required that the band mass matrix have identical
 band structure to the Jacobian matrix.  While this is typical of
@@ -3539,8 +3582,10 @@ use requires inclusion of the header file \code{arkode\_klu.h}.
 \end{description}
 
 \textbf{Notes:}  The ARKKLU linear solver is not compatible with all
-implementations of the NVECTOR module. Of the two nvector modules
-provided with SUNDIALS, only NVECTOR\_SERIAL is compatible.
+implementations of the NVECTOR module. Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 \end{fulllineitems}
 
@@ -3589,8 +3634,10 @@ factoring/solving the ODE system.
 \end{description}
 
 \textbf{Notes:}  The ARKSUPERLUMT linear solver is not compatible with all
-implementations of the NVECTOR module. Of the two nvector modules
-provided with SUNDIALS, only NVECTOR\_SERIAL is compatible.
+implementations of the NVECTOR module. Of the four NVector
+modules provided with SUNDIALS, only the serial and threaded
+modules ({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}) are compatible.
 
 \end{fulllineitems}
 
@@ -11485,19 +11532,20 @@ band-block-diagonal preconditioner  for parallel problems (ARKBBDPRE).
 \label{c_interface/Preconditioners:cinterface-bandpre}\label{c_interface/Preconditioners:a-serial-banded-preconditioner-module}
 This preconditioner provides a band matrix preconditioner for use with
 any of the Krylov iterative linear solvers.  It requires that the
-problem be set up using the NVECTOR\_SERIAL module, due to data access
-patterns.  It uses difference quotients of the ODE right-hand side
-function $f_I$ to generate a band matrix of bandwidth \code{ml +
-mu + 1}, where the number of super-diagonals (\code{mu}, the upper
-half-bandwidth) and sub-diagonals (\code{ml}, the lower half-bandwidth)
-are specified by the user.  This band matrix is used to to form a
-preconditioner the Krylov linear solver.  Although this matrix is
-intended to approximate the Jacobian
-$J = \frac{\partial f_I}{\partial y}$, it may be a very crude
-approximation, since the true Jacobian may not be banded, or its true
-bandwidth may be larger than \code{ml + mu + 1}.  However, as long as the
-banded approximation generated for the preconditioner is sufficiently
-accurate, it may speed convergence of the Krylov iteration.
+problem be set up using either the NVECTOR\_SERIAL, NVECTOR\_OPENMP or
+NVECTOR\_PTHREADS module, due to data access patterns.  It uses
+difference quotients of the ODE right-hand side function $f_I$
+to generate a band matrix of bandwidth \code{ml + mu + 1}, where the
+number of super-diagonals (\code{mu}, the upper half-bandwidth) and
+sub-diagonals (\code{ml}, the lower half-bandwidth) are specified by the
+user.  This band matrix is used to to form a preconditioner the Krylov
+linear solver.  Although this matrix is intended to approximate the
+Jacobian $J = \frac{\partial f_I}{\partial y}$, it may be a
+very crude approximation, since the true Jacobian may not be banded,
+or its true bandwidth may be larger than \code{ml + mu + 1}.  However, as
+long as the banded approximation generated for the preconditioner is
+sufficiently accurate, it may speed convergence of the Krylov
+iteration.
 
 
 \subsubsection{ARKBANDPRE usage}
@@ -12315,8 +12363,8 @@ systems
 in a mixed Fortran/C setting.  While ARKODE is written in C, it is
 assumed here that the user's calling program and user-supplied
 problem-defining routines are written in Fortran. This package
-provides the necessary interface to ARKODE for both the serial and
-the parallel NVECTOR implementations.
+provides the necessary interfaces to ARKODE for all of the provided
+NVECTOR implementations.
 
 
 \section{Important notes on portability}
@@ -12412,6 +12460,14 @@ documentation, for simplified access.
 \item {} 
 {\hyperref[f_interface/Usage:f/_/FNVINITS]{\code{FNVINITS()}}} (defined by NVECTOR\_SERIAL) interfaces to
 {\hyperref[nvectors/NVector_Serial:N_VNewEmpty_Serial]{\code{N\_VNewEmpty\_Serial()}}}.
+
+\item {} 
+{\hyperref[f_interface/Usage:f/_/FNVINITS_OPENMP]{\code{FNVINITS\_OPENMP()}}} (defined by NVECTOR\_OPENMP) interfaces to
+{\hyperref[nvectors/NVector_OpenMP:N_VNewEmpty_OpenMP]{\code{N\_VNewEmpty\_OpenMP()}}}.
+
+\item {} 
+{\hyperref[f_interface/Usage:f/_/FNVINITS_PTHREADS]{\code{FNVINITS\_PTHREADS()}}} (defined by NVECTOR\_PTHREADS) interfaces to
+{\hyperref[nvectors/NVector_Pthreads:N_VNewEmpty_Pthreads]{\code{N\_VNewEmpty\_Pthreads()}}}.
 
 \item {} 
 {\hyperref[f_interface/Usage:f/_/FNVINITP]{\code{FNVINITP()}}} (defined by NVECTOR\_PARALLEL) interfaces to
@@ -12681,8 +12737,13 @@ although support within the Fortran interface is planned for the near
 future.
 
 In the instructions below, steps marked {[}\textbf{S}{]} apply to the serial
-NVECTOR implementation (NVECTOR\_SERIAL) only, while those
-marked with a {[}\textbf{P}{]} apply to NVECTOR\_PARALLEL.
+NVECTOR implementation (NVECTOR\_SERIAL) only, steps marked {[}\textbf{O}{]}
+apply to the OpenMP NVECTOR implementation (NVECTOR\_OPENMP) only,
+steps marked {[}\textbf{T}{]} apply to the Pthreads NVECTOR implementation
+(NVECTOR\_PTHREADS) only, while those marked with a {[}\textbf{P}{]} apply to
+NVECTOR\_PARALLEL.  Some steps will be marked with a combination of the
+above, e.g.  {[}\textbf{S}, \textbf{O}, \textbf{T}{]}.  Steps not marked apply to all
+supplied NVECTOR implementations.
 
 
 \subsubsection{Right-hand side specification}
@@ -12787,6 +12848,66 @@ is to be used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is ARKode).
 
 \item {} 
 \emph{NEQ} (\code{long int}, input) -- size of the ODE system.
+
+\item {} 
+\emph{IER} (\code{int}, output) -- return flag (0 success, $\ne 0$ failure).
+
+\end{itemize}
+
+\end{description}
+
+\end{fulllineitems}
+
+
+{[}\textbf{O}{]} To initialize the OpenMP NVECTOR module, the user must
+call the following function with the argument \emph{KEY} = 4.
+\index{FNVINITS\_OPENMP() (fortran subroutine)|textbf}
+
+\begin{fulllineitems}
+\phantomsection\label{f_interface/Usage:f/_/FNVINITS_OPENMP}\pysiglinewithargsret{\strong{subroutine  }\bfcode{FNVINITS\_OPENMP}}{\emph{KEY}, \emph{NEQ}, \emph{NUM\_THREADS}, \emph{IER}}{}
+Initializes the Fortran interface to the OpenMP NVECTOR module.
+\begin{description}
+\item[{\textbf{Arguments:}}] \leavevmode\begin{itemize}
+\item {} 
+\emph{KEY} (\code{int}, input) -- integer flag denoting which solver
+is to be used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is ARKode).
+
+\item {} 
+\emph{NEQ} (\code{long int}, input) -- size of the ODE system.
+
+\item {} 
+\emph{NUM\_THREADS} (\code{int}, input) -- number of threads to use in
+parallelized regions.
+
+\item {} 
+\emph{IER} (\code{int}, output) -- return flag (0 success, $\ne 0$ failure).
+
+\end{itemize}
+
+\end{description}
+
+\end{fulllineitems}
+
+
+{[}\textbf{T}{]} To initialize the Pthreads NVECTOR module, the user must
+call the following function with the argument \emph{KEY} = 4.
+\index{FNVINITS\_PTHREADS() (fortran subroutine)|textbf}
+
+\begin{fulllineitems}
+\phantomsection\label{f_interface/Usage:f/_/FNVINITS_PTHREADS}\pysiglinewithargsret{\strong{subroutine  }\bfcode{FNVINITS\_PTHREADS}}{\emph{KEY}, \emph{NEQ}, \emph{NUM\_THREADS}, \emph{IER}}{}
+Initializes the Fortran interface to the Pthreads NVECTOR module.
+\begin{description}
+\item[{\textbf{Arguments:}}] \leavevmode\begin{itemize}
+\item {} 
+\emph{KEY} (\code{int}, input) -- integer flag denoting which solver
+is to be used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is ARKode).
+
+\item {} 
+\emph{NEQ} (\code{long int}, input) -- size of the ODE system.
+
+\item {} 
+\emph{NUM\_THREADS} (\code{int}, input) -- number of threads to use in
+parallelized regions.
 
 \item {} 
 \emph{IER} (\code{int}, output) -- return flag (0 success, $\ne 0$ failure).
@@ -13595,8 +13716,8 @@ FARKODE must call a routine with a specific name to make the
 desired choice.
 
 
-\paragraph{{[}\textbf{S}{]} Dense treatment of the linear system}
-\label{f_interface/Usage:s-dense-treatment-of-the-linear-system}
+\paragraph{{[}\textbf{S}, \textbf{O}, \textbf{T}{]} Dense treatment of the linear system}
+\label{f_interface/Usage:s-o-t-dense-treatment-of-the-linear-system}
 To use the direct dense linear solver based on the internal SUNDIALS
 implementation, the user must call the {\hyperref[f_interface/Usage:f/_/FARKDENSE]{\code{FARKDENSE()}}} routine:
 \index{FARKDENSE() (fortran subroutine)|textbf}
@@ -13738,8 +13859,8 @@ $\ne 0$ if an error occurred).
 
 
 
-\paragraph{{[}\textbf{S}{]} Band treatment of the linear system}
-\label{f_interface/Usage:s-band-treatment-of-the-linear-system}
+\paragraph{{[}\textbf{S}, \textbf{O}, \textbf{T}{]} Band treatment of the linear system}
+\label{f_interface/Usage:s-o-t-band-treatment-of-the-linear-system}
 To use the direct band linear solver that is based on the internal
 SUNDIALS implementation, the user must call the {\hyperref[f_interface/Usage:f/_/FARKBAND]{\code{FARKBAND()}}}
 routine.
@@ -13909,8 +14030,8 @@ $\ne 0$ if an error occurred).
 
 
 
-\paragraph{{[}\textbf{S}{]} Sparse treatment of the linear system}
-\label{f_interface/Usage:s-sparse-treatment-of-the-linear-system}
+\paragraph{{[}\textbf{S}, \textbf{O}, \textbf{T}{]} Sparse treatment of the linear system}
+\label{f_interface/Usage:s-o-t-sparse-treatment-of-the-linear-system}
 To use the sparse direct linear solver interface to the KLU library,
 the user must call the {\hyperref[f_interface/Usage:f/_/FARKKLU]{\code{FARKKLU()}}} routine:
 \index{FARKKLU() (fortran subroutine)|textbf}
@@ -14052,8 +14173,8 @@ passed from the calling program to this routine using either \emph{RPAR} or
 a common block.
 
 
-\paragraph{{[}\textbf{S}{]}{[}\textbf{P}{]} SPGMR treatment of the linear systems}
-\label{f_interface/Usage:s-p-spgmr-treatment-of-the-linear-systems}
+\paragraph{SPGMR treatment of the linear systems}
+\label{f_interface/Usage:spgmr-treatment-of-the-linear-systems}
 For the Scaled Preconditioned GMRES solution of the linear systems,
 the user must call the {\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}} routine:
 \index{FARKSPGMR() (fortran subroutine)|textbf}
@@ -14092,11 +14213,11 @@ memory allocation error occurred, -2 for an illegal input).
 
 
 For descriptions of the optional user-supplied routines for use with
-{\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{{[}S{]}{[}P{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
+{\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
 
 
-\paragraph{{[}\textbf{S}{]}{[}\textbf{P}{]} SPBCG treatment of the linear systems}
-\label{f_interface/Usage:s-p-spbcg-treatment-of-the-linear-systems}
+\paragraph{SPBCG treatment of the linear systems}
+\label{f_interface/Usage:spbcg-treatment-of-the-linear-systems}
 For the Scaled Preconditioned Bi-CGStab solution of the linear systems,
 the user must call the {\hyperref[f_interface/Usage:f/_/FARKSPBCG]{\code{FARKSPBCG()}}} routine:
 \index{FARKSPBCG() (fortran subroutine)|textbf}
@@ -14114,11 +14235,11 @@ same names for {\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}}.
 
 
 For descriptions of the optional user-supplied routines for use with
-{\hyperref[f_interface/Usage:f/_/FARKSPBCG]{\code{FARKSPBCG()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{{[}S{]}{[}P{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
+{\hyperref[f_interface/Usage:f/_/FARKSPBCG]{\code{FARKSPBCG()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
 
 
-\paragraph{{[}\textbf{S}{]}{[}\textbf{P}{]} SPTFQMR treatment of the linear systems}
-\label{f_interface/Usage:s-p-sptfqmr-treatment-of-the-linear-systems}
+\paragraph{SPTFQMR treatment of the linear systems}
+\label{f_interface/Usage:sptfqmr-treatment-of-the-linear-systems}
 For the Scaled Preconditioned TFQMR solution of the linear systems,
 the user must call the {\hyperref[f_interface/Usage:f/_/FARKSPTFQMR]{\code{FARKSPTFQMR()}}} routine:
 \index{FARKSPTFQMR() (fortran subroutine)|textbf}
@@ -14139,8 +14260,8 @@ For descriptions of the optional user-supplied routines for use with
 {\hyperref[f_interface/Usage:f/_/FARKSPTFQMR]{\code{FARKSPTFQMR()}}} see the next section.
 
 
-\paragraph{{[}\textbf{S}{]}{[}\textbf{P}{]} SPFGMR treatment of the linear systems}
-\label{f_interface/Usage:s-p-spfgmr-treatment-of-the-linear-systems}
+\paragraph{SPFGMR treatment of the linear systems}
+\label{f_interface/Usage:spfgmr-treatment-of-the-linear-systems}
 For the Scaled Preconditioned Flexible Generalized Minimum Residual
 solution of the linear systems, the user must call the
 {\hyperref[f_interface/Usage:f/_/FARKSPFGMR]{\code{FARKSPFGMR()}}} routine:
@@ -14159,11 +14280,11 @@ linear solver.
 
 
 For descriptions of the optional user-supplied routines for use with
-{\hyperref[f_interface/Usage:f/_/FARKSPFGMR]{\code{FARKSPFGMR()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{{[}S{]}{[}P{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
+{\hyperref[f_interface/Usage:f/_/FARKSPFGMR]{\code{FARKSPFGMR()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
 
 
-\paragraph{{[}\textbf{S}{]}{[}\textbf{P}{]} PCG treatment of the linear systems}
-\label{f_interface/Usage:s-p-pcg-treatment-of-the-linear-systems}
+\paragraph{PCG treatment of the linear systems}
+\label{f_interface/Usage:pcg-treatment-of-the-linear-systems}
 For the Preconditioned Conjugate Gradient solution of symmetric linear
 systems, the user must call the {\hyperref[f_interface/Usage:f/_/FARKPCG]{\code{FARKPCG()}}} routine:
 \index{FARKPCG() (fortran subroutine)|textbf}
@@ -14181,11 +14302,11 @@ same names for {\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}}.
 
 
 For descriptions of the optional user-supplied routines for use with
-{\hyperref[f_interface/Usage:f/_/FARKPCG]{\code{FARKPCG()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{{[}S{]}{[}P{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
+{\hyperref[f_interface/Usage:f/_/FARKPCG]{\code{FARKPCG()}}} see the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
 
 
-\paragraph{{[}\textbf{S}{]}{[}\textbf{P}{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}
-\label{f_interface/Usage:finterface-spilsusersupplied}\label{f_interface/Usage:s-p-user-supplied-routines-for-spgmr-spbcg-sptfqmr-spfgmr-pcg}
+\paragraph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}
+\label{f_interface/Usage:user-supplied-routines-for-spgmr-spbcg-sptfqmr-spfgmr-pcg}\label{f_interface/Usage:finterface-spilsusersupplied}
 With treatment of the linear systems by any of the Krylov iterative
 solvers, there are three optional user-supplied routines --
 {\hyperref[f_interface/Usage:f/_/FARKJTIMES]{\code{FARKJTIMES()}}}, {\hyperref[f_interface/Usage:f/_/FARKPSET]{\code{FARKPSET()}}} and {\hyperref[f_interface/Usage:f/_/FARKPSOL]{\code{FARKPSOL()}}}.
@@ -15399,10 +15520,11 @@ specifically on the Fortran interface to these modules.
 \label{f_interface/Preconditioning:usage-of-the-farkbp-interface-to-arkbandpre}\label{f_interface/Preconditioning:finterface-bandpre}
 The FARKBP interface module is a package of C functions which,
 as part of the FARKODE interface module, support the use of the
-ARKode solver with the serial NVECTOR\_SERIAL module, and the
-combination of the ARKBANDPRE preconditioner module (see the
-section {\hyperref[c_interface/Preconditioners:cinterface-bandpre]{\emph{A serial banded preconditioner module}}}) with any of the Krylov iterative
-linear solvers.
+ARKode solver with the serial or threaded NVector modules
+({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} or
+{\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}), and the combination of the ARKBANDPRE
+preconditioner module (see the section {\hyperref[c_interface/Preconditioners:cinterface-bandpre]{\emph{A serial banded preconditioner module}}}) with
+any of the Krylov iterative linear solvers.
 
 The two user-callable functions in this package, with the
 corresponding ARKode function around which they wrap, are:
@@ -15448,7 +15570,7 @@ calling one of {\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}},
 Optionally, to specify that SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG
 should use the supplied {\hyperref[f_interface/Usage:f/_/FARKJTIMES]{\code{FARKJTIMES()}}} routine, the user
 should call {\hyperref[f_interface/Usage:f/_/FARKSPILSSETJAC]{\code{FARKSPILSSETJAC()}}} with FLAG $\ne 0$,
-as described in the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{{[}S{]}{[}P{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
+as described in the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
 
 Then, to initialize the ARKBANDPRE preconditioner, call the
 routine {\hyperref[f_interface/Preconditioning:f/_/FARKBPINIT]{\code{FARKBPINIT()}}}, as follows:
@@ -15542,10 +15664,10 @@ automatically by {\hyperref[f_interface/Usage:f/_/FARKFREE]{\code{FARKFREE()}}})
 \label{f_interface/Preconditioning:usage-of-the-farkbbd-interface-to-arkbbdpre}\label{f_interface/Preconditioning:finterface-bbdpre}
 The FARKBBD interface module is a package of C functions which, as
 part of the FARKODE interface module, support the use of the ARKode
-solver with the parallel NVECTOR\_PARALLEL module, and the combination
-of the ARKBBDPRE preconditioner module (see the section
-{\hyperref[c_interface/Preconditioners:cinterface-bbdpre]{\emph{A parallel band-block-diagonal preconditioner module}}}) with any of the Krylov iterative linear
-solvers.
+solver with the parallel vector module ({\hyperref[nvectors/NVector_Parallel:nvectors-nvparallel]{\emph{The NVECTOR\_PARALLEL Module}}}),
+and the combination of the ARKBBDPRE preconditioner module (see the
+section {\hyperref[c_interface/Preconditioners:cinterface-bbdpre]{\emph{A parallel band-block-diagonal preconditioner module}}}) with any of the Krylov iterative
+linear solvers.
 
 The user-callable functions in this package, with the corresponding
 ARKode and ARKBBDPRE functions, are as follows:
@@ -15639,7 +15761,7 @@ calling one of {\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}},
 Optionally, to specify that SPGMR, SPBCG, SPTFQMR, SPFGMR or PCG
 should use the supplied {\hyperref[f_interface/Usage:f/_/FARKJTIMES]{\code{FARKJTIMES()}}} routine, the user
 should call {\hyperref[f_interface/Usage:f/_/FARKSPILSSETJAC]{\code{FARKSPILSSETJAC()}}} with FLAG $\ne 0$,
-as described in the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{{[}S{]}{[}P{]} User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
+as described in the section {\hyperref[f_interface/Usage:finterface-spilsusersupplied]{\emph{User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG}}}.
 
 Then, to initialize the ARKBBDPRE preconditioner, call the function
 {\hyperref[f_interface/Preconditioning:f/_/FARKBBDINIT]{\code{FARKBBDINIT()}}}, as described below:
@@ -15914,12 +16036,13 @@ must return \emph{IER = 0}.
 
 \chapter{Vector Data Structures}
 \label{nvectors/index:nvectors}\label{nvectors/index::doc}\label{nvectors/index:vector-data-structures}
-The SUNDIALS library comes packaged with two NVECTOR implementations,
-one designed for serial simulations and the second for
-distributed-memory parallel simulations.  Both implementations assume
-that the process-local data is stored contiguously, and they in turn
-provide a variety of standard vector algebra operations that may be
-performed on the data.
+The SUNDIALS library comes packaged with four NVECTOR implementations,
+one designed for serial simulations, two designed for shared-memory
+parallel simulations (via OpenMP and Pthreads), and one for
+distributed-memory parallel simulations (via MPI).  All
+implementations assume that the process-local data is stored
+contiguously, and they in turn provide a variety of standard vector
+algebra operations that may be performed on the data.
 
 In addition, SUNDIALS provides a simple interface for generic vectors
 (akin to a C++ \emph{abstract base class}).  All of the major SUNDIALS
@@ -15931,9 +16054,9 @@ they rely on particular data storage and access patterns in the
 NVECTORS used.
 
 Details on the generic NVECTOR module are below.  However, to jump to
-specific descriptions of the serial and parallel vector modules
-provided by SUNDIALS, or ARKode's requirements for routines comprising
-a user-supplied NVECTOR module, the following links are provided:
+specific descriptions of the various vector modules provided by
+SUNDIALS, or ARKode's requirements for routines comprising a
+user-supplied NVECTOR module, the following links are provided:
 
 
 \section{The NVECTOR\_SERIAL Module}
@@ -18389,8 +18512,8 @@ after a successful call to {\hyperref[linear_solvers/DLS:denseGEQRF]{\code{dense
 \begin{fulllineitems}
 \phantomsection\label{linear_solvers/DLS:denseMatvec}\pysiglinewithargsret{int \bfcode{denseMatvec}}{realtype\emph{ **a}, realtype*\emph{ x}, realtype*\emph{ y}, long int\emph{ m}, long int\emph{ n}}{}
 Computes the product $y = ax$, for an $m\times n$
-matrix $a$, where it is assumed that $x$ has length
-$n$ and $y$ has length $m$.
+matrix $a$, where it is assumed that the vector $x$ has
+length $n$ and the vector $y$ has length $m$.
 
 \end{fulllineitems}
 
@@ -18881,8 +19004,9 @@ installation of SUNDIALS, and that SUNDIALS has been configured
 appropriately to link with KLU (see {\hyperref[Install:installation]{\emph{ARKode Installation Procedure}}} for details).
 
 Designed for serial calculations only, KLU is supported for
-calculations employing SUNDIALS' serial \code{N\_Vector} module (see
-{\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}}).
+calculations employing SUNDIALS' serial or shared-memory parallel
+\code{N\_Vector} modules (see {\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}},
+{\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and {\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}).
 
 
 \subsection{The SuperLU\_MT solver}
@@ -18895,9 +19019,9 @@ that SUNDIALS has been configured appropriately to link with
 SuperLU\_MT (see {\hyperref[Install:installation]{\emph{ARKode Installation Procedure}}} for details).
 
 Designed for serial and threaded calculations only, SuperLU\_MT is
-supported for calculations employing SUNDIALS' serial \code{N\_Vector}
-module (see {\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}})
-and Pthreads-enabled \code{N\_Vector} module (see {\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}).
+supported for calculations employing SUNDIALS' serial or shared-memory
+parallel \code{N\_Vector} modules (see {\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{The NVECTOR\_SERIAL Module}}},
+{\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{The NVECTOR\_OPENMP Module}}} and {\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{The NVECTOR\_PTHREADS Module}}}).
 
 
 \section{The SPILS modules: SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG}
@@ -18906,9 +19030,10 @@ Due to their reliance on only general vector operations (without need
 to directly access data), the iterative linear solvers in the SPILS
 family can be used with a relatively complete NVECTOR implementation
 (see the section {\hyperref[nvectors/ARKode_requirements:nvectors-arkode]{\emph{NVECTOR functions required by ARKode}}} for a complete listing).
-We note that while both the {\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{NVECTOR\_SERIAL}}}
-and {\hyperref[nvectors/NVector_Parallel:nvectors-nvparallel]{\emph{NVECTOR\_PARALLEL}}} modules provided
-with SUNDIALS meet these criteria, these criteria may also be easily met
+We note that while all of the vector modules provided with SUNDIALS
+({\hyperref[nvectors/NVector_Serial:nvectors-nvserial]{\emph{NVECTOR\_SERIAL}}}, {\hyperref[nvectors/NVector_OpenMP:nvectors-openmp]{\emph{NVECTOR\_OPENMP}}}, {\hyperref[nvectors/NVector_Pthreads:nvectors-pthreads]{\emph{NVECTOR\_PTHREADS}}}, and
+{\hyperref[nvectors/NVector_Parallel:nvectors-nvparallel]{\emph{NVECTOR\_PARALLEL}}} )
+meet these criteria, these criteria may also be easily met
 through a user-supplied vector implementation.
 
 In the subsections below, we discuss the iterative linear solvers
@@ -19199,8 +19324,8 @@ For consistency with the existing ARKode linear solver modules, we
 recommend that the return value of the specification function be 0 for
 a successful return, and a negative value if an error occurs.
 Possible error conditions include: the pointer to the main ARKode
-memory block is \code{NULL}, and input is illegal, the NVECTOR
-implementation is not compatible, or a memoryallocation fails.
+memory block is \code{NULL}, an input is illegal, the NVECTOR
+implementation is not compatible, or a memory allocation fails.
 
 
 \subsection{Mass matrix linear solver}
@@ -19640,10 +19765,10 @@ The installation of ARKode is accomplished by installing the SUNDIALS
 suite as a whole, according to the instructions that follow.  The
 installation procedure remains the same, whether or not the downloaded
 file contains solvers other than ARKode. \footnote{
-Files for both the serial and parallel versions of ARKode are
-included in the distribution. For users in a serial computing
-environment, the files specific to parallel environments
-(which may be deleted) are as follows:
+Files for the serial, threaded and parallel versions of
+ARKode are included in the distribution. For users in a
+serial or threaded computing environment, the files specific
+to parallel environments (which may be deleted) are as follows:
 \begin{itemize}
 \item {} 
 all files in \code{src/nvec\_par/};
@@ -19669,10 +19794,11 @@ all files in \code{examples/arkode/fcmix\_parallel/}.
 
 \end{itemize}
 
-(By ``serial version'' of ARKode we mean the ARKode solver with
-the serial or threaded NVECTOR modules attached, and
-similarly for “parallel version” we mean the ARKode solver
-with the parallel NVECTOR module attached.)
+(By ``serial'' we mean the ARKode solver with the
+NVECTOR\_SERIAL module attached; by ``threaded'' we mean the
+ARKode solver with either the NVECTOR\_OPENMP or
+NVECTOR\_PTHREADS module attached; and by “parallel” we mean
+the ARKode solver with the NVECTOR\_PARALLEL module attached.)
 }
 
 The SUNDIALS suite (or individual solvers) are distributed as
@@ -20471,6 +20597,14 @@ shared source files are located under \code{SRCDIR/src/sundials}
 \code{SRCDIR/include/nvector} and \code{SRCDIR/src/nvec\_ser}
 
 \item {} 
+(optional) NVECTOR\_OPENMP header and source files are located under
+\code{SRCDIR/include/nvector} and \code{SRCDIR/src/nvec\_openmp}
+
+\item {} 
+(optional) NVECTOR\_PTHREADS header and source files are located under
+\code{SRCDIR/include/nvector} and \code{SRCDIR/src/nvec\_pthreads}
+
+\item {} 
 (optional) NVECTOR\_PARALLEL header and source are files located
 under \code{SRCDIR/include/nvector} and \code{SRCDIR/src/nvec\_par}
 
@@ -20692,7 +20826,22 @@ Header files
 \code{nvector/nvector\_serial.h}
 \\\hline
 
-Threaded NVECTOR
+OpenMP NVECTOR
+ & 
+Libraries
+ & 
+\code{libsundials\_nvecopenmp.LIB},
+\code{libsundials\_fnvecopenmp.a}
+\\\hline
+
+OpenMP NVECTOR
+ & 
+Header files
+ & 
+\code{nvector/nvector\_openmp.h}
+\\\hline
+
+Pthreads NVECTOR
  & 
 Libraries
  & 
@@ -20700,7 +20849,7 @@ Libraries
 \code{libsundials\_fnvecpthreads.a}
 \\\hline
 
-Threaded NVECTOR
+Pthreads NVECTOR
  & 
 Header files
  & 
