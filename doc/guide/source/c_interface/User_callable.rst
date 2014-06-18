@@ -475,8 +475,10 @@ SPFGMR and PCG, are described separately in the section
        * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKDENSE linear solver is not compatible with
-   all implementations of the NVECTOR module. Of the two nvector
-   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+   all implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -520,9 +522,10 @@ SPFGMR and PCG, are described separately in the section
       * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:** The ARKBAND linear solver is not compatible with all
-   implementations of the NVECTOR module.  Of the two
-   NVECTOR modules provided with SUNDIALS, only
-   NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module.  Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
    The half-bandwidths are to be set such that the nonzero locations
    :math:`(i, j)` in the banded (approximate) Jacobian satisfy *-mlower*
@@ -575,8 +578,10 @@ SPFGMR and PCG, are described separately in the section
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKKLU linear solver is not compatible with
-   all implementations of the NVECTOR module.  Of the two nvector
-   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+   all implementations of the NVECTOR module.  Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -603,8 +608,10 @@ SPFGMR and PCG, are described separately in the section
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKSUPERLUMT linear solver is not compatible with
-   all implementations of the NVECTOR module.  Of the two nvector
-   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+   all implementations of the NVECTOR module.  Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -821,8 +828,10 @@ modules.
        * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKDENSE linear solver is not compatible with all
-   implementations of the NVECTOR module. Of the two nvector modules
-   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -868,11 +877,12 @@ modules.
       * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:** The ARKBAND linear solver may not be compatible with the
-   particular implementation of the NVECTOR module. Of the two
-   NVECTOR modules provided with SUNDIALS, only
-   NVECTOR_SERIAL is compatible. The half-bandwidths are to be set
-   such that the nonzero locations :math:`(i, j)` in the banded
-   mass matrix satisfy *-mlower* :math:`\le j-i \le` *mupper*. 
+   particular implementation of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible.  The half-bandwidths are
+   to be set such that the nonzero locations :math:`(i, j)` in the
+   banded mass matrix satisfy *-mlower* :math:`\le j-i \le` *mupper*. 
 
    At present, it is required that the band mass matrix have identical
    band structure to the Jacobian matrix.  While this is typical of
@@ -930,8 +940,10 @@ modules.
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKKLU linear solver is not compatible with all
-   implementations of the NVECTOR module. Of the two nvector modules
-   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -956,8 +968,10 @@ modules.
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKSUPERLUMT linear solver is not compatible with all
-   implementations of the NVECTOR module. Of the two nvector modules
-   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 

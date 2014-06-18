@@ -24,8 +24,8 @@ systems
 in a mixed Fortran/C setting.  While ARKODE is written in C, it is
 assumed here that the user's calling program and user-supplied
 problem-defining routines are written in Fortran. This package
-provides the necessary interface to ARKODE for both the serial and
-the parallel NVECTOR implementations.
+provides the necessary interfaces to ARKODE for all of the provided
+NVECTOR implementations. 
 
 
 

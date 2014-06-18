@@ -466,8 +466,8 @@ arrays outside of the :c:type:`DlsMat` structure:
 .. c:function:: int denseMatvec(realtype **a, realtype* x, realtype* y, long int m, long int n)
 
    Computes the product :math:`y = ax`, for an :math:`m\times n`
-   matrix :math:`a`, where it is assumed that :math:`x` has length
-   :math:`n` and :math:`y` has length :math:`m`.
+   matrix :math:`a`, where it is assumed that the vector :math:`x` has
+   length :math:`n` and the vector :math:`y` has length :math:`m`.
 
 
 

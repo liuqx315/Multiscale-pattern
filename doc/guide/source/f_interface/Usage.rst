@@ -29,8 +29,14 @@ although support within the Fortran interface is planned for the near
 future.
 
 In the instructions below, steps marked [**S**] apply to the serial 
-NVECTOR implementation (NVECTOR_SERIAL) only, while those
-marked with a [**P**] apply to NVECTOR_PARALLEL.
+NVECTOR implementation (NVECTOR_SERIAL) only, steps marked [**O**]
+apply to the OpenMP NVECTOR implementation (NVECTOR_OPENMP) only,
+steps marked [**T**] apply to the Pthreads NVECTOR implementation
+(NVECTOR_PTHREADS) only, while those marked with a [**P**] apply to
+NVECTOR_PARALLEL.  Some steps will be marked with a combination of the
+above, e.g.  [**S**, **O**, **T**].  Steps not marked apply to all
+supplied NVECTOR implementations.
+
 
 
 .. _FInterface.RHS:
@@ -101,6 +107,38 @@ call the following function with the argument *KEY* = 4.
       * *KEY* (``int``, input) -- integer flag denoting which solver
 	is to be used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is ARKode).
       * *NEQ* (``long int``, input) -- size of the ODE system.
+      * *IER* (``int``, output) -- return flag (0 success, :math:`\ne 0` failure).
+
+
+[**O**] To initialize the OpenMP NVECTOR module, the user must
+call the following function with the argument *KEY* = 4.
+
+.. f:subroutine:: FNVINITS_OPENMP(KEY, NEQ, NUM_THREADS, IER)
+   
+   Initializes the Fortran interface to the OpenMP NVECTOR module.
+      
+   **Arguments:** 
+      * *KEY* (``int``, input) -- integer flag denoting which solver
+	is to be used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is ARKode).
+      * *NEQ* (``long int``, input) -- size of the ODE system.
+      * *NUM_THREADS* (``int``, input) -- number of threads to use in
+	parallelized regions.
+      * *IER* (``int``, output) -- return flag (0 success, :math:`\ne 0` failure).
+
+
+[**T**] To initialize the Pthreads NVECTOR module, the user must
+call the following function with the argument *KEY* = 4.
+
+.. f:subroutine:: FNVINITS_PTHREADS(KEY, NEQ, NUM_THREADS, IER)
+   
+   Initializes the Fortran interface to the Pthreads NVECTOR module.
+      
+   **Arguments:** 
+      * *KEY* (``int``, input) -- integer flag denoting which solver
+	is to be used (1 is CVODE, 2 is IDA, 3 is KINSOL and 4 is ARKode).
+      * *NEQ* (``long int``, input) -- size of the ODE system.
+      * *NUM_THREADS* (``int``, input) -- number of threads to use in
+	parallelized regions.
       * *IER* (``int``, output) -- return flag (0 success, :math:`\ne 0` failure).
 
 
@@ -521,8 +559,8 @@ FARKODE must call a routine with a specific name to make the
 desired choice. 
 
 
-[**S**] Dense treatment of the linear system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[**S**, **O**, **T**] Dense treatment of the linear system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To use the direct dense linear solver based on the internal SUNDIALS
 implementation, the user must call the :f:func:`FARKDENSE()` routine: 
@@ -615,8 +653,8 @@ must call the routine :f:func:`FARKDENSESETJAC()`:
    
 
 
-[**S**] Band treatment of the linear system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[**S**, **O**, **T**] Band treatment of the linear system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To use the direct band linear solver that is based on the internal
 SUNDIALS implementation, the user must call the :f:func:`FARKBAND()`
@@ -722,8 +760,8 @@ user must call the routine :f:func:`FARKBANDSETJAC()`.
 
 
 
-[**S**] Sparse treatment of the linear system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[**S**, **O**, **T**] Sparse treatment of the linear system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To use the sparse direct linear solver interface to the KLU library,
 the user must call the :f:func:`FARKKLU()` routine:  
@@ -813,7 +851,7 @@ a common block.
    
 
 
-[**S**][**P**] SPGMR treatment of the linear systems
+SPGMR treatment of the linear systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the Scaled Preconditioned GMRES solution of the linear systems,
@@ -843,7 +881,7 @@ For descriptions of the optional user-supplied routines for use with
 
 
 
-[**S**][**P**] SPBCG treatment of the linear systems
+SPBCG treatment of the linear systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the Scaled Preconditioned Bi-CGStab solution of the linear systems,
@@ -867,7 +905,7 @@ For descriptions of the optional user-supplied routines for use with
 
 
 
-[**S**][**P**] SPTFQMR treatment of the linear systems
+SPTFQMR treatment of the linear systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the Scaled Preconditioned TFQMR solution of the linear systems,
@@ -889,7 +927,7 @@ For descriptions of the optional user-supplied routines for use with
 
 
 
-[**S**][**P**] SPFGMR treatment of the linear systems
+SPFGMR treatment of the linear systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the Scaled Preconditioned Flexible Generalized Minimum Residual
@@ -914,7 +952,7 @@ For descriptions of the optional user-supplied routines for use with
 
 
 
-[**S**][**P**] PCG treatment of the linear systems
+PCG treatment of the linear systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the Preconditioned Conjugate Gradient solution of symmetric linear
@@ -940,7 +978,7 @@ For descriptions of the optional user-supplied routines for use with
 
 .. _FInterface.SpilsUserSupplied:
 
-[**S**][**P**] User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG
+User-supplied routines for SPGMR/SPBCG/SPTFQMR/SPFGMR/PCG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With treatment of the linear systems by any of the Krylov iterative

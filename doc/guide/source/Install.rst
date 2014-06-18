@@ -98,10 +98,10 @@ following subsections:
 
 .. rubric:: Footnotes
 
-.. [#f1] Files for both the serial and parallel versions of ARKode are
-	 included in the distribution. For users in a serial computing
-	 environment, the files specific to parallel environments
-	 (which may be deleted) are as follows: 
+.. [#f1] Files for the serial, threaded and parallel versions of
+	 ARKode are included in the distribution. For users in a
+	 serial or threaded computing environment, the files specific
+	 to parallel environments (which may be deleted) are as follows: 
 
 	 * all files in ``src/nvec_par/``; 
 	 * ``nvector parallel.h`` (in ``include/nvector/``); 
@@ -112,10 +112,11 @@ following subsections:
 	 * all files in ``examples/arkode/parallel/``; 
 	 * all files in ``examples/arkode/fcmix_parallel/``. 
 	 
-	 (By "serial version" of ARKode we mean the ARKode solver with
-	 the serial or threaded NVECTOR modules attached, and
-	 similarly for “parallel version” we mean the ARKode solver
-	 with the parallel NVECTOR module attached.) 
+	 (By "serial" we mean the ARKode solver with the
+	 NVECTOR_SERIAL module attached; by "threaded" we mean the
+	 ARKode solver with either the NVECTOR_OPENMP or
+	 NVECTOR_PTHREADS module attached; and by “parallel” we mean
+	 the ARKode solver with the NVECTOR_PARALLEL module attached.)
 
 
 
@@ -1200,6 +1201,10 @@ The following files are required to compile a SUNDIALS solver module:
 * shared source files are located under ``SRCDIR/src/sundials``
 * (optional) NVECTOR_SERIAL header and source files are located under 
   ``SRCDIR/include/nvector`` and ``SRCDIR/src/nvec_ser``
+* (optional) NVECTOR_OPENMP header and source files are located under 
+  ``SRCDIR/include/nvector`` and ``SRCDIR/src/nvec_openmp``
+* (optional) NVECTOR_PTHREADS header and source files are located under 
+  ``SRCDIR/include/nvector`` and ``SRCDIR/src/nvec_pthreads``
 * (optional) NVECTOR_PARALLEL header and source are files located
   under ``SRCDIR/include/nvector`` and ``SRCDIR/src/nvec_par``
 * the configuration header file, ``sundials_config.h`` (see below)
@@ -1398,10 +1403,15 @@ Table: SUNDIALS libraries and header files
 +------------------+--------------+-------------------------------------+
 | Serial NVECTOR   | Header files | ``nvector/nvector_serial.h``        |
 +------------------+--------------+-------------------------------------+
-| Threaded NVECTOR | Libraries    | ``libsundials_nvecpthreads.LIB``,   |
+| OpenMP NVECTOR   | Libraries    | ``libsundials_nvecopenmp.LIB``,     |
+|                  |              | ``libsundials_fnvecopenmp.a``       |
++------------------+--------------+-------------------------------------+
+| OpenMP NVECTOR   | Header files | ``nvector/nvector_openmp.h``        |
++------------------+--------------+-------------------------------------+
+| Pthreads NVECTOR | Libraries    | ``libsundials_nvecpthreads.LIB``,   |
 |                  |              | ``libsundials_fnvecpthreads.a``     |
 +------------------+--------------+-------------------------------------+
-| Threaded NVECTOR | Header files | ``nvector/nvector_pthreads.h``      |
+| Pthreads NVECTOR | Header files | ``nvector/nvector_pthreads.h``      |
 +------------------+--------------+-------------------------------------+
 | Parallel NVECTOR | Libraries    | ``libsundials_nvecparallel.LIB``,   |
 |                  |              | ``libsundials_fnvecparallel.a``     |

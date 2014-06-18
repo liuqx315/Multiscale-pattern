@@ -190,8 +190,9 @@ installation of SUNDIALS, and that SUNDIALS has been configured
 appropriately to link with KLU (see :ref:`Installation` for details).
 
 Designed for serial calculations only, KLU is supported for
-calculations employing SUNDIALS' serial ``N_Vector`` module (see
-:ref:`NVectors.NVSerial`).
+calculations employing SUNDIALS' serial or shared-memory parallel
+``N_Vector`` modules (see :ref:`NVectors.NVSerial`,
+:ref:`NVectors.OpenMP` and :ref:`NVectors.Pthreads`).
 
 
 
@@ -206,7 +207,6 @@ that SUNDIALS has been configured appropriately to link with
 SuperLU_MT (see :ref:`Installation` for details).
 
 Designed for serial and threaded calculations only, SuperLU_MT is
-supported for calculations employing SUNDIALS' serial ``N_Vector``
-module (see :ref:`NVectors.NVSerial`) 
-and Pthreads-enabled ``N_Vector`` module (see :ref:`NVectors.Pthreads`).
-
+supported for calculations employing SUNDIALS' serial or shared-memory
+parallel ``N_Vector`` modules (see :ref:`NVectors.NVSerial`,
+:ref:`NVectors.OpenMP` and :ref:`NVectors.Pthreads`).

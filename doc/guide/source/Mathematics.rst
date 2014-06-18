@@ -296,7 +296,7 @@ stiffness, in the form of a user-supplied preconditioner matrix
 [BH1989]_.  We note that the direct linear solvers
 provided by SUNDIALS (dense, band and sparse), as well as the direct
 linear solvers accessible through LAPACK, can only be used with the
-serial vector representations.
+serial and threaded vector representations.
 
 
 .. index:: modified Newton iteration
