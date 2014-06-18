@@ -15,29 +15,48 @@ Code Organization
 =================
 
 The family of solvers referred to as SUNDIALS consists of the solvers
-CVODE (linear multistep solvers for ODE systems), ARKode
-(Runge-Kutta solvers for ODE systems), KINSOL (for nonlinear
-algebraic systems), and IDA (for differential-algebraic systems).
-In addition, SUNDIALS also includes variants of CVODE and
-IDA with sensitivity analysis capabilities (using either forward
-or adjoint methods: CVODES and IDAS, respectively).
+CVODE and ARKode (for ODE systems), KINSOL (for nonlinear algebraic 
+systems), and IDA (for differential-algebraic systems).  In addition, 
+SUNDIALS also includes variants of CVODE and IDA with sensitivity analysis 
+capabilities (using either forward or adjoint methods), called CVODES and
+IDAS, respectively. 
 
 The various solvers of this family share many subordinate modules.
 For this reason, it is organized as a family, with a directory
-structure that exploits that sharing.  The following is a list of the
-solver packages presently available:
+structure that exploits that sharing (see the following Figures
+:ref:`SUNDIALS organization <sunorg1>` and :ref:`SUNDIALS tree
+<sunorg2>`).  The following is a list of the solver packages presently
+available, and the basic functionality of each:
 
-- ARKode, a Runge-Kutta solver for stiff, nonstiff and multi-rate ODEs 
-  :math:`M \dot{y} = f_E(t,y) + f_I(t,y)`;
-- CVODE, a linear multistep solver for stiff and nonstiff ODEs
+- CVODE, a linear multistep solver for stiff and nonstiff ODE systems
   :math:`\dot{y} = f(t,y)`;
 - CVODES, a linear multistep solver for stiff and nonstiff ODEs with
   sensitivity analysis capabilities;
+- ARKode, a Runge-Kutta solver for stiff, nonstiff and multi-rate ODE systems 
+  :math:`M \dot{y} = f_E(t,y) + f_I(t,y)`;
 - IDA, a linear multistep solver for differential-algebraic systems
   :math:`F(t,y,\dot{y}) = 0`; 
 - IDAS, a linear multistep solver for differential-algebraic systems with sensitivity
   analysis capabilities; 
 - KINSOL, a solver for nonlinear algebraic systems :math:`F(u) = 0`.
+
+
+.. _sunorg1:
+
+.. figure:: figs/sunorg1.png
+
+   *SUNDIALS organization*: High-level diagram of the SUNDIALS structure (note that none of the
+   Lapack or sparse linear solver modules are represented).
+
+
+.. _sunorg2:
+
+.. figure:: figs/sunorg2.png
+
+   *SUNDIALS tree*: Directory structure of the source tree. 
+
+
+
 
 
 ARKode organization
@@ -47,21 +66,33 @@ The ARKode package is written in the ANSI C language.  The
 following summarizes the basic structure of the package, although
 knowledge of this structure is not necessary for its use.
 
-The overall organization of the ARKode package is as follows.  The 
-central integration module, implemented in the files ``arkode.h``,
-``arkode_impl.h`` and ``arkode.c``, deals with the evaluation of
-integration stages, the nonlinear solver :math:`(\text{if}\;
-f_I(t,y)\ne 0)`, estimation of the local truncation error, selection
-of step size, and interpolation to user output points, among other
-issues.  ARKode currently supports modified Newton, inexact Newton, and
-accelerated fixed-point solvers for these implicit problems.  However,
-when using the Newton-based iterations, or when using a non-identity
-mass matrix :math:`M\ne I`, ARKode has flexibility in the choice of
-method used to solve the linear sub-systems that arise.  Therefore,
-for any user problem invoking the Newton solvers, or any user problem
-with :math:`M\ne I`, one (or more) of the linear system solver modules
-should be specified by the user, which is then invoked as needed
-during the integration process.
+The overall organization of the ARKode package is shown in Figure
+:ref:`ARKode organization <arkorg>`.  The central integration module,
+implemented in the files ``arkode.h``, ``arkode_impl.h`` and
+``arkode.c``, deals with the evaluation of integration stages, the
+nonlinear solver :math:`(\text{if}\; f_I(t,y)\ne 0)`, estimation of
+the local truncation error, selection of step size, and interpolation
+to user output points, among other issues.  ARKode currently supports
+modified Newton, inexact Newton, and accelerated fixed-point solvers
+for these implicit problems.  However, when using the Newton-based
+iterations, or when using a non-identity mass matrix :math:`M\ne I`,
+ARKode has flexibility in the choice of method used to solve the
+linear sub-systems that arise.  Therefore, for any user problem
+invoking the Newton solvers, or any user problem with :math:`M\ne I`,
+one (or more) of the linear system solver modules should be specified
+by the user, which is then invoked as needed during the integration
+process.
+
+.. _arkorg:
+
+.. figure:: figs/arkorg.png
+
+   *ARKode organization*: Overall structure of the ARKode package.
+   Modules specific to ARKode are distinguished by round boxes, while
+   generic solver and auxiliary modules are in rectangular boxes.
+   Note that the direct linear solvers using Lapack implementations
+   are not explicitly represented.  Also note that all ARK* linear
+   solver modules may additionally be used on mass matrix systems.
 
 For solving these linear systems, ARKode presently includes the
 following linear algebra modules, organized into two families.  The

@@ -13,8 +13,8 @@
 The NVECTOR_PARALLEL Module
 ================================
 
-The parallel implementation of the NVECTOR module provided with
-SUNDIALS, NVECTOR_PARALLEL, defines the *content* field of a
+The NVECTOR_PARALLEL implementation of the NVECTOR module provided with
+SUNDIALS is based on MPI.  It defines the *content* field of a
 ``N_Vector`` to be a structure containing the global and local lengths
 of the vector, a pointer to the beginning of a contiguous local data
 array, an MPI communicator, an a boolean flag *own_data* indicating

@@ -1120,7 +1120,11 @@ Rootfinding initialization function
 As described in the section :ref:`Mathematics.Rootfinding`, while
 solving the IVP ARKode has the capability to find the roots of a set
 of user-defined functions.  To activate the root-finding algorithm,
-call the following function:
+call the following function.  This is normally called only once, prior
+to the first call to :c:func:`ARKode()`, but if the rootfinding
+problem is to be changed during the solution,
+:c:func:`ARKodeRootInit()` can also be called prior to a continuation
+call to :c:func:`ARKode()`. 
 
 
 .. c:function:: int ARKodeRootInit(void* arkode_mem, int nrtfn, ARKRootFn g)
@@ -4557,7 +4561,9 @@ solver for the solution of a problem, where a prior call to
 same size as the previous one.  :c:func:`ARKodeReInit()` performs the
 same input checking and initializations that :c:func:`ARKodeInit()`
 does, but does no memory allocation as it assumes that the existing
-internal memory is sufficient for the new problem. 
+internal memory is sufficient for the new problem.  A call to
+:c:func:`ARKodeReInit()` deletes the solution history that was stored
+internally during the previous integration.
 
 The use of :c:func:`ARKodeReInit()` requires that the number of Runge
 Kutta stages, denoted by *s*, be no larger for the new problem than
