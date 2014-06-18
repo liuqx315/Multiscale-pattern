@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4141 $
+ * $Date: 2014-06-17 12:31:58 -0700 (Tue, 17 Jun 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -5089,7 +5089,7 @@ static int cvStep(CVodeMem cv_mem)
   /* Initialize local counters for convergence and error test failures */
 
   ncf  = nef  = 0;
-  nefQ = 0;
+  nefQ = nefQS = 0;
   ncfS = nefS = 0;
   if (do_sensi_stg1) {
     for (is=0; is<Ns; is++) ncfS1[is] = 0;
