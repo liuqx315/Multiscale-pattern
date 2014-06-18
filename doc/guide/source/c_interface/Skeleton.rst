@@ -34,6 +34,11 @@ marked [S] correspond to NVECTOR_SERIAL.
    :math:`N`, equaling the sum of all the values of ``Nlocal`` on the
    active set of processes). 
 
+   .. note::
+
+      The variables ``N`` and ``Nlocal`` should be of type
+      ``long int``.
+
 3. Set vector of initial values
 
    To set the vector ``y0`` of initial values, use the appropriate

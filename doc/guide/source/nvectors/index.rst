@@ -56,8 +56,10 @@ The SUNDIALS solvers are written in a data-independent manner. They
 all operate on generic vectors (of type ``N_Vector``) through a set of
 operations defined by, and specific to, the particular NVECTOR
 implementation. Users can provide a custom implementation of the
-NVECTOR module or use one of two provided within SUNDIALS, one serial
-and the other an MPI parallel implementation.
+NVECTOR module or use one of four provided within SUNDIALS -- a serial
+and three parallel implementations.  The generic operations are
+described below.  In the sections following, the implementations
+provided with SUNDIALS are described.
 
 The generic ``N_Vector`` type is a pointer to a structure that has an
 implementation-dependent *content* field containing the description

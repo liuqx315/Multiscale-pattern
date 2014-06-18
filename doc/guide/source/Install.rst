@@ -33,12 +33,9 @@ installation, first uncompress and expand the sources, by issuing
 
 This will extract source files under a directory ``SOLVER-X.Y.Z.``
 
-Starting with version 2.4.0 of SUNDIALS, two installation methods are
-provided: a standard LINUX/UNIX autotools-based method (see the
-section :ref:`Installation.Autotools`), and a new method based on
-:index:`CMake` (see the section :ref:`Installation.CMake`).  However,
-before providing detailed explanations on the installation procedure
-for the two approaches, we begin with a few common observations:
+Starting with version 2.6.0 of SUNDIALS, CMake is the only supported
+method of installation.  Before providing detailed explanations on the
+installation procedure, we begin with a few common observations:
 
 * In the remainder of this chapter, we make the following
   distinctions:
@@ -57,20 +54,18 @@ for the two approaches, we begin with a few common observations:
      libraries are installed under ``INSTDIR/lib``, with ``INSTDIR``
      specified at configuration time. 
 
-* For the CMake-based installation, in-source builds are prohibited;
+* For SUNDIALS' CMake-based installation, in-source builds are prohibited;
   in other words, the build directory ``BUILDDIR`` can **not** be the
-  same as ``SRCDIR`` and such an attempt will lead to an error.  For
-  autotools-based installation, in-source builds are allowed, although
-  even in that case we recommend using a separate ``BUILDDIR``. Indeed,
-  this prevents "polluting" the source tree and allows efficient
-  builds for different configurations and/or options. 
+  same as ``SRCDIR`` and such an attempt will lead to an error.  This
+  prevents "polluting" the source tree and allows efficient builds for
+  different configurations and/or options.
 
-* For both methods, the installation directory ``INSTDIR`` can not be
-  the same as the source directory ``SRCDIR``. 
+* The installation directory ``INSTDIR`` can not be the same as 
+  the source directory ``SRCDIR``.  
 
 * By default, only the libraries and header files are exported to the
   installation directory ``INSTDIR``.  If enabled by the user (with the
-  appropriate option to ``configure`` or toggle for CMake), the
+  appropriate toggle for CMake), the
   examples distributed with SUNDIALS will be built together with the
   solver libraries.  This installation will result in exporting (by
   default in a subdirectory of the installation directory) the example
@@ -78,12 +73,11 @@ for the two approaches, we begin with a few common observations:
   configuration files that reference the installed SUNDIALS headers
   and libraries.  As such, these configuration files for the 
   SUNDIALS examples can be used as "templates" for your own
-  problems. The ``configure`` script will install makefiles. CMake
-  installs ``CMakeLists.txt`` files and also (as an option available
-  only under Unix/Linux) makefiles. Note that both installation
-  approaches also allow the option of building the SUNDIALS examples
-  without having to install them (useful as a sanity check
-  for the freshly built libraries).
+  problems. CMake installs ``CMakeLists.txt`` files and also (as an
+  option available only under Unix/Linux) makefiles.  Note this
+  installation approach also allows the option of building the
+  SUNDIALS examples without having to install them (useful as a sanity
+  check for the freshly built libraries).
 
 * Even if generation of shared libraries is enabled, only static
   libraries are created for the FCMIX modules.  Because of the use of
@@ -91,12 +85,11 @@ for the two approaches, we begin with a few common observations:
   libraries would result in "undefined symbol" errors at link time.
 
 
-Further details on the autotools- and CMake-based installation
-procedures, instructions for manual compilation, and a roadmap of the
-resulting installed libraries and exported header files, are provided
-in the following subsections:
+Further details on the CMake-based installation procedures,
+instructions for manual compilation, and a roadmap of the resulting
+installed libraries and exported header files, are provided in the
+following subsections: 
 
-* :ref:`Installation.Autotools`
 * :ref:`Installation.CMake`
 * :ref:`Installation.Manual`
 * :ref:`Installation.Results`
@@ -120,433 +113,433 @@ in the following subsections:
 	 * all files in ``examples/arkode/fcmix_parallel/``. 
 	 
 	 (By "serial version" of ARKode we mean the ARKode solver with
-	 the serial NVECTOR module attached, and similarly for
-	 “parallel version” we mean the ARKode solver with the
-	 parallel NVECTOR module attached.) 
+	 the serial or threaded NVECTOR modules attached, and
+	 similarly for “parallel version” we mean the ARKode solver
+	 with the parallel NVECTOR module attached.) 
 
 
 
 
 
-.. _Installation.Autotools:
+.. .. _Installation.Autotools:
 
-Autotools-based installation
-=========================================
+.. Autotools-based installation
+.. =========================================
 
-The installation procedure outlined below will work on commodity
-LINUX/UNIX systems without modification.  However, users are still
-encouraged to carefully read this entire section before attempting to
-install the SUNDIALS suite, in case non-default choices are desired
-for compilers, compilation options, installation location, etc.  The
-user may invoke the configuration script with the "help" flag to
-view a complete listing of available options, by issuing the command 
+.. The installation procedure outlined below will work on commodity
+.. LINUX/UNIX systems without modification.  However, users are still
+.. encouraged to carefully read this entire section before attempting to
+.. install the SUNDIALS suite, in case non-default choices are desired
+.. for compilers, compilation options, installation location, etc.  The
+.. user may invoke the configuration script with the "help" flag to
+.. view a complete listing of available options, by issuing the command 
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ ./configure --help
+..    $ ./configure --help
 
-from within ``SRCDIR``.  
+.. from within ``SRCDIR``.  
 
-.. note:: In the command arguments within this section, the preceding
-	  "$" refers to the LINUX/UNIX command prompt, and should not
-	  be entered within each command. 
+.. .. note:: In the command arguments within this section, the preceding
+.. 	  "$" refers to the LINUX/UNIX command prompt, and should not
+.. 	  be entered within each command. 
 
-The installation steps for SUNDIALS can be as simple as the following:
+.. The installation steps for SUNDIALS can be as simple as the following:
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ cd SRCDIR
-   $ ./configure
-   $ make
-   $ make install
+..    $ cd SRCDIR
+..    $ ./configure
+..    $ make
+..    $ make install
 
-in which case the SUNDIALS header files and libraries are installed
-under ``/usr/local/include`` and ``/usr/local/lib``,
-respectively. Note that, by default, the example programs are not
-built and installed.  To subsequently delete all temporary files
-created by building SUNDIALS, issue 
+.. in which case the SUNDIALS header files and libraries are installed
+.. under ``/usr/local/include`` and ``/usr/local/lib``,
+.. respectively. Note that, by default, the example programs are not
+.. built and installed.  To subsequently delete all temporary files
+.. created by building SUNDIALS, issue 
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ make clean
+..    $ make clean
 
-To prepare the SUNDIALS distribution for a new install (using, for
-example, different options and/or installation destinations), issue 
+.. To prepare the SUNDIALS distribution for a new install (using, for
+.. example, different options and/or installation destinations), issue 
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ make distclean
+..    $ make distclean
 
-We note that the above steps are for an "in-source" build (not
-recommended). For an "out-of-source" build (recommended), the
-procedure is simply:
+.. We note that the above steps are for an "in-source" build (not
+.. recommended). For an "out-of-source" build (recommended), the
+.. procedure is simply:
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ cd BUILDDIR
-   $ SRCDIR/configure
-   $ make
-   $ make install
+..    $ cd BUILDDIR
+..    $ SRCDIR/configure
+..    $ make
+..    $ make install
 
-Note that, in this case, ``make clean`` and ``make distclean`` are
-irrelevant. Indeed, if disk space is a priority, the entire ``BUILDDIR``
-can be purged after the installation completes.  For a new install, a
-new ``BUILDDIR`` directory can be created and used.
+.. Note that, in this case, ``make clean`` and ``make distclean`` are
+.. irrelevant. Indeed, if disk space is a priority, the entire ``BUILDDIR``
+.. can be purged after the installation completes.  For a new install, a
+.. new ``BUILDDIR`` directory can be created and used.
 
 
 
 
-Configuration options
-------------------------------
+.. Configuration options
+.. ------------------------------
 
-The installation procedure given above will generally work without
-modification; however, if the system includes multiple (or
-non-default) MPI implementations, then certain configure
-script-related options may be used to indicate which MPI
-implementation should be used.  Also, if the user wants to use
-non-default language compilers, then, again, the necessary shell
-environment variables must be appropriately redefined.  The remainder
-of this section provides explanations of available configure script
-options.
+.. The installation procedure given above will generally work without
+.. modification; however, if the system includes multiple (or
+.. non-default) MPI implementations, then certain configure
+.. script-related options may be used to indicate which MPI
+.. implementation should be used.  Also, if the user wants to use
+.. non-default language compilers, then, again, the necessary shell
+.. environment variables must be appropriately redefined.  The remainder
+.. of this section provides explanations of available configure script
+.. options.
 
 
-General options
-^^^^^^^^^^^^^^^^^^^^^^^^^
+.. General options
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:index:`--prefix=PREFIX <--prefix=PREFIX (autotools option)>`
-   Location for architecture-independent files.
+.. :index:`--prefix=PREFIX <--prefix=PREFIX (autotools option)>`
+..    Location for architecture-independent files.
 
-   Default: ``PREFIX=/usr/local``
+..    Default: ``PREFIX=/usr/local``
 
-:index:`--exec-prefix=EPREFIX <--exec-prefix=EPREFIX (autotools option)>`
-   Location for architecture-dependent files.
+.. :index:`--exec-prefix=EPREFIX <--exec-prefix=EPREFIX (autotools option)>`
+..    Location for architecture-dependent files.
 
-   Default: ``EPREFIX=/usr/local``
+..    Default: ``EPREFIX=/usr/local``
 
-:index:`--includedir=DIR <--includedir=DIR (autotools option)>`
-   Alternate location for installation of header files. 
+.. :index:`--includedir=DIR <--includedir=DIR (autotools option)>`
+..    Alternate location for installation of header files. 
 
-   Default: ``DIR=PREFIX/include``
+..    Default: ``DIR=PREFIX/include``
 
-:index:`--libdir=DIR <--libdir=DIR (autotools option)>`
-   Alternate location for installation of libraries.
+.. :index:`--libdir=DIR <--libdir=DIR (autotools option)>`
+..    Alternate location for installation of libraries.
 
-   Default: ``DIR=EPREFIX/lib``
+..    Default: ``DIR=EPREFIX/lib``
 
-:index:`--disable-solver <--disable-solver (autotools option)>`
-   Although each existing solver module is built 
-   by default, support for a given solver can be explicitly disabled
-   using this option. The valid values for solver are: ``arkode``, ``cvode``,
-   ``cvodes``, ``ida``, ``idas``, and ``kinsol``.  For example,
+.. :index:`--disable-solver <--disable-solver (autotools option)>`
+..    Although each existing solver module is built 
+..    by default, support for a given solver can be explicitly disabled
+..    using this option. The valid values for solver are: ``arkode``, ``cvode``,
+..    ``cvodes``, ``ida``, ``idas``, and ``kinsol``.  For example,
 
-   .. code-block:: bash
+..    .. code-block:: bash
 
-      $ ./configure --disable-cvodes --disable-idas
+..       $ ./configure --disable-cvodes --disable-idas
 
 
-:index:`--enable-examples <--enable-examples (autotools option)>`
-   Available example programs are not built by 
-   default. Use this option to enable compilation of all pertinent
-   example programs.  Upon completion of the ``make`` command, the
-   example executables will be created under solver-specific
-   subdirectories of ``BUILDDIR/examples``, e.g.: 
+.. :index:`--enable-examples <--enable-examples (autotools option)>`
+..    Available example programs are not built by 
+..    default. Use this option to enable compilation of all pertinent
+..    example programs.  Upon completion of the ``make`` command, the
+..    example executables will be created under solver-specific
+..    subdirectories of ``BUILDDIR/examples``, e.g.: 
 
-   ``BUILDDIR/examples/SOLVER/serial``: serial C examples
+..    ``BUILDDIR/examples/SOLVER/serial``: serial C examples
 
-   ``BUILDDIR/examples/SOLVER/parallel``: parallel C examples
+..    ``BUILDDIR/examples/SOLVER/parallel``: parallel C examples
 
-   ``BUILDDIR/examples/SOLVER/fcmix_serial``: serial Fortran examples
+..    ``BUILDDIR/examples/SOLVER/fcmix_serial``: serial Fortran examples
 
-   ``BUILDDIR/examples/SOLVER/fcmix_parallel``: parallel Fortran
-   examples
+..    ``BUILDDIR/examples/SOLVER/fcmix_parallel``: parallel Fortran
+..    examples
 
-   .. note:: Some of these subdirectories may not exist depending upon
-	     the solver and/or the configuration options given.  
+..    .. note:: Some of these subdirectories may not exist depending upon
+.. 	     the solver and/or the configuration options given.  
 
-   .. note:: Since ARKode is packaged with examples in C, C++, Fortran 77
-	     and Fortran 90, the ARKode examples are installed in the
-	     subdirectories:
+..    .. note:: Since ARKode is packaged with examples in C, C++, Fortran 77
+.. 	     and Fortran 90, the ARKode examples are installed in the
+.. 	     subdirectories:
 
-	     ``BUILDDIR/examples/arkode/C_serial``: serial C examples
+.. 	     ``BUILDDIR/examples/arkode/C_serial``: serial C examples
 
-	     ``BUILDDIR/examples/SOLVER/C_parallel``: parallel C examples
+.. 	     ``BUILDDIR/examples/SOLVER/C_parallel``: parallel C examples
 
-	     ``BUILDDIR/examples/SOLVER/F77_serial``: serial Fortran 77 examples
+.. 	     ``BUILDDIR/examples/SOLVER/F77_serial``: serial Fortran 77 examples
 
-	     ``BUILDDIR/examples/SOLVER/F77_parallel``: parallel
-	     Fortran 77 examples
+.. 	     ``BUILDDIR/examples/SOLVER/F77_parallel``: parallel
+.. 	     Fortran 77 examples
 
-	     At present, the SUNDIALS Autotools-based build system
-	     does not install ARKode's C++ or Fortran 90 examples.
+.. 	     At present, the SUNDIALS Autotools-based build system
+.. 	     does not install ARKode's C++ or Fortran 90 examples.
 
-:index:`--with-examples-instdir=EXINSTDIR <--with-examples-instdir=EXINSTDIR (autotools option)>`
-   Alternate location for example executables and sample output files
-   (valid only if examples are enabled). Note that installation of
-   example files can be completely disabled by issuing
-   ``EXINSTDIR=no`` (in case building the examples is desired only as
-   a test of the SUNDIALS libraries).  
+.. :index:`--with-examples-instdir=EXINSTDIR <--with-examples-instdir=EXINSTDIR (autotools option)>`
+..    Alternate location for example executables and sample output files
+..    (valid only if examples are enabled). Note that installation of
+..    example files can be completely disabled by issuing
+..    ``EXINSTDIR=no`` (in case building the examples is desired only as
+..    a test of the SUNDIALS libraries).  
 
-   Default: ``DIR=EPREFIX/examples``
+..    Default: ``DIR=EPREFIX/examples``
 
-:index:`--with-cppflags=ARG <--with-cppflags=ARG (autotools option)>`
-   Specify additional C preprocessor flags (e.g.,
-   ``--with-cppflags=-I/usr/local/include``>) if necessary header files are
-   located in nonstandard locations. 
+.. :index:`--with-cppflags=ARG <--with-cppflags=ARG (autotools option)>`
+..    Specify additional C preprocessor flags (e.g.,
+..    ``--with-cppflags=-I/usr/local/include``>) if necessary header files are
+..    located in nonstandard locations. 
 
-:index:`--with-cflags=ARG <--with-cflags=ARG (autotools option)>`
-   Specify additional C compilation flags.
+.. :index:`--with-cflags=ARG <--with-cflags=ARG (autotools option)>`
+..    Specify additional C compilation flags.
 
-:index:`--with-ldflags=ARG <--with-ldflags=ARG (autotools option)>`
-   Specify additional linker flags (e.g., 
-   ``--with-ldflags=-L/usr/local/lib``) if required libraries are located in
-   nonstandard locations. 
+.. :index:`--with-ldflags=ARG <--with-ldflags=ARG (autotools option)>`
+..    Specify additional linker flags (e.g., 
+..    ``--with-ldflags=-L/usr/local/lib``) if required libraries are located in
+..    nonstandard locations. 
 
-:index:`--with-libs=ARG <--with-libs=ARG (autotools option)>`
-   Specify additional libraries to be used (e.g.,
-   ``--with-libs=-lfoo`` to link with the library named ``libfoo.a``
-   or ``libfoo.so``). 
+.. :index:`--with-libs=ARG <--with-libs=ARG (autotools option)>`
+..    Specify additional libraries to be used (e.g.,
+..    ``--with-libs=-lfoo`` to link with the library named ``libfoo.a``
+..    or ``libfoo.so``). 
 
-:index:`--with-precision=ARG <--with-precision=ARG (autotools option)>`
-   By default, SUNDIALS will define a real number
-   (internally referred to as ``realtype``) to be a double-precision
-   floating-point numeric data type (``double`` C-type); however, this
-   option may be used to build SUNDIALS with an alternate
-   ``realtype``: 
+.. :index:`--with-precision=ARG <--with-precision=ARG (autotools option)>`
+..    By default, SUNDIALS will define a real number
+..    (internally referred to as ``realtype``) to be a double-precision
+..    floating-point numeric data type (``double`` C-type); however, this
+..    option may be used to build SUNDIALS with an alternate
+..    ``realtype``: 
 
-   ``--with-precision=single`` declares ``realtype`` as a
-   single-precision floating-point numeric data type (``float``
-   C-type).
+..    ``--with-precision=single`` declares ``realtype`` as a
+..    single-precision floating-point numeric data type (``float``
+..    C-type).
 
-   ``--with-precision=extended`` declares ``realtype`` as a
-   double-precision floating-point numeric data type (``long double``
-   C-type).
+..    ``--with-precision=extended`` declares ``realtype`` as a
+..    double-precision floating-point numeric data type (``long double``
+..    C-type).
 
-   Default ``double``:
+..    Default ``double``:
 
-   Users should not build SUNDIALS with support for single-precision
-   floating-point arithmetic on 32- or 64-bit systems.  This will
-   almost certainly result in unreliable numerical solutions. The
-   configuration option ``--with-precision=single`` is intended for
-   systems on which single-precision arithmetic involves at least 14
-   decimal digits. 
+..    Users should not build SUNDIALS with support for single-precision
+..    floating-point arithmetic on 32- or 64-bit systems.  This will
+..    almost certainly result in unreliable numerical solutions. The
+..    configuration option ``--with-precision=single`` is intended for
+..    systems on which single-precision arithmetic involves at least 14
+..    decimal digits. 
 
 
 
-Options for Fortran support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. Options for Fortran support
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:index:`--disable-fcmix <--disable-fcmix (autotools option)>`
-   Using this option will disable all Fortran
-   support. The FARKODE, FCVODE, FKINSOL, FIDA and FNVECTOR modules
-   will not be built, regardless of availability. 
+.. :index:`--disable-fcmix <--disable-fcmix (autotools option)>`
+..    Using this option will disable all Fortran
+..    support. The FARKODE, FCVODE, FKINSOL, FIDA and FNVECTOR modules
+..    will not be built, regardless of availability. 
 
-:index:`--with-fflags=ARG <--with-fflags=ARG (autotools option)>`
-   Specify additional Fortran compilation flags.
+.. :index:`--with-fflags=ARG <--with-fflags=ARG (autotools option)>`
+..    Specify additional Fortran compilation flags.
 
 
 
-Options for MPI support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. Options for MPI support
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following configuration options are only applicable to the
-parallel SUNDIALS packages: 
+.. The following configuration options are only applicable to the
+.. parallel SUNDIALS packages: 
 
-:index:`--disable-mpi <--disable-mpi (autotools option)>`
-   Using this option will completely disable MPI support.
+.. :index:`--disable-mpi <--disable-mpi (autotools option)>`
+..    Using this option will completely disable MPI support.
 
-:index:`--with-mpicc=ARG <--with-mpicc=ARG (autotools option)>`
-   By default, the configuration utility script will
-   use the MPI compiler script named ``mpicc`` to compile the
-   C-language parallelized SUNDIALS subroutines; however, for reasons
-   of compatibility, different executable names may be specified. 
+.. :index:`--with-mpicc=ARG <--with-mpicc=ARG (autotools option)>`
+..    By default, the configuration utility script will
+..    use the MPI compiler script named ``mpicc`` to compile the
+..    C-language parallelized SUNDIALS subroutines; however, for reasons
+..    of compatibility, different executable names may be specified. 
 
-   Also, ``--with-mpicc=no`` can be used to disable the use of MPI
-   compiler scripts, thus causing the serial C compilers to be used to
-   compile the parallelized SUNDIALS functions and examples. 
+..    Also, ``--with-mpicc=no`` can be used to disable the use of MPI
+..    compiler scripts, thus causing the serial C compilers to be used to
+..    compile the parallelized SUNDIALS functions and examples. 
 
-:index:`--with-mpif77=ARG <--with-mpif77=ARG (autotools option)>`
-   As described above for C routines, the configuration utility script
-   will use the MPI compiler script named ``mpif77`` to compile the
-   Fortran parallelized SUNDIALS subroutines.  Similarly,
-   ``--with-mpif77=no`` can be used to force the serial Fortran
-   compiler to compile the parallelized SUNDIALS functions and
-   examples.
+.. :index:`--with-mpif77=ARG <--with-mpif77=ARG (autotools option)>`
+..    As described above for C routines, the configuration utility script
+..    will use the MPI compiler script named ``mpif77`` to compile the
+..    Fortran parallelized SUNDIALS subroutines.  Similarly,
+..    ``--with-mpif77=no`` can be used to force the serial Fortran
+..    compiler to compile the parallelized SUNDIALS functions and
+..    examples.
 
-:index:`--with-mpi-root=MPIDIR <--with-mpi-root=MPIDIR (autotools option)>`
-   This option may be used to specify which MPI implementation should
-   be used. The SUNDIALS configuration script will automatically check
-   under the subdirectories ``MPIDIR/include`` and ``MPIDIR/lib`` for
-   the necessary header files and libraries.  The subdirectory
-   ``MPIDIR/bin`` will also be searched for the C and Fortran MPI
-   compiler scripts, unless the user specifies ``--with-mpicc=no`` or
-   ``--with-mpif77=no``.
+.. :index:`--with-mpi-root=MPIDIR <--with-mpi-root=MPIDIR (autotools option)>`
+..    This option may be used to specify which MPI implementation should
+..    be used. The SUNDIALS configuration script will automatically check
+..    under the subdirectories ``MPIDIR/include`` and ``MPIDIR/lib`` for
+..    the necessary header files and libraries.  The subdirectory
+..    ``MPIDIR/bin`` will also be searched for the C and Fortran MPI
+..    compiler scripts, unless the user specifies ``--with-mpicc=no`` or
+..    ``--with-mpif77=no``.
 
-:index:`--with-mpi-flags=ARG <--with-mpi-flags=ARG (autotools option)>`
-   Specify additional MPI-specific compilation flags.
+.. :index:`--with-mpi-flags=ARG <--with-mpi-flags=ARG (autotools option)>`
+..    Specify additional MPI-specific compilation flags.
 
-If a user would prefer not to use a preexisting MPI compiler script,
-but instead use a serial compiler and provide the flags necessary to
-compile the MPI-aware subroutines in SUNDIALS, the following options
-may be used.
+.. If a user would prefer not to use a preexisting MPI compiler script,
+.. but instead use a serial compiler and provide the flags necessary to
+.. compile the MPI-aware subroutines in SUNDIALS, the following options
+.. may be used.
 
-:index:`--with-mpi-incdir=INCDIR <--with-mpi-incdir=INCDIR (autotools option)>`
-   Include directory for MPI library; must include ``mpi.h``.
+.. :index:`--with-mpi-incdir=INCDIR <--with-mpi-incdir=INCDIR (autotools option)>`
+..    Include directory for MPI library; must include ``mpi.h``.
 
-   Default: ``INCDIR=MPIDIR/include``
+..    Default: ``INCDIR=MPIDIR/include``
 
-:index:`--with-mpi-libdir=LIBDIR <--with-mpi-libdir=LIBDIR (autotools option)>`
-   Library directory for MPI library.
+.. :index:`--with-mpi-libdir=LIBDIR <--with-mpi-libdir=LIBDIR (autotools option)>`
+..    Library directory for MPI library.
 
-   Default: ``LIBDIR=MPIDIR/lib``
+..    Default: ``LIBDIR=MPIDIR/lib``
 
-:index:`--with-mpi-libs=LIBS <--with-mpi-libs=LIBS (autotools option)>`
-   MPI library files to link with example executables (e.g., ``--with-mpi-libs=-lmpich``).
+.. :index:`--with-mpi-libs=LIBS <--with-mpi-libs=LIBS (autotools option)>`
+..    MPI library files to link with example executables (e.g., ``--with-mpi-libs=-lmpich``).
 
 
-Options for library support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. Options for library support
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, only static libraries are built, but the following option
-may be used to build shared libraries on supported platforms.
+.. By default, only static libraries are built, but the following option
+.. may be used to build shared libraries on supported platforms.
 
-:index:`--enable-shared <--enable-shared (autotools option)>`
-   Using this particular option will result in both
-   static and shared versions of the available SUNDIALS libraries
-   being built if the system supports shared libraries. To build only
-   shared libraries also specify ``--disable-static``.
+.. :index:`--enable-shared <--enable-shared (autotools option)>`
+..    Using this particular option will result in both
+..    static and shared versions of the available SUNDIALS libraries
+..    being built if the system supports shared libraries. To build only
+..    shared libraries also specify ``--disable-static``.
 
-.. note:: The FARKODE, FCVODE, FKINSOL and FIDA libraries can only be
-	  built as static libraries because they contain references to
-	  externally defined symbols, namely user-supplied Fortran
-	  subroutines.  Although the Fortran interfaces to the serial and
-	  parallel implementations of the supplied NVECTOR module do not
-	  contain any unresolvable external symbols, the libraries are still
-	  built as static libraries for the purpose of consistency.
+.. .. note:: The FARKODE, FCVODE, FKINSOL and FIDA libraries can only be
+.. 	  built as static libraries because they contain references to
+.. 	  externally defined symbols, namely user-supplied Fortran
+.. 	  subroutines.  Although the Fortran interfaces to the serial and
+.. 	  parallel implementations of the supplied NVECTOR module do not
+.. 	  contain any unresolvable external symbols, the libraries are still
+.. 	  built as static libraries for the purpose of consistency.
 
 
-Options for BLAS/LAPACK support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. Options for BLAS/LAPACK support
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``configure`` script will attempt to automatically determine the
-proper libraries to be linked for support of the BLAS/LAPACK linear
-solver module. If these are not found, or if BLAS and/or LAPACK
-libraries are installed in a non-standard location, the following
-options can be used: 
+.. The ``configure`` script will attempt to automatically determine the
+.. proper libraries to be linked for support of the BLAS/LAPACK linear
+.. solver module. If these are not found, or if BLAS and/or LAPACK
+.. libraries are installed in a non-standard location, the following
+.. options can be used: 
 
-:index:`--with-blas=BLASDIR <--with-blas=BLASDIR (autotools option)>`
-   Specify the BLAS library.
+.. :index:`--with-blas=BLASDIR <--with-blas=BLASDIR (autotools option)>`
+..    Specify the BLAS library.
 
-   Default: none
+..    Default: none
 
-:index:`--with-lapack=LAPACKDIR <--with-lapack=LAPACKDIR (autotools option)>`
-   Specify the LAPACK library.
+.. :index:`--with-lapack=LAPACKDIR <--with-lapack=LAPACKDIR (autotools option)>`
+..    Specify the LAPACK library.
 
-   Default: none
+..    Default: none
 
 
-Environment variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. Environment variables
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following environment variables can be locally (re)defined for use
-during the configuration of SUNDIALS. See the next section for
-illustrations of these. 
+.. The following environment variables can be locally (re)defined for use
+.. during the configuration of SUNDIALS. See the next section for
+.. illustrations of these. 
 
-:index:`CC <CC (env. variable)>`
-   Since the configuration script uses the first C compiler found in
-   the current executable search path, then ``CC`` must be locally
-   (re)defined in order to use a different compiler.  For example, to
-   use ``xcc`` (executable name of chosen compiler) as the C language
-   compiler, 
+.. :index:`CC <CC (env. variable)>`
+..    Since the configuration script uses the first C compiler found in
+..    the current executable search path, then ``CC`` must be locally
+..    (re)defined in order to use a different compiler.  For example, to
+..    use ``xcc`` (executable name of chosen compiler) as the C language
+..    compiler, 
 
-   .. code-block:: bash
+..    .. code-block:: bash
 
-      $ ./configure CC=xcc
+..       $ ./configure CC=xcc
 
-:index:`F77 <F77 (env. variable)>`
-   As above, since the configuration script uses the first Fortran
-   compiler found in the current executable search path, then ``F77``
-   must be locally (re)defined in order to use a different compiler. 
+.. :index:`F77 <F77 (env. variable)>`
+..    As above, since the configuration script uses the first Fortran
+..    compiler found in the current executable search path, then ``F77``
+..    must be locally (re)defined in order to use a different compiler. 
 
-:index:`CFLAGS <CFLAGS (env. variable)>`
-   Overrides the default C compilation flags. 
+.. :index:`CFLAGS <CFLAGS (env. variable)>`
+..    Overrides the default C compilation flags. 
 
-:index:`FFLAGS <FFLAGS (env. variable)>`
-   Overrides the default Fortran compilation flags. 
+.. :index:`FFLAGS <FFLAGS (env. variable)>`
+..    Overrides the default Fortran compilation flags. 
 
 
 
 
-Configuration examples
---------------------------------------
+.. Configuration examples
+.. --------------------------------------
 
-The following examples are meant to help demonstrate proper usage of
-the configure options. 
+.. The following examples are meant to help demonstrate proper usage of
+.. the configure options. 
 
-In each example, we assume that the SUNDIALS source files are in the
-subdirectory ``/home/myname/sundials_src/``, and that the library is
-being built in the directory ``/home/myname/sundials_build/``.
+.. In each example, we assume that the SUNDIALS source files are in the
+.. subdirectory ``/home/myname/sundials_src/``, and that the library is
+.. being built in the directory ``/home/myname/sundials_build/``.
 
-To build SUNDIALS using the default C and Fortran compilers, the 
-default ``mpicc`` and ``mpif77`` parallel compilers, enable
-compilation of examples, and install libraries, headers, and example
-sources under appropriate subdirectories of
-``/home/myname/sundials/``, use
+.. To build SUNDIALS using the default C and Fortran compilers, the 
+.. default ``mpicc`` and ``mpif77`` parallel compilers, enable
+.. compilation of examples, and install libraries, headers, and example
+.. sources under appropriate subdirectories of
+.. ``/home/myname/sundials/``, use
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ cd /home/myname/sundials_build
-   $ /home/myname/sundials_src/configure --prefix=/home/myname/sundials --enable-examples
+..    $ cd /home/myname/sundials_build
+..    $ /home/myname/sundials_src/configure --prefix=/home/myname/sundials --enable-examples
 
-To disable installation of the examples, use:
+.. To disable installation of the examples, use:
 
-.. code-block::  bash
+.. .. code-block::  bash
 
-   $ cd /home/myname/sundials_build
-   $ /home/myname/sundials_src/configure --prefix=/home/myname/sundials \
-               --enable-examples --with-examples-instdir=no
+..    $ cd /home/myname/sundials_build
+..    $ /home/myname/sundials_src/configure --prefix=/home/myname/sundials \
+..                --enable-examples --with-examples-instdir=no
 
-The following example builds SUNDIALS using ``gcc`` as the serial C
-compiler, ``gfortran`` as the serial Fortran compiler, the default
-``mpicc`` as the parallel C compiler, the default ``mpif77`` as the
-parallel Fortran compiler, and appends the ``-O3`` compilaton flag to
-the list of default flags: 
+.. The following example builds SUNDIALS using ``gcc`` as the serial C
+.. compiler, ``gfortran`` as the serial Fortran compiler, the default
+.. ``mpicc`` as the parallel C compiler, the default ``mpif77`` as the
+.. parallel Fortran compiler, and appends the ``-O3`` compilaton flag to
+.. the list of default flags: 
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ cd /home/myname/sundials_build
-   $ /home/myname/sundials_src/configure CC=gcc F77=gfortran --with-cflags=-O3 \
-               --with-fflags=-O3 --with-mpicc=mpicc --with-mpif77=mpif77
+..    $ cd /home/myname/sundials_build
+..    $ /home/myname/sundials_src/configure CC=gcc F77=gfortran --with-cflags=-O3 \
+..                --with-fflags=-O3 --with-mpicc=mpicc --with-mpif77=mpif77
 
-The next example again builds SUNDIALS using ``gcc`` as the serial C
-compiler, but the ``--with-mpicc=no`` option explicitly disables the
-use of the corresponding MPI compiler script.  In addition, since the 
-``--with-mpi-root`` option is given, the compilation flags 
-``-I/usr/apps/mpich/1.2.4/include`` and
-``-L/usr/apps/mpich/1.2.4/lib`` are passed to ``gcc`` when compiling
-the MPI-enabled functions. The ``--with-mpi-libs`` option is required
-so that the configure script can check if ``gcc`` can link with the 
-appropriate MPI library. The ``--disable-lapack`` option explicitly
-disables support for BLAS/LAPACK, while the ``--disable-fcmix``
-explicitly disables building the FCMIX interfaces. Note that, because
-of the last two options, no Fortran-related settings are checked for.
+.. The next example again builds SUNDIALS using ``gcc`` as the serial C
+.. compiler, but the ``--with-mpicc=no`` option explicitly disables the
+.. use of the corresponding MPI compiler script.  In addition, since the 
+.. ``--with-mpi-root`` option is given, the compilation flags 
+.. ``-I/usr/apps/mpich/1.2.4/include`` and
+.. ``-L/usr/apps/mpich/1.2.4/lib`` are passed to ``gcc`` when compiling
+.. the MPI-enabled functions. The ``--with-mpi-libs`` option is required
+.. so that the configure script can check if ``gcc`` can link with the 
+.. appropriate MPI library. The ``--disable-lapack`` option explicitly
+.. disables support for BLAS/LAPACK, while the ``--disable-fcmix``
+.. explicitly disables building the FCMIX interfaces. Note that, because
+.. of the last two options, no Fortran-related settings are checked for.
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ cd /home/myname/sundials_build
-   $ /home/myname/sundials_src/configure CC=gcc --with-mpicc=no \
-               --with-mpi-root=/usr/apps/mpich/1.2.4 \
-               --with-mpi-libs=-lmpich \
-               --disable-lapack --disable-fcmix
+..    $ cd /home/myname/sundials_build
+..    $ /home/myname/sundials_src/configure CC=gcc --with-mpicc=no \
+..                --with-mpi-root=/usr/apps/mpich/1.2.4 \
+..                --with-mpi-libs=-lmpich \
+..                --disable-lapack --disable-fcmix
 
-Finally, a minimal configuration and installation of SUNDIALS in
-``/home/myname/sundials/`` (serial only, no Fortran support, no
-examples) can be obtained with: 
+.. Finally, a minimal configuration and installation of SUNDIALS in
+.. ``/home/myname/sundials/`` (serial only, no Fortran support, no
+.. examples) can be obtained with: 
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-   $ cd /home/myname/sundials_build
-   $ /home/myname/sundials_src/configure --prefix=/home/myname/sundials \
-               --disable-mpi --disable-lapack --disable-fcmix
+..    $ cd /home/myname/sundials_build
+..    $ /home/myname/sundials_src/configure --prefix=/home/myname/sundials \
+..                --disable-mpi --disable-lapack --disable-fcmix
 
 
 
@@ -558,27 +551,13 @@ examples) can be obtained with:
 CMake-based installation
 ======================================
 
-Support for CMake-based installation has been added to SUNDIALS
-primarily to provide a platform-independent build system.  Like
-autotools, CMake can generate a Unix Makefile.  Unlike autotools, CMake
-can also create KDevelop, Visual Studio, and (Apple) XCode project
-files from the same configuration files.  In addition, CMake provides a
-GUI front end, allowing a more interactive installation process than
-when using autotools.
+CMake-based installation provides a platform-independent build system.
+CMake can generate Unix/Linux Makefiles, as well as KDevelop, Visual
+Studio, and (Apple) XCode project files from the same configuration
+file.  In addition, CMake provides a GUI front end which allows an
+interactive build and installation process.
 
-The installation options are very similar to the options mentioned
-above (although their default values may differ
-slightly).  Practically, all configurations supported by the
-autotools-based installation approach are also possible with CMake,
-the only notable exception being cross-compilation, which is currently
-not implemented in the CMake approach.
-
-However, the CMake approach does support installation of the C++ and
-Fortran 90 examples supplied with ARKode (both serial and parallel),
-allowing for a complete installation of all possible example programs
-supplied with SUNDIALS.
-
-The SUNDIALS build process requires CMake version 2.4.x or higher and
+The SUNDIALS build process requires CMake version 2.8.1 or higher and
 a working compiler.  On Unix-like operating systems, it also requires
 Make (and ``curses``, including its development libraries, for the GUI
 front end to CMake, ``ccmake`` or ``cmake-gui``), while on Windows it
@@ -586,13 +565,13 @@ requires Visual Studio.  While many Linux distributions offer CMake,
 the version included may be out of date and should be verified.  Many
 new CMake features have been added recently, and it is recommended
 that you download the latest version from
-http://www.cmake.org/HTML/Download.html.  Build instructions for 
-CMake (only necessary for Unix-like systems) can be found on the CMake
-website. Once CMake is installed, Linux/Unix users will be able to use
-``ccmake`` or ``cmake-gui`` (depending the version of CMake), while
-Windows users will be able to use ``CMakeSetup``.
+http://www.cmake.org.  Build instructions for CMake (only necessary
+for Unix-like systems) can be found on the CMake website. Once CMake
+is installed, Linux/Unix users will be able to use ``ccmake`` or
+``cmake-gui`` (depending the version of CMake), while Windows users
+will be able to use ``CMakeSetup``.
 
-As noted above, when using CMake to configure, build and install
+As previously noted, when using CMake to configure, build and install
 SUNDIALS, it is always required to use a separate build
 directory.  While in-source builds are possible, they are explicitly
 prohibited by the SUNDIALS CMake scripts (one of the reasons being
@@ -605,120 +584,204 @@ after an in-source build).
 
 .. index:: ccmake
 
-.. index:: cmake-gui
-
+.. _Installation.CMake.Unix:
 
 Configuring, building, and installing on Unix-like systems
 ----------------------------------------------------------------
 
-These instructions use ``ccmake`` from the CMake installed
-location. ``ccmake`` is a Curses based GUI for CMake.  
-For newer versions of CMake, you may replace each ``ccmake`` command
-with ``cmake-gui``, that provides a full point-and-click graphical
-user interface to CMake.  When using ``cmake-gui``, make sure to
-select the appropriate source and the build directory.  Also, make
-sure to pick the "Unix Makefiles" generator.  Some CMake versions will
-ask you to select the generator the first time you press Configure
-instead of having a drop-down menu in the main dialog.  All remaining
-instructions should follow similarly.  
+The default CMake configuration will build all included solvers and
+associated examples and will only build static libraries.  The INSTDIR
+defaults to ``/usr/local`` and can be changed by setting the
+``CMAKE_INSTALL_PREFIX`` variable.  Support for FORTRAN, shared
+libraries and all other options are disabled. 
 
-To run ``ccmake``, go to the build directory and specify as an
-argument the source directory:
+CMake can be used from the command line with the ``cmake`` command, or
+from a Curses based GUI by using the ``ccmake`` command, or from a
+wxWidgets based GUI by using the ``cmake-gui`` command.  Examples for
+using both text and graphical methods will be presented.  For the
+examples shown it is assumed that there is a top level SUNDIALS
+directory with appropriate source, build and install directories:
+
+
 
 .. code-block:: bash
 
-   $ mkdir BUILDDIR
-   $ cd BUILDDIR
-   $ ccmake SRCDIR
+   $ mkdir (...)/INSTDIR
+   $ mkdir (...)/BUILDDIR
+   $ cd (...)/BUILDDIR
 
-About ``ccmake``:
 
-* Iterative process
+.. index:: cmake-gui
+.. index:: ccmake
 
-  * Select values, run configure (press the ``<c>`` key)
-  * Set the settings, run configure, set the settings, run configure,
-    etc. 
 
-* Repeat until all values are set and the generate option is available
-  (press the ``<g>`` key) 
-* Some variables (advanced variables) are not visible right away
-* To see advanced varables, toggle to advanced mode (press the ``<t>``
-  key) 
-* To set a variable, move the cursor to the variable and press
-  ``<enter>`` 
+Building with the GUI
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Using CMake with the ``ccmake`` GUI follows the general process:
+
+* Select and modify values, run configure (``c`` key)
+
+* New values are denoted with an asterisk
+
+* To set a variable, move the cursor to the variable and press enter
 
   * If it is a boolean (``ON/OFF``) it will flip the value
+
   * If it is string or file, it will allow editing of the string
-  * For file and directories, the ``<tab>`` key can be used to
-    auto-complete 
-  * (``cmake-gui`` only)  If it is file or directory, an ellipsis
-    button will appear ("...") on the far right of the entry.
-    Clicking this button will bring up the file or directory selection
-    dialog.
 
-* To search for a variable press the ``</>`` key, and to repeat the
-  search, press the ``<n>`` key 
+  * For files and directories, the ``<tab>`` key can be used to
+    complete 
 
-CMake will now generate makefiles including all dependencies and all
-rules to build SUNDIALS on this system.  You should not, however, try
-to move the build directory to another location on this system or to
-another system. Once you have makefiles you should be able to just
-type: 
+* Repeat until all values are set as desired and the ``generate``
+  option is available (``g`` key)
+
+* Some variables (advanced variables) are not visible right away
+
+* To see advanced variables, toggle to advanced mode (``t`` key)
+
+* To search for a variable press the ``/`` key, and to repeat the
+  search, press the ``n`` key 
+
+
+Using CMake with the ``cmake-gui`` GUI follows a similar process:
+
+* Select and modify values, click ``Configure``
+
+* The first time you click ``Configure``, make sure to pick the
+  appropriate generator (the following will ssume generation of Unix
+  Makfiles).
+
+* New values are highlighted in red
+
+* To set a variable, click on or move the cursor to the variable and press enter
+
+  * If it is a boolean (``ON/OFF``) it will check/uncheck the box
+
+  * If it is string or file, it will allow editing of the string.
+    Additionally, an ellipsis button will appear ``...`` on the far
+    right of the entry.  Clicking this button will bring up the file
+    or directory selection dialog.
+
+  * For files and directories, the ``<tab>`` key can be used to
+    complete 
+
+* Repeat until all values are set as desired and click the
+  ``Generate`` button
+
+* Some variables (advanced variables) are not visible right away
+
+* To see advanced variables, click the ``advanced`` button
+
+
+
+To build the default configuration using the curses GUI, from the
+BUILDDIR enter the ``ccmake`` command and point to the SOURCEDIR:
+
+.. code-block:: bash
+
+   $ ccmake (...)/SOURCEDIR
+
+Similarly, to build the default configuration using the wxWidgets GUI,
+from the BUILDDIR enter the ``cmake-gui`` command and point to the
+SOURCEDIR:
+
+.. code-block:: bash
+
+   $ cmake-gui (...)/SOURCEDIR
+
+The default curses configuration screen is shown in 
+the following figure.
+
+.. :num:`figure #ccmakedefault`.   [consider installing/enabling the sphinx numfig extension]
+
+.. _ccmakedefault:
+
+.. figure:: figs/ccmakedefault.png
+   :scale: 75 %
+   :align: center
+
+   Default configuration screen. Note: Initial screen is empty.
+   Press 'c' to get this initial default configuration.
+
+The default INSTDIR for both SUNDIALS and corresponding examples
+can be changed by setting the ``CMAKE_INSTALL_PREFIX`` and
+the ``EXAMPLES_INSTALL_PATH`` as shown in the following figure.
+
+.. _ccmakeprefix:
+
+.. figure:: figs/ccmakeprefix.png
+   :scale: 75 %
+   :align: center
+
+   Changing the INSTDIR for SUNDIALS and corresponding EXAMPLES.
+
+
+Pressing the ``g`` key or clicking ``generate`` will generate
+makefiles including all dependencies and all rules to build SUNDIALS
+on this system.  Back at the command prompt, you can now type:
 
 .. code-block:: bash
 
    $ make
 
-To install SUNDIALS in the installation directory specified at
-configuration time, simply run 
+or for a faster parallel build (e.g. using 4 threads), you can type
+
+.. code-block:: bash
+
+   $ make -j 4
+
+To install SUNDIALS in the installation directory specified in the configuration, simply run:
 
 .. code-block:: bash
 
    $ make install
 
+The distribution of SUNDIALS includes several examples corresponding
+to the solvers to be installed.  Also included in the source bundle is
+a *testRunner* configured by CMake to test these included examples:
+
+.. code-block:: bash
+
+   $ make test
+
+The output of *testRunner* should look similar to the following figure
+
+.. _cmaketest:
+
+.. figure:: figs/cmaketest.png
+   :scale: 75 %
+   :align: center
+
+   Invoking *testRunner* with ``make test`` to execute all configured
+   EXAMPLES.
 
 
-Configuring, building, and installing on Windows
-----------------------------------------------------------------
+.. index:: cmake
 
-These instructions use :index:`CMakeSetup` from the CMake install
-location. Make sure to select the appropriate source and the build
-directory.  Also, make sure to pick the appropriate generator (e.g. on
-Visual Studio 6, pick the Visual Studio 6 generator).  Some CMake
-versions will ask you to select the generator the first time you press
-Configure instead of having a drop-down menu in the main dialog.
+Building from the command line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-About ``CMakeSetup``:
+Using CMake from the command line is simply a matter of specifying
+CMake variable settings with the ``cmake`` command.  The following
+will build the same configuration as shown above: 
 
-* Iterative process
+.. code-block:: bash
 
-  * Select values, press the Configure button
-  * Set the settings, run configure, set the settings, run configure,
-    etc. 
+   $ cmake -DCMAKE_INSTALL_PREFIX=/usr/casc/sundials/installdir \
+   >  -DEXAMPLES_INSTALL_PATH=/usr/casc/sundials/installdir \
+   >  ../sourcedir
+   $ make
+   $ make test
 
-* Repeat until all values are set and the ``OK`` button becomes available. 
-* Some variables (advanced variables) are not visible right away
-* To see advanced varables, toggle to advanced mode ("Show Advanced
-  Values" toggle).  
-* To set the value of a variable, click on that value.
 
-  * If it is boolean (``ON/OFF``), a drop-down menu will appear for
-    changing the value.  
-  * If it is file or directory, an ellipsis button will appear ("...")
-    on the far right of the entry.  Clicking this button will bring up
-    the file or directory selection dialog.  
-  * If it is a string, it will become an editable string.
 
-CMake will now create Visual Studio project files. You should now be
-able to open the SUNDIALS project (or workspace) file. Make sure to
-select the appropriate build type (Debug, Release, ...). To build
-SUNDIALS, simply build the ``ALL_BUILD`` target. To install SUNDIALS,
-simply run the ``INSTALL`` target within the build system.
 
+.. _Installation.CMake.Options:
 
 
 Configuration options
-----------------------------------------------------------------
+----------------------
 
 A complete list of all available options for a CMake-based SUNDIALS
 configuration is provide below.  Note that the default values shown
@@ -1046,6 +1109,16 @@ systems.
 
    Default: ``ON``
 
+:index:`OPENMP_ENABLE <OPENMP_ENABLE (CMake option)>` 
+   Turn on support for the OpenMP based NVector
+
+   Default: ``OFF``
+
+:index:`PTHREADS_ENABLE <PTHREADS_ENABLE (CMake option)>` 
+   Turn on support for the Pthreads based NVector
+
+   Default: ``OFF``
+
 :index:`SUNDIALS_PRECISION <SUNDIALS_PRECISION (CMake option)>` 
    Precision used in SUNDIALS, options are: ``double``, ``single`` or
    ``extended``
@@ -1059,6 +1132,47 @@ systems.
 
 
 
+.. _Installation.CMake.Windows:
+
+Configuring, building, and installing on Windows
+----------------------------------------------------------------
+
+Use :index:`CMakeSetup` from the CMake install location. Make sure to
+select the appropriate source and the build directory.  Also, make
+sure to pick the appropriate generator (on Visual Studio 6, pick the
+Visual Studio 6 generator).  Some CMake versions will ask you to
+select the generator the first time you press Configure instead of
+having a drop-down menu in the main dialog. 
+
+About ``CMakeSetup``:
+
+* Iterative process
+
+  * Select values, press the Configure button
+  * Set the settings, run configure, set the settings, run configure,
+    etc. 
+
+* Repeat until all values are set and the ``OK`` button becomes available. 
+* Some variables (advanced variables) are not visible right away
+* To see advanced varables, toggle to advanced mode ("Show Advanced
+  Values" toggle).  
+* To set the value of a variable, click on that value.
+
+  * If it is boolean (``ON/OFF``), a drop-down menu will appear for
+    changing the value.  
+  * If it is file or directory, an ellipsis button will appear ("...")
+    on the far right of the entry.  Clicking this button will bring up
+    the file or directory selection dialog.  
+  * If it is a string, it will become an editable string.
+
+CMake will now create Visual Studio project files. You should now be
+able to open the SUNDIALS project (or workspace) file. Make sure to
+select the appropriate build type (Debug, Release, ...). To build
+SUNDIALS, simply build the ``ALL_BUILD`` target. To install SUNDIALS,
+simply run the ``INSTALL`` target within the build system.
+
+
+
 
 
 .. _Installation.Manual:
@@ -1068,8 +1182,8 @@ Manually building SUNDIALS
 
 With the addition of CMake support, the installation of the SUNDIALS
 package on almost any platform was greatly simplified.  However, if for
-whatever reason, neither of the two procedures described above is
-convenient (for example for users who prefer to own the build process
+whatever reason, the procedure described above is
+inconvenient (for example for users who prefer to own the build process
 or otherwise incorporate SUNDIALS or one of its solvers in a larger
 project with its own build system), we provide a few directions
 for a completely manual installation. 
@@ -1092,21 +1206,24 @@ The following files are required to compile a SUNDIALS solver module:
 
 A sample header file that, appropriately modified, can be used as
 ``sundials_config.h`` (otherwise created automatically by the
-configure or CMake scripts), is provided below. 
+CMake scripts), is provided below. 
 
 .. code-block:: c
 
    /* SUNDIALS configuration header file */
-   #define SUNDIALS_PACKAGE_VERSION "2.5.0"
+   #define SUNDIALS_PACKAGE_VERSION "2.6.0"
 
    #define SUNDIALS_F77_FUNC(name,NAME) name ## _
-   #define SUNDIALS_F77_FUNC_(name,NAME) name ## _
 
    #define SUNDIALS_DOUBLE_PRECISION 1
 
    #define SUNDIALS_USE_GENERIC_MATH
 
+   #define SUNDIALS_HAVE_POSIX_TIMERS
+
    #define SUNDIALS_BLAS_LAPACK 1
+
+   #define SUNDIALS_SUPERLU 0
 
    #define SUNDIALS_MPI_COMM_F2C 1
 
@@ -1114,6 +1231,27 @@ configure or CMake scripts), is provided below.
 
 The various preprocessor macros defined within ``sundials_config.h``
 have the following uses: 
+
+* Fortran name-mangling scheme
+
+  The macro given below is used to transform the C-language function
+  names defined in the Fortran-C interface modules in a manner
+  consistent with the preferred Fortran compiler, thus allowing native
+  C functions to be called from within a Fortran subroutine. The
+  name-mangling scheme is specified by appropriately defining the
+  following parameterized macro (using the stringization operator,
+  ``##``, if necessary): 
+
+  * :index:`SUNDIALS_F77_FUNC(name,NAME)`
+
+  For example, to specify that mangled C-language function names
+  should be lowercase with two underscores appended, include
+
+  .. code-block:: c
+
+     #define SUNDIALS_F77_FUNC(name,NAME) name ## __
+
+  in the ``sundials_config.h`` header file.
 
 * Precision of the SUNDIALS ``realtype`` type
 
@@ -1141,33 +1279,20 @@ have the following uses:
 	    requirements. Consequently, these routines will only be
 	    used if available. 
 
-* Fortran name-mangling scheme
+* Use of POSIX timers
 
-  The macros given below are used to transform the C-language function
-  names defined in the Fortran-C interface modules in a manner
-  consistent with the preferred Fortran compiler, thus allowing native
-  C functions to be called from within a Fortran subroutine. The
-  name-mangling scheme is specified by appropriately defining the
-  following parameterized macros (using the stringization operator,
-  ``##``, if necessary): 
-
-  * :index:`SUNDIALS_F77_FUNC(name,NAME)`
-  * :index:`SUNDIALS_F77_FUNC_(name,NAME)`
-
-  For example, to specify that mangled C-language function names
-  should be lowercase with two underscores appended, include
-
-  .. code-block:: c
-
-     #define SUNDIALS_F77_FUNC(name,NAME) name ## __
-     #define SUNDIALS_F77_FUNC_(name,NAME) name ## __
-
-  in the ``sundials_config.h`` header file.
+  If the system supports POSIX timers, these should be enabled here.
 
 * Availability of BLAS/LAPACK libraries
 
   If working libraries for BLAS and LAPACK are available, then the
   macro :index:`SUNDIALS_BLAS_LAPACK` should be set to 1; otherwise it 
+  should have the value 0.
+
+* Availability of SuperLU_MT libraries
+
+  If a working library for SuperLU_MT is available, then the
+  macro :index:`SUNDIALS_SUPERLUMT` should be set to 1; otherwise it 
   should have the value 0.
 
 * Use of an MPI communicator other than ``MPI_COMM_WORLD`` in Fortran 
@@ -1212,17 +1337,15 @@ Using the standard SUNDIALS build system, the command
 
 will install the libraries under ``LIBDIR`` and the public header
 files under ``INCLUDEDIR``. The default values for these directories
-are ``INSTDIR/lib`` and ``INSTDIR/include``, respectively, but can
-be changed using the configure script options ``--prefix``,
-``--exec-prefix``, ``--includedir`` and ``--libdir`` (see the section
-:ref:`Installation.Autotools`) or the appropriate CMake options (see
-the section :ref:`Installation.CMake`). For example, a global
-installation of SUNDIALS on a LINUX/UNIX system to the system-level
-directory ``/opt/sundials-2.5.0`` could be accomplished using
+are ``INSTDIR/lib`` and ``INSTDIR/include``, respectively, where
+INSTDIR is given by the CMake configuration option
+``CMAKE_INSTALL_PREFIX``. For example, a global installation of
+SUNDIALS on a LINUX/UNIX system to the system-level directory
+``/opt/sundials-2.6.0`` could be accomplished using 
 
 .. code-block:: bash
 
-   $ configure --prefix=/opt/sundials-2.5.0
+   $ cmake -DCMAKE_INSTALL_PREFIX=/opt/sundials-2.6.0
 
 Although all installed libraries reside under ``LIBDIR``, the public
 header files are further organized into subdirectories under

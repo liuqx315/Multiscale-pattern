@@ -148,7 +148,7 @@ the underlying data representation in a banded matrix of type
 
 .. _DLS_figure:
 
-.. figure:: figs/dls_diagram.png
+.. figure:: figs/bandmat.png
 
    DLS Diagram: Storage for a banded matrix of type :c:type:`DlsMat`. Here
    ``A`` is an :math:`N \times N` band matrix of type :c:type:`DlsMat`
@@ -322,6 +322,12 @@ DENSE package. For full details, see the header files
    Computes the product :math:`w = Qv`, with :math:`Q` calculated
    using :c:func:`DenseGEQRF()`.  
 
+.. c:function:: int DenseMatvec(DlsMat A, realtype* x, realtype* y)
+
+   Computes the product :math:`y = Ax`, where it is assumed that
+   :math:`x` has length equal to the number of columns in the matrix
+   :math:`A`, and :math:`y` has length equal to the number of rows in
+   the matrix :math:`A`.
 
 
 
@@ -457,6 +463,11 @@ arrays outside of the :c:type:`DlsMat` structure:
    after a successful call to :c:func:`denseGEQRF()`. The real array
    *wrk*, of length *m*, must be provided as temporary workspace.
 
+.. c:function:: int denseMatvec(realtype **a, realtype* x, realtype* y, long int m, long int n)
+
+   Computes the product :math:`y = ax`, for an :math:`m\times n`
+   matrix :math:`a`, where it is assumed that :math:`x` has length
+   :math:`n` and :math:`y` has length :math:`m`.
 
 
 
@@ -532,6 +543,12 @@ for completeness.
    Solves :math:`Ax = b` using LU factorization resulting from
    :c:func:`BandGBTRF()`. 
 
+.. c:function:: int BandMatvec(DlsMat A, realtype* x, realtype* y)
+
+   Computes the product :math:`y = Ax`, where it is assumed that
+   :math:`x` and :math:`y` have length equal to the number of rows in
+   the square band matrix :math:`A`.
+
 
 
 The following functions for small band matrices are available in the
@@ -600,3 +617,11 @@ outside of the :c:type:`DlsMat` structure:
    and the pivot array *p* has been set by a successful call to
    :c:func:`bandGETRF()`. The solution *x* is written into the *b*
    array. 
+
+.. c:function:: int bandMatvec(realtype **a, realtype* x, realtype* y, long int n, long int mu, long int ml, long int smu)
+
+   Computes the product :math:`y = ax`, for an :math:`n\times n`
+   square band matrix :math:`a`, having band structure as allocated by
+   the parameters *mu*, *ml* and *smu*, and where it is assumed that
+   :math:`x` and :math:`y` have length :math:`n`.
+
