@@ -8,6 +8,9 @@
 # ----------------------------------------------------------------
 
 
+# go to the repository directory
+cd /home/dreynolds/www/arkode_dev
+
 # update the ARKode_dev source code
 hg pull
 hg up
