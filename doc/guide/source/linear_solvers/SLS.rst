@@ -61,8 +61,8 @@ SlsMat
 --------------------
 
 The type :c:type:`SlsMat`, defined in ``sundials_sparse.h`` is a
-pointer to a structure defining a generic matrix, and is used with all
-linear solvers in the SLS family: 
+pointer to a structure defining a generic compressed-sparse-column
+matrix, and is used with all linear solvers in the SLS family: 
 
 .. c:type:: SlsMat
 
@@ -77,7 +77,7 @@ linear solvers in the SLS family:
         int *colptrs;
       } *SlsMat;
 
-The fields of this structure are as follows (note that a dense matrix
+The fields of this structure are as follows (note that a sparse matrix
 of type :c:type:`SlsMat` need not be square): 
 
 :M: -- number of rows
