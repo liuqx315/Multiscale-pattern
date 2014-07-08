@@ -212,19 +212,19 @@ Completed components:
     Instead, I introduced a new residual weight array that is used in
     measuring nonlinear/linear solver equation norms.  If M=I, this
     just points to ewt.
-
-
-
-Remaining components to build:
-[ ] Add interfaces to new SuperLU_MT solver for serial ARKode
+[X] Add interfaces to new SuperLU_MT solver for serial ARKode
     problems.  Add corresponding regression/example problems.
-[ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
-    and LAPACKKLU solvers.
-[ ] Investigate whether I still need the Krylov solver initial guess
+[X] Investigate whether I still need the Krylov solver initial guess
     to be unit roundoff (instead of zero), since this results in one
     additional matvec to compute the residual.  I added this in when
     introducing non-identity mass matrices, but I think that my use of
     a "residual weight vector" fixes the problem that I'd been seeing.
+
+
+
+Remaining components to build:
+[ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
+    and LAPACKKLU solvers.
 [ ] Optimize fixed-point solver (currently results in too much ODE
     error).  On this topic, it turns out that the "better" solution is
     not the one returned by the fixed-point solver to the integrator,
