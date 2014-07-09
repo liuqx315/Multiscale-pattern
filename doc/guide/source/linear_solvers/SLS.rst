@@ -77,8 +77,11 @@ matrix, and is used with all linear solvers in the SLS family:
         int *colptrs;
       } *SlsMat;
 
-The fields of this structure are as follows (note that a sparse matrix
-of type :c:type:`SlsMat` need not be square): 
+The fields of this structure are as follows (see Figure
+:ref:`SlsMat Diagram <SLS_figure>`
+for a diagram of the underlying compressed-sparse-column
+representation in a sparse matrix of type :c:type:`SlsMat`).  Note that a
+sparse matrix of type :c:type:`SlsMat` need not be square.
 
 :M: -- number of rows
 :N: --  number of columns
@@ -98,12 +101,62 @@ of type :c:type:`SlsMat` need not be square):
   **rowvals[7]** of the matrix.  The last entry points just past the
   end of the active data in **data** and **rowvals**.
 
-..
-   .. _SLS_figure:
+.. _SLS_figure:
 
-   .. figure:: figs/sls_diagram.png
+.. figure:: figs/cscmat.png
 
-      SLS Diagram: caption
+   Diagram of the storage for a compressed-sparse-column matrix of
+   type :c:type:`SlsMat`: Here ``A`` is an :math:`M \times N` sparse
+   matrix of type :c:type:`SlsMat` with storage for up to ``NNZ``
+   nonzero entries (the allocated length of both ``data`` and
+   ``rowvals``).  The entries in ``rowvals`` may assume values from
+   ``0`` to ``M-1``, corresponding to the row index (zero-based) of
+   each nonzero value.  The entries in ``data`` contain the values of
+   the nonzero entries, with the row ``i``, column ``j`` entry of
+   ``A`` (again, zero-based) denoted as ``A(i,j)``.  The ``colprts``
+   array contains ``N+1`` entries; the first ``N`` denote the starting
+   index of each column within the ``rowvals`` and ``data`` arrays,
+   while the final entry points one past the final nonzero entry.
+   Here, although ``NNZ`` values are allocated, only ``nz`` are
+   actually filled in; the greyed-out portions of ``data`` and
+   ``rowvals`` indicate extra allocated space.
+
+For example, the :math:`5\times 4` matrix
+
+.. math::
+
+   \left[\begin{array}{cccc} 
+      0 & 3 & 1 & 0\\
+      3 & 0 & 0 & 2\\
+      0 & 7 & 0 & 0\\
+      1 & 0 & 0 & 9\\
+      0 & 0 & 0 & 5
+   \end{array}\right]
+
+could be stored in a :c:type:`SlsMat` structure as either
+
+.. code-block:: c
+
+   M = 5;
+   N = 4;
+   NNZ = 8;
+   data = {3.0, 1.0, 3.0, 7.0, 1.0, 2.0, 9.0, 5.0};
+   rowvals = {1, 3, 0, 2, 0, 1, 3, 4};
+   colptrs = {0, 2, 4, 5, 8};
+
+or 
+
+.. code-block:: c
+
+   M = 5;
+   N = 4;
+   NNZ = 10;
+   data = {3.0, 1.0, 3.0, 7.0, 1.0, 2.0, 9.0, 5.0, *, *};
+   rowvals = {1, 3, 0, 2, 0, 1, 3, 4, *, *};
+   colptrs = {0, 2, 4, 5, 8};
+
+where the first has no unused space, and the second has additional
+storage (the entries marked with ``*`` may contain any values).
 
 
 
