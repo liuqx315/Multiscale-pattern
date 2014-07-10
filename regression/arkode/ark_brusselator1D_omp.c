@@ -185,7 +185,7 @@ int main()
   printf("\n1D Brusselator PDE test problem:\n");
   printf("    N = %li,  NEQ = %li\n", udata->N, NEQ);
 #ifdef _OPENMP
-  num_threads = omp_get_num_threads();
+  num_threads = omp_get_max_threads();
   printf("    num_threads = %i\n", num_threads);
 #endif
   printf("    problem parameters:  a = %g,  b = %g,  ep = %g\n",
