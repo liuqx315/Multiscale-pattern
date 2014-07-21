@@ -1,4 +1,10 @@
-The ARKODE solver employs adaptive-step additive Runge Kutta methods
+ARKode-Pub:
+
+This repository contains the public "beta" release of the ARKode
+solver, a newly-developed addition to the SUNDIALS suite of nonlinear
+solver and time integration libraries.  
+
+The ARKode solver employs adaptive-step additive Runge Kutta methods
 to enable accurate and efficient time integration of multi-rate
 systems of ordinary differential equations of the form
 
@@ -24,3 +30,10 @@ and root-finding capabilities, for calculations both in serial and
 parallel (via, OpenMP, Pthreads or MPI).  The default integration and
 solver options will apply to most users, though complete control over
 all internal parameters is enabled through optional interface routines.  
+
+All questions/comments on the software in this repository should be
+directed to:
+
+Daniel R. Reynolds
+SMU Mathematics
+reynolds@smu.edu
