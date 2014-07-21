@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4173 $
+ * $Date: 2014-07-20 22:11:56 -0700 (Sun, 20 Jul 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh and
  *                Radu Serban @ LLNL
@@ -40,8 +40,8 @@
 #define NEQ   3
 #define NOUT  12
 
-#define ZERO RCONST(0.0);
-#define ONE  RCONST(1.0);
+#define ZERO RCONST(0.0)
+#define ONE  RCONST(1.0)
 
 /* Macro to define dense matrix elements, indexed from 1. */
 

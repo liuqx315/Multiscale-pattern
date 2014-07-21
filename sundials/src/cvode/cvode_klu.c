@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4140 $
- * $Date: 2014-06-16 12:02:34 -0700 (Mon, 16 Jun 2014) $
+ * $Revision: 4171 $
+ * $Date: 2014-07-17 11:58:37 -0700 (Thu, 17 Jul 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -294,6 +294,10 @@ static int cvKLUSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
 
     cvsls_mem->s_first_factorize = 0;
   }
+  else {
+    klu_free_numeric(&(klu_data->s_Numeric), &(klu_data->s_Common));
+  }
+
 
   /* ------------------------------------------------------------
      Compute the LU factorization of  the Jacobian.

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4130 $
- * $Date: 2014-06-11 16:01:26 -0700 (Wed, 11 Jun 2014) $
+ * $Revision: 4173 $
+ * $Date: 2014-07-20 22:11:56 -0700 (Sun, 20 Jul 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol Woodward.
  *      Based on cvRoberts_dns.c and modified to use KLU.
@@ -54,7 +54,7 @@
 
 /* Problem Constants */
 
-#define ZERO  RCONST(0.0);
+#define ZERO  RCONST(0.0)
 
 #define NEQ   3                /* number of equations  */
 #define Y1    RCONST(1.0)      /* initial y components */
