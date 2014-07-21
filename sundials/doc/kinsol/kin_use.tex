@@ -487,11 +487,10 @@ solver, as specified below.
 \index{KINSOL@{\kinsol} linear solvers!selecting one|)}
 
 \index{KINSOL@{\kinsol} linear solvers!built on generic solvers|)}
-In each case, with the exception of the externally-provided direct
-solvers (Lapack, KLU and SuperLU\_MT),
-the linear solver module used by {\kinsol} is actually built
-on top of a generic linear system solver, which may be of interest in itself.
-These generic solvers, denoted {\dense}, {\band}, {\spgmr}, {\spbcg}, and {\sptfqmr},
+In each case the linear solver module used by {\kinsol} is actually
+built on top of a generic linear system solver, which may be of
+interest in itself. These generic solvers, denoted {\dense}, {\band},
+{\klu}, {\superlumt}, {\spgmr}, {\spbcg}, and {\sptfqmr},
 are described separately in Chapter \ref{s:gen_linsolv}.
 \index{KINSOL@{\kinsol} linear solvers!built on generic solvers|)}
 %%
@@ -695,7 +694,7 @@ are described separately in Chapter \ref{s:gen_linsolv}.
 \index{KINSUPERLUMT@{\kinsuperlumt} linear solver!NVECTOR@{\nvector} compatibility}
 \ucfunction{KINSuperLUMT}
 {
-  flag = KINSuperLUMT(kin\_mem, num\_threads, M, N, NNZ);
+  flag = KINSuperLUMT(kin\_mem, num\_threads, N, NNZ);
 }
 {
   The function \ID{KINSuperLUMT} selects the {\kinsuperlumt} linear solver and indicates
@@ -709,10 +708,8 @@ are described separately in Chapter \ref{s:gen_linsolv}.
     pointer to the {\kinsol} memory block.
   \item[num\_threads] (\id{int})
     the number of threads to use when factoring/solving the linear systems.
-  \item[M] (\id{int})
-    number of rows in the Jacobian matrix (problem dimension).
   \item[N] (\id{int})
-    number of columns in the Jacobian matrix (problem dimension).
+    problem dimension.
   \item[NNZ] (\id{int})
     maximum number of nonzero entries in the system Jacobian.
   \end{args}
@@ -2175,7 +2172,7 @@ program.  The pointer \id{use\_data} may be specified through
 Both the {\kinklu} and {\kinsuperlumt} solvers can apply reordering
 algorithms to minimize fill-in for the resulting sparse $LU$
 decomposition internal to the solver.  The approximate minimal degree
-ordering for unsymmetric matrices given by the \id{COLAMD} algorithm
+ordering for nonsymmetric matrices given by the \id{COLAMD} algorithm
 is the default algorithm used within both solvers, but alternate
 orderings may be chosen through one of the following two functions.
 %%
@@ -2467,6 +2464,12 @@ Size of real and integer workspaces & \id{KINDlsGetWorkSpace} \\
 No. of Jacobian evaluations & \id{KINDlsGetNumJacEvals} \\
 No. of $F$ calls for D.Q. Jacobian evals. & \id{KINDlsGetNumFuncEvals} \\ 
 Last return from a {\kindls} function & \id{KINDlsGetLastFlag} \\ 
+\hline
+\multicolumn{2}{|c|}{\bf KINSLS linear solvers} \\
+\hline
+No. of Jacobian evaluations & \id{KINSlsGetNumJacEvals} \\
+Last return from a linear solver function & \id{KINSlsGetLastFlag} \\
+Name of constant associated with a return flag & \id{KINSlsGetReturnFlagName} \\
 \hline
 \multicolumn{2}{|c|}{\bf KINSPILS linear solvers} \\
 \hline

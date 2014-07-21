@@ -283,15 +283,15 @@ with {\cvodes}: steps marked {\p} correspond to {\nvecp}, steps marked
 
   {\s, \omp, \pt} \id{ier = }\Id{CVBand}\id{(...);}
 
-  {\s, \omp, \pt} \id{flag = }\Id{CVLapackDense}\id{(...);}
+  {\s, \omp, \pt} \id{ier = }\Id{CVLapackDense}\id{(...);}
 
-  {\s, \omp, \pt} \id{flag = }\Id{CVLapackBand}\id{(...);}
-
-  {\s, \omp, \pt} \id{flag = }\Id{CVKLU}\id{(...);}
-
-  {\s, \omp, \pt} \id{flag = }\Id{CVSuperLUMT}\id{(...);}
+  {\s, \omp, \pt} \id{ier = }\Id{CVLapackBand}\id{(...);}
 
   \id{ier = }\Id{CVDiag}\id{(...);}
+
+  {\s, \omp, \pt} \id{ier = }\Id{CVKLU}\id{(...);}
+
+  {\s, \omp, \pt} \id{ier = }\Id{CVSuperLUMT}\id{(...);}
 
   \id{ier = }\Id{CVSpgmr}\id{(...);}
   
@@ -712,7 +712,7 @@ $M = I - \gamma J$ of (\ref{e:Newtonmat}).
 To specify a {\cvodes} linear solver, after the call to \id{CVodeCreate}
 but before any calls to \id{CVode}, the user's program must call one
 of the functions \Id{CVDense}/\Id{CVLapackDense}, \Id{CVBand}/\Id{CVLapackBand}, 
-\Id{CVKLU}, \Id{CVSuperLUMT}, \Id{CVDiag}, \Id{CVSpgmr}, \Id{CVSpbcg},
+\Id{CVDiag}, \Id{CVKLU}, \Id{CVSuperLUMT}, \Id{CVSpgmr}, \Id{CVSpbcg},
 or \Id{CVSptfqmr}, as documented below. 
 The first argument passed to these functions is the {\cvodes}
 memory pointer returned by \id{CVodeCreate}.  A call to one of these
@@ -727,11 +727,11 @@ solver, as specified below.
 \index{CVODES@{\cvodes} linear solvers!selecting one|)}
 
 \index{CVODES@{\cvodes} linear solvers!built on generic solvers|(} 
-In each case except the diagonal approximation case {\cvdiag} and the Lapack direct solvers,
+In each case except the diagonal approximation case {\cvdiag},
 the linear solver module used by {\cvodes} is actually built on top of a generic
 linear system solver, which may be of interest in itself.  These generic
-solvers, denoted {\dense}, {\band}, {\spgmr}, {\spbcg}, and {\sptfqmr},
-are described separately in Chapter \ref{s:gen_linsolv}.
+solvers, denoted {\dense}, {\band}, {\klu}, {\superlumt}, {\spgmr}, {\spbcg},
+and {\sptfqmr}, are described separately in Chapter \ref{s:gen_linsolv}.
 \index{CVODES@{\cvodes} linear solvers!built on generic solvers|)}
 
 \index{CVODES@{\cvodes} linear solvers!CVDENSE@{\cvdense}}
@@ -968,7 +968,7 @@ are described separately in Chapter \ref{s:gen_linsolv}.
 \index{CVSUPERLUMT@{\cvsuperlumt} linear solver!NVECTOR@{\nvector} compatibility}
 \ucfunction{CVSuperLUMT}
 {
-  flag = CVSuperLUMT(cvode\_mem, num\_threads, M, N, NNZ);
+  flag = CVSuperLUMT(cvode\_mem, num\_threads, N, NNZ);
 }
 {
   The function \ID{CVSuperLUMT} selects the {\cvsuperlumt} linear
@@ -983,10 +983,8 @@ are described separately in Chapter \ref{s:gen_linsolv}.
     pointer to the {\cvodes} memory block.
   \item[num\_threads] (\id{int})
     the number of threads to use when factoring/solving the linear systems.
-  \item[M] (\id{int})
-    number of rows in the Jacobian matrix (problem dimension).
   \item[N] (\id{int})
-    number of columns in the Jacobian matrix (problem dimension).
+    problem dimension.
   \item[NNZ] (\id{int})
     maximum number of nonzero entries in the system Jacobian.
   \end{args}
@@ -2129,7 +2127,7 @@ The pointer \id{user\_data} may be specified through \id{CVodeSetUserData}.
 Both the {\cvklu} and {\cvsuperlumt} solvers can apply reordering
 algorithms to minimize fill-in for the resulting sparse $LU$
 decomposition internal to the solver.  The approximate minimal degree
-ordering for unsymmetric matrices given by the \id{COLAMD} algorithm
+ordering for nonsymmetric matrices given by the \id{COLAMD} algorithm
 is the default algorithm used within both solvers, but alternate
 orderings may be chosen through one of the following two functions.
 %%
@@ -2719,6 +2717,12 @@ Size of {\cvdiag} real and integer workspaces & \id{CVDiagGetWorkSpace} \\
 No. of r.h.s. calls for finite diff. Jacobian evals. & \id{CVDiagGetNumRhsEvals} \\ 
 Last return from a {\cvdiag} function & \id{CVDiagGetLastFlag} \\ 
 Name of constant associated with a return flag & \id{CVDiagGetReturnFlagName} \\
+\hline
+\multicolumn{2}{|c|}{\bf CVSLS linear solvers} \\
+\hline
+No. of Jacobian evaluations & \id{CVSlsGetNumJacEvals} \\
+Last return from a linear solver function & \id{CVSlsGetLastFlag} \\
+Name of constant associated with a return flag & \id{CVSlsGetReturnFlagName} \\
 \hline
 \multicolumn{2}{|c|}{\bf CVSPILS linear solvers} \\
 \hline
@@ -3650,100 +3654,6 @@ the name of an optional output from the main solver, a suffix \id{LS}
 
 
 %%==============================================================================
-\subsubsection{Sparse linear solvers optional output functions}\label{sss:optout_sls}
-%%==============================================================================
-\index{optional output!sparse linear solver|(}
-\index{CVKLU@{\cvklu} linear solver!optional output|(}
-\index{CVSUPERLUMT@{\cvsuperlumt} linear solver!optional output|(}
-The following optional outputs are available from the {\cvsls} modules:
-number of calls to the Jacobian routine
-and last return value from a {\cvsls} function.
-%%
-%%
-\ucfunction{CVSlsGetNumJacEvals}
-{
-  flag = CVSlsGetNumJacEvals(cvode\_mem, \&njevals);
-}
-{
-  The function \ID{CVSlsGetNumJacEvals} returns the
-  number of calls made to the {\cvsls} sparse
-  Jacobian approximation function.
-}
-{
-  \begin{args}[cvode\_mem]
-  \item[cvode\_mem] (\id{void *})
-    pointer to the {\cvodes} memory block.
-  \item[njevals] (\id{long int})
-    the number of calls to the Jacobian function.
-  \end{args}
-}
-{
-  The return value \id{flag} (of type \id{int}) is one of
-  \begin{args}[CVSLS\_LMEM\_NULL]
-  \item[\Id{CVSLS\_SUCCESS}] 
-    The optional output value has been successfully set.
-  \item[\Id{CVSLS\_MEM\_NULL}]
-    The \id{cvode\_mem} pointer is \id{NULL}.
-  \item[\Id{CVSLS\_LMEM\_NULL}]
-    The {\cvsls} linear solver has not been initialized.
-  \end{args}
-}
-{}
-%%
-%%
-\ucfunction{CVSlsGetLastFlag}
-{
-  flag = CVSlsGetLastFlag(cvode\_mem, \&lsflag);
-}
-{
-  The function \ID{CVSlsGetLastFlag} returns the
-  last return value from a {\cvsls} routine. 
-}
-{
-  \begin{args}[cvode\_mem]
-  \item[cvode\_mem] (\id{void *})
-    pointer to the {\cvodes} memory block.
-  \item[lsflag] (\id{long int})
-    the value of the last return flag from a {\cvsls} function.
-  \end{args}
-}
-{
-  The return value \id{flag} (of type \id{int}) is one of
-  \begin{args}[CVSLS\_LMEM\_NULL]
-  \item[\Id{CVSLS\_SUCCESS}] 
-    The optional output value has been successfully set.
-  \item[\Id{CVSLS\_MEM\_NULL}]
-    The \id{cvode\_mem} pointer is \id{NULL}.
-  \item[\Id{CVSLS\_LMEM\_NULL}]
-    The {\cvsls} linear solver has not been initialized.
-  \end{args}
-}
-{
-}
-%%
-%%
-\ucfunction{CVSlsGetReturnFlagName}
-{
-  name = CVSlsGetReturnFlagName(lsflag);
-}
-{
-  The function \ID{CVSlsGetReturnFlagName} returns the
-  name of the {\cvsls} constant corresponding to \id{lsflag}.
-}
-{
-  The only argument, of type \id{long int}, is a return flag from a {\cvsls}
-  function.
-}
-{
-  The return value is a string containing the name of the corresponding constant.
-}
-{}
-\index{CVSUPERLUMT@{\cvsuperlumt} linear solver!optional output|)}
-\index{CVKLU@{\cvklu} linear solver!optional output|)}
-\index{optional output!sparse linear solver|)}
-
-
-%%==============================================================================
 \subsubsection{Diagonal linear solver optional output functions}\label{sss:optout_diag}
 %%==============================================================================
 \index{optional output!diagonal linear solver|(}
@@ -3882,6 +3792,100 @@ the name of an optional output from the main solver, a suffix \id{LS}
 {}
 \index{CVDIAG@{\cvdiag} linear solver!optional output|)}
 \index{optional output!diagonal linear solver|)}
+
+
+%%==============================================================================
+\subsubsection{Sparse linear solvers optional output functions}\label{sss:optout_sls}
+%%==============================================================================
+\index{optional output!sparse linear solver|(}
+\index{CVKLU@{\cvklu} linear solver!optional output|(}
+\index{CVSUPERLUMT@{\cvsuperlumt} linear solver!optional output|(}
+The following optional outputs are available from the {\cvsls} modules:
+number of calls to the Jacobian routine
+and last return value from a {\cvsls} function.
+%%
+%%
+\ucfunction{CVSlsGetNumJacEvals}
+{
+  flag = CVSlsGetNumJacEvals(cvode\_mem, \&njevals);
+}
+{
+  The function \ID{CVSlsGetNumJacEvals} returns the
+  number of calls made to the {\cvsls} sparse
+  Jacobian approximation function.
+}
+{
+  \begin{args}[cvode\_mem]
+  \item[cvode\_mem] (\id{void *})
+    pointer to the {\cvodes} memory block.
+  \item[njevals] (\id{long int})
+    the number of calls to the Jacobian function.
+  \end{args}
+}
+{
+  The return value \id{flag} (of type \id{int}) is one of
+  \begin{args}[CVSLS\_LMEM\_NULL]
+  \item[\Id{CVSLS\_SUCCESS}] 
+    The optional output value has been successfully set.
+  \item[\Id{CVSLS\_MEM\_NULL}]
+    The \id{cvode\_mem} pointer is \id{NULL}.
+  \item[\Id{CVSLS\_LMEM\_NULL}]
+    The {\cvsls} linear solver has not been initialized.
+  \end{args}
+}
+{}
+%%
+%%
+\ucfunction{CVSlsGetLastFlag}
+{
+  flag = CVSlsGetLastFlag(cvode\_mem, \&lsflag);
+}
+{
+  The function \ID{CVSlsGetLastFlag} returns the
+  last return value from a {\cvsls} routine. 
+}
+{
+  \begin{args}[cvode\_mem]
+  \item[cvode\_mem] (\id{void *})
+    pointer to the {\cvodes} memory block.
+  \item[lsflag] (\id{long int})
+    the value of the last return flag from a {\cvsls} function.
+  \end{args}
+}
+{
+  The return value \id{flag} (of type \id{int}) is one of
+  \begin{args}[CVSLS\_LMEM\_NULL]
+  \item[\Id{CVSLS\_SUCCESS}] 
+    The optional output value has been successfully set.
+  \item[\Id{CVSLS\_MEM\_NULL}]
+    The \id{cvode\_mem} pointer is \id{NULL}.
+  \item[\Id{CVSLS\_LMEM\_NULL}]
+    The {\cvsls} linear solver has not been initialized.
+  \end{args}
+}
+{
+}
+%%
+%%
+\ucfunction{CVSlsGetReturnFlagName}
+{
+  name = CVSlsGetReturnFlagName(lsflag);
+}
+{
+  The function \ID{CVSlsGetReturnFlagName} returns the
+  name of the {\cvsls} constant corresponding to \id{lsflag}.
+}
+{
+  The only argument, of type \id{long int}, is a return flag from a {\cvsls}
+  function.
+}
+{
+  The return value is a string containing the name of the corresponding constant.
+}
+{}
+\index{CVSUPERLUMT@{\cvsuperlumt} linear solver!optional output|)}
+\index{CVKLU@{\cvklu} linear solver!optional output|)}
+\index{optional output!sparse linear solver|)}
 
 
 %%==============================================================================

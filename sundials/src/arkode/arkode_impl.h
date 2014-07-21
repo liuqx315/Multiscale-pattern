@@ -25,14 +25,14 @@ extern "C" {
 ===============================================================*/
 
 /* Basic ARKODE constants */
-#define Q_DEFAULT        4      /* default RK order */
-#define QDENSE_DEF       3      /* default dense output order */
-#define MXSTEP_DEFAULT   500    /* mxstep default value */
-#define MAXNEF           7      /* maxnef default value */
-#define MAXNCF           10     /* maxncf default value */
-#define MXHNIL           10     /* mxhnil default value */
-#define MAXCOR           3      /* maxcor default value */
-#define FP_ACCEL_M       3      /* fp_m default value */
+#define Q_DEFAULT        4       /* default RK order */
+#define QDENSE_DEF       3       /* default dense output order */
+#define MXSTEP_DEFAULT   500     /* mxstep default value */
+#define MAXNEF           7       /* maxnef default value */
+#define MAXNCF           10      /* maxncf default value */
+#define MXHNIL           10      /* mxhnil default value */
+#define MAXCOR           3       /* maxcor default value */
+#define FP_ACCEL_M       3       /* fp_m default value */
 
 /* Numeric constants */
 #define ZERO   RCONST(0.0)      /* real 0.0     */
