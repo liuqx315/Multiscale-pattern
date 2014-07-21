@@ -19,3 +19,6 @@ Make.machine
 www/build
 doc/guide/build
 doc/examples/build
+local_standards.dat
+local_reg_tests.txt
+

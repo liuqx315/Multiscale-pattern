@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4171 $
+ * $Date: 2014-07-17 11:58:37 -0700 (Thu, 17 Jul 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -201,7 +201,7 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
 		       N_Vector rrp, N_Vector tmp1, N_Vector tmp2,
 		       N_Vector tmp3)
 {
-  int retval, last_flag;
+  int retval;
   realtype tn, cj;
   IDASlsMem idasls_mem;
   IDASlsSparseJacFn jaceval;
@@ -215,7 +215,6 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
 
   klu_data = (KLUData) idasls_mem->s_solver_data;
 
-  last_flag = idasls_mem->s_last_flag;
   jaceval = idasls_mem->s_jaceval;
   jacdata = idasls_mem->s_jacdata;
   JacMat = idasls_mem->s_JacMat;
@@ -236,11 +235,11 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
   if (retval < 0) {
     IDAProcessError(IDA_mem, IDASLS_JACFUNC_UNRECVR, "IDASLS", 
 		    "IDAKLUSetup", MSGSP_JACFUNC_FAILED);
-    last_flag = IDASLS_JACFUNC_UNRECVR;
+    idasls_mem->s_last_flag = IDASLS_JACFUNC_UNRECVR;
     return(IDASLS_JACFUNC_UNRECVR);
   }
   if (retval > 0) {
-    last_flag = IDASLS_JACFUNC_RECVR;
+    idasls_mem->s_last_flag = IDASLS_JACFUNC_RECVR;
     return(+1);
   }
 
@@ -259,9 +258,12 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
 		      MSGSP_PACKAGE_FAIL);
       return(IDASLS_PACKAGE_FAIL);
     }
-
     idasls_mem->s_first_factorize = 0;
   }
+  else {
+    klu_free_numeric(&(klu_data->s_Numeric), &(klu_data->s_Common));
+  }
+
 
   /* ------------------------------------------------------------
      Compute the LU factorization of  the Jacobian.
@@ -276,7 +278,7 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
   }
 
 
-  last_flag = IDASLS_SUCCESS;
+  idasls_mem->s_last_flag = IDASLS_SUCCESS;
 
   return(0);
 }
@@ -290,7 +292,7 @@ static int IDAKLUSetup(IDAMem IDA_mem, N_Vector yyp, N_Vector ypp,
 static int IDAKLUSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight,
 		       N_Vector ycur, N_Vector ypcur, N_Vector rrcur)
 {
-  int last_flag, flag;
+  int flag;
   realtype cjratio;
   IDASlsMem idasls_mem;
   KLUData klu_data;
@@ -300,10 +302,7 @@ static int IDAKLUSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight,
   idasls_mem = (IDASlsMem) IDA_mem->ida_lmem;
   JacMat = idasls_mem->s_JacMat;
   cjratio = IDA_mem->ida_cjratio;
-
   klu_data = (KLUData) idasls_mem->s_solver_data;
-  last_flag = idasls_mem->s_last_flag;
-
   bd = N_VGetArrayPointer(b);
 
   /* Call KLU to solve the linear system */
@@ -318,7 +317,7 @@ static int IDAKLUSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight,
   /* Scale the correction to account for change in cj. */
   if (cjratio != ONE) N_VScale(TWO/(ONE + cjratio), b, b);
 
-  last_flag = IDASLS_SUCCESS;
+  idasls_mem->s_last_flag = IDASLS_SUCCESS;
   return(IDASLS_SUCCESS);
 }
 

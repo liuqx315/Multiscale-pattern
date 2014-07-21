@@ -449,12 +449,11 @@ to be needed in the user code. These are available in the
 corresponding header file associated with the linear solver, as
 specified below.
 
-In each case except the LAPACK, KLU and SuperLU_MT direct solvers, the
-linear solver module used by ARKode is actually built on top of a
-generic linear system solver, which may be of interest in itself.
-These generic solvers, denoted DENSE, BAND, SPGMR, SPBCG, SPTFQMR,
-SPFGMR and PCG, are described separately in the section
-:ref:`LinearSolvers`.
+In each case the linear solver module used by ARKode is actually built
+on top of a generic linear system solver, which may be of interest in
+itself. These generic solvers, denoted DENSE, BAND, KLU, SUPERLUMT,
+SPGMR, SPBCG, SPTFQMR, SPFGMR and PCG, are described separately in the
+section :ref:`LinearSolvers`.
 
 
 
@@ -475,8 +474,10 @@ SPFGMR and PCG, are described separately in the section
        * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKDENSE linear solver is not compatible with
-   all implementations of the NVECTOR module. Of the two nvector
-   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+   all implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -520,9 +521,10 @@ SPFGMR and PCG, are described separately in the section
       * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:** The ARKBAND linear solver is not compatible with all
-   implementations of the NVECTOR module.  Of the two
-   NVECTOR modules provided with SUNDIALS, only
-   NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module.  Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
    The half-bandwidths are to be set such that the nonzero locations
    :math:`(i, j)` in the banded (approximate) Jacobian satisfy *-mlower*
@@ -575,8 +577,10 @@ SPFGMR and PCG, are described separately in the section
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKKLU linear solver is not compatible with
-   all implementations of the NVECTOR module.  Of the two nvector
-   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+   all implementations of the NVECTOR module.  Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -603,8 +607,10 @@ SPFGMR and PCG, are described separately in the section
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKSUPERLUMT linear solver is not compatible with
-   all implementations of the NVECTOR module.  Of the two nvector
-   modules provided with SUNDIALS, only NVECTOR_SERIAL is compatible.
+   all implementations of the NVECTOR module.  Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -821,8 +827,10 @@ modules.
        * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKDENSE linear solver is not compatible with all
-   implementations of the NVECTOR module. Of the two nvector modules
-   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -868,11 +876,12 @@ modules.
       * *ARKDLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:** The ARKBAND linear solver may not be compatible with the
-   particular implementation of the NVECTOR module. Of the two
-   NVECTOR modules provided with SUNDIALS, only
-   NVECTOR_SERIAL is compatible. The half-bandwidths are to be set
-   such that the nonzero locations :math:`(i, j)` in the banded
-   mass matrix satisfy *-mlower* :math:`\le j-i \le` *mupper*. 
+   particular implementation of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible.  The half-bandwidths are
+   to be set such that the nonzero locations :math:`(i, j)` in the
+   banded mass matrix satisfy *-mlower* :math:`\le j-i \le` *mupper*. 
 
    At present, it is required that the band mass matrix have identical
    band structure to the Jacobian matrix.  While this is typical of
@@ -930,8 +939,10 @@ modules.
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKKLU linear solver is not compatible with all
-   implementations of the NVECTOR module. Of the two nvector modules
-   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -956,8 +967,10 @@ modules.
        * *ARKSLS_ILL_INPUT* if a required vector operation is missing
    
    **Notes:**  The ARKSUPERLUMT linear solver is not compatible with all
-   implementations of the NVECTOR module. Of the two nvector modules
-   provided with SUNDIALS, only NVECTOR_SERIAL is compatible. 
+   implementations of the NVECTOR module. Of the four NVector
+   modules provided with SUNDIALS, only the serial and threaded
+   modules (:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` and
+   :ref:`NVectors.Pthreads`) are compatible. 
 
 
 
@@ -1120,7 +1133,11 @@ Rootfinding initialization function
 As described in the section :ref:`Mathematics.Rootfinding`, while
 solving the IVP ARKode has the capability to find the roots of a set
 of user-defined functions.  To activate the root-finding algorithm,
-call the following function:
+call the following function.  This is normally called only once, prior
+to the first call to :c:func:`ARKode()`, but if the rootfinding
+problem is to be changed during the solution,
+:c:func:`ARKodeRootInit()` can also be called prior to a continuation
+call to :c:func:`ARKode()`. 
 
 
 .. c:function:: int ARKodeRootInit(void* arkode_mem, int nrtfn, ARKRootFn g)
@@ -2676,12 +2693,16 @@ Table: Optional inputs for ARKSLS
 
 .. cssclass:: table-bordered
 
-===========================  =================================  =============
-Optional input               Function name                      Default
-===========================  =================================  =============
-Sparse Jacobian function     :c:func:`ARKSlsSetSparseJacFn()`   none
-Sparse mass matrix function  :c:func:`ARKSlsSetSparseMassFn()`  none
-===========================  =================================  =============
+=====================================  =======================================  =============
+Optional input                         Function name                            Default
+=====================================  =======================================  =============
+Sparse Jacobian function               :c:func:`ARKSlsSetSparseJacFn()`         none
+Sparse mass matrix function            :c:func:`ARKSlsSetSparseMassFn()`        none
+Sparse matrix ordering algorithm       :c:func:`ARKKLUSetOrdering()`            ``COLAMD``
+Sparse mass matrix ordering algorithm  :c:func:`ARKMassKLUSetOrdering()`        ``COLAMD``
+Sparse matrix ordering algorithm       :c:func:`ARKSuperLUMTSetOrdering()`      ``COLAMD``
+Sparse mass matrix ordering algorithm  :c:func:`ARKMassSuperLUMTSetOrdering()`  ``COLAMD``
+=====================================  =======================================  =============
 
 The ARKSPARSE solvers need a function to compute a
 compressed-sparse-column approximation to the Jacobian matrix
@@ -2758,6 +2779,99 @@ user data may be specified through :c:func:`ARKodeSetUserData()`.
    
    The function type :c:func:`ARKSlsSparseMassFn()` is described in the section
    :ref:`CInterface.UserSupplied`.
+
+
+Both the ARKKLU and ARKSUPERLUMT solvers can apply reordering
+algorithms to minimize fill-in for the resulting sparse :math:`LU`
+decomposition internal to the solver.  The approximate minimal degree
+ordering for nonsymmetric matrices given by the ``COLAMD`` algorithm 
+is the default algorithm used within both solvers, but alternate
+orderings may be chosen through one of the following two functions.
+
+
+.. c:function:: int ARKKLUSetOrdering(void *arkode_mem, int ordering_choice)
+
+   Specifies the ordering algorithm used by ARKKLU for reducing fill
+   in the system solver.
+
+   **Arguments:**
+     * *arkode_mem* -- pointer to the ARKode memory block.
+     * *ordering_choice* -- flag denoting algorithm choice:
+       * *0* -- ``AMD``
+       * *1* -- ``COLAMD``
+       * *2* -- natural ordering
+
+   **Return value:**
+     * *ARKSLS_SUCCESS*  if successful
+     * *ARKSLS_MEM_NULL* if the linear solver memory was ``NULL``
+     * *ARKSLS_ILL_INPUT* if the supplied value of *ordering_choice* is illegal
+
+   **Notes:**
+     * The default ordering choice is ``COLAMD``
+
+
+.. c:function:: int ARKMassKLUSetOrdering(void *arkode_mem, int ordering_choice)
+
+   Specifies the ordering algorithm used by ARKKLU for reducing fill
+   in the mass matrix solver.
+
+   **Arguments:**
+     * *arkode_mem* -- pointer to the ARKode memory block.
+     * *ordering_choice* -- flag denoting algorithm choice:
+       * *0* -- ``AMD``
+       * *1* -- ``COLAMD``
+       * *2* -- natural ordering
+
+   **Return value:**
+     * *ARKSLS_SUCCESS*  if successful
+     * *ARKSLS_MEM_NULL* if the linear solver memory was ``NULL``
+     * *ARKSLS_ILL_INPUT* if the supplied value of *ordering_choice* is illegal
+
+   **Notes:**
+     * The default ordering choice is ``COLAMD``
+
+
+.. c:function:: int ARKSuperLUMTSetOrdering(void *arkode_mem, int ordering_choice)
+
+   Specifies the ordering algorithm used by ARKSUPERLUMT for reducing
+   fill in the system solver.
+
+   **Arguments:**
+     * *arkode_mem* -- pointer to the ARKode memory block.
+     * *ordering_choice* -- flag denoting algorithm choice:
+       * *0* --natural ordering
+       * *1* -- minimal degree ordering on :math:`A^TA`
+       * *2* -- minimal degree ordering on :math:`A^T + A`
+       * *3* -- ``COLAMD``
+
+   **Return value:**
+     * *ARKSLS_SUCCESS*  if successful
+     * *ARKSLS_MEM_NULL* if the linear solver memory was ``NULL``
+     * *ARKSLS_ILL_INPUT* if the supplied value of *ordering_choice* is illegal
+
+   **Notes:**
+     * The default ordering choice is ``COLAMD``
+
+.. c:function:: int ARKMassSuperLUMTSetOrdering(void *arkode_mem, int ordering_choice)
+
+   Specifies the ordering algorithm used by ARKSUPERLUMT for reducing
+   fill in the mass matrix solver.
+
+   **Arguments:**
+     * *arkode_mem* -- pointer to the ARKode memory block.
+     * *ordering_choice* -- flag denoting algorithm choice:
+       * *0* --natural ordering
+       * *1* -- minimal degree ordering on :math:`M^TM`
+       * *2* -- minimal degree ordering on :math:`M^T + M`
+       * *3* -- ``COLAMD``
+
+   **Return value:**
+     * *ARKSLS_SUCCESS*  if successful
+     * *ARKSLS_MEM_NULL* if the linear solver memory was ``NULL``
+     * *ARKSLS_ILL_INPUT* if the supplied value of *ordering_choice* is illegal
+
+   **Notes:**
+     * The default ordering choice is ``COLAMD``
 
 
 
@@ -4557,7 +4671,9 @@ solver for the solution of a problem, where a prior call to
 same size as the previous one.  :c:func:`ARKodeReInit()` performs the
 same input checking and initializations that :c:func:`ARKodeInit()`
 does, but does no memory allocation as it assumes that the existing
-internal memory is sufficient for the new problem. 
+internal memory is sufficient for the new problem.  A call to
+:c:func:`ARKodeReInit()` deletes the solution history that was stored
+internally during the previous integration.
 
 The use of :c:func:`ARKodeReInit()` requires that the number of Runge
 Kutta stages, denoted by *s*, be no larger for the new problem than

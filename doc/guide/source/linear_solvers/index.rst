@@ -18,8 +18,10 @@ In this section, we describe the generic linear solver code modules
 from SUNDIALS that are included in ARKode.  While these may be used in
 conjunction with ARKode, they may also be used separately as generic
 packages in themselves.  These generic linear solver modules are
-organized in two families of solvers, the DLS family, which includes
-direct linear solvers appropriate for sequential computations; and the 
+organized in three families of solvers, the DLS family, which includes
+direct linear solvers appropriate for sequential computations; the SLS
+family, which includes direct linear solvers for sparse matrices in
+serial or shared-memory computations; and the 
 SPILS family, which includes scaled preconditioned iterative (Krylov)
 linear solvers. The solvers in each family share common data
 structures and functions. 
@@ -68,15 +70,15 @@ in these generic solvers begin with the prefix SUNDIALS. But despite
 this, each of the DLS and SPILS solvers is in fact generic, in that
 they are usable completely independently of SUNDIALS. 
 
-For the sake of space, the functions for the DENSE and BAND modules
+For the sake of space, the functions for the DENSE, BAND modules
 that work with a matrix type and the functions in the SPGMR, SPBCG,
 SPTFQMR, SPFGMR and PCG modules are only summarized briefly, since
 they are less likely to be of direct use in connection with a SUNDIALS
 solver.  However, the functions for dense matrices treated as simple
-arrays are fully described, because we anticipate that they will be 
-useful in the implementation of preconditioners used with the
-combination of one of the SUNDIALS solvers and one of the SPILS linear 
-solvers. 
+arrays and sparse matrices are fully described, because we anticipate
+that they will be useful in the implementation of preconditioners used
+with the combination of one of the SUNDIALS solvers and one of the
+SPILS linear solvers. 
 
 Lastly, it is possible to supply customized linear solvers to ARKode,
 in that the ARKode solvers only require the existence of a minimal set

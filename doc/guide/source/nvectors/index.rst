@@ -14,12 +14,13 @@
 Vector Data Structures
 =======================
 
-The SUNDIALS library comes packaged with two NVECTOR implementations,
-one designed for serial simulations and the second for
-distributed-memory parallel simulations.  Both implementations assume
-that the process-local data is stored contiguously, and they in turn
-provide a variety of standard vector algebra operations that may be
-performed on the data.  
+The SUNDIALS library comes packaged with four NVECTOR implementations,
+one designed for serial simulations, two designed for shared-memory
+parallel simulations (via OpenMP and Pthreads), and one for
+distributed-memory parallel simulations (via MPI).  All
+implementations assume that the process-local data is stored
+contiguously, and they in turn provide a variety of standard vector
+algebra operations that may be performed on the data.  
 
 In addition, SUNDIALS provides a simple interface for generic vectors
 (akin to a C++ *abstract base class*).  All of the major SUNDIALS
@@ -31,9 +32,9 @@ they rely on particular data storage and access patterns in the
 NVECTORS used.
 
 Details on the generic NVECTOR module are below.  However, to jump to
-specific descriptions of the serial and parallel vector modules
-provided by SUNDIALS, or ARKode's requirements for routines comprising
-a user-supplied NVECTOR module, the following links are provided:
+specific descriptions of the various vector modules provided by
+SUNDIALS, or ARKode's requirements for routines comprising a
+user-supplied NVECTOR module, the following links are provided:
 
 .. toctree::
    :maxdepth: 1
@@ -56,8 +57,10 @@ The SUNDIALS solvers are written in a data-independent manner. They
 all operate on generic vectors (of type ``N_Vector``) through a set of
 operations defined by, and specific to, the particular NVECTOR
 implementation. Users can provide a custom implementation of the
-NVECTOR module or use one of two provided within SUNDIALS, one serial
-and the other an MPI parallel implementation.
+NVECTOR module or use one of four provided within SUNDIALS -- a serial
+and three parallel implementations.  The generic operations are
+described below.  In the sections following, the implementations
+provided with SUNDIALS are described.
 
 The generic ``N_Vector`` type is a pointer to a structure that has an
 implementation-dependent *content* field containing the description

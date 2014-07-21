@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4096 $
-# $Date: 2014-05-02 14:49:50 -0700 (Fri, 02 May 2014) $
+# $Revision: 4138 $
+# $Date: 2014-06-15 13:50:39 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -157,7 +157,10 @@ IF(EXAMPLES_INSTALL)
   # Prepare substitution variables for Makefile and/or CMakeLists templates
   SET(SOLVER "IDAS")
   SET(SOLVER_LIB "sundials_idas")
-  LIST2STRING(IDAS_examples EXAMPLES)
+  FOREACH(example_tuple ${IDAS_examples})
+  	list(GET example_tuple 0 example)
+  	LIST2STRING(example EXAMPLES)
+  ENDFOREACH(example_tuple ${IDAS_examples})
 
   IF(LAPACK_FOUND)
     LIST2STRING(IDAS_examples_BL EXAMPLES_BL)
@@ -165,18 +168,18 @@ IF(EXAMPLES_INSTALL)
     SET(EXAMPLES_BL "")
   ENDIF(LAPACK_FOUND)
 
-  # SGS TODO what are these used for?  Don't seem to be reference anywhere
+  IF(KLU_FOUND)
+    LIST(APPEND EXAMPLES " ")
+    LIST(APPEND EXAMPLES ${IDAS_examples_KLU})
+  ENDIF(KLU_FOUND)
+
   IF(SUPERLUMT_FOUND)
-    LIST2STRING(IDAS_examples_SUPERLUMT EXAMPLES_SUPERLUMT)
-  ELSE(SUPERLUMT_FOUND)
-    SET(EXAMPLES_SUPERLUMT "")
+    LIST(APPEND EXAMPLES " ")
+    LIST(APPEND EXAMPLES ${IDAS_examples_SUPERLUMT})
   ENDIF(SUPERLUMT_FOUND)
 
-  IF(KLU_FOUND)
-    LIST2STRING(IDAS_examples_KLU EXAMPLES_KLU)
-  ELSE(KLU_FOUND)
-    SET(EXAMPLES_KLU "")
-  ENDIF(KLU_FOUND)
+  STRING (REPLACE ";" " " TMP_STR ${EXAMPLES})
+  SET(EXAMPLES ${TMP_STR})
 
   # Regardless of the platform we're on, we will generate and install 
   # CMakeLists.txt file for building the examples. This file  can then 

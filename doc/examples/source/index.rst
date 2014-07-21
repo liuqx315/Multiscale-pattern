@@ -56,27 +56,30 @@ according to programming language (C, C++, Fortran 77, Fortran 90).
 
 
 ARKode example problems written in C are summarized in the table
-below, and are further described in the chapters :ref:`serial_c` and
-:ref:`parallel_c`. 
+below, and are further described in the chapters :ref:`serial_c`,
+:ref:`openmp_c` and :ref:`parallel_c`. 
 
 .. cssclass:: table-bordered
 
-====================================================  ==========  ===========  ======  =============  =================================
-Problem                                               Integrator  Nonlinear    Linear  Size           Extras
-====================================================  ==========  ===========  ======  =============  =================================
-:ref:`ark_analytic <ark_analytic>`                    DIRK        Newton       Dense   1              
-:ref:`ark_analytic_nonlin <ark_analytic_nonlin>`      ERK         N.A.         N.A.    1              
-:ref:`ark_brusselator <ark_brusselator>`              DIRK        Newton       Dense   3              
-:ref:`ark_robertson <ark_robertson>`                  DIRK        Newton       Dense   3              
-:ref:`ark_robertson_root <ark_robertson_root>`        DIRK        Newton       Dense   3              rootfinding
-:ref:`ark_brusselator1D <ark_brusselator1D>`          DIRK        Newton       Band    3N             
-:ref:`ark_heat1D <ark_heat1D>`                        DIRK        Newton       PCG     N              
-:ref:`ark_KrylovDemo_prec <ark_KrylovDemo_prec>`      DIRK        Newton       SPGMR   216            multiple preconditioners
-:ref:`ark_brusselator_fp <ark_brusselator_fp>`        ARK         Fixed-point  N.A.    3              
-:ref:`ark_heat1D_adapt <ark_heat1D_adapt>`            DIRK        Newton       PCG     (dynamic)      adaptive vector resizing
-:ref:`ark_diurnal_kry_bbd_p <ark_diurnal_kry_bbd_p>`  DIRK        Newton       SPGMR   200            parallel, BBD preconditioner
-:ref:`ark_diurnal_kry_p <ark_diurnal_kry_p>`          DIRK        Newton       SPGMR   200            parallel, block-diagonal precond.
-====================================================  ==========  ===========  ======  =============  =================================
+================================  ==========  ===========  ==========  =============  =================================
+Problem                           Integrator  Nonlinear    Linear      Size           Extras
+================================  ==========  ===========  ==========  =============  =================================
+:ref:`ark_analytic`               DIRK        Newton       Dense       1              
+:ref:`ark_analytic_nonlin`        ERK         N.A.         N.A.        1              
+:ref:`ark_brusselator`            DIRK        Newton       Dense       3              
+:ref:`ark_brusselator_fp`         ARK         Fixed-point  N.A.        3              
+:ref:`ark_robertson`              DIRK        Newton       Dense       3              
+:ref:`ark_robertson_root`         DIRK        Newton       Dense       3              rootfinding
+:ref:`ark_brusselator1D`          DIRK        Newton       Band        3N             
+:ref:`ark_brusselator1D_omp`      DIRK        Newton       Band        3N             OpenMP-enabled
+:ref:`ark_brusselator1D_klu`      DIRK        Newton       KLU         3N             sparse matrices
+:ref:`ark_brusselator1D_FEM_slu`  DIRK        Newton       SuperLU_MT  3N             finite-element, :math:`M\ne I`, sparse matrices
+:ref:`ark_heat1D`                 DIRK        Newton       PCG         N              
+:ref:`ark_heat1D_adapt`           DIRK        Newton       PCG         (dynamic)      adaptive vector resizing
+:ref:`ark_KrylovDemo_prec`        DIRK        Newton       SPGMR       216            multiple preconditioners
+:ref:`ark_diurnal_kry_bbd_p`      DIRK        Newton       SPGMR       200            parallel, BBD preconditioner
+:ref:`ark_diurnal_kry_p`          DIRK        Newton       SPGMR       200            parallel, block-diagonal precond.
+================================  ==========  ===========  ==========  =============  =================================
 
 
 ARKode example problems written in C++ are summarized in the table
@@ -85,12 +88,12 @@ below, and are further described in the chapters :ref:`serial_cpp` and
 
 .. cssclass:: table-bordered
 
-====================================================  ==========  ===========  ======  =============  =================================
-Problem                                               Integrator  Nonlinear    Linear  Size           Extras
-====================================================  ==========  ===========  ======  =============  =================================
-:ref:`ark_analytic_sys <ark_analytic_sys>`            DIRK        Newton       Dense   3              
-:ref:`ark_heat2D <ark_heat2D>`                        DIRK        Newton       PCG     :math:`nx*ny`  parallel
-====================================================  ==========  ===========  ======  =============  =================================
+=======================  ==========  ===========  ======  =============  =================================
+Problem                  Integrator  Nonlinear    Linear  Size           Extras
+=======================  ==========  ===========  ======  =============  =================================
+:ref:`ark_analytic_sys`  DIRK        Newton       Dense   3              
+:ref:`ark_heat2D`        DIRK        Newton       PCG     :math:`nx*ny`  parallel
+=======================  ==========  ===========  ======  =============  =================================
 
 
 ARKode example problems written in Fortran 77 are summarized in the table
@@ -99,14 +102,14 @@ below, and are further described in the chapters :ref:`serial_f77` and
 
 .. cssclass:: table-bordered
 
-====================================================  ==========  ===========  ======  =============  =================================
-Problem                                               Integrator  Nonlinear    Linear  Size           Extras
-====================================================  ==========  ===========  ======  =============  =================================
-:ref:`fark_diurnal_kry_bp <fark_diurnal_kry_bp>`      DIRK        Newton       SPGMR   10             banded preconditioner
-:ref:`fark_roberts_dnsL <fark_roberts_dnsL>`          DIRK        Newton       Dense   3              LAPACK dense solver, rootfinding
-:ref:`fark_diag_kry_bbd_p <fark_diag_kry_bbd_p>`      DIRK        Newton       SPGMR   10*NProcs      parallel BBD preconditioner
-:ref:`fark_diag_non_p <fark_diag_non_p>`              ERK         N.A.         N.A.    10*NProcs      parallel
-====================================================  ==========  ===========  ======  =============  =================================
+==========================   ==========  ===========  ======  =============  =================================
+Problem                      Integrator  Nonlinear    Linear  Size           Extras
+==========================   ==========  ===========  ======  =============  =================================
+:ref:`fark_diurnal_kry_bp`   DIRK        Newton       SPGMR   10             banded preconditioner
+:ref:`fark_roberts_dnsL`     DIRK        Newton       Dense   3              LAPACK dense solver, rootfinding
+:ref:`fark_diag_kry_bbd_p`   DIRK        Newton       SPGMR   10*NProcs      parallel BBD preconditioner
+:ref:`fark_diag_non_p`       ERK         N.A.         N.A.    10*NProcs      parallel
+==========================   ==========  ===========  ======  =============  =================================
 
 
 ARKode example problems written in Fortran 90 are summarized in the table
@@ -115,12 +118,12 @@ below, and are further described in the chapters :ref:`serial_f90` and
 
 .. cssclass:: table-bordered
 
-====================================================  ==========  ===========  ======  =============  =================================
-Problem                                               Integrator  Nonlinear    Linear  Size           Extras
-====================================================  ==========  ===========  ======  =============  =================================
-:ref:`ark_bruss <ark_bruss>`                          ARK         Newton       Dense   3              
-:ref:`fark_heat2D <fark_heat2D>`                      DIRK        Newton       PCG     :math:`nx*ny`  parallel
-====================================================  ==========  ===========  ======  =============  =================================
+==================   ==========  ===========  ======  =============  =================================
+Problem              Integrator  Nonlinear    Linear  Size           Extras
+==================   ==========  ===========  ======  =============  =================================
+:ref:`ark_bruss`     ARK         Newton       Dense   3              
+:ref:`fark_heat2D`   DIRK        Newton       PCG     :math:`nx*ny`  parallel
+==================   ==========  ===========  ======  =============  =================================
 
 
 
@@ -134,6 +137,7 @@ Problem                                               Integrator  Nonlinear    L
    :maxdepth: 1
 
    c_serial
+   c_openmp
    c_parallel
    cpp_serial
    cpp_parallel

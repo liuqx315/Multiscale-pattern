@@ -103,17 +103,14 @@ int main()
   N_Vector vmask = NULL;
   N_Vector wmask = NULL;
   void *arkode_mem = NULL;      /* empty ARKode memory structure */
-  realtype pi;
+  realtype pi, t, dTout, tout, u, v, w;
   FILE *FID, *UFID, *VFID, *WFID;
-  realtype t = T0;
-  realtype dTout = (Tf-T0)/Nt;
-  realtype tout = T0+dTout;
-  realtype u, v, w;
   int iout;
   long int nst, nst_a, nfe, nfi, nsetups, nje, nfeLS, nni, ncfn, netf;
 
   /* allocate udata structure */
   udata = (UserData) malloc(sizeof(*udata));
+  if (check_flag((void *) udata, "malloc", 2)) return 1;
 
   /* store the inputs in the UserData structure */
   udata->N  = N;
@@ -205,10 +202,10 @@ int main()
   UFID=fopen("bruss_u.txt","w");
   VFID=fopen("bruss_v.txt","w");
   WFID=fopen("bruss_w.txt","w");
-  data = N_VGetArrayPointer(y);
-  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
 
   /* output initial condition to disk */
+  data = N_VGetArrayPointer(y);
+  if (check_flag((void *)data, "N_VGetArrayPointer", 0)) return 1;
   for (i=0; i<N; i++)  fprintf(UFID," %.16e", data[IDX(i,0)]);
   for (i=0; i<N; i++)  fprintf(VFID," %.16e", data[IDX(i,1)]);
   for (i=0; i<N; i++)  fprintf(WFID," %.16e", data[IDX(i,2)]);

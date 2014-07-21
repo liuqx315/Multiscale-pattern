@@ -16,7 +16,6 @@ Parallel C example problems
 
 
 
-
 .. _ark_diurnal_kry_bbd_p:
 
 ark_diurnal_kry_bbd_p

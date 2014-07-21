@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4137 $
+ * $Date: 2014-06-15 12:26:15 -0700 (Sun, 15 Jun 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): David J. Gardner @ LLNL
  * -----------------------------------------------------------------
@@ -26,7 +26,7 @@
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_math.h>
-#include <test_nvector.h>
+#include "test_nvector.h"
 
 
 /* ----------------------------------------------------------------------

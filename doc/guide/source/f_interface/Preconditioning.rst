@@ -29,10 +29,11 @@ Usage of the FARKBP interface to ARKBANDPRE
 
 The FARKBP interface module is a package of C functions which,
 as part of the FARKODE interface module, support the use of the
-ARKode solver with the serial NVECTOR_SERIAL module, and the
-combination of the ARKBANDPRE preconditioner module (see the
-section :ref:`CInterface.BandPre`) with any of the Krylov iterative
-linear solvers. 
+ARKode solver with the serial or threaded NVector modules
+(:ref:`NVectors.NVSerial`, :ref:`NVectors.OpenMP` or
+:ref:`NVectors.Pthreads`), and the combination of the ARKBANDPRE
+preconditioner module (see the section :ref:`CInterface.BandPre`) with
+any of the Krylov iterative linear solvers. 
 
 The two user-callable functions in this package, with the
 corresponding ARKode function around which they wrap, are: 
@@ -136,10 +137,10 @@ Usage of the FARKBBD interface to ARKBBDPRE
 
 The FARKBBD interface module is a package of C functions which, as
 part of the FARKODE interface module, support the use of the ARKode
-solver with the parallel NVECTOR_PARALLEL module, and the combination
-of the ARKBBDPRE preconditioner module (see the section
-:ref:`CInterface.BBDPre`) with any of the Krylov iterative linear
-solvers. 
+solver with the parallel vector module (:ref:`NVectors.NVParallel`),
+and the combination of the ARKBBDPRE preconditioner module (see the
+section :ref:`CInterface.BBDPre`) with any of the Krylov iterative
+linear solvers. 
 
 The user-callable functions in this package, with the corresponding
 ARKode and ARKBBDPRE functions, are as follows:

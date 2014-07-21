@@ -116,16 +116,20 @@ constants ``FALSE`` and ``TRUE``, so a user program does not need to
 include ``sundials_types.h`` directly. 
 
 The calling program must also include an NVECTOR implementation
-header file (see the section :ref:`NVectors` for details).  For the two
+header file (see the section :ref:`NVectors` for details).  For the four
 NVECTOR implementations that are included in the ARKode package, the
 corresponding header files are: 
 
 * ``nvector_serial.h``, which defines the serial implementation
   NVECTOR_SERIAL; 
+* ``nvector_openmp.h``, which defines the OpenMP implementation
+  NVECTOR_OPENMP; 
+* ``nvector_pthreads.h``, which defines the Pthreads implementation
+  NVECTOR_PTHREADS; 
 * ``nvector_parallel.h``, which defines the parallel (MPI)
   implementation, NVECTOR_PARALLEL.
 
-Note that both these files in turn include the header file
+Note that all of these files in turn include the header file
 ``sundials_nvector.h`` which defines the abstract ``N_Vector`` data
 type.
 

@@ -29,19 +29,20 @@ A serial banded preconditioner module
 
 This preconditioner provides a band matrix preconditioner for use with
 any of the Krylov iterative linear solvers.  It requires that the
-problem be set up using the NVECTOR_SERIAL module, due to data access
-patterns.  It uses difference quotients of the ODE right-hand side
-function :math:`f_I` to generate a band matrix of bandwidth ``ml +
-mu + 1``, where the number of super-diagonals (``mu``, the upper
-half-bandwidth) and sub-diagonals (``ml``, the lower half-bandwidth)
-are specified by the user.  This band matrix is used to to form a
-preconditioner the Krylov linear solver.  Although this matrix is
-intended to approximate the Jacobian 
-:math:`J = \frac{\partial f_I}{\partial y}`, it may be a very crude
-approximation, since the true Jacobian may not be banded, or its true
-bandwidth may be larger than ``ml + mu + 1``.  However, as long as the
-banded approximation generated for the preconditioner is sufficiently
-accurate, it may speed convergence of the Krylov iteration.
+problem be set up using either the NVECTOR_SERIAL, NVECTOR_OPENMP or
+NVECTOR_PTHREADS module, due to data access patterns.  It uses
+difference quotients of the ODE right-hand side function :math:`f_I`
+to generate a band matrix of bandwidth ``ml + mu + 1``, where the
+number of super-diagonals (``mu``, the upper half-bandwidth) and
+sub-diagonals (``ml``, the lower half-bandwidth) are specified by the
+user.  This band matrix is used to to form a preconditioner the Krylov
+linear solver.  Although this matrix is intended to approximate the
+Jacobian :math:`J = \frac{\partial f_I}{\partial y}`, it may be a
+very crude approximation, since the true Jacobian may not be banded,
+or its true bandwidth may be larger than ``ml + mu + 1``.  However, as
+long as the banded approximation generated for the preconditioner is
+sufficiently accurate, it may speed convergence of the Krylov
+iteration. 
 
 
 

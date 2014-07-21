@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4075 $
-# $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+# $Revision: 4138 $
+# $Date: 2014-06-15 13:50:39 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -38,6 +38,10 @@ IF(KLU_FOUND)
     LIST(APPEND kinsol_SOURCES kinsol_klu.c)
 ENDIF()
 
+IF(SUPERLUMT_FOUND)
+    LIST(APPEND kinsol_SOURCES kinsol_superlumt.c)
+ENDIF()
+
 # Add variable shared_SOURCES with the common SUNDIALS sources which will
 # also be included in the KINSOL library
 SET(shared_SOURCES
@@ -72,6 +76,14 @@ SET(kinsol_HEADERS
   kinsol_sptfqmr.h
   kinsol_superlumt.h
   )
+
+IF(KLU_FOUND)
+    LIST(APPEND kinsol_HEADERS kinsol_klu.h kinsol_sparse.h)
+ENDIF()
+
+IF(SUPERLUMT_FOUND)
+    LIST(APPEND kinsol_HEADERS kinsol_superlumt.h kinsol_sparse.h)
+ENDIF()
 
 # Add prefix with complete path to the KINSOL header files
 ADD_PREFIX(${sundials_SOURCE_DIR}/include/kinsol/ kinsol_HEADERS)

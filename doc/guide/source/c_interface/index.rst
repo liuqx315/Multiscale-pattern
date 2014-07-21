@@ -36,8 +36,9 @@ implementations.  For example, NVECTOR_PARALLEL is not compatible with
 the direct dense or direct band linear solvers since these linear
 solver modules need to form the complete system Jacobian on a single
 processor.  Specifically, the following ARKode modules can only be
-used with NVECTOR_SERIAL: ARKDENSE, ARKBAND (using either the internal
-or the LAPACK implementation) and ARKBANDPRE. Also, the preconditioner
+used with NVECTOR_SERIAL, NVECTOR_OPENMP or NVECTOR_PTHREADS: ARKDENSE,
+ARKBAND (using either the internal or the LAPACK implementation),
+ARKKLU, ARKSUPERLUMT and ARKBANDPRE. Also, the preconditioner
 module ARKBBDPRE can only be used with NVECTOR_PARALLEL. 
 
 ARKode uses various constants for both input and output. These are

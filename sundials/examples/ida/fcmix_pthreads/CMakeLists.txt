@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4096 $
-# $Date: 2014-05-02 14:49:50 -0700 (Fri, 02 May 2014) $
+# $Revision: 4137 $
+# $Date: 2014-06-15 12:26:15 -0700 (Sun, 15 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -123,5 +123,20 @@ IF(EXAMPLES_INSTALL)
     FILES ${PROJECT_BINARY_DIR}/examples/ida/fcmix_pthreads/CMakeLists.txt
     DESTINATION ${EXAMPLES_INSTALL_PATH}/ida/fcmix_pthreads 
     )
+
+  IF(UNIX)
+    # generate Makefile and place it in the binary dir
+    CONFIGURE_FILE(
+      ${PROJECT_SOURCE_DIR}/examples/templates/makefile_pthreads_F77_ex.in
+      ${PROJECT_BINARY_DIR}/examples/ida/fcmix_pthreads/Makefile_ex
+      @ONLY
+      )
+    # install the configured Makefile_ex as Makefile
+    INSTALL(
+      FILES ${PROJECT_BINARY_DIR}/examples/ida/fcmix_pthreads/Makefile_ex 
+      DESTINATION ${EXAMPLES_INSTALL_PATH}/ida/fcmix_pthreads
+      RENAME Makefile
+      )
+  ENDIF(UNIX)
 
 ENDIF(EXAMPLES_INSTALL)

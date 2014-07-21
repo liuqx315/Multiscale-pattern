@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4128 $
+ * $Date: 2014-06-11 15:34:14 -0700 (Wed, 11 Jun 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol S. Woodward @ LLNL.  Adapted from the file
  *    kinRoboKin_dns.c by Radu Serban @ LLNL
@@ -140,7 +140,7 @@ int main()
   N_VConst_Serial(ONE,scale);
   flag = KINSol(kmem,           /* KINSol memory block */
                 y,              /* initial guess on input; solution vector */
-                KIN_LINESEARCH, /* global stragegy choice */
+                KIN_LINESEARCH, /* global strategy choice */
                 scale,          /* scaling vector, for the variable cc */
                 scale);         /* scaling vector for function values fval */
   if (check_flag(&flag, "KINSol", 1)) return(1);

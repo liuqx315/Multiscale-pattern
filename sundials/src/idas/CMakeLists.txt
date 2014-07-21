@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4075 $
-# $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+# $Revision: 4135 $
+# $Date: 2014-06-13 15:55:05 -0700 (Fri, 13 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -40,6 +40,10 @@ IF(KLU_FOUND)
     LIST(APPEND idas_SOURCES idas_klu.c)
 ENDIF()
 
+IF(SUPERLUMT_FOUND)
+    LIST(APPEND idas_SOURCES idas_superlumt.c)
+ENDIF()
+
 # Add variable shared_SOURCES with the common SUNDIALS sources which will
 # also be included in the IDAS library
 SET(shared_SOURCES
@@ -65,14 +69,20 @@ SET(idas_HEADERS
   idas_dense.h
   idas_direct.h
   idas.h
-  idas_klu.h
   idas_sparse.h
   idas_spbcgs.h
   idas_spgmr.h
   idas_spils.h
   idas_sptfqmr.h
-  idas_superlumt.h
   )
+
+IF(KLU_FOUND)
+    LIST(APPEND idas_HEADERS idas_klu.h)
+ENDIF()
+
+IF(SUPERLUMT_FOUND)
+    LIST(APPEND idas_HEADERS idas_superlumt.h)
+ENDIF()
 
 # Add prefix with complete path to the IDAS header files
 ADD_PREFIX(${sundials_SOURCE_DIR}/include/idas/ idas_HEADERS)

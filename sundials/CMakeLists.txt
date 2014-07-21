@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4119 $
-# $Date: 2014-05-29 10:57:48 -0700 (Thu, 29 May 2014) $
+# $Revision: 4161 $
+# $Date: 2014-07-11 12:40:21 -0700 (Fri, 11 Jul 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -905,6 +905,9 @@ IF(EXAMPLES_ENABLE)
 
   IF(BUILD_ARKODE)
     ADD_SUBDIRECTORY(examples/arkode/C_serial)
+    IF(OPENMP_FOUND)
+      ADD_SUBDIRECTORY(examples/arkode/C_openmp)
+    ENDIF(OPENMP_FOUND)
     IF(CXX_ENABLE AND CXX_FOUND)
       ADD_SUBDIRECTORY(examples/arkode/CXX_serial)
     ENDIF(CXX_ENABLE AND CXX_FOUND)

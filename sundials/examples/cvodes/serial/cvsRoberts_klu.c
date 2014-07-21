@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4086 $
- * $Date: 2014-04-30 16:04:45 -0700 (Wed, 30 Apr 2014) $
+ * $Revision: 4173 $
+ * $Date: 2014-07-20 22:11:56 -0700 (Sun, 20 Jul 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol Woodward.
  *      Based on cvRoberts_dns.c and modified to use KLU.
@@ -20,7 +20,7 @@
  * While integrating the system, we also use the rootfinding
  * feature to find the points at which y1 = 1e-4 or at which
  * y3 = 0.01. This program solves the problem with the BDF method,
- * Newton iteration with the CVKLU sparse dircet linear solver, and a
+ * Newton iteration with the CVKLU sparse direct linear solver, and a
  * user-supplied Jacobian routine.
  * It uses a scalar relative tolerance and a vector absolute
  * tolerance. Output is printed in decades from t = .4 to t = 4.e10.
@@ -54,7 +54,7 @@
 
 /* Problem Constants */
 
-#define ZERO  RCONST(0.0);
+#define ZERO  RCONST(0.0)
 
 #define NEQ   3                /* number of equations  */
 #define Y1    RCONST(1.0)      /* initial y components */

@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4075 $
-# $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+# $Revision: 4135 $
+# $Date: 2014-06-13 15:55:05 -0700 (Fri, 13 Jun 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -76,6 +76,14 @@ SET(cvode_HEADERS
   cvode_spils.h
   cvode_sptfqmr.h
   )
+
+IF(KLU_FOUND)
+    LIST(APPEND cvode_HEADERS cvode_klu.h)
+ENDIF()
+
+IF(SUPERLUMT_FOUND)
+    LIST(APPEND cvode_HEADERS cvode_superlumt.h)
+ENDIF()
 
 # Add prefix with complete path to the CVODE header files
 ADD_PREFIX(${sundials_SOURCE_DIR}/include/cvode/ cvode_HEADERS)
