@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4128 $
- * $Date: 2014-06-11 15:34:14 -0700 (Wed, 11 Jun 2014) $
+ * $Revision: 4182 $
+ * $Date: 2014-07-23 13:05:06 -0700 (Wed, 23 Jul 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol S. Woodward @ LLNL.  Adapted from the file
  *    kinRoboKin_dns.c by Radu Serban @ LLNL
@@ -115,7 +115,7 @@ int main()
   nnz = 56;
   /* Set the number fo threads to use */
   num_threads = 2;
-  flag = KINSuperLUMT(kmem, num_threads, NEQ, NEQ, nnz);
+  flag = KINSuperLUMT(kmem, num_threads, NEQ, nnz);
   if (check_flag(&flag, "KINSuperLUMT", 1)) return(1);
 
   flag = KINSlsSetSparseJacFn(kmem, jac);
