@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4192 $
+ * $Date: 2014-08-06 13:24:16 -0700 (Wed, 06 Aug 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -310,7 +310,7 @@ int IDAAdjInit(void *ida_mem, long int steps, int interp)
 
   /* By default we will store but not interpolate sensitivities
    *  - storeSensi will be set in IDASolveF to FALSE if FSA is not enabled
-   *    or if the user forced this through IDASetAdjNoSensi 
+   *    or if the user forced this through IDAAdjSetNoSensi 
    *  - interpSensi will be set in IDASolveB to TRUE if storeSensi is TRUE 
    *    and if at least one backward problem requires sensitivities 
    *  - noInterp will be set in IDACalcICB to TRUE before the call to
