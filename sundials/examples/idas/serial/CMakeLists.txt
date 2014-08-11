@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4138 $
-# $Date: 2014-06-15 13:50:39 -0700 (Sun, 15 Jun 2014) $
+# $Revision: 4197 $
+# $Date: 2014-08-07 16:26:06 -0700 (Thu, 07 Aug 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -128,6 +128,7 @@ IF(SUPERLUMT_FOUND)
   FOREACH(example ${IDAS_examples_SUPERLUMT})
     ADD_EXECUTABLE(${example} ${example}.c)
     SET_TARGET_PROPERTIES(${example} PROPERTIES FOLDER "Examples")
+    SUNDIALS_ADD_TEST(${example} ${example})
     TARGET_LINK_LIBRARIES(${example} ${SUNDIALS_LIBS})
     IF(EXAMPLES_INSTALL)
       INSTALL(FILES ${example}.c ${example}.out DESTINATION ${EXAMPLES_INSTALL_PATH}/idas/serial)
