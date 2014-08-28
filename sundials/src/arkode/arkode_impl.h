@@ -764,7 +764,7 @@ void arkProcessError(ARKodeMem ark_mem, int error_code,
 #define MSGARK_RHSFUNC_FIRST  "The right-hand side routine failed at the first call."
 #define MSGARK_RTFUNC_FAILED  "At " MSG_TIME ", the rootfinding routine failed in an unrecoverable manner."
 #define MSGARK_CLOSE_ROOTS    "Root found at and very near " MSG_TIME "."
-#define MSGARK_BAD_TSTOP      "The value " MSG_TIME_TSTOP " is behind current " MSG_TIME_H " in the direction of integration."
+#define MSGARK_BAD_TSTOP      "The value " MSG_TIME_TSTOP " is behind current " MSG_TIME " in the direction of integration."
 #define MSGARK_INACTIVE_ROOTS "At the end of the first step, there are still some root functions identically 0. This warning will not be issued again."
 #define MSGARK_MISSING_FE     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."
 #define MSGARK_MISSING_FI     "Cannot specify that method is explicit without providing a function pointer to fe(t,y)."

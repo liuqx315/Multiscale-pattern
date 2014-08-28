@@ -1224,7 +1224,7 @@ int ARKodeSetStopTime(void *arkode_mem, realtype tstop)
     if ( (tstop - ark_mem->ark_tn) * ark_mem->ark_h < ZERO ) {
       arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", 
 		      "ARKodeSetStopTime", MSGARK_BAD_TSTOP, 
-		      tstop, ark_mem->ark_tn, ark_mem->ark_h);
+		      tstop, ark_mem->ark_tn);
       return(ARK_ILL_INPUT);
     }
   }
