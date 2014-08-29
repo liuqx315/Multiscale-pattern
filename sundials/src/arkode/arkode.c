@@ -2207,6 +2207,7 @@ static void arkPrintMem(ARKodeMem ark_mem)
   printf("ark_crate = %.16g\n", ark_mem->ark_crate);
   printf("ark_eLTE = %.16g\n", ark_mem->ark_eLTE);
   printf("ark_nlscoef = %.16g\n", ark_mem->ark_nlscoef);
+  printf("ark_fixedstep = %i\n", ark_mem->ark_fixedstep);
   printf("ark_hadapt_ehist =  %.16g  %.16g  %.16g\n",
 	 ark_mem->ark_hadapt_ehist[0], ark_mem->ark_hadapt_ehist[1], ark_mem->ark_hadapt_ehist[2]);
   printf("ark_hadapt_hhist =  %.16g  %.16g  %.16g\n",
@@ -3888,6 +3889,11 @@ static int arkStep(ARKodeMem ark_mem)
 	/* check for convergence (on failure, h will have been modified) */
 	kflag = arkHandleNFlag(ark_mem, &nflag, saved_t, &ncf);
 
+	/* If fixed time-stepping is used, then anything other than a 
+	   successful solve must result in an error */
+	if (ark_mem->ark_fixedstep && (kflag != SOLVE_SUCCESS)) 
+	  return(kflag);
+
 	/* If h reduced and step needs to be retried, break loop */
 	if (kflag == PREDICT_AGAIN) break;
 
@@ -3913,6 +3919,11 @@ static int arkStep(ARKodeMem ark_mem)
 	  /* increment failure counter if necessary */
 	  if (kflag != SOLVE_SUCCESS)
 	    ark_mem->ark_nmassfails++;
+
+	  /* If fixed time-stepping is used, then anything other than a 
+	     successful solve must result in an error */
+	  if (ark_mem->ark_fixedstep && (kflag != SOLVE_SUCCESS)) 
+	    return(kflag);
 
 	  /* If h reduced and step needs to be retried, break loop */
 	  if (kflag == PREDICT_AGAIN) break;
@@ -3952,7 +3963,8 @@ static int arkStep(ARKodeMem ark_mem)
     } /* loop over stages */
 
     /* if h has changed due to convergence failure and a new 
-       prediction is needed, continue to next attempt at step */
+       prediction is needed, continue to next attempt at step
+       (cannot occur if fixed time stepping is enabled) */
     if (kflag == PREDICT_AGAIN)  continue;
       
     /* compute time-evolved solution (in ark_y), error estimate (in dsm) */
@@ -3969,7 +3981,8 @@ static int arkStep(ARKodeMem ark_mem)
 	      ark_mem->ark_nst, ark_mem->ark_h, dsm);
 
     /* Perform time accuracy error test (if failure, updates h for next try) */
-    eflag = arkDoErrorTest(ark_mem, &nflag, saved_t, &nef, dsm);
+    if (!ark_mem->ark_fixedstep) 
+      eflag = arkDoErrorTest(ark_mem, &nflag, saved_t, &nef, dsm);
 	
 #ifdef DEBUG_OUTPUT
  printf("error test flag = %i\n", eflag);
@@ -4459,8 +4472,9 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
 {
   int retval;
 
-  /* If etamax = 1, defer step size changes until next step */
-  if (ark_mem->ark_etamax == ONE) {
+  /* If etamax = 1, or if fixed time-stepping requesetd, defer 
+     step size changes until next step */
+  if ((ark_mem->ark_etamax == ONE) || ark_mem->ark_fixedstep){
     ark_mem->ark_hprime = ark_mem->ark_h;
     ark_mem->ark_eta = ONE;
     return(ARK_SUCCESS);
@@ -5074,7 +5088,7 @@ static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval,
  perform the error test.
 
  If the nonlinear system was not solved successfully, then ncfn and
- ncf = *ncfPtr are incremented and Nordsieck array zn is restored.
+ ncf = *ncfPtr are incremented.
 
  If the solution of the nonlinear system failed due to an
  unrecoverable failure by setup, we return the value ARK_LSETUP_FAIL.
@@ -5087,9 +5101,9 @@ static int arkAndersenAcc(ARKodeMem ark_mem, N_Vector gval,
 
  Otherwise, a recoverable failure occurred when solving the 
  nonlinear system (arkNls returned nflag == CONV_FAIL or RHSFUNC_RECVR). 
- In this case, if ncf is now equal to maxncf or |h| = hmin, 
- we return the value ARK_CONV_FAILURE (if nflag=CONV_FAIL) or
- ARK_REPTD_RHSFUNC_ERR (if nflag=RHSFUNC_RECVR).
+ In this case, if using fixed time step sizes, or if ncf is now equal 
+ to maxncf, or if |h| = hmin, then we return the value ARK_CONV_FAILURE 
+ (if nflag=CONV_FAIL) or ARK_REPTD_RHSFUNC_ERR (if nflag=RHSFUNC_RECVR).
  If not, we set *nflagPtr = PREV_CONV_FAIL and return the value
  PREDICT_AGAIN, telling arkStep to reattempt the step.
 ---------------------------------------------------------------*/
@@ -5102,8 +5116,13 @@ static int arkHandleNFlag(ARKodeMem ark_mem, int *nflagPtr,
   
   if (nflag == ARK_SUCCESS) return(SOLVE_SUCCESS);
 
-  /* The nonlinear soln. failed; increment ncfn and restore tn, zn */
+  /* The nonlinear soln. failed; increment ncfn */
   ark_mem->ark_ncfn++;
+  
+  /* If fixed time stepping, then return with convergence failure */
+  if (ark_mem->ark_fixedstep)    return(ARK_CONV_FAILURE);
+
+  /* Restore the previous step time, tn */
   ark_mem->ark_tn = saved_t;
   
   /* Return if lsetup, lsolve, or rhs failed unrecoverably */

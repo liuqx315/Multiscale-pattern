@@ -1333,6 +1333,7 @@ Supply a pointer to a diagnostics output file    :c:func:`ARKodeSetDiagnostics()
 Supply a pointer to an error output file         :c:func:`ARKodeSetErrFile()`          ``stderr``
 Supply a custom error handler function           :c:func:`ARKodeSetErrHandlerFn()`     internal fn
 Supply an initial step size to attempt           :c:func:`ARKodeSetInitStep()`         estimated
+Disable time step adaptivity (fixed-step mode)   :c:func:`ARKodeSetFixedStep()`        disabled
 Maximum no. of warnings for :math:`t_n+h = t_n`  :c:func:`ARKodeSetMaxHnilWarns()`     10
 Maximum no. of internal steps before *tout*      :c:func:`ARKodeSetMaxNumSteps()`      500
 Maximum no. of error test failures               :c:func:`ARKodeSetMaxErrTestFails()`  7
@@ -1480,6 +1481,26 @@ Supply a pointer for user data                   :c:func:`ARKodeSetUserData()`  
    solution :math:`h` of the equation :math:`\left\| \frac{h^2
    \ddot{y}}{2}\right\| = 1`, where :math:`\ddot{y}` is an estimated
    value of the second derivative of the solution at *t0*.  
+
+
+
+
+.. c:function:: int ARKodeSetFixedStep(void* arkode_mem, realtype hfixed)
+
+   Disabled time step adaptivity within ARKode, and specifies the
+   fixed time step size to use for all internal steps.
+   
+   **Arguments:**
+      * *arkode_mem* -- pointer to the ARKode memory block.
+      * *hfixed* -- value of the fixed step size to use
+   
+   **Return value:** 
+      * *ARK_SUCCESS* if successful
+      * *ARK_MEM_NULL* if the ARKode memory is ``NULL``
+      * *ARK_ILL_INPUT* if an argument has an illegal value
+   
+   **Notes:** Pass 0.0 to return ARKode to the default (adaptive-step) mode.  
+
 
 
 

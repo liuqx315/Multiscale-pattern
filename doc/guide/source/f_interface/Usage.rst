@@ -347,6 +347,7 @@ Key                ARKode routine
 ``NONLIN_CRDOWN``  :c:func:`ARKodeSetNonlinCRDown()`
 ``NONLIN_RDIV``    :c:func:`ARKodeSetNonlinRDiv()`
 ``LSETUP_DGMAX``   :c:func:`ARKodeSetDeltaGammaMax()`
+``FIXED_STEP``     :c:func:`ARKodeSetFixedStep()`
 =================  =========================================
 
 
