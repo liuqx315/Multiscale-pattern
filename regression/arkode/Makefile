@@ -13,6 +13,10 @@
 #      <arkode>/install     -- SUNDIALS+ARKode install location
 ###################################################################
 
+# flag to decide between optimized and debugging libraries
+#LIBTYPE = DBG
+LIBTYPE = OPT
+
 # compilers (assumes standard MPICH/OpenMPI compiler wrappers)
 CC = mpicc
 CXX = mpicxx
@@ -23,12 +27,15 @@ SUND_DEFS = -DSUNDIALS_CASE_LOWER -DSUNDIALS_UNDERSCORE_ONE \
             -DSUNDIALS_DOUBLE_PRECISION
 
 # compilation flags 
-CFLAGS = -O2
-FFLAGS = -O2
-CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
-# CFLAGS = -O0 -g
-# FFLAGS = -O0 -g
-# CXXFLAGS = -O0 -g -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+ifeq ($(LIBTYPE),OPT)
+  CFLAGS = -O2
+  FFLAGS = -O2
+  CXXFLAGS = -O2 -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+else
+  CFLAGS = -O0 -g
+  FFLAGS = -O0 -g
+  CXXFLAGS = -O0 -g -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX
+endif
 OMPFLAGS = -fopenmp
 
 # append problem and interface preprocessor defs to compilation defs.
@@ -36,36 +43,40 @@ CFLAGS_ = $(CFLAGS) $(SUND_DEFS)
 CXXFLAGS_ = $(CXXFLAGS) $(SUND_DEFS)
 
 # shortcuts for include and library paths, etc.
-INCS = -I../../install_opt/include/
-LIBS = ../../install_opt/lib/libsundials_arkode.a \
-       ../../install_opt/lib/libsundials_nvecparallel.a \
-       ../../install_opt/lib/libsundials_nvecserial.a \
-       -lm
-FLIBS = ../../install_opt/lib/libsundials_farkode.a \
-        ../../install_opt/lib/libsundials_fnvecserial.a \
-        ../../install_opt/lib/libsundials_arkode.a \
-        ../../install_opt/lib/libsundials_nvecserial.a
-KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
-          /usr/local/klu-1.2.0/gnu/lib/libcolamd.a \
-          /usr/local/klu-1.2.0/gnu/lib/libamd.a \
-          /usr/local/klu-1.2.0/gnu/lib/libbtf.a
-SLULIBS = -L/usr/local/superlu-mt-2.1/gnu_pthread/lib -lsuperlu_mt \
-          -L/usr/lib/libblas -lblas
-# INCS = -I../../install_dbg/include/
-# LIBS = ../../install_dbg/lib/libsundials_arkode.a \
-#        ../../install_dbg/lib/libsundials_nvecparallel.a \
-#        ../../install_dbg/lib/libsundials_nvecserial.a \
-#        -lm
-# FLIBS = ../../install_dbg/lib/libsundials_farkode.a \
-#         ../../install_dbg/lib/libsundials_fnvecserial.a \
-#         ../../install_dbg/lib/libsundials_arkode.a \
-#         ../../install_dbg/lib/libsundials_nvecserial.a
-# KLULIBS = /usr/local/klu-1.2.0/gnu_debug/lib/libklu.a \
-#           /usr/local/klu-1.2.0/gnu_debug/lib/libcolamd.a \
-#           /usr/local/klu-1.2.0/gnu_debug/lib/libamd.a \
-#           /usr/local/klu-1.2.0/gnu_debug/lib/libbtf.a
-# SLULIBS = -L/usr/local/superlu-mt-2.1/gnu_pthread_debug/lib -lsuperlu_mt \
-#           -L/usr/lib/libblas -lblas
+ifeq ($(LIBTYPE),OPT)
+  INCS = -I../../install_opt/include/
+  LIBS = ../../install_opt/lib/libsundials_arkode.a \
+         ../../install_opt/lib/libsundials_nvecparallel.a \
+         ../../install_opt/lib/libsundials_nvecserial.a \
+         -lm
+  FLIBS = ../../install_opt/lib/libsundials_farkode.a \
+          ../../install_opt/lib/libsundials_fnvecserial.a \
+          ../../install_opt/lib/libsundials_arkode.a \
+          ../../install_opt/lib/libsundials_nvecserial.a
+  KLULIBS = /usr/local/klu-1.2.0/gnu/lib/libklu.a \
+            /usr/local/klu-1.2.0/gnu/lib/libcolamd.a \
+            /usr/local/klu-1.2.0/gnu/lib/libamd.a \
+            /usr/local/klu-1.2.0/gnu/lib/libbtf.a
+  SLULIBS = -L/usr/local/superlu-mt-2.1/gnu_pthread/lib -lsuperlu_mt \
+            -L/usr/lib/libblas -lblas
+else
+  INCS = -I../../install_dbg/include/
+  LIBS = ../../install_dbg/lib/libsundials_arkode.a \
+         ../../install_dbg/lib/libsundials_nvecparallel.a \
+         ../../install_dbg/lib/libsundials_nvecserial.a \
+         -lm
+  FLIBS = ../../install_dbg/lib/libsundials_farkode.a \
+          ../../install_dbg/lib/libsundials_fnvecserial.a \
+          ../../install_dbg/lib/libsundials_arkode.a \
+          ../../install_dbg/lib/libsundials_nvecserial.a
+  KLULIBS = /usr/local/klu-1.2.0/gnu_debug/lib/libklu.a \
+            /usr/local/klu-1.2.0/gnu_debug/lib/libcolamd.a \
+            /usr/local/klu-1.2.0/gnu_debug/lib/libamd.a \
+            /usr/local/klu-1.2.0/gnu_debug/lib/libbtf.a
+  SLULIBS = -L/usr/local/superlu-mt-2.1/gnu_pthread_debug/lib -lsuperlu_mt \
+            -L/usr/lib/libblas -lblas
+endif
+
 
 # listing of all test routines
 TESTS = ark_analytic.exe \
