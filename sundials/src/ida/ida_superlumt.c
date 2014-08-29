@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4140 $
- * $Date: 2014-06-16 12:02:34 -0700 (Mon, 16 Jun 2014) $
+ * $Revision: 4179 $
+ * $Date: 2014-07-23 12:16:01 -0700 (Wed, 23 Jul 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -75,7 +75,7 @@ static int IDASuperLUMTFree(IDAMem IDA_mem);
  * -----------------------------------------------------------------
  */
 
-int IDASuperLUMT(void *ida_mem, int num_threads, int m, int n, int nnz)
+int IDASuperLUMT(void *ida_mem, int num_threads, int n, int nnz)
 {
   IDAMem IDA_mem;
   IDASlsMem idasls_mem;
@@ -136,7 +136,7 @@ int IDASuperLUMT(void *ida_mem, int num_threads, int m, int n, int nnz)
 
   /* Allocate memory for the sparse Jacobian */
   idasls_mem->s_JacMat = NULL;
-  idasls_mem->s_JacMat = NewSparseMat(m, n, nnz);
+  idasls_mem->s_JacMat = NewSparseMat(n, n, nnz);
   if (idasls_mem->s_JacMat == NULL) {
     IDAProcessError(IDA_mem, IDASLS_MEM_FAIL, "IDASLS", "IDASuperLUMT", 
 		    MSGSP_MEM_FAIL);
@@ -144,7 +144,7 @@ int IDASuperLUMT(void *ida_mem, int num_threads, int m, int n, int nnz)
   }
 
   /* Set up memory for the permutations */
-  perm_r = (int *)malloc(m*sizeof(int));
+  perm_r = (int *)malloc(n*sizeof(int));
   if (perm_r == NULL) {
     IDAProcessError(IDA_mem, IDASLS_MEM_FAIL, "IDASLS", "IDASuperLUMT", 
 		    MSGSP_MEM_FAIL);
@@ -190,7 +190,7 @@ int IDASuperLUMT(void *ida_mem, int num_threads, int m, int n, int nnz)
   nrhs = 1;
   bd = NULL;
   B = (SuperMatrix *)malloc(sizeof(SuperMatrix));
-  dCreate_Dense_Matrix(B, m, nrhs, bd, m, 
+  dCreate_Dense_Matrix(B, n, nrhs, bd, n, 
 		       SLU_DN, SLU_D, SLU_GE);
   slumt_data->s_B = B;
 

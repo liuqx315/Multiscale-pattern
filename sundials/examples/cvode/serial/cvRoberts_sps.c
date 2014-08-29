@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4173 $
- * $Date: 2014-07-20 22:11:56 -0700 (Sun, 20 Jul 2014) $
+ * $Revision: 4182 $
+ * $Date: 2014-07-23 13:05:06 -0700 (Wed, 23 Jul 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol Woodward.
  *      Based on cvRoberts_dns.c and modified to use SUPERLU_MT.
@@ -151,7 +151,7 @@ int main()
 
   /* Call CVSuperLUMT to specify the CVSuperLUMT sparse direct linear solver */
   nnz = NEQ * NEQ;
-  flag = CVSuperLUMT(cvode_mem, 1, NEQ, NEQ, nnz);
+  flag = CVSuperLUMT(cvode_mem, 1, NEQ, nnz);
   if (check_flag(&flag, "CVSuperLUMT", 1)) return(1);
 
   /* Set the Jacobian routine to Jac (user-supplied) */

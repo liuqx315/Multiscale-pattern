@@ -1,6 +1,6 @@
 C     ----------------------------------------------------------------
-C     $Revision: 4074 $
-C     $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+C     $Revision: 4198 $
+C     $Date: 2014-08-07 16:55:14 -0700 (Thu, 07 Aug 2014) $
 C     ----------------------------------------------------------------
 C     FCVODE Example Problem: 2D kinetics-transport, 
 C     precond. Krylov solver. 
@@ -42,8 +42,10 @@ C
 C The following declaration specification should match C type long int.
       INTEGER*8 NEQ, IOUT(25), IPAR(4)
       INTEGER NST, NFE, NPSET, NPE, NPS, NNI
-      INTEGER NLI, NCFN, NCFL, NETF, MU, ML
-      INTEGER LENRW, LENIW, LENRWLS, LENIWLS, LENRWBP, LENIWBP, NFEBP
+      INTEGER NLI, NCFN, NCFL, NETF
+      INTEGER LENRW, LENIW, LENRWLS, LENIWLS
+C The following declaration specification should match C type long int.
+      INTEGER*8 MU, ML, LENRWBP, LENIWBP, NFEBP
       DOUBLE PRECISION ATOL, AVDIM, DELT, FLOOR, RTOL, T, TOUT, TWOHR
       DOUBLE PRECISION ROUT(10), U(2,MX,MY), RPAR(12)
 C
@@ -162,12 +164,12 @@ C     Print final statistics.
      &   ' number of conv. failures.. nonlinear =', I3,
      &   ' linear = ', I3/
      &   ' number of error test failures = ', I3/
-     &   ' main solver real/int workspace sizes   = ',2I5/
+     &   ' main solver real/int workspace sizes   = ',2I7/
      &   ' linear solver real/int workspace sizes = ',2I5)
       CALL FCVBPOPT(LENRWBP, LENIWBP, NFEBP)
       WRITE(6,82) LENRWBP, LENIWBP, NFEBP
  82   FORMAT('In CVBANDPRE:'/
-     &        ' real/int workspace sizes = ', 2I5/
+     &        ' real/int workspace sizes = ', 2I7/
      &        ' number of f evaluations  = ', I5)
 C     
       CALL FCVFREE

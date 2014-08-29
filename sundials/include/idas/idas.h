@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4192 $
+ * $Date: 2014-08-06 13:24:16 -0700 (Wed, 06 Aug 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -1918,13 +1918,13 @@ SUNDIALS_EXPORT int IDASolveB(void *ida_mem, realtype tBout, int itaskB);
 
 /*
  * -----------------------------------------------------------------
- * IDASetAdjNoSensi
+ * IDAAdjSetNoSensi
  * -----------------------------------------------------------------
  * Disables the forward sensitivity analysis in IDASolveF.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT int IDASetAdjNoSensi(void *ida_mem);
+SUNDIALS_EXPORT int IDAAdjSetNoSensi(void *ida_mem);
 
 /*
  * -----------------------------------------------------------------

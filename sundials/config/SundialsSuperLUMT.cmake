@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4074 $
-# $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+# $Revision: 4199 $
+# $Date: 2014-08-08 16:10:58 -0700 (Fri, 08 Aug 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Eddy Banks @ LLNL
 # ---------------------------------------------------------------
@@ -24,7 +24,7 @@ include(FindSUPERLUMT)
 #print_warning("SundialsSUPERLUMT.cmake 4: SUPERLUMT_BLAS_LIBRARIES" "${SUPERLUMT_BLAS_LIBRARIES}")
 if(SUPERLUMT_LIBRARIES)
   #print_warning("SundialsSUPERLUMT.cmake 5 SUPERLUMT_FOUND" "${SUPERLUMT_FOUND}")
-  #PRINT_WARNING("SundialsSUPERLUMT.cmake 6 SUPERLUMT_LIBRARIES" "${SUPERLUMT_LIBRARIES}")
+  #print_WARNING("SundialsSUPERLUMT.cmake 6 SUPERLUMT_LIBRARIES" "${SUPERLUMT_LIBRARIES}")
   message(STATUS "Looking for SUPERLUMT libraries... OK")
   # Create the SUPERLUMT_TEST directory
   set(SUPERLUMT_TEST_DIR ${PROJECT_BINARY_DIR}/SUPERLUMT_TEST)
