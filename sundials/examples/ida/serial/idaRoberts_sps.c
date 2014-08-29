@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4146 $
- * $Date: 2014-06-24 09:04:33 -0700 (Tue, 24 Jun 2014) $
+ * $Revision: 4182 $
+ * $Date: 2014-07-23 13:05:06 -0700 (Wed, 23 Jul 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol Woodward @ LLNL  (based on idasRoberts_dns.c)
  * -----------------------------------------------------------------
@@ -132,7 +132,7 @@ int main(void)
 
   /* Call IDASuperLUMT and set up the linear solver. */
   nnz = NEQ * NEQ;
-  retval = IDASuperLUMT(mem, 1, NEQ, NEQ, nnz);
+  retval = IDASuperLUMT(mem, 1, NEQ, nnz);
   if(check_flag(&retval, "IDASuperLUMT", 1)) return(1);
   retval = IDASlsSetSparseJacFn(mem, jacrob);
   if(check_flag(&retval, "IDASlsSetSparseJacFn", 1)) return(1);

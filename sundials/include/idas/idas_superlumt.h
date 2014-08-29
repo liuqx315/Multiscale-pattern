@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4180 $
+ * $Date: 2014-07-23 12:36:20 -0700 (Wed, 23 Jul 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -54,7 +54,7 @@ extern "C" {
  */
 
   SUNDIALS_EXPORT int IDASuperLUMT(void *ida_mem, int num_threads, 
-				   int m, int n, int nnz); 
+				   int n, int nnz); 
 
 /*
  * -----------------------------------------------------------------
@@ -66,7 +66,7 @@ extern "C" {
  */
 
   SUNDIALS_EXPORT int IDASuperLUMTB(void *ida_mem, int num_threads, 
-				    int which, int mB, int nB, int nnzB);
+				    int which, int nB, int nnzB);
 
 
 

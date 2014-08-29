@@ -1220,6 +1220,30 @@ the function :f:func:`FARKSETRIN()`, and has a default value of
 
 
 
+.. _Mathematics.FixedStep:
+
+Fixed time stepping
+--------------------
+
+While ARKode is designed for time step adaptivity, it may additionally
+be called in "fixed-step" mode, typically used for debugging purposes
+or for verification against hand-coded Runge-Kutta methods.  In this
+mode, all time step adaptivity is disabled:
+
+* temporal error control is disabled,
+
+* nonlinear or linear solver non-convergence results in an error
+  (instead of a step size adjustment),
+
+* no check against an explicit stability condition is performed.
+
+
+Additional information on this mode is provided in the section
+:ref:`CInterface.OptionalInputs`.
+
+
+
+
 .. _Mathematics.MassSolve:
 
 Mass matrix solver
