@@ -1,0 +1,24 @@
+# use glob syntax.
+syntax: glob
+*.mod
+*.o
+*~
+*.pyc
+gmon.out
+*.exe
+*.a
+diags*.txt
+regression_results_*
+build_dbg
+install_dbg
+examples_dbg
+build_opt
+install_opt
+examples_opt
+Make.machine
+www/build
+doc/guide/build
+doc/examples/build
+local_standards.dat
+local_reg_tests.txt
+
