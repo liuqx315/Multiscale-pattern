@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4211 $
+ * $Date: 2014-09-01 15:14:38 -0700 (Mon, 01 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Dan Shumaker @ LLNL
@@ -1153,6 +1153,15 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
       return(CV_FIRST_RHSFUNC_ERR);
     }
 
+    /* Test input tstop for legality. */
+
+    if (tstopset) {
+      if ( (tstop - tn)*(tout - tn) <= ZERO ) {
+        cvProcessError(cv_mem, CV_ILL_INPUT, "CVODE", "CVode", MSGCV_BAD_TSTOP, tstop, tn);
+        return(CV_ILL_INPUT);
+      }
+     }
+
     /* Set initial h (from H0 or cvHin). */
 
     h = hin;
@@ -1162,7 +1171,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
     if (h == ZERO) {
       tout_hin = tout;
-      if ( tstopset && (tout-tn)*(tout-tstop) > 0 ) tout_hin = tstop; 
+      if ( tstopset && (tout-tn)*(tout-tstop) > ZERO ) tout_hin = tstop; 
       hflag = cvHin(cv_mem, tout_hin);
       if (hflag != CV_SUCCESS) {
         istate = cvHandleFailure(cv_mem, hflag);
@@ -1176,10 +1185,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     /* Check for approach to tstop */
 
     if (tstopset) {
-      if ( (tstop - tn)*h < ZERO ) {
-        cvProcessError(cv_mem, CV_ILL_INPUT, "CVODE", "CVode", MSGCV_BAD_TSTOP, tstop, tn);
-        return(CV_ILL_INPUT);
-      }
       if ( (tn + h - tstop)*h > ZERO ) 
         h = (tstop - tn)*(ONE-FOUR*uround);
     }
