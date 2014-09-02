@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4210 $
+ * $Date: 2014-08-27 15:40:02 -0700 (Wed, 27 Aug 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan Hindmarsh, Radu Serban and
  *                Aaron Collier @ LLNL
@@ -223,7 +223,7 @@ int IDASetStopTime(void *ida_mem, realtype tstop)
   if (IDA_mem->ida_nst > 0) {
 
     if ( (tstop - IDA_mem->ida_tn) * IDA_mem->ida_hh < ZERO ) {
-      IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDASetStopTime", MSG_BAD_TSTOP, IDA_mem->ida_tn);
+      IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDASetStopTime", MSG_BAD_TSTOP, tstop, IDA_mem->ida_tn);
       return(IDA_ILL_INPUT);
     }
 

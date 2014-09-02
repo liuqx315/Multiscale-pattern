@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4199 $
-# $Date: 2014-08-08 16:10:58 -0700 (Fri, 08 Aug 2014) $
+# $Revision: 4206 $
+# $Date: 2014-08-18 15:03:04 -0700 (Mon, 18 Aug 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -33,10 +33,12 @@ SET(IDA_examples
 
 SET(IDA_examples_SUPERLUMT
   idaRoberts_sps
+  idaHeat2D_sps
   )
 
 SET(IDA_examples_KLU
   idaRoberts_klu
+  idaHeat2D_klu
   )
 
 # Add variable IDA_examples_BL with the names of the serial IDA examples

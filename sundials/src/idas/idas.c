@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4211 $
+ * $Date: 2014-09-01 15:14:38 -0700 (Mon, 01 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -2284,7 +2284,7 @@ int IDASolve(void *ida_mem, realtype tout, realtype *tret,
     if (rh > ONE) hh /= rh;
 
     if (tstopset) {
-      if ( (tstop - tn)*hh < ZERO) {
+      if ( (tstop - tn)*hh <= ZERO) {
         IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDAS", "IDASolve", MSG_BAD_TSTOP, tstop, tn);
         return(IDA_ILL_INPUT);
       }
@@ -3870,7 +3870,7 @@ int IDAInitialSetup(IDAMem IDA_mem)
 
   /* Test for more vector operations, depending on options */
   if (suppressalg)
-    if (id->ops->nvwrmsnormmask == NULL) {
+    if (yy->ops->nvwrmsnormmask == NULL) {
       IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDAS", "IDAInitialSetup", MSG_BAD_NVECTOR);
       return(IDA_ILL_INPUT);
   }
