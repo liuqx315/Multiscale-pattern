@@ -1243,6 +1243,15 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
     /*   if (!ark_mem->ark_explicit)*/
     N_VScale(ONE, ark_mem->ark_fnew, ark_mem->ark_fold);
     
+    /* Test input tstop for legality. */
+    if ( ark_mem->ark_tstopset ) {
+      if ( (ark_mem->ark_tstop - ark_mem->ark_tn)*(tout - ark_mem->ark_tn) <= ZERO ) {
+        arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKVODE", "ARKode", 
+			MSGARK_BAD_TSTOP, ark_mem->ark_tstop, ark_mem->ark_tn);
+        return(ARK_ILL_INPUT);
+      }
+    }
+
     /* Set initial h (from H0 or arkHin). */
     ark_mem->ark_h = ark_mem->ark_hin;
     if ( (ark_mem->ark_h != ZERO) && 
@@ -1258,7 +1267,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
       /* Estimate the first step size */
       tout_hin = tout;
       if ( ark_mem->ark_tstopset && 
-	   (tout-ark_mem->ark_tn)*(tout-ark_mem->ark_tstop) > 0 ) 
+	   (tout-ark_mem->ark_tn)*(tout-ark_mem->ark_tstop) > ZERO ) 
 	tout_hin = ark_mem->ark_tstop; 
       hflag = arkHin(ark_mem, tout_hin);
       if (hflag != ARK_SUCCESS) {
@@ -1273,11 +1282,6 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
 
     /* Check for approach to tstop */
     if (ark_mem->ark_tstopset) {
-      if ( (ark_mem->ark_tstop - ark_mem->ark_tn)*ark_mem->ark_h < ZERO ) {
-        arkProcessError(ark_mem, ARK_ILL_INPUT, "ARKODE", "ARKode", 
-			MSGARK_BAD_TSTOP, ark_mem->ark_tstop, ark_mem->ark_tn);
-        return(ARK_ILL_INPUT);
-      }
       if ( (ark_mem->ark_tn + ark_mem->ark_h - ark_mem->ark_tstop)*ark_mem->ark_h > ZERO ) {
         ark_mem->ark_h = (ark_mem->ark_tstop - ark_mem->ark_tn)*(ONE-FOUR*ark_mem->ark_uround);
       }
