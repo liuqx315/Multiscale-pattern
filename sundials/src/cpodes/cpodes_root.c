@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban  @ LLNL
  * -----------------------------------------------------------------
@@ -226,7 +226,7 @@ int cpRcheck1(CPodeMem cp_mem)
    * y'(t0+smallh) = zn[1] 
    */
 
-  hratio = MAX(ttol/ABS(h), PT1);
+  hratio = SUN_MAX(ttol/ABS(h), PT1);
   smallh = hratio*h;
   tlo += smallh;
   N_VLinearSum(ONE, zn[0], hratio, zn[1], y);

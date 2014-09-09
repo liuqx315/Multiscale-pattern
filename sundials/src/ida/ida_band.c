@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -173,7 +173,7 @@ int IDABand(void *ida_mem, long int Neq, long int mupper, long int mlower)
   idadls_mem->d_mu = mupper;
     
   /* Set extended upper half-bandwidth for JJ (required for pivoting). */
-  smu = MIN(Neq-1, mupper + mlower);
+  smu = SUN_MIN(Neq-1, mupper + mlower);
 
   /* Allocate memory for JJ and pivot array. */
   JJ = NULL;

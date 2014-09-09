@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban  @ LLNL
  * -----------------------------------------------------------------
@@ -527,10 +527,10 @@ static int cpicProjNonlinear(CPodeMem cp_mem)
     cmax = N_VMaxNorm(ctemp);
 
     /* Estimated convergence rate */
-    if (m > 0) crate = MAX(PRJ_CRDOWN * crate, pnorm/pnorm_p);
+    if (m > 0) crate = SUN_MAX(PRJ_CRDOWN * crate, pnorm/pnorm_p);
 
     /* Convergence test based on pnorm and crate */
-    pcon = pnorm * MIN(ONE, crate) / icprj_convcoef;
+    pcon = pnorm * SUN_MIN(ONE, crate) / icprj_convcoef;
 
 #ifdef CPODES_DEBUG
     printf("  Stop test quantities:\n");

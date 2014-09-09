@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4210 $
- * $Date: 2014-08-27 15:40:02 -0700 (Wed, 27 Aug 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -157,8 +157,8 @@ int CVodeSetMaxOrd(void *cvode_mem, int maxord)
   /* Cannot increase maximum order beyond the value that
      was used when allocating memory */
   qmax_alloc = cv_mem->cv_qmax_alloc;
-  qmax_alloc = MIN(qmax_alloc, cv_mem->cv_qmax_allocQ);
-  qmax_alloc = MIN(qmax_alloc, cv_mem->cv_qmax_allocS);  
+  qmax_alloc = SUN_MIN(qmax_alloc, cv_mem->cv_qmax_allocQ);
+  qmax_alloc = SUN_MIN(qmax_alloc, cv_mem->cv_qmax_allocS);
 
   if (maxord > qmax_alloc) {
     cvProcessError(cv_mem, CV_ILL_INPUT, "CVODES", "CVodeSetMaxOrd", MSGCV_BAD_MAXORD);
