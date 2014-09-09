@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4210 $
- * $Date: 2014-08-27 15:40:02 -0700 (Wed, 27 Aug 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban and Cosmin Petra @ LLNL
  * -----------------------------------------------------------------
@@ -127,7 +127,7 @@ int IDASetMaxOrd(void *ida_mem, int maxord)
     return(IDA_ILL_INPUT);
   }  
 
-  IDA_mem->ida_maxord = MIN(maxord,MAXORD_DEFAULT);
+  IDA_mem->ida_maxord = SUN_MIN(maxord,MAXORD_DEFAULT);
 
   return(IDA_SUCCESS);
 }

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -49,7 +49,7 @@ int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
   
   vk_norm = RSqrt(N_VDotProd(v[k],v[k]));
   k_minus_1 = k - 1;
-  i0 = MAX(k-p, 0);
+  i0 = SUN_MAX(k-p, 0);
   
   /* Perform modified Gram-Schmidt */
   
@@ -111,7 +111,7 @@ int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
 
   vk_norm = RSqrt(N_VDotProd(v[k], v[k]));
 
-  i0 = MAX(k-p, 0);
+  i0 = SUN_MAX(k-p, 0);
   for (i=i0; i < k; i++) {
     h[i][k_minus_1] = N_VDotProd(v[i], v[k]);
   }

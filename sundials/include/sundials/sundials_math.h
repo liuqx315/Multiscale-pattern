@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Aaron Collier @ LLNL
@@ -43,12 +43,12 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-#ifndef MIN
-#define MIN(A, B) ((A) < (B) ? (A) : (B))
+#ifndef SUN_MIN
+#define SUN_MIN(A, B) ((A) < (B) ? (A) : (B))
 #endif
 
-#ifndef MAX
-#define MAX(A, B) ((A) > (B) ? (A) : (B))
+#ifndef SUN_MAX
+#define SUN_MAX(A, B) ((A) > (B) ? (A) : (B))
 #endif
 
 #ifndef SQR

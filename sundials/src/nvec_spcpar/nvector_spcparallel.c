@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Daniel R. Reynolds and Radu Serban @LLNL
  * -----------------------------------------------------------------
@@ -1598,7 +1598,7 @@ realtype N_VMinQuotient_SpcParallel(N_Vector x, N_Vector y)
             loc = Zblock + Yblock + Xblock + is;
             if (yd[loc] == ZERO) continue;
             else {
-              if (!notEvenOnce) min = MIN(min, xd[loc] / yd[loc]);
+              if (!notEvenOnce) min = SUN_MIN(min, xd[loc] / yd[loc]);
               else {
                 min = xd[loc] / yd[loc] ;
                 notEvenOnce = FALSE;

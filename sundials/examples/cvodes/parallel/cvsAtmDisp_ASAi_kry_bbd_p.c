@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4217 $
+ * $Date: 2014-09-03 16:27:34 -0700 (Wed, 03 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Lukas Jager and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -78,7 +78,7 @@
 
 #define DIFF_COEF RCONST(1.0)
 #define V_MAX     RCONST(1.0)
-#define L         (YMAX-YMIN)/RCONST(2.0)
+#define L         ((YMAX-YMIN)/RCONST(2.0))
 #define V_COEFF   V_MAX/L/L
 
 /* Initial and final times */

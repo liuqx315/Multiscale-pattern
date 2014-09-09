@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -804,7 +804,7 @@ static int Precond(realtype t, N_Vector c, N_Vector fc,
         /* Generate the jth column as a difference quotient */
         jj = if0 + j; 
         save = cdata[jj];
-        r = MAX(srur*ABS(save),r0/rewtdata[jj]);
+        r = SUN_MAX(srur*ABS(save),r0/rewtdata[jj]);
         cdata[jj] += r;
         fac = -gamma/r;
         fblock (t, cdata, jx, jy, f1, wdata);

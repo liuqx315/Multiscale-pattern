@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4216 $
+ * $Date: 2014-09-03 16:16:58 -0700 (Wed, 03 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmers: Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -1016,9 +1016,9 @@ int IDASpilsSetJacTimesVecFnB(void *ida_mem, int which, IDASpilsJacTimesVecFnB j
   idaspilsB_mem->s_jtimesB   = jtvB;
 
   if (jtvB != NULL) {
-    flag = IDASpilsSetJacTimesVecFn(IDAB_mem, IDAAspilsJacTimesVec);
+    flag = IDASpilsSetJacTimesVecFn(ida_memB, IDAAspilsJacTimesVec);
   } else {
-    flag = IDASpilsSetJacTimesVecFn(IDAB_mem, NULL);
+    flag = IDASpilsSetJacTimesVecFn(ida_memB, NULL);
   }
   return(flag);
 }

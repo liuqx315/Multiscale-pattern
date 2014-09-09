@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban  @ LLNL
  * -----------------------------------------------------------------
@@ -242,7 +242,7 @@ int cpDoProjection(CPodeMem cp_mem, realtype saved_t, int *npfPtr)
   }
 
   /* Reduce step size; return to reattempt the step */
-  eta = MAX(ETAPR, hmin / ABS(h));
+  eta = SUN_MAX(ETAPR, hmin / ABS(h));
   cpRescale(cp_mem);
 
   return(PREDICT_AGAIN);
@@ -486,8 +486,8 @@ static int cpProjNonlinearIteration(CPodeMem cp_mem)
 
     /* Test for convergence.  If m > 0, an estimate of the convergence
        rate constant is stored in crateP, and used in the test.        */
-    if (m > 0) crateP = MAX(PRJ_CRDOWN * crateP, del/delp);
-    dcon = del * MIN(ONE, crateP) / prjcoef;
+    if (m > 0) crateP = SUN_MAX(PRJ_CRDOWN * crateP, del/delp);
+    dcon = del * SUN_MIN(ONE, crateP) / prjcoef;
 
 #ifdef CPODES_DEBUG
     printf("            Convergence test  dcon = %lg\n", dcon);

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): David J. Gardner @ LLNL
  * ----------------------------------------------------------------- 
@@ -2281,7 +2281,7 @@ static void *N_VMinQuotient_PT(void *thread_data)
   for (i = start; i < end; i++) {
     if (dd[i] == ZERO)
       continue;
-    local_min = MIN(local_min, nd[i]/dd[i]);
+    local_min = SUN_MIN(local_min, nd[i]/dd[i]);
   }
 
   /* update global min */

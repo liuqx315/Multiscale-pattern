@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -838,7 +838,7 @@ realtype N_VMinQuotient_Serial(N_Vector num, N_Vector denom)
   for (i = 0; i < N; i++) {
     if (dd[i] == ZERO) continue;
     else {
-      if (!notEvenOnce) min = MIN(min, nd[i]/dd[i]);
+      if (!notEvenOnce) min = SUN_MIN(min, nd[i]/dd[i]);
       else {
 	min = nd[i]/dd[i];
         notEvenOnce = FALSE;

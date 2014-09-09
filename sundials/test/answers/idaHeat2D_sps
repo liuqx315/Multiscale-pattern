@@ -1,13 +1,15 @@
 
-idaHeat2D_klu: Heat equation, serial example problem for IDA
+.. Use approximate minimum degree column ordering.
+
+idaHeat2D_sps: Heat equation, serial example problem for IDA
           Discretized heat equation on 2D unit square.
           Zero boundary conditions, polynomial initial conditions.
           Mesh dimensions: 10 x 10        Total system size: 100
 
 Tolerance parameters:  rtol = 0   atol = 1e-08
 Constraints set to force all solution components >= 0. 
-Linear solver: IDAKLU, sparse direct solver 
-       difference quotient Jacobian
+Linear solver: IDASuperLU, sparse direct solver 
+       difference quotient Jacobian 
 IDACalcIC called with input boundary values = 0 
 
    Output Summary (umax = max-norm of solution) 
@@ -20,11 +22,11 @@ IDACalcIC called with input boundary values = 0
   0.04   4.70961e-01  5   90  106   27   108   1.91e-03 
   0.08   2.16312e-01  5  113  130   27   132   1.72e-03 
   0.16   4.53210e-02  5  137  155   28   157   3.43e-03 
-  0.32   1.98864e-03  5  173  193   29   195   6.18e-03 
-  0.64   3.83238e-06  5  210  233   31   235   2.22e-02 
-  1.28   0.00000e+00  1  227  255   34   257   1.78e-01 
-  2.56   0.00000e+00  1  230  258   37   260   1.42e+00 
-  5.12   0.00000e+00  1  231  259   38   261   2.85e+00 
- 10.24   0.00000e+00  1  232  260   39   262   5.69e+00 
+  0.32   1.98923e-03  5  173  193   29   195   6.18e-03 
+  0.64   3.88493e-03  5  211  234   31   236   2.22e-02 
+  1.28   8.16105e-01  4  254  300   48   302   3.71e-03 
+  2.56   6.57902e+01  5  309  366   56   368   4.28e-02 
+  5.12   2.66354e+03  5  374  438   57   440   2.81e-02 
+ 10.24   7.75211e+04  5  395  464   62   466   8.98e-01 
 
- netf = 2,   ncfn = 0 
+ netf = 2,   ncfn = 7 
