@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan Hindmarsh, Radu Serban and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
@@ -952,6 +952,7 @@ int IDARootInit(void *ida_mem, int nrtfn, IDARootFn g)
 #define netf           (IDA_mem->ida_netf)
 #define nni            (IDA_mem->ida_nni)
 #define nsetups        (IDA_mem->ida_nsetups)
+
 #define ns             (IDA_mem->ida_ns)
 #define linit          (IDA_mem->ida_linit)
 #define lsetup         (IDA_mem->ida_lsetup)
@@ -1122,7 +1123,7 @@ int IDASolve(void *ida_mem, realtype tout, realtype *tret,
     if (rh > ONE) hh /= rh;
 
     if (tstopset) {
-      if ( (tstop - tn)*hh < ZERO) {
+      if ( (tstop - tn)*hh <= ZERO) {
         IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDASolve", MSG_BAD_TSTOP, tstop, tn);
         return(IDA_ILL_INPUT);
       }
@@ -1579,7 +1580,7 @@ static booleantype IDAAllocVectors(IDAMem IDA_mem, N_Vector tmpl)
   /* Allocate phi[0] ... phi[maxord].  Make sure phi[2] and phi[3] are
   allocated (for use as temporary vectors), regardless of maxord.       */
 
-  maxcol = MAX(maxord,3);
+  maxcol = SUN_MAX(maxord,3);
   for (j=0; j <= maxcol; j++) {
     phi[j] = N_VClone(tmpl);
     if (phi[j] == NULL) {
@@ -1618,7 +1619,7 @@ static void IDAFreeVectors(IDAMem IDA_mem)
   N_VDestroy(delta);
   N_VDestroy(tempv1);
   N_VDestroy(tempv2);
-  maxcol = MAX(IDA_mem->ida_maxord_alloc,3);
+  maxcol = SUN_MAX(IDA_mem->ida_maxord_alloc,3);
   for(j=0; j <= maxcol; j++) N_VDestroy(phi[j]);
 
   lrw -= (maxcol + 6)*lrw1;
@@ -1669,7 +1670,7 @@ int IDAInitialSetup(IDAMem IDA_mem)
 
   /* Test for more vector operations, depending on options */
   if (suppressalg)
-    if (id->ops->nvwrmsnormmask == NULL) {
+    if (yy->ops->nvwrmsnormmask == NULL) {
       IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDAInitialSetup", MSG_BAD_NVECTOR);
       return(IDA_ILL_INPUT);
   }
@@ -2217,7 +2218,7 @@ static void IDASetCoeffs(IDAMem IDA_mem, realtype *ck)
   /* Set coefficients for the current stepsize h */
 
   if (hh != hused || kk != kused) ns = 0;
-  ns = MIN(ns+1,kused+2);
+  ns = SUN_MIN(ns+1,kused+2);
   if (kk+1 >= ns){
     beta[0] = ONE;
     alpha[0] = ONE;
@@ -2250,7 +2251,7 @@ static void IDASetCoeffs(IDAMem IDA_mem, realtype *ck)
   /* compute variable stepsize error coefficient ck */
 
   *ck = ABS(alpha[kk] + alphas - alpha0);
-  *ck = MAX(*ck, alpha[kk]);
+  *ck = SUN_MAX(*ck, alpha[kk]);
 
  /* change phi to phi-star  */
 
@@ -2381,7 +2382,7 @@ static int IDANls(IDAMem IDA_mem)
         N_VLinearSum(ONE, phi[0], -ONE, yy, tempv1);
         N_VProd(mm, tempv1, tempv1);
         rr = PT9*N_VMinQuotient(phi[0], tempv1);
-        rr = MAX(rr,PT1);
+        rr = SUN_MAX(rr,PT1);
         return(IDA_CONSTR_RECVR);
       }
     }
@@ -2539,7 +2540,7 @@ static int IDATestError(IDAMem IDA_mem, realtype ck,
       terr_km2 = (kk-1) * err_km2;
 
       /* Decrease order if errors are reduced */
-      if (MAX(terr_km1, terr_km2) <= terr_k)  knew = kk - 1; 
+      if (SUN_MAX(terr_km1, terr_km2) <= terr_k)  knew = kk - 1;
 
     } else {
 
@@ -2671,7 +2672,7 @@ static int IDAHandleNFlag(IDAMem IDA_mem, int nflag, realtype err_k, realtype er
 
       kk = knew;      
       rr = PT9 * RPowerR( TWO * err_knew + PT0001,(-ONE/(kk+1)) );
-      rr = MAX(QUARTER, MIN(PT9,rr));
+      rr = SUN_MAX(QUARTER, SUN_MIN(PT9,rr));
       hh *=rr;
       return(PREDICT_AGAIN);
       
@@ -2792,7 +2793,7 @@ static void IDACompleteStep(IDAMem IDA_mem, realtype err_k, realtype err_km1)
       else                                   {action = RAISE;    goto takeaction;}
     } else {
       terr_km1 = kk * err_km1;
-      if (terr_km1 <= MIN(terr_k, terr_kp1)) {action = LOWER;    goto takeaction;}
+      if (terr_km1 <= SUN_MIN(terr_k, terr_kp1)) {action = LOWER;    goto takeaction;}
       else if (terr_kp1 >= terr_k)           {action = MAINTAIN; goto takeaction;}
       else                                   {action = RAISE;    goto takeaction;}
     }
@@ -2815,7 +2816,7 @@ static void IDACompleteStep(IDAMem IDA_mem, realtype err_k, realtype err_km1)
       hnew = TWO * hh;
       if( (tmp = ABS(hnew)*hmax_inv) > ONE ) hnew /= tmp;
     } else if (rr <= ONE ) { 
-      rr = MAX(HALF, MIN(PT9,rr));
+      rr = SUN_MAX(HALF, SUN_MIN(PT9,rr));
       hnew = hh * rr;
     }
     
@@ -2975,7 +2976,7 @@ static int IDARcheck1(IDAMem IDA_mem)
   if (!zroot) return(IDA_SUCCESS);
 
   /* Some g_i is zero at t0; look at g at t0+(small increment). */
-  hratio = MAX(ttol/ABS(hh), PT1);
+  hratio = SUN_MAX(ttol/ABS(hh), PT1);
   smallh = hratio*hh;
   tplus = tlo + smallh;
   N_VLinearSum(ONE, phi[0], smallh, phi[1], yy);

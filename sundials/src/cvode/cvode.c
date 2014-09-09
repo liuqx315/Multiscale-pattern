@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Dan Shumaker @ LLNL
@@ -187,7 +187,7 @@
  *    MXNEF       max no. of error test failures during one step try
  *    MXNEF1      max no. of error test failures before forcing a reduction of order
  *    SMALL_NEF   if an error failure occurs and SMALL_NEF <= nef <= MXNEF1, then
- *                reset eta =  MIN(eta, ETAMXF)
+ *                reset eta =  SUN_MIN(eta, ETAMXF)
  *    LONG_WAIT   number of steps to wait before considering an order change when
  *                q==1 and MXNEF1 error test failures have occurred
  *
@@ -1153,6 +1153,15 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
       return(CV_FIRST_RHSFUNC_ERR);
     }
 
+    /* Test input tstop for legality. */
+
+    if (tstopset) {
+      if ( (tstop - tn)*(tout - tn) <= ZERO ) {
+        cvProcessError(cv_mem, CV_ILL_INPUT, "CVODE", "CVode", MSGCV_BAD_TSTOP, tstop, tn);
+        return(CV_ILL_INPUT);
+      }
+     }
+
     /* Set initial h (from H0 or cvHin). */
 
     h = hin;
@@ -1162,7 +1171,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
     if (h == ZERO) {
       tout_hin = tout;
-      if ( tstopset && (tout-tn)*(tout-tstop) > 0 ) tout_hin = tstop; 
+      if ( tstopset && (tout-tn)*(tout-tstop) > ZERO ) tout_hin = tstop; 
       hflag = cvHin(cv_mem, tout_hin);
       if (hflag != CV_SUCCESS) {
         istate = cvHandleFailure(cv_mem, hflag);
@@ -1176,10 +1185,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     /* Check for approach to tstop */
 
     if (tstopset) {
-      if ( (tstop - tn)*h < ZERO ) {
-        cvProcessError(cv_mem, CV_ILL_INPUT, "CVODE", "CVode", MSGCV_BAD_TSTOP, tstop, tn);
-        return(CV_ILL_INPUT);
-      }
       if ( (tn + h - tstop)*h > ZERO ) 
         h = (tstop - tn)*(ONE-FOUR*uround);
     }
@@ -1815,7 +1820,7 @@ static int cvHin(CVodeMem cv_mem, realtype tout)
   
   sign = (tdiff > ZERO) ? 1 : -1;
   tdist = ABS(tdiff);
-  tround = uround * MAX(ABS(tn), ABS(tout));
+  tround = uround * SUN_MAX(ABS(tn), ABS(tout));
 
   if (tdist < TWO*tround) return(CV_TOO_CLOSE);
   
@@ -2599,8 +2604,8 @@ static int cvNlsFunctional(CVodeMem cv_mem)
     
     /* Test for convergence.  If m > 0, an estimate of the convergence
        rate constant is stored in crate, and used in the test.        */
-    if (m > 0) crate = MAX(CRDOWN * crate, del / delp);
-    dcon = del * MIN(ONE, crate) / tq[4];
+    if (m > 0) crate = SUN_MAX(CRDOWN * crate, del / delp);
+    dcon = del * SUN_MIN(ONE, crate) / tq[4];
     if (dcon <= ONE) {
       acnrm = (m == 0) ? del : N_VWrmsNorm(acor, ewt);
       return(CV_SUCCESS);  /* Convergence achieved */
@@ -2759,9 +2764,9 @@ static int cvNewtonIteration(CVodeMem cv_mem)
     /* Test for convergence.  If m > 0, an estimate of the convergence
        rate constant is stored in crate, and used in the test.        */
     if (m > 0) {
-      crate = MAX(CRDOWN * crate, del/delp);
+      crate = SUN_MAX(CRDOWN * crate, del/delp);
     }
-    dcon = del * MIN(ONE, crate) / tq[4];
+    dcon = del * SUN_MIN(ONE, crate) / tq[4];
     
     if (dcon <= ONE) {
       acnrm = (m==0) ? del : N_VWrmsNorm(acor, ewt);
@@ -2857,7 +2862,7 @@ static int cvHandleNFlag(CVodeMem cv_mem, int *nflagPtr, realtype saved_t,
 
   /* Reduce step size; return to reattempt the step */
 
-  eta = MAX(ETACF, hmin / ABS(h));
+  eta = SUN_MAX(ETACF, hmin / ABS(h));
   *nflagPtr = PREV_CONV_FAIL;
   cvRescale(cv_mem);
 
@@ -2932,15 +2937,15 @@ static booleantype cvDoErrorTest(CVodeMem cv_mem, int *nflagPtr,
   /* Set h ratio eta from dsm, rescale, and return for retry of step */
   if (*nefPtr <= MXNEF1) {
     eta = ONE / (RPowerR(BIAS2*dsm,ONE/L) + ADDON);
-    eta = MAX(ETAMIN, MAX(eta, hmin / ABS(h)));
-    if (*nefPtr >= SMALL_NEF) eta = MIN(eta, ETAMXF);
+    eta = SUN_MAX(ETAMIN, SUN_MAX(eta, hmin / ABS(h)));
+    if (*nefPtr >= SMALL_NEF) eta = SUN_MIN(eta, ETAMXF);
     cvRescale(cv_mem);
     return(TRY_AGAIN);
   }
   
   /* After MXNEF1 failures, force an order reduction and retry step */
   if (q > 1) {
-    eta = MAX(ETAMIN, hmin / ABS(h));
+    eta = SUN_MAX(ETAMIN, hmin / ABS(h));
     cvAdjustOrder(cv_mem,-1);
     L = q;
     q--;
@@ -2951,7 +2956,7 @@ static booleantype cvDoErrorTest(CVodeMem cv_mem, int *nflagPtr,
 
   /* If already at order 1, restart: reload zn from scratch */
 
-  eta = MAX(ETAMIN, hmin / ABS(h));
+  eta = SUN_MAX(ETAMIN, hmin / ABS(h));
   h *= eta;
   next_h = h;
   hscale = h;
@@ -3023,7 +3028,7 @@ static void cvPrepareNextStep(CVodeMem cv_mem, realtype dsm)
 {
   /* If etamax = 1, defer step size or order changes */
   if (etamax == ONE) {
-    qwait = MAX(qwait, 2);
+    qwait = SUN_MAX(qwait, 2);
     qprime = q;
     hprime = h;
     eta = ONE;
@@ -3067,8 +3072,8 @@ static void cvSetEta(CVodeMem cv_mem)
     hprime = h;
   } else {
     /* Limit eta by etamax and hmax, then set hprime */
-    eta = MIN(eta, etamax);
-    eta /= MAX(ONE, ABS(h)*hmax_inv*eta);
+    eta = SUN_MIN(eta, etamax);
+    eta /= SUN_MAX(ONE, ABS(h)*hmax_inv*eta);
     hprime = h * eta;
     if (qprime < q) nscon = 0;
   }
@@ -3131,7 +3136,7 @@ static void cvChooseEta(CVodeMem cv_mem)
 {
   realtype etam;
   
-  etam = MAX(etaqm1, MAX(etaq, etaqp1));
+  etam = SUN_MAX(etaqm1, SUN_MAX(etaq, etaqp1));
   
   if (etam < THRESH) {
     eta = ONE;
@@ -3253,7 +3258,7 @@ static void cvBDFStab(CVodeMem cv_mem)
         ssdat[i][k] = ssdat[i-1][k];
     factorial = 1;
     for (i = 1; i <= q-1; i++) factorial *= i;
-    sq = factorial*q*(q+1)*acnrm/MAX(tq[5],TINY);
+    sq = factorial*q*(q+1)*acnrm/SUN_MAX(tq[5],TINY);
     sqm1 = factorial*q*N_VWrmsNorm(zn[q], ewt);
     sqm2 = factorial*N_VWrmsNorm(zn[q-1], ewt);
     ssdat[1][1] = sqm2*sqm2;
@@ -3275,8 +3280,8 @@ static void cvBDFStab(CVodeMem cv_mem)
            Reduce new order.                     */
         qprime = q-1;
         eta = etaqm1; 
-        eta = MIN(eta,etamax);
-        eta = eta/MAX(ONE,ABS(h)*hmax_inv*eta);
+        eta = SUN_MIN(eta,etamax);
+        eta = eta/SUN_MAX(ONE,ABS(h)*hmax_inv*eta);
         hprime = h*eta;
         nor = nor + 1;
       }
@@ -3362,8 +3367,8 @@ static int cvSLdet(CVodeMem cv_mem)
     smaxk = ZERO;
     
     for (i=1; i<=5; i++) {
-      smink = MIN(smink,ssdat[i][k]);
-      smaxk = MAX(smaxk,ssdat[i][k]);
+      smink = SUN_MIN(smink,ssdat[i][k]);
+      smaxk = SUN_MAX(smaxk,ssdat[i][k]);
     }
     
     if (smink < TINY*smaxk) {
@@ -3399,8 +3404,8 @@ static int cvSLdet(CVodeMem cv_mem)
      Return a kflag = 1 if this procedure works. If three root 
      differ more than vrrt2, return error kflag = -3.    */
   
-  vmin = MIN(vrat[1],MIN(vrat[2],vrat[3]));
-  vmax = MAX(vrat[1],MAX(vrat[2],vrat[3]));
+  vmin = SUN_MIN(vrat[1],SUN_MIN(vrat[2],vrat[3]));
+  vmax = SUN_MAX(vrat[1],SUN_MAX(vrat[2],vrat[3]));
   
   if (vmin < vrrtol*vrrtol) {
 
@@ -3412,7 +3417,7 @@ static int cvSLdet(CVodeMem cv_mem)
       drrmax = ZERO;
       for (k = 1;k<=3;k++) {
         adrr = ABS(rav[k] - rr);
-        drrmax = MAX(drrmax, adrr);
+        drrmax = SUN_MAX(drrmax, adrr);
       }
       if (drrmax > vrrt2) kflag = -3;    
       kflag = 1;
@@ -3637,7 +3642,7 @@ static int cvRcheck1(CVodeMem cv_mem)
   if (!zroot) return(CV_SUCCESS);
 
   /* Some g_i is zero at t0; look at g at t0+(small increment). */
-  hratio = MAX(ttol/ABS(h), PT1);
+  hratio = SUN_MAX(ttol/ABS(h), PT1);
   smallh = hratio*h;
   tplus = tlo + smallh;
   N_VLinearSum(ONE, zn[0], hratio, zn[1], y);

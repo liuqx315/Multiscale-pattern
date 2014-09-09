@@ -1501,6 +1501,42 @@ Supply a pointer for user data                   :c:func:`ARKodeSetUserData()`  
    
    **Notes:** Pass 0.0 to return ARKode to the default (adaptive-step) mode.  
 
+   Use of this function is not recommended, since we may give no
+   assurance of the validity of the computed solutions.  It is
+   primarily provided for code-to-code verification testing purposes.
+
+   When using :c:func:`ARKodeSetFixedStep()`, any values provided to
+   the functions 
+   :c:func:`ARKodeSetInitStep()`,
+   :c:func:`ARKodeSetAdaptivityFn()`,
+   :c:func:`ARKodeSetMaxErrTestFails()`, 
+   :c:func:`ARKodeSetAdaptivityMethod()`,
+   :c:func:`ARKodeSetCFLFraction()`, 
+   :c:func:`ARKodeSetErrorBias()`, 
+   :c:func:`ARKodeSetFixedStepBounds()`,
+   :c:func:`ARKodeSetMaxCFailGrowth()`,
+   :c:func:`ARKodeSetMaxEFailGrowth()`,
+   :c:func:`ARKodeSetMaxFirstGrowth()`,
+   :c:func:`ARKodeSetMaxGrowth()`, 
+   :c:func:`ARKodeSetSafetyFactor()`, 
+   :c:func:`ARKodeSetSmallNumEFails()` and
+   :c:func:`ARKodeSetStabilityFn()` 
+   will be ignored, since temporal adaptivity is disabled. 
+
+   If both :c:func:`ARKodeSetFixedStep()` and
+   :c:func:`ARKodeSetStopTime()` are used, then the fixed step size
+   will be used for all steps until the final step preceding the
+   provided stop time (which may be shorter).  To resume use of the
+   previous fixed step size, another call to
+   :c:func:`ARKodeSetFixedStep()` must be made prior to calling
+   :c:func:`ARKode()` to resume integration.
+
+   It is *not* recommended that :c:func:`ARKodeSetFixedStep()` be used
+   in concert with :c:func:`ARKodeSetMaxStep()` or
+   :c:func:`ARKodeSetMinStep()`, since at best those routines will
+   provide no useful information to the solver, and at worst they may
+   interfere with the desired fixed step size.
+
 
 
 

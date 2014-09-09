@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4081 $
- * $Date: 2014-04-25 11:59:36 -0700 (Fri, 25 Apr 2014) $
+ * $Revision: 4220 $
+ * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban and Cosmin Petra @ LLNL
  * -----------------------------------------------------------------
@@ -127,7 +127,7 @@ int IDASetMaxOrd(void *ida_mem, int maxord)
     return(IDA_ILL_INPUT);
   }  
 
-  IDA_mem->ida_maxord = MIN(maxord,MAXORD_DEFAULT);
+  IDA_mem->ida_maxord = SUN_MIN(maxord,MAXORD_DEFAULT);
 
   return(IDA_SUCCESS);
 }
@@ -222,7 +222,7 @@ int IDASetStopTime(void *ida_mem, realtype tstop)
   if (IDA_mem->ida_nst > 0) {
 
     if ( (tstop - IDA_mem->ida_tn) * IDA_mem->ida_hh < ZERO ) {
-      IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDASetStopTime", MSG_BAD_TSTOP, IDA_mem->ida_tn);
+      IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDASetStopTime", MSG_BAD_TSTOP, tstop, IDA_mem->ida_tn);
       return(IDA_ILL_INPUT);
     }
 
