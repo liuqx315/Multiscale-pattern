@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4243 $
+ * $Date: 2014-10-17 10:51:45 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh and
  *                Radu Serban @ LLNL
@@ -477,7 +477,7 @@ static int PrecSetupBD(N_Vector cc, N_Vector cscale,
       for (j = 0; j < NUM_SPECIES; j++) {
         
         csave = cxy[j];  /* Save the j,jx,jy element of cc */
-        r = SUN_MAX(sqruround*ABS(csave), r0/scxy[j]);
+        r = SUN_MAX(sqruround*SUN_ABS(csave), r0/scxy[j]);
         cxy[j] += r; /* Perturb the j,jx,jy element of cc */
         fac = ONE/r;
         
@@ -626,7 +626,7 @@ static void InitUserData(UserData data)
   data->dx = (data->ax)/(MX-1);
   data->dy = (data->ay)/(MY-1);
   data->uround = UNIT_ROUNDOFF;
-  data->sqruround = SQRT(data->uround);
+  data->sqruround = SUN_SQRT(data->uround);
 
   /* Set up the coefficients a and b plus others found in the equations */
   np = data->np;

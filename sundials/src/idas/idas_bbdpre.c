@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4259 $
+ * $Date: 2014-11-12 16:57:08 -0800 (Wed, 12 Nov 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -185,7 +185,7 @@ int IDABBDPrecInit(void *ida_mem, long int Nlocal,
   pdata->tempv4 = tempv4;
   
   /* Set rel_yy based on input value dq_rel_yy (0 implies default). */
-  pdata->rel_yy = (dq_rel_yy > ZERO) ? dq_rel_yy : RSqrt(uround); 
+  pdata->rel_yy = (dq_rel_yy > ZERO) ? dq_rel_yy : SUN_SQRT(uround); 
 
   /* Store Nlocal to be used in IDABBDPrecSetup */
   pdata->n_local = Nlocal;
@@ -242,7 +242,7 @@ int IDABBDPrecReInit(void *ida_mem,
   pdata->mldq = SUN_MIN(Nlocal-1, SUN_MAX(0, mldq));
 
   /* Set rel_yy based on input value dq_rel_yy (0 implies default). */
-  pdata->rel_yy = (dq_rel_yy > ZERO) ? dq_rel_yy : RSqrt(uround); 
+  pdata->rel_yy = (dq_rel_yy > ZERO) ? dq_rel_yy : SUN_SQRT(uround); 
 
   /* Re-initialize nge */
   pdata->nge = 0;
@@ -549,15 +549,15 @@ static int IBBDDQJac(IBBDPrecData pdata, realtype tt, realtype cj,
       /* Set increment inc to yj based on rel_yy*abs(yj), with
          adjustments using ypj and ewtj if this is small, and a further
          adjustment to give it the same sign as hh*ypj. */
-      inc = rel_yy*SUN_MAX(ABS(yj), SUN_MAX( ABS(hh*ypj), ONE/ewtj));
+      inc = rel_yy*SUN_MAX(SUN_ABS(yj), SUN_MAX( SUN_ABS(hh*ypj), ONE/ewtj));
       if (hh*ypj < ZERO) inc = -inc;
       inc = (yj + inc) - yj;
       
       /* Adjust sign(inc) again if yj has an inequality constraint. */
       if (constraints != NULL) {
         conj = cnsdata[j];
-        if (ABS(conj) == ONE)      {if ((yj+inc)*conj <  ZERO) inc = -inc;}
-        else if (ABS(conj) == TWO) {if ((yj+inc)*conj <= ZERO) inc = -inc;}
+        if (SUN_ABS(conj) == ONE)      {if ((yj+inc)*conj <  ZERO) inc = -inc;}
+        else if (SUN_ABS(conj) == TWO) {if ((yj+inc)*conj <= ZERO) inc = -inc;}
       }
 
       /* Increment yj and ypj. */
@@ -579,13 +579,13 @@ static int IBBDDQJac(IBBDPrecData pdata, realtype tt, realtype cj,
       ewtj = ewtdata[j];
 
       /* Set increment inc as before .*/
-      inc = rel_yy*SUN_MAX(ABS(yj), SUN_MAX( ABS(hh*ypj), ONE/ewtj));
+      inc = rel_yy*SUN_MAX(SUN_ABS(yj), SUN_MAX( SUN_ABS(hh*ypj), ONE/ewtj));
       if (hh*ypj < ZERO) inc = -inc;
       inc = (yj + inc) - yj;
       if (constraints != NULL) {
         conj = cnsdata[j];
-        if (ABS(conj) == ONE)      {if ((yj+inc)*conj <  ZERO) inc = -inc;}
-        else if (ABS(conj) == TWO) {if ((yj+inc)*conj <= ZERO) inc = -inc;}
+        if (SUN_ABS(conj) == ONE)      {if ((yj+inc)*conj <  ZERO) inc = -inc;}
+        else if (SUN_ABS(conj) == TWO) {if ((yj+inc)*conj <= ZERO) inc = -inc;}
       }
 
       /* Form difference quotients and load into PP. */

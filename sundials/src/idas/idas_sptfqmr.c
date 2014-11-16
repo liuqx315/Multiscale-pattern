@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4259 $
+ * $Date: 2014-11-12 16:57:08 -0800 (Wed, 12 Nov 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -231,7 +231,7 @@ int IDASptfqmr(void *ida_mem, int maxl)
 
   /* Compute sqrtN from a dot product */
   N_VConst(ONE, ytemp);
-  sqrtN = RSqrt(N_VDotProd(ytemp, ytemp));
+  sqrtN = SUN_SQRT(N_VDotProd(ytemp, ytemp));
 
   /* Call SptfqmrMalloc to allocate workspace for Sptfqmr */
   sptfqmr_mem = NULL;

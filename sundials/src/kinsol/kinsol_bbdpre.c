@@ -1,7 +1,7 @@
 /*
  *-----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4260 $
+ * $Date: 2014-11-12 16:58:02 -0800 (Wed, 12 Nov 2014) $
  *-----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -181,7 +181,7 @@ int KINBBDPrecInit(void *kinmem, long int Nlocal,
   /* set rel_uu based on input value dq_rel_uu */
 
   if (dq_rel_uu > ZERO) pdata->rel_uu = dq_rel_uu;
-  else pdata->rel_uu = RSqrt(uround);  /* using dq_rel_uu = 0.0 means use default */
+  else pdata->rel_uu = SUN_SQRT(uround);  /* using dq_rel_uu = 0.0 means use default */
 
   /* store Nlocal to be used by the preconditioner routines */
 
@@ -511,7 +511,7 @@ static int KBBDDQJac(KBBDPrecData pdata,
     /* increment all u_j in group */
 
     for(j = group - 1; j < Nlocal; j += width) {
-      inc = rel_uu * SUN_MAX(ABS(udata[j]), (ONE / uscdata[j]));
+      inc = rel_uu * SUN_MAX(SUN_ABS(udata[j]), (ONE / uscdata[j]));
       utempdata[j] += inc;
     }
   
@@ -525,7 +525,7 @@ static int KBBDDQJac(KBBDPrecData pdata,
     for (j = group - 1; j < Nlocal; j += width) {
       utempdata[j] = udata[j];
       col_j = BAND_COL(PP,j);
-      inc = rel_uu * SUN_MAX(ABS(udata[j]) , (ONE / uscdata[j]));
+      inc = rel_uu * SUN_MAX(SUN_ABS(udata[j]) , (ONE / uscdata[j]));
       inc_inv = ONE / inc;
       i1 = SUN_MAX(0, (j - mukeep));
       i2 = SUN_MIN((j + mlkeep), (Nlocal - 1));

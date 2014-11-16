@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4182 $
- * $Date: 2014-07-23 13:05:06 -0700 (Wed, 23 Jul 2014) $
+ * $Revision: 4243 $
+ * $Date: 2014-10-17 10:51:45 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Carol S. Woodward @ LLNL.  Adapted from the file
  *    kinRoboKin_dns.c by Radu Serban @ LLNL
@@ -130,7 +130,7 @@ int main()
   /* Initial guess */
 
   N_VConst_Serial(ONE, y);
-  for(i = 1; i <= NVAR; i++) Ith(y,i) = SQRT(TWO)/TWO;
+  for(i = 1; i <= NVAR; i++) Ith(y,i) = SUN_SQRT(TWO)/TWO;
 
   printf("Initial guess:\n");
   PrintOutput(y);

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4242 $
+ * $Date: 2014-10-17 10:01:32 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -318,7 +318,7 @@ static int func(N_Vector u, N_Vector f, void *user_data)
   L2 = udata[5];
 
   fdata[0] = PT5 * sin(x1*x2) - PT25 * x2 / PI - PT5 * x1;
-  fdata[1] = (ONE - PT25/PI)*(EXP(TWO*x1)-E) + E*x2/PI - TWO*E*x1;
+  fdata[1] = (ONE - PT25/PI)*(SUN_EXP(TWO*x1)-E) + E*x2/PI - TWO*E*x1;
   fdata[2] = l1 - x1 + lb[0];
   fdata[3] = L1 - x1 + ub[0];
   fdata[4] = l2 - x2 + lb[1];

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4265 $
+ * $Date: 2014-11-12 17:08:08 -0800 (Wed, 12 Nov 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -214,7 +214,7 @@ void force(N_Vector yy, realtype *Q, UserData data)
   c21 = c2*c1 + s2*s1;
 
   l2 = x*x - x*(c2+a*c1) + (ONE + a*a)/FOUR + a*c21/TWO;
-  l = RSqrt(l2);
+  l = SUN_SQRT(l2);
   ld = TWO*x*xd - xd*(c2+a*c1) + x*(s2*pd+a*s1*qd) - a*s21*(pd-qd)/TWO;
   ld /= TWO*l;
 

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4242 $
+ * $Date: 2014-10-17 10:01:32 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen and Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -57,7 +57,7 @@
 #include <nvector/nvector_serial.h>   /* definitions N_Vector, macro NV_DATA_S */
 #include <sundials/sundials_dense.h>  /* use generic DENSE solver for prec. */
 #include <sundials/sundials_types.h>  /* definition of realtype */
-#include <sundials/sundials_math.h>   /* contains macros SQR and EXP */
+#include <sundials/sundials_math.h>   /* contains macros SUN_SQR and EXP */
 
 /* Problem Constants */
 
@@ -352,8 +352,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
   s = sin(data->om*t);
   if (s > ZERO) {
-    q3 = EXP(-A3/s);
-    data->q4 = EXP(-A4/s);
+    q3 = SUN_EXP(-A3/s);
+    data->q4 = SUN_EXP(-A4/s);
   } else {
     q3 = ZERO;
     data->q4 = ZERO;
@@ -375,8 +375,8 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
 
     zdn = ZMIN + (jz - RCONST(0.5))*delz;
     zup = zdn + delz;
-    czdn = verdco*EXP(RCONST(0.2)*zdn);
-    czup = verdco*EXP(RCONST(0.2)*zup);
+    czdn = verdco*SUN_EXP(RCONST(0.2)*zdn);
+    czup = verdco*SUN_EXP(RCONST(0.2)*zup);
     idn = (jz == 0) ? 1 : -1;
     iup = (jz == MZ-1) ? -1 : 1;
     for (jx=0; jx < MX; jx++) {
@@ -485,8 +485,8 @@ static int Precond(realtype tn, N_Vector y, N_Vector fy, booleantype jok,
     for (jz=0; jz < MZ; jz++) {
       zdn = ZMIN + (jz - RCONST(0.5))*delz;
       zup = zdn + delz;
-      czdn = verdco*EXP(RCONST(0.2)*zdn);
-      czup = verdco*EXP(RCONST(0.2)*zup);
+      czdn = verdco*SUN_EXP(RCONST(0.2)*zdn);
+      czup = verdco*SUN_EXP(RCONST(0.2)*zup);
       diag = -(czdn + czup + RCONST(2.0)*hordco);
       for (jx=0; jx < MX; jx++) {
         c1 = IJKth(ydata,1,jx,jz);
@@ -665,9 +665,9 @@ static void InitUserData(UserData data)
   data->om = PI/HALFDAY;
   data->dx = (XMAX-XMIN)/(MX-1);
   data->dz = (ZMAX-ZMIN)/(MZ-1);
-  data->hdco = KH/SQR(data->dx);
+  data->hdco = KH/SUN_SQR(data->dx);
   data->haco = VEL/(RCONST(2.0)*data->dx);
-  data->vdco = (ONE/SQR(data->dz))*KV0;
+  data->vdco = (ONE/SUN_SQR(data->dz))*KV0;
 
   data->p[0] = Q1;
   data->p[1] = Q2;
@@ -718,12 +718,12 @@ static void SetInitialProfiles(N_Vector y, realtype dx, realtype dz)
 
   for (jz=0; jz < MZ; jz++) {
     z = ZMIN + jz*dz;
-    cz = SQR(RCONST(0.1)*(z - ZMID));
-    cz = ONE - cz + RCONST(0.5)*SQR(cz);
+    cz = SUN_SQR(RCONST(0.1)*(z - ZMID));
+    cz = ONE - cz + RCONST(0.5)*SUN_SQR(cz);
     for (jx=0; jx < MX; jx++) {
       x = XMIN + jx*dx;
-      cx = SQR(RCONST(0.1)*(x - XMID));
-      cx = ONE - cx + RCONST(0.5)*SQR(cx);
+      cx = SUN_SQR(RCONST(0.1)*(x - XMID));
+      cx = ONE - cx + RCONST(0.5)*SUN_SQR(cx);
       IJKth(ydata,1,jx,jz) = C1_SCALE*cx*cz; 
       IJKth(ydata,2,jx,jz) = C2_SCALE*cx*cz;
     }

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4243 $
+ * $Date: 2014-10-17 10:51:45 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -97,7 +97,7 @@
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fct. and macros */
 #include <sundials/sundials_dense.h> /* use generic DENSE solver in preconditioning */
 #include <sundials/sundials_types.h> /* definition of realtype */
-#include <sundials/sundials_math.h>  /* contains the macros ABS and SQR */
+#include <sundials/sundials_math.h>  /* contains the macros ABS and SUN_SQR */
 
 /* Constants */
 
@@ -369,8 +369,8 @@ static void InitUserData(WebData wdata)
   dx = wdata->dx = DX;
   dy = wdata->dy = DY;
   for (i = 0; i < ns; i++) {
-    cox[i] = diff[i]/SQR(dx);
-    coy[i] = diff[i]/SQR(dy);
+    cox[i] = diff[i]/SUN_SQR(dx);
+    coy[i] = diff[i]/SUN_SQR(dy);
   }
 
   /* Set remaining method parameters */
@@ -379,7 +379,7 @@ static void InitUserData(WebData wdata)
   wdata->mq = MQ;
   wdata->mx = MX;
   wdata->my = MY;
-  wdata->srur = SQRT(UNIT_ROUNDOFF);
+  wdata->srur = SUN_SQRT(UNIT_ROUNDOFF);
   wdata->mxmp = MXMP;
   wdata->ngrp = NGRP;
   wdata->ngx = NGX;
@@ -428,15 +428,15 @@ static void CInit(N_Vector c, WebData wdata)
   dx = wdata->dx;
   dy = wdata->dy;
 
-  x_factor = RCONST(4.0)/SQR(AX);
-  y_factor = RCONST(4.0)/SQR(AY);
+  x_factor = RCONST(4.0)/SUN_SQR(AX);
+  y_factor = RCONST(4.0)/SUN_SQR(AY);
   for (jy = 0; jy < MY; jy++) {
     y = jy*dy;
-    argy = SQR(y_factor*y*(AY-y)); 
+    argy = SUN_SQR(y_factor*y*(AY-y));
     iyoff = mxns*jy;
     for (jx = 0; jx < MX; jx++) {
       x = jx*dx;
-      argx = SQR(x_factor*x*(AX-x));
+      argx = SUN_SQR(x_factor*x*(AX-x));
       ioff = iyoff + ns*jx;
       for (i = 1; i <= ns; i++) {
         ici = ioff + i-1;
@@ -789,7 +789,7 @@ static int Precond(realtype t, N_Vector c, N_Vector fc,
   f1 = NV_DATA_S(vtemp1);
   
   fac = N_VWrmsNorm (fc, rewt);
-  r0 = RCONST(1000.0)*ABS(gamma)*uround*NEQ*fac;
+  r0 = RCONST(1000.0)*SUN_ABS(gamma)*uround*NEQ*fac;
   if (r0 == ZERO) r0 = ONE;
   
   for (igy = 0; igy < ngy; igy++) {
@@ -804,7 +804,7 @@ static int Precond(realtype t, N_Vector c, N_Vector fc,
         /* Generate the jth column as a difference quotient */
         jj = if0 + j; 
         save = cdata[jj];
-        r = SUN_MAX(srur*ABS(save),r0/rewtdata[jj]);
+        r = SUN_MAX(srur*SUN_ABS(save),r0/rewtdata[jj]);
         cdata[jj] += r;
         fac = -gamma/r;
         fblock (t, cdata, jx, jy, f1, wdata);

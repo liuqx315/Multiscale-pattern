@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4240 $
+ * $Date: 2014-10-16 13:43:22 -0700 (Thu, 16 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -106,7 +106,7 @@ static int f(realtype t, N_Vector y, N_Vector ydot, void *f_data)
   y1 = NV_Ith_S(y,1);
 
   NV_Ith_S(ydot,0) = y1;
-  NV_Ith_S(ydot,1) = (ONE - SQR(y0))* P1_ETA * y1 - y0;
+  NV_Ith_S(ydot,1) = (ONE - SUN_SQR(y0))* P1_ETA * y1 - y0;
 
   return(0);
 } 

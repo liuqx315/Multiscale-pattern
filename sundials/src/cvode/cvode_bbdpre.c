@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4255 $
+ * $Date: 2014-11-12 16:52:26 -0800 (Wed, 12 Nov 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -154,7 +154,7 @@ int CVBBDPrecInit(void *cvode_mem, long int Nlocal,
   }
 
   /* Set pdata->dqrely based on input dqrely (0 implies default). */
-  pdata->dqrely = (dqrely > ZERO) ? dqrely : RSqrt(uround);
+  pdata->dqrely = (dqrely > ZERO) ? dqrely : SUN_SQRT(uround);
 
   /* Store Nlocal to be used in CVBBDPrecSetup */
   pdata->n_local = Nlocal;
@@ -212,7 +212,7 @@ int CVBBDPrecReInit(void *cvode_mem,
   pdata->mldq = SUN_MIN(Nlocal-1, SUN_MAX(0,mldq));
 
   /* Set pdata->dqrely based on input dqrely (0 implies default). */
-  pdata->dqrely = (dqrely > ZERO) ? dqrely : RSqrt(uround);
+  pdata->dqrely = (dqrely > ZERO) ? dqrely : SUN_SQRT(uround);
 
   /* Re-initialize nge */
   pdata->nge = 0;
@@ -517,7 +517,7 @@ static int CVBBDDQJac(CVBBDPrecData pdata, realtype t,
   /* Set minimum increment based on uround and norm of g */
   gnorm = N_VWrmsNorm(gy, ewt);
   minInc = (gnorm != ZERO) ?
-           (MIN_INC_MULT * ABS(h) * uround * Nlocal * gnorm) : ONE;
+           (MIN_INC_MULT * SUN_ABS(h) * uround * Nlocal * gnorm) : ONE;
 
   /* Set bandwidth and number of column groups for band differencing */
   width = mldq + mudq + 1;
@@ -528,7 +528,7 @@ static int CVBBDDQJac(CVBBDPrecData pdata, realtype t,
     
     /* Increment all y_j in group */
     for(j=group-1; j < Nlocal; j+=width) {
-      inc = SUN_MAX(dqrely*ABS(y_data[j]), minInc/ewt_data[j]);
+      inc = SUN_MAX(dqrely*SUN_ABS(y_data[j]), minInc/ewt_data[j]);
       ytemp_data[j] += inc;
     }
 
@@ -541,7 +541,7 @@ static int CVBBDDQJac(CVBBDPrecData pdata, realtype t,
     for (j=group-1; j < Nlocal; j+=width) {
       ytemp_data[j] = y_data[j];
       col_j = BAND_COL(savedJ,j);
-      inc = SUN_MAX(dqrely*ABS(y_data[j]), minInc/ewt_data[j]);
+      inc = SUN_MAX(dqrely*SUN_ABS(y_data[j]), minInc/ewt_data[j]);
       inc_inv = ONE/inc;
       i1 = SUN_MAX(0, j-mukeep);
       i2 = SUN_MIN(j+mlkeep, Nlocal-1);

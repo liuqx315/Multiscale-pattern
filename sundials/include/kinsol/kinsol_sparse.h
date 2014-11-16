@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4268 $
+ * $Date: 2014-11-14 16:37:06 -0800 (Fri, 14 Nov 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -92,18 +92,11 @@ extern "C" {
  *     as temporary storage or work space.                     
  *                                                                
  * A KINSlsSparseJacFn should return                                
- *     0 if successful,                                           
+ *     0 if successful,                      
+ *     1 if successful but the user code indicates a new factorization
+ *       of the Jacobian is required
  *     a positive int if a recoverable error occurred, or         
  *     a negative int if a nonrecoverable error occurred.         
- *
- * -----------------------------------------------------------------
- *
-  * NOTE: If the user's Jacobian routine needs other quantities,   
- *     they are accessible as follows: hcur (the current stepsize)
- *     and ewt (the error weight vector) are accessible through   
- *     IDAGetCurrentStep and IDAGetErrWeights, respectively 
- *     (see ida.h). The unit roundoff is available as 
- *     UNIT_ROUNDOFF defined in sundials_types.h.
  *
  * -----------------------------------------------------------------
  */

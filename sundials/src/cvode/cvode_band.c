@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4241 $
+ * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -262,7 +262,7 @@ static int cvBandSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
 
   /* Use nst, gamma/gammap, and convfail to set J eval. flag jok */
 
-  dgamma = ABS((gamma/gammap) - ONE);
+  dgamma = SUN_ABS((gamma/gammap) - ONE);
   jbad = (nst == 0) || (nst > nstlj + CVD_MSBJ) ||
          ((convfail == CV_FAIL_BAD_J) && (dgamma < CVD_DGMAX)) ||
          (convfail == CV_FAIL_OTHER);

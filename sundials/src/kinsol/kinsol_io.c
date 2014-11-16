@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4260 $
+ * $Date: 2014-11-12 16:58:02 -0800 (Wed, 12 Nov 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -667,9 +667,9 @@ int KINSetRelErrFunc(void *kinmem, realtype relfunc)
 
   if (relfunc == ZERO) {
     uround = kin_mem->kin_uround;
-    kin_mem->kin_sqrt_relfunc = RSqrt(uround);
+    kin_mem->kin_sqrt_relfunc = SUN_SQRT(uround);
   } else {
-    kin_mem->kin_sqrt_relfunc = RSqrt(relfunc);
+    kin_mem->kin_sqrt_relfunc = SUN_SQRT(relfunc);
   }
 
   return(KIN_SUCCESS);

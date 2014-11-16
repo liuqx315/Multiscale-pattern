@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4241 $
+ * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -100,11 +100,11 @@ long int bandGBTRF(realtype **a, long int n, long int mu, long int ml, long int 
     /* find l = pivot row number */
 
     l=k;
-    max = ABS(*diag_k);
+    max = SUN_ABS(*diag_k);
     for (i=k+1, kptr=sub_diag_k; i <= last_row_k; i++, kptr++) { 
-      if (ABS(*kptr) > max) {
+      if (SUN_ABS(*kptr) > max) {
 	l=i;
-	max = ABS(*kptr);
+	max = SUN_ABS(*kptr);
       }
     }
     storage_l = ROW(l, k, smu);

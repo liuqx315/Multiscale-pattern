@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4233 $
+ * $Date: 2014-10-08 16:11:32 -0700 (Wed, 08 Oct 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -148,8 +148,11 @@ int CVSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
 typedef struct CVSpilsMemRecB {
 
   CVSpilsJacTimesVecFnB s_jtimesB;
+  CVSpilsJacTimesVecFnBS s_jtimesBS;
   CVSpilsPrecSetupFnB s_psetB;
+  CVSpilsPrecSetupFnBS s_psetBS;
   CVSpilsPrecSolveFnB s_psolveB;
+  CVSpilsPrecSolveFnBS s_psolveBS;
   void *s_P_dataB;
 
 } *CVSpilsMemB;

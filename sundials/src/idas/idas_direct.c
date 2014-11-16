@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4259 $
+ * $Date: 2014-11-12 16:57:08 -0800 (Wed, 12 Nov 2014) $
  * ----------------------------------------------------------------- 
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -380,7 +380,7 @@ int idaDlsDenseDQJac(long int N, realtype tt, realtype c_j,
   yp_data  = N_VGetArrayPointer(yp);
   if(constraints!=NULL) cns_data = N_VGetArrayPointer(constraints);
 
-  srur = RSqrt(uround);
+  srur = SUN_SQRT(uround);
 
   for (j=0; j < N; j++) {
 
@@ -395,7 +395,7 @@ int idaDlsDenseDQJac(long int N, realtype tt, realtype c_j,
     adjustments using yp_j and ewt_j if this is small, and a further
     adjustment to give it the same sign as hh*yp_j. */
 
-    inc = SUN_MAX( srur * SUN_MAX( ABS(yj), ABS(hh*ypj) ) , ONE/ewt_data[j] );
+    inc = SUN_MAX( srur * SUN_MAX( SUN_ABS(yj), SUN_ABS(hh*ypj) ) , ONE/ewt_data[j] );
 
     if (hh*ypj < ZERO) inc = -inc;
     inc = (yj + inc) - yj;
@@ -403,8 +403,8 @@ int idaDlsDenseDQJac(long int N, realtype tt, realtype c_j,
     /* Adjust sign(inc) again if y_j has an inequality constraint. */
     if (constraints != NULL) {
       conj = cns_data[j];
-      if (ABS(conj) == ONE)      {if((yj+inc)*conj <  ZERO) inc = -inc;}
-      else if (ABS(conj) == TWO) {if((yj+inc)*conj <= ZERO) inc = -inc;}
+      if (SUN_ABS(conj) == ONE)      {if((yj+inc)*conj <  ZERO) inc = -inc;}
+      else if (SUN_ABS(conj) == TWO) {if((yj+inc)*conj <= ZERO) inc = -inc;}
     }
 
     /* Increment y_j and yp_j, call res, and break on error return. */
@@ -497,7 +497,7 @@ int idaDlsBandDQJac(long int N, long int mupper, long int mlower,
 
   /* Compute miscellaneous values for the Jacobian computation. */
 
-  srur = RSqrt(uround);
+  srur = SUN_SQRT(uround);
   width = mlower + mupper + 1;
   ngroups = SUN_MIN(width, N);
 
@@ -515,7 +515,7 @@ int idaDlsBandDQJac(long int N, long int mupper, long int mlower,
         adjustments using ypj and ewtj if this is small, and a further
         adjustment to give it the same sign as hh*ypj. */
 
-        inc = SUN_MAX( srur * SUN_MAX( ABS(yj), ABS(hh*ypj) ) , ONE/ewtj );
+        inc = SUN_MAX( srur * SUN_MAX( SUN_ABS(yj), SUN_ABS(hh*ypj) ) , ONE/ewtj );
 
         if (hh*ypj < ZERO) inc = -inc;
         inc = (yj + inc) - yj;
@@ -524,8 +524,8 @@ int idaDlsBandDQJac(long int N, long int mupper, long int mlower,
 
         if (constraints != NULL) {
           conj = cns_data[j];
-          if (ABS(conj) == ONE)      {if((yj+inc)*conj <  ZERO) inc = -inc;}
-          else if (ABS(conj) == TWO) {if((yj+inc)*conj <= ZERO) inc = -inc;}
+          if (SUN_ABS(conj) == ONE)      {if((yj+inc)*conj <  ZERO) inc = -inc;}
+          else if (SUN_ABS(conj) == TWO) {if((yj+inc)*conj <= ZERO) inc = -inc;}
         }
 
         /* Increment yj and ypj. */
@@ -553,13 +553,13 @@ int idaDlsBandDQJac(long int N, long int mupper, long int mlower,
       
       /* Set increment inc exactly as above. */
 
-      inc = SUN_MAX( srur * SUN_MAX( ABS(yj), ABS(hh*ypj) ) , ONE/ewtj );
+      inc = SUN_MAX( srur * SUN_MAX( SUN_ABS(yj), SUN_ABS(hh*ypj) ) , ONE/ewtj );
       if (hh*ypj < ZERO) inc = -inc;
       inc = (yj + inc) - yj;
       if (constraints != NULL) {
         conj = cns_data[j];
-        if (ABS(conj) == ONE)      {if((yj+inc)*conj <  ZERO) inc = -inc;}
-        else if (ABS(conj) == TWO) {if((yj+inc)*conj <= ZERO) inc = -inc;}
+        if (SUN_ABS(conj) == ONE)      {if((yj+inc)*conj <  ZERO) inc = -inc;}
+        else if (SUN_ABS(conj) == TWO) {if((yj+inc)*conj <= ZERO) inc = -inc;}
       }
       
       /* Load the difference quotient Jacobian elements for column j. */
@@ -915,9 +915,9 @@ static int idaDlsDenseJacBSWrapper(long int NeqB, realtype tt, realtype c_jB,
   /* Get forward solution from interpolation. */
   if( noInterp == FALSE) {
     if (interpSensi)
-      flag = IDAADJ_mem->ia_getY(ida_mem, tt, yyTmp, ypTmp, yySTmp, ypSTmp);
+      flag = IDAADJ_mem->ia_getY(IDA_mem, tt, yyTmp, ypTmp, yySTmp, ypSTmp);
     else
-      flag = IDAADJ_mem->ia_getY(ida_mem, tt, yyTmp, ypTmp, NULL, NULL);
+      flag = IDAADJ_mem->ia_getY(IDA_mem, tt, yyTmp, ypTmp, NULL, NULL);
   
     if (flag != IDA_SUCCESS) {
       IDAProcessError(IDAB_mem->IDA_mem, -1, "IDASDLS", "idaDlsDenseJacBSWrapper", MSGD_BAD_T);
@@ -1014,9 +1014,9 @@ static int idaDlsBandJacBSWrapper(long int NeqB, long int mupperB, long int mlow
   /* Get forward solution from interpolation. */
   if( noInterp == FALSE) {
     if (interpSensi)
-      flag = IDAADJ_mem->ia_getY(ida_mem, tt, yyTmp, ypTmp, yySTmp, ypSTmp);
+      flag = IDAADJ_mem->ia_getY(IDA_mem, tt, yyTmp, ypTmp, yySTmp, ypSTmp);
     else
-      flag = IDAADJ_mem->ia_getY(ida_mem, tt, yyTmp, ypTmp, NULL, NULL);
+      flag = IDAADJ_mem->ia_getY(IDA_mem, tt, yyTmp, ypTmp, NULL, NULL);
   
     if (flag != IDA_SUCCESS) {
       IDAProcessError(IDAB_mem->IDA_mem, -1, "IDASDLS", "idaDlsBandJacBSWrapper", MSGD_BAD_T);

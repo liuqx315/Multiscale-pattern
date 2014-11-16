@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4242 $
+ * $Date: 2014-10-17 10:01:32 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -64,7 +64,7 @@
 #include <cvodes/cvodes_diag.h>        /* use CVDIAG linear solver */
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fct. and macros */
 #include <sundials/sundials_types.h> /* definition of realtype */
-#include <sundials/sundials_math.h>  /* contains the macros ABS, SQR, and EXP*/
+#include <sundials/sundials_math.h>  /* contains the macros ABS, SUN_SQR, and EXP*/
 
 /* Shared Problem Constants */
 
@@ -208,7 +208,7 @@ static int Problem1(void)
         break;
       }
       if (iout%2 == 0) {
-        er = ABS(NV_Ith_S(y,0)) / abstol;
+        er = SUN_ABS(NV_Ith_S(y,0)) / abstol;
         if (er > ero) ero = er;
         if (er > P1_TOL_FACTOR) {
           nerr++;
@@ -261,7 +261,7 @@ static int Problem1(void)
         break;
       }
       if (iout%2 == 0) {
-        er = ABS(NV_Ith_S(y,0)) / abstol;
+        er = SUN_ABS(NV_Ith_S(y,0)) / abstol;
         if (er > ero) ero = er;
         if (er > P1_TOL_FACTOR) {
           nerr++;
@@ -325,7 +325,7 @@ static int f1(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   y1 = NV_Ith_S(y,1);
 
   NV_Ith_S(ydot,0) = y1;
-  NV_Ith_S(ydot,1) = (ONE - SQR(y0))* P1_ETA * y1 - y0;
+  NV_Ith_S(ydot,1) = (ONE - SUN_SQR(y0))* P1_ETA * y1 - y0;
 
   return(0);
 } 
@@ -342,7 +342,7 @@ static int Jac1(long int N, realtype tn,
 
   DENSE_ELEM(J,0,1) = ONE;
   DENSE_ELEM(J,1,0) = -TWO * P1_ETA * y0 * y1 - ONE;
-  DENSE_ELEM(J,1,1) = P1_ETA * (ONE - SQR(y0));
+  DENSE_ELEM(J,1,1) = P1_ETA * (ONE - SUN_SQR(y0));
 
   return(0);
 }
@@ -585,14 +585,14 @@ static realtype MaxError(N_Vector y, realtype t)
   if (t == ZERO) return(ZERO);
 
   ydata = NV_DATA_S(y);
-  if (t <= THIRTY) ex = EXP(-TWO*t); 
+  if (t <= THIRTY) ex = SUN_EXP(-TWO*t);
   
   for (j = 0; j < P2_MESHY; j++) {
     ifact_inv = ONE;
     for (i = 0; i < P2_MESHX; i++) {
       k = i + j * P2_MESHX;
       yt = RPowerI(t,i+j) * ex * ifact_inv * jfact_inv;
-      er = ABS(ydata[k] - yt);
+      er = SUN_ABS(ydata[k] - yt);
       if (er > maxError) maxError = er;
       ifact_inv /= (i+1);
     }
