@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4262 $
+ * $Date: 2014-11-12 17:02:39 -0800 (Wed, 12 Nov 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -612,7 +612,7 @@ void N_VAbs_Parallel(N_Vector x, N_Vector z)
   zd = NV_DATA_P(z);
 
   for (i = 0; i < N; i++)
-    zd[i] = ABS(xd[i]);
+    zd[i] = SUN_ABS(xd[i]);
 
   return;
 }
@@ -686,7 +686,7 @@ realtype N_VMaxNorm_Parallel(N_Vector x)
   max = ZERO;
 
   for (i = 0; i < N; i++) {
-    if (ABS(xd[i]) > max) max = ABS(xd[i]);
+    if (SUN_ABS(xd[i]) > max) max = SUN_ABS(xd[i]);
   }
    
   gmax = VAllReduce_Parallel(max, 2, comm);
@@ -711,12 +711,12 @@ realtype N_VWrmsNorm_Parallel(N_Vector x, N_Vector w)
 
   for (i = 0; i < N; i++) {
     prodi = xd[i]*wd[i];
-    sum += SQR(prodi);
+    sum += SUN_SQR(prodi);
   }
 
   gsum = VAllReduce_Parallel(sum, 1, comm);
 
-  return(RSqrt(gsum/N_global));
+  return(SUN_SQRT(gsum/N_global));
 }
 
 realtype N_VWrmsNormMask_Parallel(N_Vector x, N_Vector w, N_Vector id)
@@ -738,13 +738,13 @@ realtype N_VWrmsNormMask_Parallel(N_Vector x, N_Vector w, N_Vector id)
   for (i = 0; i < N; i++) {
     if (idd[i] > ZERO) {
       prodi = xd[i]*wd[i];
-      sum += SQR(prodi);
+      sum += SUN_SQR(prodi);
     }
   }
 
   gsum = VAllReduce_Parallel(sum, 1, comm);
 
-  return(RSqrt(gsum/N_global));
+  return(SUN_SQRT(gsum/N_global));
 }
 
 realtype N_VMin_Parallel(N_Vector x)
@@ -793,12 +793,12 @@ realtype N_VWL2Norm_Parallel(N_Vector x, N_Vector w)
 
   for (i = 0; i < N; i++) {
     prodi = xd[i]*wd[i];
-    sum += SQR(prodi);
+    sum += SUN_SQR(prodi);
   }
 
   gsum = VAllReduce_Parallel(sum, 1, comm);
 
-  return(RSqrt(gsum));
+  return(SUN_SQRT(gsum));
 }
 
 realtype N_VL1Norm_Parallel(N_Vector x)
@@ -815,7 +815,7 @@ realtype N_VL1Norm_Parallel(N_Vector x)
   comm = NV_COMM_P(x);
 
   for (i = 0; i<N; i++) 
-    sum += ABS(xd[i]);
+    sum += SUN_ABS(xd[i]);
 
   gsum = VAllReduce_Parallel(sum, 1, comm);
 
@@ -834,7 +834,7 @@ void N_VCompare_Parallel(realtype c, N_Vector x, N_Vector z)
   zd = NV_DATA_P(z);
 
   for (i = 0; i < N; i++) {
-    zd[i] = (ABS(xd[i]) >= c) ? ONE : ZERO;
+    zd[i] = (SUN_ABS(xd[i]) >= c) ? ONE : ZERO;
   }
 
   return;

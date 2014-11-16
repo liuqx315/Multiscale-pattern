@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4128 $
- * $Date: 2014-06-11 15:34:14 -0700 (Wed, 11 Jun 2014) $
+ * $Revision: 4243 $
+ * $Date: 2014-10-17 10:51:45 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -126,7 +126,7 @@ int main()
   /* Initial guess */
 
   N_VConst_Serial(ONE, y);
-  for(i = 1; i <= NVAR; i++) Ith(y,i) = SQRT(TWO)/TWO;
+  for(i = 1; i <= NVAR; i++) Ith(y,i) = SUN_SQRT(TWO)/TWO;
 
   printf("Initial guess:\n");
   PrintOutput(y);

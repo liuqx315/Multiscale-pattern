@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4242 $
+ * $Date: 2014-10-17 10:01:32 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -515,7 +515,7 @@ static void SetIC(N_Vector u, realtype dx, long int my_length, long int my_base)
   for (i=1; i<=my_length; i++) {
     iglobal = my_base + i;
     x = iglobal*dx;
-    udata[i-1] = x*(XMAX - x)*EXP(TWO*x);
+    udata[i-1] = x*(XMAX - x)*SUN_EXP(TWO*x);
   }  
 }
 

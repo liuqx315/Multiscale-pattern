@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4237 $
+ * $Date: 2014-10-15 16:19:59 -0700 (Wed, 15 Oct 2014) $
  * ----------------------------------------------------------------- 
  * Programmers: Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -202,8 +202,11 @@ int IDASpilsDQJtimes(realtype tt,
 typedef struct IDASpilsMemRecB {
 
   IDASpilsJacTimesVecFnB s_jtimesB;
+  IDASpilsJacTimesVecFnBS s_jtimesBS;
   IDASpilsPrecSetupFnB s_psetB;
+  IDASpilsPrecSetupFnBS s_psetBS;
   IDASpilsPrecSolveFnB s_psolveB;
+  IDASpilsPrecSolveFnBS s_psolveBS;
   void *s_P_dataB;
 
 } *IDASpilsMemB;

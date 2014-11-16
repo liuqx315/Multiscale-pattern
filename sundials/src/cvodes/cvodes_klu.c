@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4171 $
- * $Date: 2014-07-17 11:58:37 -0700 (Thu, 17 Jul 2014) $
+ * $Revision: 4241 $
+ * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -254,7 +254,7 @@ static int cvKLUSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
   }
 
   /* Determine whether Jacobian needs to be recalculated */
-  dgamma = ABS((gamma/gammap) - ONE);
+  dgamma = SUN_ABS((gamma/gammap) - ONE);
   jbad = (nst == 0) || (nst > nstlj + CVS_MSBJ) ||
          ((convfail == CV_FAIL_BAD_J) && (dgamma < CVS_DGMAX)) ||
          (convfail == CV_FAIL_OTHER);

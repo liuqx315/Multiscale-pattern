@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4260 $
+ * $Date: 2014-11-12 16:58:02 -0800 (Wed, 12 Nov 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, Carol Woodward,
  *                and Aaron Collier @ LLNL
@@ -274,7 +274,7 @@ void *KINCreate(void)
   kin_mem->kin_sthrsh           = TWO;
   kin_mem->kin_noMinEps         = FALSE;
   kin_mem->kin_mxnstepin        = ZERO;
-  kin_mem->kin_sqrt_relfunc     = RSqrt(uround);
+  kin_mem->kin_sqrt_relfunc     = SUN_SQRT(uround);
   kin_mem->kin_scsteptol        = RPowerR(uround,TWOTHIRDS);
   kin_mem->kin_fnormtol         = RPowerR(uround,ONETHIRD);
   kin_mem->kin_etaflag          = KIN_ETACHOICE1;
@@ -1112,7 +1112,7 @@ static int KINSolInit(KINMem kin_mem)
 
     /* this value is always used for choice #1 */
 
-    if (etaflag == KIN_ETACHOICE1) ealpha = (ONE + RSqrt(FIVE)) * HALF;
+    if (etaflag == KIN_ETACHOICE1) ealpha = (ONE + SUN_SQRT(FIVE)) * HALF;
 
     /* initial value for eta set to 0.5 for other than the 
        KIN_ETACONSTANT option */
@@ -1366,7 +1366,7 @@ static int KINFullNewton(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
  *  rlmin = --------------------------
  *          ||           pp         ||
  *          || -------------------- ||_L-infinity
- *          || (1/uscale + ABS(uu)) ||
+ *          || (1/uscale + SUN_ABS(uu)) ||
  *
  *
  * If the system function fails unrecoverably at any time, KINLineSearch 
@@ -1522,10 +1522,10 @@ static int KINLineSearch(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
       rl_b *= tmp1;
       disc = (rl_b * rl_b) - (THREE * rl_a * slpi);
 
-      if (ABS(rl_a) < uround) {        /* cubic is actually just a quadratic (rl_a ~ 0) */
+      if (SUN_ABS(rl_a) < uround) {        /* cubic is actually just a quadratic (rl_a ~ 0) */
         rltmp = -slpi / (TWO * rl_b);
       } else {                         /* real cubic */
-        rltmp = (-rl_b + RSqrt(disc)) / (THREE * rl_a);
+        rltmp = (-rl_b + SUN_SQRT(disc)) / (THREE * rl_a);
       }
     }
       if (rltmp > (HALF * rl)) rltmp = HALF * rl;
@@ -1599,7 +1599,7 @@ static int KINLineSearch(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
     if ((rl < ONE) || ((rl > ONE) && (*f1normp > alpha_cond))) {
 
       rllo = SUN_MIN(rl, rlprev);
-      rldiff = ABS(rlprev - rl);
+      rldiff = SUN_ABS(rlprev - rl);
 
       do {
 
@@ -1688,7 +1688,7 @@ static int KINConstraint(KINMem kin_mem)
 
   if(N_VConstrMask(constraints, vtemp1, vtemp2)) return(KIN_SUCCESS);
 
-  /* vtemp1[i] = ABS(pp[i]) */
+  /* vtemp1[i] = SUN_ABS(pp[i]) */
 
   N_VAbs(pp, vtemp1);
 
@@ -1803,7 +1803,7 @@ static int KINStop(KINMem kin_mem, booleantype maxStepTaken, int sflag)
       /* If indicated, estimate new OMEGA value */
       if (eval_omega) {
         omexp = SUN_MAX(ZERO,(fnorm/fnormtol)-ONE);
-        omega = (omexp > TWELVE)? omega_max : SUN_MIN(omega_min*EXP(omexp), omega_max);
+        omega = (omexp > TWELVE)? omega_max : SUN_MIN(omega_min*SUN_EXP(omexp), omega_max);
       }   
       /* Check if making satisfactory progress */
 
@@ -1873,12 +1873,12 @@ static void KINForcingTerm(KINMem kin_mem, realtype fnormp)
 
     /* compute the norm of f + Jp , scaled L2 norm */
 
-    linmodel_norm = RSqrt((fnorm * fnorm) + (TWO * sFdotJp) + (sJpnorm * sJpnorm));
+    linmodel_norm = SUN_SQRT((fnorm * fnorm) + (TWO * sFdotJp) + (sJpnorm * sJpnorm));
 
     /* form the safeguarded for choice #1 */ 
 
     eta_safe = RPowerR(eta, ealpha); 
-    eta = ABS(fnormp - linmodel_norm) / fnorm; 
+    eta = SUN_ABS(fnormp - linmodel_norm) / fnorm;
   }
 
   /* choice #2 forcing term */

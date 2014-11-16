@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4262 $
+ * $Date: 2014-11-12 17:02:39 -0800 (Wed, 12 Nov 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Daniel R. Reynolds and Radu Serban @LLNL
  * -----------------------------------------------------------------
@@ -912,7 +912,7 @@ void N_VAbs_SpcParallel(N_Vector x, N_Vector z)
           Xblock = i * Ns;
           for (is=0; is<Ns; is++) {
             loc = Zblock + Yblock + Xblock + is;
-            zd[loc] = ABS(xd[loc]);
+            zd[loc] = SUN_ABS(xd[loc]);
           }
         }
       }
@@ -1098,7 +1098,7 @@ realtype N_VMaxNorm_SpcParallel(N_Vector x)
           Xblock = i * Ns;
           for (is=0; is<Ns; is++) {
             loc = Zblock + Yblock + Xblock + is;
-            if (ABS(xd[loc]) > max) max = ABS(xd[loc]);
+            if (SUN_ABS(xd[loc]) > max) max = SUN_ABS(xd[loc]);
           }
         }
       }
@@ -1165,7 +1165,7 @@ realtype N_VWrmsNorm_SpcParallel(N_Vector x, N_Vector w)
   MPI_Allreduce(&sum, &gsum, 1, SPVEC_REAL_MPI_TYPE, MPI_SUM, comm);
 
   /* scale correctly and return */
-  return(RSqrt(gsum / Nglobal));
+  return(SUN_SQRT(gsum / Nglobal));
 }
 
 /* 
@@ -1222,7 +1222,7 @@ realtype N_VWrmsNormMask_SpcParallel(N_Vector x, N_Vector w, N_Vector id)
   MPI_Allreduce(&sum, &gsum, 1, SPVEC_REAL_MPI_TYPE, MPI_SUM, comm);
 
   /* scale result and return */
-  return(RSqrt(gsum / Nglobal));
+  return(SUN_SQRT(gsum / Nglobal));
 }
 
 /* 
@@ -1326,7 +1326,7 @@ realtype N_VWL2Norm_SpcParallel(N_Vector x, N_Vector w)
   gsum = ZERO;
   MPI_Allreduce(&sum, &gsum, 1, SPVEC_REAL_MPI_TYPE, MPI_SUM, comm);
 
-  return(RSqrt(gsum));
+  return(SUN_SQRT(gsum));
 }
 
 /* 
@@ -1366,7 +1366,7 @@ realtype N_VL1Norm_SpcParallel(N_Vector x)
           Xblock = i * Ns;
           for (is=0; is<Ns; is++) {
             loc = Zblock + Yblock + Xblock + is;
-            sum += ABS(xd[loc]);
+            sum += SUN_ABS(xd[loc]);
           }
         }
       }
@@ -1414,7 +1414,7 @@ void N_VCompare_SpcParallel(realtype c, N_Vector x, N_Vector z)
           Xblock = i * Ns;
           for (is=0; is<Ns; is++) {
             loc = Zblock + Yblock + Xblock + is;
-            zd[loc] = (ABS(xd[loc]) >= c) ? ONE : ZERO;
+            zd[loc] = (SUN_ABS(xd[loc]) >= c) ? ONE : ZERO;
           }
         }
       }

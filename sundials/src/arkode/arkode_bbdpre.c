@@ -135,7 +135,7 @@ int ARKBBDPrecInit(void *arkode_mem, long int Nlocal,
   }
 
   /* Set pdata->dqrely based on input dqrely (0 implies default). */
-  pdata->dqrely = (dqrely > ZERO) ? dqrely : RSqrt(ark_mem->ark_uround);
+  pdata->dqrely = (dqrely > ZERO) ? dqrely : SUN_SQRT(ark_mem->ark_uround);
 
   /* Store Nlocal to be used in ARKBBDPrecSetup */
   pdata->n_local = Nlocal;
@@ -197,7 +197,7 @@ int ARKBBDPrecReInit(void *arkode_mem, long int mudq,
   pdata->mldq = SUN_MIN(Nlocal-1, SUN_MAX(0,mldq));
 
   /* Set pdata->dqrely based on input dqrely (0 implies default). */
-  pdata->dqrely = (dqrely > ZERO) ? dqrely : RSqrt(ark_mem->ark_uround);
+  pdata->dqrely = (dqrely > ZERO) ? dqrely : SUN_SQRT(ark_mem->ark_uround);
 
   /* Re-initialize nge */
   pdata->nge = 0;
@@ -484,7 +484,7 @@ static int ARKBBDDQJac(ARKBBDPrecData pdata, realtype t,
   /* Set minimum increment based on uround and norm of g */
   /* gnorm = N_VWrmsNorm(gy, ark_mem->ark_ewt); */
   gnorm = N_VWrmsNorm(gy, ark_mem->ark_rwt);
-  minInc = (gnorm != ZERO) ? (MIN_INC_MULT * ABS(ark_mem->ark_h) * 
+  minInc = (gnorm != ZERO) ? (MIN_INC_MULT * SUN_ABS(ark_mem->ark_h) *
 			      ark_mem->ark_uround * pdata->n_local * gnorm) : ONE;
 
   /* Set bandwidth and number of column groups for band differencing */
@@ -496,7 +496,7 @@ static int ARKBBDDQJac(ARKBBDPrecData pdata, realtype t,
     
     /* Increment all y_j in group */
     for(j=group-1; j < pdata->n_local; j+=width) {
-      inc = SUN_MAX(pdata->dqrely*ABS(y_data[j]), minInc/ewt_data[j]);
+      inc = SUN_MAX(pdata->dqrely*SUN_ABS(y_data[j]), minInc/ewt_data[j]);
       ytemp_data[j] += inc;
     }
 
@@ -510,7 +510,7 @@ static int ARKBBDDQJac(ARKBBDPrecData pdata, realtype t,
     for (j=group-1; j < pdata->n_local; j+=width) {
       ytemp_data[j] = y_data[j];
       col_j = BAND_COL(pdata->savedJ,j);
-      inc = SUN_MAX(pdata->dqrely*ABS(y_data[j]), minInc/ewt_data[j]);
+      inc = SUN_MAX(pdata->dqrely*SUN_ABS(y_data[j]), minInc/ewt_data[j]);
       inc_inv = ONE/inc;
       i1 = SUN_MAX(0, j-pdata->mukeep);
       i2 = SUN_MIN(j+pdata->mlkeep, pdata->n_local-1);

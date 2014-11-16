@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4241 $
+ * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): S. D. Cohen, A. C. Hindmarsh, M. R. Wittman, and
  *                Radu Serban @ LLNL
@@ -59,7 +59,7 @@
 #include <cvodes/cvodes_spgmr.h>      /* use CVSPGMR linear solver each internal step  */
 #include <nvector/nvector_parallel.h> /* definitions of type N_Vector, macro NV_DATA_P */
 #include <sundials/sundials_dense.h>  /* use generic DENSE solver in preconditioning   */
-#include <sundials/sundials_math.h>   /* contains SQR macro                            */
+#include <sundials/sundials_math.h>   /* contains SUN_SQR macro                            */
 #include <sundials/sundials_types.h>  /* definitions of realtype and booleantype       */
 
 #include <mpi.h>
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 
     pbar = (realtype *) malloc(NS*sizeof(realtype));
     if (check_flag((void *)pbar, "malloc", 2, my_pe)) MPI_Abort(comm, 1);
-    for (is=0; is<NS; is++) pbar[is] = ABS(data->p[plist[is]-1]);
+    for (is=0; is<NS; is++) pbar[is] = SUN_ABS(data->p[plist[is]-1]);
 
     uS = N_VCloneVectorArray_Parallel(NS, u);
     if (check_flag((void *)uS, "N_VCloneVectorArray", 0, my_pe)) MPI_Abort(comm, 1);
@@ -613,8 +613,8 @@ static void SetInitialProfiles(N_Vector u, UserData data)
     for (lx = 0; lx < MXSUB; lx++) {
       jx = lx + isubx*MXSUB;
       x = XMIN + jx*dx;
-      cx = SQR(RCONST(0.1)*(x - xmid));
-      cx = RCONST(1.0) - cx + RCONST(0.5)*SQR(cx);
+      cx = SUN_SQR(RCONST(0.1)*(x - xmid));
+      cx = RCONST(1.0) - cx + RCONST(0.5)*SUN_SQR(cx);
       udata[offset  ] = C1_SCALE*cx*cy;
       udata[offset+1] = C2_SCALE*cx*cy;
       offset = offset + 2;
@@ -1134,8 +1134,8 @@ static int f(realtype t, N_Vector u, N_Vector udot, void *f_data)
   delx = data->dx;
   dely = data->dy;
   
-  verdco =  KV/SQR(dely);
-  hordco  = KH/SQR(delx);
+  verdco =  KV/SUN_SQR(dely);
+  hordco  = KH/SUN_SQR(delx);
   horaco  = VEL/(RCONST(2.0)*delx);
 
   /* Copy local segment of u vector into the working array uext */
@@ -1308,8 +1308,8 @@ static int Precond(realtype tn, N_Vector u, N_Vector fu,
     delx = data->dx;
     dely = data->dy;
     
-    verdco  = KV/SQR(dely);
-    hordco  = KH/SQR(delx);
+    verdco  = KV/SUN_SQR(dely);
+    hordco  = KH/SUN_SQR(delx);
     horaco  = VEL/(RCONST(2.0)*delx);
     
     /* Compute 2x2 diagonal Jacobian blocks (using q4 values

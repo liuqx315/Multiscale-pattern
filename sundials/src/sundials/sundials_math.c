@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4261 $
+ * $Date: 2014-11-12 16:59:15 -0800 (Wed, 12 Nov 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Aaron Collier @ LLNL
@@ -57,7 +57,7 @@ realtype RPowerR(realtype base, realtype exponent)
 #endif
 }
 
-realtype RSqrt(realtype x)
+realtype SUN_SQRT(realtype x)
 {
   if (x <= ZERO) return(ZERO);
 
@@ -72,7 +72,7 @@ realtype RSqrt(realtype x)
 #endif
 }
 
-realtype RAbs(realtype x)
+realtype SUN_ABS(realtype x)
 {
 #if defined(SUNDIALS_USE_GENERIC_MATH)
   return((realtype) fabs((double) x));
@@ -85,7 +85,7 @@ realtype RAbs(realtype x)
 #endif
 }
 
-realtype RExp(realtype x)
+realtype SUN_EXP(realtype x)
 {
 #if defined(SUNDIALS_USE_GENERIC_MATH)
   return((realtype) exp((double) x));

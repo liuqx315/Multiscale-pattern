@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4074 $
- * $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+ * $Revision: 4242 $
+ * $Date: 2014-10-17 10:01:32 -0700 (Fri, 17 Oct 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -41,7 +41,7 @@
 #include <nvector/nvector_serial.h>   /* serial N_Vector types, fct. and macros */
 #include <sundials/sundials_dense.h>  /* use generic DENSE solver in preconditioning */
 #include <sundials/sundials_types.h>  /* definition of realtype */
-#include <sundials/sundials_math.h>   /* contains the macros ABS, SQR, and EXP */
+#include <sundials/sundials_math.h>   /* contains the macros ABS, SUN_SQR, and EXP */
 
 /* Problem Constants */
 
@@ -264,9 +264,9 @@ static void InitUserData(UserData data)
   data->om = PI/HALFDAY;
   data->dx = (XMAX-XMIN)/(MX-1);
   data->dy = (YMAX-YMIN)/(MY-1);
-  data->hdco = KH/SQR(data->dx);
+  data->hdco = KH/SUN_SQR(data->dx);
   data->haco = VEL/(TWO*data->dx);
-  data->vdco = (ONE/SQR(data->dy))*KV0;
+  data->vdco = (ONE/SUN_SQR(data->dy))*KV0;
 }
 
 /* Free data memory */
@@ -302,12 +302,12 @@ static void SetInitialProfiles(N_Vector u, realtype dx, realtype dy)
 
   for (jy=0; jy < MY; jy++) {
     y = YMIN + jy*dy;
-    cy = SQR(RCONST(0.1)*(y - YMID));
-    cy = ONE - cy + RCONST(0.5)*SQR(cy);
+    cy = SUN_SQR(RCONST(0.1)*(y - YMID));
+    cy = ONE - cy + RCONST(0.5)*SUN_SQR(cy);
     for (jx=0; jx < MX; jx++) {
       x = XMIN + jx*dx;
-      cx = SQR(RCONST(0.1)*(x - XMID));
-      cx = ONE - cx + RCONST(0.5)*SQR(cx);
+      cx = SUN_SQR(RCONST(0.1)*(x - XMID));
+      cx = ONE - cx + RCONST(0.5)*SUN_SQR(cx);
       IJKth(udata,1,jx,jy) = C1_SCALE*cx*cy; 
       IJKth(udata,2,jx,jy) = C2_SCALE*cx*cy;
     }
@@ -466,8 +466,8 @@ static int f(realtype t, N_Vector u, N_Vector udot, void *user_data)
 
   s = sin(data->om*t);
   if (s > ZERO) {
-    q3 = EXP(-A3/s);
-    data->q4 = EXP(-A4/s);
+    q3 = SUN_EXP(-A3/s);
+    data->q4 = SUN_EXP(-A4/s);
   } else {
       q3 = ZERO;
       data->q4 = ZERO;
@@ -489,8 +489,8 @@ static int f(realtype t, N_Vector u, N_Vector udot, void *user_data)
 
     ydn = YMIN + (jy - RCONST(0.5))*dely;
     yup = ydn + dely;
-    cydn = verdco*EXP(RCONST(0.2)*ydn);
-    cyup = verdco*EXP(RCONST(0.2)*yup);
+    cydn = verdco*SUN_EXP(RCONST(0.2)*ydn);
+    cyup = verdco*SUN_EXP(RCONST(0.2)*yup);
     idn = (jy == 0) ? 1 : -1;
     iup = (jy == MY-1) ? -1 : 1;
     for (jx=0; jx < MX; jx++) {
@@ -565,7 +565,7 @@ static int jtv(N_Vector v, N_Vector Jv, realtype t,
 
   s = sin(data->om*t);
   if (s > ZERO) {
-    data->q4 = EXP(-A4/s);
+    data->q4 = SUN_EXP(-A4/s);
   } else {
     data->q4 = ZERO;
   }
@@ -587,8 +587,8 @@ static int jtv(N_Vector v, N_Vector Jv, realtype t,
     ydn = YMIN + (jy - RCONST(0.5))*dely;
     yup = ydn + dely;
 
-    cydn = verdco*EXP(RCONST(0.2)*ydn);
-    cyup = verdco*EXP(RCONST(0.2)*yup);
+    cydn = verdco*SUN_EXP(RCONST(0.2)*ydn);
+    cyup = verdco*SUN_EXP(RCONST(0.2)*yup);
 
     idn = (jy == 0) ? 1 : -1;
     iup = (jy == MY-1) ? -1 : 1;
@@ -736,8 +736,8 @@ static int Precond(realtype tn, N_Vector u, N_Vector fu,
     for (jy=0; jy < MY; jy++) {
       ydn = YMIN + (jy - RCONST(0.5))*dely;
       yup = ydn + dely;
-      cydn = verdco*EXP(RCONST(0.2)*ydn);
-      cyup = verdco*EXP(RCONST(0.2)*yup);
+      cydn = verdco*SUN_EXP(RCONST(0.2)*ydn);
+      cyup = verdco*SUN_EXP(RCONST(0.2)*yup);
       diag = -(cydn + cyup + TWO*hordco);
       for (jx=0; jx < MX; jx++) {
         c1 = IJKth(udata,1,jx,jy);
