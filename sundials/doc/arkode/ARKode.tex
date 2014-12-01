@@ -402,7 +402,7 @@ These default to the {\hyperref[Butcher:butcher-sdirk-2-1]{\emph{SDIRK-2-1-2}}},
 \section{Nonlinear solver methods}
 \label{Mathematics:nonlinear-solver-methods}\label{Mathematics:mathematics-nonlinear}
 For both the DIRK and ARK methods corresponding to \eqref{Mathematics-IVP} and
-\eqref{Mathematics-IVP_implicit}, a nonlinear system
+\eqref{Mathematics-IVP_implicit}, an implicit system
 \phantomsection\label{Mathematics:equation-Residual}\begin{gather}
 \begin{split}G(z_i) \equiv M z_i - h_n A^I_{i,i} f_I(t_{n,i}, z_i) - a_i = 0\end{split}\label{Mathematics-Residual}\\\begin{split}\end{split}\notag
 \end{gather}
@@ -418,10 +418,15 @@ for the ARK methods, or
 \begin{split}a_i \equiv M y_{n-1} + h_n \sum_{j=0}^{i-1}
    A^I_{i,j} f_I(t_{n,j}, z_j)\end{split}\notag\\\begin{split}\end{split}\notag
 \end{gather}
-for the DIRK methods.  For these nonlinear systems, ARKode allows a
-choice of solution strategy.
+for the DIRK methods.  Here, if $f_I(t,y)$ depends nonlinearly
+on $y$ then \eqref{Mathematics-Residual} corresponds to a nonlinear system of
+equations; if $f_I(t,y)$ depends linearly on $y$ then this
+is a linear system of equations.
 
-The default solver choice is a variant of \index{Newton's method}Newton's method,
+For systems of either type, ARKode allows a choice of solution
+strategy. The default solver choice is a variant of \index{Newton's
+method}Newton's
+method,
 \phantomsection\label{Mathematics:equation-Newton_iteration}\begin{gather}
 \begin{split}z_i^{(m+1)} = z_i^{(m)} + \delta^{(m+1)},\end{split}\label{Mathematics-Newton_iteration}\\\begin{split}\end{split}\notag
 \end{gather}
@@ -449,6 +454,12 @@ solution of a linear system at each iteration, instead opting for
 solution of a low-dimensional least-squares solution to construct the
 nonlinear update.  For details on how this iteration is performed, we
 refer the reader to the reference {\hyperref[References:wn2011]{{[}WN2011{]}}}.
+
+Finally, if the user specifies that $f_I(t,y)$ depends linearly
+on $y$ (via a call to {\hyperref[c_interface/User_callable:ARKodeSetLinear]{\code{ARKodeSetLinear()}}}, or the
+\emph{LINEAR} argument to {\hyperref[f_interface/Usage:f/_/FARKSETIIN]{\code{FARKSETIIN()}}}), and if the
+Newton-based nonlinear solver is chosen, then the problem
+\eqref{Mathematics-Residual} will be solved using only a single Newton iteration.
 
 The optimal solver (Newton vs fixed-point) is highly
 problem-dependent.  Since fixed-point solvers do not require
@@ -630,10 +641,14 @@ update satisfies $\left|\gamma/\bar{\gamma} - 1\right| > 0.2$
 argument to {\hyperref[f_interface/Usage:f/_/FARKSETRIN]{\code{FARKSETRIN()}}},
 
 \item {} 
-when a non-fatal convergence failure just occurred, or
+when a non-fatal convergence failure just occurred,
 
 \item {} 
-when an error test failure just occurred.
+when an error test failure just occurred, or
+
+\item {} 
+if the problem is linearly implicit and $\gamma$ has
+changed by a factor larger than 100 times machine epsilon.
 
 \end{itemize}
 
@@ -656,7 +671,11 @@ value $\bar{\gamma}$ of $\gamma$ at the last update
 satisfies $\left|\gamma/\bar{\gamma} - 1\right| > 0.2$,
 
 \item {} 
-a convergence failure occurred that forced a step size reduction.
+a convergence failure occurred that forced a step size reduction, or
+
+\item {} 
+if the problem is linearly implicit and $\gamma$ has
+changed by a factor larger than 100 times machine epsilon.
 
 \end{itemize}
 
@@ -779,13 +798,17 @@ on in the next section).  In an attempt to ensure that the linear
 iteration errors do not interfere with the nonlinear solution error
 and local time integration error controls, we require that the norm of
 the preconditioned linear residual satisfies
-\begin{gather}
-\begin{split}\|r\| \le 0.05\epsilon.\end{split}\notag
+\phantomsection\label{Mathematics:equation-LinearTolerance}\begin{gather}
+\begin{split}\|r\| \le 0.05\epsilon.\end{split}\label{Mathematics-LinearTolerance}\\\begin{split}\end{split}\notag
 \end{gather}
 Here $\epsilon$ is the same value as that used above for the
 nonlinear error control.  The value 0.05 may be modified by the user
-through the {\hyperref[c_interface/User_callable:ARKSpilsSetEpsLin]{\code{ARKSpilsSetEpsLin()}}} function; it cannot
-currently be modified from Fortran applications.
+through the {\hyperref[c_interface/User_callable:ARKSpilsSetEpsLin]{\code{ARKSpilsSetEpsLin()}}} function.  Fortran users may
+adjust this value using the \emph{DELT} argument to the functions
+{\hyperref[f_interface/Usage:f/_/FARKSPGMR]{\code{FARKSPGMR()}}}, {\hyperref[f_interface/Usage:f/_/FARKSPBCG]{\code{FARKSPBCG()}}}, {\hyperref[f_interface/Usage:f/_/FARKSPTFQMR]{\code{FARKSPTFQMR()}}},
+{\hyperref[f_interface/Usage:f/_/FARKSPFGMR]{\code{FARKSPFGMR()}}} or {\hyperref[f_interface/Usage:f/_/FARKPCG]{\code{FARKPCG()}}}.  We note that for
+linearly implicit problems the same tolerance \eqref{Mathematics-LinearTolerance}
+is used for the single Newton iteration.
 
 
 \section{Preconditioning}
@@ -6195,8 +6218,12 @@ Specifies that the implicit portion of the problem is linear.
 \end{description}
 
 \textbf{Notes:} Tightens the linear solver tolerances and takes only a
-single Newton iteration.  Only useful when used in combination with
-the modified Newton iteration (not the fixed-point solver).
+single Newton iteration.  Calls {\hyperref[c_interface/User_callable:ARKodeSetDeltaGammaMax]{\code{ARKodeSetDeltaGammaMax()}}}
+to enforce Jacobian recomputation when the step size ratio changes
+by more than 100 times the unit roundoff (since nonlinear
+convergence is not tested).  Only applicable when used in
+combination with the modified Newton iteration (not the fixed-point
+solver).
 
 \end{fulllineitems}
 
@@ -6227,7 +6254,10 @@ Specifies that the implicit portion of the problem is nonlinear.
 \end{description}
 
 \textbf{Notes:} This is the default behavior of ARKode, so the function
-is primarily useful to undo a previous call to {\hyperref[c_interface/User_callable:ARKodeSetLinear]{\code{ARKodeSetLinear()}}}.
+is primarily useful to undo a previous call to
+{\hyperref[c_interface/User_callable:ARKodeSetLinear]{\code{ARKodeSetLinear()}}}.  Calls
+{\hyperref[c_interface/User_callable:ARKodeSetDeltaGammaMax]{\code{ARKodeSetDeltaGammaMax()}}} to reset the step size ratio
+threshold to the default value.
 
 \end{fulllineitems}
 
