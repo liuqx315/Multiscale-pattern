@@ -219,10 +219,19 @@ Completed components:
     additional matvec to compute the residual.  I added this in when
     introducing non-identity mass matrices, but I think that my use of
     a "residual weight vector" fixes the problem that I'd been seeing.
+[X] Set up code to enable user-defined flag for a linearly-implicit
+    problem (only calls linear solver, etc.).  Already have
+    "ark_linear" boolean, just need to use it.
+[X] Tighten tolerance for iterative linear solvers when running in
+    linearly implicit mode.
 
 
 
 Remaining components to build:
+[ ] Add a solver option and update linear solve routine for the
+    scenario that a problem depends linearly on y, but that the linear 
+    dependence changes as a function of time.  In this case, we must
+    call lsetup once prior to EVERY time step.
 [ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
     and LAPACKKLU solvers.
 [ ] Optimize fixed-point solver (currently results in too much ODE
@@ -263,15 +272,6 @@ Remaining components to build:
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
-[ ] Set up code to enable user-defined flag for a linearly-implicit
-    problem (only calls linear solver, etc.).  Already have
-    "ark_linear" boolean, just need to use it.
-[ ] Tighten tolerance for iterative linear solvers when running in
-    linearly implicit mode.
-[ ] Add a solver option and update linear solve routine for the
-    scenario that a problem depends linearly on y, but that the linear 
-    dependence changes as a function of time.  In this case, we must
-    call lsetup once prior to EVERY time step.
 [ ] If I need to use any currently-unused N_Vector operations, add
     them to ARKCheckNvector routine.
 [ ] Determine if I need ark_acor at all.  CVODE uses it to estimate
