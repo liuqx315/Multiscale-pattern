@@ -204,6 +204,10 @@ int main() {
   flag = ARKSpilsSetJacTimesVecFn(arktrue_mem, Jac);
   if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
+  /* Specify linearly implicit problem */
+  flag = ARKodeSetLinear(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetLinear", 1)) return 1;
+
   /* Open output stream for results, access data arrays */
   FILE *UFID=fopen("heat1D.txt","w");
   data = N_VGetArrayPointer(y);

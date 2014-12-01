@@ -282,6 +282,10 @@ int main(int argc, char* argv[]) {
   flag = ARKSpilsSetPreconditioner(arktrue_mem, PSet, PSol);    // Specify the Preconditoner
   if (check_flag(&flag, "ARKSpilsSetPreconditioner", 1)) return 1;
 
+  // Specify linearly implicit problem
+  flag = ARKodeSetLinear(arkode_mem);
+  if (check_flag(&flag, "ARKodeSetLinear", 1)) return 1;
+
   // Each processor outputs subdomain information
   char outname[100];
   sprintf(outname, "heat2d_subdomain.%03i.txt", udata->myid);
