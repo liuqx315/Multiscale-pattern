@@ -95,7 +95,7 @@
 #include <nvector/nvector_serial.h>  /* serial N_Vector types, fct. and macros */
 #include <sundials/sundials_dense.h> /* use generic DENSE solver in preconditioning */
 #include <sundials/sundials_types.h> /* definition of realtype */
-#include <sundials/sundials_math.h>  /* contains the macros ABS and SUN_SQR */
+#include <sundials/sundials_math.h>  /* contains the macros SUN_ABS and SUN_SQR */
 
 /* Constants */
 

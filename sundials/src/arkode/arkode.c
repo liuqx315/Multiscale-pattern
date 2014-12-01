@@ -5099,7 +5099,7 @@ static int arkLs(ARKodeMem ark_mem, int nflag)
   /* Decide whether or not to call setup routine (if one exists) */
   if (ark_mem->ark_setupNonNull) {      
     callSetup = (ark_mem->ark_firststage) || 
-      (ABS(ark_mem->ark_gamrat-ONE) > ark_mem->ark_dgmax);
+      (SUN_ABS(ark_mem->ark_gamrat-ONE) > ark_mem->ark_dgmax);
   } else {  
     callSetup = FALSE;
   }
