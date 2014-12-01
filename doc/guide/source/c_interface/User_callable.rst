@@ -2359,8 +2359,12 @@ Maximum number of convergence failures         :c:func:`ARKodeSetMaxConvFails()`
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** Tightens the linear solver tolerances and takes only a
-   single Newton iteration.  Only useful when used in combination with
-   the modified Newton iteration (not the fixed-point solver).
+   single Newton iteration.  Calls :c:func:`ARKodeSetDeltaGammaMax()`
+   to enforce Jacobian recomputation when the step size ratio changes
+   by more than 100 times the unit roundoff (since nonlinear
+   convergence is not tested).  Only applicable when used in
+   combination with the modified Newton iteration (not the fixed-point
+   solver).
 
 
 
@@ -2377,7 +2381,10 @@ Maximum number of convergence failures         :c:func:`ARKodeSetMaxConvFails()`
       * *ARK_ILL_INPUT* if an argument has an illegal value
    
    **Notes:** This is the default behavior of ARKode, so the function
-   is primarily useful to undo a previous call to :c:func:`ARKodeSetLinear()`. 
+   is primarily useful to undo a previous call to
+   :c:func:`ARKodeSetLinear()`.  Calls
+   :c:func:`ARKodeSetDeltaGammaMax()` to reset the step size ratio
+   threshold to the default value. 
 
 
 
