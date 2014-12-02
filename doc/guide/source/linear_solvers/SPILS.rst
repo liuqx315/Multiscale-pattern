@@ -81,9 +81,8 @@ Only two of the preprocessing directives in the header file
 
 The ``sundials_types.h`` header file defines the SUNDIALS ``realtype``
 and ``booleantype`` types and the macro ``RCONST``, while the
-``sundials_math.h`` header file is needed for the macros ``SUN_MIN``,
-``SUN_MAX``, and ``SUN_SQR``, and the functions ``SUN_ABS``,
-``SUN_SQRT``, and ``SUN_EXP``.
+``sundials_math.h`` header file is needed for the macros ``SUNMIN``,
+``SUNMAX``, and ``SUNSQR``, and the functions ``SUNRabs`` and ``SUNRsqrt``.
 
 The generic NVECTOR files, ``sundials_nvector.h`` and
 ``sundials_nvector.c`` are needed for the definition of the generic
