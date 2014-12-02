@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4241 $
- * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -157,8 +157,8 @@ int CVodeSetMaxOrd(void *cvode_mem, int maxord)
   /* Cannot increase maximum order beyond the value that
      was used when allocating memory */
   qmax_alloc = cv_mem->cv_qmax_alloc;
-  qmax_alloc = SUN_MIN(qmax_alloc, cv_mem->cv_qmax_allocQ);
-  qmax_alloc = SUN_MIN(qmax_alloc, cv_mem->cv_qmax_allocS);
+  qmax_alloc = SUNMIN(qmax_alloc, cv_mem->cv_qmax_allocQ);
+  qmax_alloc = SUNMIN(qmax_alloc, cv_mem->cv_qmax_allocS);
 
   if (maxord > qmax_alloc) {
     cvProcessError(cv_mem, CV_ILL_INPUT, "CVODES", "CVodeSetMaxOrd", MSGCV_BAD_MAXORD);
@@ -650,7 +650,7 @@ int CVodeSetSensParams(void *cvode_mem, realtype *p, realtype *pbar, int *plist)
         cvProcessError(cv_mem, CV_ILL_INPUT, "CVODES", "CVodeSetSensParams", MSGCV_BAD_PBAR);
         return(CV_ILL_INPUT);
       }
-      cv_mem->cv_pbar[is] = SUN_ABS(pbar[is]);
+      cv_mem->cv_pbar[is] = SUNRabs(pbar[is]);
     }
   else
     for (is=0; is<Ns; is++)
