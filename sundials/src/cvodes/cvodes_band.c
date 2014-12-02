@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4241 $
- * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -177,7 +177,7 @@ int CVBand(void *cvode_mem, long int N, long int mupper, long int mlower)
   }
 
   /* Set extended upper half-bandwith for M (required for pivoting) */
-  smu = SUN_MIN(N-1, mu + ml);
+  smu = SUNMIN(N-1, mu + ml);
 
   /* Allocate memory for M, savedJ, and pivot arrays */
   M = NULL;
@@ -269,7 +269,7 @@ static int cvBandSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
 
   /* Use nst, gamma/gammap, and convfail to set J eval. flag jok */
 
-  dgamma = SUN_ABS((gamma/gammap) - ONE);
+  dgamma = SUNRabs((gamma/gammap) - ONE);
   jbad = (nst == 0) || (nst > nstlj + CVD_MSBJ) ||
          ((convfail == CV_FAIL_BAD_J) && (dgamma < CVD_DGMAX)) ||
          (convfail == CV_FAIL_OTHER);

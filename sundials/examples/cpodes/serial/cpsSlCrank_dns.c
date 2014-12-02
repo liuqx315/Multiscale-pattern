@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4264 $
- * $Date: 2014-11-12 17:06:51 -0800 (Wed, 12 Nov 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -293,7 +293,7 @@ void get_acc(realtype *pos, realtype *vel, realtype *acc, UserData data)
   c21 = c2*c1 + s2*s1;
 
   l2 = x*x - x*(c2+a*c1) + (ONE + a*a)/FOUR + a*c21/TWO;
-  l = SUN_SQRT(l2);
+  l = SUNRsqrt(l2);
   ld = TWO*x*xd - xd*(c2+a*c1) + x*(s2*pd+a*s1*qd) - a*s21*(pd-qd)/TWO;
   ld /= TWO*l;
 

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4261 $
- * $Date: 2014-11-12 16:59:15 -0800 (Wed, 12 Nov 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Aaron Collier @ LLNL
@@ -30,7 +30,7 @@
 #define ZERO RCONST(0.0)
 #define ONE  RCONST(1.0)
 
-realtype RPowerI(realtype base, int exponent)
+realtype SUNRpowerI(realtype base, int exponent)
 {
   int i, expt;
   realtype prod;
@@ -42,7 +42,7 @@ realtype RPowerI(realtype base, int exponent)
   return(prod);
 }
 
-realtype RPowerR(realtype base, realtype exponent)
+realtype SUNRpowerR(realtype base, realtype exponent)
 {
   if (base <= ZERO) return(ZERO);
 
@@ -57,7 +57,7 @@ realtype RPowerR(realtype base, realtype exponent)
 #endif
 }
 
-realtype SUN_SQRT(realtype x)
+realtype SUNRsqrt(realtype x)
 {
   if (x <= ZERO) return(ZERO);
 
@@ -72,7 +72,7 @@ realtype SUN_SQRT(realtype x)
 #endif
 }
 
-realtype SUN_ABS(realtype x)
+realtype SUNRabs(realtype x)
 {
 #if defined(SUNDIALS_USE_GENERIC_MATH)
   return((realtype) fabs((double) x));
@@ -85,7 +85,7 @@ realtype SUN_ABS(realtype x)
 #endif
 }
 
-realtype SUN_EXP(realtype x)
+realtype SUNRexp(realtype x)
 {
 #if defined(SUNDIALS_USE_GENERIC_MATH)
   return((realtype) exp((double) x));

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4241 $
- * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
@@ -605,7 +605,7 @@ int KINSpilsDQJtimes(N_Vector v, N_Vector Jv,
  
   /*  this expression for sigma is from p. 469, Brown and Saad paper */
 
-  sigma = sign*sqrt_relfunc*SUN_MAX(SUN_ABS(sutsv),sq1norm)/vtv;
+  sigma = sign*sqrt_relfunc*SUNMAX(SUNRabs(sutsv),sq1norm)/vtv;
 
   sigma_inv = ONE/sigma;
 

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4241 $
- * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban and Cosmin Petra @ LLNL
  * -----------------------------------------------------------------
@@ -127,7 +127,7 @@ int IDASetMaxOrd(void *ida_mem, int maxord)
     return(IDA_ILL_INPUT);
   }  
 
-  IDA_mem->ida_maxord = SUN_MIN(maxord,MAXORD_DEFAULT);
+  IDA_mem->ida_maxord = SUNMIN(maxord,MAXORD_DEFAULT);
 
   return(IDA_SUCCESS);
 }
@@ -755,7 +755,7 @@ int IDASetSensParams(void *ida_mem, realtype *p, realtype *pbar, int *plist)
         IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDAS", "IDASetSensParams", MSG_BAD_PBAR);
         return(IDA_ILL_INPUT);
       }
-      IDA_mem->ida_pbar[is] = SUN_ABS(pbar[is]);
+      IDA_mem->ida_pbar[is] = SUNRabs(pbar[is]);
     }
   else
     for (is=0; is<Ns; is++)

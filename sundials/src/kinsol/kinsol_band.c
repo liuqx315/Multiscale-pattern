@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -180,7 +180,7 @@ int KINBand(void *kinmem, long int N, long int mupper, long int mlower)
   }
 
   /* Set extended upper half-bandwith for M (required for pivoting) */
-  smu = SUN_MIN(N-1, mu + ml);
+  smu = SUNMIN(N-1, mu + ml);
 
   /* Allocate memory for J and pivot array */
   J = NULL;

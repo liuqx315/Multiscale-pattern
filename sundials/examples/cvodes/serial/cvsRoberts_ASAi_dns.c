@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4241 $
- * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -517,7 +517,7 @@ static int ewt(N_Vector y, N_Vector w, void *user_data)
 
   for (i=1; i<=3; i++) {
     yy = Ith(y,i);
-    ww = rtol * SUN_ABS(yy) + atol[i-1];
+    ww = rtol * SUNRabs(yy) + atol[i-1];
     if (ww <= 0.0) return (-1);
     Ith(w,i) = 1.0/ww;
   }

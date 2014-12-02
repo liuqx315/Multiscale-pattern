@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4220 $
- * $Date: 2014-09-08 15:18:42 -0700 (Mon, 08 Sep 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer: Radu Serban  @ LLNL
  * -----------------------------------------------------------------
@@ -175,7 +175,7 @@ int CPodeCalcIC(void *cpode_mem)
    *   icprj_maxiter  - maximum number of nonlinear iterations
    */
   icprj_convcoef = PT1 * prjcoef;
-  icprj_normtol = RPowerR(uround, HALF);
+  icprj_normtol = SUNRpowerR(uround, HALF);
   icprj_maxrcvr = MAX_RECVR;
   icprj_maxiter = MAX_ITERS;
 
@@ -527,10 +527,10 @@ static int cpicProjNonlinear(CPodeMem cp_mem)
     cmax = N_VMaxNorm(ctemp);
 
     /* Estimated convergence rate */
-    if (m > 0) crate = SUN_MAX(PRJ_CRDOWN * crate, pnorm/pnorm_p);
+    if (m > 0) crate = SUNMAX(PRJ_CRDOWN * crate, pnorm/pnorm_p);
 
     /* Convergence test based on pnorm and crate */
-    pcon = pnorm * SUN_MIN(ONE, crate) / icprj_convcoef;
+    pcon = pnorm * SUNMIN(ONE, crate) / icprj_convcoef;
 
 #ifdef CPODES_DEBUG
     printf("  Stop test quantities:\n");
