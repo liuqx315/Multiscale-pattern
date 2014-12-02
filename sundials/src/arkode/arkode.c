@@ -4501,7 +4501,7 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
 
  This routine attempts to solve the nonlinear system associated
  with a single implicit step of the linear multistep method.
- It calls one of arkLs, arkNlsAccelFP or arkNlsNewton to do the 
+ It calls one of arkNlsAccelFP, arkLs or arkNlsNewton to do the 
  work.
 
  Upon a successful solve, the solution is held in ark_mem->ark_y.
@@ -4509,16 +4509,19 @@ static int arkCompleteStep(ARKodeMem ark_mem, realtype dsm)
 static int arkNls(ARKodeMem ark_mem, int nflag)
 {
 
-  /* for linear problems, call arkLs */
+  /* call the appropriate solver */
+
+  /*   fixed point */
+  if (ark_mem->ark_use_fp)
+    return(arkNlsAccelFP(ark_mem, nflag));
+
+  /*   linearly implicit (one Newton iteration) */
   if (ark_mem->ark_linear)
     return(arkLs(ark_mem, nflag));
+  
+  /*   Newton */
+  return(arkNlsNewton(ark_mem, nflag));
 
-  /* for nonlinear problems, call the appropriate nonlinear solver */
-  if (ark_mem->ark_use_fp) {
-    return(arkNlsAccelFP(ark_mem, nflag));
-  } else {
-    return(arkNlsNewton(ark_mem, nflag));
-  }
 }
 
 
