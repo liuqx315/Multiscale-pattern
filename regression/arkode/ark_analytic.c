@@ -155,8 +155,8 @@ int main()
   }
   if (check_flag(&flag, "ARKDlsSetDenseJacFn", 1)) return 1;
 
-  /* Specify linearly implicit problem */
-  flag = ARKodeSetLinear(arkode_mem);
+  /* Specify linearly implicit problem, with non-time-dependent Jacobian */
+  flag = ARKodeSetLinear(arkode_mem, 0);
   if (check_flag(&flag, "ARKodeSetLinear", 1)) return 1;
 
   /* Write all solver parameters to stdout */

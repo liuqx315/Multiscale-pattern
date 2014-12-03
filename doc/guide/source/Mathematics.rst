@@ -226,6 +226,10 @@ on :math:`y` (via a call to :c:func:`ARKodeSetLinear()`, or the
 *LINEAR* argument to :f:func:`FARKSETIIN()`), and if the 
 Newton-based nonlinear solver is chosen, then the problem
 :eq:`Residual` will be solved using only a single Newton iteration.
+In this case, an additional argument to the respective function
+denotes whether this Jacobian is time-dependent or not, indicating
+whether the Jacobian or preconditioner needs to be recomputed at each
+step.
 
 The optimal solver (Newton vs fixed-point) is highly
 problem-dependent.  Since fixed-point solvers do not require

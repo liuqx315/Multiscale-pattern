@@ -2346,12 +2346,16 @@ Maximum number of convergence failures         :c:func:`ARKodeSetMaxConvFails()`
 
 
 
-.. c:function:: int ARKodeSetLinear(void* arkode_mem)
+.. c:function:: int ARKodeSetLinear(void* arkode_mem, int timedepend)
 
    Specifies that the implicit portion of the problem is linear.
    
    **Arguments:**
       * *arkode_mem* -- pointer to the ARKode memory block.
+      * *timedepend* -- flag denoting whether the Jacobian of
+	:math:`f_I(t,y)` is time-dependent (1) or not (0).
+	Alternately, when using an iterative linear solver this flag
+	denotes time dependence of the preconditioner.
    
    **Return value:** 
       * *ARK_SUCCESS* if successful

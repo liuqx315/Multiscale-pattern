@@ -204,8 +204,8 @@ int main() {
   flag = ARKSpilsSetJacTimesVecFn(arktrue_mem, Jac);
   if (check_flag(&flag, "ARKSpilsSetJacTimesVecFn", 1)) return 1;
 
-  /* Specify linearly implicit problem */
-  flag = ARKodeSetLinear(arkode_mem);
+  /* Specify linearly implicit problem, with non-time-dependent Jacobian */
+  flag = ARKodeSetLinear(arkode_mem, 0);
   if (check_flag(&flag, "ARKodeSetLinear", 1)) return 1;
 
   /* Open output stream for results, access data arrays */

@@ -224,16 +224,16 @@ Completed components:
     "ark_linear" boolean, just need to use it.
 [X] Tighten tolerance for iterative linear solvers when running in
     linearly implicit mode.
+[X] Add a solver option and update linear solve routine for the
+    scenario that a problem depends linearly on y, but that the linear 
+    dependence changes as a function of time.  In this case, we must
+    call lsetup once prior to EVERY time step.
 
 
 
 Remaining components to build:
-[ ] Add a solver option and update linear solve routine for the
-    scenario that a problem depends linearly on y, but that the linear 
-    dependence changes as a function of time.  In this case, we must
-    call lsetup once prior to EVERY time step.
 [ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
-    and LAPACKKLU solvers.
+    and KLU solvers.
 [ ] Optimize fixed-point solver (currently results in too much ODE
     error).  On this topic, it turns out that the "better" solution is
     not the one returned by the fixed-point solver to the integrator,

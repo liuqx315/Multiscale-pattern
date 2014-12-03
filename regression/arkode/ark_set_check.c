@@ -131,10 +131,14 @@ int main() {
   if (check_flag(&flag, "ARKodeSetDefaults", 1)) return 1;
 
   /* linear problem */
-  flag = ARKodeSetLinear(arkode_mem);
+  flag = ARKodeSetLinear(arkode_mem, 1);
   if (check_flag(&flag, "ARKodeSetLinear", 1)) return 1;
   if (ark_mem->ark_linear != TRUE) {
     printf("Error in ARKodeSetLinear: did not set solver linearity\n");
+    return 1;
+  }
+  if (ark_mem->ark_linear_timedep != TRUE) {
+    printf("Error in ARKodeSetLinear: did not set solver linear time dependence\n");
     return 1;
   }
 
