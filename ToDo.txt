@@ -228,12 +228,16 @@ Completed components:
     scenario that a problem depends linearly on y, but that the linear 
     dependence changes as a function of time.  In this case, we must
     call lsetup once prior to EVERY time step.
+[X] If I need to use any currently-checked N_Vector operations, add
+    them to ARKCheckNvector routine.
 
 
 
 Remaining components to build:
-[ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
-    and KLU solvers.
+[ ] Ensure that everything is set up so that a user must only perform
+    communication preceding a call to fI for an ImEx problem.  A call
+    preceding fI would be more useful than one preceding fE, since fI
+    should be called more often throughout the solve. 
 [ ] Optimize fixed-point solver (currently results in too much ODE
     error).  On this topic, it turns out that the "better" solution is
     not the one returned by the fixed-point solver to the integrator,
@@ -245,6 +249,8 @@ Remaining components to build:
     up.  I should just return the newer guess, but I want to wait
     until after the initial release so that this is a "new feature"
     since our ParaDiS paper results use the current approach.
+[ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
+    and KLU solvers.
 [ ] For non-identity mass matrices, come up with an alternate strategy
     for estimating the initial step size if it is not supplied by the
     user.  The current approach performs a finite difference on f(t,y)
@@ -263,17 +269,11 @@ Remaining components to build:
 [ ] Clean up documentation system for how a user should tell ARKode
     about his J*v function (and other optional user-supplied
     functions).
-[ ] Ensure that everything is set up so that a user must only perform
-    communication preceding a call to fI for an ImEx problem.  A call
-    preceding fI would be more useful than one preceding fE, since fI
-    should be called more often throughout the solve. 
 [ ] Tune solver parameters for increased efficiency on all test
     problems. 
 [ ] Go through new and existing routines to determine whether we need
     additional #define control constants, return values and error
     messages; also prune out unused ones.
-[ ] If I need to use any currently-unused N_Vector operations, add
-    them to ARKCheckNvector routine.
 [ ] Determine if I need ark_acor at all.  CVODE uses it to estimate
     the local truncation error, but it won't really help us out for
     that purpose, and we may be able to reformulate implicit solver to
