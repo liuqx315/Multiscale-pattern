@@ -73,8 +73,9 @@ int ARKSptfqmr(void *arkode_mem, int pretype, int maxl)
   }
   ark_mem = (ARKodeMem) arkode_mem;
 
-  /* Check if N_VDotProd is present */
-  if (ark_mem->ark_tempv->ops->nvdotprod == NULL) {
+  /* Check if N_VDotProd and N_VProd are present */
+  if ((ark_mem->ark_tempv->ops->nvdotprod == NULL) ||
+      (ark_mem->ark_tempv->ops->nvprod == NULL)) {
     arkProcessError(ark_mem, ARKSPILS_ILL_INPUT, "ARKSPTFQMR", 
 		    "ARKSptfqmr", MSGS_BAD_NVECTOR);
     return(ARKSPILS_ILL_INPUT);
@@ -157,7 +158,7 @@ int ARKSptfqmr(void *arkode_mem, int pretype, int maxl)
 
   /* Compute sqrtN from a dot product */
   N_VConst(ONE, arkspils_mem->s_ytemp);
-  arkspils_mem->s_sqrtN = SUN_SQRT(N_VDotProd(arkspils_mem->s_ytemp, 
+  arkspils_mem->s_sqrtN = SUNRsqrt(N_VDotProd(arkspils_mem->s_ytemp, 
 					   arkspils_mem->s_ytemp));
 
   /* Call SptfqmrMalloc to allocate workspace for Sptfqmr */
@@ -256,7 +257,7 @@ static int ARKSptfqmrSetup(ARKodeMem ark_mem, int convfail,
   arkspils_mem = (ARKSpilsMem) ark_mem->ark_lmem;
 
   /* Use nst, gamma/gammap, and convfail to set J eval. flag jok */
-  dgamma = SUN_ABS((ark_mem->ark_gamma/ark_mem->ark_gammap) - ONE);
+  dgamma = SUNRabs((ark_mem->ark_gamma/ark_mem->ark_gammap) - ONE);
   jbad = (ark_mem->ark_nst == 0) || 
     (ark_mem->ark_nst > arkspils_mem->s_nstlpre + ARKSPILS_MSBPRE) ||
     ((convfail == ARK_FAIL_BAD_J) && (dgamma < ARKSPILS_DGMAX)) ||
@@ -547,7 +548,7 @@ int ARKMassSptfqmr(void *arkode_mem, int pretype, int maxl,
 
   /* Compute sqrtN from a dot product */
   N_VConst(ONE, arkspils_mem->s_ytemp);
-  arkspils_mem->s_sqrtN = SUN_SQRT(N_VDotProd(arkspils_mem->s_ytemp, 
+  arkspils_mem->s_sqrtN = SUNRsqrt(N_VDotProd(arkspils_mem->s_ytemp, 
 					   arkspils_mem->s_ytemp));
 
   /* Call SptfqmrMalloc to allocate workspace for Sptfqmr */

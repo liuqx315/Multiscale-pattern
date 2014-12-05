@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4243 $
- * $Date: 2014-10-17 10:51:45 -0700 (Fri, 17 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh and
  *                Radu Serban @ LLNL
@@ -1139,7 +1139,7 @@ static int Precondbd(realtype tt, N_Vector cc,
 
   webdata = (UserData)user_data;
   uround = UNIT_ROUNDOFF;
-  sqru = SUN_SQRT(uround);
+  sqru = SUNRsqrt(uround);
   thispe = webdata->thispe;
 
   mem = webdata->ida_mem;
@@ -1161,7 +1161,7 @@ static int Precondbd(realtype tt, N_Vector cc,
       ratesxy = IJ_Vptr(rates,ix,jy);
 
       for (js = 0; js < ns; js++) {
-        inc = sqru*(SUN_MAX(SUN_ABS(cxy[js]), SUN_MAX(hh*SUN_ABS(cpxy[js]), ONE/ewtxy[js])));
+        inc = sqru*(SUNMAX(SUNRabs(cxy[js]), SUNMAX(hh*SUNRabs(cpxy[js]), ONE/ewtxy[js])));
         cctemp = cxy[js];  /* Save the (js,ix,jy) element of cc. */
         cxy[js] += inc;    /* Perturb the (js,ix,jy) element of cc. */
         fac = -ONE/inc;

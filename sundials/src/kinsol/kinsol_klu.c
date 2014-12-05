@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4268 $
- * $Date: 2014-11-14 16:37:06 -0800 (Fri, 14 Nov 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
@@ -279,7 +279,7 @@ static int kinKLUSetup(KINMem kin_mem)
   void *jacdata;
   realtype uround, uround_twothirds;
 
-  uround = RPowerR(kin_mem->kin_uround,TWOTHIRDS);
+  uround = SUNRpowerR(kin_mem->kin_uround,TWOTHIRDS);
 
   kinsls_mem = (KINSlsMem) (kin_mem->kin_lmem);
 

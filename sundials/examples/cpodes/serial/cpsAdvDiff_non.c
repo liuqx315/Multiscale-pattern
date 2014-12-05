@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4242 $
- * $Date: 2014-10-17 10:01:32 -0700 (Fri, 17 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -140,14 +140,14 @@ static realtype MaxError(N_Vector y, realtype t)
   if (t == ZERO) return(ZERO);
 
   ydata = NV_DATA_S(y);
-  if (t <= THIRTY) ex = SUN_EXP(-TWO*t);
+  if (t <= THIRTY) ex = SUNRexp(-TWO*t);
   
   for (j = 0; j < MESHY; j++) {
     ifact_inv = ONE;
     for (i = 0; i < MESHX; i++) {
       k = i + j * MESHX;
-      yt = RPowerI(t,i+j) * ex * ifact_inv * jfact_inv;
-      er = SUN_ABS(ydata[k] - yt);
+      yt = SUNRpowerI(t,i+j) * ex * ifact_inv * jfact_inv;
+      er = SUNRabs(ydata[k] - yt);
       if (er > maxError) maxError = er;
       ifact_inv /= (i+1);
     }

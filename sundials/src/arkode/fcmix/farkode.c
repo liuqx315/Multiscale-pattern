@@ -84,6 +84,11 @@ void FARK_MALLOC(realtype *t0, realtype *y0, int *imex,
     printf("Error: setarraypointer vector operation is not implemented.\n\n");
     return;
   }
+  if(F2C_ARKODE_vec->ops->nvcloneempty == NULL) {
+    *ier = -1;
+    printf("Error: cloneempty vector operation is not implemented.\n\n");
+    return;
+  }
 
   /* Initialize all pointers to NULL */
   ARK_arkodemem = NULL;
@@ -326,7 +331,7 @@ void FARK_SETIIN(char key_name[], long int *ival, int *ier)
   else if (!strncmp(key_name, "DENSE_ORDER", 11)) 
     *ier = ARKodeSetDenseOrder(ARK_arkodemem, (int) *ival);
   else if (!strncmp(key_name, "LINEAR", 6)) 
-    *ier = ARKodeSetLinear(ARK_arkodemem);
+    *ier = ARKodeSetLinear(ARK_arkodemem, (int) *ival);
   else if (!strncmp(key_name, "NONLINEAR", 9)) 
     *ier = ARKodeSetNonlinear(ARK_arkodemem);
   else if (!strncmp(key_name, "FIXEDPOINT", 10)) 
