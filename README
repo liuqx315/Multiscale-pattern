@@ -2,7 +2,7 @@ The ARKODE solver employs adaptive-step additive Runge Kutta methods
 to enable accurate and efficient time integration of multi-rate
 systems of ordinary differential equations of the form
 
-     M y' = f_E(t,y) + f_I(t,y),
+    M dy/dt = f_E(t,y) + f_I(t,y),
 
 where t is the independent variable, y is the set of dependent
 variables (in R^n), M is a user-specified, non-singular operator from
@@ -24,3 +24,11 @@ and root-finding capabilities, for calculations both in serial and
 parallel (via, OpenMP, Pthreads or MPI).  The default integration and
 solver options will apply to most users, though complete control over
 all internal parameters is enabled through optional interface routines.  
+
+All questions/comments on the software in this repository should be
+directed to:
+
+
+Daniel R. Reynolds,
+SMU Mathematics,
+reynolds@smu.edu
