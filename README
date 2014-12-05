@@ -8,8 +8,7 @@ The ARKode solver employs adaptive-step additive Runge Kutta methods
 to enable accurate and efficient time integration of multi-rate
 systems of ordinary differential equations of the form
 
-.. math::
-   M y' = f_E(t,y) + f_I(t,y),
+    M y' = f_E(t,y) + f_I(t,y),
 
 where t is the independent variable, y is the set of dependent
 variables (in R^n), M is a user-specified, non-singular operator from
