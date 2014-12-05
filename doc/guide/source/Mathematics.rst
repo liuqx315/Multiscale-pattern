@@ -159,7 +159,7 @@ Nonlinear solver methods
 
 
 For both the DIRK and ARK methods corresponding to :eq:`IVP` and
-:eq:`IVP_implicit`, a nonlinear system
+:eq:`IVP_implicit`, an implicit system
 
 .. math::
    G(z_i) \equiv M z_i - h_n A^I_{i,i} f_I(t_{n,i}, z_i) - a_i = 0
@@ -179,10 +179,14 @@ for the ARK methods, or
    a_i \equiv M y_{n-1} + h_n \sum_{j=0}^{i-1} 
       A^I_{i,j} f_I(t_{n,j}, z_j)
    
-for the DIRK methods.  For these nonlinear systems, ARKode allows a
-choice of solution strategy. 
+for the DIRK methods.  Here, if :math:`f_I(t,y)` depends nonlinearly
+on :math:`y` then :eq:`Residual` corresponds to a nonlinear system of
+equations; if :math:`f_I(t,y)` depends linearly on :math:`y` then this
+is a linear system of equations.  
 
-The default solver choice is a variant of :index:`Newton's method`,
+For systems of either type, ARKode allows a choice of solution
+strategy. The default solver choice is a variant of :index:`Newton's
+method`, 
 
 .. math::
    z_i^{(m+1)} = z_i^{(m)} + \delta^{(m+1)},
@@ -216,6 +220,16 @@ solution of a linear system at each iteration, instead opting for
 solution of a low-dimensional least-squares solution to construct the
 nonlinear update.  For details on how this iteration is performed, we
 refer the reader to the reference [WN2011]_.
+
+Finally, if the user specifies that :math:`f_I(t,y)` depends linearly
+on :math:`y` (via a call to :c:func:`ARKodeSetLinear()`, or the
+*LINEAR* argument to :f:func:`FARKSETIIN()`), and if the 
+Newton-based nonlinear solver is chosen, then the problem
+:eq:`Residual` will be solved using only a single Newton iteration.
+In this case, an additional argument to the respective function
+denotes whether this Jacobian is time-dependent or not, indicating
+whether the Jacobian or preconditioner needs to be recomputed at each
+step.
 
 The optimal solver (Newton vs fixed-point) is highly
 problem-dependent.  Since fixed-point solvers do not require
@@ -396,8 +410,10 @@ only in the following circumstances:
   (this tolerance may be changed via the *dgmax* argument to 
   :c:func:`ARKodeSetDeltaGammaMax()`) or the *LSETUP_DGMAX*
   argument to :f:func:`FARKSETRIN()`, 
-* when a non-fatal convergence failure just occurred, or
-* when an error test failure just occurred.
+* when a non-fatal convergence failure just occurred,
+* when an error test failure just occurred, or
+* if the problem is linearly implicit and :math:`\gamma` has
+  changed by a factor larger than 100 times machine epsilon.
 
 When an update is forced due to a convergence failure, an update of
 :math:`\tilde{\mathcal A}` or :math:`P` may or may not involve a reevaluation of
@@ -411,8 +427,9 @@ failure.  More generally, the decision is made to reevaluate :math:`J`
 * a convergence failure occurred with an outdated matrix, and the
   value :math:`\bar{\gamma}` of :math:`\gamma` at the last update
   satisfies :math:`\left|\gamma/\bar{\gamma} - 1\right| > 0.2`,
-* a convergence failure occurred that forced a step size reduction.
-
+* a convergence failure occurred that forced a step size reduction, or
+* if the problem is linearly implicit and :math:`\gamma` has
+  changed by a factor larger than 100 times machine epsilon.
 
 As will be further discussed in the section
 :ref:`Mathematics.Preconditioning`, in the case of a Krylov method, 
@@ -561,13 +578,17 @@ and local time integration error controls, we require that the norm of
 the preconditioned linear residual satisfies
 
 .. math::
-  
    \|r\| \le 0.05\epsilon.
+   :label: LinearTolerance
 
 Here :math:`\epsilon` is the same value as that used above for the
 nonlinear error control.  The value 0.05 may be modified by the user
-through the :c:func:`ARKSpilsSetEpsLin()` function; it cannot
-currently be modified from Fortran applications.
+through the :c:func:`ARKSpilsSetEpsLin()` function.  Fortran users may
+adjust this value using the *DELT* argument to the functions
+:f:func:`FARKSPGMR()`, :f:func:`FARKSPBCG()`, :f:func:`FARKSPTFQMR()`,
+:f:func:`FARKSPFGMR()` or :f:func:`FARKPCG()`.  We note that for
+linearly implicit problems the same tolerance :eq:`LinearTolerance`
+is used for the single Newton iteration.
 
 
 

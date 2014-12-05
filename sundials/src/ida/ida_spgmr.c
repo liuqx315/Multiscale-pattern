@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4258 $
- * $Date: 2014-11-12 16:55:45 -0800 (Wed, 12 Nov 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmers: Alan C. Hindmarsh, and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -223,7 +223,7 @@ int IDASpgmr(void *ida_mem, int maxl)
 
   /* Compute sqrtN from a dot product */
   N_VConst(ONE, ytemp);
-  sqrtN = SUN_SQRT( N_VDotProd(ytemp, ytemp) );
+  sqrtN = SUNRsqrt( N_VDotProd(ytemp, ytemp) );
 
   /* Call SpgmrMalloc to allocate workspace for Spgmr */
   spgmr_mem = NULL;

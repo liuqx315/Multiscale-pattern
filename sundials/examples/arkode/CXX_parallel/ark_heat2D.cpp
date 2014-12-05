@@ -206,6 +206,10 @@ int main(int argc, char* argv[]) {
   flag = ARKSpilsSetPreconditioner(arkode_mem, PSet, PSol);   // Specify the Preconditoner
   if (check_flag(&flag, "ARKSpilsSetPreconditioner", 1)) return 1;
 
+  // Specify linearly implicit RHS, with non-time-dependent preconditioner
+  flag = ARKodeSetLinear(arkode_mem, 0);
+  if (check_flag(&flag, "ARKodeSetLinear", 1)) return 1;
+
   // Each processor outputs subdomain information
   char outname[100];
   sprintf(outname, "heat2d_subdomain.%03i.txt", udata->myid);

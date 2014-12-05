@@ -58,9 +58,8 @@ themselves (see the section :ref:`Installation` for details):
 
 The ``sundials_types.h`` header file defines the SUNDIALS ``realtype``
 and ``booleantype`` types and the macro ``RCONST``, while the
-``sundials_math.h`` header file is needed for the macros ``SUN_MIN``,
-``SUN_MAX``, and ``SUN_SQR``, and the functions ``SUN_ABS``,
-``SUN_SQRT``, and ``SUN_EXP``.
+``sundials_math.h`` header file is needed for the macros ``SUNMIN``
+and ``SUNMAX``, and the function ``SUNRabs``.
 
 The files listed above for either module can be extracted from the
 SUNDIALS ``srcdir`` and compiled by themselves into a separate library

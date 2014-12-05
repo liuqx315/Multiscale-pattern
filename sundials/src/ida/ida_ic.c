@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4241 $
- * $Date: 2014-10-16 23:04:03 -0700 (Thu, 16 Oct 2014) $
+ * $Revision: 4272 $
+ * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmers: Alan C. Hindmarsh, and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -198,8 +198,8 @@ int IDACalcIC(void *ida_mem, int icopt, realtype tout1)
     return(IDA_ILL_INPUT);
   }
 
-  tdist = SUN_ABS(tout1 - tn);
-  troundoff = TWO*uround*(SUN_ABS(tn) + SUN_ABS(tout1));
+  tdist = SUNRabs(tout1 - tn);
+  troundoff = TWO*uround*(SUNRabs(tn) + SUNRabs(tout1));
   if(tdist < troundoff) {
     IDAProcessError(IDA_mem, IDA_ILL_INPUT, "IDA", "IDACalcIC", MSG_IC_TOO_CLOSE);
     return(IDA_ILL_INPUT);
@@ -436,7 +436,7 @@ static int IDANewtonIC(IDAMem IDA_mem)
 
   /* Compute the norm of the step; return now if this is small. */
   fnorm = IDAWrmsNorm(IDA_mem, delta, ewt, FALSE);
-  if(sysindex == 0) fnorm *= tscale*SUN_ABS(cj);
+  if(sysindex == 0) fnorm *= tscale*SUNRabs(cj);
   if(fnorm <= epsNewt) return(IDA_SUCCESS);
   fnorm0 = fnorm;
 
@@ -606,7 +606,7 @@ static int IDAfnorm(IDAMem IDA_mem, realtype *fnorm)
 
   /* Compute the WRMS-norm; rescale if index = 0. */
   *fnorm = IDAWrmsNorm(IDA_mem, delnew, ewt, FALSE);
-  if(sysindex == 0) (*fnorm) *= tscale*SUN_ABS(cj);
+  if(sysindex == 0) (*fnorm) *= tscale*SUNRabs(cj);
 
   return(IDA_SUCCESS);
 
