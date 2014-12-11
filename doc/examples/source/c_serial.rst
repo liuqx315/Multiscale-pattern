@@ -142,7 +142,7 @@ We now wish to exercise the ARKode solvers on more challenging
 nonlinear ODE systems.  The following test simulates a brusselator
 problem from chemical kinetics, and is used throughout the community
 as a standard benchmark problem for new solvers.  The ODE system has
-with 3 components, :math:`Y = [u,\, v,\, w]`, satisfying the equations,
+3 components, :math:`Y = [u,\, v,\, w]`, satisfying the equations,
 
 .. math::
 
