@@ -1234,7 +1234,7 @@ int ARKode(void *arkode_mem, realtype tout, N_Vector yout,
   if (ark_mem->ark_nst == 0) {
 
     /* initialize tret values to initialization time */
-    tretlast = *tret = tn;
+    ark_mem->ark_tretlast = *tret = ark_mem->ark_tn;
 
     /* Temporarily set ark_h and perform initial integrator setup */
     ark_mem->ark_h = SUNRabs(tout - ark_mem->ark_tn);
