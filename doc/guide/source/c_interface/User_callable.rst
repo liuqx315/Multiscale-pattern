@@ -1192,7 +1192,7 @@ has requested rootfinding.
       * *arkode_mem* -- pointer to the ARKode memory block.
       * *tout* -- the next time at which a computed solution is desired
       * *yout* -- the computed solution vector
-      * *tret* -- the time reached by the solver (output)
+      * *tret* -- the time corresponding to *yout* (output)
       * *itask* -- a flag indicating the job of the solver for the next
         user step. 
 
@@ -1265,21 +1265,20 @@ has requested rootfinding.
       * *ARK_MASSSOLVE_FAIL* if the mass matrix solver's solve routine
 	failed.
    
-   **Notes:** The input vector *yout* can be the same as the vector
-   *y0* of initial conditions that was passed to :c:func:`ARKodeInit()`. 
+   **Notes:** The input vector *yout* can use the same memory as the
+   vector *y0* of initial conditions that was passed to
+   :c:func:`ARKodeInit()`.
    
    In *ARK_ONE_STEP* mode, *tout* is used only on the first call, and
    only to get the direction and a rough scale of the independent
-   variable.
- 
-   All failure return values are negative and so testing the return
-   argument for negative values will trap all ARKode failures.
+   variable. All failure return values are negative and so testing the
+   return argument for negative values will trap all ARKode failures.
    
    On any error return in which one or more internal steps were taken
    by ARKode, the returned values of *tret* and *yout* correspond to
-   the farthest point reached in the integration. On all other error
-   returns, *tret* and *yout* are left unchanged from the previous
-   ARKode return.
+   the farthest point reached in the integration.  On all other error
+   returns, *tret* and *yout* are left unchanged from those provided
+   to the routine.
 
 
 

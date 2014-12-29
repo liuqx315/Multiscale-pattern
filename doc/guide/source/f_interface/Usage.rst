@@ -1178,15 +1178,15 @@ Carrying out the integration is accomplished by making calls to
       * *TOUT* (``realtype``, input) -- next value of :math:`t` at
 	which a solution is desired.
 
-      * *T* (``realtype``, output) -- current value of independent
-	variable reached by the solver. 
+      * *T* (``realtype``, output) -- value of independent variable
+	that corresponds to the output *Y*
 
       * *Y* (``realtype``, output) -- array containing dependent state
 	variables on output. 
 
       * *ITASK* (``int``, input) -- task indicator :
 
-        * 1 = normal mode (overshoot *TOUT* and interpolate)
+        * 1 = normal mode (overshoot *TOUT* and interpolate the solution)
 
         * 2 = one-step mode (return after each internal step taken)
 
@@ -1213,7 +1213,12 @@ Carrying out the integration is accomplished by making calls to
    The current values of the optional outputs are immediately
    available in *IOUT* and *ROUT* upon return from this function (see
    :ref:`FInterface.IOUTTable` and :ref:`FInterface.ROUTTable`). 
+
+   A full description of error flags and output behavior of the solver
+   (values filled in for *T* and *Y*) is provided in the description
+   of :c:func:`ARKode()`.
    
+
 
 
 .. _FInterface.AdditionalOutput:
