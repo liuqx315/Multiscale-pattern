@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4272 $
- * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
+ * $Revision: 4285 $
+ * $Date: 2014-12-12 13:39:23 -0800 (Fri, 12 Dec 2014) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Dan Shumaker @ LLNL
@@ -1134,6 +1134,8 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
    */
 
   if (nst == 0) {
+
+    tretlast = *tret = tn;
 
     ier = cvInitialSetup(cv_mem);
     if (ier!= CV_SUCCESS) return(ier);
