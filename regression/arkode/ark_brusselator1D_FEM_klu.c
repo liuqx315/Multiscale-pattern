@@ -168,6 +168,7 @@ int main() {
   udata = (UserData) malloc(sizeof(*udata));
   udata->x = NULL;
   udata->tmp = NULL;
+  udata->R = NULL;
   if (check_flag((void *)udata, "malloc", 2)) return 1;
 
   /* read problem parameter and tolerances from input file:
