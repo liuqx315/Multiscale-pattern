@@ -234,6 +234,12 @@ Completed components:
 
 
 Remaining components to build:
+[ ] For non-identity mass matrices, come up with an alternate strategy
+    for estimating the initial step size if it is not supplied by the
+    user.  The current approach performs a finite difference on f(t,y)
+    to estimate y''(t), but for non-identity mass matrices this will
+    instead estimate My''(t).
+[ ] Update ARKodeGetEstLocalErrors().
 [ ] Ensure that everything is set up so that a user must only perform
     communication preceding a call to fI for an ImEx problem.  A call
     preceding fI would be more useful than one preceding fE, since fI
@@ -251,11 +257,6 @@ Remaining components to build:
     since our ParaDiS paper results use the current approach.
 [ ] Add example/test problems for Fortran LAPACKDENSE, LAPACKBAND 
     and KLU solvers.
-[ ] For non-identity mass matrices, come up with an alternate strategy
-    for estimating the initial step size if it is not supplied by the
-    user.  The current approach performs a finite difference on f(t,y)
-    to estimate y''(t), but for non-identity mass matrices this will
-    instead estimate My''(t).
 [ ] Consider swapping method/embedding for Billington and TRBDF2
     methods, since in those the higher-order method is not A-stable
     whereas the embedding is A-stable; i.e. here the method would be
@@ -265,7 +266,6 @@ Remaining components to build:
 [ ] Determine optimal input parameters for a user to control how often
     mesh adaptivity should be enabled (e.g. a physical amount of time,
     a fixed number of time steps, etc.).
-[ ] Update ARKodeGetEstLocalErrors().
 [ ] Clean up documentation system for how a user should tell ARKode
     about his J*v function (and other optional user-supplied
     functions).
