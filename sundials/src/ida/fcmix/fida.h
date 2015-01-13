@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
+ * $Revision: 4301 $
+ * $Date: 2014-12-17 14:22:09 -0800 (Wed, 17 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -565,6 +565,7 @@ extern "C" {
 #define FIDA_PSOL           SUNDIALS_F77_FUNC(fidapsol, FIDAPSOL)
 #define FIDA_JTIMES         SUNDIALS_F77_FUNC(fidajtimes, FIDAJTIMES)
 #define FIDA_EWT            SUNDIALS_F77_FUNC(fidaewt, FIDAEWT)
+#define FIDA_EWTSET         SUNDIALS_F77_FUNC(fidaewtset, FIDAEWTSET)
 #define FIDA_GETDKY         SUNDIALS_F77_FUNC(fidagetdky, FIDAGETDKY)
 #define FIDA_GETERRWEIGHTS  SUNDIALS_F77_FUNC(fidageterrweights, FIDAGETERRWEIGHTS)
 #define FIDA_GETESTLOCALERR SUNDIALS_F77_FUNC(fidagetestlocalerr, FIDAGETESTLOCALERR)
