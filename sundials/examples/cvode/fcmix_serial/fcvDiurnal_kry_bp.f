@@ -1,6 +1,6 @@
 C     ----------------------------------------------------------------
-C     $Revision: 4198 $
-C     $Date: 2014-08-07 16:55:14 -0700 (Thu, 07 Aug 2014) $
+C     $Revision: 4294 $
+C     $Date: 2014-12-15 13:18:40 -0800 (Mon, 15 Dec 2014) $
 C     ----------------------------------------------------------------
 C     FCVODE Example Problem: 2D kinetics-transport, 
 C     precond. Krylov solver. 

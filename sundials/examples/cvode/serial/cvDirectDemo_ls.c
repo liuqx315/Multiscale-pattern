@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4272 $
- * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
+ * $Revision: 4314 $
+ * $Date: 2015-01-07 15:46:45 -0800 (Wed, 07 Jan 2015) $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -489,7 +489,6 @@ static void PrintIntro2(void)
 #else
   printf(" itol = %s, reltol = %.2g, abstol = %.2g", "CV_SS", RTOL, ATOL);
 #endif
-  printf("\n      t        max.err      qu     hu \n");
 }
 
 static void PrintHeader2(void)
