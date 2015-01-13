@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4272 $
- * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
+ * $Revision: 4306 $
+ * $Date: 2015-01-03 14:34:31 -0800 (Sat, 03 Jan 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -2684,6 +2684,8 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
    */
 
   if (nst == 0) {
+
+    tretlast = *tret = tn;
 
     /* Check inputs for corectness */
 
