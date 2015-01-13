@@ -1,6 +1,6 @@
 C     ----------------------------------------------------------------
-C     $Revision: 4074 $
-C     $Date: 2014-04-23 14:13:52 -0700 (Wed, 23 Apr 2014) $
+C     $Revision: 4298 $
+C     $Date: 2014-12-17 13:34:18 -0800 (Wed, 17 Dec 2014) $
 C     ----------------------------------------------------------------
 C     FCVODE Example Problem: 2D kinetics-transport, precond. Krylov
 C     solver. 
@@ -183,6 +183,8 @@ C     Problem constants
       MM = MX * MY
       Q1 = 1.63D-16
       Q2 = 4.66D-16
+      Q3 = 0.0D0
+      Q4 = 0.0D0
       A3 = 22.62D0
       A4 = 7.601D0
       OM = PI / HALFDA

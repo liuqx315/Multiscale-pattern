@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------
-# $Revision: 4161 $
-# $Date: 2014-07-11 12:40:21 -0700 (Fri, 11 Jul 2014) $
+# $Revision: 4296 $
+# $Date: 2014-12-16 15:27:36 -0800 (Tue, 16 Dec 2014) $
 # ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
@@ -296,11 +296,13 @@ ENDIF(BUILD_ARKODE OR BUILD_CVODE OR BUILD_IDA OR BUILD_KINSOL)
 # F90 support is an option only if ARKode is built and 
 # examples are enabled
 
-IF(BUILD_ARKODE AND EXAMPLES_ENABLE)
+IF(BUILD_ARKODE AND EXAMPLES_ENABLE AND FCMIX_ENABLE)
   SHOW_VARIABLE(F90_ENABLE BOOL "Enable Fortran90 ARKode examples" OFF)
-ELSE(BUILD_ARKODE AND EXAMPLES_ENABLE)
-  HIDE_VARIABLE(F90_ENABLE)
-ENDIF(BUILD_ARKODE AND EXAMPLES_ENABLE)
+ELSE(BUILD_ARKODE AND EXAMPLES_ENABLE AND FCMIX_ENABLE)
+  # set back to OFF (in case was ON)
+  SET(F90_ENABLE OFF)
+  HIDE_VARIABLE(F90_ENABLE AND FCMIX_ENABLE)
+ENDIF(BUILD_ARKODE AND EXAMPLES_ENABLE AND FCMIX_ENABLE)
 
 # -------------------------------------------------------------
 # Enable C++ support?
